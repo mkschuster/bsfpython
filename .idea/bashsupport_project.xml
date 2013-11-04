@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BashSupportProjectSettings">
+    <option name="autocompleteBuiltinVars" value="true" />
+    <option name="formatterEnabled" value="true" />
+    <option name="globalVariables">
+      <set>
+        <option value="BSF_ARCHVE" />
+        <option value="BSF_LANES" />
+        <option value="BSF_PROJECTS" />
+        <option value="BSF_PUBLIC_HTML" />
+        <option value="NGS_SOFTWARE" />
+      </set>
+    </option>
+  </component>
+</project>
+

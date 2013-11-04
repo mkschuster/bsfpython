@@ -1,0 +1,107 @@
+
+BSF Python Library
+
+Introduction
+
+The Biomedical Sequencing Facility (BSF) [1] is part of the joint genomics core facility of the
+Medical University of Vienna [2] and the CeMM Research Center for Molecular Medicine [3] of the
+Austrian Academy of Sciences [4]. The BSF is Austria’s first technology platform dedicated to
+next generation sequencing in biomedicine and expected to play a catalyzing role for the
+development of genomic medicine in Vienna and Austria.
+
+This Python library and the accompanying scripts are used for day-to-day analysis of
+next-generation sequencing (NGS) data sets.
+
+BSF Python General Configuration File
+
+General settings for the BSF Python library are configured via a $HOME/.bsfpython.ini file
+in the user's home directory. This file is site-specific and its information allows for automatic
+discovery of raw (e.g. Illumina run folders) and pre-processed (e.g. de-multiplexed lanes and samples)
+NGS data. A template file (bsf_init_template.txt) can be found in the doc sub-directory. The template,
+which documents the configuration options and provides, as far as possible, sensible default settings,
+needs copying to $HOME/.bsfpython.ini before editing accordingly.
+
+Analysis
+
+The BSF Analysis is central to the BSF pipeline infrastructure. It encapsulates both, logic and data
+for a multi-step analysis procedure. Specific Analysis objects are available, tailored to recurring
+tasks.
+
+Analysis Configuration File
+
+BSF Analysis objects are initialised and configured via UNIX-style configuration (*.ini) files.
+Templates for these files are again provided in the doc sub-directory, document configuration options and
+provide, as far as possible, sensible default settings. Generally, only few configuration
+options need filling in. Most importantly, the location of sample annotation sheets and, depending on the
+analysis type, sample comparison sheets, need to be specified.
+
+Sample Annotation Sheet
+
+A sample annotation sheet specifies the file system location of NGS reads. For data pre-processed via
+Illumina CASAVA, a hierarchy of run folders, projects samples, and paired reads can be automatically
+discovered. Additional reads can be linked into the system by specifying the exact file system path.
+Sample annotation sheets also provide grouping of samples that is available to the analysis.
+
+    - Type (CASAVA or External)
+    - ProcessRunFolder (e.g. )
+    - Project
+    - Sample
+    - Reads1
+    - File1
+    - Reads2
+    - File2
+    - Group
+
+Analyses
+
+ChIPSeq
+
+The ChIPSeq analysis aligns each BSF Sample object to the genome sequence via BWA. Regions of interest
+are then defined by means of the MACS2 peak caller.
+
+In the context of the ChIPSeq analysis, BSF Paired Reads objects of BSF Sample objects are aligned as a pool.
+
+
+RNASeq
+
+The RNASeq pipeline is based on the Tuxedo suite. NGS reads are aligned with Tophat2 [] an aligner that
+implements a splice site model and uses a reference transcriptome as the base. is based on the Bowtie2 [] short read aligner.
+
+In the context of the RNASeq analysis, BSF Sample objects are aligned and assembled into transcriptomes individually.
+According to a group_replicates configuration option, each BSF Paired Reads object of a BSF Sample object can be
+processed individually by TopHat and Cufflinks or pooled before alignment. The resulting transcriptome assemblies
+for each BSF Sample resulting from each BSF Paired Reads object are then merged via Cuffmerge. Cuffdiff then compares
+the merged assemblies on the basis of the BAM alignments produced by Tophat2.
+
+
+References
+
+[1] http://www.biomedical-sequencing.at/
+[2] http://www.meduniwien.ac.at/homepage/homepage/en/
+[3] http://www.cemm.oeaw.ac.at/
+[4] http://www.oeaw.ac.at/english/home.html
+
+
+Licence
+
+Copyright 2013 Michael K. Schuster
+
+Biomedical Sequencing Facility (BSF), part of the genomics core facility
+of the Research Center for Molecular Medicine (CeMM) of the
+Austrian Academy of Sciences and the Medical University of Vienna (MUW).
+
+
+This file is part of BSF Python.
+
+BSF Python is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+BSF Python is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
