@@ -102,7 +102,7 @@ class Argument(object):
 
 class Switch(Argument):
 
-    """Bio.BSF.Executable.Switch class, for an argument obeying a "--key" or "-k" schema.
+    """Bio.BSF.Argument.Switch class, for an argument obeying a "--key" or "-k" schema.
 
     Attributes:
     :ivar is_long: GNU-style long switch (--key)
@@ -111,7 +111,7 @@ class Switch(Argument):
 
     def __init__(self, key, is_long=False):
 
-        """Initialise a Bio.BSF.Executable.Switch object.
+        """Initialise a Bio.BSF.Argument.Switch object.
 
         :param key: Key
         :type key: str
@@ -130,14 +130,14 @@ class Switch(Argument):
 
 class SwitchLong(Switch):
 
-    """Bio.BSF.Executable.SwitchLong class, for an argument obeying a "--key" schema.
+    """Bio.BSF.Argument.SwitchLong class, for an argument obeying a "--key" schema.
 
     Attributes:
     """
 
     def __init__(self, key):
 
-        """Initialise a Bio.BSF.Executable.SwitchLong object.
+        """Initialise a Bio.BSF.Argument.SwitchLong object.
 
         :param key: Key
         :type key: str
@@ -150,14 +150,14 @@ class SwitchLong(Switch):
 
 class SwitchShort(Switch):
 
-    """Bio.BSF.Executable.SwitchShort class, for an argument obeying a "-k" schema.
+    """Bio.BSF.Argument.SwitchShort class, for an argument obeying a "-k" schema.
 
     Attributes:
     """
 
     def __init__(self, key):
 
-        """Initialise a Bio.BSF.Executable.SwitchShort object.
+        """Initialise a Bio.BSF.Argument.SwitchShort object.
 
         :param key: Key
         :type key: str
@@ -170,7 +170,7 @@ class SwitchShort(Switch):
 
 class Option(Switch):
 
-    """Bio.BSF.Executable.Option class for arguments obeying a "--key value" or "-k value" schema.
+    """Bio.BSF.Argument.Option class for arguments obeying a "--key value" or "-k value" schema.
 
     Attributes:
     :ivar is_pair: A KEY=VALUE pair
@@ -181,7 +181,7 @@ class Option(Switch):
 
     def __init__(self, key, value, is_long=False, is_pair=False):
 
-        """Initialise a Bio.BSF.Executable.Option object.
+        """Initialise a Bio.BSF.Argument.Option object.
 
         :param key: Key
         :type key: str
@@ -210,14 +210,14 @@ class Option(Switch):
 
 class OptionLong(Option):
 
-    """Bio.BSF.Executable.OptionLong class, representing an argument obeying a "--key value" schema.
+    """Bio.BSF.Argument.OptionLong class, representing an argument obeying a "--key value" schema.
 
     Attributes:
     """
 
     def __init__(self, key, value):
 
-        """Initialise a Bio.BSF.Executable.OptionLong object.
+        """Initialise a Bio.BSF.Argument.OptionLong object.
 
         :param key: Key
         :type key: str
@@ -232,14 +232,14 @@ class OptionLong(Option):
 
 class OptionShort(Option):
 
-    """Bio.BSF.Executable.OptionShort class, representing an argument obeying a "-k value" schema.
+    """Bio.BSF.Argument.OptionShort class, representing an argument obeying a "-k value" schema.
 
     Attributes:
     """
 
     def __init__(self, key, value):
 
-        """Initialise a Bio.BSF.Executable.OptionShort object.
+        """Initialise a Bio.BSF.Argument.OptionShort object.
 
         :param key: Key
         :type key: str
@@ -254,7 +254,7 @@ class OptionShort(Option):
 
 class OptionPair(Option):
 
-    """Bio.BSF.Executable.OptionPair class, for an argument obeying a KEY=VALUE schema.
+    """Bio.BSF.Argument.OptionPair class, for an argument obeying a KEY=VALUE schema.
 
     Although the KEY=VALUE expressions could be added as simple arguments, the benefit
     of having a specific sub-class is the tracking of the key in the Bio.BSF:Command.options
@@ -265,7 +265,7 @@ class OptionPair(Option):
 
     def __init__(self, key, value):
 
-        """Initialise a Bio.BSF.Executable.OptionPair object.
+        """Initialise a Bio.BSF.Argument.OptionPair object.
 
         :param key: Key
         :type key: str
