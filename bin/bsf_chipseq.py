@@ -27,7 +27,7 @@
 
 import argparse
 
-from Bio.BSF.Analysis import ChIPSeq
+from Bio.BSF.Analyses import ChIPSeq
 
 
 parser = argparse.ArgumentParser(description='ChIP-Seq analysis driver script.')

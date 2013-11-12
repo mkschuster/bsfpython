@@ -114,7 +114,7 @@ class RunInformation(object):
 
         # Parse meta-information about the Illumina run
 
-        run_identifier = run_info_root.find('Run').attrib['ID']  # e.g. 130724_SN815_0089_BC26JBACXX
+        run_identifier = run_info_root.find('Run').attrib['Id']  # e.g. 130724_SN815_0089_BC26JBACXX
         run_number = run_info_root.find('Run').attrib['Number']  # e.g. 91
         flow_cell = run_info_root.find('Run/Flowcell').text  # e.g. C26JBACXX
         instrument = run_info_root.find('Run/Instrument').text  # e.g. SN815
@@ -125,16 +125,27 @@ class RunInformation(object):
         reads = list()
 
         for xml_read in xml_list_reads:
+
+            is_index = bool(0)
+
+            if xml_read.attrib['IsIndexedRead'] == 'Y':
+                is_index = True
+            elif xml_read.attrib['IsIndexedRead'] == 'N':
+                is_index = False
+            else:
+                warning = 'Unexpected value {} in Read element attribute IsIndexedRead '. \
+                    format(xml_read.attrib['IsIndexedRead'])
+                warnings.warn(warning)
+
             reads.append(RunInformationRead(number=int(xml_read.attrib['Number']),
                                             cycles=int(xml_read.attrib['NumCycles']),
-                                            index=bool(xml_read.attrib['IsIndexedRead'])))
+                                            index=is_index))
 
         reads.sort(key=lambda read: read.number)
-        # reads.sort(cmp=lambda x, y: cmp(x.number, y.number))
 
         # Warn if there is not at least one non-index read.
 
-        non_index_reads = filter(function_or_none=lambda read: not read.index, sequence=reads)
+        non_index_reads = filter(lambda read: not read.index, reads)
         if len(non_index_reads) == 0:
             message = 'No non-index read in Illumina RunInformation {}'.format(file_path)
             warnings.warn(message, UserWarning)
@@ -313,6 +324,17 @@ class RunParameters(object):
         """
 
         return self.element_tree.getroot().find('ExperimentName').text
+
+    def get_flow_cell_barcode(self):
+
+        """Get the flow-cell barcode of a BSF Illumina Run Parameters object.
+        :param self: BSF Run Parameters
+        :type self: RunParameters
+        :return: Flow-cell barcode e.g BSF_0001
+        :rtype: str
+        """
+
+        return self.element_tree.getroot().find('Barcode').text
 
     def get_flow_cell_type(self):
 

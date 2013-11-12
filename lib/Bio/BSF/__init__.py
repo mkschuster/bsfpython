@@ -806,6 +806,10 @@ class Default(object):
     Attributes:
     :cvar global_default: Global BSF Default
     :type global_default: Default
+    :ivar classpath_picard: Picard JAVA Archive (JAR) class path directory
+    :type classpath_picard: str, unicode
+    :ivar classpath_illumina2bam: Illumina2bam JAVA Archive (JAR) class path directory
+    :type classpath_illumina2bam: str, unicode
     :ivar directory_data: Root directory for all data
     :type directory_data: str, unicode
     :ivar directory_lanes: Sub-directory for processed lanes
@@ -820,8 +824,6 @@ class Default(object):
     :type directory_genomes: str, unicode
     :ivar directory_annotations: Sub-directory for genome annotations
     :type directory_annotations: str, unicode
-    :ivar directory_picard: Picard JAVA Archive (JAR) class path directory
-    :type directory_picard: str, unicode
     :ivar indices: Python dict of program name key and index directory name value data
     :type indices: dict
     :ivar drms_implementation: DRMS implementation (e.g. Bash, SGE)
@@ -920,6 +922,8 @@ class Default(object):
         return default
 
     def __init__(self,
+                 classpath_picard=None,
+                 classpath_illumina2bam=None,
                  directory_data=None,
                  directory_runs=None,
                  directory_lanes=None,
@@ -928,7 +932,6 @@ class Default(object):
                  directory_public_html=None,
                  directory_genomes=None,
                  directory_annotations=None,
-                 directory_picard=None,
                  indices=None,
                  drms_implementation=None,
                  drms_maximum_threads=None,
@@ -948,6 +951,10 @@ class Default(object):
 
         :param self: BSF Default
         :type self: Default
+        :param classpath_picard: PICARD JAVA Archive (JAR) class path directory
+        :type classpath_picard: str, unicode
+        :param classpath_illumina2bam: Illumina2bam JAVA Archive (JAR) class path directory
+        :type classpath_illumina2bam: str, unicode
         :param directory_data: Root directory for all data
         :type directory_data: str, unicode
         :param directory_runs: Sub-directory for (Illumina) runs
@@ -964,8 +971,6 @@ class Default(object):
         :type directory_genomes: str, unicode
         :param directory_annotations: Sub-directory for genome annotations
         :type directory_annotations: str, unicode
-        :param directory_picard: PICARD JAVA Archive (JAR) class path directory
-        :type directory_picard: str, unicode
         :param indices: Python dict of program name key and index directory name value data
         :type indices: dict
         :param drms_implementation: DRMS implementation (e.g. Bash, SGE)
@@ -997,6 +1002,18 @@ class Default(object):
         :return: Nothing
         :rtype: None
         """
+
+        # Set JAVA classpath information.
+
+        if classpath_illumina2bam:
+            self.classpath_illumina2bam = classpath_illumina2bam
+        else:
+            self.classpath_illumina2bam = str()
+
+        if classpath_picard:
+            self.classpath_picard = classpath_picard
+        else:
+            self.classpath_picard = str()
 
         # Set directory information.
 
@@ -1039,11 +1056,6 @@ class Default(object):
             self.directory_annotations = directory_annotations
         else:
             self.directory_annotations = str()
-
-        if directory_picard:
-            self.directory_picard = directory_picard
-        else:
-            self.directory_picard = str()
 
         # Set index information.
 
@@ -1143,6 +1155,11 @@ class Default(object):
         # Reading configuration cannot be done via a single Python dict,
         # because each option really needs defining.
 
+        section = 'classpath'
+
+        self.classpath_illumina2bam = cp.get(section=section, option='illumina2bam')
+        self.classpath_picard = cp.get(section=section, option='picard')
+
         section = 'directories'
 
         self.directory_data = cp.get(section=section, option='data')
@@ -1153,7 +1170,6 @@ class Default(object):
         self.directory_public_html = cp.get(section=section, option='public_html')
         self.directory_genomes = cp.get(section=section, option='genomes')
         self.directory_annotations = cp.get(section=section, option='annotations')
-        self.directory_picard = cp.get(section=section, option='picard')
 
         section = 'indices'
 
@@ -1450,7 +1466,7 @@ class DRMS(object):
         :rtype: DRMS
         """
 
-        # assert isinstance(analysis, Analysis)
+        assert isinstance(analysis, Analysis)
 
         # Set a minimal set of global defaults.
 
@@ -1773,7 +1789,7 @@ class DRMS(object):
         :rtype: None
         """
 
-        # assert isinstance(executable, Executable)
+        assert isinstance(executable, Executable)
 
         self.executables.append(executable)
 
@@ -2177,7 +2193,7 @@ class Executable(Command):
         :rtype: Executable
         """
 
-        # assert isinstance(analysis, Analysis)
+        assert isinstance(analysis, Analysis)
 
         # Initialise a BSF Executable object with default values.
 
@@ -2248,7 +2264,7 @@ class Executable(Command):
         :param stderr: Standard error (STDERR) redirection in Bash (2>word)
         :type stderr: str, unicode
         :param dependencies: Python list of BSF Executable
-        name strings in the context of BSF DRMS dependencies
+         name strings in the context of BSF DRMS dependencies
         :type dependencies: list
         :param hold: Hold on job scheduling
         :type hold: str
@@ -2262,13 +2278,8 @@ class Executable(Command):
 
         self.name = name
 
-        # TODO: Python confuses the class Executable defined in this module with the
-        # Bio.BSF.Executable.__init__py module. Why?
-        # super(Executable, self).__init__(command=program, options=options, arguments=arguments,
-        #                                  sub_command=sub_command)
-
-        Command.__init__(self, command=program, options=options, arguments=arguments,
-                         sub_command=sub_command)
+        super(Executable, self).__init__(command=program, options=options, arguments=arguments,
+                                         sub_command=sub_command)
 
         if stderr:
             self.stderr = stderr
@@ -2339,11 +2350,7 @@ class Executable(Command):
 
         # Trace the Command super-class.
 
-        # TODO: Python confuses the class Executable defined in this module with the
-        # Bio.BSF.Executable.__init__py module. Why?
-        # output += super(Executable, self).trace(level=level + 1)
-
-        output += Command.trace(self, level=level + 1)
+        output += super(Executable, self).trace(level=level + 1)
 
         return output
 
@@ -2359,11 +2366,7 @@ class Executable(Command):
 
         command = list()
 
-        # TODO: Python confuses the class Executable defined in this module with the
-        # Bio.BSF.Executable.__init__py module. Why?
-        # command.extend(super(Executable,self).command_list())
-
-        command.extend(Command.command_list(self))
+        command.extend(super(Executable,self).command_list())
 
         # Append stdout and stderr re-directions if defined.
         # TODO: This only works for Bash in SGE context.
@@ -2389,11 +2392,7 @@ class Executable(Command):
 
         command = str()
 
-        # TODO: Python confuses the class Executable defined in this module with the
-        # Bio.BSF.Executable.__init__py module. Why?
-        # command += ' ' + super(Executable, self).command_str()
-
-        command += Command.command_str(self)
+        command += super(Executable, self).command_str()
 
         # Append stdout and stderr re-directions if defined.
         # TODO: This only works for Bash in SGE context.

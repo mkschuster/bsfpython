@@ -35,7 +35,7 @@ import warnings
 
 from Bio.BSF import Analysis, Configuration, Default, Defaults, DRMS, Executable
 from Bio.BSF.Data import Collection, ProcessedRunFolder, Sample, SampleAnnotationSheet
-from Bio.BSF.Executable import Bowtie2, Macs14, Macs2Bdgcmp, Macs2Callpeak, Cuffdiff, Cufflinks, Cuffmerge, TopHat,\
+from Bio.BSF.Executables import Bowtie2, Macs14, Macs2Bdgcmp, Macs2Callpeak, Cuffdiff, Cufflinks, Cuffmerge, TopHat,\
     FastQC
 
 

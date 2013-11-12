@@ -33,6 +33,7 @@ import csv
 import errno
 import os.path
 import re
+import string
 import warnings
 
 from Bio.BSF import Analysis, Default, DRMS, Executable
@@ -41,7 +42,6 @@ from Bio.BSF.Illumina import RunFolder
 
 
 def _process_row_dict(barcode_dict, row_dict, prefix=None):
-
     """Private function to read fields from a Python row_dict object, index by the 'lane' field in the barcode_dict.
 
     :param barcode_dict: A Python dict of 'lane' key data and Python list objects of lane_dict value data
@@ -93,7 +93,6 @@ def _process_row_dict(barcode_dict, row_dict, prefix=None):
 
 
 def extract_illumina_barcodes(config_file):
-
     """Convert an Illumina Run Folder into BAM files.
 
     :param config_file: Configuration file
@@ -207,7 +206,7 @@ def extract_illumina_barcodes(config_file):
             else:
                 if bc1_length != bc_length:
                     # Barcode lengths do not match ...
-                    message = "The length {} of barcode 1 '{}' does not match the length ({}) of other barcodes.".\
+                    message = "The length {} of barcode 1 '{}' does not match the length ({}) of other barcodes.". \
                         format(bc_length, lane_dict['barcode_sequence_1'], bc1_length)
                     warnings.warn(message, UserWarning)
 
@@ -221,7 +220,7 @@ def extract_illumina_barcodes(config_file):
             else:
                 if bc2_length != bc_length:
                     # Barcode lengths do not match ...
-                    message = "The length {} of barcode 2 '{}' does not match the length ({}) of other barcodes.".\
+                    message = "The length {} of barcode 2 '{}' does not match the length ({}) of other barcodes.". \
                         format(bc_length, lane_dict['barcode_sequence_2'], bc2_length)
                     warnings.warn(message, UserWarning)
 
@@ -274,8 +273,8 @@ def extract_illumina_barcodes(config_file):
 
         eib.add_SwitchShort(key='Xmx6G')  # TODO: Make this configurable somewhere ...
 
-        if default.directory_picard:
-            eib.add_OptionShort(key='cp', value=default.directory_picard)
+        if default.classpath_picard:
+            eib.add_OptionShort(key='cp', value=default.classpath_picard)
 
         eib.add_OptionShort(key='jar', value='ExtractIlluminaBarcodes.jar')
 
@@ -290,11 +289,11 @@ def extract_illumina_barcodes(config_file):
         eib.arguments.append('METRICS_FILE={}'.format(metrics_path))
         if max_mismatches:
             eib.arguments.append('MAX_MISMATCHES={}').format()
-        # MIN_MISMATCH_DELTA
+            # MIN_MISMATCH_DELTA
         # MAX_NO_CALLS
         if min_base_quality:
             eib.arguments.append('MINIMUM_BASE_QUALITY={}'.format(min_base_quality))
-        # MINIMUM_QUALITY
+            # MINIMUM_QUALITY
         # COMPRESS_OUTPUTS for s_l_t_barcode.txt files
         eib.arguments.append('NUM_PROCESSORS={}'.format(int(eib_drms.threads)))
         eib.arguments.append('COMPRESS_OUTPUTS=TRUE')
@@ -309,8 +308,8 @@ def extract_illumina_barcodes(config_file):
 
         ibs.add_SwitchShort(key='Xmx6G')  # TODO: Make this configurable somewhere ...
 
-        if default.directory_picard:
-            ibs.add_OptionShort(key='cp', value=default.directory_picard)
+        if default.classpath_picard:
+            ibs.add_OptionShort(key='cp', value=default.classpath_picard)
 
         ibs.add_OptionShort(key='jar', value='IlluminaBasecallsToSam.jar')
 
@@ -330,7 +329,6 @@ def extract_illumina_barcodes(config_file):
 
 
 def picard_sam_to_fastq(analysis):
-
     """Convert a [BS]AM file into FASTQ format.
 
     :param analysis: BSF Analysis
@@ -430,8 +428,8 @@ def picard_sam_to_fastq(analysis):
                 # Set Picard SamToFastq options.
 
                 stf.add_SwitchShort(key='Xmx4G')
-                if default.directory_picard:
-                    stf.add_OptionShort(key='cp', value=default.directory_picard)
+                if default.classpath_picard:
+                    stf.add_OptionShort(key='cp', value=default.classpath_picard)
                 stf.add_OptionShort(key='jar', value='SamToFastq.jar')
 
                 stf.arguments.append('INPUT={}'.format(paired_reads.reads1.file_path))
@@ -466,17 +464,21 @@ def picard_sam_to_fastq(analysis):
                 # READ2_MAX_BASES_TO_WRITE
                 # INCLUDE_NON_PRIMARY_ALIGNMENTS
 
-    # TODO: Try a new strategy to pass in a complete Analysis object to allow simpler chaining of Analyses.
-    # TODO: Maybe this could be used to pass in an ChIPSeq or RNASeq Analysis object...
-    # TODO: The problem is that a BSF Collection may contain more BSF Project and BSF Sample objects
-    # than strictly required for the Analysis in question.
-    # TODO: We could use a standard directory for data conversion and check if files are already there.
-    # A raw_data folder under the analysis.project_directory could work.
+                # TODO: Try a new strategy to pass in a complete Analysis object to allow simpler chaining of Analyses.
+                # TODO: Maybe this could be used to pass in an ChIPSeq or RNASeq Analysis object...
+                # TODO: The problem is that a BSF Collection may contain more BSF Project and BSF Sample objects
+                # than strictly required for the Analysis in question.
+                # TODO: We could use a standard directory for data conversion and check if files are already there.
+                # A raw_data folder under the analysis.project_directory could work.
 
 
 def illumina_to_bam(analysis):
+    """Convert an Illumina flow-cell into lane-specific archive BAM files.
 
-    """Convert an Illumina flow-cell into one archive BAM file per lane.
+    To convert an Illumina flow cell, Illumina2bam is run first, setting the SAM Read Group (@RG)
+    library name (LB) and sample name (SM) to 'flow-cell identifier.lane'.
+    The resulting archive BAM file is then sorted by query name with Picard SortSam.
+    Depends on the bsf_illumina2bam.sh Bash script to run this efficiently.
     :param analysis: BSF Analysis
     :type analysis: Analysis
     :return: Nothing
@@ -490,15 +492,7 @@ def illumina_to_bam(analysis):
 
     default = Default.get_global_default()
 
-    # Load the default and override from the configuration file if available.
-
-    if config_parser.has_option(section=config_section, option='sequencing_centre'):
-        sequencing_centre = config_parser.get(section=config_section, option='sequencing_centre')
-    else:
-        sequencing_centre = str()
-
-    if not sequencing_centre:
-        sequencing_centre = default.operator_sequencing_centre
+    # Load from the configuration file and override with the defaults if necessary.
 
     # Get the Illumina Run Folder
 
@@ -506,33 +500,192 @@ def illumina_to_bam(analysis):
     illumina_run_folder = os.path.expanduser(path=illumina_run_folder)
     illumina_run_folder = os.path.expandvars(path=illumina_run_folder)
     if not os.path.isabs(illumina_run_folder):
-        os.path.join(Default.absolute_runs(), illumina_run_folder)
-
+        illumina_run_folder = os.path.join(Default.absolute_runs(), illumina_run_folder)
     irf = RunFolder.from_file_path(file_path=illumina_run_folder)
 
-    itb_drms = DRMS.from_Analysis(name='IlluminaToBam',
-                                  work_directory=analysis.output_directory,
+    # The experiment name (e.g. BSF_0000) is used as the prefix for archive BAM files.
+    # Read it from the configuration file or from the
+    # Run Parameters of the Illumina Run Folder.
+    if config_parser.has_option(section=config_section, option='experiment_name'):
+        experiment_name = config_parser.get(section=config_section, option='experiment_name')
+    else:
+        experiment_name = str()
+    if not experiment_name:
+        experiment_name = irf.run_parameters.get_experiment_name()
+
+    # Get the sequencing centre
+    if config_parser.has_option(section=config_section, option='sequencing_centre'):
+        sequencing_centre = config_parser.get(section=config_section, option='sequencing_centre')
+    else:
+        sequencing_centre = str()
+    if not sequencing_centre:
+        sequencing_centre = default.operator_sequencing_centre
+
+    if config_parser.has_option(section=config_section, option='classpath_illumina2bam'):
+        classpath_illumina2bam = config_parser.get(section=config_section, option='classpath_illumina2bam')
+    else:
+        classpath_illumina2bam = str()
+    if not classpath_illumina2bam:
+        classpath_illumina2bam = default.classpath_illumina2bam
+
+    if config_parser.has_option(section=config_section, option='classpath_picard'):
+        classpath_picard = config_parser.get(section=config_section, option='classpath_picard')
+    else:
+        classpath_picard = str()
+    if not classpath_picard:
+        classpath_picard = default.classpath_picard
+
+    itb_drms = DRMS.from_Analysis(name='illumina_to_bam',
+                                  work_directory=analysis.project_directory,
                                   analysis=analysis)
 
     analysis.drms_list.append(itb_drms)
 
-    for lane in range(1, 8):
+    for lane in range(1, 9):
 
-        itb = Executable(name='illumina_to_bam_{}'.format(lane), program='java')
+        itb = Executable(name='illumina_to_bam_{}'.format(lane), program='bsf_illumina2bam.sh')
 
         itb_drms.add_Executable(executable=itb)
 
-        itb.add_SwitchShort(key='Xmx4g')
-        itb.add_OptionShort(key='jar', value="${NGS_ILLUMINA2BAM}/Illumina2bam.jar")  # TODO: Fix this.
-        itb.add_OptionPair(key='INTENSITY_DIR', value=os.path.join(analysis.input_directory,
-                                                                   'Data', 'Intensities'))
-        itb.add_OptionPair(key='LANE', value=str(lane))
-        itb.add_OptionPair(key='OUTPUT', value='{output}_{}.bam'.format(lane))  # TODO: Fix this.
-        itb.add_OptionPair(key='GENERATE_SECONDARY_BASE_CALLS', value='false')
-        itb.add_OptionPair(key='PF_FILTER', value='false')
-        itb.add_OptionPair(key='READ_GROUP_ID', value='{}.{}'.format(irf.run_information.flow_cell, lane))
-        itb.add_OptionPair(key='LIBRARY_NAME', value='{}.{}'.format(irf.run_information.flow_cell, lane))
-        itb.add_OptionPair(key='SEQUENCING_CENTER', value=sequencing_centre)
-        itb.add_OptionPair(key='CREATE_INDEX', value='false')
-        itb.add_OptionPair(key='CREATE_MD5_FILE', value='true')
-        itb.add_OptionPair(key='VERBOSITY', value='WARNING')
+        itb.arguments.append(illumina_run_folder)
+        itb.arguments.append(str(lane))
+        itb.arguments.append(sequencing_centre)
+        itb.arguments.append(experiment_name)
+        itb.arguments.append(os.path.join(classpath_illumina2bam, 'Illumina2bam.jar'))
+        itb.arguments.append(os.path.join(classpath_picard, 'SortSam.jar'))
+
+
+def bam_index_decoder(analysis):
+    """Decode an archive BAM file produced with Illumina2bam into sample-specific BAM files.
+
+    :param analysis: BSF Analysis
+    :type analysis: Analysis
+    :return: Nothing
+    :rtype: None
+    """
+
+    # The standard GATK *comma-separated* value sample sheet needs to be transformed into
+    # a Picard *tab-separated* value sample sheet.
+    # lane, barcode_sequence_1, barcode_sequence_2, sample_name, library_name
+    # barcode_sequence, barcode_name, library_name, sample_name, description
+
+    assert isinstance(analysis, Analysis)
+
+    config_parser = analysis.configuration.config_parser
+    config_section = analysis.configuration.section_from_instance(analysis)
+
+    default = Default.get_global_default()
+
+    # Load from the configuration file and override with the default if necessary.
+
+    if config_parser.has_option(section=config_section, option='classpath_illumina2bam'):
+        illumina2bam = config_parser.get(section=config_section, option='classpath_illumina2bam')
+    else:
+        illumina2bam = str()
+
+    if not illumina2bam:
+        illumina2bam = default.classpath_illumina2bam
+
+    # if config_parser.has_option(section=config_section, option='prefix'):
+    #     prefix = config_parser.get(section=config_section, option='prefix')
+
+    # The sample annotation sheet is deliberately not passed in via sas_file,
+    # as the Analysis.run method reads that option into a BSF Collection object.
+    if config_parser.has_option(section=config_section, option='library_file'):
+        library_file = config_parser.get(section=config_section, option='library_file')
+    else:
+        message = 'Require a library_file option in the configuration file.'
+        raise Exception(message)
+
+    bid_drms = DRMS.from_Analysis(name='bam_index_decoder',
+                                  work_directory=analysis.project_directory,
+                                  analysis=analysis)
+
+    analysis.drms_list.append(bid_drms)
+
+    index_by_lane = dict()
+
+    field_names_1 = ['lane', 'barcode_sequence_1', 'barcode_sequence_2', 'sample_name', 'library_name']
+    field_names_2 = ['barcode_sequence', 'barcode_name', 'library_name', 'sample_name', 'description']
+    field_names_3 = ['ProcessedRunFolder', 'Project', 'Sample', 'Reads1', 'File1']
+
+    sas = SampleAnnotationSheet(file_path=library_file, field_names=field_names_1)
+
+    sas.csv_reader_open()
+
+    for row_dict in sas._csv_reader:
+
+        if row_dict['lane'] in index_by_lane:
+            lane_list = index_by_lane[row_dict['lane']]
+        else:
+            lane_list = list()
+            index_by_lane[row_dict['lane']] = lane_list
+
+        lane_list.append(row_dict)
+
+    sas.csv_reader_close()
+
+    sample_csv_file = open(name='{}_samples.csv'.format(analysis.project_name), mode='wb')
+    sample_csv_writer = csv.DictWriter(f=sample_csv_file, fieldnames=field_names_3)
+    sample_csv_writer.writeheader()
+
+    keys = index_by_lane.keys()
+    keys.sort(cmp=lambda x, y: cmp(x, y))
+
+    for key in keys:
+
+        # file_name_metrics = os.path.join(analysis.genome_directory, '{}_{}_metrics.txt'.format(prefix, key))
+        file_name_barcode = os.path.join(analysis.genome_directory,
+                                         '{}_{}_barcode.csv'.format(analysis.project_name, key))
+
+        file_handle_barcode = open(name=file_name_barcode, mode='w')
+        file_handle_barcode.write(string.join(words=field_names_2, sep='\t') + '\n')
+
+        for row_dict in index_by_lane[key]:
+
+            # Write the lane-specific tab-delimited Picard barcode file.
+            file_handle_barcode.write(string.join(words=(row_dict['barcode_sequence_1']
+                                                         + row_dict['barcode_sequence_2'],
+                                                         row_dict['sample_name'],
+                                                         row_dict['library_name'],
+                                                         row_dict['sample_name'], ''), sep='\t') + '\n')
+
+            # Write the flow-cell-specific sample annotation sheet.
+            sample_dict = dict()
+            sample_dict['ProcessedRunFolder'] = analysis.project_name
+            sample_dict['Project'] = row_dict['library_name']
+            sample_dict['Sample'] = row_dict['sample_name']
+            sample_dict['Reads1'] = row_dict['sample_name']
+            sample_dict['File1'] = os.path.join(analysis.genome_directory,
+                                                '{}_{}_samples'.format(analysis.project_name, key),
+                                                '{}_{}#{}.bam'.format(analysis.project_name, key,
+                                                                      row_dict['sample_name']))
+
+            sample_csv_writer.writerow(rowdict=sample_dict)
+
+        file_handle_barcode.close()
+
+        # bid = Executable(name='bam_index_decoder_{}_{}'.format(prefix, key), program='java')
+        #
+        # bid_drms.add_Executable(executable=bid)
+        #
+        # bid.add_OptionShort(key='cp', value=illumina2bam)
+        # bid.add_OptionShort(key='jar', value='BamIndexDecoder.jar')
+        # bid.add_OptionPair(key='INPUT', value='{}_{}_sorted.bam'.format(analysis.project_name, key))
+        # bid.add_OptionPair(key='OUTPUT_DIR', value='{}_{}_samples'.format(analysis.project_name, key))
+        # bid.add_OptionPair(key='OUTPUT_PREFIX', value='')  # TODO: Fix this.
+        # bid.add_OptionPair(key='OUTPUT_FORMAT', value='bam')
+        # bid.add_OptionPair(key='BARCODE_FILE', value=file_name_barcode)
+        # bid.add_OptionPair(key='METRICS_FILE', value=file_name_metrics)
+        # bid.add_OptionPair(key='CREATE_MD5_FILE', value='true')
+        # bid.add_OptionPair(key='VERBOSITY', value='WARNING')
+
+        bid = Executable(name='bam_index_decoder_{}_{}'.format(analysis.project_name, key),
+                         program='bsf_bam_index_decoder.sh')
+
+        bid_drms.add_Executable(executable=bid)
+
+        bid.arguments.append('{}_{}'.format(analysis.project_name, key))
+        bid.arguments.append(os.path.join(illumina2bam, 'BamIndexDecoder.jar'))
+
+    sample_csv_file.close()

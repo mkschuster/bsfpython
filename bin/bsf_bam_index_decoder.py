@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# BSF Python driver script for the conversion of BAM files into FASTQ format.
+# BSF Python script to drive the Illumina2bam BamIndexDecoder analysis.
 #
 #
 # Copyright 2013 Michael K. Schuster
@@ -26,16 +26,18 @@
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
+import os.path
 
-from Bio.BSF.Analyses import RunBamToFastq
+from Bio.BSF import Analysis, Default
+from Bio.BSF.Analyses.picard import bam_index_decoder
 
 
-parser = argparse.ArgumentParser(description='BAM To FASTQ analysis driver script.')
+parser = argparse.ArgumentParser(description='Illumina2bam BamIndexDecoder analysis driver script.')
 
 parser.add_argument('--debug', required=False, type=int,
                     help='Debug level')
 
-parser.add_argument('--stage', required=False,
+parser.add_argument('--stage', dest='stage', required=False,
                     help='Limit job submission to a particular Analysis stage')
 
 parser.add_argument('configuration',
@@ -43,20 +45,29 @@ parser.add_argument('configuration',
 
 args = parser.parse_args()
 
-# Create a RunBamToFastq BSF Analysis and run it.
+# Create a BSF Analysis and run it.
 
-bam2fastq = RunBamToFastq.from_config_file(config_file=args.configuration)
+bid = Analysis.from_config_file(config_file=args.configuration)
 
 if args.debug:
-    bam2fastq.debug = args.debug
+    bid.debug = args.debug
 
-bam2fastq.run()
+# The Analysis has to use the default lanes directory, before it can run.
+
+bid.output_directory = os.path.expanduser(path=bid.output_directory)
+bid.output_directory = os.path.expandvars(path=bid.output_directory)
+
+if not os.path.isabs(bid.output_directory):
+    bid.output_directory = os.path.join(Default.absolute_lanes(), bid.output_directory)
+
+bid.run()
+bam_index_decoder(bid)  # TODO: Find a better solution?
 
 # Submit all Executable objects of all Distributed Resource Management System objects.
 
 submit = 0
 
-for drms in bam2fastq.drms_list:
+for drms in bid.drms_list:
 
     if args.stage:
         if args.stage == drms.name:
@@ -64,23 +75,25 @@ for drms in bam2fastq.drms_list:
         else:
             continue
 
-    drms.submit(debug=bam2fastq.debug)
+    drms.submit(debug=bid.debug)
 
-    if bam2fastq.debug:
+    if bid.debug:
         print repr(drms)
         print drms.trace(1)
 
 if args.stage:
     if args.stage == 'report':
+        bid.report()
         pass
     elif not submit:
-        name_list = [drms.name for drms in bam2fastq.drms_list, 'report']
+        name_list = [drms.name for drms in bid.drms_list]
+        name_list.append('report')
         print 'Valid Analysis stages are: {!r}'.format(name_list)
 
-print 'RunBamToFastq Analysis'
-print 'Project name:      ', bam2fastq.project_name
-print 'Genome version:    ', bam2fastq.genome_version
-print 'Input directory:   ', bam2fastq.input_directory
-print 'Output directory:  ', bam2fastq.output_directory
-print 'Project directory: ', bam2fastq.project_directory
-print 'Genome directory:  ', bam2fastq.genome_directory
+print 'BamIndexDecoder Analysis'
+print 'Project name:      ', bid.project_name
+print 'Genome version:    ', bid.genome_version
+print 'Input directory:   ', bid.input_directory
+print 'Output directory:  ', bid.output_directory
+print 'Project directory: ', bid.project_directory
+print 'Genome directory:  ', bid.genome_directory

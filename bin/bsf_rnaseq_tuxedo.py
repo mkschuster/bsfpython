@@ -27,7 +27,7 @@
 
 import argparse
 
-from Bio.BSF.Analysis import RNASeq
+from Bio.BSF.Analyses import RNASeq
 
 
 parser = argparse.ArgumentParser(description='RNA-Seq analysis driver script.')

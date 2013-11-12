@@ -1,7 +1,21 @@
 #! /bin/bash
 #
+# BSF GNU Bourne-Again (Bash) script to convert an (unmapped) BAM file
+# into FASTQ files via Picard SamToFastq and to compress them with GNU Gzip.
+#
+# Usage: bsf_bam2fastq.sh <bam_file> [prefix]
+#   bam_file: The path to the BAM file ot be converted
+#   prefix: An optional prefix for the FASTQ files, _R1_001.fastq and
+#           _R2_001.fastq get appended.
+#           If not specified, built from the bam_file parameter by removing
+#           .bam and [._]unmapped are removed from the end.
+#   output_directory: The directory in which to place the FASTQ files.
+#                     Defaults to the directory name of the bam_file parameter.
+#
+#
 # Copyright 2013 Michael Schuster
-# CeMM - Research Center for Molecular Medicine of the Austrian Academy of Sciences
+# CeMM - Research Center for Molecular Medicine of the
+# Austrian Academy of Sciences
 #
 # This file is part of BSF Python.
 #
@@ -17,19 +31,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# BSF GNU Bourne-Again (Bash) script to convert an (unmapped) BAM file
-# into FASTQ files via Picard SamToFastq and compress them with GNU Gzip.
-#
-# Usage: bsf_bam2fastq.sh <bam_file> [prefix]
-#   bam_file: The path to the BAM file ot be converted
-#   prefix: An optional prefix for the FASTQ files, _R1_001.fastq and
-#           _R2_001.fastq get appended.
-#           If not specified, built from the bam_file parameter by removing
-#           .bam and [._]unmapped are removed from the end.
-#   output_directory: The directory in which to place the FASTQ files.
-#                     Defaults to the directory name of the bam_file parameter.
 
 if [ -z "${LANG}" ]; then
     declare -x LANG='C'

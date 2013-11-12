@@ -27,7 +27,7 @@
 
 import argparse
 
-from Bio.BSF.Analysis import RunFastQC
+from Bio.BSF.Analyses import RunFastQC
 
 
 parser = argparse.ArgumentParser(description='FastQC driver script.')

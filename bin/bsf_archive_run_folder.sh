@@ -1,7 +1,35 @@
 #! /bin/bash
 #
+# BSF GNU Bourne-Again (Bash) script to prepare an Illumina Run Folder
+# for a tape archive.
+#
+# 1. Check if the Illumina Run has finished by testing for an
+#    RTAComplete.txt file.
+# 2. Check if an archive process is already running by testing for an
+#    archive directory.
+# 3. Run the GNU tar utility over each Data/Intensities/L00[1-8] directory,
+#    before deleting the directory.
+# 4. Run the GNU tar utility over the remaining Data/Intensities directory,
+#    before deleting the directory.
+# 5. Run the GNU tar utility over the remaining Illumina Run folder.
+# 6. Record the archive file sizes via ls -la.
+#
+# Usage: bsf_archive_run_folder.sh run_folder [output_folder] [force]
+#
+#   run_folder: Path to the Illumina Run Folder
+#
+#   output_folder: Path to the output folder, in which an archive folder
+#                  will be created. If not specified, defaults to the current
+#                  working directory.
+#
+#   force: Forces archiving of incomplete run folders
+#          (RTAComplete.txt is missing) or a restart of archiving after an
+#          archive folder has already been created.
+#
+#
 # Copyright 2013 Michael Schuster
-# CeMM - Research Center for Molecular Medicine of the Austrian Academy of Sciences
+# CeMM - Research Center for Molecular Medicine of the
+# Austrian Academy of Sciences
 #
 # This file is part of BSF Python.
 #
@@ -17,28 +45,6 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
-#
-#
-# This Bash script archives Illumina Run Folders in several steps.
-#
-# 1. Check if the Illumina Run has finished by testing for an RTAComplete.txt file.
-# 2. Check if an archive process is already running by testing for an archive directory.
-# 3. Run the GNU tar utility over each Data/Intensities/L00[1-8] directory,
-#    before deleting the directory.
-# 4. Run the GNU tar utility over the remaining Data/Intensities directory,
-#    before deleting the directory.
-# 5. Run the GNU tar utility over the remaining Illumina Run folder.
-# 6. Record the archive file sizes via ls -la.
-#
-# Usage: bsf_archive_run_folder.sh run_folder [output_folder] [force]
-#
-#   run_folder: Path to the Illumina Run Folder
-#
-#   output_folder: Path to the output folder, in which an archive folder will be
-#                  created. If not specified, defaults to the current working directory.
-#
-#   force: Forces archiving of incomplete run folders (RTAComplete.txt is missing) or
-#          a restart of archiving after an archive folder has already been created.
 
 # Function definitions.
 
@@ -74,7 +80,7 @@ if [ "$#" -eq '0' ]; then
     exit 1
 fi
 
-declare run_folder="${1}"
+declare run_folder="${1%/}"
 shift
 
 if [ ! -d "${run_folder}" ]; then

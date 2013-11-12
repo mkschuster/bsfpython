@@ -1,11 +1,12 @@
 #! /bin/bash
 #
-# BSF GNU Bourne-Again (Bash) script to convert MACS2 bedGraph files into BigWig format and
-# BED files into the BigBED format.
+# BSF GNU Bourne-Again (Bash) script to convert MACS2 bedGraph files into
+# BigWig format and BED files into the BigBED format.
 #
 #
 # Copyright 2013 Michael Schuster
-# CeMM - Research Center for Molecular Medicine of the Austrian Academy of Sciences
+# CeMM - Research Center for Molecular Medicine of the
+# Austrian Academy of Sciences
 #
 # This file is part of BSF Python.
 #
