@@ -776,7 +776,7 @@ class Sample(object):
             paired_reads = PairedReads(reads1=reads)
             self.paired_reads.append(paired_reads)
 
-    def get_all_PairedReads(self, replicate_grouping):
+    def get_all_PairedReads(self, replicate_grouping, full=False):
 
         """Get all BSF PairedReads objects of a BSF Sample grouped or un-grouped.
 
@@ -791,6 +791,8 @@ class Sample(object):
         :param replicate_grouping: Group all BSF PairedReads objects of a BSF Sample or
          list them individually
         :type replicate_grouping: bool
+        :param full: Return the full name including read and chunk information.
+        :type full: bool
         :return: Python dict of Python str (sensible replicate name) key and
          Python list object of BSF PairedReads objects value data
         :rtype: dict
@@ -808,7 +810,7 @@ class Sample(object):
                 # If un-grouped use the Bio.BSF.Data.PairedReads.get_name() as key so that each
                 # BSF PairedReads object of this BSF Sample object ends up on a separate Python list
                 # object.
-                key = paired_reads.get_name()
+                key = paired_reads.get_name(full=full)
 
             if not key:
                 continue

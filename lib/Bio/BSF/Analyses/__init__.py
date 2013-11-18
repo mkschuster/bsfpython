@@ -3738,8 +3738,9 @@ class RunFastQC(Analysis):
             # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
             # Python str key and Python list of Python list objects
             # of Bio.BSF.Data.PairedReads objects.
+            # Since FastQC is run on each replicate this needs the full name.
 
-            replicate_dict = sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
+            replicate_dict = sample.get_all_PairedReads(replicate_grouping=replicate_grouping, full=True)
 
             replicate_keys = replicate_dict.keys()
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
