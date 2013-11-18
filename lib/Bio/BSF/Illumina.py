@@ -35,6 +35,36 @@ import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import ElementTree
 
 
+class RunInformationFlowcellLayout(object):
+
+    """BSF Illumina Run Information Flow-cell Layout class models
+    one <FlowcellLayout> element in a BSF Illumina Run Information (RunInfo.xml) document.
+    """
+
+    def __init__(self, lane_count=0, surface_count=0, swath_count=0, tile_count=0):
+
+        """Initialise a Bio.BSF.Data.Illumina.RunInformationFlowcellLayout object
+
+        :param self: Bio.BSF.Data.Illumina.RunInformationFlowcellLayout
+        :type self: RunInformationFlowcellLayout
+        :param lane_count: Number of lanes
+        :type lane_count: int
+        :param surface_count: Number of surfaces
+        :type surface_count: int
+        :param swath_count: Number of swaths
+        :type swath_count: int
+        :param tile_count: Number of tiles
+        :type tile_count: int
+        :return: Nothing
+        :rtype: None
+        """
+
+        self.lane_count = lane_count
+        self.surface_count = surface_count
+        self.swath_count = swath_count
+        self.tile_count = tile_count
+
+
 class RunInformationRead(object):
 
     """BSF Illumina Run Information Reads class.
@@ -152,16 +182,25 @@ class RunInformation(object):
 
         # Set a paired_end attribute if more than one read without index is defined?
 
+        # Get the Flow-Cell Layout.
+
+        xml_flow_cell_layout = run_info_root.find('Run/FlowcellLayout')
+        flow_cell_layout = RunInformationFlowcellLayout(
+            lane_count=int(xml_flow_cell_layout.attrib['LaneCount']),
+            surface_count=int(xml_flow_cell_layout.attrib['SurfaceCount']),
+            swath_count=int(xml_flow_cell_layout.attrib['SwathCount']),
+            tile_count=int(xml_flow_cell_layout.attrib['TileCount']))
+
         iri = cls(file_path=file_path, file_type='xml', name=file_name,
                   run_identifier=run_identifier, run_number=run_number,
                   flow_cell=flow_cell, instrument=instrument, date=date,
-                  reads=reads)
+                  reads=reads, flow_cell_layout=flow_cell_layout)
 
         return iri
 
     def __init__(self, file_path=None, file_type=None, name=None,
                  run_identifier=None, run_number=None, flow_cell=None, instrument=None, date=None,
-                 reads=None):
+                 reads=None, flow_cell_layout=None):
 
         """Initialise a Bio.BSF.Data.Illumina.RunInformation object.
 
@@ -185,6 +224,8 @@ class RunInformation(object):
         :type date: str
         :param reads: Python list of Bio.BSF.Data.Illumina.RunInformationRead objects
         :type reads: list
+        :param flow_cell_layout: Bio.BSF.Data.Illumina.RunInformationFlowcellLayout object
+        :type flow_cell_layout: RunInformationFlowcellLayout
         :return: Nothing
         :rtype: None
         """
@@ -233,6 +274,11 @@ class RunInformation(object):
             self.reads = reads
         else:
             self.reads = list()
+
+        if flow_cell_layout:
+            self.flow_cell_layout = flow_cell_layout
+        else:
+            self.flow_cell_layout = RunInformationFlowcellLayout()
 
     def picard_read_structure(self):
 

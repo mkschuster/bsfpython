@@ -21,6 +21,7 @@
       <w>fasta</w>
       <w>fastq</w>
       <w>fastqc</w>
+      <w>flowcell</w>
       <w>fpkm</w>
       <w>genomics</w>
       <w>gzip</w>

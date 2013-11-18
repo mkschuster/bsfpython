@@ -541,7 +541,7 @@ def illumina_to_bam(analysis):
 
     analysis.drms_list.append(itb_drms)
 
-    for lane in range(1, 9):
+    for lane in range(1, irf.run_information.flow_cell_layout.lane_count + 1):
 
         itb = Executable(name='illumina_to_bam_{}'.format(lane), program='bsf_illumina2bam.sh')
 
