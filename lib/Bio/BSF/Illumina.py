@@ -369,7 +369,7 @@ class RunParameters(object):
         :rtype: str
         """
 
-        return self.element_tree.getroot().find('ExperimentName').text
+        return self.element_tree.getroot().find('Setup/ExperimentName').text
 
     def get_flow_cell_barcode(self):
 
@@ -380,7 +380,7 @@ class RunParameters(object):
         :rtype: str
         """
 
-        return self.element_tree.getroot().find('Barcode').text
+        return self.element_tree.getroot().find('Setup/Barcode').text
 
     def get_flow_cell_type(self):
 
@@ -391,7 +391,7 @@ class RunParameters(object):
         :rtype: str
         """
 
-        return self.element_tree.getroot().find('Flowcell').text
+        return self.element_tree.getroot().find('Setup/Flowcell').text
 
     def get_position(self):
 
@@ -402,7 +402,7 @@ class RunParameters(object):
         :rtype: str
         """
 
-        return self.element_tree.getroot().find('FCPosition').text
+        return self.element_tree.getroot().find('Setup/FCPosition').text
 
     def get_run_identifier(self):
 
@@ -413,7 +413,7 @@ class RunParameters(object):
         :rtype: str
         """
 
-        return self.element_tree.getroot().find('RunID').text
+        return self.element_tree.getroot().find('Setup/RunID').text
 
 
 class RunFolder(object):
