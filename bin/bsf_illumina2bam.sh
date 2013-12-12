@@ -105,8 +105,8 @@ java  \
  OUTPUT="${prefix}_unsorted.bam"  \
  GENERATE_SECONDARY_BASE_CALLS='false'  \
  PF_FILTER='false'  \
- READ_GROUP_ID="${barcode}.${lane}"  \
- LIBRARY_NAME="${barcode}.${lane}"  \
+ READ_GROUP_ID="${barcode}_${lane}"  \
+ LIBRARY_NAME="${barcode}_${lane}"  \
  SEQUENCING_CENTER="${center}"  \
  TMP_DIR="${prefix}_temporary"  \
  VERBOSITY='WARNING'  \
