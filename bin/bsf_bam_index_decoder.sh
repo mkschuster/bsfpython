@@ -1,7 +1,7 @@
 #! /bin/bash
 #
-# BSF GNU Bourne-Again (Bash) script to decode an archive BAM file
-# into sample-specific BAM files.
+# BSF GNU Bourne-Again (Bash) script to decode an
+# Illumina2bam archive BAM file into sample-specific BAM files.
 #
 # Usage: bsf_bam_index_decoder.sh
 #   prefix                  # e.g. BSF_0052_D2C55ACXX_1
@@ -64,10 +64,19 @@ declare bam_index_decoder_jar="${2}"
 mkdir -p "${prefix}_temporary" || bsf_error
 mkdir -p "${prefix}_samples" || bsf_error
 
+# Work with sorted or unsorted archive BAM files, where sorted take precedence.
+
+declare input_file=''
+if [ -f "${prefix}_sorted.bam" ]; then
+    input_file="${prefix}_sorted.bam"
+elif [ -f "${prefix}_unsorted.bam" ]; then
+    input_file="${prefix}_unsorted.bam"
+fi
+
 java  \
  -Xmx4G  \
  -jar "${bam_index_decoder_jar}"  \
- INPUT="${prefix}_sorted.bam"  \
+ INPUT="${input_file}"  \
  OUTPUT_DIR="${prefix}_samples"  \
  OUTPUT_PREFIX="${prefix}"  \
  OUTPUT_FORMAT='bam'  \
