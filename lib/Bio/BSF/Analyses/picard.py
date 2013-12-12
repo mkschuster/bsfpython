@@ -418,6 +418,9 @@ def picard_sam_to_fastq(analysis):
                 # TODO: How could the FASTQ files be moved back into the collection?
                 # The paired_reads object in this scope would have to get Reads1 replaced and Reads2 added ...
 
+                # TODO: The solution could be to return a richer SampleAnnotationSheet object that points to the
+                # new data files and also contains a DRMS job dependency to wait for.
+
                 # TODO: How could the job dependency be communicated back to the analysis?
                 # Maybe there should be a Collection method to do the conversion in the context of an analysis?
 
@@ -543,7 +546,8 @@ def illumina_to_bam(analysis):
 
     for lane in range(1, irf.run_information.flow_cell_layout.lane_count + 1):
 
-        itb = Executable(name='illumina_to_bam_{}'.format(lane), program='bsf_illumina2bam.sh')
+        itb = Executable(name='illumina_to_bam_{}_{}'.format(irf.run_information.flow_cell, lane),
+                         program='bsf_illumina2bam.sh')
 
         itb_drms.add_Executable(executable=itb)
 
@@ -673,7 +677,7 @@ def bam_index_decoder(analysis):
         # bid.add_OptionShort(key='jar', value='BamIndexDecoder.jar')
         # bid.add_OptionPair(key='INPUT', value='{}_{}_sorted.bam'.format(analysis.project_name, key))
         # bid.add_OptionPair(key='OUTPUT_DIR', value='{}_{}_samples'.format(analysis.project_name, key))
-        # bid.add_OptionPair(key='OUTPUT_PREFIX', value='')  # TODO: Fix this.
+        # bid.add_OptionPair(key='OUTPUT_PREFIX', value='{}_{}'.format(analysis.project_name, key))
         # bid.add_OptionPair(key='OUTPUT_FORMAT', value='bam')
         # bid.add_OptionPair(key='BARCODE_FILE', value=file_name_barcode)
         # bid.add_OptionPair(key='METRICS_FILE', value=file_name_metrics)
