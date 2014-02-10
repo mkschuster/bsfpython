@@ -1895,11 +1895,11 @@ class Collection(object):
         return value, samples
 
 
-class SampleAnnotationSheet(object):
+class AnnotationSheet(object):
 
-    """BSF Sample Annotation Sheet class.
+    """BSF Annotation Sheet class.
 
-    The BSF SampleAnnotationSheet class represents comma-separated value (CSV) files.
+    The BSF AnnotationSheet class represents comma-separated value (CSV) files.
 
     Attributes:
     :ivar file_path: File path
@@ -1908,22 +1908,173 @@ class SampleAnnotationSheet(object):
     :type file_type: str
     :ivar name: Name
     :type name: str
+    :ivar field_names: Python list of field names
+    :type field_names: list
+    :ivar row_dicts: Python list of Python dict objects
+    :type row_dicts: list
     """
 
-    def __init__(self, file_path=None, file_type=None, name=None, field_names=None):
+    non_alpha_expression = re.compile(pattern='\W')
+    non_numeric_expression = re.compile(pattern='\D')
+    non_sequence_expression = re.compile(pattern='[^ACGTacgt]')
 
-        """Initialise a BSF SampleAnnotationSheet object.
+    @classmethod
+    def check_column(cls, row_number, row_dict, column_name):
 
-        :param self: BSF SampleAnnotationSheet
-        :type self: SampleAnnotationSheet
+        """Check for a column name and return its associated value, if any.
+
+        :param cls: Class
+        :type cls: Class
+        :param row_number: Row number for warning messages
+        :type row_number: int
+        :param row_dict: A Python dict of row entries of a Python csv object
+        :type row_dict: dict
+        :param column_name: Column name
+        :type column_name: str
+        :return: Tuple of warning message and column value
+        :rtype: tuple
+        """
+
+        message = str()
+
+        if column_name not in row_dict:
+            message += 'Column name {!r} not in dict for row {}.\n'.format(column_name, row_number)
+            return message, None
+
+        if not row_dict[column_name]:
+            message += 'Column name {!r} without value in row {}.\n'.format(column_name, row_number)
+            return message, None
+        else:
+            return message, row_dict[column_name]
+
+    @classmethod
+    def check_alphanumeric(cls, row_number, row_dict, column_name):
+
+        """Validate a particular column value as alphanumeric.
+
+         Check that the particular column name key exists in the row dictionary and that
+         its associated value contains only alphanumeric characters.
+
+        :param cls: Class
+        :type cls: Class
+        :param row_number: Row number for warning messages
+        :type row_number: int
+        :param row_dict: A Python dict of row entries of a Python csv object
+        :type row_dict: dict
+        :param column_name: Column name
+        :type column_name: str
+        :return: Warning messages
+        :rtype: str
+        """
+
+        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
+
+        if column_value:
+            match = re.search(pattern=cls.non_alpha_expression, string=row_dict[column_name])
+            if match:
+                messages += 'Column {!r} in row {} contains a value {!r} with non-alphanumeric characters.\n'. \
+                    format(column_name, row_number, row_dict[column_name])
+
+        return messages
+
+    @classmethod
+    def check_numeric(cls, row_number, row_dict, column_name):
+
+        """Validate a particular column value as numeric.
+
+         Check that the particular column name key exists in the row dictionary and that
+         its associated value contains only numeric characters.
+
+        :param cls: Class
+        :type cls: Class
+        :param row_number: Row number for warning messages
+        :type row_number: int
+        :param row_dict: A Python dict of row entries of a Python csv object
+        :type row_dict: dict
+        :param column_name: Column name
+        :type column_name: str
+        :return: Warning messages
+        :rtype: str
+        """
+
+        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
+
+        if column_value:
+            match = re.search(pattern=cls.non_numeric_expression, string=row_dict[column_name])
+            if match:
+                messages += 'Column {!r} in row {} contains a value {!r} with non-numeric characters.\n'. \
+                    format(column_name, row_number, row_dict[column_name])
+
+        return messages
+
+    @classmethod
+    def check_sequence(cls, row_number, row_dict, column_name):
+
+        """Validate a particular column value as sequence.
+
+        :param cls: Class
+        :type cls: Class
+        :param row_number: Row number for warning messages
+        :type row_number: int
+        :param row_dict: A Python dict of row entries of a Python csv object
+        :type row_dict: dict
+        :param column_name: Column name
+        :type column_name: str
+        :return: Warning messages
+        :rtype: str
+        """
+        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
+
+        if column_value:
+            match = re.search(pattern=cls.non_sequence_expression, string=row_dict[column_name])
+            if match:
+                messages += 'Field {!r} in row {} contains a sequence {!r} with illegal characters.\n'. \
+                    format(column_name, row_number, row_dict[column_name])
+
+        return messages
+
+    @classmethod
+    def read_from_file(cls, file_path=None, file_type=None, name=None):
+
+        """Construct an Annotation Sheet from a comma-separated value (CSV) file.
+
+        :param cls: Class
+        :type cls: Class
+        :param file_path: File path
+        :type file_path: str, unicode
+        :param file_type: File type (e.g. ...)
+        :type file_type: str
+        :return: BSF Annotation Sheet
+        :rtype: AnnotationSheet
+        """
+
+        annotation_sheet = cls(file_path=file_path, file_type=file_type, name=name)
+
+        annotation_sheet.csv_reader_open()
+
+        for row_dict in annotation_sheet._csv_reader:
+            annotation_sheet.row_dicts.append(row_dict)
+
+        annotation_sheet.csv_reader_close()
+
+        return annotation_sheet
+
+    def __init__(self, file_path=None, file_type=None, name=None, field_names=None, row_dicts=None):
+
+        """Initialise a BSF AnnotationSheet object.
+
+        :param self: BSF AnnotationSheet
+        :type self: AnnotationSheet
         :param file_path: File path
         :type file_path: str, unicode
         :param file_type: File type (e.g. ...)
         :type file_type: str
         :param name: Name
         :type name: str
-        :param field_names: Python list of filed names
+        :param field_names: Python list of field names
         :type field_names: list
+        :param row_dicts: Python list of Python dict objects
+        :type row_dicts: list
         :return: Nothing
         :rtype: None
         """
@@ -1948,25 +2099,48 @@ class SampleAnnotationSheet(object):
         else:
             self.field_names = list()
 
-    def csv_reader_open(self):
+        if row_dicts:
+            self.row_dicts = row_dicts
+        else:
+            self.row_dicts = list()
+
+    def csv_reader_open(self, header=True):
 
         """Open a Comma-Separated Value (CSV) file for reading and initialise a Python csv.DictWriter object.
 
-        :param self: BSF SampleAnnotationSheet
-        :type self: SampleAnnotationSheet
+        :param self: BSF AnnotationSheet
+        :type self: AnnotationSheet
+        :param header: A header line is present and populates the filed_names Python list.
+        :type header: bool
         :return: Nothing
         :rtype: None
         """
 
+        # Although the AnnotationSheet is initialised with an empty Python list object,
+        # the DictReader really needs None to automatically populate the fieldnames instance variable.
+        # However, the DictReader should always do so, if a header line is expected since
+        # otherwise, the header line would get repeated as data line.
+
+        if len(self.field_names) and not header:
+            field_names = self.field_names
+        else:
+            field_names = None
+
         self._csv_reader_file = open(name=self.file_path, mode='rb')
-        self._csv_reader = csv.DictReader(f=self._csv_reader_file)
+        self._csv_reader = csv.DictReader(f=self._csv_reader_file, fieldnames=field_names)
+
+        # Automatically set the field names from the DictReader,
+        # if the field_names list is empty and if possible.
+
+        if len(self._csv_reader.fieldnames) and not len(self.field_names):
+            self.field_names.extend(self._csv_reader.fieldnames)
 
     def csv_reader_next(self):
 
         """Read the next line of a CSV file.
 
-        :param self: BSF SampleAnnotationSheet
-        :type self: SampleAnnotationSheet
+        :param self: BSF AnnotationSheet
+        :type self: AnnotationSheet
         :return: Python dict of column key and row value data
         :rtype: dict
         """
@@ -1977,21 +2151,22 @@ class SampleAnnotationSheet(object):
 
         """Close a Comma-Separated Value (CSV) file for reading.
 
-        :param self: BSF SampleAnnotationSheet
-        :type self: SampleAnnotationSheet
+        :param self: BSF AnnotationSheet
+        :type self: AnnotationSheet
         :return: Nothing
         :rtype: None
         """
 
-        self._csv_reader_file.close()
         self._csv_reader = None
+        self._csv_reader_file.close()
+        self._csv_reader_file = None
 
     def read_tsv(self):
 
         """Read a Tab-Separated Value (TSV) file.
 
-        :param self: BSF SampleAnnotationSheet
-        :type self: SampleAnnotationSheet
+        :param self: BSF AnnotationSheet
+        :type self: AnnotationSheet
         :return: Nothing
         :rtype: None
         """
@@ -2014,8 +2189,8 @@ class SampleAnnotationSheet(object):
 
         """Open a Comma-Separated Value (CSV) file for writing and initialise a Python csv.DictWriter object.
 
-        :param self: BSF SampleAnnotationSheet
-        :type self: SampleAnnotationSheet
+        :param self: BSF AnnotationSheet
+        :type self: AnnotationSheet
         :return: Nothing
         :rtype: None
         """
@@ -2028,8 +2203,8 @@ class SampleAnnotationSheet(object):
 
         """Write the next line of a CSV file.
 
-        :param self: BSF SampleAnnotationSheet
-        :type self: SampleAnnotationSheet
+        :param self: BSF AnnotationSheet
+        :type self: AnnotationSheet
         :param row_dict: Row dictionary
         :type row_dict: dict
         :return: Nothing
@@ -2042,13 +2217,226 @@ class SampleAnnotationSheet(object):
 
         """Close a Comma-Separated Value (CSV) file for writing.
 
-        :param self: BSF SampleAnnotationSheet
-        :type self: SampleAnnotationSheet
+        :param self: BSF AnnotationSheet
+        :type self: AnnotationSheet
         :return: Nothing
         :rtype: None
         """
 
+        self._csv_writer = None
         self._csv_writer_file.close()
+
+    def sort(self):
+
+        """Sort a BSF Annotation Sheet.
+        This method has to implemented in the sub-class,
+        as it requires information about field-specific sorting.
+
+        :param self: BSF AnnotationSheet
+        :type self: AnnotationSheet
+        :return: Nothing
+        :rtype: None
+        """
+
+        message = 'Sorting of BSF Annotation Sheets has to implemented in the sub-class.'
+        warnings.warn(message, UserWarning)
+
+    def validate(self, test_methods):
+
+        """Validate a BSF Annotation Sheet.
+
+        :param self: BSF AnnotationSheet
+        :type self: AnnotationSheet
+        :param test_methods: Dict of column names and associated test methods,
+        i.e. AnnotationSheet.check_alphanumeric, AnnotationSheet.check_sequence, ...
+        :return: Warning messages
+        :rtype: str
+        """
+
+        messages = str()
+        row_number = 0
+
+        for row_dict in self.row_dicts:
+            row_number += 1
+            for field_name in self.field_names:
+                if field_name in test_methods:
+                    # Only validate fields, for which instructions exist in the tests dict.
+                    messages += test_methods[field_name](row_number=row_number,
+                                                         row_dict=row_dict,
+                                                         column_name=field_name)
+
+        return messages
+
+    def write_to_file(self):
+
+        """Write a BSF Annotation Sheet to a file.
+
+        :param self: BSF AnnotationSheet
+        :type self: AnnotationSheet
+        :return: Nothing
+        :rtype: None
+        """
+
+        self.csv_writer_open()
+
+        for row_dict in self.row_dicts:
+            self.csv_writer_next(row_dict=row_dict)
+
+        self.csv_writer_close()
+
+
+class BamIndexDecoderSheet(AnnotationSheet):
+
+    """
+    BSF BamIndexDecoder Sheet class.
+
+    The BSF BamIndexDecoder Sheet class represents a comma-separated value (CSV) table of
+    library information for the Illumina2bam BamIndexDecoder.
+    """
+
+    # Column header names.
+
+    field_names = ['lane', 'barcode_sequence_1', 'barcode_sequence_2', 'sample_name', 'library_name']
+
+    # Python dict to correlate columns with validation methods.
+
+    test_methods = dict(lane=AnnotationSheet.check_alphanumeric,
+                        barcode_sequence_1=AnnotationSheet.check_sequence,
+                        barcode_sequence_2=AnnotationSheet.check_sequence,
+                        sample_name=AnnotationSheet.check_alphanumeric,
+                        library_name=AnnotationSheet.check_alphanumeric)
+
+    @classmethod
+    def read_from_file(cls, file_path=None, file_type=None, name=None):
+
+        """Construct a BamIndexDecoder Sheet from a comma-separated value (CSV) file.
+
+        :param cls: Class
+        :type cls: Class
+        :param file_path: File path
+        :type file_path: str, unicode
+        :param file_type: File type (e.g. ...)
+        :type file_type: str
+        :return: BSF BamIndexDecoder Sheet
+        :rtype: BamIndexDecoderSheet
+        """
+
+        return super(BamIndexDecoderSheet, cls).read_from_file(file_path=file_path)
+
+    def __init__(self, file_path=None, file_type=None, name=None, row_dicts=None):
+
+        """Initialise a BSF BamIndexDecoder Sheet object.
+
+        :param self: BSF BamIndexDecoder Sheet
+        :type self: BamIndexDecoderSheet
+        :param file_path: File path
+        :type file_path: str, unicode
+        :param file_type: File type (e.g. ...)
+        :type file_type: str
+        :param name: Name
+        :type name: str
+        :param row_dicts: Python list of Python dict objects
+        :type row_dicts: list
+        :return: Nothing
+        :rtype: None
+        """
+
+        super(BamIndexDecoderSheet, self).__init__(file_path=file_path,
+                                                   file_type=file_type,
+                                                   name=name,
+                                                   field_names=BamIndexDecoderSheet.field_names,
+                                                   row_dicts=row_dicts)
+
+    def validate(self, test_methods=None):
+
+        """
+        Validate a BSF BamIndexDecoder Sheet.
+
+        :param test_methods:
+        :type test_methods: dict
+        :return: Warning messages
+        :rtype: str
+        """
+
+        messages = str()
+
+        # Check the header line via the pre-defined field names.
+
+        for index in range(0, len(BamIndexDecoderSheet.field_names)):
+            if not self.field_names[index]:
+                messages += 'Column with name {!r} is missing from the header line.\n'. \
+                    format(BamIndexDecoderSheet.field_names[index])
+
+            if self.field_names[index] != BamIndexDecoderSheet.field_names[index]:
+                messages += 'Column name {!r} in the header line does not match template {!r}.\n'. \
+                    format(self.field_names[index], BamIndexDecoderSheet.field_names[index])
+
+        # Validate the field values for alphanumeric or sequence grade in the context of the
+        # BSF Annotation Sheet super-class.
+
+        if not test_methods:
+            test_methods = BamIndexDecoderSheet.test_methods
+
+        messages += super(BamIndexDecoderSheet, self).validate(test_methods=test_methods)
+
+        lane_index = dict()
+
+        row_number = 0
+
+        for row_dict in self.row_dicts:
+
+            row_number += 1
+
+            # Check that all required fields are defined.
+
+            if row_dict['lane'] in lane_index:
+                barcode_dict, sample_dict, library_name = lane_index[row_dict['lane']]
+            else:
+                barcode_dict = dict()
+                sample_dict = dict()
+                library_name = str(row_dict['library_name'])
+                lane_index[row_dict['lane']] = (barcode_dict, sample_dict, library_name)
+
+            barcode_sequence = str()
+
+            if 'barcode_sequence_1' in row_dict and row_dict['barcode_sequence_1']:
+                barcode_sequence += row_dict['barcode_sequence_1']
+
+            if 'barcode_sequence_2' in row_dict and row_dict['barcode_sequence_2']:
+                barcode_sequence += row_dict['barcode_sequence_2']
+
+            if barcode_sequence in barcode_dict:
+                messages += 'Barcode sequence {!r} from row {} duplicated in row {}.\n'. \
+                    format(barcode_sequence, barcode_dict[barcode_sequence], row_number)
+            else:
+                barcode_dict[barcode_sequence] = row_number
+
+            sample_name = str()
+            sample_name += row_dict['sample_name']
+
+            if sample_name in sample_dict:
+                messages += 'Sample name {!r} from row {} duplicated in row {}.\n'. \
+                    format(sample_name, sample_dict[sample_name], row_number)
+            else:
+                sample_dict[sample_name] = row_number
+
+            if library_name != row_dict['library_name']:
+                messages += 'Library name {!r} in row {} does not match previous name {!r}.\n'. \
+                    format(row_dict['library_name'], row_number, library_name)
+
+        # TODO: The lane number needs to be configurable. Maybe this needs checking at the point where the
+        # Annotation Sheet gets used?
+        for lane_number in range(1, 9):
+            lane_string = str(lane_number)
+            if lane_string not in lane_index:
+                messages += 'No annotation for lane number {!r}.\n'.format(lane_number)
+
+        return messages
+
+
+class SampleAnnotationSheet(AnnotationSheet):
+
+    pass
 
 
 class SampleGroup(object):

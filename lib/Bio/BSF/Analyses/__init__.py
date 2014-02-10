@@ -34,7 +34,7 @@ import string
 import warnings
 
 from Bio.BSF import Analysis, Configuration, Default, Defaults, DRMS, Executable
-from Bio.BSF.Data import Collection, ProcessedRunFolder, Sample, SampleAnnotationSheet
+from Bio.BSF.Data import Collection, ProcessedRunFolder, Sample, AnnotationSheet, SampleAnnotationSheet
 from Bio.BSF.Executables import Bowtie2, Macs14, Macs2Bdgcmp, Macs2Callpeak, Cuffdiff, Cufflinks, Cuffmerge, TopHat,\
     FastQC
 
@@ -116,6 +116,70 @@ class ChIPSeqComparison(object):
             self.replicate = replicate
         else:
             self.replicate = int(x=0)
+
+
+class ChIPSeqDiffBindSheet(AnnotationSheet):
+
+    field_names = ['SampleID', 'Tissue', 'Factor', 'Condition', 'Treatment', 'Replicate',
+                   'bamReads', 'bamControl', 'ControlID', 'Peaks', 'PeakCaller', 'PeakFormat']
+
+    test_methods = dict(SampleID=AnnotationSheet.check_alphanumeric,
+                        Tissue=AnnotationSheet.check_alphanumeric,
+                        Factor=AnnotationSheet.check_alphanumeric,
+                        Condition=AnnotationSheet.check_alphanumeric,
+                        Treatment=AnnotationSheet.check_alphanumeric,
+                        Replicate=AnnotationSheet.check_numeric,
+                        ControlID=AnnotationSheet.check_alphanumeric,
+                        PeakCaller=AnnotationSheet.check_alphanumeric,
+                        PeakFormat=AnnotationSheet.check_alphanumeric)
+
+    def __init__(self, file_path=None, file_type=None, name=None, row_dicts=None):
+
+        """Initialise a BSF ChIPSeq DiffBind Sheet object.
+
+        :param self: BSF ChIPSeq DiffBind Sheet
+        :type self: ChIPSeqDiffBindSheet
+        :param file_path: File path
+        :type file_path: str, unicode
+        :param file_type: File type (e.g. ...)
+        :type file_type: str
+        :param name: Name
+        :type name: str
+        :param row_dicts: Python list of Python dict objects
+        :type row_dicts: list
+        :return: Nothing
+        :rtype: None
+        """
+
+        super(ChIPSeqDiffBindSheet, self).__init__(file_path=file_path,
+                                                   file_type=file_type,
+                                                   name=name,
+                                                   field_names=ChIPSeqDiffBindSheet.field_names,
+                                                   row_dicts=row_dicts)
+
+    def sort(self):
+
+        self.row_dicts.sort(cmp=lambda x, y:
+                            cmp(x['Tissue'], y['Tissue']) or
+                            cmp(x['Factor'], y['Factor']) or
+                            cmp(x['Condition'], y['Condition']) or
+                            cmp(x['Treatment'], y['Treatment']) or
+                            cmp(int(x['Replicate']), int(y['Replicate'])))
+
+    def write_to_file(self):
+
+        """Write a BSF ChIPSeq DiffBind Sheet to a file.
+
+        :param self: BSF ChIPSeq DiffBind Sheet
+        :type self: ChIPSeqDiffBindSheet
+        :return: Nothing
+        :rtype: None
+        """
+
+        # Override the method from the super-class to automatically sort before writing to a file.
+
+        self.sort()
+        super(ChIPSeqDiffBindSheet, self).write_to_file()
 
 
 class ChIPSeq(Analysis):
@@ -322,7 +386,7 @@ class ChIPSeq(Analysis):
             for c_sample in c_samples:
                 if self.debug > 1:
                     print '  Control Sample name: {!r} file_path:{!r}'.format(c_sample.name, c_sample.file_path)
-                    # print c_sample.trace(1)
+                    print c_sample.trace(1)
                 # Find the BSF Sample in the unified sample dictionary.
                 if c_sample.name in sample_dict:
                     self.add_Sample(sample=sample_dict[c_sample.name])
@@ -332,7 +396,7 @@ class ChIPSeq(Analysis):
             for t_sample in t_samples:
                 if self.debug > 1:
                     print '  Treatment Sample name: {!r} file_path:{!r}'.format(t_sample.name, t_sample.file_path)
-                    # print t_sample.trace(1)
+                    print t_sample.trace(1)
                 if t_sample.name in sample_dict:
                     self.add_Sample(sample=sample_dict[t_sample.name])
 
@@ -931,97 +995,9 @@ class ChIPSeq(Analysis):
                             process_macs2.arguments.append('{}__{}'.format(t_replicate_key, c_replicate_key))
                             process_macs2.arguments.append(genome_sizes)
 
-    def _create_sample_annotation_sheet(self):
-
-        """Private method to create a sample annotation sheet for use by the bsf_chipseq_DiffBind.R script.
-
-        :param self: BSF ChIPSeq object
-        :type self: ChIPSeq
-        :return: Nothing
-        :rtype: None
-        """
-
-        # TODO: This method has been replaced with _create_diffbind_jobs and is thus obsolete now.
-
-        config_parser = self.configuration.config_parser
-        config_section = self.configuration.section_from_instance(self)
-
-        replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
-
-        # Create a DictWriter object
-
-        file_path = os.path.join(self.genome_directory, '{}_DiffBind_annotation.csv'.format(self.project_name))
-
-        field_names = ['SampleID', 'Tissue', 'Factor', 'Condition', 'Treatment', 'Replicate',
-                       'bamReads', 'bamControl', 'ControlID', 'Peaks', 'PeakCaller', 'PeakFormat']
-
-        sas = SampleAnnotationSheet(file_path=file_path, field_names=field_names)
-
-        sas.csv_writer_open()
-
-        keys = self.comparisons.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
-
-        for key in keys:
-
-            chipseq_comparison = self.comparisons[key]
-            assert isinstance(chipseq_comparison, ChIPSeqComparison)
-
-            for t_sample in chipseq_comparison.t_samples:
-
-                t_replicate_dict = t_sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
-
-                # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
-                # Python str key and Python list of Python list objects
-                # of Bio.BSF.Data.PairedReads objects.
-
-                t_replicate_keys = t_replicate_dict.keys()
-                t_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-                for t_replicate_key in t_replicate_keys:
-
-                    for c_sample in chipseq_comparison.c_samples:
-
-                        c_replicate_dict = c_sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
-
-                        c_replicate_keys = c_replicate_dict.keys()
-                        c_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-                        for c_replicate_key in c_replicate_keys:
-
-                            prefix = 'chipseq_macs2_{}__{}'.format(t_replicate_key, c_replicate_key)
-
-                            row_dict = dict()
-
-                            row_dict['SampleID'] = t_replicate_key
-                            row_dict['Tissue'] = chipseq_comparison.tissue
-                            row_dict['Factor'] = chipseq_comparison.factor
-                            row_dict['Condition'] = chipseq_comparison.condition
-                            row_dict['Treatment'] = chipseq_comparison.treatment
-                            row_dict['Replicate'] = chipseq_comparison.replicate
-                            row_dict['bamReads'] = os.path.join(self.genome_directory,
-                                                                'chipseq_bowtie2_{}'.format(t_replicate_key),
-                                                                '{}.aligned.sorted.bam'.format(t_replicate_key))
-                            row_dict['bamControl'] = os.path.join(self.genome_directory,
-                                                                  'chipseq_bowtie2_{}'.format(c_replicate_key),
-                                                                  '{}.aligned.sorted.bam'.format(c_replicate_key))
-                            row_dict['ControlID'] = c_replicate_key
-                            row_dict['Peaks'] = os.path.join(self.genome_directory,
-                                                             prefix,
-                                                             '{}_peaks.xls'.format(prefix))
-                            row_dict['PeakCaller'] = 'macs'  # TODO: make this configurable.
-                            row_dict['PeakFormat'] = 'macs'  # TODO: make this configurable.
-                            # row_dict['ScoreCol'] = str()
-                            # row_dict['LowerBetter'] = str()
-                            # row_dict['Counts'] = str()
-
-                            sas.csv_writer_next(row_dict=row_dict)
-
-        sas.csv_writer_close()
-
     def _create_diffbind_jobs(self):
 
-        """Create DiffBind jobs.
+        """Create Bioconductor DiffBind jobs.
 
         :param self: BSF ChIPSeq
         :type self: ChIPSeq
@@ -1038,9 +1014,6 @@ class ChIPSeq(Analysis):
                                            work_directory=self.genome_directory,
                                            analysis=self)
         self.drms_list.append(diffbind_drms)
-
-        field_names = ['SampleID', 'Tissue', 'Factor', 'Condition', 'Treatment', 'Replicate',
-                       'bamReads', 'bamControl', 'ControlID', 'Peaks', 'PeakCaller', 'PeakFormat']
 
         # Reorganise the comparisons by factor.
 
@@ -1083,15 +1056,14 @@ class ChIPSeq(Analysis):
 
             job_dependencies = list()
 
-            # Create a DictWriter object
+            # Create a new BSF ChIPSeq DiffBind Sheet per factor.
 
             file_path = os.path.join(factor_directory, 'chipseq_diffbind_{}_samples.csv'.format(key))
 
-            sas = SampleAnnotationSheet(file_path=file_path, field_names=field_names)
-
-            sas.csv_writer_open()
+            dbs = ChIPSeqDiffBindSheet(file_path=file_path)
 
             factor_list = self._factor_dict[key]
+            factor_list.sort(cmp=lambda x, y: cmp(x, y))
 
             for chipseq_comparison in factor_list:
 
@@ -1137,18 +1109,22 @@ class ChIPSeq(Analysis):
                                                                  format(t_replicate_key, c_replicate_key),
                                                                  'chipseq_macs2_{}__{}_peaks.xls'.
                                                                  format(t_replicate_key, c_replicate_key))
-                                row_dict['PeakCaller'] = 'macs'  # TODO: make this configurable.
-                                row_dict['PeakFormat'] = 'macs'  # TODO: make this configurable.
+                                row_dict['PeakCaller'] = 'macs'
+                                row_dict['PeakFormat'] = 'macs'
                                 # row_dict['ScoreCol'] = str()
                                 # row_dict['LowerBetter'] = str()
                                 # row_dict['Counts'] = str()
 
-                                sas.csv_writer_next(row_dict=row_dict)
+                                # TODO: Remove once the code works.
+                                ### sas.csv_writer_next(row_dict=row_dict)
+                                dbs.row_dicts.append(row_dict)
 
                                 job_dependency = 'chipseq_process_macs2_{}__{}'.format(t_replicate_key, c_replicate_key)
                                 job_dependencies.append(job_dependency)
 
-            sas.csv_writer_close()
+            # TODO: Remove once the code works.
+            ### sas.csv_writer_close()
+            dbs.write_to_file()
 
             # Create the DiffBind job.
 
@@ -1880,8 +1856,8 @@ class ChIPSeq(Analysis):
                 track_output += 'shortLabel Alignments_{}\n'.format(replicate_key)
                 track_output += 'longLabel Bowtie2 alignments of {}\n'. \
                     format(replicate_key)
-                track_output += 'bigDataUrl ./{}.aligned.sorted.bam\n'. \
-                    format(replicate_key)
+                track_output += 'bigDataUrl ./chipseq_bowtie2_{}/{}.aligned.sorted.bam\n'. \
+                    format(replicate_key, replicate_key)
                 track_output += 'visibility hide\n'
                 # track_output += 'html {}\n'.format()
 
@@ -2894,6 +2870,14 @@ class RNASeq(Analysis):
         track_output += 'group alignments\n'
         track_output += '\n'
 
+        track_output += 'track Coverage\n'
+        track_output += 'shortLabel Coverage\n'
+        track_output += 'longLabel TopHat alignment coverage\n'
+        track_output += 'visibility full\n'  # full or show?
+        track_output += 'superTrack on\n'
+        track_output += 'group coverage\n'
+        track_output += '\n'
+
         track_output += 'track Deletions\n'
         track_output += 'shortLabel Deletions\n'
         track_output += 'longLabel Tophat2 deletions tracks\n'
@@ -2968,6 +2952,53 @@ class RNASeq(Analysis):
                 # Composite track settings.
 
                 track_output += 'parent Alignments\n'
+                track_output += '\n'
+
+                #
+                # Add a trackDB entry for each accepted_hits.bw file.
+                #
+
+                # Common trackDB settings.
+
+                track_output += 'track coverage_{}\n'. \
+                    format(replicate_key)
+                # TODO: The bigWig type must declare the expected signal range.
+                # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
+                track_output += 'type bigWig\n'
+                track_output += 'shortLabel coverage_{}\n'. \
+                    format(replicate_key)
+                track_output += 'longLabel {} RNA-Seq alignment coverage\n'. \
+                    format(replicate_key)
+                track_output += 'bigDataUrl ./rnaseq_tophat_{}/accepted_hits.bw\n'. \
+                    format(replicate_key)
+                track_output += 'visibility full\n'
+                # track_output += 'html {}\n'.format()
+
+                # Common optional settings.
+
+                track_output += 'color {}\n'. \
+                    format('0,0,0')
+
+                # bigWig - Signal graphing track settings.
+
+                track_output += 'alwaysZero on\n'
+                track_output += 'autoScale on\n'
+                track_output += 'graphTypeDefault bar\n'
+                track_output += 'maxHeightPixels 100:60:20\n'
+                # track_output += 'maxWindowToQuery 10000000\n'
+                # track_output += 'smoothingWindow 5\n'
+                # track_output += 'transformFunc NONE\n'
+                # track_output += 'viewLimits 0:45\n'
+                # track_output += 'viewLimitsMax 0:50\n'
+                # track_output += 'windowingFunction maximum\n'
+                # track_output += 'yLineMark <#>\n'
+                # track_output += 'yLineOnOff on \n'
+                # track_output += 'gridDefault on\n'
+
+                # Composite track settings.
+
+                track_output += 'parent Coverage\n'
+                track_output += 'centerLabelsDense off\n'
                 track_output += '\n'
 
                 #
