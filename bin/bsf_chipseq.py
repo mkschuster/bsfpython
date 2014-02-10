@@ -73,8 +73,6 @@ for drms in chipseq.drms_list:
 if args.stage:
     if args.stage == 'report':
         chipseq.report()
-    elif args.stage == 'sas':
-        chipseq._create_sample_annotation_sheet()
     elif not submit:
         name_list = [drms.name for drms in chipseq.drms_list]
         name_list.append('report')
