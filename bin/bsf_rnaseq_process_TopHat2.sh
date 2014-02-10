@@ -95,6 +95,51 @@ done
 
 # Index the sorted BAM file accepted_hits.bam.
 
-samtools index "${directory}/accepted_hits.bam" || exit 1
+samtools index "${directory}/accepted_hits.bam" \
+    || exit 1
+
+# Use RseQC bam.wig.py to create a UCSC Wig file.
+
+# TODO: This should set the --strand rule option.
+
+bam2wig.py \
+    --input-file "${directory}/accepted_hits.bam" \
+    --chromSize "${chromosome_sizes}" \
+    --out-prefix "${directory}/accepted_hits" \
+    || exit 1
+
+function process_wig {
+
+    declare directory="${1}"
+    declare chromosome_sizes="${2}"
+    declare prefix="${3}"
+
+    if test -f "${directory}/accepted_hits${prefix}.wig"; then
+
+        wigToBigWig \
+            -clip \
+            "${directory}/accepted_hits${prefix}.wig" \
+            "${chromosome_sizes}" \
+            "${directory}/accepted_hits${prefix}.bw" \
+            || exit 1
+
+        rm "${directory}/accepted_hits${prefix}.wig" \
+            || exit 1
+
+    fi
+
+    return 0
+
+}
+
+# Process by RseQC names for unstranded versus stranded data.
+
+prefixes[0]=''
+prefixes[1]='_Forward'
+prefixes[2]='_Reverse'
+
+for prefix in "${prefixes[@]}"; do
+    process_wig "${directory}" "${chromosome_sizes}" "${prefix}"
+done
 
 exit 0
