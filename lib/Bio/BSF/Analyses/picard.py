@@ -124,7 +124,7 @@ def extract_illumina_barcodes(config_file):
     illumina_run_folder = os.path.expanduser(path=illumina_run_folder)
     illumina_run_folder = os.path.expandvars(path=illumina_run_folder)
     if not os.path.isabs(illumina_run_folder):
-        os.path.join(Default.absolute_runs(), illumina_run_folder)
+        os.path.join(Default.absolute_runs_illumina(), illumina_run_folder)
 
     irf = RunFolder.from_file_path(file_path=illumina_run_folder)
 
@@ -503,7 +503,7 @@ def illumina_to_bam(analysis):
     illumina_run_folder = os.path.expanduser(path=illumina_run_folder)
     illumina_run_folder = os.path.expandvars(path=illumina_run_folder)
     if not os.path.isabs(illumina_run_folder):
-        illumina_run_folder = os.path.join(Default.absolute_runs(), illumina_run_folder)
+        illumina_run_folder = os.path.join(Default.absolute_runs_illumina(), illumina_run_folder)
     irf = RunFolder.from_file_path(file_path=illumina_run_folder)
 
     # The experiment name (e.g. BSF_0000) is used as the prefix for archive BAM files.
@@ -515,6 +515,32 @@ def illumina_to_bam(analysis):
         experiment_name = str()
     if not experiment_name:
         experiment_name = irf.run_parameters.get_experiment_name()
+
+    # The project name is a concatenation of the experiment name and the Illumina flow cell identifier.
+    # In case it has not been specified in the configuration file, read it from the
+    # Run Information of the Illumina Run Folder.
+    if not analysis.project_name:
+        analysis.project_name = '{}_{}'.format(experiment_name, irf.run_information.flow_cell)
+
+    # In contrast to normal analyses that use the samples directory, this one needs to use the
+    # sequences directory. Make sure an absolute path is defined, before Bio.BSF.Analysis.run
+    # is called.
+
+    analysis.input_directory = os.path.expanduser(path=analysis.input_directory)
+    analysis.input_directory = os.path.expandvars(path=analysis.input_directory)
+
+    if not os.path.isabs(analysis.input_directory):
+        analysis.input_directory = os.path.join(Default.absolute_runs_illumina(), analysis.input_directory)
+
+    # In contrast to normal analyses that use the projects directory, this one needs to use the
+    # sequences directory. Make sure an absolute path is defined, before Bio.BSF.Analysis.run
+    # is called.
+
+    analysis.output_directory = os.path.expanduser(path=analysis.output_directory)
+    analysis.output_directory = os.path.expandvars(path=analysis.output_directory)
+
+    if not os.path.isabs(analysis.output_directory):
+        analysis.output_directory = os.path.join(Default.absolute_sequences(), analysis.output_directory)
 
     # Get the sequencing centre
     if config_parser.has_option(section=config_section, option='sequencing_centre'):
@@ -537,6 +563,10 @@ def illumina_to_bam(analysis):
         classpath_picard = str()
     if not classpath_picard:
         classpath_picard = default.classpath_picard
+
+    # At this stage the configuration is set. Now call run to create the necessary directories.
+
+    analysis.run()
 
     itb_drms = DRMS.from_Analysis(name='illumina_to_bam',
                                   work_directory=analysis.project_directory,

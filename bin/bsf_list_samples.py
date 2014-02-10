@@ -70,7 +70,7 @@ input_directory = os.path.expanduser(input_directory)
 input_directory = os.path.expandvars(input_directory)
 
 if not os.path.isabs(input_directory):
-    input_directory = os.path.join(Default.absolute_lanes(), input_directory)
+    input_directory = os.path.join(Default.absolute_sequences(), input_directory)
 
 prf = ProcessedRunFolder.from_file_path(file_path=input_directory, file_type='Automatic')
 

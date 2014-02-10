@@ -58,7 +58,7 @@ bid.output_directory = os.path.expanduser(path=bid.output_directory)
 bid.output_directory = os.path.expandvars(path=bid.output_directory)
 
 if not os.path.isabs(bid.output_directory):
-    bid.output_directory = os.path.join(Default.absolute_lanes(), bid.output_directory)
+    bid.output_directory = os.path.join(Default.absolute_sequences(), bid.output_directory)
 
 bid.run()
 bam_index_decoder(bid)  # TODO: Find a better solution?

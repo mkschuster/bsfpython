@@ -374,7 +374,7 @@ class Analysis(object):
         self.input_directory = os.path.expandvars(path=self.input_directory)
 
         if not os.path.isabs(self.input_directory):
-            self.input_directory = os.path.join(Default.absolute_lanes(), self.input_directory)
+            self.input_directory = os.path.join(Default.absolute_sequences(), self.input_directory)
 
         self.output_directory = os.path.expanduser(path=self.output_directory)
         self.output_directory = os.path.expandvars(path=self.output_directory)
@@ -810,10 +810,12 @@ class Default(object):
     :type classpath_picard: str, unicode
     :ivar classpath_illumina2bam: Illumina2bam JAVA Archive (JAR) class path directory
     :type classpath_illumina2bam: str, unicode
-    :ivar directory_data: Root directory for all data
-    :type directory_data: str, unicode
-    :ivar directory_lanes: Sub-directory for processed lanes
-    :type directory_lanes: str, unicode
+    :ivar directory_home: Home directory for all data
+    :type directory_home: str, unicode
+    :ivar directory_runs_illumina: Sub-directory for Illumina runs
+    :type directory_runs_illumina: str, unicode
+    :ivar directory_sequences: Sub-directory for sequences
+    :type directory_sequences: str, unicode
     :ivar directory_samples: Sub-directory for processed samples
     :type directory_samples: str, unicode
     :ivar directory_projects: Sub-directory for processed projects
@@ -921,30 +923,13 @@ class Default(object):
 
         return default
 
-    def __init__(self,
-                 classpath_picard=None,
-                 classpath_illumina2bam=None,
-                 directory_data=None,
-                 directory_runs=None,
-                 directory_lanes=None,
-                 directory_samples=None,
-                 directory_projects=None,
-                 directory_public_html=None,
-                 directory_genomes=None,
-                 directory_annotations=None,
-                 indices=None,
-                 drms_implementation=None,
-                 drms_maximum_threads=None,
-                 drms_memory_limit_hard=None,
-                 drms_memory_limit_soft=None,
-                 operator_e_mail=None,
-                 operator_sequencing_centre=None,
-                 ucsc_host_name=None,
-                 url_protocol=None,
-                 url_host_name=None,
-                 url_relative_projects=None,
-                 url_relative_chip_seq=None,
-                 url_relative_dna_seq=None,
+    def __init__(self, classpath_picard=None, classpath_illumina2bam=None, directory_home=None,
+                 directory_runs_illumina=None, directory_sequences=None, directory_samples=None,
+                 directory_projects=None, directory_public_html=None, directory_genomes=None,
+                 directory_annotations=None, indices=None, drms_implementation=None, drms_maximum_threads=None,
+                 drms_memory_limit_hard=None, drms_memory_limit_soft=None, operator_e_mail=None,
+                 operator_sequencing_centre=None, ucsc_host_name=None, url_protocol=None, url_host_name=None,
+                 url_relative_projects=None, url_relative_chip_seq=None, url_relative_dna_seq=None,
                  url_relative_rna_seq=None):
 
         """Initialise a BSF Default object.
@@ -955,12 +940,12 @@ class Default(object):
         :type classpath_picard: str, unicode
         :param classpath_illumina2bam: Illumina2bam JAVA Archive (JAR) class path directory
         :type classpath_illumina2bam: str, unicode
-        :param directory_data: Root directory for all data
-        :type directory_data: str, unicode
-        :param directory_runs: Sub-directory for (Illumina) runs
-        :type directory_runs: str, unicode
-        :param directory_lanes: Sub-directory for processed lanes
-        :type directory_lanes: str, unicode
+        :param directory_home: Home directory for all data
+        :type directory_home: str, unicode
+        :param directory_runs_illumina: Sub-directory for Illumina runs
+        :type directory_runs_illumina: str, unicode
+        :param directory_sequences: Sub-directory for sequences
+        :type directory_sequences: str, unicode
         :param directory_samples: Sub-directory for processed samples
         :type directory_samples: str, unicode
         :param directory_projects: Sub-directory for processed projects
@@ -1017,20 +1002,20 @@ class Default(object):
 
         # Set directory information.
 
-        if directory_data:
-            self.directory_data = directory_data
+        if directory_home:
+            self.directory_home = directory_home
         else:
-            self.directory_data = str()
+            self.directory_home = str()
 
-        if directory_runs:
-            self.directory_runs = directory_runs
+        if directory_runs_illumina:
+            self.directory_runs_illumina = directory_runs_illumina
         else:
-            self.directory_runs = str()
+            self.directory_runs_illumina = str()
 
-        if directory_lanes:
-            self.directory_lanes = directory_lanes
+        if directory_sequences:
+            self.directory_sequences = directory_sequences
         else:
-            self.directory_lanes = str()
+            self.directory_sequences = str()
 
         if directory_samples:
             self.directory_samples = directory_samples
@@ -1162,9 +1147,9 @@ class Default(object):
 
         section = 'directories'
 
-        self.directory_data = cp.get(section=section, option='data')
-        self.directory_runs = cp.get(section=section, option='runs')
-        self.directory_lanes = cp.get(section=section, option='lanes')
+        self.directory_home = cp.get(section=section, option='home')
+        self.directory_runs_illumina = cp.get(section=section, option='runs_illumina')
+        self.directory_sequences = cp.get(section=section, option='sequences')
         self.directory_samples = cp.get(section=section, option='samples')
         self.directory_projects = cp.get(section=section, option='projects')
         self.directory_public_html = cp.get(section=section, option='public_html')
@@ -1208,23 +1193,37 @@ class Default(object):
         self.url_relative_rna_seq = cp.get(section=section, option='relative_rna_seq')
 
     @staticmethod
-    def absolute_runs():
+    def absolute_home():
 
-        """Get the absolute directory path for (Illumina) runs.
+        """
+        Get the absolute directory path for the home directory.
 
-        :return: Absolute path to the (Illumina) runs directory
+        :return: Absolute path to the home directory
+        :rtype; str, unicode
+        """
+
+        default = Default.get_global_default()
+
+        return default.directory_home
+
+    @staticmethod
+    def absolute_runs_illumina():
+
+        """Get the absolute directory path for Illumina runs.
+
+        :return: Absolute path to the Illumina runs directory
         :rtype: str, unicode
         """
 
         default = Default.get_global_default()
 
-        if os.path.isabs(default.directory_runs):
-            return default.directory_runs
+        if os.path.isabs(default.directory_runs_illumina):
+            return default.directory_runs_illumina
         else:
-            return os.path.join(default.directory_data, default.directory_runs)
+            return os.path.join(default.directory_home, default.directory_runs_illumina)
 
     @staticmethod
-    def absolute_lanes():
+    def absolute_sequences():
 
         """Get the absolute directory path for processed lanes.
 
@@ -1234,10 +1233,10 @@ class Default(object):
 
         default = Default.get_global_default()
 
-        if os.path.isabs(default.directory_lanes):
-            return default.directory_lanes
+        if os.path.isabs(default.directory_sequences):
+            return default.directory_sequences
         else:
-            return os.path.join(default.directory_data, default.directory_lanes)
+            return os.path.join(default.directory_home, default.directory_sequences)
 
     @staticmethod
     def absolute_projects():
@@ -1253,7 +1252,7 @@ class Default(object):
         if os.path.isabs(default.directory_projects):
             return default.directory_projects
         else:
-            return os.path.join(default.directory_data, default.directory_projects)
+            return os.path.join(default.directory_home, default.directory_projects)
 
     @staticmethod
     def absolute_samples():
@@ -1269,7 +1268,7 @@ class Default(object):
         if os.path.isabs(default.directory_samples):
             return default.directory_samples
         else:
-            return os.path.join(default.directory_data, default.directory_samples)
+            return os.path.join(default.directory_home, default.directory_samples)
 
     @staticmethod
     def absolute_public_html():
@@ -1285,7 +1284,7 @@ class Default(object):
         if os.path.isabs(default.directory_public_html):
             return default.directory_public_html
         else:
-            return os.path.join(default.directory_data, default.directory_public_html)
+            return os.path.join(default.directory_home, default.directory_public_html)
 
     @staticmethod
     def absolute_genomes(genome_version):

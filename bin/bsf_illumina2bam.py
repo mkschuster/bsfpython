@@ -26,9 +26,8 @@
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import os.path
 
-from Bio.BSF import Analysis, Default
+from Bio.BSF import Analysis
 from Bio.BSF.Analyses.picard import illumina_to_bam
 
 
@@ -52,16 +51,7 @@ itb = Analysis.from_config_file(config_file=args.configuration)
 if args.debug:
     itb.debug = args.debug
 
-# The Analysis has to use the default runs (flow-cells) directory, before it can run.
-
-itb.output_directory = os.path.expanduser(path=itb.output_directory)
-itb.output_directory = os.path.expandvars(path=itb.output_directory)
-
-if not os.path.isabs(itb.output_directory):
-    itb.output_directory = os.path.join(Default.absolute_runs(), itb.output_directory)
-
-itb.run()
-illumina_to_bam(itb)  # TODO: Find a better solution?
+illumina_to_bam(itb)
 
 # Submit all Executable objects of all Distributed Resource Management System objects.
 

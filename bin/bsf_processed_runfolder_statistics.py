@@ -44,7 +44,7 @@ args = parser.parse_args()
 prf_path = args.input
 
 if not os.path.isabs(prf_path):
-    prf_path = os.path.join(Default.absolute_lanes(), prf_path)
+    prf_path = os.path.join(Default.absolute_sequences(), prf_path)
 
 if not os.path.exists(path=prf_path):
     message = 'Could not find processed run folder directory {!r}'.format(prf_path)
