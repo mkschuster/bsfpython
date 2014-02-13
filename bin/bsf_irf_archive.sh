@@ -18,17 +18,17 @@
 #  9. Run the GNU tar utility over the remaining Illumina Run folder.
 # 10. Record the archive file sizes via the ls utility.
 #
-# Usage: bsf_archive_run_folder.sh illumina_run_folder [output_folder] [force]
+# Usage: bsf_irf_archive.sh illumina_run_folder [output_directory] [force]
 #
 #   illumina_run_folder: Path to the Illumina Run Folder
 #
-#   output_folder: Path to the output folder, in which an archive folder
-#                  will be created. If not specified, defaults to the current
-#                  working directory.
+#   output_directory: Path to the output directory, in which an archive
+#                     directory will be created. If not specified, defaults
+#                     to the current working directory.
 #
-#   force: Forces archiving of incomplete run folders
+#   force: Forces archiving of an incomplete Illumina Run Folder
 #          (RTAComplete.txt is missing) or a restart of archiving after an
-#          archive folder has already been created.
+#          archive directory has already been created.
 #
 #
 # Copyright 2013 Michael Schuster
@@ -77,9 +77,9 @@ else
 fi
 
 if [ "$#" -eq '0' ]; then
-    echo "Error: ${0} Too few arguments." 1>&2 \
+    echo "Error: Too few arguments." 1>&2 \
         || bsf_error
-    echo "Usage: ${0} bsf_irf_archive.sh illumina_run_folder [output_folder] [force]" 1>&2 \
+    echo "Usage: $(basename ${0}) illumina_run_folder [output_directory] [force]" 1>&2 \
         || bsf_error
     exit 1
 fi
@@ -88,7 +88,7 @@ declare illumina_run_folder="${1%/}"
 shift
 
 if [ ! -d "${illumina_run_folder}" ]; then
-    echo "Error: ${0} '${illumina_run_folder}' does not exist." 1>&2 \
+    echo "Error: An Illumina Run Folder '${illumina_run_folder}' does not exist." 1>&2 \
         || bsf_error
     exit 1
 fi
@@ -105,15 +105,16 @@ fi
 # Check if an archive directory was set as the second argument.
 
 if [ -n "${1}" ]; then
-    declare output_folder="${2}"
+    declare output_directory="${2}"
     shift
-    mkdir -p "${output_folder}" \
+    mkdir -p "${output_directory}" \
         || bsf_error
 else
-    declare output_folder="${PWD}"
+    declare output_directory="${PWD}"
 fi
 
 # Check if force was set as the third argument.
+
 if [ "${1}" = 'force' ]; then
     declare force='TRUE'
     shift
@@ -121,7 +122,7 @@ else
     declare force='FALSE'
 fi
 
-exec 3>>"${output_folder}/${illumina_run_name}_archive.txt" \
+exec 3>>"${output_directory}/${illumina_run_name}_archive.txt" \
     || bsf_error
 
 # 0. Check whether Picard ExtractIlluminaBarcodes has written any
@@ -130,64 +131,70 @@ exec 3>>"${output_folder}/${illumina_run_name}_archive.txt" \
 # http://picard.sourceforge.net/command-line-overview.shtml#ExtractIlluminaBarcodes
 
 if [ -n "$(find "${illumina_run_folder}/Data/Intensities/BaseCalls" -name '*_barcode.txt' -print -quit)" ]; then
-    echo "Illumina Run Folder contains Picard ExtractIlluminaBarcodes files." 1>&2 \
+    echo "Error: This Illumina Run Folder contains Picard ExtractIlluminaBarcodes files." 1>&2 \
 	    || bsf_error
-    echo "Illumina Run Folder contains Picard ExtractIlluminaBarcodes files." 1>&3 \
+    echo "ERROR: This Illumina Run Folder contains Picard ExtractIlluminaBarcodes files." 1>&3 \
 	    || bsf_error
-    echo "Delete those files before restarting the packing process." 1>&2 \
+    echo "       Delete these files before restarting the archiving process." 1>&2 \
 	    || bsf_error
-    echo "Delete those files before restarting the packing process." 1>&3 \
+    echo "       Delete these files before restarting the archiving process." 1>&3 \
 	    || bsf_error
     exit 1
 fi
 
 # 1. Check whether the RTAComplete.txt file exists in the Illumina Run Folder
-# to prevent archiving and deleting an active folder.
-# Otherwise require force to start archiving.
+# to prevent archiving and deleting of an active folder.
+# Otherwise, require force to start archiving.
 
 if [ ! -f "${illumina_run_folder}/RTAComplete.txt" ]; then
     if [ "${force}" = 'TRUE' ]; then
-	    echo "Archive Illumina Run Folder forced incomplete folder ..." \
+        echo "Info: Forced archiving of an incomplete Illumina Run Folder ..." 1>&2 \
 	        || bsf_error
-	    echo "Archive Illumina Run Folder forced incomplete folder ..." 1>&3 \
+        echo "INFO: Forced archiving of an incomplete Illumina Run Folder ..." 1>&3 \
 	        || bsf_error
     else
-	    echo "Archive Illumina Run Folder got an incomplete folder." 1>&2 \
+        echo "Error: This Illumina Run Folder is not complete, RTAComplete.txt is missing." 1>&2 \
 	        || bsf_error
-	    echo "The RTAComplete.txt file is missing - Exiting." 1>&2 \
+        echo "ERROR: This Illumina Run Folder is not complete, RTAComplete.txt is missing." 1>&3 \
 	        || bsf_error
-	    echo "Use the 'force' parameter to start archiving regardless." 1>&2 \
+        echo "       Use the 'force' parameter to start archiving regardless." 1>&2 \
 	        || bsf_error
-	    exit 1
+        echo "       Use the 'force' parameter to start archiving regardless." 1>&3 \
+	        || bsf_error
+        exit 1
     fi
 fi
 
-# 2. Use the archive_folder to check, whether an archive process is
-# already running. If so, stop here, unless a 'force' parameter has
-# been set, in which case resume a archiving process that failed.
+# 2. Use the archive_directory to check, whether another archive process
+# is already running. If so, stop here, unless a 'force' parameter has
+# been set, in which case resume an archiving process that failed.
 
-declare archive_folder="${output_folder}/${illumina_run_name}_archive"
+declare archive_directory="${output_directory}/${illumina_run_name}_archive"
 
-if [ -d "${archive_folder}" ]; then
+if [ -d "${archive_directory}" ]; then
     if [ "${force}" = 'TRUE' ]; then
-	    echo "Archive Illumina Run Folder forced a re-start ..." \
+        echo "Info: Forced the re-start of the archiving process ..." 1>&2 \
 	        || bsf_error
-	    echo "Archive Illumina Run Folder forced a re-start ..." 1>&3 \
+        echo "INFO: Forced the re-start of the archiving process ..." 1>&3 \
 	        || bsf_error
     else
-	    echo "Archive Illumina Run Folder process already running. Exiting." \
+        echo "Error: Another archiving process may already be already running." 1>&2 \
 	        || bsf_error
-	    echo "Use the 'force' parameter to start archiving regardless." \
+        echo "ERROR: Another archiving process may already be already running." 1>&3 \
 	        || bsf_error
-	    exit 1
+        echo "       Use the 'force' parameter to start archiving regardless." 1>&2 \
+	        || bsf_error
+        echo "       Use the 'force' parameter to start archiving regardless." 1>&3 \
+	        || bsf_error
+        exit 1
     fi
 else
-    # 3. Create a archive directory.
-    mkdir -p "${archive_folder}" \
+    # 3. Create an archive directory.
+    mkdir -p "${archive_directory}" \
         || bsf_error
     # 4. Size the native Illumina Run Folder.
     # The size is only meaningful in the first run.
-    echo "Archive Illumina Run Folder: ${illumina_run_name}" 1>&3 \
+    echo "Illumina Run Folder: ${illumina_run_name}" 1>&3 \
         || bsf_error
     echo "Size: $(du -k -s "${illumina_run_folder}")" 1>&3 \
         || bsf_error
@@ -195,32 +202,32 @@ fi
 
 # 5. Reset all file permissions for directories.
 
-echo "$(date): Started resetting directory access permissions" 1>&3 \
+echo "$(date): Started  resetting directory access permissions" 1>&3 \
     || bsf_error
 find "${illumina_run_folder}" -type d -execdir chmod u=rwx,go=rx {} \+ \
     || bsf_error
-echo "$(date): Finished resetting directory permissions" 1>&3 \
+echo "$(date): Finished resetting directory access permissions" 1>&3 \
     || bsf_error
 
 # 6. Reset all file permissions for regular files.
 
-echo "$(date): Started resetting file access permissions" 1>&3 \
+echo "$(date): Started  resetting file access permissions" 1>&3 \
     || bsf_error
 find "${illumina_run_folder}" -type f -execdir chmod u=rw,go=r {} \+ \
     || bsf_error
-echo "$(date): Finished resetting file permissions" 1>&3 \
+echo "$(date): Finished resetting file access permissions" 1>&3 \
     || bsf_error
 
 # Start packing into GNU tape archive files.
 
-declare archive_prefix="${archive_folder}/${illumina_run_name}"
+declare archive_prefix="${archive_directory}/${illumina_run_name}"
 
 # 7. Run the GNU tar utility over each L00[1-8] directory (8 * 11 % = 88%),
 #    before removing it.
 #    Each lane directory contains one cluster location file *.clocs per tile and
 #    one sub-directory per cycle containing one cluster intensity files *.cif per tile.
 
-declare intensities_folder="${illumina_run_folder}/Data/Intensities"
+declare intensities_directory="${illumina_run_folder}/Data/Intensities"
 
 # PyCharm suggests replacing the expansion with its result.
 # for i in {1..8}; do
@@ -228,46 +235,46 @@ declare intensities_folder="${illumina_run_folder}/Data/Intensities"
 for i in 1 2 3 4 5 6 7 8; do
 
     declare lane_name=$(printf 'L%03u' "${i}")
-    declare lane_folder="${intensities_folder}/${lane_name}"
+    declare lane_directory="${intensities_directory}/${lane_name}"
     declare state_file="${archive_prefix}_${lane_name}_removing.txt"
 
-    if [ -d "${lane_folder}" ] && [ ! -e "${state_file}" ]; then
-	    # The Lane folder is still there and has not already been
-	    # deleted partially. The tar process can re-start regardless.
-	    echo "$(date): Started archiving ${intensities_folder}/${lane_name}/" 1>&3 \
+    if [ -d "${lane_directory}" ] && [ ! -e "${state_file}" ]; then
+        # The Lane directory is still there and has not already been
+        # deleted partially. The tar process can re-start regardless.
+        echo "$(date): Started  archiving ${lane_directory}/" 1>&3 \
 	        || bsf_error
-	    tar -c -f "${archive_prefix}_${lane_name}.tar" \
-	        "${intensities_folder}/${lane_name}/" \
+        tar -c -f "${archive_prefix}_${lane_name}.tar" \
+	        "${lane_directory}/" \
 	        || bsf_error
-	    echo "$(date): Finished archiving ${intensities_folder}/${lane_name}/" 1>&3 \
+        echo "$(date): Finished archiving ${lane_directory}/" 1>&3 \
 	        || bsf_error
     fi
 
-    if [ -d "${lane_folder}" ]; then
-	    # The Lane folder is still there, so delete it. Touch the
-	    # state file before and remove it after successful completion.
-    	echo "$(date): Started removing ${intensities_folder}/${lane_name}/" 1>&3 \
+    if [ -d "${lane_directory}" ]; then
+        # The Lane directory is still there, so delete it. Touch the
+        # state file before and remove it after successful completion.
+        echo "$(date): Started  removing ${lane_directory}/" 1>&3 \
 	        || bsf_error
-	    touch "${state_file}" \
+        touch "${state_file}" \
 	        || bsf_error
-	    rm -f -R "${intensities_folder}/${lane_name}" \
+        rm -f -R "${lane_directory}" \
 	        || bsf_error
-	    echo "$(date): Finished removing ${intensities_folder}/${lane_name}/" 1>&3 \
+        echo "$(date): Finished removing ${lane_directory}/" 1>&3 \
 	        || bsf_error
-	    rm "${state_file}" \
+        rm "${state_file}" \
 	        || bsf_error
     fi
+
+    unset lane_name
+    unset lane_directory
+    unset state_file
 
 done
 
-unset lane_name
-unset lane_folder
-unset state_file
-
-# 8. Run the GNU tar utility over the remaining Intensities folder (11 %),
+# 8. Run the GNU tar utility over the remaining Intensities directory (11 %),
 #    before removing it.
 #    Aside the lane directories that have been packed and removed before,
-#    the Intensities folder contains:
+#    the Intensities directory contains:
 #    * The BaseCalls directory
 #    * The Offsets directory
 #    * A BaseCalls config.xml file
@@ -275,39 +282,39 @@ unset state_file
 
 declare state_file="${archive_prefix}_Intensities_removing.txt"
 
-if [ -d "${intensities_folder}" ] && [ ! -e "${state_file}" ]; then
-    # The Intensities folder is still there and has not already been
+if [ -d "${intensities_directory}" ] && [ ! -e "${state_file}" ]; then
+    # The Intensities directory is still there and has not already been
     # deleted partially. The tar process can re-start regardless.
-    echo "$(date): Started archiving ${intensities_folder}/" 1>&3 \
+    echo "$(date): Started  archiving ${intensities_directory}/" 1>&3 \
 	    || bsf_error
     tar -c -f "${archive_prefix}_Intensities.tar" \
-	"${intensities_folder}/" \
+	    "${intensities_directory}/" \
 	    || bsf_error
-    echo "$(date): Finished archiving ${intensities_folder}/" 1>&3 \
+    echo "$(date): Finished archiving ${intensities_directory}/" 1>&3 \
 	    || bsf_error
 fi
 
-if [ -d "${intensities_folder}" ]; then
-    # The Intensities folder is still there, so delete it. Touch the
+if [ -d "${intensities_directory}" ]; then
+    # The Intensities directory is still there, so delete it. Touch the
     # state file before and remove it after successful completion.
-    echo "$(date): Started removing ${intensities_folder}/" 1>&3 \
+    echo "$(date): Started  removing ${intensities_directory}/" 1>&3 \
 	    || bsf_error
     touch "${state_file}" \
 	    || bsf_error
-    rm -f -R "${intensities_folder}" \
+    rm -f -R "${intensities_directory}" \
 	    || bsf_error
-    echo "$(date): Finished removing ${intensities_folder}/" 1>&3 \
+    echo "$(date): Finished removing ${intensities_directory}/" 1>&3 \
 	    || bsf_error
     rm "${state_file}" \
 	    || bsf_error
 fi
 
 unset state_file
-unset intensities_folder
+unset intensities_directory
 
 # 9. Archive, but do not remove the remaining Illumina Run Folder. (<1%)
 
-echo "$(date): Started archiving ${illumina_run_folder}/" 1>&3 \
+echo "$(date): Started  archiving ${illumina_run_folder}/" 1>&3 \
     || bsf_error
 tar -c -f "${archive_prefix}_Folder.tar" \
     "${illumina_run_folder}/" \
@@ -319,8 +326,7 @@ echo "$(date): Finished archiving ${illumina_run_folder}/" 1>&3 \
 
 echo "$(date): Archive folder file sizes:" 1>&3 \
     || bsf_error
-
-ls -la "${archive_folder}" 1>&3 \
+ls -la "${archive_directory}" 1>&3 \
     || bsf_error
 
 # 11. All done ...
