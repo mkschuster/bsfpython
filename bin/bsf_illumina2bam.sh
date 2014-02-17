@@ -9,7 +9,7 @@
 #   center           # e.g. BSF
 #   experiment       # e.g. BSF_0000
 #   illumina2bam_jar # file path to Java Archive (JAR) file
-#   sort_sam_jar     # file path to JAva Archive (JAR) file
+#   sort_sam_jar     # file path to Java Archive (JAR) file
 #
 # Copyright 2013 Michael Schuster
 # CeMM - Research Center for Molecular Medicine of the
@@ -97,36 +97,53 @@ fi
 
 mkdir -p "${prefix}_temporary" || bsf_error
 
-java  \
- -Xmx4G  \
- -jar "${illumina2bam_jar}"  \
- INTENSITY_DIR="${run_folder}/Data/Intensities"  \
- LANE="${lane}"  \
- OUTPUT="${prefix}_unsorted.bam"  \
- GENERATE_SECONDARY_BASE_CALLS='false'  \
- PF_FILTER='false'  \
- READ_GROUP_ID="${barcode}_${lane}"  \
- LIBRARY_NAME="${barcode}_${lane}"  \
- SEQUENCING_CENTER="${center}"  \
- TMP_DIR="${prefix}_temporary"  \
- VERBOSITY='WARNING'  \
- MAX_RECORDS_IN_RAM='4000000'  \
- CREATE_INDEX='false'  \
- CREATE_MD5_FILE='true'  \
- || bsf_error
+# If the unsorted.bam file and the corresponding md5 file are present,
+# the Illumina2bam stage does not need re-running.
 
-java  \
- -Xmx4G  \
- -jar "${sort_sam_jar}"  \
- INPUT="${prefix}_unsorted.bam"  \
- OUTPUT="${prefix}_sorted.bam"  \
- SORT_ORDER='queryname'  \
- TMP_DIR="${prefix}_temporary"  \
- VERBOSITY='WARNING'  \
- MAX_RECORDS_IN_RAM='4000000'  \
- CREATE_INDEX='false'  \
- CREATE_MD5_FILE='true'  \
- || bsf_error
+if [ -f "${prefix}_unsorted.bam" ] && [ -f "${prefix}_unsorted.bam.md5" ]; then
+    echo "Skipping Illumina2bam step that has already run successfully." \
+    || bsf_error
+    echo "Files '${prefix}_unsorted.bam' and '${prefix}_unsorted.bam.md5' are present." \
+    ||bsf_error
+else
+    java  \
+    -Xmx4G  \
+    -jar "${illumina2bam_jar}"  \
+    INTENSITY_DIR="${run_folder}/Data/Intensities"  \
+    LANE="${lane}"  \
+    OUTPUT="${prefix}_unsorted.bam"  \
+    GENERATE_SECONDARY_BASE_CALLS='false'  \
+    PF_FILTER='false'  \
+    READ_GROUP_ID="${barcode}_${lane}"  \
+    LIBRARY_NAME="${barcode}_${lane}"  \
+    SEQUENCING_CENTER="${center}"  \
+    TMP_DIR="${prefix}_temporary"  \
+    VERBOSITY='WARNING'  \
+    MAX_RECORDS_IN_RAM='4000000'  \
+    CREATE_INDEX='false'  \
+    CREATE_MD5_FILE='true'  \
+    || bsf_error
+fi
+
+if [ -f "${prefix}_sorted.bam" ] && [ -f "${prefix}_sorted.bam.md5" ]; then
+    echo "Skipping SortSam step that has already run successfully." \
+    || bsf_error
+    echo "Files '${prefix}_sorted.bam' and '${prefix}_sorted.bam.md5' are present." \
+    || bsf_error
+else
+    java  \
+    -Xmx4G  \
+    -jar "${sort_sam_jar}"  \
+    INPUT="${prefix}_unsorted.bam"  \
+    OUTPUT="${prefix}_sorted.bam"  \
+    SORT_ORDER='queryname'  \
+    TMP_DIR="${prefix}_temporary"  \
+    VERBOSITY='WARNING'  \
+    MAX_RECORDS_IN_RAM='4000000'  \
+    CREATE_INDEX='false'  \
+    CREATE_MD5_FILE='true'  \
+    || bsf_error
+fi
 
 rm "${prefix}_unsorted.bam" || bsf_error
 rm "${prefix}_unsorted.bam.md5" || bsf_error
