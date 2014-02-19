@@ -4,10 +4,11 @@
 # from a directory of tape archive files. This script depends upon
 # GNU tar functionality and will skip and not overwrite older files.
 #
-#  1. Extract the Illumina Run Folder.
-#  2. Extract the Intensities directory.
-#  3. Extract the Lane directories.
-#  4. All done.
+#  1. Check if the Illumina Run Folder does already exist.
+#  2. Extract the Illumina Run Folder.
+#  3. Extract the Intensities directory.
+#  4. Extract the Lane directories.
+#  5. All done.
 #
 # Usage: bsf_irf_restore.sh archive_directory [output_directory] [force]
 #
@@ -17,6 +18,8 @@
 #   output_directory: Path to the output directory, in which the
 #                     Illumina Run Folder will be recreated. If not specified,
 #                     defaults to the current working directory.
+#   force: Forces restoring over an already existing Illumina Run Folder.
+#          Older files will not be overwritten.
 #
 #
 # Copyright 2013 Michael Schuster
@@ -72,6 +75,7 @@ if [ "$#" -eq '0' ]; then
     exit 1
 fi
 
+declare force='FALSE'
 declare archive_directory="${1%/}"
 shift
 
@@ -87,7 +91,7 @@ declare illumina_run_name="${archive_name%_archive}"
 # Check if 'force' was set as the second argument.
 
 if [ "${1}" = 'force' ]; then
-    declare force='TRUE'
+    force='TRUE'
     shift
 fi
 
@@ -109,23 +113,37 @@ fi
 # Check if force was set as the third argument.
 
 if [ "${1}" = 'force' ]; then
-    declare force='TRUE'
+    force='TRUE'
     shift
-else
-    declare force='FALSE'
-fi
-
-if [ -d "${output_directory}/${illumina_run_name}" ]; then
-
-    echo "Error: An Illumina Run Folder already exists at this location." 1>&2 \
-        || bsf_error
-    echo "       '${output_directory}/${illumina_run_name}'" 1>&2 \
-        || bsf_error
-
 fi
 
 exec 3>>"${output_directory}/${illumina_run_name}_restore.txt" \
     || bsf_error
+
+# 1. Check if the Illumina Run Folder does already exist.
+
+if [ -d "${output_directory}/${illumina_run_name}" ]; then
+    if [ "${force}" = 'TRUE' ]; then
+        echo "Info: Forced restoring of an existing Illumina Run Folder ..." 1>&2 \
+	        || bsf_error
+        echo "INFO: Forced archiving of an existing Illumina Run Folder ..." 1>&3 \
+	        || bsf_error
+    else
+        echo "Error: An Illumina Run Folder already exists at this location." 1>&2 \
+            || bsf_error
+        echo "Error: An Illumina Run Folder already exists at this location." 1>&3 \
+            || bsf_error
+        echo "       '${output_directory}/${illumina_run_name}'" 1>&2 \
+            || bsf_error
+        echo "       '${output_directory}/${illumina_run_name}'" 1>&3 \
+            || bsf_error
+        echo "       Use the 'force' parameter to start restoring regardless." 1>&2 \
+	        || bsf_error
+        echo "       Use the 'force' parameter to start restoring regardless." 1>&3 \
+	        || bsf_error
+        exit 1
+    fi
+fi
 
 echo "Illumina Run Folder: ${illumina_run_name}" 1>&3 \
     ||bsf_error
@@ -133,25 +151,30 @@ echo "Illumina Run Folder: ${illumina_run_name}" 1>&3 \
 cd "${output_directory}" \
     || bsf_error
 
-# 1. Extract the Illumina Run Folder.
+# 2. Extract the Illumina Run Folder.
 
 echo "$(date): Started extracting the Illumina Run Folder" 1>&3 \
     || bsf_error
-tar --extract --file --skip-old-files "${archive_directory}/${illumina_run_name}_Folder.tar" \
+tar \
+    --extract \
+    --file "${archive_directory}/${illumina_run_name}_Folder.tar" \
+    --keep-old-files \
     || bsf_error
 echo "$(date): Finished extracting the Illumina Run Folder" 1>&3 \
     || bsf_error
 
-# 2. Extract the Intensities directory.
+# 3. Extract the Intensities directory.
 
 echo "$(date): Started extracting the Intensities directory" 1>&3 \
     || bsf_error
-tar --extract --file --skip-old-files "${archive_directory}/${illumina_run_name}_Intensities.tar" \
+tar \
+    --extract --file "${archive_directory}/${illumina_run_name}_Intensities.tar" \
+    --keep-old-files \
     || bsf_error
 echo "$(date): Finished extracting the Intensities directory" 1>&3 \
     || bsf_error
 
-# 3. Extract the Lane directories.
+# 4. Extract the Lane directories.
 
 for i in 1 2 3 4 5 6 7 8; do
 
@@ -159,7 +182,10 @@ for i in 1 2 3 4 5 6 7 8; do
 
     echo "$(date): Started extracting the Lanes directory ${lane_name}" 1>&3 \
         || bsf_error
-    tar --extract --file --skip-old-files "${archive_directory}/${illumina_run_name}_${lane_name}.tar" \
+    tar \
+        --extract \
+        --file "${archive_directory}/${illumina_run_name}_${lane_name}.tar" \
+        --keep-old-files \
         || bsf_error
     echo "$(date): Finished extracting the Lanes directory ${lane_name}" 1>&3 \
         || bsf_error
@@ -168,7 +194,7 @@ for i in 1 2 3 4 5 6 7 8; do
 
 done
 
-# 4. All done.
+# 5. All done.
 
 echo "$(date): Finished everything ..." 1>&3 \
     || bsf_error
