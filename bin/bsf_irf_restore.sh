@@ -126,7 +126,7 @@ if [ -d "${output_directory}/${illumina_run_name}" ]; then
     if [ "${force}" = 'TRUE' ]; then
         echo "Info: Forced restoring of an existing Illumina Run Folder ..." 1>&2 \
 	        || bsf_error
-        echo "INFO: Forced archiving of an existing Illumina Run Folder ..." 1>&3 \
+        echo "INFO: Forced restoring of an existing Illumina Run Folder ..." 1>&3 \
 	        || bsf_error
     else
         echo "Error: An Illumina Run Folder already exists at this location." 1>&2 \
@@ -158,7 +158,6 @@ echo "$(date): Started extracting the Illumina Run Folder" 1>&3 \
 tar \
     --extract \
     --file "${archive_directory}/${illumina_run_name}_Folder.tar" \
-    --keep-old-files \
     || bsf_error
 echo "$(date): Finished extracting the Illumina Run Folder" 1>&3 \
     || bsf_error
@@ -168,8 +167,8 @@ echo "$(date): Finished extracting the Illumina Run Folder" 1>&3 \
 echo "$(date): Started extracting the Intensities directory" 1>&3 \
     || bsf_error
 tar \
-    --extract --file "${archive_directory}/${illumina_run_name}_Intensities.tar" \
-    --keep-old-files \
+    --extract \
+    --file "${archive_directory}/${illumina_run_name}_Intensities.tar" \
     || bsf_error
 echo "$(date): Finished extracting the Intensities directory" 1>&3 \
     || bsf_error
@@ -185,7 +184,6 @@ for i in 1 2 3 4 5 6 7 8; do
     tar \
         --extract \
         --file "${archive_directory}/${illumina_run_name}_${lane_name}.tar" \
-        --keep-old-files \
         || bsf_error
     echo "$(date): Finished extracting the Lanes directory ${lane_name}" 1>&3 \
         || bsf_error
