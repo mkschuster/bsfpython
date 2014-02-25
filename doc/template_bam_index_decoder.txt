@@ -2,35 +2,50 @@
 # Configuration file for the Python Bio.BSF.Analysis BamIndexDecoder
 # library module.
 #
-# Configuration sections correspond to Python packages.
+# Configuration sections correspond to Python package names.
 #
+
 
 [Bio.BSF.Analysis]
 
-# Set an integer debug level, the higher, the more verbose.
-
-debug = 0
-
-# (Meaningful) Project Name
-# In general, this is the run-specific sub-directory in the central sequence
-# store, the sequences directory.
-
+# (Meaningful) Project Name (mandatory)
+#
+# In the context of BamIndexDecoder conversion, the project name is set to the
+# flow cell identifier, which is a concatenation of the experiment name and
+# the flow cell barcode. It is also the name of the sub-directory in the
+# central sequence store, the sequences directory.
+#
 project_name =
 
+
+# Analysis Input and Output Directories (optional)
+#
 # Analysis input and output directories can override standard paths
 # from Bio.BSF.Configuration. Both, user and variable expansion gets
 # applied. If, at that point, the path is still relative, default
-# directory paths from Bio.BSF.Default are prepended. These
+# directory paths from Bio.BSF.Default get prepended. These
 # options can therefore remain empty in typical cases and the output
 # directory will be created in the standard location from the project
 # name.
-
+#
 # input_directory =
 # output_directory =
 
-# Library Annotation File
-# This file specifies in comma separated value format information
-# required for de-multiplexing of BAM files created with Illumina2bam.
+
+# Debug Level (optional)
+#
+# A level of extra information can be set via an integer,
+# the higher, the more verbose.
+#
+# debug = 0
+
+
+# Library Annotation File (optional)
+#
+# A library annotation file specifies in comma-separated value format
+# information required for de-multiplexing of BAM files created with
+# Illumina2bam.
+#
 # Column names:
 #   lane
 #   barcode_sequence_1
@@ -38,14 +53,19 @@ project_name =
 #   sample_name
 #   library_name
 #
-# Defaults to 'project_name'_libraries.csv, if not explicitly specified.
-
+# Defaults to 'project_name'_libraries.csv, in the working directory,
+# if not explicitly specified.
+#
 # library_file =
 
-# Illumina2bam Java class path
-# Default will be read from library the configuration.
 
+# Illumina2bam Java Class Path (optional)
+#
+# The class path to the Java Archive (JAR) files for the Illumina2bam package.
+# Defaults to the value in Bio.BSF.Default.classpath_illumina2bam
+#
 # classpath_illumina2bam =
+
 
 [Bio.BSF.DRMS]
 
@@ -54,38 +74,61 @@ project_name =
 # Specific sections, configuring specific Bio.BSF.Analysis objects,
 # as well as Bio.BSF.DRMS objects follow below.
 
-# DRMS Implementation (i.e. SGE or Bash)
+# DRMS Implementation (optional)
+#
+# The specific implementation of the DRMS to submit jobs into.
+# Defaults to the value in Bio.BSF.Default.drms_implementation
+# Examples are SGE or Bash.
+#
+# implementation =
 
-implementation = SGE
 
-# Memory Limits per Process
-
-# The minimum free memory requirements have to be met,
-# before a process can start.
-
+# Memory Limits per Process (optional)
+#
+# Generally, the minimum free memory requirements have to be met,
+# before a process is started by the DRMS.
+# Defaults to the value in ...
+#  ... Bio.BSF.Default.drms_memory_free_mem
+#  ... Bio.BSF.Default.drms_memory_free_swap
+#  ... Bio.BSF.Default.drms_memory_free_virtual
+#
 # memory_free_mem = 2G
 # memory_free_swap = 2G
 # memory_free_virtual = 2G
-
+#
 # The soft and hard memory limits warn and subsequently kill a process,
 # respectively.
-
+# Defaults to the value in ...
+#  ... Bio.BSF.Default.drms_memory_limit_hard
+#  ... Bio.BSF.Default.drms_memory_limit_soft
+#
 memory_hard = 6G
 memory_soft = 6G
 
-# The DRMS queue
 
-# queue =
+# DRMS Queue (optional)
+#
+# Defaults to the value in Bio.BSF.Default.drms_queue
+# queue = longtime.q
 
+
+# DRMS Parallel Environment (optional)
+#
 # The parallel environment defines how multi-threaded processes are run.
 # Values are depending on the DRMS implementation.
-
+# Defaults to the value in Bio.BSF.Default.drms_parallel_environment
+#
 # parallel_environment =
 
+
+# DRMS Threads (optional)
+#
 # The number of threads defines how many parallel processes can run
 # in each parallel environment.
+# Defaults to 1
+#
+# threads = 1
 
-threads = 1
 
 [Bio.BSF.Analysis.DRMS]
 
