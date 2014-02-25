@@ -4,12 +4,12 @@
 # Illumina flow-cell into an archive BAM file sorted by query name.
 #
 # Usage: bsf_illumina2bam.sh
-#   run_folder       # e.g. 130926_SN181_0391_AD28APACXX
-#   lane             # e.g. 1
-#   center           # e.g. BSF
-#   experiment       # e.g. BSF_0000
-#   illumina2bam_jar # file path to Java Archive (JAR) file
-#   sort_sam_jar     # file path to Java Archive (JAR) file
+#   run_folder         e.g. 130926_SN181_0391_AD28APACXX
+#   lane               e.g. 1
+#   sequencing_center  e.g. BSF
+#   experiment         e.g. BSF_0000
+#   illumina2bam_jar   File path to Java Archive (JAR) file (Illumina2bam.jar)
+#   sort_sam_jar       File path to Java Archive (JAR) file (SortSam.jar)
 #
 # Copyright 2013 Michael Schuster
 # CeMM - Research Center for Molecular Medicine of the
@@ -55,9 +55,9 @@ else
 fi
 
 if [ "$#" -ne '6' ]; then
-    echo "Error: ${0} Too few arguments." 1>&2 \
+    echo "Error: Too few arguments." 1>&2 \
     || bsf_error
-    echo "Usage: ${0} run_folder lane sequencing_center experiment illumina2bam_jar sort_sam_jar" 1>&2 \
+    echo "Usage: $(basename "${0}") run_folder lane sequencing_center experiment illumina2bam_jar sort_sam_jar" 1>&2 \
     || bsf_error
     exit 1
 fi
@@ -72,25 +72,25 @@ declare barcode="${run_folder##*_[A-B]}"
 declare prefix="${experiment}_${barcode}_${lane}"
 
 if [ ! -d "${run_folder}" ]; then
-    echo "Error: ${0} Illumina Run Folder ${run_folder} does not exist." 1>&2 \
+    echo "Error: An Illumina Run Folder '${run_folder}' does not exist." 1>&2 \
     || bsf_error
     exit 1
 fi
 
 if [ ! -f "${run_folder}/RTAComplete.txt" ]; then
-    echo "Error: ${0} Illumina Run Folder not complete." 1>&2 \
+    echo "Error: This Illumina Run Folder is not complete, RTAComplete.txt is missing." 1>&2 \
     || bsf_error
     exit 1
 fi
 
 if [ ! -f "${illumina2bam_jar}" ]; then
-    echo "Error: ${0} Illumina2bam Java Archive (JAR) file does not exist." 1>&2 \
+    echo "Error: Illumina2bam Java Archive (JAR) file does not exist." 1>&2 \
     || bsf_error
     exit 1
 fi
 
 if [ ! -f "${sort_sam_jar}" ]; then
-    echo "Error: ${0} Picard SortSam Java Archive (JAR) file does not exist." 1>&2 \
+    echo "Error: Picard SortSam Java Archive (JAR) file does not exist." 1>&2 \
     || bsf_error
     exit 1
 fi
@@ -101,9 +101,9 @@ mkdir -p "${prefix}_temporary" || bsf_error
 # the Illumina2bam stage does not need re-running.
 
 if [ -f "${prefix}_unsorted.bam" ] && [ -f "${prefix}_unsorted.bam.md5" ]; then
-    echo "Skipping Illumina2bam step that has already run successfully." \
+    echo "Skipping Illumina2bam step that has already run successfully."  \
     || bsf_error
-    echo "Files '${prefix}_unsorted.bam' and '${prefix}_unsorted.bam.md5' are present." \
+    echo "Files '${prefix}_unsorted.bam' and '${prefix}_unsorted.bam.md5' are present."  \
     ||bsf_error
 else
     java  \
@@ -126,9 +126,9 @@ else
 fi
 
 if [ -f "${prefix}_sorted.bam" ] && [ -f "${prefix}_sorted.bam.md5" ]; then
-    echo "Skipping SortSam step that has already run successfully." \
+    echo "Skipping SortSam step that has already run successfully."  \
     || bsf_error
-    echo "Files '${prefix}_sorted.bam' and '${prefix}_sorted.bam.md5' are present." \
+    echo "Files '${prefix}_sorted.bam' and '${prefix}_sorted.bam.md5' are present."  \
     || bsf_error
 else
     java  \
@@ -148,3 +148,5 @@ fi
 rm "${prefix}_unsorted.bam" || bsf_error
 rm "${prefix}_unsorted.bam.md5" || bsf_error
 rm -R "${prefix}_temporary" || bsf_error
+
+exit 0
