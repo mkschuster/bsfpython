@@ -374,7 +374,7 @@ class Analysis(object):
         self.input_directory = os.path.expandvars(path=self.input_directory)
 
         if not os.path.isabs(self.input_directory):
-            self.input_directory = os.path.join(Default.absolute_sequences(), self.input_directory)
+            self.input_directory = os.path.join(Default.absolute_samples(), self.input_directory)
 
         self.output_directory = os.path.expanduser(path=self.output_directory)
         self.output_directory = os.path.expandvars(path=self.output_directory)
@@ -806,9 +806,9 @@ class Default(object):
     Attributes:
     :cvar global_default: Global BSF Default
     :type global_default: Default
-    :ivar classpath_picard: Picard JAVA Archive (JAR) class path directory
+    :ivar classpath_picard: Picard Java Archive (JAR) class path directory
     :type classpath_picard: str, unicode
-    :ivar classpath_illumina2bam: Illumina2bam JAVA Archive (JAR) class path directory
+    :ivar classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
     :type classpath_illumina2bam: str, unicode
     :ivar directory_home: Home directory for all data
     :type directory_home: str, unicode
@@ -936,9 +936,9 @@ class Default(object):
 
         :param self: BSF Default
         :type self: Default
-        :param classpath_picard: PICARD JAVA Archive (JAR) class path directory
+        :param classpath_picard: Picard Java Archive (JAR) class path directory
         :type classpath_picard: str, unicode
-        :param classpath_illumina2bam: Illumina2bam JAVA Archive (JAR) class path directory
+        :param classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
         :type classpath_illumina2bam: str, unicode
         :param directory_home: Home directory for all data
         :type directory_home: str, unicode
@@ -988,7 +988,7 @@ class Default(object):
         :rtype: None
         """
 
-        # Set JAVA classpath information.
+        # Set Java class path information.
 
         if classpath_illumina2bam:
             self.classpath_illumina2bam = classpath_illumina2bam
