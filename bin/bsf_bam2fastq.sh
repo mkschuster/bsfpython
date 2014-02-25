@@ -1,16 +1,13 @@
 #! /bin/bash
 #
-# BSF GNU Bourne-Again (Bash) script to convert an (unmapped) BAM file
-# into FASTQ files via Picard SamToFastq and to compress them with GNU Gzip.
+# BSF GNU Bourne-Again (Bash) script to convert an (unmapped) BAM or SAM file
+# into FASTQ files via Picard SamToFastq before compressing with GNU Gzip.
 #
-# Usage: bsf_bam2fastq.sh <bam_file> [prefix]
-#   bam_file: The path to the BAM file ot be converted
-#   prefix: An optional prefix for the FASTQ files, _R1_001.fastq and
-#           _R2_001.fastq get appended.
-#           If not specified, built from the bam_file parameter by removing
-#           .bam and [._]unmapped are removed from the end.
-#   output_directory: The directory in which to place the FASTQ files.
-#                     Defaults to the directory name of the bam_file parameter.
+# Usage: bsf_bam2fastq.sh input_file sam_to_fastq_jar [output_directory]
+#   input_file:        The path to the BAM or SAM file to be converted
+#   sam_to_fastq_jar:  File path to Java Archive (JAR) file (SamToFastq.jar)
+#   output_directory:  The directory in which to place the FASTQ files.
+#                      Defaults to the directory name of the input_file parameter.
 #
 #
 # Copyright 2013 Michael Schuster
@@ -32,62 +29,81 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+function bsf_error () {
+
+    cat << EOF_ERROR
+
+ #######
+ #        #####   #####    ####   #####
+ #        #    #  #    #  #    #  #    #
+ #        #    #  #    #  #    #  #    #
+ #####    #    #  #    #  #    #  #    #
+ #        #####   #####   #    #  #####
+ #        #   #   #   #   #    #  #   #
+ #######  #    #  #    #   ####   #    #
+
+EOF_ERROR
+
+    exit 1
+}
+
 if [ -z "${LANG}" ]; then
     declare -x LANG='C'
 else
     LANG='C'
 fi
 
-if test "$#" -lt '1'; then
-    echo "Error: bsf_bam2fastq.sh Too few arguments." 1>&2 \
-    || exit 1
-    echo "Usage: bsf_bam2fastq.sh <bam_file> [output_directory]" 1>&2 \
-    || exit 1
+if test "$#" -lt '2'; then
+    echo "Error: Too few arguments." 1>&2 \
+    || bsf_error
+    echo "Usage: $(basename "${0}") bam_file sam_to_fastq_jar [output_directory]" 1>&2 \
+    || bsf_error
     exit 1
 fi
 
-declare bam_file="${1}"
+declare input_file="${1}"
+declare sam_to_fastq_jar="${2}"
 
-if test -n "${2}"; then
-    declare directory="${2}"
+if test -n "${3}"; then
+    declare directory="${3}"
 else
-    declare directory="$(dirname "${bam_file}")"
+    declare directory="$(dirname "${input_file}")"
 fi
 
-# Get the base name of the bam_file parameter, remove the .bam extension
+# Get the base name of the input_file parameter, remove the .bam or .sam extension
 # and subsequently a potential [._]unmapped part.
 
-declare prefix="$(basename "${bam_file}")"
-prefix="${prefix%.bam}"
+declare prefix="$(basename "${input_file}")"
+prefix="${prefix%.[bs]am}"
 prefix="${prefix%[._]unmapped}"
+
+# Construct file names for reads one and two in the style of
+# the Illumina CASAVA software package.
 
 declare read1="${directory}/${prefix}_R1_001.fastq"
 declare read2="${directory}/${prefix}_R2_001.fastq"
 
-# TODO: Alternatively, pass the Picard directory location into this script.
-if test -z "${NGS_PICARD}"; then
-    echo "Environment variable NGS_PICARD has to be declared."
-    exit 1
-fi
-
 if test -f "${read1}.gz" -o -f "${read2}.gz"; then
-    echo "BAM file ${bam_file} has already been converted."
+    echo "BAM or SAM file ${input_file} has already been converted." \
+    || bsf_error
 else
-    java -Xmx2g -jar "${NGS_PICARD}/SamToFastq.jar" \
-        INPUT="${bam_file}" \
+    java -Xmx2g -jar "${sam_to_fastq_jar}" \
+        INPUT="${input_file}" \
         FASTQ="${read1}" \
         SECOND_END_FASTQ="${read2}" \
-        || exit 1
+        || bsf_error
 fi
 
 if test -f "${read1}"; then
     # A regular file exists ...
     if test -s "${read1}"; then
         # ... and has a size grater than zero.
-        gzip --best "${read1}" || exit 1
+        gzip --best "${read1}" \
+        || bsf_error
     else
         # ... and is empty.
-        rm "${read1}" || exit 1
+        rm "${read1}" \
+        || bsf_error
     fi
 fi
 
@@ -95,10 +111,12 @@ if test -f "${read2}"; then
     # A regular file exists ...
     if test -s "${read2}"; then
         # ... and has a size grater than zero.
-        gzip --best "${read2}" || exit 1
+        gzip --best "${read2}" \
+        || bsf_error
     else
         # ... and is empty.
-        rm "${read2}" || exit 1
+        rm "${read2}" \
+        || bsf_error
     fi
 fi
 

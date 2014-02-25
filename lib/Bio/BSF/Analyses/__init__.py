@@ -3802,7 +3802,7 @@ class RunFastQC(Analysis):
 
 class RunBamToFastq(Analysis):
 
-    """BSF BAM to FASTQ converter sub-class.
+    """BSF BAM or SAM to FASTQ converter sub-class.
 
     Attributes:
     None
@@ -3932,7 +3932,7 @@ class RunBamToFastq(Analysis):
 
     def _convert_BamToFastq(self):
 
-        """Private method to convert all Reads objects in BAM to FASTQ format.
+        """Private method to convert all Reads objects in BAM or SAM format into FASTQ format.
 
         :param self: BSF RunBamToFastq
         :type self: RunBamToFastq
@@ -3943,15 +3943,17 @@ class RunBamToFastq(Analysis):
         config_parser = self.configuration.config_parser
         config_section = self.configuration.section_from_instance(self)
 
-        # TODO: Replicates have to be un-grouped, always!
+        default = Default.get_global_default()
+
+        # Replicates have to be un-grouped, always!
         # replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
         replicate_grouping = False
 
-        bam2fastq_drms = DRMS.from_Analysis(name='bam2fastq',
+        sam_to_fastq_drms = DRMS.from_Analysis(name='sam_to_fastq',
                                             work_directory=self.genome_directory,
                                             analysis=self)
 
-        self.drms_list.append(bam2fastq_drms)
+        self.drms_list.append(sam_to_fastq_drms)
 
         for sample in self.collection.get_all_Samples():
 
@@ -3975,8 +3977,8 @@ class RunBamToFastq(Analysis):
                     if self.debug > 0:
                         print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
 
-                    # TODO: A BAM file should only appear as PairedReads.reads1 Reads object.
-                    # The block, processing the PairedReads.reads2 object may be redundant.
+                    # In a BSF Paired Reads object, the SAM or BAM file could potentially
+                    # occur as reads1 or reads2 instance variable.
 
                     if paired_reads.reads1:
                         file_name = str(paired_reads.reads1.file_path)
@@ -3986,16 +3988,18 @@ class RunBamToFastq(Analysis):
                         # TODO: The matching part to remove the .bam could be achieved with Bash parameter expansion.
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
-                            bam2fastq = Executable.from_Analysis(name='picard_bam2fastq_{}_1'.
-                                                                 format(replicate_key),
-                                                                 program='bsf_bam2fastq.sh',
-                                                                 analysis=self)
+                            sam_to_fastq = Executable.from_Analysis(name='picard_sam_to_fastq_{}_1'.
+                                                                    format(replicate_key),
+                                                                    program='bsf_bam2fastq.sh',
+                                                                    analysis=self)
 
-                            bam2fastq_drms.add_Executable(bam2fastq)
+                            sam_to_fastq_drms.add_Executable(sam_to_fastq)
 
-                            bam2fastq.arguments.append(paired_reads.reads1.file_path)
-                            bam2fastq.arguments.append(os.path.join(self.genome_directory,
-                                                                    match.group(1)))
+                            sam_to_fastq.arguments.append(paired_reads.reads1.file_path)
+                            sam_to_fastq.arguments.append(os.path.join(default.classpath_picard,
+                                                                       'SamToFastq.jar'))
+                            sam_to_fastq.arguments.append(os.path.join(self.genome_directory,
+                                                                       match.group(1)))
 
                     if paired_reads.reads2:
                         file_name = str(paired_reads.reads2.file_path)
@@ -4004,13 +4008,15 @@ class RunBamToFastq(Analysis):
 
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
-                            bam2fastq = Executable.from_Analysis(name='picard_bam2fastq_{}_2'.
-                                                                 format(replicate_key),
-                                                                 program='bsf_bam2fastq.sh',
-                                                                 analysis=self)
+                            sam_to_fastq = Executable.from_Analysis(name='picard_sam_to_fastq_{}_2'.
+                                                                    format(replicate_key),
+                                                                    program='bsf_bam2fastq.sh',
+                                                                    analysis=self)
 
-                            bam2fastq_drms.add_Executable(bam2fastq)
+                            sam_to_fastq_drms.add_Executable(sam_to_fastq)
 
-                            bam2fastq.arguments.append(paired_reads.reads2.file_path)
-                            bam2fastq.arguments.append(os.path.join(self.genome_directory,
-                                                                    match.group(1)))
+                            sam_to_fastq.arguments.append(paired_reads.reads2.file_path)
+                            sam_to_fastq.arguments.append(os.path.join(default.classpath_picard,
+                                                                       'SamToFastq.jar'))
+                            sam_to_fastq.arguments.append(os.path.join(self.genome_directory,
+                                                                       match.group(1)))
