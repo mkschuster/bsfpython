@@ -4,8 +4,8 @@
 # Illumina2bam archive BAM file into sample-specific BAM files.
 #
 # Usage: bsf_bam_index_decoder.sh
-#   prefix                  # e.g. BSF_0052_D2C55ACXX_1
-#   bam_index_decoder_jar
+#   input_file              # Illumina2bam input file
+#   bam_index_decoder_jar   # File path to Java Archive (JAR) file (BamIndexDecoder.jar)
 #
 # Copyright 2013 Michael Schuster
 # CeMM - Research Center for Molecular Medicine of the
@@ -51,27 +51,28 @@ else
 fi
 
 if [ "$#" -ne '2' ]; then
-    echo "Error: ${0} Too few arguments." 1>&2  \
- || bsf_error
-    echo "Usage: ${0} prefix illumina2bam_jar" 1>&2  \
- || bsf_error
+    echo "Error: Too few arguments." 1>&2  \
+    || bsf_error
+    echo "Usage: $(basename "${0}") input_file bam_index_decoder_jar" 1>&2  \
+    || bsf_error
     exit 1
 fi
 
-declare prefix="${1}"
+declare input_file="${1}"
 declare bam_index_decoder_jar="${2}"
 
-mkdir -p "${prefix}_temporary" || bsf_error
-mkdir -p "${prefix}_samples" || bsf_error
+# To get the prefix, strip the input_file to the base name and remove the
+# _(un)?sorted.[bs]am string.
 
-# Work with sorted or unsorted archive BAM files, where sorted take precedence.
+declare prefix="$(basename "${input_file}")"
+prefix="${prefix%.[bs]am}"
+prefix="${prefix%_sorted}"
+prefix="${prefix%_unsorted}"
 
-declare input_file=''
-if [ -f "${prefix}_sorted.bam" ]; then
-    input_file="${prefix}_sorted.bam"
-elif [ -f "${prefix}_unsorted.bam" ]; then
-    input_file="${prefix}_unsorted.bam"
-fi
+mkdir -p "${prefix}_temporary" \
+    || bsf_error
+mkdir -p "${prefix}_samples" \
+    || bsf_error
 
 java  \
  -Xmx4G  \
@@ -87,4 +88,7 @@ java  \
  VERBOSITY='WARNING'  \
  || bsf_error
 
-rm -R "${prefix}_temporary" || bsf_error
+rm -R "${prefix}_temporary" \
+    || bsf_error
+
+exit 0

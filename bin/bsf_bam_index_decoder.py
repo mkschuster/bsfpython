@@ -26,9 +26,8 @@
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import os.path
 
-from Bio.BSF import Analysis, Default
+from Bio.BSF import Analysis
 from Bio.BSF.Analyses.picard import bam_index_decoder
 
 
@@ -52,16 +51,7 @@ bid = Analysis.from_config_file(config_file=args.configuration)
 if args.debug:
     bid.debug = args.debug
 
-# The Analysis has to use the default lanes directory, before it can run.
-
-bid.output_directory = os.path.expanduser(path=bid.output_directory)
-bid.output_directory = os.path.expandvars(path=bid.output_directory)
-
-if not os.path.isabs(bid.output_directory):
-    bid.output_directory = os.path.join(Default.absolute_sequences(), bid.output_directory)
-
-bid.run()
-bam_index_decoder(bid)  # TODO: Find a better solution?
+bam_index_decoder(bid)
 
 # Submit all Executable objects of all Distributed Resource Management System objects.
 

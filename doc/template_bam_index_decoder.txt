@@ -1,0 +1,92 @@
+#
+# Configuration file for the Python Bio.BSF.Analysis BamIndexDecoder
+# library module.
+#
+# Configuration sections correspond to Python packages.
+#
+
+[Bio.BSF.Analysis]
+
+# Set an integer debug level, the higher, the more verbose.
+
+debug = 0
+
+# (Meaningful) Project Name
+# In general, this is the run-specific sub-directory in the central sequence
+# store, the sequences directory.
+
+project_name =
+
+# Analysis input and output directories can override standard paths
+# from Bio.BSF.Configuration. Both, user and variable expansion gets
+# applied. If, at that point, the path is still relative, default
+# directory paths from Bio.BSF.Default are prepended. These
+# options can therefore remain empty in typical cases and the output
+# directory will be created in the standard location from the project
+# name.
+
+# input_directory =
+# output_directory =
+
+# Library Annotation File
+# This file specifies in comma separated value format information
+# required for de-multiplexing of BAM files created with Illumina2bam.
+# Column names:
+#   lane
+#   barcode_sequence_1
+#   barcode_sequence_2
+#   sample_name
+#   library_name
+#
+# Defaults to 'project_name'_libraries.csv, if not explicitly specified.
+
+# library_file =
+
+# Illumina2bam Java class path
+# Default will be read from library the configuration.
+
+# classpath_illumina2bam =
+
+[Bio.BSF.DRMS]
+
+# The General Distributed Resource Management System (DRMS)
+# configuration section applies to all analyses in this configuration file.
+# Specific sections, configuring specific Bio.BSF.Analysis objects,
+# as well as Bio.BSF.DRMS objects follow below.
+
+# DRMS Implementation (i.e. SGE or Bash)
+
+implementation = SGE
+
+# Memory Limits per Process
+
+# The minimum free memory requirements have to be met,
+# before a process can start.
+
+# memory_free_mem = 2G
+# memory_free_swap = 2G
+# memory_free_virtual = 2G
+
+# The soft and hard memory limits warn and subsequently kill a process,
+# respectively.
+
+memory_hard = 6G
+memory_soft = 6G
+
+# The DRMS queue
+
+# queue =
+
+# The parallel environment defines how multi-threaded processes are run.
+# Values are depending on the DRMS implementation.
+
+# parallel_environment =
+
+# The number of threads defines how many parallel processes can run
+# in each parallel environment.
+
+threads = 1
+
+[Bio.BSF.Analysis.DRMS]
+
+[Bio.BSF.Analysis.DRMS.bam_index_decoder]
