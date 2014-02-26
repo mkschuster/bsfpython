@@ -84,6 +84,7 @@ if [ "$#" -eq '0' ]; then
     exit 1
 fi
 
+declare force='FALSE'
 declare illumina_run_folder="${1%/}"
 shift
 
@@ -98,17 +99,21 @@ declare illumina_run_name="$(basename "${illumina_run_folder}")"
 # Check if 'force' was set as the second argument.
 
 if [ "${1}" = 'force' ]; then
-    declare force='TRUE'
+    force='TRUE'
     shift
 fi
 
-# Check if an archive directory was set as the second argument.
+# Check if an output directory was set as the second argument.
 
 if [ -n "${1}" ]; then
     declare output_directory="${2}"
     shift
-    mkdir -p "${output_directory}" \
-        || bsf_error
+    # The output directory has to exist.
+    if [ ! -d "${output_directory}" ]; then
+        echo "Error: The output directory '${output_directory}' does not exist." 1>&2 \
+            || bsf_error
+        exit 1
+    fi
 else
     declare output_directory="${PWD}"
 fi
@@ -116,21 +121,19 @@ fi
 # Check if force was set as the third argument.
 
 if [ "${1}" = 'force' ]; then
-    declare force='TRUE'
+    force='TRUE'
     shift
-else
-    declare force='FALSE'
 fi
 
 exec 3>>"${output_directory}/${illumina_run_name}_archive.txt" \
     || bsf_error
 
 # 0. Check whether Picard ExtractIlluminaBarcodes has written any
-# s_<lane>_<tile>_barcode.txt files into the BaseCalls directory.
+# s_<lane>_<tile>_barcode.txt(.gz) files into the BaseCalls directory.
 # Keeping them is rather pointless and they should be removed.
 # http://picard.sourceforge.net/command-line-overview.shtml#ExtractIlluminaBarcodes
 
-if [ -n "$(find "${illumina_run_folder}/Data/Intensities/BaseCalls" -name '*_barcode.txt' -print -quit)" ]; then
+if [ -n "$(find "${illumina_run_folder}/Data/Intensities/BaseCalls" -name '*_barcode.txt*' -print -quit)" ]; then
     echo "Error: This Illumina Run Folder contains Picard ExtractIlluminaBarcodes files." 1>&2 \
 	    || bsf_error
     echo "ERROR: This Illumina Run Folder contains Picard ExtractIlluminaBarcodes files." 1>&3 \
