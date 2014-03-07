@@ -1919,7 +1919,7 @@ class AnnotationSheet(object):
     non_sequence_expression = re.compile(pattern='[^ACGTacgt]')
 
     @classmethod
-    def check_column(cls, row_number, row_dict, column_name):
+    def check_column(cls, row_number, row_dict, column_name, require_column=True, require_value=True):
 
         """Check for a column name and return its associated value, if any.
 
@@ -1931,6 +1931,10 @@ class AnnotationSheet(object):
         :type row_dict: dict
         :param column_name: Column name
         :type column_name: str
+        :param require_column: Require the column_name to be defined in teh row_dict
+        :type require_column: bool
+        :param require_value: Require a value
+        :type require_value: bool
         :return: Tuple of warning message and column value
         :rtype: tuple
         """
@@ -1938,14 +1942,16 @@ class AnnotationSheet(object):
         message = str()
 
         if column_name not in row_dict:
-            message += 'Column name {!r} not in dict for row {}.\n'.format(column_name, row_number)
+            if require_column:
+                message += 'Column name {!r} not in dict for row {}.\n'.format(column_name, row_number)
             return message, None
 
-        if not row_dict[column_name]:
-            message += 'Column name {!r} without value in row {}.\n'.format(column_name, row_number)
-            return message, None
-        else:
+        if row_dict[column_name]:
             return message, row_dict[column_name]
+        else:
+            if require_value:
+                message += 'Column name {!r} without value in row {}.\n'.format(column_name, row_number)
+            return message, None
 
     @classmethod
     def check_alphanumeric(cls, row_number, row_dict, column_name):
@@ -2008,9 +2014,40 @@ class AnnotationSheet(object):
         return messages
 
     @classmethod
-    def check_sequence(cls, row_number, row_dict, column_name):
+    def check_sequence(cls, row_number, row_dict, column_name, require_column=True, require_value=True):
 
         """Validate a particular column value as sequence.
+
+        :param cls: Class
+        :type cls: Class
+        :param row_number: Row number for warning messages
+        :type row_number: int
+        :param row_dict: A Python dict of row entries of a Python csv object
+        :type row_dict: dict
+        :param column_name: Column name
+        :type column_name: str
+        :param require_column: Require the column_name to be defined in teh row_dict
+        :type require_column: bool
+        :param require_value: Require a value
+        :type require_value: bool
+        :return: Warning messages
+        :rtype: str
+        """
+        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name,
+                                                  require_column=require_column, require_value=require_value)
+
+        if column_value:
+            match = re.search(pattern=cls.non_sequence_expression, string=row_dict[column_name])
+            if match:
+                messages += 'Field {!r} in row {} contains a sequence {!r} with illegal characters.\n'. \
+                    format(column_name, row_number, row_dict[column_name])
+
+        return messages
+
+    @classmethod
+    def check_sequence_mandatory(cls, row_number, row_dict, column_name):
+
+        """Validate a particular column value as mandatory sequence.
 
         :param cls: Class
         :type cls: Class
@@ -2023,15 +2060,27 @@ class AnnotationSheet(object):
         :return: Warning messages
         :rtype: str
         """
-        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
+        return cls.check_sequence(row_number=row_number, row_dict=row_dict, column_name=column_name,
+                                  require_column=True, require_value=True)
 
-        if column_value:
-            match = re.search(pattern=cls.non_sequence_expression, string=row_dict[column_name])
-            if match:
-                messages += 'Field {!r} in row {} contains a sequence {!r} with illegal characters.\n'. \
-                    format(column_name, row_number, row_dict[column_name])
+    @classmethod
+    def check_sequence_optional(cls, row_number, row_dict, column_name):
 
-        return messages
+        """Validate a particular column value as optional sequence.
+
+        :param cls: Class
+        :type cls: Class
+        :param row_number: Row number for warning messages
+        :type row_number: int
+        :param row_dict: A Python dict of row entries of a Python csv object
+        :type row_dict: dict
+        :param column_name: Column name
+        :type column_name: str
+        :return: Warning messages
+        :rtype: str
+        """
+        return cls.check_sequence(row_number=row_number, row_dict=row_dict, column_name=column_name,
+                                  require_column=True, require_value=False)
 
     @classmethod
     def read_from_file(cls, file_path=None, file_type=None, name=None):
@@ -2301,8 +2350,8 @@ class BamIndexDecoderSheet(AnnotationSheet):
     # Python dict to correlate columns with validation methods.
 
     test_methods = dict(lane=AnnotationSheet.check_alphanumeric,
-                        barcode_sequence_1=AnnotationSheet.check_sequence,
-                        barcode_sequence_2=AnnotationSheet.check_sequence,
+                        barcode_sequence_1=AnnotationSheet.check_sequence_mandatory,
+                        barcode_sequence_2=AnnotationSheet.check_sequence_optional,
                         sample_name=AnnotationSheet.check_alphanumeric,
                         library_name=AnnotationSheet.check_alphanumeric)
 
