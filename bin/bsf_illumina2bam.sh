@@ -132,7 +132,7 @@ if [ -f "${prefix}_sorted.bam" ] && [ -f "${prefix}_sorted.bam.md5" ]; then
     || bsf_error
 else
     java  \
-    -Xmx4G  \
+    -Xmx6G  \
     -jar "${sort_sam_jar}"  \
     INPUT="${prefix}_unsorted.bam"  \
     OUTPUT="${prefix}_sorted.bam"  \
