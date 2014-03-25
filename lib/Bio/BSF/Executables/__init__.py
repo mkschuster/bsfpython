@@ -31,14 +31,12 @@ from Bio.BSF import Command, Executable
 
 
 class Bowtie1(Executable):
-
     """BSF Bowtie1 short read aligner class.
 
     Reference: http://bowtie-bio.sourceforge.net/manual.shtml
     """
 
     def __init__(self, name, analysis):
-
         """Initialise a Bowtie1 object.
 
         :param self: BSF Bowtie1 object
@@ -62,11 +60,9 @@ class Bowtie1(Executable):
 
 
 class Bowtie2(Executable):
-
     """BSF Bowtie2 short read aligner class."""
 
     def __init__(self, name, analysis):
-
         """Initialise a Bowtie2 object.
 
         :param self: BSF Bowtie2 object
@@ -89,8 +85,38 @@ class Bowtie2(Executable):
         # Set default Bowtie2 options.
 
 
-class Cuffdiff(Executable):
+class BWA07(Executable):
+    """BSF Burrows Wheeler Aligner version 0.7 class.
 
+    Reference: http://bio-bwa.sourceforge.net/
+    Usage: bwa mem db_prefix reads.fq [mates.fq]
+    """
+
+    def __init__(self, name, analysis):
+        """Initialise a BWA07 object.
+
+        :param self: BSF BWA07 object
+        :type self: BWA07
+        :param name: Name
+        :type name: str
+        :param analysis: Bio.BSF.Analysis object or a sub-class thereof
+        :type analysis: Analysis
+        :return: Nothing
+        :rtype: None
+        """
+
+        super(BWA07, self).__init__(name=name, program='bwa', sub_command=Command(command='mem'))
+
+        # The options have to be set for the 'mem' sub-command.
+        section = analysis.configuration.section_from_instance(self)
+        self.sub_command.set_Configuration(configuration=analysis.configuration, section=section)
+
+        # Set default BWA mem options.
+
+        # None for the moment.
+
+
+class Cuffdiff(Executable):
     """BSF Cuffdiff differential expression class.
 
     Reference: http://cufflinks.cbcb.umd.edu/manual.html#cuffdiff
@@ -101,7 +127,6 @@ class Cuffdiff(Executable):
     """
 
     def __init__(self, name, analysis):
-
         """Initialise a Cuffdiff object.
 
         :param self: BSF Cuffdiff object
@@ -137,7 +162,6 @@ class Cuffdiff(Executable):
 
 
 class Cufflinks(Executable):
-
     """BSF Cufflinks transcript assembler class.
 
     Reference: http://cufflinks.cbcb.umd.edu/manual.html
@@ -145,7 +169,6 @@ class Cufflinks(Executable):
     """
 
     def __init__(self, name, analysis):
-
         """Initialise a Cufflinks object.
 
         :param self: BSF Cufflinks object
@@ -181,7 +204,6 @@ class Cufflinks(Executable):
 
 
 class Cuffmerge(Executable):
-
     """BSF Cuffmerge transcript assembly merge class.
 
     Reference: http://cufflinks.cbcb.umd.edu/manual.html#cuffmerge
@@ -189,7 +211,6 @@ class Cuffmerge(Executable):
     """
 
     def __init__(self, name, analysis):
-
         """Initialise a Cuffmerge object.
 
         :param self: BSF Cuffmerge object
@@ -224,7 +245,6 @@ class Cuffmerge(Executable):
 
 
 class TopHat(Executable):
-
     """BSF TopHat RNA-Seq aligner class.
 
     Reference: http://tophat.cbcb.umd.edu/manual.html
@@ -236,7 +256,6 @@ class TopHat(Executable):
     """
 
     def __init__(self, name, analysis):
-
         """Initialise a TopHat object.
 
         :param self: BSF TopHat object
@@ -269,14 +288,12 @@ class TopHat(Executable):
 
 
 class Macs14(Executable):
-
     """BSF Model-based Analysis for ChIP-Seq (MACS) version 1.4 peak-caller class.
 
     Reference: http://liulab.dfci.harvard.edu/MACS/
     """
 
     def __init__(self, name, analysis):
-
         """Initialise a Macs14 object.
 
         :param self: BSF Macs14 object
@@ -304,14 +321,12 @@ class Macs14(Executable):
 
 
 class Macs2Bdgcmp(Executable):
-
     """BSF Model-based Analysis for ChIP-Seq (MACS) version 2 bedGraph comparison class.
 
     Reference: http://liulab.dfci.harvard.edu/MACS/
     """
 
     def __init__(self, name, analysis):
-
         """Initialise a MACS2 BedGraph Comparison object.
 
         :param self: BSF Macs2Bdgmp object
@@ -336,14 +351,12 @@ class Macs2Bdgcmp(Executable):
 
 
 class Macs2Callpeak(Executable):
-
     """BSF Model-based Analysis for ChIP-Seq (MACS) version 2 peak-caller class.
 
     Reference: http://liulab.dfci.harvard.edu/MACS/
     """
 
     def __init__(self, name, analysis):
-
         """Initialise a Macs2Callpeak object.
 
         :param self: BSF Macs2Callpeak object
@@ -372,14 +385,12 @@ class Macs2Callpeak(Executable):
 
 
 class FastQC(Executable):
-
     """BSF FastQC quality checker class.
 
     Reference: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
     """
 
     def __init__(self, name, analysis):
-
         """Initialise a FastQC object.
 
         :param self: BSF FastQC object
