@@ -36,52 +36,58 @@ executable = 'cuffmerge'  # TODO: This is only needed until a better solution ha
 
 
 def process_stdout(stdout_handle, lock):
-
     """BSF Runner function to process STDOUT from the child process.
 
     :param stdout_handle: The STDOUT file handle
     :type stdout_handle: file
     :param lock: A Python threading.Lock object
-    :type: lock: Lock
+    :type lock: Lock
     :return: Nothing
     :rtype: None
     """
 
     lock.acquire(True)
-    print 'Started BSF Runner STDOUT processor in module {}.'.format(__name__)
+    print '[{}] Started BSF Runner STDOUT processor in module {}.'. \
+        format(datetime.datetime.now().isoformat(), __name__)
     lock.release()
 
     for line in stdout_handle:
-
         lock.acquire(True)
         print '[{}] STDOUT: {}'.format(datetime.datetime.now().isoformat(), line.rstrip())
         lock.release()
+
+    lock.acquire(True)
+    print '[{}] STDOUT: EOF on pipe.'.format(datetime.datetime.now().isoformat())
+    lock.release()
 
     # Close the pipe in the main thread.
     # stdout_handle.close()
 
 
 def process_stderr(stderr_handle, lock):
-
     """BSF Runner function to process STDERR from the child process.
 
     :param stderr_handle: The STDERR file handle
     :type stderr_handle: file
     :param lock: A Python threading.Lock object
-    :type: lock: Lock
+    :type lock: Lock
     :return: Nothing
     :rtype: None
     """
 
     lock.acquire(True)
-    print 'Started BSF Runner STDERR processor in module {}.'.format(__name__)
+    print '[{}] Started BSF Runner STDERR processor in module {}.'. \
+        format(datetime.datetime.now().isoformat(), __name__)
     lock.release()
 
     for line in stderr_handle:
-
         lock.acquire(True)
         print '[{}] STDERR: {}'.format(datetime.datetime.now().isoformat(), line.rstrip())
         lock.release()
+
+    lock.acquire(True)
+    print '[{}] STDERR: EOF on pipe.'.format(datetime.datetime.now().isoformat())
+    lock.release()
 
     # Close the pipe in the main thread.
     # stderr_handle.close()
