@@ -1894,7 +1894,7 @@ class Command(object):
             i += 1
 
         if self.sub_command:
-            self.sub_command.trace(level=level + 1)
+            output += self.sub_command.trace(level=level + 1)
 
         return output
 
