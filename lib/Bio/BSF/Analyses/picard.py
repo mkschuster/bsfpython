@@ -26,8 +26,6 @@ A package of classes and methods modelling Picard analyses data files and data d
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-# TODO: Test if BSF Analysis objects can be configured, without specifying a sub-class.
-
 
 import csv
 import errno
@@ -106,7 +104,7 @@ def extract_illumina_barcodes(config_file):
     analysis = Analysis.from_config_file(config_file=config_file)
 
     cp = analysis.configuration.config_parser
-    section = '{}.{}'.format(__name__, analysis.__name__)  # TODO: Experimental
+    section = '{}.{}'.format(__name__, analysis.__name__)
 
     if cp.has_option(section=section, option='max_mismatches'):
         max_mismatches = cp.get(section=section, option='max_mismatches')
@@ -587,7 +585,6 @@ def illumina_to_bam(analysis):
     analysis.drms_list.append(itb_drms)
 
     for lane in range(1, irf.run_information.flow_cell_layout.lane_count + 1):
-
         itb = Executable(name='illumina_to_bam_{}_{}'.format(irf.run_information.flow_cell, lane),
                          program='bsf_illumina2bam.sh')
 
@@ -657,7 +654,7 @@ def bam_index_decoder(analysis):
     library_file = os.path.expandvars(path=library_file)
 
     if not os.path.exists(path=library_file):
-        message = 'A library_file option is missing from configuration file section {!r}.'.\
+        message = 'A library_file option is missing from configuration file section {!r}.'. \
             format(config_section)
         raise Exception(message)
 
@@ -731,7 +728,6 @@ def bam_index_decoder(analysis):
         file_handle_barcode.write(string.join(words=field_names_2, sep='\t') + '\n')
 
         for row_dict in index_by_lane[key]:
-
             # Write the lane-specific tab-delimited Picard barcode file.
             file_handle_barcode.write(string.join(words=(row_dict['barcode_sequence_1']
                                                          + row_dict['barcode_sequence_2'],
@@ -744,7 +740,7 @@ def bam_index_decoder(analysis):
             sample_dict['ProcessedRunFolder'] = analysis.project_name
             sample_dict['Project'] = row_dict['library_name']
             sample_dict['Sample'] = row_dict['sample_name']
-            sample_dict['Reads1'] = row_dict['sample_name']
+            sample_dict['Reads1'] = '{}_{}_{}'.format(analysis.project_name, key, row_dict['sample_name'])
             sample_dict['File1'] = os.path.join(analysis.genome_directory,
                                                 '{}_{}_samples'.format(analysis.project_name, key),
                                                 '{}_{}#{}.bam'.format(analysis.project_name, key,
