@@ -31,7 +31,6 @@ SubCommand (key) and Argument (key).
 
 
 class Argument(object):
-
     """Bio.BSF.Argument.Argument class for an argument obeying a "key" schema.
 
     Attributes:
@@ -42,7 +41,7 @@ class Argument(object):
     @classmethod
     def from_key_value(cls, key, value):
 
-        """Create a Bio.BSF.Argument or sub-class object from a key and value argument pair.
+        """Create a Bio.BSF.Argument.Argument or sub-class object from a key and value argument pair.
 
         If the key starts with one or two hyphen and has no value associated, create a
         SwitchShort or SwitchLong object, respectively. If the key is additionally associated
@@ -83,7 +82,7 @@ class Argument(object):
 
     def __init__(self, key):
 
-        """Initialise a Bio.BSF.Argument object.
+        """Initialise a Bio.BSF.Argument.Argument object.
 
         :param key: Key
         :type key: str
@@ -99,9 +98,27 @@ class Argument(object):
 
         self.key = key
 
+    def trace(self, level):
+
+        """Trace a Bio.BSF.Argument.Argument object.
+
+        :param self: Bio.BSF.Argument.Argument
+        :type self: Argument
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information
+        :rtype: str
+        """
+
+        indent = '  ' * level
+        output = str()
+        output += '{}{!r}\n'.format(indent, self)
+        output += '{}  key: {!r}\n'.format(indent, self.key)
+
+        return output
+
 
 class Switch(Argument):
-
     """Bio.BSF.Argument.Switch class, for an argument obeying a "--key" or "-k" schema.
 
     Attributes:
@@ -110,7 +127,6 @@ class Switch(Argument):
     """
 
     def __init__(self, key, is_long=False):
-
         """Initialise a Bio.BSF.Argument.Switch object.
 
         :param key: Key
@@ -127,16 +143,34 @@ class Switch(Argument):
 
         self.is_long = is_long
 
+    def trace(self, level):
+        """Trace a Bio.BSF.Argument.Switch object.
+
+        :param self: Bio.BSF.Argument.Switch
+        :type self: Switch
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information
+        :rtype: str
+        """
+
+        indent = '  ' * level
+        output = str()
+        output += '{}{!r}\n'.format(indent, self)
+        output += '{}  is_long: {!r}\n'.format(indent, self.is_long)
+
+        output += super(Switch, self).trace(level=level + 1)
+
+        return output
+
 
 class SwitchLong(Switch):
-
     """Bio.BSF.Argument.SwitchLong class, for an argument obeying a "--key" schema.
 
     Attributes:
     """
 
     def __init__(self, key):
-
         """Initialise a Bio.BSF.Argument.SwitchLong object.
 
         :param key: Key
@@ -147,16 +181,33 @@ class SwitchLong(Switch):
 
         super(SwitchLong, self).__init__(key=key, is_long=True)
 
+    def trace(self, level):
+        """Trace a Bio.BSF.Argument.SwitchLong object.
+
+        :param self: Bio.BSF.Argument.SwitchLong
+        :type self: SwitchLong
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information
+        :rtype: str
+        """
+
+        indent = '  ' * level
+        output = str()
+        output += '{}{!r}\n'.format(indent, self)
+
+        output += super(SwitchLong, self).trace(level=level + 1)
+
+        return output
+
 
 class SwitchShort(Switch):
-
     """Bio.BSF.Argument.SwitchShort class, for an argument obeying a "-k" schema.
 
     Attributes:
     """
 
     def __init__(self, key):
-
         """Initialise a Bio.BSF.Argument.SwitchShort object.
 
         :param key: Key
@@ -167,9 +218,27 @@ class SwitchShort(Switch):
 
         super(SwitchShort, self).__init__(key=key, is_long=False)
 
+    def trace(self, level):
+        """Trace a Bio.BSF.Argument.SwitchShort object.
+
+        :param self: Bio.BSF.Argument.SwitchShort
+        :type self: SwitchShort
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information
+        :rtype: str
+        """
+
+        indent = '  ' * level
+        output = str()
+        output += '{}{!r}\n'.format(indent, self)
+
+        output += super(SwitchShort, self).trace(level=level + 1)
+
+        return output
+
 
 class Option(Switch):
-
     """Bio.BSF.Argument.Option class for arguments obeying a "--key value" or "-k value" schema.
 
     Attributes:
@@ -180,7 +249,6 @@ class Option(Switch):
     """
 
     def __init__(self, key, value, is_long=False, is_pair=False):
-
         """Initialise a Bio.BSF.Argument.Option object.
 
         :param key: Key
@@ -207,16 +275,35 @@ class Option(Switch):
         self.value = value
         self.is_pair = is_pair
 
+    def trace(self, level):
+        """Trace a Bio.BSF.Argument.Option object.
+
+        :param self: Bio.BSF.Argument.Option
+        :type self: Option
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information
+        :rtype: str
+        """
+
+        indent = '  ' * level
+        output = str()
+        output += '{}{!r}\n'.format(indent, self)
+        output += '{}  is_pair: {!r}\n'.format(indent, self.is_pair)
+        output += '{}  value:   {!r}\n'.format(indent, self.value)
+
+        output += super(Option, self).trace(level=level + 1)
+
+        return output
+
 
 class OptionLong(Option):
-
     """Bio.BSF.Argument.OptionLong class, representing an argument obeying a "--key value" schema.
 
     Attributes:
     """
 
     def __init__(self, key, value):
-
         """Initialise a Bio.BSF.Argument.OptionLong object.
 
         :param key: Key
@@ -229,16 +316,33 @@ class OptionLong(Option):
 
         super(OptionLong, self).__init__(key=key, value=value, is_long=True)
 
+    def trace(self, level):
+        """Trace a Bio.BSF.Argument.OptionLong object.
+
+        :param self: Bio.BSF.Argument.OptionLong
+        :type self: OptionLong
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information
+        :rtype: str
+        """
+
+        indent = '  ' * level
+        output = str()
+        output += '{}{!r}\n'.format(indent, self)
+
+        output += super(OptionLong, self).trace(level=level + 1)
+
+        return output
+
 
 class OptionShort(Option):
-
     """Bio.BSF.Argument.OptionShort class, representing an argument obeying a "-k value" schema.
 
     Attributes:
     """
 
     def __init__(self, key, value):
-
         """Initialise a Bio.BSF.Argument.OptionShort object.
 
         :param key: Key
@@ -251,9 +355,27 @@ class OptionShort(Option):
 
         super(OptionShort, self).__init__(key=key, value=value, is_long=False)
 
+    def trace(self, level):
+        """Trace a Bio.BSF.Argument.OptionShort object.
+
+        :param self: Bio.BSF.Argument.OptionShort
+        :type self: OptionShort
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information
+        :rtype: str
+        """
+
+        indent = '  ' * level
+        output = str()
+        output += '{}{!r}\n'.format(indent, self)
+
+        output += super(OptionShort, self).trace(level=level + 1)
+
+        return output
+
 
 class OptionPair(Option):
-
     """Bio.BSF.Argument.OptionPair class, for an argument obeying a KEY=VALUE schema.
 
     Although the KEY=VALUE expressions could be added as simple arguments, the benefit
@@ -264,7 +386,6 @@ class OptionPair(Option):
     """
 
     def __init__(self, key, value):
-
         """Initialise a Bio.BSF.Argument.OptionPair object.
 
         :param key: Key
@@ -276,3 +397,22 @@ class OptionPair(Option):
         """
 
         super(OptionPair, self).__init__(key=key, value=value, is_pair=True)
+
+    def trace(self, level):
+        """Trace a Bio.BSF.Argument.OptionPair object.
+
+        :param self: Bio.BSF.Argument.OptionPair
+        :type self: OptionPair
+        :param level: Indentation level
+        :type level: int
+        :return: Trace information
+        :rtype: str
+        """
+
+        indent = '  ' * level
+        output = str()
+        output += '{}{!r}\n'.format(indent, self)
+
+        output += super(OptionPair, self).trace(level=level + 1)
+
+        return output
