@@ -44,7 +44,6 @@ from Bio.BSF.Argument import *
 
 
 class Analysis(object):
-
     """BSF Analysis class.
 
     The BSF Analysis class represents a high-level analysis that may use one or more
@@ -246,7 +245,7 @@ class Analysis(object):
         :type self: Analysis
         :param level: Indentation level
         :type level: int
-        :return: BSF Analysis information
+        :return: Trace information
         :rtype: str
         """
 
@@ -314,8 +313,7 @@ class Analysis(object):
         assert isinstance(configuration, Configuration)
 
         if not configuration.config_parser.has_section(section=section):
-
-            message = 'Section {!r} not defined in BSF Configuration file {!r}.'.\
+            message = 'Section {!r} not defined in BSF Configuration file {!r}.'. \
                 format(section, configuration.config_file)
             warnings.warn(message, UserWarning)
 
@@ -487,7 +485,7 @@ class Analysis(object):
         # Do not automatically create "new" paths based on mis-spelt sub_directory names.
 
         if not os.path.isdir(html_path):
-            message = "Public HTML path {} does not exist. Check sub-directory {} name.".\
+            message = "Public HTML path {} does not exist. Check sub-directory {} name.". \
                 format(html_path, sub_directory)
             raise Exception(message)
 
@@ -541,7 +539,7 @@ class Analysis(object):
                 except OSError as exception:
                     if exception.errno != errno.ENOENT:
                         raise
-                # In principle, a race condition could occur as the directory
+                    # In principle, a race condition could occur as the directory
                 # could have been created after its existence has been checked.
                 try:
                     os.symlink(self.project_directory, link_name)
@@ -665,7 +663,6 @@ class Analysis(object):
 
 
 class Configuration(object):
-
     """BSF Configuration class.
 
     The BSF Configuration class represents a UNIX-style initialisation (*.ini) file and
@@ -764,7 +761,7 @@ class Configuration(object):
         :type self: Configuration
         :param level: Indentation level
         :type level: int
-        :return: BSF Configuration information
+        :return: Trace information
         :rtype: str
         """
 
@@ -800,7 +797,6 @@ class Configuration(object):
 
 
 class Default(object):
-
     """The BSF Default class specifies the application or library default configuration.
 
     Attributes:
@@ -1414,7 +1410,6 @@ class Default(object):
 
 
 class DRMS(object):
-
     """BSF Distributed Resource Management System (DRMS) class.
 
     The BSF DRMS class represents a Distributed Resource Management System or
@@ -1666,7 +1661,7 @@ class DRMS(object):
         :type self: DRMS
         :param level: Indentation level
         :type level: int
-        :return: BSF DRMS information
+        :return: Trace information
         :rtype: str
         """
 
@@ -1723,8 +1718,7 @@ class DRMS(object):
         assert isinstance(configuration, Configuration)
 
         if not configuration.config_parser.has_section(section=section):
-
-            message = 'Section {!r} not defined in BSF Configuration file {!r}.'.\
+            message = 'Section {!r} not defined in BSF Configuration file {!r}.'. \
                 format(section, configuration.config_file)
             warnings.warn(message, UserWarning)
 
@@ -1812,7 +1806,6 @@ class DRMS(object):
 
 
 class Command(object):
-
     """BSF Command class.
 
     The BSF Command class represents one (subordinate) command,
@@ -1867,7 +1860,7 @@ class Command(object):
         :type self: Command
         :param level: Indentation level
         :type level: int
-        :return: BSF Command information
+        :return: Trace information
         :rtype: str
         """
 
@@ -1883,6 +1876,7 @@ class Command(object):
 
         for key in self.options.keys():
             output += '{}    key: {!r} value: {!r}\n'.format(indent, key, self.options[key])
+            output += self.options[key].trace(level=level + 2)
 
         # List all arguments
 
@@ -1924,7 +1918,7 @@ class Command(object):
 
         if not override and argument.key in self.options:
             message = 'Overwriting a Bio.BSF.Argument.Switch or Bio.BSF.Argument.Option ' \
-                      'with key {!r} that exits already in Command {!r}.'.\
+                      'with key {!r} that exits already in Command {!r}.'. \
                 format(argument.key, self.command)
             warnings.warn(message, UserWarning)
 
@@ -2022,8 +2016,7 @@ class Command(object):
         assert isinstance(configuration, Configuration)
 
         if not configuration.config_parser.has_section(section=section):
-
-            message = 'Section {!r} not defined in BSF Configuration file {!r}.'.\
+            message = 'Section {!r} not defined in BSF Configuration file {!r}.'. \
                 format(section, configuration.config_file)
             warnings.warn(message, UserWarning)
 
@@ -2032,7 +2025,6 @@ class Command(object):
         # The configuration section is available.
 
         for option in configuration.config_parser.options(section=section):
-
             argument = Argument.from_key_value(key=option,
                                                value=configuration.config_parser.get(section=section,
                                                                                      option=option))
@@ -2143,7 +2135,6 @@ class Command(object):
 
 
 class Executable(Command):
-
     """BSF Executable class.
 
     The BSF Executable class represents an executable program,
@@ -2318,7 +2309,7 @@ class Executable(Command):
         :type self: Executable
         :param level: Indentation level
         :type level: int
-        :return: BSF Executable information
+        :return: Trace information
         :rtype: str
         """
 
@@ -2365,7 +2356,7 @@ class Executable(Command):
 
         command = list()
 
-        command.extend(super(Executable,self).command_list())
+        command.extend(super(Executable, self).command_list())
 
         # Append stdout and stderr re-directions if defined.
         # TODO: This only works for Bash in SGE context.
