@@ -33,10 +33,10 @@ import re
 from stat import *
 import string
 import warnings
+import weakref
 
 
 class Reads(object):
-
     """BSF Next-Generation Sequencing Reads class.
 
     The BSF Reads class represents a file of Next-Generation Sequencing reads,
@@ -59,6 +59,8 @@ class Reads(object):
     :type read: str
     :ivar chunk: Chunk number (e.g. 001, 002, ...)
     :type chunk: str
+    :ivar weak_reference_paired_reads: Weak Reference to a BSF PairedReads object
+    :type weak_reference_paired_reads: PairedReads
     :return: Nothing
     :rtype: None
     """
@@ -107,7 +109,8 @@ class Reads(object):
         return reads
 
     def __init__(self, file_path=None, file_type=None, name=None,
-                 barcode=None, lane=None, read=None, chunk=None):
+                 barcode=None, lane=None, read=None, chunk=None,
+                 weak_reference_paired_reads=None):
 
         """Initialise a BSF Reads object.
 
@@ -130,6 +133,8 @@ class Reads(object):
         :type read: str
         :param chunk: Chunk number (e.g. 001, 002, ...)
         :type chunk:str
+        :param weak_reference_paired_reads: Weak Reference to a BSF PairedReads object
+        :type weak_reference_paired_reads: PairedReads
         :return: Nothing
         :rtype: None
         """
@@ -169,6 +174,11 @@ class Reads(object):
         else:
             self.chunk = str()
 
+        if weak_reference_paired_reads:
+            self.weak_reference_paired_reads = weak_reference_paired_reads
+        else:
+            self.weak_reference_paired_reads = None
+
     def trace(self, level):
 
         """Trace a BSF Reads object.
@@ -177,13 +187,14 @@ class Reads(object):
         :type self: Reads
         :param level: Indentation level
         :type level: int
-        :return: BSF Reads information
+        :return: Trace information
         :rtype: str
         """
 
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
+        output += '{}  weak_reference_paired_reads: {!r}\n'.format(indent, self.weak_reference_paired_reads)
         output += '{}  file_path: {!r}\n'.format(indent, self.file_path)
         output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
         output += '{}  name:      {!r}\n'.format(indent, self.name)
@@ -294,7 +305,6 @@ class Reads(object):
 
 
 class PairedReads(object):
-
     """BSF Next-Generation Sequencing Paired Reads class.
 
     The BSF PairedReads class represents a pair of BSF Reads objects
@@ -305,9 +315,11 @@ class PairedReads(object):
     :type reads1: Reads
     :ivar reads2: Second BSF Reads
     :type reads2: Reads
+    :ivar weak_reference_sample: Weak Reference to a BSF Sample
+    :type weak_reference_sample: Sample
     """
 
-    def __init__(self, reads1=None, reads2=None):
+    def __init__(self, reads1=None, reads2=None, weak_reference_sample=None):
 
         """Initialise a BSF PairedReads object.
 
@@ -320,13 +332,15 @@ class PairedReads(object):
         :type reads1: Reads
         :param reads2: Second BSF Reads
         :type reads2: Reads
+        :param weak_reference_sample: Weak Reference to a BSF Sample
+        :type weak_reference_sample: Sample
         :return: Nothing
         :rtype: None
         :raise Exception: For file_type 'CASAVA', 'R1' or 'R2' must be set in the
         Reads object.
         """
 
-        if (reads1 and reads2) and (not reads1.match_paired(reads2)):
+        if (reads1 and reads2) and (not reads1.match_paired(reads=reads2)):
             raise Exception('The BSF Reads objects do not match')
 
         self.reads1 = None
@@ -337,30 +351,39 @@ class PairedReads(object):
             if reads1.file_type == 'CASAVA':
                 if reads1.read == 'R1':
                     self.reads1 = reads1
+                    reads1.weak_reference_paired_reads = weakref.ref(self)
                 elif reads1.read == 'R2':
                     self.reads2 = reads1
+                    reads1.weak_reference_paired_reads = weakref.ref(self)
                 else:
-                    message = 'Unknown BSF Reads read attribute ' \
-                              + reads1.read
+                    message = 'Unknown BSF Reads read attribute {}.'.format(reads1.read)
                     raise Exception(message)
             else:
                 # Other file types go here ...
                 self.reads1 = reads1
+                reads1.weak_reference_paired_reads = weakref.ref(self)
 
         if reads2:
 
             if reads2.file_type == 'CASAVA':
                 if reads2.read == 'R1':
                     self.reads1 = reads2
+                    reads2.weak_reference_paired_reads = weakref.ref(self)
                 elif reads2.read == 'R2':
                     self.reads2 = reads2
+                    reads2.weak_reference_paired_reads = weakref.ref(self)
                 else:
-                    message = 'Unknown BSF Reads read attribute ' \
-                              + reads2.read
+                    message = 'Unknown BSF Reads read attribute {}.'.format(reads2.read)
                     raise Exception(message)
             else:
                 # Other file types go here ...
                 self.reads2 = reads2
+                reads2.weak_reference_paired_reads = weakref.ref(self)
+
+        if weak_reference_sample:
+            self.weak_reference_sample = weak_reference_sample
+        else:
+            self.weak_reference_sample = None
 
     def trace(self, level):
 
@@ -370,13 +393,14 @@ class PairedReads(object):
         :type self: PairedReads
         :param level: Indentation level
         :type level: int
-        :return: BSF PairedReads information
+        :return: Trace information
         :rtype: str
         """
 
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
+        output += '{}  weak_reference_sample: {!r}\n'.format(indent, self.weak_reference_sample)
         output += '{}  reads1: {!r}\n'.format(indent, self.reads1)
         output += '{}  reads2: {!r}\n'.format(indent, self.reads2)
 
@@ -410,22 +434,22 @@ class PairedReads(object):
 
         if self.reads1:
 
-            if not self.reads1.match_paired(reads):
+            if not self.reads1.match_paired(reads=reads):
                 return False
 
             if self.reads1.file_type == 'CASAVA':
                 if reads.read == 'R1':
-                    message = 'BSF PairedReads reads1 ' \
-                              + 'has already been defined.\n' \
-                              + '  reads1: ' + self.reads1.file_path + '\n' \
-                              + '  reads:  ' + reads.file_path
+                    message = 'BSF PairedReads reads1 has already been defined.\n' \
+                              + '  reads1: {}\n' \
+                              + '  reads:  {}'. \
+                        format(self.reads1.file_path, reads.file_path)
                     raise Exception(message)
                 elif reads.read == 'R2':
                     self.reads2 = reads
+                    reads.weak_reference_paired_reads = weakref.ref(self)
                     return True
                 else:
-                    message = 'Unknown BSF Reads read attribute ' \
-                              + reads.read
+                    message = 'Unknown BSF Reads read attribute {}.'.format(reads.read)
                     raise Exception(message)
             else:
                 # Other file types go here ...
@@ -434,22 +458,22 @@ class PairedReads(object):
 
         if self.reads2:
 
-            if not self.reads2.match_paired(reads):
+            if not self.reads2.match_paired(reads=reads):
                 return False
 
             if self.reads2.file_type == 'CASAVA':
                 if reads.read == 'R1':
                     self.reads1 = reads
+                    reads.weak_reference_paired_reads = weakref.ref(self)
                     return True
                 elif reads.read == 'R2':
-                    message = 'BSF PairedReads reads2 ' \
-                              + 'has already been defined.\n' \
-                              + '  reads2: ' + self.reads2.file_path + '\n' \
-                              + '  reads:  ' + reads.file_path
+                    message = 'BSF PairedReads reads2 has already been defined.\n' \
+                              + '  reads2: {}\n' \
+                              + '  reads:  {}'. \
+                        format(self.reads2.file_path, reads.file_path)
                     raise Exception(message)
                 else:
-                    message = 'Unknown BSF Reads read attribute ' \
-                              + reads.read
+                    message = 'Unknown BSF Reads read attribute {}.'.format(reads.read)
                     raise Exception(message)
             else:
                 # Other file types go here ...
@@ -470,10 +494,10 @@ class PairedReads(object):
         :rtype: bool
         """
 
-        if not self.reads1.match(paired_reads.reads1):
+        if not self.reads1.match(reads=paired_reads.reads1):
             return False
 
-        if (self.reads2 and paired_reads.reads2) and not self.reads2.match(paired_reads.reads2):
+        if (self.reads2 and paired_reads.reads2) and not self.reads2.match(reads=paired_reads.reads2):
             return False
 
         return True
@@ -513,7 +537,6 @@ class PairedReads(object):
 
 
 class Sample(object):
-
     """BSF Sample class.
 
     The BSF Sample class represents a Next-Generation Sequencing sample that
@@ -530,8 +553,10 @@ class Sample(object):
                      External: other data files
     :ivar name: Name
     :type name: str
-    :ivar paired_reads: Python list of BSF PairedReads objects
-    :type paired_reads: list
+    :ivar paired_reads_list: Python list of BSF PairedReads objects
+    :type paired_reads_list: list
+    :ivar weak_reference_project: Weak reference to a BSF Project object
+    :type weak_reference_project: Project
     """
 
     default_key = 'Default'
@@ -575,11 +600,9 @@ class Sample(object):
                 mode = os.stat(file_path).st_mode
                 match = re.search(pattern=r'fastq.gz$', string=file_name)
                 if S_ISREG(mode) and match:
-                    reads = Reads.from_file_path(file_path=file_path, file_type=file_type)
-                    sample.add_Reads(reads)
+                    sample.add_Reads(reads=Reads.from_file_path(file_path=file_path, file_type=file_type))
 
         else:
-
             message = 'Unsupported file_type {!r}.'.format(file_type)
             raise Exception(message)
 
@@ -604,7 +627,7 @@ class Sample(object):
         assert isinstance(sample2, Sample)
 
         if sample1.name != sample2.name:
-            message = 'Merged BSF Sample objects {!r} and {!r} should have the same name.'.\
+            message = 'Merged BSF Sample objects {!r} and {!r} should have the same name.'. \
                 format(sample1.name, sample2.name)
             warnings.warn(message, UserWarning)
 
@@ -615,18 +638,17 @@ class Sample(object):
         # Merge the BSF PairedReads objects from both BSF Sample objects,
         # but check, if the BSF PairedReads objects are not already there.
 
-        for paired_reads in sample1.paired_reads:
-            if paired_reads not in sample.paired_reads:
-                sample.paired_reads.append(paired_reads)
+        for paired_reads in sample1.paired_reads_list:
+            if paired_reads not in sample.paired_reads_list:
+                sample.add_PairedReads(paired_reads=paired_reads)
 
-        for paired_reads in sample2.paired_reads:
-            if paired_reads not in sample.paired_reads:
-                sample.paired_reads.append(paired_reads)
+        for paired_reads in sample2.paired_reads_list:
+            if paired_reads not in sample.paired_reads_list:
+                sample.add_PairedReads(paired_reads=paired_reads)
 
         return sample
 
-    def __init__(self, file_path=None, file_type=None, name=None,
-                 paired_reads=None):
+    def __init__(self, file_path=None, file_type=None, name=None, paired_reads_list=None, weak_reference_project=None):
 
         """Initialise a BSF Sample object.
 
@@ -638,8 +660,10 @@ class Sample(object):
         :type file_type: str
         :param name: Name
         :type name: str
-        :param paired_reads: Python list of BSF PairedReads objects
-        :type paired_reads: list
+        :param paired_reads_list: Python list of BSF PairedReads objects
+        :type paired_reads_list: list
+        :param weak_reference_project: Weak Reference to a BSF Project object
+        :type weak_reference_project: Project
         :return: Nothing
         :rtype: None
         """
@@ -659,10 +683,19 @@ class Sample(object):
         else:
             self.name = str()
 
-        if paired_reads:
-            self.paired_reads = paired_reads
+        if paired_reads_list:
+            self.paired_reads_list = paired_reads_list
+            # Setting the Sample object as a weak reference is problematic as it modifies the
+            # BSF PairedReads objects on the list.
+            for paired_reads_object in paired_reads_list:
+                paired_reads_object.weak_reference_sample = weakref.ref(self)
         else:
-            self.paired_reads = list()
+            self.paired_reads_list = list()
+
+        if weak_reference_project:
+            self.weak_reference_project = weak_reference_project
+        else:
+            self.weak_reference_project = None
 
     def trace(self, level):
 
@@ -672,19 +705,20 @@ class Sample(object):
         :type self: Sample
         :param level: Indentation level
         :type level: int
-        :return: BSF Sample information
+        :return: Trace information
         :rtype: str
         """
 
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
+        output += '{}  weak_reference_project: {!r}\n'.format(indent, self.weak_reference_project)
         output += '{}  file_path: {!r}\n'.format(indent, self.file_path)
         output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
         output += '{}  name:      {!r}\n'.format(indent, self.name)
         output += '{}  paired_reads:\n'.format(indent)
 
-        for paired_reads in self.paired_reads:
+        for paired_reads in self.paired_reads_list:
             output += paired_reads.trace(level + 1)
 
         return output
@@ -715,13 +749,13 @@ class Sample(object):
 
         # Match Python list objects of BSF PairedReads objects ...
 
-        for paired_reads1 in self.paired_reads:
+        for paired_reads1 in self.paired_reads_list:
 
             match = False
 
-            for paired_reads2 in sample.paired_reads:
+            for paired_reads2 in sample.paired_reads_list:
 
-                if paired_reads1.match(paired_reads2):
+                if paired_reads1.match(paired_reads=paired_reads2):
                     match = True
                     break
 
@@ -745,7 +779,8 @@ class Sample(object):
 
         if paired_reads:
             assert isinstance(paired_reads, PairedReads)
-            self.paired_reads.append(paired_reads)
+            self.paired_reads_list.append(paired_reads)
+            paired_reads.weak_reference_sample = weakref.ref(self)
 
     def add_Reads(self, reads):
 
@@ -766,15 +801,14 @@ class Sample(object):
         # The chunk must be identical
         # The read must fit
 
-        for paired_reads in self.paired_reads:
-            if paired_reads.add_Reads(reads):
+        for paired_reads in self.paired_reads_list:
+            if paired_reads.add_Reads(reads=reads):
                 break
         else:
             # The BSF Reads object could not be added.
-            # Create and append a new BSF PairedReads object initialised
-            # with the BSF Reads object.
-            paired_reads = PairedReads(reads1=reads)
-            self.paired_reads.append(paired_reads)
+            # Create a new BSF PairedReads object initialised
+            # with the BSF Reads object and add it to the BSF Sample.
+            self.add_PairedReads(paired_reads=PairedReads(reads1=reads))
 
     def get_all_PairedReads(self, replicate_grouping, full=False):
 
@@ -800,7 +834,7 @@ class Sample(object):
 
         groups = dict()
 
-        for paired_reads in self.paired_reads:
+        for paired_reads in self.paired_reads_list:
 
             if replicate_grouping:
                 # If grouped, use the Bio.BSF.Data.Sample.name as key so that all PairedReds objects
@@ -827,7 +861,6 @@ class Sample(object):
 
 
 class Project(object):
-
     """BSF Project class.
 
     The BSF Project class represents a BSF Next-Generation Sequencing Project
@@ -847,6 +880,8 @@ class Project(object):
     :type name: str
     :ivar samples: Python dict of BSF Sample objects
     :type samples: dict
+    :ivar weak_reference_prf: Weak Reference to a BSF Processed Run Folder object
+    :type weak_reference_prf: ProcessedRunFolder
     """
 
     default_key = 'Default'
@@ -892,18 +927,16 @@ class Project(object):
                         message = 'BSF Sample with name {!r} already exists.'.format(match.group(1))
                         raise Exception(message)
                     else:
-                        project.samples[match.group(1)] = \
-                            Sample.from_file_path(file_path=file_path, file_type=file_type)
+                        project.add_Sample(sample=Sample.from_file_path(file_path=file_path, file_type=file_type))
 
         else:
-
             message = 'Unsupported file_type {!r}.'.format(file_type)
             raise Exception(message)
 
         return project
 
     def __init__(self, file_path=None, file_type=None, name=None,
-                 samples=None):
+                 samples=None, weak_reference_prf=None):
 
         """Initialise a BSF Project object.
 
@@ -919,6 +952,8 @@ class Project(object):
         :type name: str
         :param samples: A Python dict of BSF Sample objects
         :type samples: dict
+        :param weak_reference_prf: Weak Reference to a BSF Processed Run Folder object
+        :type weak_reference_prf: ProcessedRunFolder
         :return: Nothing
         :rtype: None
         :raise Exception: For file_type 'CASAVA' BSF Sample name members
@@ -945,6 +980,11 @@ class Project(object):
         else:
             self.samples = dict()
 
+        if weak_reference_prf:
+            self.weak_reference_prf = weak_reference_prf
+        else:
+            self.weak_reference_prf = None
+
     def trace(self, level):
 
         """Trace a BSF Project object.
@@ -953,13 +993,14 @@ class Project(object):
         :type self: Project
         :param level: Indentation level
         :type level: int
-        :return: BSF Project information
+        :return: Trace information
         :rtype: str
         """
 
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
+        output += '{}  weak_reference_prf: {!r}'.format(indent, self.weak_reference_prf)
         output += '{}  file_path: {!r}\n'.format(indent, self.file_path)
         output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
         output += '{}  name:      {!r}\n'.format(indent, self.name)
@@ -985,6 +1026,7 @@ class Project(object):
         if sample:
             assert isinstance(sample, Sample)
             self.samples[sample.name] = sample
+            sample.weak_reference_project = weakref.ref(self)
 
     def get_all_Samples(self):
 
@@ -1008,7 +1050,6 @@ class Project(object):
 
 
 class ProcessedRunFolder(object):
-
     """BSF (CASAVA-) Processed Run Folder class.
 
     The BSF ProcessedRunFolder class represents an (Illumina)
@@ -1033,6 +1074,8 @@ class ProcessedRunFolder(object):
     :type version: str
     :ivar projects: Python dict of BSF Project objects
     :type projects: dict
+    :ivar weak_reference_collection: Weak Reference to a BSF Collection object
+    :type weak_reference_collection: Collection
     """
 
     default_key = 'Default'
@@ -1120,8 +1163,7 @@ class ProcessedRunFolder(object):
                         message = 'BSF Project with name {!r} already exists.'.format(match.group(1))
                         raise Exception(message)
                     else:
-                        prf.projects[match.group(1)] = \
-                            Project.from_file_path(file_path=file_path, file_type=file_type)
+                        prf.add_Project(project=Project.from_file_path(file_path=file_path, file_type=file_type))
 
         elif file_type == 'External':
 
@@ -1140,7 +1182,7 @@ class ProcessedRunFolder(object):
 
     def __init__(self, file_path=None, file_type=None, name=None,
                  prefix=None, flow_cell=None, version=None,
-                 projects=None):
+                 projects=None, weak_reference_collection=None):
 
         """Initialise a BSF ProcessedRunFolder object.
 
@@ -1163,6 +1205,8 @@ class ProcessedRunFolder(object):
         :type version: str
         :param projects: Python dict of BSF Project objects
         :type projects: dict
+        :param weak_reference_collection: Weak Reference to a BSF Collection object
+        :type weak_reference_collection: Collection
         :return: Nothing
         :rtype: None
         :raise Exception: For file_type 'CASAVA' BSF Project
@@ -1204,6 +1248,11 @@ class ProcessedRunFolder(object):
         else:
             self.projects = dict()
 
+        if weak_reference_collection:
+            self.weak_reference_collection = weak_reference_collection
+        else:
+            self.weak_reference_collection = None
+
     def trace(self, level):
 
         """Trace a BSF ProcessedRunFolder object.
@@ -1212,13 +1261,14 @@ class ProcessedRunFolder(object):
         :type self: ProcessedRunFolder
         :param level: Indentation level
         :type level: int
-        :return: BSF ProcessedRunFolder information
+        :return: Trace information
         :rtype: str
         """
 
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
+        output += '{}  weak_reference_collection: {!r}\n'.format(indent, self.weak_reference_collection)
         output += '{}  file_path: {!r}\n'.format(indent, self.file_path)
         output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
         output += '{}  name:      {!r}\n'.format(indent, self.name)
@@ -1247,6 +1297,7 @@ class ProcessedRunFolder(object):
         if project:
             assert isinstance(project, Project)
             self.projects[project.name] = project
+            project.weak_reference_prf = weakref.ref(self)
 
     def get_all_Projects(self):
 
@@ -1270,7 +1321,6 @@ class ProcessedRunFolder(object):
 
 
 class Collection(object):
-
     """BSF Collection class.
 
     The BSF Collection class represents a collection of
@@ -1379,7 +1429,7 @@ class Collection(object):
         :type self: Collection
         :param level: Indentation level
         :type level: int
-        :return: BSF Collection information
+        :return: Trace information
         :rtype: str
         """
 
@@ -1425,11 +1475,14 @@ class Collection(object):
         if prf:
             assert isinstance(prf, ProcessedRunFolder)
             self.processed_run_folders[prf.name] = prf
+            prf.weak_reference_collection = weakref.ref(self)
 
     def get_ProcessedRunFolder(self, file_path, file_type=None):
 
-        """Get a BSF ProcessedRunFolder by name.
+        """Get a BSF ProcessedRunFolder by file path.
 
+        If the BSF ProcessedRunFolder does not exist in the BSF Collection object,
+        it will be automatically discovered and added.
         :param self: BSF Collection
         :type self: Collection
         :param file_path: File path
@@ -1456,7 +1509,7 @@ class Collection(object):
 
             prf = ProcessedRunFolder.from_file_path(file_path=file_path, file_type=file_type)
 
-            self.add_ProcessedRunFolder(prf)
+            self.add_ProcessedRunFolder(prf=prf)
 
             return prf
 
@@ -1660,7 +1713,7 @@ class Collection(object):
             else:
             #    prf = ProcessedRunFolder(name=value,
             #                             file_type=file_type)
-            #    self.add_ProcessedRunFolder(prf)
+            #    self.add_ProcessedRunFolder(prf=prf)
                 # Try to automatically discover a BSF ProcessedRunFolder.
                 prf = self.get_ProcessedRunFolder(file_path=row_dict[key], file_type=file_type)
         elif ProcessedRunFolder.default_key in self.processed_run_folders:
@@ -1668,7 +1721,7 @@ class Collection(object):
         else:
             # No key or value therefore create a default object.
             prf = ProcessedRunFolder(name=ProcessedRunFolder.default_key, file_type=file_type)
-            self.add_ProcessedRunFolder(prf)
+            self.add_ProcessedRunFolder(prf=prf)
 
         return prf
 
@@ -1700,12 +1753,12 @@ class Collection(object):
                 project = prf.projects[value]
             else:
                 project = Project(name=value, file_type=file_type)
-                prf.add_Project(project)
+                prf.add_Project(project=project)
         elif Project.default_key in prf.projects:
             project = prf.projects[Project.default_key]
         else:
             project = Project(name=Project.default_key, file_type=file_type)
-            prf.add_Project(project)
+            prf.add_Project(project=project)
 
         return project
 
@@ -1737,24 +1790,24 @@ class Collection(object):
                 sample = project.samples[value]
             else:
                 sample = Sample(name=value, file_type=file_type)
-                project.add_Sample(sample)
+                project.add_Sample(sample=sample)
         elif Sample.default_key in project.samples:
             sample = project.samples[Sample.default_key]
         else:
             sample = Sample(name=Sample.default_key, file_type=file_type)
-            project.add_Sample(sample)
+            project.add_Sample(sample=sample)
 
         return sample
 
     def _process_reads(self, row_dict, prefix, file_type, suffix):
 
-        # Get or create a first BSF Reads object.
-        # The '[Prefix ]Reads1' and '[Prefix ]File1' keys are optional,
+        # Get or create a BSF Reads object.
+        # The '[Prefix ]Reads{suffix}' and '[Prefix ]File{suffix}' keys are optional,
         # in which case the default is a None object.
 
         """Get or create a BSF Reads object.
 
-        A '[Prefix] ReadsN' key is optional, in which case the default is a None object.
+        A '[Prefix] Reads{suffix}' key is optional, in which case the default is a None object.
         :param self: BSF Collection
         :type self: Collection
         :param row_dict: A Python dict of row entries of a Python csv object
@@ -1773,7 +1826,6 @@ class Collection(object):
         key1 = '{} File{}'.format(prefix, suffix).lstrip(' ')
 
         if key1 in row_dict and row_dict[key1]:
-
             file_path = row_dict[key1]
             file_path = os.path.expanduser(file_path)
             file_path = os.path.expandvars(file_path)
@@ -1783,11 +1835,14 @@ class Collection(object):
 
             key2 = '{} Reads{}'.format(prefix, suffix).lstrip(' ')
 
-            reads1 = Reads(name=row_dict[key2], file_path=file_path, file_type=file_type)
+            if key2 in row_dict and row_dict[key2]:
+                reads = Reads(name=row_dict[key2], file_path=file_path, file_type=file_type)
+            else:
+                reads = None
         else:
-            reads1 = None
+            reads = None
 
-        return reads1
+        return reads
 
     def get_Sample_from_row_dict(self, row_dict, prefix=None):
 
@@ -1896,7 +1951,6 @@ class Collection(object):
 
 
 class AnnotationSheet(object):
-
     """BSF Annotation Sheet class.
 
     The BSF AnnotationSheet class represents comma-separated value (CSV) files.
@@ -2335,7 +2389,6 @@ class AnnotationSheet(object):
 
 
 class BamIndexDecoderSheet(AnnotationSheet):
-
     """
     BSF BamIndexDecoder Sheet class.
 
@@ -2484,12 +2537,10 @@ class BamIndexDecoderSheet(AnnotationSheet):
 
 
 class SampleAnnotationSheet(AnnotationSheet):
-
     pass
 
 
 class SampleGroup(object):
-
     """BSF Sample Group class.
 
     The BSF Sample Group class represents a group of BSF Sample objects.
