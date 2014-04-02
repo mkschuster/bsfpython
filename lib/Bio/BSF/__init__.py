@@ -2041,9 +2041,10 @@ class Command(object):
         :rtype: list
         """
 
-        command = list()
+        command_line = list()
 
-        command.append(self.command)
+        if self.command:
+            command_line.append(self.command)
 
         # Add all options and switches in alphabetical order.
 
@@ -2055,19 +2056,19 @@ class Command(object):
             argument = self.options[key]
 
             if isinstance(argument, SwitchLong):
-                command.append('--{}'.format(argument.key))
+                command_line.append('--{}'.format(argument.key))
             elif isinstance(argument, SwitchShort):
-                command.append('-{}'.format(argument.key))
+                command_line.append('-{}'.format(argument.key))
             elif isinstance(argument, OptionLong):
-                command.append('--{}'.format(argument.key))
+                command_line.append('--{}'.format(argument.key))
                 if argument.value:
-                    command.append(str(argument.value))
+                    command_line.append(str(argument.value))
             elif isinstance(argument, OptionShort):
-                command.append('-{}'.format(argument.key))
+                command_line.append('-{}'.format(argument.key))
                 if argument.value:
-                    command.append(str(argument.value))
+                    command_line.append(str(argument.value))
             elif isinstance(argument, OptionPair):
-                command.append('{}={}'.format(argument.key, argument.value))
+                command_line.append('{}={}'.format(argument.key, argument.value))
             else:
                 message = 'Unexpected object {!r} in Bio.BSF.Command.options dict'.format(argument)
                 warnings.warn(message, UserWarning)
@@ -2075,14 +2076,14 @@ class Command(object):
         # Add all arguments.
 
         for argument in self.arguments:
-            command.append(str(argument))
+            command_line.append(str(argument))
 
         # Expand a subordinate command, if defined.
 
         if self.sub_command:
-            command.extend(self.sub_command.command_list())
+            command_line.extend(self.sub_command.command_list())
 
-        return command
+        return command_line
 
     def command_str(self):
 
@@ -2094,9 +2095,10 @@ class Command(object):
         :rtype: str
         """
 
-        command = str()
+        command_line = str()
 
-        command += self.command
+        if self.command:
+            command_line += self.command
 
         # Add all options and switches in alphabetical order.
 
@@ -2108,15 +2110,15 @@ class Command(object):
             argument = self.options[key]
 
             if isinstance(argument, SwitchLong):
-                command += ' --{}'.format(argument.key)
+                command_line += ' --{}'.format(argument.key)
             elif isinstance(argument, SwitchShort):
-                command += ' -{}'.format(argument.key)
+                command_line += ' -{}'.format(argument.key)
             elif isinstance(argument, OptionLong):
-                command += ' --{} {}'.format(argument.key, argument.value)
+                command_line += ' --{} {}'.format(argument.key, argument.value)
             elif isinstance(argument, OptionShort):
-                command += ' -{} {}'.format(argument.key, argument.value)
+                command_line += ' -{} {}'.format(argument.key, argument.value)
             elif isinstance(argument, OptionPair):
-                command += ' {}={}'.format(argument.key, argument.value)
+                command_line += ' {}={}'.format(argument.key, argument.value)
             else:
                 message = 'Unexpected object {!r} in Bio.BSF.Command.options dict'.format(argument)
                 warnings.warn(message, UserWarning)
@@ -2124,14 +2126,14 @@ class Command(object):
         # Add all arguments.
 
         for argument in self.arguments:
-            command += ' {}'.format(argument)
+            command_line += ' {}'.format(argument)
 
         # Expand a subordinate command, if defined.
 
         if self.sub_command:
-            command += ' ' + self.sub_command.command_str()
+            command_line += ' ' + self.sub_command.command_str()
 
-        return command
+        return command_line
 
 
 class Executable(Command):
