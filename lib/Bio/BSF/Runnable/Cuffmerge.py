@@ -60,9 +60,6 @@ def process_stdout(stdout_handle, lock):
     print '[{}] STDOUT: EOF on pipe.'.format(datetime.datetime.now().isoformat())
     lock.release()
 
-    # Close the pipe in the main thread.
-    # stdout_handle.close()
-
 
 def process_stderr(stderr_handle, lock):
     """BSF Runner function to process STDERR from the child process.
@@ -88,6 +85,3 @@ def process_stderr(stderr_handle, lock):
     lock.acquire(True)
     print '[{}] STDERR: EOF on pipe.'.format(datetime.datetime.now().isoformat())
     lock.release()
-
-    # Close the pipe in the main thread.
-    # stderr_handle.close()
