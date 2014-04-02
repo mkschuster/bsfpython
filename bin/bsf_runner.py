@@ -37,8 +37,8 @@ from threading import Lock, Thread
 
 
 max_loop_counter = 10
-max_thread_counter = 10
-threading_timeout = 10.0
+max_thread_joins = 10
+thread_join_timeout = 10.0
 
 on_posix = 'posix' in sys.builtin_module_names
 
@@ -90,48 +90,49 @@ while loop_counter < max_loop_counter:
 
     child_return_code = child_process.wait()
 
-    thread_counter = 0
+    thread_joins = 0
 
-    while thread_out.is_alive and thread_counter < max_thread_counter:
-
+    while thread_out.is_alive() and thread_joins < max_thread_joins:
         thread_lock.acquire(True)
-        print '[{}] Waiting for STDOUT processor to finish.'.format(datetime.datetime.now().isoformat())
+        print '[{}] Waiting for STDOUT processor to finish.'. \
+            format(datetime.datetime.now().isoformat())
         thread_lock.release()
 
-        thread_out.join(threading_timeout)
-        thread_counter += 1
+        thread_out.join(timeout=thread_join_timeout)
+        thread_joins += 1
 
-    thread_counter = 0
+    thread_joins = 0
 
-    while thread_err.is_alive and thread_counter < max_thread_counter:
-
+    while thread_err.is_alive() and thread_joins < max_thread_joins:
         thread_lock.acquire(True)
-        print '[{}] Waiting for STDERR processor to finish.'.format(datetime.datetime.now().isoformat())
+        print '[{}] Waiting for STDERR processor to finish.'. \
+            format(datetime.datetime.now().isoformat())
         thread_lock.release()
 
-        thread_err.join(threading_timeout)
-        thread_counter += 1
-
-    # Close all pipes - not sure if it's required.
-    child_process.stdin.close()
-    child_process.stdout.close()
-    child_process.stderr.close()
+        thread_err.join(timeout=thread_join_timeout)
+        thread_joins += 1
 
     if child_return_code > 0:
-        print 'Child process {} returned exit code {}'. \
-            format(module.executable, +child_return_code)
+        print '[{}] Child process {} returned exit code {}'. \
+            format(datetime.datetime.now().isoformat(),
+                   module.executable,
+                   +child_return_code)
         loop_counter += 1
     elif child_return_code < 0:
-        print 'Child process {} received signal {}.'. \
-            format(module.executable, -child_return_code)
+        print '[{}] Child process {} received signal {}.'. \
+            format(datetime.datetime.now().isoformat(),
+                   module.executable,
+                   -child_return_code)
     else:
-        print 'Child process {} completed successfully {}.'. \
-            format(module.executable, +child_return_code)
+        print '[{}] Child process {} completed successfully {}.'. \
+            format(datetime.datetime.now().isoformat(),
+                   module.executable,
+                   +child_return_code)
         break
 
 else:
-    print 'This BSF runner exceeded the maximum re-run counter {}.' \
-        .format(max_loop_counter)
+    print '[{}] This BSF runner exceeded the maximum re-run counter {}.' \
+        .format(datetime.datetime.now().isoformat(), max_loop_counter)
 
 if child_return_code < 0:
     # This process has been sent a signal.
