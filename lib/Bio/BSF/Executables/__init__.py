@@ -85,18 +85,18 @@ class Bowtie2(Executable):
         # Set default Bowtie2 options.
 
 
-class BWA07(Executable):
-    """BSF Burrows Wheeler Aligner version 0.7 class.
+class BWA(Executable):
+    """BSF Burrows-Wheeler Aligner version class.
 
     Reference: http://bio-bwa.sourceforge.net/
     Usage: bwa mem db_prefix reads.fq [mates.fq]
     """
 
     def __init__(self, name, analysis):
-        """Initialise a BWA07 object.
+        """Initialise a BWA object.
 
-        :param self: BSF BWA07 object
-        :type self: BWA07
+        :param self: BSF BWA object
+        :type self: BWA
         :param name: Name
         :type name: str
         :param analysis: Bio.BSF.Analysis object or a sub-class thereof
@@ -105,7 +105,7 @@ class BWA07(Executable):
         :rtype: None
         """
 
-        super(BWA07, self).__init__(name=name, program='bwa', sub_command=Command(command='mem'))
+        super(BWA, self).__init__(name=name, program='bwa', sub_command=Command(command='mem'))
 
         # The options have to be set for the 'mem' sub-command.
         section = analysis.configuration.section_from_instance(self)
