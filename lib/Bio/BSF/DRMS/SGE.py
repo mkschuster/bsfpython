@@ -182,6 +182,11 @@ def submit(self, debug=0):
 
         command.extend(executable.command_list())
 
+        if executable.stdout_path:
+            command.append("1>{}".format(executable.stdout_path))
+        if executable.stderr_path:
+            command.append("2>{}".format(executable.stderr_path))
+
         # Finally, submit this command if not in debug mode.
 
         if debug == 0:

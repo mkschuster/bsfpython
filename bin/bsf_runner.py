@@ -49,7 +49,7 @@ parser.add_argument('--runnable', required=True,
 
 (args, arguments) = parser.parse_known_args()
 
-module = importlib.import_module(name='Bio.BSF.Runnable.' + args.runnable)
+module = importlib.import_module(name='Bio.BSF.Runnables.' + args.runnable)
 
 # TODO: How to set the binary executable as first option needs re-thinking.
 # A BSF Executable, Command and subordinate command infrastructure exists.

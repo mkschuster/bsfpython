@@ -51,8 +51,13 @@ def submit(self, debug=0):
         output += "\n"
 
     for executable in self.executables:
-        output += '{}\n'.format(executable.command_str())
-        output += '\n'
+        output += executable.command_str()
+        if executable.stdout_path:
+            output += " 1>{}".format(executable.stdout_path)
+        if executable.stderr_path:
+            output += " 2>{}".format(executable.stderr_path)
+        output += "\n"
+        output += "\n"
 
     script_path = os.path.join(self.work_directory, 'bsfpython_bash_{}.sh'.format(self.name))
     script_file = open(name=script_path, mode='w')

@@ -1,4 +1,4 @@
-"""Bio.BSF.Runnable.Cuffmerge
+"""Bio.BSF.Runnables.Cuffmerge
 
 A package of functions supporting the BSF Runner script.
 """

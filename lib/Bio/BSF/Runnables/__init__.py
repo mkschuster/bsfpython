@@ -1,6 +1,6 @@
-"""Bio.BSF.Runnable
+"""Bio.BSF.Runnables
 
-A package of classes and methods supporting the BSF Runner script.
+A package of classes and methods supporting the BSF Runnable class.
 """
 
 #

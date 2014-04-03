@@ -29,12 +29,16 @@ Reference: http://www.biomedical-sequencing.at/
 
 
 from ConfigParser import SafeConfigParser
+import datetime
 import errno
 import importlib
 import os
 import re
 from stat import *
 import string
+from subprocess import PIPE, Popen
+import sys
+from threading import Lock, Thread
 import uuid
 import warnings
 
@@ -513,7 +517,7 @@ class Analysis(object):
                 target_name = os.readlink(path_name)
                 if not os.path.isabs(target_name):
                     target_name = os.path.join(os.path.dirname(html_path), target_name)
-                if not os.path.exists(target_name):
+                if not os.path.exists(path=target_name):
                     # Both paths for os.path.samefile have to exist.
                     # Check for dangling symbolic links.
                     message = 'Dangling symbolic link {} to {}'.format(path_name, target_name)
@@ -2153,10 +2157,10 @@ class Executable(Command):
     :type arguments: list
     :ivar sub_command: Subordinate BSF Command
     :type sub_command: Command
-    :ivar stdout: Standard output (STDOUT) redirection in Bash (1>word)
-    :type stdout: str, unicode
-    :ivar stderr: Standard error (STDERR) redirection in Bash (2>word)
-    :type stderr: str, unicode
+    :ivar stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
+    :type stdout_path: str, unicode
+    :ivar stderr_path: Standard error (STDERR) redirection in Bash (2>word)
+    :type stderr_path: str, unicode
     :ivar dependencies: Python list of BSF Executable name strings in the
                         context of BSF DRMS dependencies
     :type dependencies: list
@@ -2235,7 +2239,7 @@ class Executable(Command):
 
     def __init__(self, name,
                  program=None, options=None, arguments=None, sub_command=None,
-                 stdout=None, stderr=None, dependencies=None, hold=None,
+                 stdout_path=None, stderr_path=None, dependencies=None, hold=None,
                  process_identifier=None, process_name=None):
 
         """Initialise a BSF Executable object.
@@ -2251,10 +2255,10 @@ class Executable(Command):
         :type arguments: list
         :param sub_command: Subordinate BSF Command
         :type sub_command: Command
-        :param stdout: Standard output (STDOUT) redirection in Bash (1>word)
-        :type stdout: str, unicode
-        :param stderr: Standard error (STDERR) redirection in Bash (2>word)
-        :type stderr: str, unicode
+        :param stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
+        :type stdout_path: str, unicode
+        :param stderr_path: Standard error (STDERR) redirection in Bash (2>word)
+        :type stderr_path: str, unicode
         :param dependencies: Python list of BSF Executable
          name strings in the context of BSF DRMS dependencies
         :type dependencies: list
@@ -2273,15 +2277,15 @@ class Executable(Command):
         super(Executable, self).__init__(command=program, options=options, arguments=arguments,
                                          sub_command=sub_command)
 
-        if stderr:
-            self.stderr = stderr
+        if stderr_path:
+            self.stderr_path = stderr_path
         else:
-            self.stderr = str()
+            self.stderr_path = str()
 
-        if stdout:
-            self.stdout = stdout
+        if stdout_path:
+            self.stdout_path = stdout_path
         else:
-            self.stdout = str()
+            self.stdout_path = str()
 
         if dependencies:
             self.dependencies = dependencies
@@ -2321,9 +2325,9 @@ class Executable(Command):
         output += '{}  name:               {!r}\n'. \
             format(indent, self.name)
         output += '{}  stdout:             {!r}\n'. \
-            format(indent, self.stdout)
+            format(indent, self.stdout_path)
         output += '{}  stderr:             {!r}\n'. \
-            format(indent, self.stderr)
+            format(indent, self.stderr_path)
         output += '{}  hold:               {!r}\n'. \
             format(indent, self.hold)
         output += '{}  process_identifier: {!r}\n'. \
@@ -2360,15 +2364,7 @@ class Executable(Command):
 
         command.extend(super(Executable, self).command_list())
 
-        # Append stdout and stderr re-directions if defined.
-        # TODO: This only works for Bash in SGE context.
-        # TODO: Maybe this should move to the DRMS:Bash and DRMS.SGE modules?
-
-        if self.stdout:
-            command.append('1>{}'.format(self.stdout))
-
-        if self.stderr:
-            command.append('2>{}'.format(self.stderr))
+        # The stdout_path and stderr_path gets appended in specific modules.
 
         return command
 
@@ -2386,14 +2382,233 @@ class Executable(Command):
 
         command += super(Executable, self).command_str()
 
-        # Append stdout and stderr re-directions if defined.
-        # TODO: This only works for Bash in SGE context.
-        # TODO: Maybe this should move to the DRMS:Bash and DRMS.SGE modules?
-
-        if self.stdout:
-            command += ' 1>{}'.format(self.stdout)
-
-        if self.stderr:
-            command += ' 2>{}'.format(self.stderr)
+        # The stdout_path and stderr_path gets appended in specific modules.
 
         return command
+
+
+class Runnable(object):
+    """BSF Runnable class.
+
+    The BSF Runnable class represents a sub process.
+
+    Attributes:
+    """
+
+    @staticmethod
+    def process_stream(file_type, file_handle, thread_lock, file_path=None, debug=0):
+        """BSF Runnable function to process STDOUT or STDERR from the child process as a thread.
+
+        :param file_type: File handle type STDOUT or STDERR
+        :type file_type: str
+        :param file_handle: The STDOUT or STDERR file handle
+        :type file_handle: file
+        :param thread_lock: A Python threading.Lock object
+        :type thread_lock: threading.Lock
+        :param file_path: STDOUT file path
+        :type file_path: str, unicode
+        :param debug: Debug level
+        :type debug: int
+        :return: Nothing
+        :rtype: None
+        """
+
+        if file_type not in ('STDOUT', 'STDERR'):
+            message = 'The file_type has to be either STDOUT or STDERR.'
+            raise Exception(message)
+
+        thread_lock.acquire(True)
+        if debug > 0:
+            print '[{}] Started BSF Runner {} processor in module {}.'. \
+                format(datetime.datetime.now().isoformat(), file_type, __name__)
+        output_file = None
+        if file_path:
+            output_file = open(file_path, 'w')
+            if debug > 0:
+                print "[{}] Opened {} file '{}'.". \
+                    format(datetime.datetime.now().isoformat(), file_type, file_path)
+        thread_lock.release()
+
+        for line in file_handle:
+            thread_lock.acquire(True)
+            if output_file:
+                output_file.write(line)
+            else:
+                print '[{}] {}: {}'.format(datetime.datetime.now().isoformat(), file_type, line.rstrip())
+            thread_lock.release()
+
+        thread_lock.acquire(True)
+        if debug > 0:
+            print '[{}] Received EOF on {} pipe.'.format(datetime.datetime.now().isoformat(), file_type)
+        if output_file:
+            output_file.close()
+            if debug > 0:
+                print "[{}] Closed {} file '{}'.". \
+                    format(datetime.datetime.now().isoformat(), file_type, file_path)
+        thread_lock.release()
+
+    @staticmethod
+    def process_stdout(stdout_handle, thread_lock, stdout_path=None, debug=0):
+        """BSF Runnable function to process STDOUT from the child process as a thread.
+
+        :param stdout_handle: The STDOUT file handle
+        :type stdout_handle: file
+        :param thread_lock: A Python threading.Lock object
+        :type thread_lock: threading.Lock
+        :param stdout_path: STDOUT file path
+        :type stdout_path: str, unicode
+        :param debug: Debug level
+        :type debug: int
+        :return: Nothing
+        :rtype: None
+        """
+
+        return Runnable.process_stream(file_type='STDOUT', file_handle=stdout_handle,
+                                       thread_lock=thread_lock, file_path=stdout_path,
+                                       debug=debug)
+
+    @staticmethod
+    def process_stderr(stderr_handle, thread_lock, stderr_path=None, debug=0):
+        """BSF Runnable function to process STDERR from the child process as a thread.
+
+        :param stderr_handle: The STDERR file handle
+        :type stderr_handle: file
+        :param thread_lock: A Python threading.Lock object
+        :type thread_lock: threading.Lock
+        :param stderr_path: STDOUT file path
+        :type stderr_path: str, unicode
+        :param debug: Debug level
+        :type debug: int
+        :return: Nothing
+        :rtype: None
+        """
+
+        return Runnable.process_stream(file_type='STDERR', file_handle=stderr_handle,
+                                       thread_lock=thread_lock, file_path=stderr_path,
+                                       debug=debug)
+
+    @staticmethod
+    def run(executable, max_loop_counter=3, max_thread_joins=10, thread_join_timeout=10, debug=1):
+        """BSF Runnable function to run a BSF Executable object as Python subprocess.
+
+        :param executable: BSF Executable
+        :type executable: Executable
+        :param max_loop_counter: Maximum number of retries
+        :type max_loop_counter: int
+        :param max_thread_joins: Maximum number of attempts to join the output threads
+        :type max_thread_joins: int
+        :param thread_join_timeout: Timeout for each attempt to join the output threads
+        :type thread_join_timeout: int
+        :param debug: Debug level
+        :type debug: int
+        :return: Return value of the child in the Python subprocess.
+        Negative values indicate that the child received a signal.
+        :rtype: int
+        """
+
+        on_posix = 'posix' in sys.builtin_module_names
+
+        loop_counter = 0
+        child_return_code = 0
+
+        while loop_counter < max_loop_counter:
+
+            child_process = Popen(args=executable.command_list(),
+                                  bufsize=-1,
+                                  stdin=PIPE,
+                                  stdout=PIPE,
+                                  stderr=PIPE,
+                                  shell=False,
+                                  close_fds=on_posix)
+
+            # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
+            # should make sure that buffers are not filling up.
+
+            thread_lock = Lock()
+
+            thread_out = Thread(target=Runnable.process_stdout,
+                                kwargs={'stdout_handle': child_process.stdout,
+                                        'thread_lock': thread_lock,
+                                        'stdout_path': executable.stdout_path,
+                                        'debug': debug})
+            thread_out.daemon = True  # Thread dies with the program.
+            thread_out.start()
+
+            thread_err = Thread(target=Runnable.process_stderr,
+                                kwargs={'stderr_handle': child_process.stderr,
+                                        'thread_lock': thread_lock,
+                                        'stderr_path': executable.stderr_path,
+                                        'debug': debug})
+            thread_err.daemon = True  # Thread dies with the program.
+            thread_err.start()
+
+            # Wait for the child process to finish.
+
+            child_return_code = child_process.wait()
+
+            thread_join_counter = 0
+
+            while thread_out.is_alive() and thread_join_counter < max_thread_joins:
+                thread_lock.acquire(True)
+                if debug > 0:
+                    print '[{}] Waiting for STDOUT processor to finish.'. \
+                        format(datetime.datetime.now().isoformat())
+                thread_lock.release()
+
+                thread_out.join(timeout=thread_join_timeout)
+                thread_join_counter += 1
+
+            thread_join_counter = 0
+
+            while thread_err.is_alive() and thread_join_counter < max_thread_joins:
+                thread_lock.acquire(True)
+                if debug > 0:
+                    print '[{}] Waiting for STDERR processor to finish.'. \
+                        format(datetime.datetime.now().isoformat())
+                thread_lock.release()
+
+                thread_err.join(timeout=thread_join_timeout)
+                thread_join_counter += 1
+
+            if child_return_code > 0:
+                if debug > 0:
+                    print '[{}] Child process {} failed with exit code {}'. \
+                        format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
+                loop_counter += 1
+            elif child_return_code < 0:
+                if debug > 0:
+                    print '[{}] Child process {} received signal {}.'. \
+                        format(datetime.datetime.now().isoformat(), executable.name, -child_return_code)
+            else:
+                if debug > 0:
+                    print '[{}] Child process {} completed successfully {}.'. \
+                        format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
+                break
+
+        else:
+            if debug > 0:
+                print "[{}] BSF Runnable '{}' exceeded the maximum re-run counter {}." \
+                    .format(datetime.datetime.now().isoformat(), executable.name, max_loop_counter)
+
+        return child_return_code
+
+    @staticmethod
+    def evaluate_return_code(executable, return_code):
+        """Evaluate a return code from the run method.
+        :param executable: BSF Executable
+        :type executable: Executable
+        :param return_code: Return code
+        :type return_code: int
+        :return: Nothing
+        :rtype: None
+        """
+
+        if return_code > 0:
+            print "[{}] Child process '{}' failed with return code {}". \
+                format(datetime.datetime.now().isoformat(), executable.name, +return_code)
+        elif return_code < 0:
+            print "[{}] Child process '{}' received signal {}.". \
+                format(datetime.datetime.now().isoformat(), executable.name, -return_code)
+        else:
+            print "[{}] Child process '{}' completed with return code {}.". \
+                format(datetime.datetime.now().isoformat(), executable.name, +return_code)
