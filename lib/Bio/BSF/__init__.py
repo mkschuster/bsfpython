@@ -541,10 +541,10 @@ class Analysis(object):
                 try:
                     os.remove(path_name)
                 except OSError as exception:
+                    # In principle, a race condition could occur as the directory
+                    # could have been created after its existence has been checked.
                     if exception.errno != errno.ENOENT:
                         raise
-                    # In principle, a race condition could occur as the directory
-                # could have been created after its existence has been checked.
                 try:
                     os.symlink(self.project_directory, link_name)
                 except OSError as exception:
@@ -923,7 +923,7 @@ class Default(object):
 
         return default
 
-    def __init__(self, classpath_picard=None, classpath_illumina2bam=None, directory_home=None,
+    def __init__(self, classpath_gatk=None, classpath_illumina2bam=None, classpath_picard=None, directory_home=None,
                  directory_runs_illumina=None, directory_sequences=None, directory_samples=None,
                  directory_projects=None, directory_public_html=None, directory_genomes=None,
                  directory_annotations=None, indices=None, drms_implementation=None, drms_maximum_threads=None,
@@ -934,12 +934,15 @@ class Default(object):
 
         """Initialise a BSF Default object.
 
+        :param classpath_gatk:
         :param self: BSF Default
         :type self: Default
-        :param classpath_picard: Picard Java Archive (JAR) class path directory
-        :type classpath_picard: str, unicode
+        :param classpath_gatk: Genome Analysis Toolkit Java Archive (JAR) class path directory
+        :type classpath_gatk: str, unicode
         :param classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
         :type classpath_illumina2bam: str, unicode
+        :param classpath_picard: Picard Java Archive (JAR) class path directory
+        :type classpath_picard: str, unicode
         :param directory_home: Home directory for all data
         :type directory_home: str, unicode
         :param directory_runs_illumina: Sub-directory for Illumina runs
@@ -989,6 +992,11 @@ class Default(object):
         """
 
         # Set Java class path information.
+
+        if classpath_gatk:
+            self.classpath_gatk = classpath_gatk
+        else:
+            self.classpath_gatk = str()
 
         if classpath_illumina2bam:
             self.classpath_illumina2bam = classpath_illumina2bam
@@ -1142,6 +1150,7 @@ class Default(object):
 
         section = 'classpath'
 
+        self.classpath_gatk = cp.get(section=section, option='gatk')
         self.classpath_illumina2bam = cp.get(section=section, option='illumina2bam')
         self.classpath_picard = cp.get(section=section, option='picard')
 
