@@ -1888,8 +1888,9 @@ class Command(object):
         output += '{}  options:\n'.format(indent)
 
         for key in self.options.keys():
-            output += '{}    key: {!r} value: {!r}\n'.format(indent, key, self.options[key])
-            output += self.options[key].trace(level=level + 2)
+            output += '{}    key: {!r} Argument objects:\n'.format(indent, key)
+            for argument in self.options[key]:
+                output += argument.trace(level=level + 2)
 
         # List all arguments
 
@@ -1930,12 +1931,18 @@ class Command(object):
         assert isinstance(argument, Argument)
 
         if not override and argument.key in self.options:
-            message = 'Overwriting a Bio.BSF.Argument.Switch or Bio.BSF.Argument.Option ' \
+            message = 'Adding a Bio.BSF.Argument.Switch or Bio.BSF.Argument.Option ' \
                       'with key {!r} that exits already in Command {!r}.'. \
                 format(argument.key, self.command)
             warnings.warn(message, UserWarning)
 
-        self.options[argument.key] = argument
+        if argument.key in self.options:
+            arguments_list = self.options[argument.key]
+        else:
+            arguments_list = list()
+            self.options[argument.key] = arguments_list
+
+        arguments_list.append(argument)
 
     def add_SwitchLong(self, key, override=False):
 
@@ -2065,26 +2072,25 @@ class Command(object):
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
-
-            argument = self.options[key]
-
-            if isinstance(argument, SwitchLong):
-                command_line.append('--{}'.format(argument.key))
-            elif isinstance(argument, SwitchShort):
-                command_line.append('-{}'.format(argument.key))
-            elif isinstance(argument, OptionLong):
-                command_line.append('--{}'.format(argument.key))
-                if argument.value:
-                    command_line.append(str(argument.value))
-            elif isinstance(argument, OptionShort):
-                command_line.append('-{}'.format(argument.key))
-                if argument.value:
-                    command_line.append(str(argument.value))
-            elif isinstance(argument, OptionPair):
-                command_line.append('{}={}'.format(argument.key, argument.value))
-            else:
-                message = 'Unexpected object {!r} in Bio.BSF.Command.options dict'.format(argument)
-                warnings.warn(message, UserWarning)
+            options_list = self.options[key]
+            for argument in options_list:
+                if isinstance(argument, SwitchLong):
+                    command_line.append('--{}'.format(argument.key))
+                elif isinstance(argument, SwitchShort):
+                    command_line.append('-{}'.format(argument.key))
+                elif isinstance(argument, OptionLong):
+                    command_line.append('--{}'.format(argument.key))
+                    if argument.value:
+                        command_line.append(str(argument.value))
+                elif isinstance(argument, OptionShort):
+                    command_line.append('-{}'.format(argument.key))
+                    if argument.value:
+                        command_line.append(str(argument.value))
+                elif isinstance(argument, OptionPair):
+                    command_line.append('{}={}'.format(argument.key, argument.value))
+                else:
+                    message = 'Unexpected object {!r} in Bio.BSF.Command.options dict'.format(argument)
+                    warnings.warn(message, UserWarning)
 
         # Add all arguments.
 
@@ -2119,22 +2125,21 @@ class Command(object):
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
-
-            argument = self.options[key]
-
-            if isinstance(argument, SwitchLong):
-                command_line += ' --{}'.format(argument.key)
-            elif isinstance(argument, SwitchShort):
-                command_line += ' -{}'.format(argument.key)
-            elif isinstance(argument, OptionLong):
-                command_line += ' --{} {}'.format(argument.key, argument.value)
-            elif isinstance(argument, OptionShort):
-                command_line += ' -{} {}'.format(argument.key, argument.value)
-            elif isinstance(argument, OptionPair):
-                command_line += ' {}={}'.format(argument.key, argument.value)
-            else:
-                message = 'Unexpected object {!r} in Bio.BSF.Command.options dict'.format(argument)
-                warnings.warn(message, UserWarning)
+            options_list = self.options[key]
+            for argument in options_list:
+                if isinstance(argument, SwitchLong):
+                    command_line += ' --{}'.format(argument.key)
+                elif isinstance(argument, SwitchShort):
+                    command_line += ' -{}'.format(argument.key)
+                elif isinstance(argument, OptionLong):
+                    command_line += ' --{} {}'.format(argument.key, argument.value)
+                elif isinstance(argument, OptionShort):
+                    command_line += ' -{} {}'.format(argument.key, argument.value)
+                elif isinstance(argument, OptionPair):
+                    command_line += ' {}={}'.format(argument.key, argument.value)
+                else:
+                    message = 'Unexpected object {!r} in Bio.BSF.Command.options dict'.format(argument)
+                    warnings.warn(message, UserWarning)
 
         # Add all arguments.
 
