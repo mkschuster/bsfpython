@@ -29,18 +29,18 @@ A package of classes and methods supporting NGS-specific analyses such as ChIP-S
 
 import errno
 import os
+from pickle import Pickler, HIGHEST_PROTOCOL
 import re
 import string
 import warnings
 
 from Bio.BSF import Analysis, Configuration, Default, Defaults, DRMS, Executable
 from Bio.BSF.Data import Collection, ProcessedRunFolder, Sample, AnnotationSheet, SampleAnnotationSheet
-from Bio.BSF.Executables import Bowtie2, Macs14, Macs2Bdgcmp, Macs2Callpeak, Cuffdiff, Cufflinks, Cuffmerge, TopHat,\
-    FastQC
+from Bio.BSF.Executables import Bowtie2, BWA, Macs14, Macs2Bdgcmp, Macs2Callpeak, Cuffdiff, Cufflinks, Cuffmerge, \
+    TopHat, FastQC
 
 
 class ChIPSeqComparison(object):
-
     def __init__(self, c_name, t_name, c_samples, t_samples,
                  factor, tissue=None, condition=None, treatment=None, replicate=None):
 
@@ -119,7 +119,6 @@ class ChIPSeqComparison(object):
 
 
 class ChIPSeqDiffBindSheet(AnnotationSheet):
-
     field_names = ['SampleID', 'Tissue', 'Factor', 'Condition', 'Treatment', 'Replicate',
                    'bamReads', 'bamControl', 'ControlID', 'Peaks', 'PeakCaller', 'PeakFormat']
 
@@ -134,7 +133,6 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
                         PeakFormat=AnnotationSheet.check_alphanumeric)
 
     def __init__(self, file_path=None, file_type=None, name=None, row_dicts=None):
-
         """Initialise a BSF ChIPSeq DiffBind Sheet object.
 
         :param self: BSF ChIPSeq DiffBind Sheet
@@ -158,7 +156,6 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
                                                    row_dicts=row_dicts)
 
     def sort(self):
-
         self.row_dicts.sort(cmp=lambda x, y:
                             cmp(x['Tissue'], y['Tissue']) or
                             cmp(x['Factor'], y['Factor']) or
@@ -167,7 +164,6 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
                             cmp(int(x['Replicate']), int(y['Replicate'])))
 
     def write_to_file(self):
-
         """Write a BSF ChIPSeq DiffBind Sheet to a file.
 
         :param self: BSF ChIPSeq DiffBind Sheet
@@ -183,7 +179,6 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
 
 
 class ChIPSeq(Analysis):
-
     """BSF ChIP-Seq-specific BSF Analysis sub-class.
 
     Attributes:
@@ -387,7 +382,7 @@ class ChIPSeq(Analysis):
                 if self.debug > 1:
                     print '  Control Sample name: {!r} file_path:{!r}'.format(c_sample.name, c_sample.file_path)
                     print c_sample.trace(1)
-                # Find the BSF Sample in the unified sample dictionary.
+                    # Find the BSF Sample in the unified sample dictionary.
                 if c_sample.name in sample_dict:
                     self.add_Sample(sample=sample_dict[c_sample.name])
 
@@ -621,9 +616,9 @@ class ChIPSeq(Analysis):
 
                 # Store the absolute file_path of the alignment file.
 
-                bowtie2.stdout = os.path.join(self.genome_directory,
-                                              replicate_directory,
-                                              replicate_key + '.aligned.sam')
+                bowtie2.stdout_path = os.path.join(self.genome_directory,
+                                                   replicate_directory,
+                                                   replicate_key + '.aligned.sam')
 
                 # Set bsf_sam2bam.sh options.
 
@@ -694,8 +689,7 @@ class ChIPSeq(Analysis):
 
                         for c_replicate_key in c_replicate_keys:
 
-                            macs14 = Macs14(name='chipseq_macs14_{}__{}'.
-                                            format(t_replicate_key, c_replicate_key),
+                            macs14 = Macs14(name='chipseq_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
                                             analysis=self)
 
                             macs14.dependencies.append('chipseq_sam2bam_' + t_replicate_key)
@@ -703,10 +697,10 @@ class ChIPSeq(Analysis):
 
                             macs14_drms.add_Executable(macs14)
 
-                            process_macs14 = Executable.from_Analysis(name='chipseq_process_macs14_{}__{}'.
-                                                                      format(t_replicate_key, c_replicate_key),
-                                                                      program='bsf_chipseq_process_macs14.sh',
-                                                                      analysis=self)
+                            process_macs14 = Executable.from_Analysis(
+                                name='chipseq_process_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
+                                program='bsf_chipseq_process_macs14.sh',
+                                analysis=self)
 
                             process_macs14.dependencies.append(macs14.name)
 
@@ -778,7 +772,7 @@ class ChIPSeq(Analysis):
                                 pass
                             else:
                                 message = 'Unable to set MACS14 parameters for unknown factor {!r}. ' \
-                                          'Please use default factor {!r} or adjust Python code if necessary.'.\
+                                          'Please use default factor {!r} or adjust Python code if necessary.'. \
                                     format(factor, Defaults.web.chipseq_default_factor)
                                 # raise Exception(message)
                                 warnings.warn(message, UserWarning)
@@ -857,23 +851,23 @@ class ChIPSeq(Analysis):
 
                         for c_replicate_key in c_replicate_keys:
 
-                            macs2_callpeak = Macs2Callpeak(name='chipseq_macs2_callpeak_{}__{}'.
-                                                           format(t_replicate_key, c_replicate_key),
-                                                           analysis=self)
+                            macs2_callpeak = Macs2Callpeak(
+                                name='chipseq_macs2_callpeak_{}__{}'.format(t_replicate_key, c_replicate_key),
+                                analysis=self)
                             macs2_callpeak_drms.add_Executable(macs2_callpeak)
                             macs2_callpeak.dependencies.append('chipseq_sam2bam_' + t_replicate_key)
                             macs2_callpeak.dependencies.append('chipseq_sam2bam_' + c_replicate_key)
 
-                            macs2_bdgcmp = Macs2Bdgcmp(name='chipseq_macs2_bdgcmp_{}__{}'.
-                                                       format(t_replicate_key, c_replicate_key),
-                                                       analysis=self)
+                            macs2_bdgcmp = Macs2Bdgcmp(
+                                name='chipseq_macs2_bdgcmp_{}__{}'.format(t_replicate_key, c_replicate_key),
+                                analysis=self)
                             macs2_bdgcmp_drms.add_Executable(macs2_bdgcmp)
                             macs2_bdgcmp.dependencies.append(macs2_callpeak.name)
 
-                            process_macs2 = Executable.from_Analysis(name='chipseq_process_macs2_{}__{}'.
-                                                                     format(t_replicate_key, c_replicate_key),
-                                                                     program='bsf_chipseq_process_macs2.sh',
-                                                                     analysis=self)
+                            process_macs2 = Executable.from_Analysis(
+                                name='chipseq_process_macs2_{}__{}'.format(t_replicate_key, c_replicate_key),
+                                program='bsf_chipseq_process_macs2.sh',
+                                analysis=self)
                             process_macs2_drms.add_Executable(process_macs2)
                             process_macs2.dependencies.append(macs2_bdgcmp.name)
 
@@ -946,7 +940,7 @@ class ChIPSeq(Analysis):
                                 pass
                             else:
                                 message = 'Unable to set MACS2 parameters for unknown factor {!r}. ' \
-                                          'Please use default factor {!r} or adjust Python code if necessary.'.\
+                                          'Please use default factor {!r} or adjust Python code if necessary.'. \
                                     format(factor, Defaults.web.chipseq_default_factor)
                                 # raise Exception(message)
                                 warnings.warn(message, UserWarning)
@@ -1088,7 +1082,6 @@ class ChIPSeq(Analysis):
                             c_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
                             for c_replicate_key in c_replicate_keys:
-
                                 row_dict = dict()
 
                                 row_dict['SampleID'] = t_replicate_key
@@ -1128,8 +1121,7 @@ class ChIPSeq(Analysis):
 
             # Create the DiffBind job.
 
-            diffbind = Executable.from_Analysis(name='chipseq_diffbind_{}'.
-                                                format(key),
+            diffbind = Executable.from_Analysis(name='chipseq_diffbind_{}'.format(key),
                                                 program='bsf_chipseq_diffbind.R',
                                                 analysis=self)
             diffbind_drms.add_Executable(diffbind)
@@ -1179,7 +1171,8 @@ class ChIPSeq(Analysis):
         output += '<p>\n'
         output += 'Next-Generation Sequencing reads are aligned with the short read aligner\n'
         output += '<strong><a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie2</a></strong>,\n'
-        output += 'before peaks are called with <a href="http://liulab.dfci.harvard.edu/MACS/index.html">MACS 1.4</a>\n'
+        output += 'before peaks are called with '
+        output += '<a href="http://liulab.dfci.harvard.edu/MACS/index.html">MACS 1.4</a>\n'
         output += 'on a treatment and control sample pair.\n'
         output += '</p>\n'
         output += '\n'
@@ -1268,7 +1261,8 @@ class ChIPSeq(Analysis):
                                         format(t_replicate_key, c_replicate_key, state, scaling)
                                     track_output += 'longLabel {} ChIP-Seq read counts for {} of {} versus {}\n'. \
                                         format(scaling.capitalize(), state, t_replicate_key, c_replicate_key)
-                                    track_output += 'bigDataUrl ./{}__{}_MACS_wiggle/{}/{}__{}_{}_afterfiting_all.bw\n'. \
+                                    track_output += 'bigDataUrl '
+                                    track_output += './{}__{}_MACS_wiggle/{}/{}__{}_{}_afterfiting_all.bw\n'. \
                                         format(t_replicate_key, c_replicate_key, state,
                                                t_replicate_key, c_replicate_key, state)
                                     if treatment and not absolute:
@@ -1331,9 +1325,11 @@ class ChIPSeq(Analysis):
                                 format(t_replicate_key, c_replicate_key,
                                        t_replicate_key, c_replicate_key)
 
-                            output += '<td><a href="./{}__{}_negative_peaks.xls">Negative peaks {} versus {}</a></td>\n'. \
+                            output += '<td>'
+                            output += '<a href="./{}__{}_negative_peaks.xls">Negative peaks {} versus {}</a>'. \
                                 format(t_replicate_key, c_replicate_key,
                                        t_replicate_key, c_replicate_key)
+                            output += '</td>\n'
 
                             output += '<td><a href="./{}__{}_model.r">R model</a></td>\n'. \
                                 format(t_replicate_key, c_replicate_key,
@@ -1363,7 +1359,6 @@ class ChIPSeq(Analysis):
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
             for replicate_key in replicate_keys:
-
                 # Add a UCSC trackDB entry.
 
                 # Common trackDb settings.
@@ -1576,7 +1571,7 @@ class ChIPSeq(Analysis):
                                 track_output += 'track {}\n'.format(composite_group)
                                 track_output += 'type bigWig\n'
                                 track_output += 'shortLabel ChIP_{}_control\n'.format(factor)
-                                track_output += 'longLabel ChIP-Seq control track for factor {!r}\n'.\
+                                track_output += 'longLabel ChIP-Seq control track for factor {!r}\n'. \
                                     format(factor)
                                 track_output += 'visibility dense\n'
                                 track_output += 'compositeTrack on\n'
@@ -1638,7 +1633,7 @@ class ChIPSeq(Analysis):
                                 track_output += 'track {}\n'.format(composite_group)
                                 track_output += 'type bigWig\n'
                                 track_output += 'shortLabel ChIP_{}_treatment\n'.format(factor)
-                                track_output += 'longLabel ChIP-Seq treatment track for factor {!r}\n'.\
+                                track_output += 'longLabel ChIP-Seq treatment track for factor {!r}\n'. \
                                     format(factor)
                                 track_output += 'visibility dense\n'
                                 track_output += 'compositeTrack on\n'
@@ -1699,7 +1694,7 @@ class ChIPSeq(Analysis):
                                 track_output += 'track {}\n'.format(composite_group)
                                 track_output += 'type bigWig\n'
                                 track_output += 'shortLabel ChIP_{}_comparison\n'.format(factor)
-                                track_output += 'longLabel ChIP-Seq comparison track for factor {!r}\n'.\
+                                track_output += 'longLabel ChIP-Seq comparison track for factor {!r}\n'. \
                                     format(factor)
                                 track_output += 'visibility full\n'
                                 track_output += 'compositeTrack on\n'
@@ -1844,7 +1839,6 @@ class ChIPSeq(Analysis):
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
             for replicate_key in replicate_keys:
-
                 #
                 # Add a UCSC trackDB entry for each NAME.aligned.sorted.bam file.
                 #
@@ -1908,10 +1902,10 @@ class ChIPSeq(Analysis):
             # Correlation heat map of peak caller scores.
 
             output += '<td>'
-            output += '<a href="./{}/{}_correlation_peak_caller_score.png">'.\
+            output += '<a href="./{}/{}_correlation_peak_caller_score.png">'. \
                 format(prefix, prefix)
             output += '<img alt="DiffBind correlation analysis for factor {}" ' \
-                      'src="./{}/{}_correlation_peak_caller_score.png" height="80" width="80">'.\
+                      'src="./{}/{}_correlation_peak_caller_score.png" height="80" width="80">'. \
                 format(key, prefix, prefix)
             output += '</a>'
             output += '</td>\n'
@@ -1919,10 +1913,10 @@ class ChIPSeq(Analysis):
             # Correlation heat map of counts.
 
             output += '<td>'
-            output += '<a href="./{}/{}_correlation_read_counts.png">'.\
+            output += '<a href="./{}/{}_correlation_read_counts.png">'. \
                 format(prefix, prefix)
             output += '<img alt="DiffBind correlation analysis for factor {}" ' \
-                      'src="./{}/{}_correlation_read_counts.png" height="80" width="80">'.\
+                      'src="./{}/{}_correlation_read_counts.png" height="80" width="80">'. \
                 format(key, prefix, prefix)
             output += '</a>'
             output += '</td>\n'
@@ -1930,10 +1924,10 @@ class ChIPSeq(Analysis):
             # Correlation heat map of differential binding analysis.
 
             output += '<td>'
-            output += '<a href="./{}/{}_correlation_analysis.png">'.\
+            output += '<a href="./{}/{}_correlation_analysis.png">'. \
                 format(prefix, prefix)
             output += '<img alt="DiffBind correlation analysis for factor {}" ' \
-                      'src="./{}/{}_correlation_analysis.png" height="80" width="80">'.\
+                      'src="./{}/{}_correlation_analysis.png" height="80" width="80">'. \
                 format(key, prefix, prefix)
             output += '</a>'
             output += '</td>\n'
@@ -1959,7 +1953,6 @@ class ChIPSeq(Analysis):
             sas.csv_reader_open()
 
             for row_dict in sas._csv_reader:
-
                 suffix = '{}__{}'.format(row_dict['Group1'], row_dict['Group2'])
 
                 output += '<tr>\n'
@@ -1974,7 +1967,7 @@ class ChIPSeq(Analysis):
                 output += '<td>'
                 output += '<a href="./{}/{}_ma_plot_{}.png">'.format(prefix, prefix, suffix)
                 output += '<img alt="DiffBind MA plot for factor {}" ' \
-                          'src="./{}/{}_ma_plot_{}.png" height="80" width="80">'.\
+                          'src="./{}/{}_ma_plot_{}.png" height="80" width="80">'. \
                     format(key, prefix, prefix, suffix)
                 output += '</a>'
                 output += '</td>\n'
@@ -1984,7 +1977,7 @@ class ChIPSeq(Analysis):
                 output += '<td>'
                 output += '<a href="./{}/{}_scatter_plot_{}.png">'.format(prefix, prefix, suffix)
                 output += '<img alt="DiffBind scatter plot for factor {}" ' \
-                          'src="./{}/{}_scatter_plot_{}.png" height="80" width="80">'.\
+                          'src="./{}/{}_scatter_plot_{}.png" height="80" width="80">'. \
                     format(key, prefix, prefix, suffix)
                 output += '</a>'
                 output += '</td>\n'
@@ -1994,7 +1987,7 @@ class ChIPSeq(Analysis):
                 output += '<td>'
                 output += '<a href="./{}/{}_pca_plot_{}.png">'.format(prefix, prefix, suffix)
                 output += '<img alt="DiffBind PCA plot for factor {}" ' \
-                          'src="./{}/{}_pca_plot_{}.png" height="80" width="80">'.\
+                          'src="./{}/{}_pca_plot_{}.png" height="80" width="80">'. \
                     format(key, prefix, prefix, suffix)
                 output += '</a>'
                 output += '</td>\n'
@@ -2004,14 +1997,14 @@ class ChIPSeq(Analysis):
                 output += '<td>'
                 output += '<a href="./{}/{}_box_plot_{}.png">'.format(prefix, prefix, suffix)
                 output += '<img alt="DiffBind Box plot for factor {}" ' \
-                          'src="./{}/{}_box_plot_{}.png" height="80" width="80">'.\
+                          'src="./{}/{}_box_plot_{}.png" height="80" width="80">'. \
                     format(key, prefix, prefix, suffix)
                 output += '</a>'
                 output += '</td>\n'
 
                 # DiffBind report
 
-                output += '<td><a href="./{}/DBA_{}_report_{}.csv">DBA_{}_report_{}</a></td>\n'.\
+                output += '<td><a href="./{}/DBA_{}_report_{}.csv">DBA_{}_report_{}</a></td>\n'. \
                     format(prefix, key, suffix, key, suffix)
 
                 output += '</tr>\n'
@@ -2039,7 +2032,6 @@ class ChIPSeq(Analysis):
 
 
 class RNASeq(Analysis):
-
     """BSF RNA-Seq-specific BSF Analysis sub-class.
 
     Attributes:
@@ -2451,8 +2443,7 @@ class RNASeq(Analysis):
 
                 # Create a new process_tophat Executable
 
-                process_tophat = Executable.from_Analysis(name='rnaseq_process_tophat_{}'.
-                                                          format(replicate_key),
+                process_tophat = Executable.from_Analysis(name='rnaseq_process_tophat_{}'.format(replicate_key),
                                                           program='bsf_rnaseq_process_tophat2.sh',
                                                           analysis=self)
 
@@ -2636,7 +2627,6 @@ class RNASeq(Analysis):
                 c_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
                 for c_replicate_key in c_replicate_keys:
-
                     # Add the Cufflinks assembled transcripts to the Cuffmerge manifest.
                     transcripts_path = os.path.join(self.genome_directory,
                                                     'rnaseq_cufflinks_{}'.format(c_replicate_key),
@@ -2666,7 +2656,6 @@ class RNASeq(Analysis):
                 t_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
                 for t_replicate_key in t_replicate_keys:
-
                     # Add the Cufflinks assembled transcripts to the Cuffmerge manifest.
                     transcripts_path = os.path.join(self.genome_directory,
                                                     'rnaseq_cufflinks_{}'.format(t_replicate_key),
@@ -3155,7 +3144,6 @@ class RNASeq(Analysis):
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
-
             prefix = 'rnaseq_process_cuffdiff_{}'.format(key)
 
             output += '<tr>\n'
@@ -3187,8 +3175,8 @@ class RNASeq(Analysis):
                 format(prefix, prefix)
             output += '<td><a href="./{}/{}_splicing_diff.txt">Splicing</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="./{}/{}_tss_group_exp_diff.txt">Transcription Start Sites</a></td>\n'\
-                .format(prefix, prefix)
+            output += '<td><a href="./{}/{}_tss_group_exp_diff.txt">Transcription Start Sites</a></td>\n'. \
+                format(prefix, prefix)
             output += '<td><a href="./{}/{}_genes_fpkm_replicates.txt">Gene FPKM Replicates</a></td>\n'. \
                 format(prefix, prefix)
             output += '<td><a href="./{}/{}_isoforms_fpkm_replicates.txt">Isoform FPKM Replicates</a></td>\n'. \
@@ -3255,7 +3243,7 @@ class RNASeq(Analysis):
             # Squared Coefficient of Variation (SCV) Plots for Genes and Isoforms
 
             img_source = './{}/{}_genes_scv.png'.format(prefix, prefix)
-            if os.path.exists(os.path.join(self.genome_directory, img_source)):
+            if os.path.exists(path=os.path.join(self.genome_directory, img_source)):
                 output += '<td><a href="{}">'.format(img_source)
                 output += '<img alt="Squared Coefficient of Variation (SCV) - Genes - {}" ' \
                           'src="{}" height="80" width="80" />'.format(key, img_source)
@@ -3264,7 +3252,7 @@ class RNASeq(Analysis):
                 output += '<td></td>\n'
 
             img_source = './{}/{}_isoforms_scv.png'.format(prefix, prefix)
-            if os.path.exists(os.path.join(self.genome_directory, img_source)):
+            if os.path.exists(path=os.path.join(self.genome_directory, img_source)):
                 output += '<td><a href="{}">'.format(img_source)
                 output += '<img alt="Squared Coefficient of Variation (SCV) - Isoforms - {}" ' \
                           'src="{}" height="80" width="80" />'.format(key, img_source)
@@ -3354,7 +3342,7 @@ class RNASeq(Analysis):
             # Multidimensional Scaling Plot for Genes
 
             img_source = './{}/{}_genes_mds.png'.format(prefix, prefix)
-            if os.path.exists(os.path.join(self.genome_directory, img_source)):
+            if os.path.exists(path=os.path.join(self.genome_directory, img_source)):
                 output += '<td><a href="{}">'.format(img_source)
                 output += '<img alt="Multidimensional Scaling Plot - Genes - {}" ' \
                           'src="{}" height="80" width="80" />'.format(key, img_source)
@@ -3391,7 +3379,6 @@ class RNASeq(Analysis):
 
 
 class RunFastQC(Analysis):
-
     """BSF FastQC-specific Quality Assessment Analysis sub-class.
 
     Attributes:
@@ -3730,7 +3717,7 @@ class RunFastQC(Analysis):
 
         # Create a symbolic link containing the project name and a UUID.
         link_path = self.create_public_project_link(sub_directory=sub_directory)
-        # link_name = os.path.basename(link_path.rstrip('/'))
+        link_name = os.path.basename(link_path.rstrip('/'))
 
         # Write a HTML document.
 
@@ -3777,7 +3764,6 @@ class RunFastQC(Analysis):
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
             for replicate_key in replicate_keys:
-
                 output += '<tr>\n'
                 output += '<td>{}</td>\n'.format(replicate_key)
                 output += '<td><a href="./{}_fastqc/fastqc_report.html"><strong>Report</strong></a></td>\n'. \
@@ -3801,7 +3787,6 @@ class RunFastQC(Analysis):
 
 
 class RunBamToFastq(Analysis):
-
     """BSF BAM or SAM to FASTQ converter sub-class.
 
     Attributes:
@@ -3940,8 +3925,8 @@ class RunBamToFastq(Analysis):
         :rtype: None
         """
 
-        config_parser = self.configuration.config_parser
-        config_section = self.configuration.section_from_instance(self)
+        # config_parser = self.configuration.config_parser
+        # config_section = self.configuration.section_from_instance(self)
 
         default = Default.get_global_default()
 
@@ -3950,8 +3935,8 @@ class RunBamToFastq(Analysis):
         replicate_grouping = False
 
         sam_to_fastq_drms = DRMS.from_Analysis(name='sam_to_fastq',
-                                            work_directory=self.genome_directory,
-                                            analysis=self)
+                                               work_directory=self.genome_directory,
+                                               analysis=self)
 
         self.drms_list.append(sam_to_fastq_drms)
 
@@ -3988,10 +3973,10 @@ class RunBamToFastq(Analysis):
                         # TODO: The matching part to remove the .bam could be achieved with Bash parameter expansion.
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
-                            sam_to_fastq = Executable.from_Analysis(name='picard_sam_to_fastq_{}_1'.
-                                                                    format(replicate_key),
-                                                                    program='bsf_bam2fastq.sh',
-                                                                    analysis=self)
+                            sam_to_fastq = Executable.from_Analysis(
+                                name='picard_sam_to_fastq_{}_1'.format(replicate_key),
+                                program='bsf_bam2fastq.sh',
+                                analysis=self)
 
                             sam_to_fastq_drms.add_Executable(sam_to_fastq)
 
@@ -4008,10 +3993,10 @@ class RunBamToFastq(Analysis):
 
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
-                            sam_to_fastq = Executable.from_Analysis(name='picard_sam_to_fastq_{}_2'.
-                                                                    format(replicate_key),
-                                                                    program='bsf_bam2fastq.sh',
-                                                                    analysis=self)
+                            sam_to_fastq = Executable.from_Analysis(
+                                name='picard_sam_to_fastq_{}_2'.format(replicate_key),
+                                program='bsf_bam2fastq.sh',
+                                analysis=self)
 
                             sam_to_fastq_drms.add_Executable(sam_to_fastq)
 
@@ -4020,3 +4005,535 @@ class RunBamToFastq(Analysis):
                                                                        'SamToFastq.jar'))
                             sam_to_fastq.arguments.append(os.path.join(self.genome_directory,
                                                                        match.group(1)))
+
+
+class VariantCalling(Analysis):
+    """BSF Variant Calling-specific BSF Analysis sub-class.
+
+    Attributes:
+    None
+    """
+
+    @classmethod
+    def from_config_file(cls, config_file):
+        """Create a new BSF VariantCalling object from a UNIX-style configuration file via the BSF Configuration class.
+
+        :param cls: Class
+        :type cls: VariantCalling
+        :param config_file: UNIX-style configuration file
+        :type config_file: str, unicode
+        :return: BSF VariantCalling
+        :rtype: VariantCalling
+        """
+
+        return cls.from_Configuration(configuration=Configuration.from_config_file(config_file=config_file))
+
+    @classmethod
+    def from_Configuration(cls, configuration):
+        """Create a new BSF VariantCalling object from a BSF Configuration object.
+
+        :param cls: Class
+        :type cls: VariantCalling
+        :param configuration: BSF Configuration
+        :type configuration: Configuration
+        :return: BSF VariantCalling
+        :rtype: VariantCalling
+        """
+
+        assert isinstance(configuration, Configuration)
+
+        variant_calling = cls(configuration=configuration)
+
+        # A "Bio.BSF.Analysis.VariantCalling" section specifies defaults for this BSF Analysis.
+
+        section = '{}.{}'.format(__name__, cls.__name__)
+        variant_calling.set_Configuration(variant_calling.configuration, section=section)
+
+        return variant_calling
+
+    def __init__(self, configuration=None,
+                 project_name=None, genome_version=None,
+                 input_directory=None, output_directory=None,
+                 project_directory=None, genome_directory=None,
+                 e_mail=None, debug=0, drms_list=None,
+                 collection=None, comparisons=None, samples=None,
+                 cmp_file=None):
+        """Initialise a Bio.BSF.Analysis.VariantCalling object.
+
+        :param self: BSF VariantCalling
+        :type self: VariantCalling
+        :param configuration: BSF Configuration
+        :type configuration: Configuration
+        :param project_name: Project name
+        :type project_name: str
+        :param genome_version: Genome version
+        :type genome_version: str
+        :param input_directory: BSF Analysis-wide input directory
+        :type input_directory: str
+        :param output_directory: BSF Analysis-wide output directory
+        :type output_directory: str
+        :param project_directory: BSF Analysis-wide project directory,
+         normally under the BSF Analysis-wide output directory
+        :type project_directory: str
+        :param genome_directory: BSF Analysis-wide genome directory,
+         normally under the BSF Analysis-wide project directory
+        :type genome_directory: str
+        :param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        :type e_mail: str
+        :param debug: Integer debugging level
+        :type debug: int
+        :param drms_list: Python list of BSF DRMS objects
+        :type drms_list: list
+        :param collection: BSF Collection
+        :type collection: Collection
+        :param comparisons: Python dict of Python list objects of BSF Sample objects
+        :type comparisons: dict
+        :param samples: Python list of BSF Sample objects
+        :type samples: list
+        :param cmp_file: Comparison file
+        :type cmp_file: str, unicode
+        :return: Nothing
+        :rtype: None
+        """
+
+        super(VariantCalling, self).__init__(configuration=configuration,
+                                             project_name=project_name, genome_version=genome_version,
+                                             input_directory=input_directory, output_directory=output_directory,
+                                             project_directory=project_directory, genome_directory=genome_directory,
+                                             e_mail=e_mail, debug=debug, drms_list=drms_list,
+                                             collection=collection, comparisons=comparisons, samples=samples)
+
+        # Sub-class specific ...
+
+        if cmp_file:
+            self.cmp_file = cmp_file
+        else:
+            self.cmp_file = str()
+
+    def set_Configuration(self, configuration, section):
+        """Set instance variables of a BSF VariantCalling object via a section of a BSF Configuration object.
+
+        Instance variables without a configuration option remain unchanged.
+        :param self: BSF VariantCalling
+        :type self: VariantCalling
+        :param configuration: BSF Configuration
+        :type configuration: Configuration
+        :param section: Configuration file section
+        :type section: str
+        """
+
+        super(VariantCalling, self).set_Configuration(configuration=configuration, section=section)
+
+        # Read a comparison file.
+
+        # if configuration.config_parser.has_option(section=section, option='cmp_file'):
+        #     self.cmp_file = configuration.config_parser.get(section=section, option='cmp_file')
+        # Use the sample annotation sheet instead of a separate comparison file.
+        if configuration.config_parser.has_option(section=section, option='sas_file'):
+            self.cmp_file = configuration.config_parser.get(section=section, option='sas_file')
+
+    def _read_comparisons(self, cmp_file):
+        """Read a BSF SampleAnnotationSheet CSV file from disk.
+
+        Column headers for CASAVA folders:
+          Treatment/Control ProcessedRunFolder:
+            CASAVA processed run folder name or
+            Bio.BSF.Analysis input_directory by default.
+          Treatment/Control Project:
+            CASAVA Project name or
+            Bio.BSF.Analysis project_name by default.
+          Treatment/Control Sample:
+            CASAVA Sample name, no default.
+        Column headers for independent samples:
+          Treatment/Control Sample:
+          Treatment/Control File:
+        :param self: BSF RunFastQC
+        :type self: RunFastQC
+        :param cmp_file: Comparisons file path
+        :type cmp_file: str, unicode
+        :return: Nothing
+        :rtype: None
+        """
+
+        sas = SampleAnnotationSheet(file_path=cmp_file)
+        sas.csv_reader_open()
+
+        for row_dict in sas._csv_reader:
+            self.add_Sample(sample=self.collection.get_Sample_from_row_dict(row_dict=row_dict))
+
+        sas.csv_reader_close()
+
+    def run(self):
+        """Run this BSF Variant Calling analysis.
+
+        :param self: BSF VariantCalling
+        :type self: VariantCalling
+        :return: Nothing
+        :rtype: None
+        """
+
+        super(VariantCalling, self).run()
+
+        # Variant Calling requires a genome version.
+
+        if not self.genome_version:
+            message = 'A Variant Calling analysis requires a genome_version configuration option.'
+            raise Exception(message)
+
+        # Expand an eventual user part i.e. on UNIX ~ or ~user and
+        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Check if an absolute path has been provided, if not,
+        # automatically prepend standard BSF directory paths.
+
+        self.cmp_file = os.path.expanduser(path=self.cmp_file)
+        self.cmp_file = os.path.expandvars(path=self.cmp_file)
+
+        if not os.path.isabs(self.cmp_file):
+            self.cmp_file = os.path.join(self.project_directory, self.cmp_file)
+
+        # Real comparisons would be required for somatic mutation calling.
+        self._read_comparisons(cmp_file=self.cmp_file)
+
+        # Experimentally, sort the Python list of BSF Sample objects by the BSF Sample name.
+        # This cannot be done in the super-class, because BSF Samples are only put into the Analysis.samples list
+        # by the _read_comparisons method.
+
+        self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
+
+        self._create_alignment_jobs()
+
+    def _create_alignment_jobs(self):
+        """Create BWA alignment and post-processing jobs.
+
+        The GATK documentation recommends mapping, de-duplicating, re-aligning and re-calibrating
+        reads per sample and per lane.
+        :param self: BSF Analysis
+        :type self: Analysis
+        :return: Nothing
+        :rtype: None
+        """
+
+        config_parser = self.configuration.config_parser
+        config_section = self.configuration.section_from_instance(self)
+
+        replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
+
+        bwa_genome_db = config_parser.get(section=config_section, option='bwa_genome_db')
+
+        classpath_gatk = str()
+        if config_parser.has_option(section=config_section, option='classpath_gatk'):
+            classpath_gatk = config_parser.get(section=config_section, option='classpath_gatk')
+
+        classpath_picard = str()
+        if config_parser.has_option(section=config_section, option='classpath_picard'):
+            classpath_picard = config_parser.get(section=config_section, option='classpath_picard')
+
+        known_sites_realignment = list()
+        if config_parser.has_option(section=config_section, option='known_sites_realignment'):
+            temporary_str = config_parser.get(section=config_section, option='known_sites_realignment')
+            known_sites_realignment.extend(temporary_str.split(','))
+
+        # TODO: Prepend the GATK bundle default path.
+
+        known_sites_recalibration = list()
+        if config_parser.has_option(section=config_section, option='known_sites_recalibration'):
+            temporary_str = config_parser.get(section=config_section, option='known_sites_recalibration')
+            known_sites_recalibration.extend(temporary_str.split(','))
+
+        # TODO: Prepend the GATK bundle default path.
+
+        known_sites_discovery = list()
+        if config_parser.has_option(section=config_section, option='known_sites_discovery'):
+            temporary_str = config_parser.get(section=config_section, option='known_sites_discovery')
+            known_sites_discovery.extend(temporary_str.split(','))
+
+        # TODO: Prepend the GATK bundle default path.
+
+        # path_known_insertions_deletions_list = list()
+        # if config_parser.has_option(section=config_section, option='path_known_insertions_deletions'):
+        #     path_known_insertions_deletions_str = config_parser.get(
+        #         section=config_section,
+        #         option='path_known_insertions_deletions')
+        #     path_known_insertions_deletions_list.extend(path_known_insertions_deletions_str.split(','))
+        #
+        # for path_known_insertions_deletions in path_known_insertions_deletions_list:
+        #     if os.path.isabs(path_known_insertions_deletions):
+        #         # TODO: Prepend the GATK bundle default path.
+        #         pass
+        #
+        # path_known_sites_list = list()
+        # if config_parser.has_option(section=config_section, option='path_known_sites'):
+        #     path_known_sites_str = config_parser.get(
+        #         section=config_section,
+        #         option='path_known_sites')
+        #     path_known_sites_list.extend(path_known_sites_str.split(','))
+        #
+        # for path_known_sites in path_known_sites_list:
+        #     if os.path.isabs(path_known_sites):
+        #         # TODO: Prepend the GATK bundle default path.
+        #         pass
+
+        # Initialise the Distributed Management System objects for the run_bwa script.
+
+        vc_align_lane_drms = DRMS.from_Analysis(name='variant_calling_align_lane',
+                                                work_directory=self.genome_directory,
+                                                analysis=self)
+        self.drms_list.append(vc_align_lane_drms)
+
+        # Initialise the Distributed Resource Management System object for the
+        # bsf_run_variant_calling_processing_lane.py script.
+
+        run_vc_process_lane_drms = DRMS.from_Analysis(name='variant_calling_process_lane',
+                                                      work_directory=self.genome_directory,
+                                                      analysis=self)
+        self.drms_list.append(run_vc_process_lane_drms)
+
+        # Initialise the Distributed Resource Management System object for the
+        # bsf_run_variant_calling_processing_sample.py script.
+
+        vc_process_sample_drms = DRMS.from_Analysis(name='variant_calling_process_sample',
+                                                    work_directory=self.genome_directory,
+                                                    analysis=self)
+        self.drms_list.append(vc_process_sample_drms)
+
+        # Initialise the Distributed Resource Management System object for the
+        # bsf_run_variant_calling_process_cohort.py script.
+
+        vc_process_cohort_drms = DRMS.from_Analysis(name='variant_calling_process_cohort',
+                                                    work_directory=self.genome_directory,
+                                                    analysis=self)
+        self.drms_list.append(vc_process_cohort_drms)
+
+        cohort_name = 'cohort'
+        vc_process_cohort_dependencies = list()
+        vc_process_cohort_replicates = list()
+
+        for sample in self.samples:
+
+            if self.debug > 0:
+                print '{!r} Sample name: {}'.format(self, sample.name)
+                print sample.trace(1)
+
+            # Go back to the BSF Project to get its name and set is as the RG library name.
+            # This is obsolete if the read group line can be set from the initial BAM file.
+            # project = sample.weak_reference_project()
+            # if project is None:
+            #     library_name = 'Default'
+            # else:
+            #     library_name = project.name
+
+            vc_process_sample_dependencies = list()
+            vc_process_sample_replicates = list()
+
+            # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
+            # Python str key and Python list of Python list objects
+            # of Bio.BSF.Data.PairedReads objects.
+
+            replicate_dict = sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
+
+            replicate_keys = replicate_dict.keys()
+            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+
+            for replicate_key in replicate_keys:
+
+                # TODO: Not sure such a file_path dictionary works.
+                # file_path_dict = dict()
+                # file_path_dict['aligned_bam'] = '{}{}.bam'.format(prefix, replicate_key)
+                # file_path_dict['aligned_bai'] = '{}{}.bai'.format(prefix, replicate_key)
+                # file_path_dict['aligned_md5'] = '{}{}.bam.md5'.format(prefix, replicate_key)
+                # file_path_dict['duplicates_marked_bam'] = '{}{}_duplicates_marked.bam'.format(prefix, replicate_key)
+                # file_path_dict['path_duplicates_marked_bai'] = '{}{}_duplicates_marked.bai'.format(prefix, replicate_key)
+                # file_path_dict['duplicates_marked_md5'] = '{}{}_duplicates_marked.bam.md5'.format(prefix, replicate_key)
+                # file_path_dict['realigner_targets'] = '{}{}_realigner.intervals'.format(prefix, replicate_key)
+                # file_path_dict['realigned_bam'] = '{}{}_realigned.bam'.format(prefix, replicate_key)
+                # file_path_dict['realigned_bai'] = '{}{}_realigned.bai'.format(prefix, replicate_key)
+                # file_path_dict['realigned_md5'] = '{}{}_realigned.bam.md5'.format(prefix, replicate_key)
+                # file_path_dict['recalibration_table'] = '{}{}_recalibration.table'.format(prefix, replicate_key)
+                # file_path_dict['recalibrated_bam'] = '{}{}_recalibrated.bam'.format(prefix, replicate_key)
+                # file_path_dict['recalibrated_bai'] = '{}{}_recalibrated.bai'.format(prefix, replicate_key)
+                # file_path_dict['recalibrated_md5'] = '{}{}_recalibrated.bam.md5'.format(prefix, replicate_key)
+                # file_path_dict['alignment_summary_metrics'] = '{}{}_alignment_summary_metrics.csv'.format(prefix, replicate_key)
+
+                bwa = BWA(name='variant_calling_bwa_{}'.format(replicate_key), analysis=self)
+                # Instead of adding the BWA Executable to the DRMS, it gets serialised into the pickler_file.
+                # bwa_drms.add_Executable(bwa)
+
+                bwa_mem = bwa.sub_command
+
+                # Set BWA mem options.
+
+                # bwa_mem.add_OptionShort(key='t', value=str(vc_align_lane_drms.threads))
+                bwa_mem.add_OptionShort(key='t', value=str(1))  # TODO: For the moment, use only one thread.
+                bwa_mem.add_SwitchShort(key='C')  # Append FASTA/Q comment to SAM output.
+                bwa_mem.add_SwitchShort(key='M')  # Mark  shorter split hits as secondary (for Picard compatibility).
+                # The @RG line, including the platform unit (PU) gets taken from the original BAM file.
+                # bwa_mem.add_OptionShort(
+                #     key='R',
+                #     value="@RG\\tID:{}\\tSM:{}\\tLB:{}\\tPL:ILLUMINA". \
+                #           format(replicate_key, sample.name, library_name))
+                bwa_mem.add_OptionShort(key='v', value='2')  # Output warnings and errors only.
+
+                # Set BWA arguments.
+
+                bwa_mem.arguments.append(bwa_genome_db)
+
+                reads1 = list()
+                reads2 = list()
+
+                for paired_reads in replicate_dict[replicate_key]:
+                    if paired_reads.reads1:
+                        reads1.append(paired_reads.reads1.file_path)
+                    if paired_reads.reads2:
+                        reads2.append(paired_reads.reads2.file_path)
+
+                if len(reads1) and not len(reads2):
+                    bwa_mem.arguments.append(string.join(reads1, ','))
+                elif len(reads1) and len(reads2):
+                    bwa_mem.arguments.append(string.join(reads1, ','))
+                    bwa_mem.arguments.append(string.join(reads2, ','))
+                if len(reads2):
+                    warning = 'Only second reads, but no first reads have been defined.'
+                    warnings.warn(warning)
+
+                # Normally, the bwa object would be pushed onto the drms list.
+                # Experimentally, use Pickler to serialize the Executable object into a file.
+
+                pickler_dict_align_lane = dict()
+                pickler_dict_align_lane['prefix'] = vc_align_lane_drms.name
+                pickler_dict_align_lane['replicate_key'] = replicate_key
+                pickler_dict_align_lane['classpath_gatk'] = classpath_gatk
+                pickler_dict_align_lane['classpath_picard'] = classpath_picard
+                pickler_dict_align_lane['bwa_executable'] = bwa
+
+                pickler_path = os.path.join(
+                    self.genome_directory,
+                    '{}_{}.pkl'.format(vc_align_lane_drms.name, replicate_key))
+                pickler_file = open(pickler_path, 'wb')
+                pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
+                pickler.dump(obj=pickler_dict_align_lane)
+                pickler_file.close()
+
+                # Create a bsf_run_bwa.py job to run the pickled object.
+
+                run_bwa = Executable.from_Analysis(
+                    name='{}_{}'.format(vc_align_lane_drms.name, replicate_key),
+                    program='bsf_run_bwa.py',
+                    analysis=self)
+                vc_align_lane_drms.add_Executable(executable=run_bwa)
+
+                # Set run_bwa options.
+
+                run_bwa.add_OptionLong(key='pickler_path', value=pickler_path)
+                run_bwa.add_OptionLong(key='debug', value=str(self.debug))
+
+                # Create a bsf_run_variant_calling_process_lane.py job.
+
+                pickler_dict_process_lane = dict()
+                pickler_dict_process_lane['prefix'] = run_vc_process_lane_drms.name
+                pickler_dict_process_lane['replicate_key'] = replicate_key
+                pickler_dict_process_lane['classpath_gatk'] = classpath_gatk
+                pickler_dict_process_lane['classpath_picard'] = classpath_picard
+                # The 'path_replicate' gets defined in the bsf_run_variant_calling_align_lane.py script.
+                pickler_dict_process_lane['path_replicate'] = '{}_{}.bam'. \
+                    format(vc_align_lane_drms.name, replicate_key)
+                pickler_dict_process_lane['path_reference_sequence'] = bwa_genome_db
+                pickler_dict_process_lane['known_sites_realignment'] = known_sites_realignment
+                pickler_dict_process_lane['known_sites_recalibration'] = known_sites_recalibration
+
+                pickler_path = os.path.join(
+                    self.genome_directory,
+                    '{}_{}.pkl'.format(run_vc_process_lane_drms.name, replicate_key))
+                pickler_file = open(pickler_path, 'wb')
+                pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
+                pickler.dump(obj=pickler_dict_process_lane)
+                pickler_file.close()
+
+                vc_process_lane = Executable.from_Analysis(
+                    name='{}_{}'.format(run_vc_process_lane_drms.name, replicate_key),
+                    program='bsf_run_variant_calling_process_lane.py',
+                    analysis=self)
+                vc_process_lane.dependencies.append(run_bwa.name)
+                run_vc_process_lane_drms.add_Executable(vc_process_lane)
+
+                # Set variant_calling_run_process_lane options.
+
+                vc_process_lane.add_OptionLong(key='pickler_path', value=pickler_path)
+                vc_process_lane.add_OptionLong(key='debug', value=str(self.debug))
+
+                # Set dependencies for the next stage.
+                vc_process_sample_dependencies.append(vc_process_lane.name)
+                # Add the result of the bsf_run_variant_calling_process_lane.py script.
+                vc_process_sample_replicates.append(
+                    '{}_{}_recalibrated.bam'.format(run_vc_process_lane_drms.name, replicate_key))
+
+            # Finally, write the pickler file for processing per sample.
+
+            pickler_dict_process_sample = dict()
+            pickler_dict_process_sample['prefix'] = vc_process_sample_drms.name
+            pickler_dict_process_sample['sample_key'] = sample.name
+            pickler_dict_process_sample['replicate_file_list'] = vc_process_sample_replicates
+            pickler_dict_process_sample['path_reference_sequence'] = bwa_genome_db
+            pickler_dict_process_sample['known_sites_realignment'] = known_sites_realignment
+            pickler_dict_process_sample['known_sites_recalibration'] = known_sites_recalibration
+            pickler_dict_process_sample['known_sites_discovery'] = known_sites_discovery
+            pickler_dict_process_sample['classpath_gatk'] = classpath_gatk
+            pickler_dict_process_sample['classpath_picard'] = classpath_picard
+
+            pickler_path = os.path.join(
+                self.genome_directory,
+                '{}_{}.pkl'.format(vc_process_sample_drms.name, sample.name))
+            pickler_file = open(pickler_path, 'wb')
+            pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
+            pickler.dump(obj=pickler_dict_process_sample)
+            pickler_file.close()
+
+            vc_process_sample = Executable.from_Analysis(
+                name='{}_{}'.format(vc_process_sample_drms.name, sample.name),
+                program='bsf_run_variant_calling_process_sample.py',
+                analysis=self)
+            vc_process_sample.dependencies.extend(vc_process_sample_dependencies)
+            vc_process_sample_drms.add_Executable(vc_process_sample)
+
+            # Set variant_calling_run_process_sample options.
+
+            vc_process_sample.add_OptionLong(key='pickler_path', value=pickler_path)
+            vc_process_sample.add_OptionLong(key='debug', value=str(self.debug))
+
+            # Set dependencies for the next stage.
+            vc_process_cohort_dependencies.append(vc_process_sample.name)
+            # Add the result of the bsf_run_variant_calling_process_sample.py script.
+            vc_process_cohort_replicates.append(
+                '{}_{}_raw_variants.vcf'.format(vc_process_cohort_drms.name, sample.name))
+
+        # Finally, write the Pickler dict file for processing the cohort.
+
+        pickler_dict_process_cohort = dict()
+        pickler_dict_process_cohort['prefix'] = vc_process_sample_drms.name
+        pickler_dict_process_cohort['cohort_key'] = cohort_name
+        pickler_dict_process_cohort['replicate_file_list'] = vc_process_cohort_replicates
+        pickler_dict_process_cohort['path_reference_sequence'] = bwa_genome_db
+        pickler_dict_process_cohort['known_sites_realignment'] = known_sites_realignment
+        pickler_dict_process_cohort['known_sites_recalibration'] = known_sites_recalibration
+        pickler_dict_process_cohort['known_sites_discovery'] = known_sites_discovery
+        pickler_dict_process_cohort['classpath_gatk'] = classpath_gatk
+        pickler_dict_process_cohort['classpath_picard'] = classpath_picard
+
+        pickler_path = os.path.join(
+            self.genome_directory,
+            '{}_{}.pkl'.format(vc_process_cohort_drms.name, cohort_name))
+        pickler_file = open(pickler_path, 'wb')
+        pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
+        pickler.dump(obj=pickler_dict_process_cohort)
+        pickler_file.close()
+
+        vc_process_cohort = Executable.from_Analysis(
+            name='{}_{}'.format(vc_process_cohort_drms.name, cohort_name),
+            program='bsf_run_variant_calling_process_cohort.py',
+            analysis=self)
+        vc_process_cohort.dependencies.extend(vc_process_cohort_dependencies)
+        vc_process_cohort_drms.add_Executable(vc_process_cohort)
+
+        # Set variant_calling_run_process_sample options.
+
+        vc_process_cohort.add_OptionLong(key='pickler_path', value=pickler_path)
+        vc_process_cohort.add_OptionLong(key='debug', value=str(self.debug))

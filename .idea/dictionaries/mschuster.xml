@@ -7,6 +7,7 @@
       <w>biomedicine</w>
       <w>bourne</w>
       <w>bowtie</w>
+      <w>bqsr</w>
       <w>bsfpython</w>
       <w>casava</w>
       <w>chipseq</w>
@@ -23,18 +24,24 @@
       <w>fastqc</w>
       <w>flowcell</w>
       <w>fpkm</w>
+      <w>gatk</w>
       <w>genomics</w>
       <w>gzip</w>
       <w>illumina</w>
+      <w>indel</w>
       <w>isoform</w>
       <w>isoforms</w>
       <w>oligonucleotide</w>
       <w>phred</w>
       <w>picard</w>
       <w>pvalue</w>
+      <w>realigner</w>
+      <w>recalibrated</w>
+      <w>recalibrator</w>
       <w>rnaseq</w>
       <w>samtools</w>
       <w>schuster</w>
+      <w>slurm</w>
       <w>stderr</w>
       <w>stdin</w>
       <w>stdout</w>
