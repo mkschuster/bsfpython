@@ -49,7 +49,7 @@ class Argument(object):
         :param key: Key
         :type key: str
         :param value: Value
-        :type value: str
+        :type value: str, unicode
         :return: Bio.BSF.Argument object or a sub-class thereof
         :rtype: Option, Switch
         """
@@ -245,7 +245,7 @@ class Option(Switch):
     :ivar is_pair: A KEY=VALUE pair
     :type is_pair: bool
     :ivar value: Value
-    :type value: str
+    :type value: str, unicode
     """
 
     def __init__(self, key, value, is_long=False, is_pair=False):
@@ -254,7 +254,7 @@ class Option(Switch):
         :param key: Key
         :type key: str
         :param value: Value
-        :type value: str, None
+        :type value: str, unicode, None
         :param is_long: GNU-style long option (--key value)
         :type is_long: bool
         :param is_pair: A KEY=VALUE pair
@@ -309,7 +309,7 @@ class OptionLong(Option):
         :param key: Key
         :type key: str
         :param value: Value
-        :type value: str
+        :type value: str, unicode
         :return: Nothing
         :rtype: None
         """
@@ -348,7 +348,7 @@ class OptionShort(Option):
         :param key: Key
         :type key: str
         :param value: Value
-        :type value: str
+        :type value: str, unicode
         :return: Nothing
         :rtype: None
         """
@@ -391,7 +391,7 @@ class OptionPair(Option):
         :param key: Key
         :type key: str
         :param value: Value
-        :type value: str
+        :type value: str, unicode
         :return: Nothing
         :rtype: None
         """
