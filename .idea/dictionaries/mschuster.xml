@@ -11,13 +11,16 @@
       <w>bsfpython</w>
       <w>casava</w>
       <w>chipseq</w>
+      <w>covariates</w>
       <w>ctcf</w>
       <w>cuffdiff</w>
       <w>cufflinks</w>
       <w>cuffmerge</w>
       <w>cvar</w>
+      <w>dbsnp</w>
       <w>drms</w>
       <w>executables</w>
+      <w>exome</w>
       <w>exon</w>
       <w>fasta</w>
       <w>fastq</w>
@@ -27,6 +30,8 @@
       <w>gatk</w>
       <w>genomics</w>
       <w>gzip</w>
+      <w>haplotype</w>
+      <w>hapmap</w>
       <w>illumina</w>
       <w>indel</w>
       <w>isoform</w>
@@ -39,9 +44,12 @@
       <w>recalibrated</w>
       <w>recalibrator</w>
       <w>rnaseq</w>
+      <w>runnables</w>
       <w>samtools</w>
       <w>schuster</w>
       <w>slurm</w>
+      <w>snpeff</w>
+      <w>sqlite</w>
       <w>stderr</w>
       <w>stdin</w>
       <w>stdout</w>
@@ -51,6 +59,7 @@
       <w>truseq</w>
       <w>ucsc</w>
       <w>unstranded</w>
+      <w>vqsr</w>
     </words>
   </dictionary>
 </component>

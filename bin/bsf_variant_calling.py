@@ -27,7 +27,7 @@
 
 import argparse
 
-from Bio.BSF.Analyses import VariantCalling
+from Bio.BSF.Analyses.VariantCalling import VariantCallingGATK
 
 
 parser = argparse.ArgumentParser(description='Variant Calling analysis driver script.')
@@ -45,7 +45,7 @@ args = parser.parse_args()
 
 # Create a BSF Variant Calling analysis and run it.
 
-variant_calling = VariantCalling.from_config_file(config_file=args.configuration)
+variant_calling = VariantCallingGATK.from_config_file(config_file=args.configuration)
 
 if args.debug:
     variant_calling.debug = args.debug
