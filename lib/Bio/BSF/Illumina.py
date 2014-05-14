@@ -36,13 +36,11 @@ from xml.etree.ElementTree import ElementTree
 
 
 class RunInformationFlowcellLayout(object):
-
     """BSF Illumina Run Information Flow-cell Layout class models
     one <FlowcellLayout> element in a BSF Illumina Run Information (RunInfo.xml) document.
     """
 
     def __init__(self, lane_count=0, surface_count=0, swath_count=0, tile_count=0):
-
         """Initialise a Bio.BSF.Data.Illumina.RunInformationFlowcellLayout object
 
         :param self: Bio.BSF.Data.Illumina.RunInformationFlowcellLayout
@@ -66,7 +64,6 @@ class RunInformationFlowcellLayout(object):
 
 
 class RunInformationRead(object):
-
     """BSF Illumina Run Information Reads class.
 
     The Bio.BSF.Data.Illumina.RunInformationRead class models
@@ -74,7 +71,6 @@ class RunInformationRead(object):
     """
 
     def __init__(self, number=0, cycles=0, index=False):
-
         """Initialise a Bio.BSF.Data.Illumina.RunInformationRead object.
 
         :param self: Bio.BSF.Data.Illumina.RunInformationRead object
@@ -95,7 +91,6 @@ class RunInformationRead(object):
 
 
 class RunInformation(object):
-
     """BSF Illumina Run Information class.
 
     The Bio.BSF.Data.Illumina.RunInformation class represents an Illumina
@@ -126,7 +121,6 @@ class RunInformation(object):
 
     @classmethod
     def from_file_path(cls, file_path):
-
         """Create a Bio.BSF.Data.Illumina.RunInformation object from a file path.
 
         :param cls: Class
@@ -201,7 +195,6 @@ class RunInformation(object):
     def __init__(self, file_path=None, file_type=None, name=None,
                  run_identifier=None, run_number=None, flow_cell=None, instrument=None, date=None,
                  reads=None, flow_cell_layout=None):
-
         """Initialise a Bio.BSF.Data.Illumina.RunInformation object.
 
         :param self: Bio.BSF.Data.Illumina.RunInformation
@@ -281,7 +274,6 @@ class RunInformation(object):
             self.flow_cell_layout = RunInformationFlowcellLayout()
 
     def picard_read_structure(self):
-
         """Get the read structure for the Picard ExtractIlluminaBarcodes module.
 
         Codes:
@@ -310,7 +302,6 @@ class RunInformation(object):
 
 
 class RunParameters(object):
-
     """BSF Illumina Run Parameters class.
 
     Attributes:
@@ -322,7 +313,6 @@ class RunParameters(object):
 
     @classmethod
     def from_file_path(cls, file_path):
-
         """Create a Bio.BSF.Data.Illumina.RunParameters object from a file path.
 
         :param cls: Class
@@ -338,8 +328,8 @@ class RunParameters(object):
         return RunParameters(file_path=file_path, element_tree=ElementTree(file=file_path))
 
     def __init__(self, file_path=None, element_tree=None):
-
         """Initialise a BSF Illumina Run Parameters object.
+
         :param self: BSF Illumina Run Parameters
         :type self: RunParameters
         :param file_path: File path
@@ -361,8 +351,8 @@ class RunParameters(object):
             self.element_tree = ElementTree()
 
     def get_experiment_name(self):
-
         """Get the experiment name of a BSF Illumina Run Parameters object.
+
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Experiment name e.g BSF_0001
@@ -372,8 +362,8 @@ class RunParameters(object):
         return self.element_tree.getroot().find('Setup/ExperimentName').text
 
     def get_flow_cell_barcode(self):
-
         """Get the flow-cell barcode of a BSF Illumina Run Parameters object.
+
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Flow-cell barcode e.g BSF_0001
@@ -383,8 +373,8 @@ class RunParameters(object):
         return self.element_tree.getroot().find('Setup/Barcode').text
 
     def get_flow_cell_type(self):
-
         """Get the flow cell of a BSF Illumina Run Parameters object.
+
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Flow-cell type
@@ -394,8 +384,8 @@ class RunParameters(object):
         return self.element_tree.getroot().find('Setup/Flowcell').text
 
     def get_position(self):
-
         """Get the flow-cell position of a BSF Illumina Run Parameters object.
+
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Flow-cell position e.g. A or B
@@ -405,8 +395,8 @@ class RunParameters(object):
         return self.element_tree.getroot().find('Setup/FCPosition').text
 
     def get_run_identifier(self):
-
         """Get the run identifier of a BSF Illumina Run Parameters object.
+
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Run identifier
@@ -415,9 +405,52 @@ class RunParameters(object):
 
         return self.element_tree.getroot().find('Setup/RunID').text
 
+    def get_read1(self):
+        """Get the read 1 cycle number of a BSF Illumina Run Parameters object.
+
+        :param self: BSF Run Parameters
+        :type self: RunParameters
+        :return: Number of cycles in read 1
+        :rtype: str
+        """
+
+        return self.element_tree.getroot().find('Setup/Read1').text
+
+    def get_read2(self):
+        """Get the read 2 cycle number of a BSF Illumina Run Parameters object.
+
+        :param self: BSF Run Parameters
+        :type self: RunParameters
+        :return: Number of cycles in read 2
+        :rtype: str
+        """
+
+        return self.element_tree.getroot().find('Setup/Read2').text
+
+    def get_index_read1(self):
+        """Get the index read 1 cycle number of a BSF Illumina Run Parameters object.
+
+        :param self: BSF Run Parameters
+        :type self: RunParameters
+        :return: Number of cycles in index read 1
+        :rtype: str
+        """
+
+        return self.element_tree.getroot().find('Setup/IndexRead1').text
+
+    def get_index_read2(self):
+        """Get the index read 2 cycle number of a BSF Illumina Run Parameters object.
+
+        :param self: BSF Run Parameters
+        :type self: RunParameters
+        :return: Number of cycles in index read 2
+        :rtype: str
+        """
+
+        return self.element_tree.getroot().find('Setup/IndexRead2').text
+
 
 class RunFolder(object):
-
     """BSF Illumina Run Folder class.
 
     The BSF RunFolder class represents an Illumina
@@ -446,7 +479,6 @@ class RunFolder(object):
 
     @classmethod
     def from_file_path(cls, file_path):
-
         """Construct a Bio.BSF.Data.Illumina.RunFolder object from a file path.
 
         :param cls: Class
@@ -480,7 +512,6 @@ class RunFolder(object):
     def __init__(self, file_path=None, file_type=None, name=None,
                  date=None, instrument=None, run=None, flow_cell=None,
                  run_information=None, run_parameters=None):
-
         """Initialise a Bio.BSF.Data.Illumina.RunFolder object.
 
         :param self: Bio.BSF.Data.Illumina.RunFolder
@@ -551,7 +582,6 @@ class RunFolder(object):
             self.run_parameters = RunParameters()
 
     def get_base_calls_directory(self):
-
         """Get the Base-calls directory in the RunFolder/Data/Intensities/BaseCalls hierarchy.
 
         :param self: Illumina Run Folder
@@ -560,4 +590,4 @@ class RunFolder(object):
         :rtype: str, unicode
         """
 
-        return os.path.join(self.file_path, 'Data',  'Intensities', 'BaseCalls')
+        return os.path.join(self.file_path, 'Data', 'Intensities', 'BaseCalls')
