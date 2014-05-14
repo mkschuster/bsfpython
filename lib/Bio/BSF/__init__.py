@@ -404,7 +404,7 @@ class Analysis(object):
             self.sas_file = os.path.expanduser(path=self.sas_file)
             self.sas_file = os.path.expandvars(path=self.sas_file)
 
-            if not os.path.isabs(self.sas_file):
+            if not os.path.isabs(self.sas_file) and not os.path.exists(self.sas_file):
                 self.sas_file = os.path.join(self.project_directory, self.sas_file)
 
             self.collection = Collection.from_sas(file_path=self.input_directory,
@@ -810,6 +810,8 @@ class Default(object):
     :type classpath_picard: str, unicode
     :ivar classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
     :type classpath_illumina2bam: str, unicode
+    :ivar classpath_snpeff: snpEff Java Archive (JAR) class path directory
+    :type classpath_snpeff: str, unicode
     :ivar directory_home: Home directory for all data
     :type directory_home: str, unicode
     :ivar directory_runs_illumina: Sub-directory for Illumina runs
@@ -826,6 +828,10 @@ class Default(object):
     :type directory_genomes: str, unicode
     :ivar directory_annotations: Sub-directory for genome annotations
     :type directory_annotations: str, unicode
+    :ivar directory_gatk_bundle: Sub-directory for GATK bundle data
+    :type directory_gatk_bundle: str, unicode
+    :ivar directory_snpeff_data: snpEff database directory
+    :type directory_snpeff_data: str, unicode
     :ivar indices: Python dict of program name key and index directory name value data
     :type indices: dict
     :ivar drms_implementation: DRMS implementation (e.g. Bash, SGE)
@@ -923,13 +929,14 @@ class Default(object):
 
         return default
 
-    def __init__(self, classpath_gatk=None, classpath_illumina2bam=None, classpath_picard=None, directory_home=None,
-                 directory_runs_illumina=None, directory_sequences=None, directory_samples=None,
+    def __init__(self, classpath_gatk=None, classpath_illumina2bam=None, classpath_picard=None, classpath_snpeff=None,
+                 directory_home=None, directory_runs_illumina=None, directory_sequences=None, directory_samples=None,
                  directory_projects=None, directory_public_html=None, directory_genomes=None,
-                 directory_annotations=None, indices=None, drms_implementation=None, drms_maximum_threads=None,
-                 drms_memory_limit_hard=None, drms_memory_limit_soft=None, operator_e_mail=None,
-                 operator_sequencing_centre=None, ucsc_host_name=None, url_protocol=None, url_host_name=None,
-                 url_relative_projects=None, url_relative_chip_seq=None, url_relative_dna_seq=None,
+                 directory_annotations=None, directory_gatk_bundle=None, directory_snpeff_data=None,
+                 indices=None, drms_implementation=None,
+                 drms_maximum_threads=None, drms_memory_limit_hard=None, drms_memory_limit_soft=None,
+                 operator_e_mail=None, operator_sequencing_centre=None, ucsc_host_name=None, url_protocol=None,
+                 url_host_name=None, url_relative_projects=None, url_relative_chip_seq=None, url_relative_dna_seq=None,
                  url_relative_rna_seq=None):
 
         """Initialise a BSF Default object.
@@ -943,6 +950,8 @@ class Default(object):
         :type classpath_illumina2bam: str, unicode
         :param classpath_picard: Picard Java Archive (JAR) class path directory
         :type classpath_picard: str, unicode
+        :param classpath_snpeff: snpEff Java Archive (JAR) class path directory
+        :type classpath_snpeff: str, unicode
         :param directory_home: Home directory for all data
         :type directory_home: str, unicode
         :param directory_runs_illumina: Sub-directory for Illumina runs
@@ -959,6 +968,10 @@ class Default(object):
         :type directory_genomes: str, unicode
         :param directory_annotations: Sub-directory for genome annotations
         :type directory_annotations: str, unicode
+        :param directory_gatk_bundle: Sub-directory for GATK bundle data
+        :type directory_gatk_bundle: str, unicode
+        :param directory_snpeff_data: snpEff database directory
+        :type directory_snpeff_data: str, unicode
         :param indices: Python dict of program name key and index directory name value data
         :type indices: dict
         :param drms_implementation: DRMS implementation (e.g. Bash, SGE)
@@ -1008,6 +1021,11 @@ class Default(object):
         else:
             self.classpath_picard = str()
 
+        if classpath_snpeff:
+            self.classpath_snpeff = classpath_snpeff
+        else:
+            self.classpath_snpeff = str()
+
         # Set directory information.
 
         if directory_home:
@@ -1049,6 +1067,16 @@ class Default(object):
             self.directory_annotations = directory_annotations
         else:
             self.directory_annotations = str()
+
+        if directory_gatk_bundle:
+            self.directory_gatk_bundle = directory_gatk_bundle
+        else:
+            self.directory_gatk_bundle = str()
+
+        if directory_snpeff_data:
+            self.directory_snpeff_data = directory_snpeff_data
+        else:
+            self.directory_snpeff_data = str()
 
         # Set index information.
 
@@ -1153,6 +1181,7 @@ class Default(object):
         self.classpath_gatk = cp.get(section=section, option='gatk')
         self.classpath_illumina2bam = cp.get(section=section, option='illumina2bam')
         self.classpath_picard = cp.get(section=section, option='picard')
+        self.classpath_snpeff = cp.get(section=section, option='snpeff')
 
         section = 'directories'
 
@@ -1164,6 +1193,8 @@ class Default(object):
         self.directory_public_html = cp.get(section=section, option='public_html')
         self.directory_genomes = cp.get(section=section, option='genomes')
         self.directory_annotations = cp.get(section=section, option='annotations')
+        self.directory_gatk_bundle = cp.get(section=section, option='gatk_bundle')
+        self.directory_snpeff_data = cp.get(section=section, option='snpeff_data')
 
         section = 'indices'
 
@@ -1294,6 +1325,30 @@ class Default(object):
             return default.directory_public_html
         else:
             return os.path.join(default.directory_home, default.directory_public_html)
+
+    @staticmethod
+    def absolute_gatk_bundle(gatk_bundle_version, genome_version):
+        """Get the absolute directory path for the Genome Analysis Toolkit bundle.
+
+        :param gatk_bundle_version: The GATK bundle version
+        :type gatk_bundle_version: str
+        :param genome_version: The genome version (e.g. b37, ...)
+        :type genome_version: str
+        :return Absolute path to the GATK bundle directory
+        :rtype: str, unicode
+        """
+
+        default = Default.get_global_default()
+
+        file_path = str(default.directory_gatk_bundle)
+
+        if gatk_bundle_version:
+            file_path = os.path.join(file_path, gatk_bundle_version)
+
+        if genome_version:
+            file_path = os.path.join(file_path, genome_version)
+
+        return file_path
 
     @staticmethod
     def absolute_genomes(genome_version):
@@ -1981,7 +2036,7 @@ class Command(object):
         :param key: Key
         :type key: str
         :param value: Value
-        :type value: str
+        :type value: str, unicode
         :return: Nothing
         :rtype: None
         """
@@ -1997,7 +2052,7 @@ class Command(object):
         :param key: Key
         :type key: str
         :param value: Value
-        :type value: str
+        :type value: str, unicode
         :return: Nothing
         :rtype: None
         """
@@ -2013,7 +2068,7 @@ class Command(object):
         :param key: Key
         :type key: str
         :param value: Value
-        :type value: str
+        :type value: str, unicode
         :return: Nothing
         :rtype: None
         """
@@ -2502,7 +2557,7 @@ class Runnable(object):
                                        debug=debug)
 
     @staticmethod
-    def run(executable, max_loop_counter=3, max_thread_joins=10, thread_join_timeout=10, debug=1):
+    def run(executable, max_loop_counter=1, max_thread_joins=10, thread_join_timeout=10, debug=0):
         """BSF Runnable function to run a BSF Executable object as Python subprocess.
 
         :param executable: BSF Executable
