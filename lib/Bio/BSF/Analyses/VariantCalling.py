@@ -367,6 +367,18 @@ class VariantCallingGATK(Analysis):
                                                  genome_version=self.genome_version),
                     known_sites_discovery)
 
+        if config_parser.has_option(section=config_section, option='truth_sensitivity_filter_level_snp'):
+            truth_sensitivity_filter_level_snp = config_parser.get(section=config_section,
+                                                                   option='truth_sensitivity_filter_level_snp')
+        else:
+            truth_sensitivity_filter_level_snp = str()
+
+        if config_parser.has_option(section=config_section, option='truth_sensitivity_filter_level_indel'):
+            truth_sensitivity_filter_level_indel = config_parser.get(section=config_section,
+                                                                     option='truth_sensitivity_filter_level_indel')
+        else:
+            truth_sensitivity_filter_level_indel = str()
+
         vqsr_annotations_indel_list = list()
         if config_parser.has_option(section=config_section, option='vqsr_annotations_indel'):
             temporary_str = config_parser.get(section=config_section, option='vqsr_annotations_indel')
@@ -1177,7 +1189,8 @@ class VariantCallingGATK(Analysis):
         sub_command.add_OptionLong(key='tranches_file', value=file_path_cohort['tranches_snp'])
         sub_command.add_OptionLong(key='out', value=file_path_cohort['gvcf_recalibrated_snp_raw_indel'])
         # TODO: The lodCutoff (VQSLOD score) filter is not applied for the moment.
-        # TODO: The ts_filter_level (truth site filter level) is not applied for the moment.
+        if truth_sensitivity_filter_level_snp:
+            sub_command.add_OptionLong(key='ts_filter_level', value=truth_sensitivity_filter_level_snp)
 
         pickler_dict_process_cohort[java_process.name] = java_process
 
@@ -1204,7 +1217,8 @@ class VariantCallingGATK(Analysis):
         sub_command.add_OptionLong(key='tranches_file', value=file_path_cohort['tranches_indel'])
         sub_command.add_OptionLong(key='out', value=file_path_cohort['gvcf_recalibrated_snp_recalibrated_indel'])
         # TODO: The lodCutoff (VQSLOD score) filter is not applied for the moment.
-        # TODO: The ts_filter_level (truth site filter level) is not applied for the moment.
+        if truth_sensitivity_filter_level_indel:
+            sub_command.add_OptionLong(key='ts_filter_level', value=truth_sensitivity_filter_level_indel)
 
         pickler_dict_process_cohort[java_process.name] = java_process
 
@@ -1255,6 +1269,91 @@ class VariantCallingGATK(Analysis):
         sub_command.add_OptionLong(key='out', value=file_path_cohort['gvcf_annotated'])
 
         pickler_dict_process_cohort[java_process.name] = java_process
+
+        # Re-process the cohort by sample.
+
+        pickler_dict_process_cohort['sample_names'] = list()
+
+        for sample in self.samples:
+
+            pickler_dict_process_cohort['sample_names'].append(sample.name)
+
+            # Run the GATK SelectVariants step to split multi-sample VCF files into one per sample.
+
+            file_path_cohort['sample_vcf_' + sample.name] = prefix_cohort + '_sample_{}.vcf'.format(sample.name)
+
+            java_process = Executable(name='gatk_select_variants_sample_' + sample.name,
+                                      program='java',
+                                      sub_command=Command(command=str()))
+            java_process.add_SwitchShort(key='d64')
+            java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
+            java_process.add_SwitchShort(key='Xmx6G')
+            java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_cohort['temporary_cohort'])
+
+            sub_command = java_process.sub_command
+            sub_command.add_OptionLong(key='analysis_type', value='SelectVariants')
+            sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+            for interval in exclude_intervals_list:
+                sub_command.add_OptionLong(key='excludeIntervals', value=interval)
+            for interval in include_intervals_list:
+                sub_command.add_OptionLong(key='intervals', value=interval)
+
+            sub_command.add_OptionLong(key='variant', value=file_path_cohort['gvcf_annotated'])
+            sub_command.add_OptionLong(key='out', value=file_path_cohort['sample_vcf_' + sample.name])
+            sub_command.add_OptionLong(key='sample_name', value=sample.name)
+            sub_command.add_SwitchLong(key='excludeNonVariants')
+
+            pickler_dict_process_cohort[java_process.name] = java_process
+
+            # Run the GATK VariantsToTable step.
+
+            file_path_cohort['sample_csv_' + sample.name] = prefix_cohort + '_sample_{}.csv'.format(sample.name)
+
+            java_process = Executable(name='gatk_variants_to_table_sample_' + sample.name,
+                                      program='java',
+                                      sub_command=Command(command=str()))
+            java_process.add_SwitchShort(key='d64')
+            java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
+            java_process.add_SwitchShort(key='Xmx6G')
+            java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_cohort['temporary_cohort'])
+
+            sub_command = java_process.sub_command
+            sub_command.add_OptionLong(key='analysis_type', value='VariantsToTable')
+            sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+            for interval in exclude_intervals_list:
+                sub_command.add_OptionLong(key='excludeIntervals', value=interval)
+            for interval in include_intervals_list:
+                sub_command.add_OptionLong(key='intervals', value=interval)
+
+            sub_command.add_OptionLong(key='variant', value=file_path_cohort['sample_vcf_' + sample.name])
+            sub_command.add_OptionLong(key='out', value=file_path_cohort['sample_csv_' + sample.name])
+            sub_command.add_SwitchLong(key='allowMissingData')
+            sub_command.add_SwitchLong(key='showFiltered')
+            sub_command.add_OptionLong(key='fields', value='CHROM')
+            sub_command.add_OptionLong(key='fields', value='POS')
+            sub_command.add_OptionLong(key='fields', value='ID')
+            sub_command.add_OptionLong(key='fields', value='REF')
+            sub_command.add_OptionLong(key='fields', value='ALT')
+            sub_command.add_OptionLong(key='fields', value='QUAL')
+            sub_command.add_OptionLong(key='fields', value='FILTER')
+            sub_command.add_OptionLong(key='fields', value='AF')
+            sub_command.add_OptionLong(key='fields', value='VQSLOD')
+            sub_command.add_OptionLong(key='genotypeFields', value='GT')
+            sub_command.add_OptionLong(key='genotypeFields', value='AD')
+            sub_command.add_OptionLong(key='genotypeFields', value='DP')
+            sub_command.add_OptionLong(key='genotypeFields', value='GQ')
+            sub_command.add_OptionLong(key='genotypeFields', value='PL')
+            sub_command.add_OptionLong(key='fields', value='SNPEFF_EFFECT')
+            sub_command.add_OptionLong(key='fields', value='SNPEFF_IMPACT')
+            sub_command.add_OptionLong(key='fields', value='SNPEFF_FUNCTIONAL_CLASS')
+            sub_command.add_OptionLong(key='fields', value='SNPEFF_CODON_CHANGE')
+            sub_command.add_OptionLong(key='fields', value='SNPEFF_AMINO_ACID_CHANGE')
+            sub_command.add_OptionLong(key='fields', value='SNPEFF_GENE_NAME')
+            sub_command.add_OptionLong(key='fields', value='SNPEFF_GENE_BIOTYPE')
+            sub_command.add_OptionLong(key='fields', value='SNPEFF_TRANSCRIPT_ID')
+            sub_command.add_OptionLong(key='fields', value='SNPEFF_EXON_ID')
+
+            pickler_dict_process_cohort[java_process.name] = java_process
 
         # Write the Pickler dict file for processing the cohort.
 

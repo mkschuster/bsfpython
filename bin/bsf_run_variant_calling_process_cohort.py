@@ -218,6 +218,58 @@ def run_gatk_variant_annotator(pickler_dict):
         raise Exception(message)
 
 
+def run_gatk_select_variants(pickler_dict):
+    """Run the GATK SelectVariants step.
+
+    :param pickler_dict: Pickler dict
+    :type pickler_dict: dict
+    :return: Nothing
+    :rtype: None
+    """
+
+    run_gatk_variant_annotator(pickler_dict=pickler_dict)
+
+    # The GATK SelectVariants step has to be run for each sample name separately.
+
+    for sample_name in pickler_dict['sample_names']:
+
+        if os.path.exists(pickler_dict['file_path_dict']['sample_vcf_' + sample_name]):
+            continue
+
+        executable = pickler_dict['gatk_select_variants_sample_' + sample_name]
+        child_return_code = Runnable.run(executable=executable)
+
+        if child_return_code:
+            message = "Could not complete the '{}' step.".format(executable.name)
+            raise Exception(message)
+
+
+def run_gatk_variants_to_table(pickler_dict):
+    """Run the GATK VariantsToTable step.
+
+    :param pickler_dict: Pickler dict
+    :type pickler_dict: dict
+    :return: Nothing
+    :rtype: None
+    """
+
+    run_gatk_select_variants(pickler_dict=pickler_dict)
+
+    # The GATK SelectVariants step has to be run for each sample name separately.
+
+    for sample_name in pickler_dict['sample_names']:
+
+        if os.path.exists(pickler_dict['file_path_dict']['sample_csv_' + sample_name]):
+            continue
+
+        executable = pickler_dict['gatk_variants_to_table_sample_' + sample_name]
+        child_return_code = Runnable.run(executable=executable)
+
+        if child_return_code:
+            message = "Could not complete the '{}' step.".format(executable.name)
+            raise Exception(message)
+
+
 # Set the environment consistently.
 
 os.environ['LANG'] = 'C'
@@ -259,7 +311,7 @@ if not os.path.isdir(path_temporary):
 # Run the chain of executables back up the function hierarchy so that
 # dependencies on temporarily created files become simple to manage.
 
-run_gatk_variant_annotator(pickler_dict=pickler_dict)
+run_gatk_variants_to_table(pickler_dict=pickler_dict)
 
 # Remove the temporary directory and everything within it.
 
