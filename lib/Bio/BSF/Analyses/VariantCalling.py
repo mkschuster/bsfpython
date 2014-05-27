@@ -1116,8 +1116,9 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionLong(key='intervals', value=interval)
         sub_command.add_OptionLong(key='mode', value='SNP')
         for resource in vqsr_resources_snp_dict.keys():
-            resource_option = 'resource:known={},training={},truth={},prior={}'. \
-                format(vqsr_resources_snp_dict[resource]['known'],
+            resource_option = 'resource:{},known={},training={},truth={},prior={}'. \
+                format(resource,
+                       vqsr_resources_snp_dict[resource]['known'],
                        vqsr_resources_snp_dict[resource]['training'],
                        vqsr_resources_snp_dict[resource]['truth'],
                        vqsr_resources_snp_dict[resource]['prior'])
@@ -1150,8 +1151,9 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionLong(key='intervals', value=interval)
         sub_command.add_OptionLong(key='mode', value='INDEL')
         for resource in vqsr_resources_indel_dict.keys():
-            resource_option = 'resource:known={},training={},truth={},prior={}'. \
-                format(vqsr_resources_indel_dict[resource]['known'],
+            resource_option = 'resource:{},known={},training={},truth={},prior={}'. \
+                format(resource,
+                       vqsr_resources_indel_dict[resource]['known'],
                        vqsr_resources_indel_dict[resource]['training'],
                        vqsr_resources_indel_dict[resource]['truth'],
                        vqsr_resources_indel_dict[resource]['prior'])
