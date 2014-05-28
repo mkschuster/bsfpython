@@ -571,10 +571,10 @@ class VariantCallingGATK(Analysis):
                 # Since read names typically contain a dash and an underscore, the READ_NAME_REGEX needs adjusting,
                 # as otherwise optical duplicates could not be detected.
                 # See BioStar post: http://www.biostars.org/p/12538/
-                # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*.
-                # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*.
+                # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
+                # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
                 sub_command.add_OptionPair(key='READ_NAME_REGEX',
-                                           value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*.')
+                                           value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
                 sub_command.add_OptionPair(key='TMP_DIR', value=file_path_lane['temporary_lane'])
                 sub_command.add_OptionPair(key='VERBOSITY', value='WARNING')
                 sub_command.add_OptionPair(key='QUIET', value='false')
@@ -865,10 +865,10 @@ class VariantCallingGATK(Analysis):
             # Since read names typically contain a dash and an underscore, the READ_NAME_REGEX needs adjusting,
             # as otherwise optical duplicates could not be detected.
             # See BioStar post: http://www.biostars.org/p/12538/
-            # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*.
-            # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*.
+            # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
+            # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
             sub_command.add_OptionPair(key='READ_NAME_REGEX',
-                                       value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*.')
+                                       value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
             sub_command.add_OptionPair(key='TMP_DIR', value=file_path_sample['temporary_sample'])
             sub_command.add_OptionPair(key='VERBOSITY', value='WARNING')
             sub_command.add_OptionPair(key='QUIET', value='false')
