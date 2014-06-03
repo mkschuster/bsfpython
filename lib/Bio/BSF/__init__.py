@@ -842,6 +842,8 @@ class Default(object):
     :type drms_memory_limit_hard: str
     :ivar drms_memory_limit_soft: DRMS memory limit soft
     :type drms_memory_limit_soft: str
+    :ivar drms_time_limit: DRMS time limit
+    :type drms_time_limit: str
     :ivar operator_e_mail: Operator e-mail
     :type operator_e_mail: str
     :ivar ucsc_host_name: UCSC Genome Browser host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
@@ -935,6 +937,7 @@ class Default(object):
                  directory_annotations=None, directory_gatk_bundle=None, directory_snpeff_data=None,
                  indices=None, drms_implementation=None,
                  drms_maximum_threads=None, drms_memory_limit_hard=None, drms_memory_limit_soft=None,
+                 drms_time_limit=None,
                  operator_e_mail=None, operator_sequencing_centre=None, ucsc_host_name=None, url_protocol=None,
                  url_host_name=None, url_relative_projects=None, url_relative_chip_seq=None, url_relative_dna_seq=None,
                  url_relative_rna_seq=None):
@@ -982,6 +985,8 @@ class Default(object):
         :type drms_memory_limit_hard: str
         :param drms_memory_limit_soft: DRMS memory limit soft
         :type drms_memory_limit_soft: str
+        :param drms_time_limit: DRMS time limit
+        :type drms_time_limit: str
         :param operator_e_mail: Operator e-mail
         :type operator_e_mail: str
         :param operator_sequencing_centre: BAM sequencing centre code
@@ -1107,6 +1112,11 @@ class Default(object):
         else:
             self.drms_memory_limit_soft = str()
 
+        if drms_time_limit:
+            self.drms_time_limit = drms_time_limit
+        else:
+            self.drms_time_limit = str()
+
         # Set operator information.
 
         if operator_e_mail:
@@ -1162,7 +1172,7 @@ class Default(object):
 
         """Set instance variables of a BSF Default object via a section of a BSF Configuration object.
 
-        Instance variables without a configuration option remain unchanged.
+        For each instance variable a configuration option has to be present.
         :param self: BSF Default
         :type self: Default
         :param configuration: BSF Configuration
@@ -1210,6 +1220,7 @@ class Default(object):
         # self.drms_memory_free_mem = cp.get(section=section, option='memory_free_mem')
         # self.drms_memory_free_swap = cp.get(section=section, option='memory_free_swap')
         # self.drms_memory_free_virtual = cp.get(section=section, option='memory_free_virtual')
+        self.drms_time_limit = cp.get(section=section, option='time_limit')
         self.drms_parallel_environment = cp.get(section=section, option='parallel_environment')
         self.drms_queue = cp.get(section=section, option='queue')
 
@@ -1530,16 +1541,11 @@ class DRMS(object):
 
         assert isinstance(analysis, Analysis)
 
+        drms = cls(name=name, work_directory=work_directory)
+
         # Set a minimal set of global defaults.
 
-        default = Default.get_global_default()
-
-        drms = cls(name=name, work_directory=work_directory,
-                   implementation=default.drms_implementation,
-                   memory_limit_hard=default.drms_memory_limit_hard,
-                   memory_limit_soft=default.drms_memory_limit_soft,
-                   parallel_environment=default.drms_parallel_environment,
-                   queue=default.drms_queue)
+        drms.set_Default(default=Default.get_global_default())
 
         # A "Bio.BSF.DRMS" section specifies defaults for all BSF DRMS objects of a BSF Analysis.
 
@@ -1590,17 +1596,11 @@ class DRMS(object):
 
         assert isinstance(configuration, Configuration)
 
-        # Set a minimal set of global defaults.
+        drms = cls(name=name, work_directory=work_directory)
 
-        default = Default.get_global_default()
+        # Set a minimal set of global defaults before setting the Configuration.
 
-        drms = cls(name=name, work_directory=work_directory,
-                   implementation=default.drms_implementation,
-                   memory_limit_hard=default.drms_memory_limit_hard,
-                   memory_limit_soft=default.drms_memory_limit_soft,
-                   parallel_environment=default.drms_parallel_environment,
-                   queue=default.drms_queue)
-
+        drms.set_Default(default=Default.get_global_default())
         drms.set_Configuration(configuration=configuration, section=section)
 
         return drms
@@ -1612,6 +1612,7 @@ class DRMS(object):
                  memory_free_virtual=None,
                  memory_limit_hard=None,
                  memory_limit_soft=None,
+                 time_limit=None,
                  parallel_environment=None,
                  queue=None,
                  threads=1,
@@ -1640,6 +1641,8 @@ class DRMS(object):
         :type memory_limit_hard: str
         :param memory_limit_soft: Memory limit (soft)
         :type memory_limit_soft: str
+        :param time_limit: Time limit
+        :type time_limit: str
         :param parallel_environment: Parallel environment
         :type parallel_environment: str
         :param queue: Queue
@@ -1697,6 +1700,11 @@ class DRMS(object):
         else:
             self.memory_limit_soft = str()
 
+        if time_limit:
+            self.time_limit = time_limit
+        else:
+            self.time_limit = str()
+
         if parallel_environment:
             self.parallel_environment = parallel_environment
         else:
@@ -1752,6 +1760,8 @@ class DRMS(object):
             format(indent, self.memory_limit_hard)
         output += '{}  memory_limit_soft:    {!r}\n'. \
             format(indent, self.memory_limit_soft)
+        output += '{}  time_limit:           {!r}\n'. \
+            format(indent, self.time_limit)
         output += '{}  queue:                {!r}\n'. \
             format(indent, self.queue)
         output += '{}  parallel_environment: {!r}\n'. \
@@ -1826,6 +1836,10 @@ class DRMS(object):
             self.memory_limit_soft = configuration.config_parser.get(section=section,
                                                                      option='memory_soft')
 
+        if configuration.config_parser.has_option(section=section, option='time_limit'):
+            self.time_limit = configuration.config_parser.get(section=section,
+                                                              option='time_limit')
+
         if configuration.config_parser.has_option(section=section, option='parallel_environment'):
             self.parallel_environment = configuration.config_parser.get(section=section,
                                                                         option='parallel_environment')
@@ -1837,6 +1851,30 @@ class DRMS(object):
         if configuration.config_parser.has_option(section=section, option='threads'):
             self.threads = configuration.config_parser.get(section=section,
                                                            option='threads')
+
+    def set_Default(self, default):
+
+        """Set instance variables of a BSF DRMS object via a BSF Default object.
+
+        :param self: BSF DRMS
+        :type self: DRMS
+        :param default: BSF Default
+        :type default: Default
+        """
+
+        assert isinstance(default, Default)
+
+        self.implementation = default.drms_implementation
+        # is_script
+        # memory_free_mem
+        # memory_free_swap
+        # memory_free_virtual
+        self.memory_limit_hard = default.drms_memory_limit_hard
+        self.memory_limit_soft = default.drms_memory_limit_soft
+        self.time_limit = default.drms_time_limit
+        self.parallel_environment = default.drms_parallel_environment
+        self.queue = default.drms_queue
+        # threads
 
     def add_Executable(self, executable):
 
