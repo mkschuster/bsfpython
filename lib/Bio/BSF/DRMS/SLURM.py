@@ -34,6 +34,10 @@ import string
 import subprocess
 import warnings
 
+from Bio.BSF.Database import DatabaseConnection, \
+    JobSubmission, JobSubmissionAdaptor, \
+    ProcessSLURMAdaptor
+
 # Global dictionary to map from Executable.name entries to SLURM job identifiers,
 # which are required for specifying job dependencies. Isn't that what a DRMS should do for us?
 
@@ -57,6 +61,17 @@ def submit(self, debug=0):
     :return: Nothing
     :rtype: None
     """
+
+    # Open or create a database.
+
+    database_path = os.path.join(self.work_directory, 'bsfpython_slurm.db')
+
+    database_connection = DatabaseConnection(file_path=database_path)
+    database_connection.create_schema()
+    # TODO: Not sure it is a good idea to require this after every call?
+    # Should this be part of the DatabaseConnection method?
+    job_submission_adaptor = JobSubmissionAdaptor(database_connection=database_connection)
+    process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
     output = str()
     output += "#! /bin/bash\n"
@@ -89,10 +104,26 @@ def submit(self, debug=0):
         # TODO: The memory must be specified in MB.
         # Maybe it would be worth having a routine that converts suffixes into MB.
         # This should use memory_limit_soft or memory_limit_hard.
+        # TODO: Not sure how to use this in a situation like BWA where a multi threaded application does not use
+        # memory fo reach thread.
 
         if self.memory_limit_hard:
+            # command.append('--mem-per-cpu')
             command.append('--mem')
             command.append(self.memory_limit_hard)
+
+        command.append('--time')
+        command.append(self.time_limit)
+
+        # Propagate none of the environment variables.
+
+        command.append('--export')
+        command.append('NONE')
+
+        # Get the user environment resembling a login shell.
+
+        command.append('--get-user-env=L')
+        # command.append('L')
 
         # Parallel environment
 
@@ -103,7 +134,11 @@ def submit(self, debug=0):
             command.append('1')
             command.append('--cpus-per-task')
             command.append(str(self.threads))
-            command.append('--share')
+
+        command.append('--requeue')
+
+        # The --share option may no longer be needed.
+        # command.append('--share')
 
         # Queue name
 
@@ -221,6 +256,14 @@ def submit(self, debug=0):
 
         output += string.join(words=command, sep=' ') + "\n"
         output += "\n"
+
+        # Write this into the SQLite database.
+
+        # For the moment, leave the command out since it has to contain the dependencies in numeric form.
+        job_submission = JobSubmission(executable_id=executable.process_identifier,
+                                       name=executable.name,
+                                       command='')
+        job_submission_adaptor.store(data_object=job_submission)
 
     script_path = os.path.join(self.work_directory, 'bsfpython_slurm_{}.sh'.format(self.name))
     script_file = open(name=script_path, mode='w')
