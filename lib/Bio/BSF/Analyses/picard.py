@@ -356,7 +356,7 @@ def picard_sam_to_fastq(analysis):
 
     # Picard SamToFastq
 
-    stf_drms = DRMS.from_Analysis(name='SamToFastq',
+    stf_drms = DRMS.from_Analysis(name='sam_to_fastq',
                                   work_directory=raw_data_directory,
                                   analysis=analysis)
 
@@ -364,7 +364,7 @@ def picard_sam_to_fastq(analysis):
 
     # GNU Gzip
 
-    gzip_drms = DRMS.from_Analysis(name='Gzip',
+    gzip_drms = DRMS.from_Analysis(name='gzip',
                                    work_directory=raw_data_directory,
                                    analysis=analysis)
 
@@ -466,7 +466,7 @@ def picard_sam_to_fastq(analysis):
                 # INCLUDE_NON_PRIMARY_ALIGNMENTS
 
                 # TODO: Try a new strategy to pass in a complete Analysis object to allow simpler chaining of Analyses.
-                # TODO: Maybe this could be used to pass in an ChIPSeq or RNASeq Analysis object...
+                # TODO: Maybe this could be used to pass in an ChIPSeq or Tuxedo Analysis object...
                 # TODO: The problem is that a BSF Collection may contain more BSF Project and BSF Sample objects
                 # than strictly required for the Analysis in question.
                 # TODO: We could use a standard directory for data conversion and check if files are already there.
