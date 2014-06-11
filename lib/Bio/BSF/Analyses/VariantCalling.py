@@ -525,6 +525,8 @@ class VariantCallingGATK(Analysis):
 
                 prefix_lane = '{}_{}'.format(vc_process_lane_drms.name, replicate_key)
 
+                # Lane-specific file paths
+
                 file_path_lane = dict(
                     temporary_lane=prefix_lane + '_temporary',
                     # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
@@ -569,7 +571,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_OptionPair(key='OUTPUT', value=file_path_lane['duplicates_marked_bam'])
                 sub_command.add_OptionPair(key='METRICS_FILE', value=file_path_lane['duplicate_metrics'])
                 # Since read names typically contain a dash and an underscore, the READ_NAME_REGEX needs adjusting,
-                # as otherwise optical duplicates could not be detected.
+                # as otherwise, optical duplicates could not be detected. This is a consequence of using Illumina2bam
+                # rather than Picard ExtractIlluminaBarcodes, IlluminaBasecallsToFastq and IlluminaBasecallsToSam.
                 # See BioStar post: http://www.biostars.org/p/12538/
                 # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
                 # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
@@ -617,7 +620,7 @@ class VariantCallingGATK(Analysis):
                                           sub_command=Command(command=str()))
                 java_process.add_SwitchShort(key='d64')
                 java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
-                java_process.add_SwitchShort(key='Xmx8G')
+                java_process.add_SwitchShort(key='Xmx6G')
                 java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_lane['temporary_lane'])
 
                 sub_command = java_process.sub_command
@@ -863,7 +866,8 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionPair(key='OUTPUT', value=file_path_sample['duplicates_marked_bam'])
             sub_command.add_OptionPair(key='METRICS_FILE', value=file_path_sample['duplicate_metrics'])
             # Since read names typically contain a dash and an underscore, the READ_NAME_REGEX needs adjusting,
-            # as otherwise optical duplicates could not be detected.
+            # as otherwise optical duplicates could not be detected. This is a consequence of using Illumina2bam
+            # rather than Picard ExtractIlluminaBarcodes, IlluminaBasecallsToFastq and IlluminaBasecallsToSam.
             # See BioStar post: http://www.biostars.org/p/12538/
             # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
             # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
