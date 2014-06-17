@@ -312,6 +312,11 @@ class VariantCallingGATK(Analysis):
         else:
             classpath_snpeff = default.classpath_snpeff
 
+        if config_parser.has_option(section=config_section, option='skip_mark_duplicates'):
+            skip_mark_duplicates = config_parser.getboolean(section=config_section, option='skip_mark_duplicates')
+        else:
+            skip_mark_duplicates = False
+
         bwa_genome_db = str(config_parser.get(section=config_section, option='bwa_genome_db'))
         if not os.path.isabs(bwa_genome_db):
             bwa_genome_db = os.path.join(
@@ -556,38 +561,40 @@ class VariantCallingGATK(Analysis):
                     prefix=vc_process_lane_drms.name,
                     replicate_key=replicate_key)
 
-                # Run the Picard MarkDuplicates step.
+                # Run the Picard MarkDuplicates step, unless configured to skip it.
 
-                java_process = Executable(name='picard_mark_duplicates',
-                                          program='java',
-                                          sub_command=Command(command=str()))
-                java_process.add_SwitchShort(key='d64')
-                java_process.add_OptionShort(key='jar', value=os.path.join(classpath_picard, 'MarkDuplicates.jar'))
-                java_process.add_SwitchShort(key='Xmx6G')
-                java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_lane['temporary_lane'])
+                if not skip_mark_duplicates:
+                    java_process = Executable(name='picard_mark_duplicates',
+                                              program='java',
+                                              sub_command=Command(command=str()))
+                    java_process.add_SwitchShort(key='d64')
+                    java_process.add_OptionShort(key='jar', value=os.path.join(classpath_picard, 'MarkDuplicates.jar'))
+                    java_process.add_SwitchShort(key='Xmx6G')
+                    java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_lane['temporary_lane'])
 
-                sub_command = java_process.sub_command
-                sub_command.add_OptionPair(key='INPUT', value=file_path_lane['aligned_bam'])
-                sub_command.add_OptionPair(key='OUTPUT', value=file_path_lane['duplicates_marked_bam'])
-                sub_command.add_OptionPair(key='METRICS_FILE', value=file_path_lane['duplicate_metrics'])
-                # Since read names typically contain a dash and an underscore, the READ_NAME_REGEX needs adjusting,
-                # as otherwise, optical duplicates could not be detected. This is a consequence of using Illumina2bam
-                # rather than Picard ExtractIlluminaBarcodes, IlluminaBasecallsToFastq and IlluminaBasecallsToSam.
-                # See BioStar post: http://www.biostars.org/p/12538/
-                # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
-                # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
-                sub_command.add_OptionPair(key='READ_NAME_REGEX',
-                                           value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
-                sub_command.add_OptionPair(key='TMP_DIR', value=file_path_lane['temporary_lane'])
-                sub_command.add_OptionPair(key='VERBOSITY', value='WARNING')
-                sub_command.add_OptionPair(key='QUIET', value='false')
-                sub_command.add_OptionPair(key='VALIDATION_STRINGENCY', value='STRICT')
-                sub_command.add_OptionPair(key='COMPRESSION_LEVEL', value='5')
-                sub_command.add_OptionPair(key='MAX_RECORDS_IN_RAM', value='4000000')
-                sub_command.add_OptionPair(key='CREATE_INDEX', value='true')
-                sub_command.add_OptionPair(key='CREATE_MD5_FILE', value='true')
+                    sub_command = java_process.sub_command
+                    sub_command.add_OptionPair(key='INPUT', value=file_path_lane['aligned_bam'])
+                    sub_command.add_OptionPair(key='OUTPUT', value=file_path_lane['duplicates_marked_bam'])
+                    sub_command.add_OptionPair(key='METRICS_FILE', value=file_path_lane['duplicate_metrics'])
+                    # Since read names typically contain a dash and an underscore, the READ_NAME_REGEX needs adjusting,
+                    # as otherwise, optical duplicates could not be detected. This is a consequence of using
+                    # Illumina2bam rather than Picard ExtractIlluminaBarcodes, IlluminaBasecallsToFastq and
+                    # IlluminaBasecallsToSam.
+                    # See BioStar post: http://www.biostars.org/p/12538/
+                    # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
+                    # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
+                    sub_command.add_OptionPair(key='READ_NAME_REGEX',
+                                               value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
+                    sub_command.add_OptionPair(key='TMP_DIR', value=file_path_lane['temporary_lane'])
+                    sub_command.add_OptionPair(key='VERBOSITY', value='WARNING')
+                    sub_command.add_OptionPair(key='QUIET', value='false')
+                    sub_command.add_OptionPair(key='VALIDATION_STRINGENCY', value='STRICT')
+                    sub_command.add_OptionPair(key='COMPRESSION_LEVEL', value='5')
+                    sub_command.add_OptionPair(key='MAX_RECORDS_IN_RAM', value='4000000')
+                    sub_command.add_OptionPair(key='CREATE_INDEX', value='true')
+                    sub_command.add_OptionPair(key='CREATE_MD5_FILE', value='true')
 
-                pickler_dict_process_lane[java_process.name] = java_process
+                    pickler_dict_process_lane[java_process.name] = java_process
 
                 # Run the GATK RealignerTargetCreator step as the first-pass walker for the IndelRealigner step.
 
@@ -608,7 +615,10 @@ class VariantCallingGATK(Analysis):
                     sub_command.add_OptionLong(key='intervals', value=interval)
                 for file_path in known_sites_realignment:
                     sub_command.add_OptionLong(key='known', value=file_path)
-                sub_command.add_OptionLong(key='input_file', value=file_path_lane['duplicates_marked_bam'])
+                if skip_mark_duplicates:
+                    sub_command.add_OptionLong(key='input_file', value=file_path_lane['aligned_bam'])
+                else:
+                    sub_command.add_OptionLong(key='input_file', value=file_path_lane['duplicates_marked_bam'])
                 sub_command.add_OptionLong(key='out', value=file_path_lane['realigner_targets'])
 
                 pickler_dict_process_lane[java_process.name] = java_process
@@ -632,7 +642,10 @@ class VariantCallingGATK(Analysis):
                     sub_command.add_OptionLong(key='intervals', value=interval)
                 for file_path in known_sites_realignment:
                     sub_command.add_OptionLong(key='knownAlleles', value=file_path)
-                sub_command.add_OptionLong(key='input_file', value=file_path_lane['duplicates_marked_bam'])
+                if skip_mark_duplicates:
+                    sub_command.add_OptionLong(key='input_file', value=file_path_lane['aligned_bam'])
+                else:
+                    sub_command.add_OptionLong(key='input_file', value=file_path_lane['duplicates_marked_bam'])
                 sub_command.add_OptionLong(key='targetIntervals', value=file_path_lane['realigner_targets'])
                 sub_command.add_OptionLong(key='out', value=file_path_lane['realigned_bam'])
 
@@ -850,39 +863,40 @@ class VariantCallingGATK(Analysis):
 
             pickler_dict_process_sample[java_process.name] = java_process
 
-            # Run the Picard MarkDuplicates step.
+            # Run the Picard MarkDuplicates step, unless configured to skip it.
             # Optical duplicates should already have been flagged in the lane-specific processing step.
 
-            java_process = Executable(name='picard_mark_duplicates',
-                                      program='java',
-                                      sub_command=Command(command=str()))
-            java_process.add_SwitchShort(key='d64')
-            java_process.add_OptionShort(key='jar', value=os.path.join(classpath_picard, 'MarkDuplicates.jar'))
-            java_process.add_SwitchShort(key='Xmx6G')
-            java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_sample['temporary_sample'])
+            if not skip_mark_duplicates:
+                java_process = Executable(name='picard_mark_duplicates',
+                                          program='java',
+                                          sub_command=Command(command=str()))
+                java_process.add_SwitchShort(key='d64')
+                java_process.add_OptionShort(key='jar', value=os.path.join(classpath_picard, 'MarkDuplicates.jar'))
+                java_process.add_SwitchShort(key='Xmx6G')
+                java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_sample['temporary_sample'])
 
-            sub_command = java_process.sub_command
-            sub_command.add_OptionPair(key='INPUT', value=file_path_sample['merged_bam'])
-            sub_command.add_OptionPair(key='OUTPUT', value=file_path_sample['duplicates_marked_bam'])
-            sub_command.add_OptionPair(key='METRICS_FILE', value=file_path_sample['duplicate_metrics'])
-            # Since read names typically contain a dash and an underscore, the READ_NAME_REGEX needs adjusting,
-            # as otherwise optical duplicates could not be detected. This is a consequence of using Illumina2bam
-            # rather than Picard ExtractIlluminaBarcodes, IlluminaBasecallsToFastq and IlluminaBasecallsToSam.
-            # See BioStar post: http://www.biostars.org/p/12538/
-            # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
-            # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
-            sub_command.add_OptionPair(key='READ_NAME_REGEX',
-                                       value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
-            sub_command.add_OptionPair(key='TMP_DIR', value=file_path_sample['temporary_sample'])
-            sub_command.add_OptionPair(key='VERBOSITY', value='WARNING')
-            sub_command.add_OptionPair(key='QUIET', value='false')
-            sub_command.add_OptionPair(key='VALIDATION_STRINGENCY', value='STRICT')
-            sub_command.add_OptionPair(key='COMPRESSION_LEVEL', value='5')
-            sub_command.add_OptionPair(key='MAX_RECORDS_IN_RAM', value='4000000')
-            sub_command.add_OptionPair(key='CREATE_INDEX', value='true')
-            sub_command.add_OptionPair(key='CREATE_MD5_FILE', value='true')
+                sub_command = java_process.sub_command
+                sub_command.add_OptionPair(key='INPUT', value=file_path_sample['merged_bam'])
+                sub_command.add_OptionPair(key='OUTPUT', value=file_path_sample['duplicates_marked_bam'])
+                sub_command.add_OptionPair(key='METRICS_FILE', value=file_path_sample['duplicate_metrics'])
+                # Since read names typically contain a dash and an underscore, the READ_NAME_REGEX needs adjusting,
+                # as otherwise optical duplicates could not be detected. This is a consequence of using Illumina2bam
+                # rather than Picard ExtractIlluminaBarcodes, IlluminaBasecallsToFastq and IlluminaBasecallsToSam.
+                # See BioStar post: http://www.biostars.org/p/12538/
+                # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
+                # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
+                sub_command.add_OptionPair(key='READ_NAME_REGEX',
+                                           value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
+                sub_command.add_OptionPair(key='TMP_DIR', value=file_path_sample['temporary_sample'])
+                sub_command.add_OptionPair(key='VERBOSITY', value='WARNING')
+                sub_command.add_OptionPair(key='QUIET', value='false')
+                sub_command.add_OptionPair(key='VALIDATION_STRINGENCY', value='STRICT')
+                sub_command.add_OptionPair(key='COMPRESSION_LEVEL', value='5')
+                sub_command.add_OptionPair(key='MAX_RECORDS_IN_RAM', value='4000000')
+                sub_command.add_OptionPair(key='CREATE_INDEX', value='true')
+                sub_command.add_OptionPair(key='CREATE_MD5_FILE', value='true')
 
-            pickler_dict_process_sample[java_process.name] = java_process
+                pickler_dict_process_sample[java_process.name] = java_process
 
             # Run the GATK RealignerTargetCreator step as the first-pass walker for the IndelRealigner step.
 
@@ -903,7 +917,10 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_OptionLong(key='intervals', value=interval)
             for file_path in known_sites_realignment:
                 sub_command.add_OptionLong(key='known', value=file_path)
-            sub_command.add_OptionLong(key='input_file', value=file_path_sample['duplicates_marked_bam'])
+            if skip_mark_duplicates:
+                sub_command.add_OptionLong(key='input_file', value=file_path_sample['merged_bam'])
+            else:
+                sub_command.add_OptionLong(key='input_file', value=file_path_sample['duplicates_marked_bam'])
             sub_command.add_OptionLong(key='out', value=file_path_sample['realigner_targets'])
 
             pickler_dict_process_sample[java_process.name] = java_process
@@ -927,7 +944,10 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_OptionLong(key='intervals', value=interval)
             for file_path in known_sites_realignment:
                 sub_command.add_OptionLong(key='knownAlleles', value=file_path)
-            sub_command.add_OptionLong(key='input_file', value=file_path_sample['duplicates_marked_bam'])
+            if skip_mark_duplicates:
+                sub_command.add_OptionLong(key='input_file', value=file_path_sample['merged_bam'])
+            else:
+                sub_command.add_OptionLong(key='input_file', value=file_path_sample['duplicates_marked_bam'])
             sub_command.add_OptionLong(key='targetIntervals', value=file_path_sample['realigner_targets'])
             sub_command.add_OptionLong(key='out', value=file_path_sample['realigned_bam'])
             # For debugging only.
