@@ -77,6 +77,10 @@ def run_picard_mark_duplicates(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['duplicates_marked_bam']):
         return
 
+    # The Picard MarkDuplicates step may be skipped.
+    if not 'picard_mark_duplicates' in pickler_dict:
+        return
+
     executable = pickler_dict['picard_mark_duplicates']
     child_return_code = Runnable.run(executable=executable)
 
@@ -84,10 +88,13 @@ def run_picard_mark_duplicates(pickler_dict):
         message = "Could not complete the '{}' step.".format(executable.name)
         raise Exception(message)
 
-    # if args.debug < 1:
-    #     os.remove(pickler_dict['file_path_dict']['merged_bam'])
-    #     os.remove(pickler_dict['file_path_dict']['merged_bai'])
-    #     os.remove(pickler_dict['file_path_dict']['merged_md5'])
+    if args.debug < 1:
+        if os.path.exists(path=pickler_dict['file_path_dict']['merged_bam']):
+            os.remove(pickler_dict['file_path_dict']['merged_bam'])
+        if os.path.exists(path=pickler_dict['file_path_dict']['merged_bai']):
+            os.remove(pickler_dict['file_path_dict']['merged_bai'])
+        if os.path.exists(path=pickler_dict['file_path_dict']['merged_md5']):
+            os.remove(pickler_dict['file_path_dict']['merged_md5'])
 
 
 def run_gatk_realigner_target_creator(pickler_dict):
@@ -133,10 +140,20 @@ def run_gatk_indel_realigner(pickler_dict):
         message = "Could not complete the '{}' step.".format(executable.name)
         raise Exception(message)
 
-    # if args.debug < 1:
-    #     os.remove(pickler_dict['file_path_dict']['duplicates_marked_bam'])
-    #     os.remove(pickler_dict['file_path_dict']['duplicates_marked_bai'])
-    #     os.remove(pickler_dict['file_path_dict']['duplicates_marked_md5'])
+    if args.debug < 1:
+        if os.path.exists(path=pickler_dict['file_path_dict']['duplicates_marked_bam']):
+            os.remove(pickler_dict['file_path_dict']['duplicates_marked_bam'])
+        if os.path.exists(path=pickler_dict['file_path_dict']['duplicates_marked_bai']):
+            os.remove(pickler_dict['file_path_dict']['duplicates_marked_bai'])
+        if os.path.exists(path=pickler_dict['file_path_dict']['duplicates_marked_md5']):
+            os.remove(pickler_dict['file_path_dict']['duplicates_marked_md5'])
+        # Additionally, if the Picard MarkDuplicates step was skipped, remove the merged BAM files here.
+        if os.path.exists(path=pickler_dict['file_path_dict']['merged_bam']):
+            os.remove(pickler_dict['file_path_dict']['merged_bam'])
+        if os.path.exists(path=pickler_dict['file_path_dict']['merged_bai']):
+            os.remove(pickler_dict['file_path_dict']['merged_bai'])
+        if os.path.exists(path=pickler_dict['file_path_dict']['merged_md5']):
+            os.remove(pickler_dict['file_path_dict']['merged_md5'])
 
 
 def run_picard_collect_alignment_summary_metrics(pickler_dict):
