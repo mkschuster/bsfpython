@@ -312,6 +312,8 @@ class Analysis(object):
         :type configuration: Configuration
         :param section: Configuration file section
         :type section: str
+        :return: Nothing
+        :rtype: None
         """
 
         assert isinstance(configuration, Configuration)
@@ -1177,6 +1179,8 @@ class Default(object):
         :type self: Default
         :param configuration: BSF Configuration
         :type configuration: Configuration
+        :return: Nothing
+        :rtype: None
         """
 
         assert isinstance(configuration, Configuration)
@@ -1780,7 +1784,7 @@ class DRMS(object):
 
         return output
 
-    def set_Configuration(self, configuration, section):
+    def set_Configuration(self, configuration, section, warning=True):
 
         """Set instance variables of a BSF DRMS object via a section of a BSF Configuration object.
 
@@ -1791,14 +1795,19 @@ class DRMS(object):
         :type configuration: Configuration
         :param section: Configuration file section
         :type section: str
+        :param warning: Warn if the configuration section does not exist
+        :type warning: bool
+        :return: Nothing
+        :rtype: None
         """
 
         assert isinstance(configuration, Configuration)
 
         if not configuration.config_parser.has_section(section=section):
-            message = 'Section {!r} not defined in BSF Configuration file {!r}.'. \
-                format(section, configuration.config_file)
-            warnings.warn(message, UserWarning)
+            if warning:
+                message = 'Section {!r} not defined in BSF Configuration file {!r}.'. \
+                    format(section, configuration.config_file)
+                warnings.warn(message, UserWarning)
 
             return
 
@@ -1860,6 +1869,8 @@ class DRMS(object):
         :type self: DRMS
         :param default: BSF Default
         :type default: Default
+        :return: Nothing
+        :rtype: None
         """
 
         assert isinstance(default, Default)
@@ -2124,6 +2135,8 @@ class Command(object):
         :type configuration: Configuration
         :param section: Configuration file section, defaults to instance class
         :type section: str
+        :return: Nothing
+        :rtype: None
         """
 
         assert isinstance(configuration, Configuration)
