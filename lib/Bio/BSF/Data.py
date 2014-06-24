@@ -102,9 +102,7 @@ class Reads(object):
                         barcode=barcode, lane=lane, read=read, chunk=chunk)
 
         else:
-
-            message = 'Unsupported file_type {!r}.'.format(file_type)
-            raise Exception(message)
+            raise Exception('Unsupported file_type {!r}.'.format(file_type))
 
         return reads
 
@@ -248,12 +246,11 @@ class Reads(object):
                 return False
 
             return True
-
         else:
-
             # It is difficult to match PairedReads outside of CASAVA conventions.
-            message = 'Matching of paired BSF Reads objects for file_type other than CASAVA not implemented yet.'
-            warnings.warn(message, UserWarning)
+            warnings.warn(
+                'Matching of paired BSF Reads objects for file_type other than CASAVA not implemented yet.',
+                UserWarning)
 
             return True
 
@@ -294,12 +291,11 @@ class Reads(object):
                 return False
 
             return True
-
         else:
-
             # It is difficult to match PairedReads outside of CASAVA conventions.
-            message = 'Matching of paired BSF Reads objects for file_type other than CASAVA not implemented yet.'
-            warnings.warn(message, UserWarning)
+            warnings.warn(
+                'Matching of paired BSF Reads objects for file_type other than CASAVA not implemented yet.',
+                UserWarning)
 
             return True
 
@@ -341,7 +337,7 @@ class PairedReads(object):
         """
 
         if (reads1 and reads2) and (not reads1.match_paired(reads=reads2)):
-            raise Exception('The BSF Reads objects do not match')
+            raise Exception('The BSF Reads objects do not match.')
 
         self.reads1 = None
         self.reads2 = None
@@ -356,8 +352,7 @@ class PairedReads(object):
                     self.reads2 = reads1
                     reads1.weak_reference_paired_reads = weakref.ref(self)
                 else:
-                    message = 'Unknown BSF Reads read attribute {}.'.format(reads1.read)
-                    raise Exception(message)
+                    raise Exception('Unknown BSF Reads read attribute {!r}.'.format(reads1.read))
             else:
                 # Other file types go here ...
                 self.reads1 = reads1
@@ -373,8 +368,7 @@ class PairedReads(object):
                     self.reads2 = reads2
                     reads2.weak_reference_paired_reads = weakref.ref(self)
                 else:
-                    message = 'Unknown BSF Reads read attribute {}.'.format(reads2.read)
-                    raise Exception(message)
+                    raise Exception('Unknown BSF Reads read attribute {!r}.'.format(reads2.read))
             else:
                 # Other file types go here ...
                 self.reads2 = reads2
@@ -439,22 +433,22 @@ class PairedReads(object):
 
             if self.reads1.file_type == 'CASAVA':
                 if reads.read == 'R1':
-                    message = 'BSF PairedReads reads1 has already been defined.\n' \
-                              + '  reads1: {}\n' \
-                              + '  reads:  {}'. \
-                        format(self.reads1.file_path, reads.file_path)
-                    raise Exception(message)
+                    raise Exception(
+                        'BSF PairedReads reads1 has already been defined.\n'
+                        '  reads1: {!r}\n'
+                        '  reads:  {!r}'.
+                        format(self.reads1.file_path, reads.file_path))
                 elif reads.read == 'R2':
                     self.reads2 = reads
                     reads.weak_reference_paired_reads = weakref.ref(self)
                     return True
                 else:
-                    message = 'Unknown BSF Reads read attribute {}.'.format(reads.read)
-                    raise Exception(message)
+                    raise Exception('Unknown BSF Reads read attribute {!r}.'.format(reads.read))
             else:
                 # Other file types go here ...
-                message = 'Method not implemented for file types other than CASAVA.'
-                warnings.warn(message, UserWarning)
+                warnings.warn(
+                    'Method not implemented for file types other than CASAVA.',
+                    UserWarning)
 
         if self.reads2:
 
@@ -467,18 +461,18 @@ class PairedReads(object):
                     reads.weak_reference_paired_reads = weakref.ref(self)
                     return True
                 elif reads.read == 'R2':
-                    message = 'BSF PairedReads reads2 has already been defined.\n' \
-                              + '  reads2: {}\n' \
-                              + '  reads:  {}'. \
-                        format(self.reads2.file_path, reads.file_path)
-                    raise Exception(message)
+                    raise Exception(
+                        'BSF PairedReads reads2 has already been defined.\n'
+                        '  reads2: {!r}\n'
+                        '  reads:  {!r}'.
+                        format(self.reads2.file_path, reads.file_path))
                 else:
-                    message = 'Unknown BSF Reads read attribute {}.'.format(reads.read)
-                    raise Exception(message)
+                    raise Exception('Unknown BSF Reads read attribute {!r}.'.format(reads.read))
             else:
                 # Other file types go here ...
-                message = 'Method not implemented for file types other than CASAVA.'
-                warnings.warn(message, UserWarning)
+                warnings.warn(
+                    'Method not implemented for file types other than CASAVA.',
+                    UserWarning)
 
         return False
 
@@ -603,8 +597,7 @@ class Sample(object):
                     sample.add_Reads(reads=Reads.from_file_path(file_path=file_path, file_type=file_type))
 
         else:
-            message = 'Unsupported file_type {!r}.'.format(file_type)
-            raise Exception(message)
+            raise Exception('Unsupported file_type {!r}.'.format(file_type))
 
         return sample
 
@@ -627,9 +620,10 @@ class Sample(object):
         assert isinstance(sample2, Sample)
 
         if sample1.name != sample2.name:
-            message = 'Merged BSF Sample objects {!r} and {!r} should have the same name.'. \
-                format(sample1.name, sample2.name)
-            warnings.warn(message, UserWarning)
+            warnings.warn(
+                'Merged BSF Sample objects {!r} and {!r} should have the same name.'.
+                format(sample1.name, sample2.name),
+                UserWarning)
 
         # A file_path does not make sense for merged BSF Sample objects.
 
@@ -924,14 +918,13 @@ class Project(object):
                 match = re.search(pattern=r'^Sample_(.*)$', string=file_name)
                 if S_ISDIR(mode) and match:
                     if match.group(1) in project.samples:
-                        message = 'BSF Sample with name {!r} already exists.'.format(match.group(1))
-                        raise Exception(message)
+                        raise Exception(
+                            'BSF Sample with name {!r} already exists.'.format(match.group(1)))
                     else:
                         project.add_Sample(sample=Sample.from_file_path(file_path=file_path, file_type=file_type))
 
         else:
-            message = 'Unsupported file_type {!r}.'.format(file_type)
-            raise Exception(message)
+            raise Exception('Unsupported file_type {!r}.'.format(file_type))
 
         return project
 
@@ -1160,8 +1153,8 @@ class ProcessedRunFolder(object):
                 match = re.search(pattern=r'^Project_(.*)$', string=file_name)
                 if S_ISDIR(mode) and match:
                     if match.group(1) in prf.projects:
-                        message = 'BSF Project with name {!r} already exists.'.format(match.group(1))
-                        raise Exception(message)
+                        raise Exception(
+                            'BSF Project with name {!r} already exists.'.format(match.group(1)))
                     else:
                         prf.add_Project(project=Project.from_file_path(file_path=file_path, file_type=file_type))
 
@@ -1174,9 +1167,7 @@ class ProcessedRunFolder(object):
             prf = cls(file_path=file_path, file_type=file_type, name=name)
 
         else:
-
-            message = 'Unsupported file_type {!r}.'.format(file_type)
-            raise Exception(message)
+            raise Exception('Unsupported file_type {!r}.'.format(file_type))
 
         return prf
 
@@ -2341,8 +2332,9 @@ class AnnotationSheet(object):
         :rtype: None
         """
 
-        message = 'Sorting of BSF Annotation Sheets has to implemented in the sub-class.'
-        warnings.warn(message, UserWarning)
+        warnings.warn(
+            'Sorting of BSF Annotation Sheets has to implemented in the sub-class.',
+            UserWarning)
 
     def validate(self, test_methods):
 

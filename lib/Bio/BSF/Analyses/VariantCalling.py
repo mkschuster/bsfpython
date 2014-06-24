@@ -76,7 +76,7 @@ class VariantCallingGATK(Analysis):
 
         # A "Bio.BSF.Analysis.VariantCalling.VariantCallingGATK" section specifies defaults for this BSF Analysis.
 
-        section = '{}.{}'.format(__name__, cls.__name__)
+        section = string.join((__name__, cls.__name__), sep='.')
         variant_calling.set_Configuration(variant_calling.configuration, section=section)
 
         return variant_calling
@@ -203,19 +203,20 @@ class VariantCallingGATK(Analysis):
         :rtype: dict
         """
         if variation_type not in ('indel', 'snp'):
-            message = "Variation type has to be 'indel' or 'snp', not {!r}.".format(variation_type)
-            warnings.warn(message)
+            warnings.warn(
+                "Variation type has to be 'indel' or 'snp', not {!r}.".format(variation_type),
+                UserWarning)
 
         config_parser = self.configuration.config_parser
         config_section = self.configuration.section_from_instance(self)
 
         vqsr_dict = dict()
 
-        resource_option = "vqsr_resources_{}".format(variation_type)
+        resource_option = string.join(('vqsr_resources', variation_type), sep='_')
         if config_parser.has_option(section=config_section, option=resource_option):
             temporary_str = config_parser.get(section=config_section, option=resource_option)
             for resource in string.split(s=temporary_str, sep=','):
-                resource_section = "vqsr_{}_{}".format(variation_type, resource)
+                resource_section = string.join(('vqsr', variation_type, resource), sep='_')
                 if config_parser.has_section(section=resource_section):
                     if resource in vqsr_dict:
                         resource_dict = vqsr_dict[resource]
@@ -239,9 +240,10 @@ class VariantCallingGATK(Analysis):
                                 temporary_str)
                         resource_dict['file_path'] = temporary_str
                 else:
-                    message = "Missing configuration section '{}' declared in option resource_section '{}'.". \
-                        format(config_section, temporary_str)
-                    warnings.warn(message)
+                    warnings.warn(
+                        'Missing configuration section {!r} declared in option resource_section {!r}.'.
+                        format(config_section, temporary_str),
+                        UserWarning)
 
         return vqsr_dict
 
@@ -259,8 +261,7 @@ class VariantCallingGATK(Analysis):
         # VariantCallingGATK requires a genome version.
 
         if not self.genome_version:
-            message = "A VariantCallingGATK analysis requires a genome_version configuration option."
-            raise Exception(message)
+            raise Exception("A 'VariantCallingGATK' analysis requires a genome_version configuration option.")
 
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
@@ -294,8 +295,7 @@ class VariantCallingGATK(Analysis):
         if config_parser.has_option(section=config_section, option='gatk_bundle_version'):
             gatk_bundle_version = config_parser.get(section=config_section, option='gatk_bundle_version')
         else:
-            message = "A VariantCallingGATK analysis requires a gatk_bundle_version configuration option."
-            raise Exception(message)
+            raise Exception("A 'VariantCallingGATK' analysis requires a gatk_bundle_version configuration option.")
 
         if config_parser.has_option(section=config_section, option='classpath_gatk'):
             classpath_gatk = config_parser.get(section=config_section, option='classpath_gatk')
@@ -518,7 +518,7 @@ class VariantCallingGATK(Analysis):
                 # Create a bsf_run_bwa.py job to run the pickled object.
 
                 run_bwa = Executable.from_Analysis(
-                    name='{}_{}'.format(vc_align_lane_drms.name, replicate_key),
+                    name=string.join((vc_align_lane_drms.name, replicate_key), sep='_'),
                     program='bsf_run_bwa.py',
                     analysis=self)
                 vc_align_lane_drms.add_Executable(executable=run_bwa)
@@ -528,7 +528,7 @@ class VariantCallingGATK(Analysis):
                 run_bwa.add_OptionLong(key='pickler_path', value=pickler_path)
                 run_bwa.add_OptionLong(key='debug', value=str(self.debug))
 
-                prefix_lane = '{}_{}'.format(vc_process_lane_drms.name, replicate_key)
+                prefix_lane = string.join((vc_process_lane_drms.name, replicate_key), sep='_')
 
                 # Lane-specific file paths
 
@@ -811,7 +811,7 @@ class VariantCallingGATK(Analysis):
             #   Picard CollectAlignmentSummaryMetrics
             #   GATK HaplotypeCaller
 
-            prefix_sample = '{}_{}'.format(vc_process_sample_drms.name, sample.name)
+            prefix_sample = string.join((vc_process_sample_drms.name, sample.name), sep='_')
 
             file_path_sample = dict(
                 temporary_sample=prefix_sample + '_temporary',
@@ -997,6 +997,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_OptionLong(key='excludeIntervals', value=interval)
             for interval in include_intervals_list:
                 sub_command.add_OptionLong(key='intervals', value=interval)
+            # TODO: The number of threads should be configurable.
+            # sub_command.add_OptionLong(key='num_cpu_threads_per_data_thread', value='8')
             sub_command.add_OptionLong(key='genotyping_mode', value='DISCOVERY')
             sub_command.add_OptionLong(key='standard_min_confidence_threshold_for_emitting', value='10')
             sub_command.add_OptionLong(key='standard_min_confidence_threshold_for_calling', value='30')
@@ -1048,7 +1050,7 @@ class VariantCallingGATK(Analysis):
         #   GATK ApplyRecalibration for SNPs
         #   GATK ApplyRecalibration for INDELs
 
-        prefix_cohort = '{}_{}'.format(vc_process_cohort_drms.name, cohort_name)
+        prefix_cohort = string.join((vc_process_cohort_drms.name, cohort_name), sep='_')
 
         file_path_cohort = dict(
             temporary_cohort=prefix_cohort + '_temporary',

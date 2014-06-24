@@ -93,8 +93,7 @@ class Argument(object):
         assert isinstance(key, basestring)
 
         if not key:
-            message = 'The key argument has to be defined.'
-            raise Exception(message)
+            raise Exception('The key argument has to be defined.')
 
         self.key = key
 
@@ -269,8 +268,7 @@ class Option(Switch):
         super(Option, self).__init__(key=key, is_long=is_long)
 
         if not value:
-            message = 'The value argument has to be defined.'
-            raise Exception(message)
+            raise Exception('The value argument has to be defined.')
 
         self.value = value
         self.is_pair = is_pair

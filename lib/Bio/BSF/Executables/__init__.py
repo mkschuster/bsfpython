@@ -316,8 +316,9 @@ class Macs14(Executable):
         # Set default Macs options.
 
         if not ('gsize' in self.options and self.options['gsize']):
-            message = "A 'gsize' option is required in the [{}] configuration section".format(section)
-            raise Exception(message)
+            raise Exception(
+                "A 'gsize' option is required in the {!r} configuration section.".
+                format(section))
 
 
 class Macs2Bdgcmp(Executable):
@@ -380,8 +381,9 @@ class Macs2Callpeak(Executable):
         # Set default Macs options.
 
         if not ('gsize' in self.sub_command.options and self.sub_command.options['gsize']):
-            message = "A 'gsize' option is required in the [{}] configuration option".format(section)
-            raise Exception(message)
+            raise Exception(
+                "A 'gsize' option is required in the {!r} configuration section.".
+                format(section))
 
 
 class FastQC(Executable):

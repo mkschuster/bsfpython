@@ -171,8 +171,9 @@ class RunInformation(object):
 
         non_index_reads = filter(lambda read: not read.index, reads)
         if len(non_index_reads) == 0:
-            message = 'No non-index read in Illumina RunInformation {}'.format(file_path)
-            warnings.warn(message, UserWarning)
+            warnings.warn(
+                'No non-index read in Illumina RunInformation {!r}'.format(file_path),
+                UserWarning)
 
         # Set a paired_end attribute if more than one read without index is defined?
 

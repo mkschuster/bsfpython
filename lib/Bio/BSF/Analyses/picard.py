@@ -104,7 +104,7 @@ def extract_illumina_barcodes(config_file):
     analysis = Analysis.from_config_file(config_file=config_file)
 
     cp = analysis.configuration.config_parser
-    section = '{}.{}'.format(__name__, analysis.__name__)
+    section = string.join((__name__, analysis.__name__), sep='.')
 
     if cp.has_option(section=section, option='max_mismatches'):
         max_mismatches = cp.get(section=section, option='max_mismatches')
@@ -204,9 +204,10 @@ def extract_illumina_barcodes(config_file):
             else:
                 if bc1_length != bc_length:
                     # Barcode lengths do not match ...
-                    message = "The length {} of barcode 1 '{}' does not match the length ({}) of other barcodes.". \
-                        format(bc_length, lane_dict['barcode_sequence_1'], bc1_length)
-                    warnings.warn(message, UserWarning)
+                    warnings.warn(
+                        'The length {} of barcode 1 {!r} does not match the length ({}) of other barcodes.'.
+                        format(bc_length, lane_dict['barcode_sequence_1'], bc1_length),
+                        UserWarning)
 
             if lane_dict['barcode_sequence_2'] == 'NoIndex' or not lane_dict['barcode_sequence_2']:
                 bc_length = -1
@@ -218,9 +219,10 @@ def extract_illumina_barcodes(config_file):
             else:
                 if bc2_length != bc_length:
                     # Barcode lengths do not match ...
-                    message = "The length {} of barcode 2 '{}' does not match the length ({}) of other barcodes.". \
-                        format(bc_length, lane_dict['barcode_sequence_2'], bc2_length)
-                    warnings.warn(message, UserWarning)
+                    warnings.warn(
+                        'The length {} of barcode 2 {!r} does not match the length ({}) of other barcodes.'.
+                        format(bc_length, lane_dict['barcode_sequence_2'], bc2_length),
+                        UserWarning)
 
         # TODO: Get the read structure from the IRF and the bc_lengths above ...
 
@@ -523,7 +525,7 @@ def illumina_to_bam(analysis):
     # Run Information of the Illumina Run Folder.
 
     if not analysis.project_name:
-        analysis.project_name = '{}_{}'.format(experiment_name, irf.run_information.flow_cell)
+        analysis.project_name = string.join((experiment_name, irf.run_information.flow_cell), sep='_')
 
     # In contrast to normal analyses that use the samples directory, this one needs to use the
     # sequences directory. Make sure an absolute path is defined, before Bio.BSF.Analysis.run
@@ -584,7 +586,7 @@ def illumina_to_bam(analysis):
 
     analysis.drms_list.append(itb_drms)
 
-    for lane in range(1, irf.run_information.flow_cell_layout.lane_count + 1):
+    for lane in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
         itb = Executable(name='illumina_to_bam_{}_{}'.format(irf.run_information.flow_cell, lane),
                          program='bsf_illumina2bam.sh')
 
@@ -654,9 +656,9 @@ def bam_index_decoder(analysis):
     library_file = os.path.expandvars(path=library_file)
 
     if not os.path.exists(path=library_file):
-        message = 'A library_file option is missing from configuration file section {!r}.'. \
-            format(config_section)
-        raise Exception(message)
+        raise Exception(
+            'A library_file option is missing from configuration file section {!r}.'.
+            format(config_section))
 
     # Get the Illumina2bam Java class path.
 
@@ -740,7 +742,7 @@ def bam_index_decoder(analysis):
             sample_dict['ProcessedRunFolder'] = analysis.project_name
             sample_dict['Project'] = row_dict['library_name']
             sample_dict['Sample'] = row_dict['sample_name']
-            sample_dict['Reads1'] = '{}_{}_{}'.format(analysis.project_name, key, row_dict['sample_name'])
+            sample_dict['Reads1'] = string.join((analysis.project_name, key, row_dict['sample_name']), sep='_')
             sample_dict['File1'] = os.path.join(analysis.genome_directory,
                                                 '{}_{}_samples'.format(analysis.project_name, key),
                                                 '{}_{}#{}.bam'.format(analysis.project_name, key,

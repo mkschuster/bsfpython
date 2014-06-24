@@ -118,7 +118,7 @@ class Analysis(object):
 
         # A "Bio.BSF.Analysis.*" section specifies defaults for this BSF Analysis.
 
-        section = '{}.{}'.format(__name__, cls.__name__)
+        section = string.join((__name__, cls.__name__), sep='.')
         analysis.set_Configuration(analysis.configuration, section=section)
 
         return analysis
@@ -319,9 +319,10 @@ class Analysis(object):
         assert isinstance(configuration, Configuration)
 
         if not configuration.config_parser.has_section(section=section):
-            message = 'Section {!r} not defined in BSF Configuration file {!r}.'. \
-                format(section, configuration.config_file)
-            warnings.warn(message, UserWarning)
+            warnings.warn(
+                'Section {!r} not defined in BSF Configuration file {!r}.'.
+                format(section, configuration.config_file),
+                UserWarning)
 
             return
 
@@ -362,8 +363,7 @@ class Analysis(object):
         """
 
         if not self.project_name:
-            message = 'A BSF Analysis project_name has not been defined.'
-            raise Exception(message)
+            raise Exception('A BSF Analysis project_name has not been defined.')
 
         # Some analyses such as FastQC do not require a genome_version,
         # nor a genome_version-specific output directory.
@@ -415,8 +415,8 @@ class Analysis(object):
                                                   sas_file=self.sas_file,
                                                   sas_prefix=self.sas_prefix)
 
-            if self.debug:
-                print '{!r} Collection name: {}'.format(self, self.collection.name)
+            if self.debug > 1:
+                print '{!r} Collection name: {!r}'.format(self, self.collection.name)
                 print self.collection.trace(1)
 
         else:
@@ -437,8 +437,9 @@ class Analysis(object):
         :rtype: None
         """
 
-        message = "The 'report' method must be implemented in the sub-class."
-        warnings.warn(message, UserWarning)
+        warnings.warn(
+            "The 'report' method must be implemented in the sub-class.",
+            UserWarning)
 
     def create_project_genome_directory(self):
 
@@ -451,8 +452,9 @@ class Analysis(object):
         """
 
         if not os.path.isdir(self.genome_directory):
-            message = 'Output (genome) directory {!r} does not exist. Create? [Y/n] '.format(self.genome_directory)
-            answer = raw_input(message)
+            answer = raw_input(
+                "Output (genome) directory {!r} does not exist.\n"
+                'Create? [Y/n] '.format(self.genome_directory))
 
             if not answer or answer == 'Y' or answer == 'y':
                 # In principle, a race condition could occur as the directory
@@ -463,8 +465,8 @@ class Analysis(object):
                     if exception.errno != errno.EEXIST:
                         raise
             else:
-                message = 'Output (genome) directory {!r} does not exist.'.format(self.genome_directory)
-                raise Exception(message)
+                raise Exception(
+                    'Output (genome) directory {!r} does not exist.'.format(self.genome_directory))
 
     def create_public_project_link(self, sub_directory=None):
 
@@ -491,9 +493,9 @@ class Analysis(object):
         # Do not automatically create "new" paths based on mis-spelt sub_directory names.
 
         if not os.path.isdir(html_path):
-            message = "Public HTML path {} does not exist. Check sub-directory {} name.". \
-                format(html_path, sub_directory)
-            raise Exception(message)
+            raise Exception(
+                "Public HTML path {!r} does not exist.\n"
+                "Check sub-directory {!r} name.".format(html_path, sub_directory))
 
         # The link_name consists of the absolute public_html directory,
         # the analysis-specific sub-directory, the project name and a 128 bit hexadecimal UUID string.
@@ -522,8 +524,9 @@ class Analysis(object):
                 if not os.path.exists(path=target_name):
                     # Both paths for os.path.samefile have to exist.
                     # Check for dangling symbolic links.
-                    message = 'Dangling symbolic link {} to {}'.format(path_name, target_name)
-                    warnings.warn(message, UserWarning)
+                    warnings.warn(
+                        'Dangling symbolic link {!r} to {!r}'.format(path_name, target_name),
+                        UserWarning)
                     continue
                 if os.path.samefile(target_name, self.project_directory):
                     link_exists = True
@@ -532,9 +535,9 @@ class Analysis(object):
 
         if link_exists:
             # Ask the user to re-create the symbolic link.
-            message = 'Public HTML link {!r} to {!r} does exist. Re-create? [y/N] '. \
-                format(path_name, self.project_directory)
-            answer = raw_input(message)
+            answer = raw_input(
+                "Public HTML link {!r} to {!r} does exist.\n"
+                "Re-create? [y/N] ".format(path_name, self.project_directory))
 
             if not answer or answer == 'N' or answer == 'n':
                 print 'Public HTML link {!r} to {!r} not reset.'. \
@@ -554,9 +557,9 @@ class Analysis(object):
                         raise
         else:
             # Ask the user to create a symbolic link.
-            message = 'Public HTML link {!r} to {!r} does not exist. Create? [Y/n] '. \
-                format(link_name, self.project_directory)
-            answer = raw_input(message)
+            answer = raw_input(
+                'Public HTML link {!r} to {!r} does not exist.\n'
+                'Create? [Y/n] '.format(link_name, self.project_directory))
 
             if not answer or answer == 'Y' or answer == 'y':
                 # In principle, a race condition could occur as the directory
@@ -730,8 +733,8 @@ class Configuration(object):
         files = configuration.config_parser.read(configuration.config_file)
 
         if len(files) == 0:
-            message = 'Could not find configuration file {!r}.'.format(configuration.config_file)
-            raise Exception(message)
+            raise Exception(
+                'Could not find configuration file {!r}.'.format(configuration.config_file))
 
         return configuration
 
@@ -1414,11 +1417,12 @@ class Default(object):
         default = Default.get_global_default()
 
         if not genome_index in default.indices:
-            message = 'Unknown genome index name {}'.format(genome_index)
-            raise Exception(message)
+            raise Exception(
+                'Unknown genome index name {!r}.'.format(genome_index))
 
         return os.path.join(Default.absolute_genomes(genome_version),
-                            default.indices[genome_index], genome_version + '.fa')
+                            default.indices[genome_index],
+                            genome_version + '.fa')
 
     @staticmethod
     def url_absolute_base():
@@ -1444,7 +1448,7 @@ class Default(object):
 
         default = Default.get_global_default()
 
-        return '{}/{}'.format(default.url_absolute_base(), default.url_relative_projects)
+        return string.join((default.url_absolute_base(), default.url_relative_projects), sep='/')
 
     @staticmethod
     def url_absolute_chip_seq():
@@ -1459,7 +1463,7 @@ class Default(object):
 
         default = Default.get_global_default()
 
-        return '{}/{}'.format(default.url_absolute_base(), default.url_relative_chip_seq)
+        return string.join((default.url_absolute_base(), default.url_relative_chip_seq), sep='/')
 
     @staticmethod
     def url_absolute_dna_seq():
@@ -1474,7 +1478,7 @@ class Default(object):
 
         default = Default.get_global_default()
 
-        return '{}/{}'.format(default.url_absolute_base(), default.url_relative_dna_seq)
+        return string.join((default.url_absolute_base(), default.url_relative_dna_seq), sep='/')
 
     @staticmethod
     def url_absolute_rna_seq():
@@ -1489,7 +1493,7 @@ class Default(object):
 
         default = Default.get_global_default()
 
-        return '{}/{}'.format(default.url_absolute_base(), default.url_relative_rna_seq)
+        return string.join((default.url_absolute_base(), default.url_relative_rna_seq), sep='/')
 
 
 class DRMS(object):
@@ -1553,29 +1557,29 @@ class DRMS(object):
 
         # A "Bio.BSF.DRMS" section specifies defaults for all BSF DRMS objects of a BSF Analysis.
 
-        section = '{}.{}'.format(__name__, cls.__name__)
+        section = string.join((__name__, cls.__name__), sep='.')
         drms.set_Configuration(configuration=analysis.configuration, section=section)
 
-        if analysis.debug > 0:
-            print 'DRMS configuration section: {}'.format(section)
+        if analysis.debug > 1:
+            print 'DRMS configuration section: {!r}.'.format(section)
 
         # A "Bio.BSF.Analysis.*.DRMS" pseudo-class section specifies
         # BSF Analysis-specific options for the BSF DRMS.
 
-        section = '{}.DRMS'.format(analysis.configuration.section_from_instance(analysis))
+        section = string.join((analysis.configuration.section_from_instance(analysis), 'DRMS'), sep='.')
         drms.set_Configuration(configuration=analysis.configuration, section=section)
 
-        if analysis.debug > 0:
-            print 'DRMS configuration section: {}'.format(section)
+        if analysis.debug > 1:
+            print 'DRMS configuration section: {!r}.'.format(section)
 
         # A "Bio.BSF.Analysis.*.DRMS.name" section specifies defaults
         # for a particular BSF DRMS objects of a BSF Analysis.
 
-        section = '{}.DRMS.{}'.format(Configuration.section_from_instance(analysis), drms.name)
+        section = string.join((Configuration.section_from_instance(analysis), 'DRMS', drms.name), sep='.')
         drms.set_Configuration(configuration=analysis.configuration, section=section)
 
-        if analysis.debug > 0:
-            print 'DRMS configuration section: {}'.format(section)
+        if analysis.debug > 1:
+            print 'DRMS configuration section: {!r}.'.format(section)
 
         return drms
 
@@ -1805,9 +1809,10 @@ class DRMS(object):
 
         if not configuration.config_parser.has_section(section=section):
             if warning:
-                message = 'Section {!r} not defined in BSF Configuration file {!r}.'. \
-                    format(section, configuration.config_file)
-                warnings.warn(message, UserWarning)
+                warnings.warn(
+                    'Section {!r} not defined in BSF Configuration file {!r}.'.
+                    format(section, configuration.config_file),
+                    UserWarning)
 
             return
 
@@ -1917,7 +1922,7 @@ class DRMS(object):
 
         # Dynamically import the module specific for the configured DRMS implementation.
 
-        module = importlib.import_module(__name__ + '.DRMS.' + self.implementation)
+        module = importlib.import_module(string.join((__name__, 'DRMS', self.implementation), sep='.'))
 
         module.submit(self, debug=debug)
 
@@ -2035,10 +2040,11 @@ class Command(object):
         assert isinstance(argument, Argument)
 
         if not override and argument.key in self.options:
-            message = 'Adding a Bio.BSF.Argument.Switch or Bio.BSF.Argument.Option ' \
-                      'with key {!r} that exits already in Command {!r}.'. \
-                format(argument.key, self.command)
-            warnings.warn(message, UserWarning)
+            warnings.warn(
+                'Adding a Bio.BSF.Argument.Switch or Bio.BSF.Argument.Option '
+                'with key {!r} that exits already in Command {!r}.'.
+                format(argument.key, self.command),
+                UserWarning)
 
         if argument.key in self.options:
             arguments_list = self.options[argument.key]
@@ -2142,9 +2148,10 @@ class Command(object):
         assert isinstance(configuration, Configuration)
 
         if not configuration.config_parser.has_section(section=section):
-            message = 'Section {!r} not defined in BSF Configuration file {!r}.'. \
-                format(section, configuration.config_file)
-            warnings.warn(message, UserWarning)
+            warnings.warn(
+                'Section {!r} not defined in BSF Configuration file {!r}.'.
+                format(section, configuration.config_file),
+                UserWarning)
 
             return
 
@@ -2195,8 +2202,10 @@ class Command(object):
                 elif isinstance(argument, OptionPair):
                     command_line.append('{}={}'.format(argument.key, argument.value))
                 else:
-                    message = 'Unexpected object {!r} in Bio.BSF.Command.options dict'.format(argument)
-                    warnings.warn(message, UserWarning)
+                    warnings.warn(
+                        'Unexpected object {!r} in Bio.BSF.Command.options dict.'.
+                        format(argument),
+                        UserWarning)
 
         # Add all arguments.
 
@@ -2244,18 +2253,22 @@ class Command(object):
                 elif isinstance(argument, OptionPair):
                     command_line += ' {}={}'.format(argument.key, argument.value)
                 else:
-                    message = 'Unexpected object {!r} in Bio.BSF.Command.options dict'.format(argument)
-                    warnings.warn(message, UserWarning)
+                    warnings.warn(
+                        'Unexpected object {!r} in Bio.BSF.Command.options dict.'.
+                        format(argument),
+                        UserWarning)
 
         # Add all arguments.
 
         for argument in self.arguments:
-            command_line += ' {}'.format(argument)
+            command_line += ' '
+            command_line += argument
 
         # Expand a subordinate command, if defined.
 
         if self.sub_command:
-            command_line += ' ' + self.sub_command.command_str()
+            command_line += ' '
+            command_line += self.sub_command.command_str()
 
         return command_line
 
@@ -2321,10 +2334,11 @@ class Executable(Command):
         # Bio.BSF.Executable.command to make this more meaningful.
 
         if section == 'Bio.BSF.Executable':
-            section += '.{}'.format(executable.command)
+            section += '.'
+            section += executable.command
 
         if analysis.debug > 0:
-            print 'Executable configuration section: {}'.format(section)
+            print 'Executable configuration section: {!r}.'.format(section)
 
         executable.set_Configuration(configuration=analysis.configuration, section=section)
 
@@ -2534,8 +2548,7 @@ class Runnable(object):
         """
 
         if file_type not in ('STDOUT', 'STDERR'):
-            message = 'The file_type has to be either STDOUT or STDERR.'
-            raise Exception(message)
+            raise Exception('The file_type has to be either STDOUT or STDERR.')
 
         thread_lock.acquire(True)
         if debug > 0:
@@ -2545,7 +2558,7 @@ class Runnable(object):
         if file_path:
             output_file = open(file_path, 'w')
             if debug > 0:
-                print "[{}] Opened {} file '{}'.". \
+                print '[{}] Opened {} file {!r}.'. \
                     format(datetime.datetime.now().isoformat(), file_type, file_path)
         thread_lock.release()
 
@@ -2563,7 +2576,7 @@ class Runnable(object):
         if output_file:
             output_file.close()
             if debug > 0:
-                print "[{}] Closed {} file '{}'.". \
+                print '[{}] Closed {} file {!r}.'. \
                     format(datetime.datetime.now().isoformat(), file_type, file_path)
         thread_lock.release()
 
@@ -2692,22 +2705,22 @@ class Runnable(object):
 
             if child_return_code > 0:
                 if debug > 0:
-                    print '[{}] Child process {} failed with exit code {}'. \
+                    print '[{}] Child process {!r} failed with exit code {}'. \
                         format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
                 loop_counter += 1
             elif child_return_code < 0:
                 if debug > 0:
-                    print '[{}] Child process {} received signal {}.'. \
+                    print '[{}] Child process {!r} received signal {}.'. \
                         format(datetime.datetime.now().isoformat(), executable.name, -child_return_code)
             else:
                 if debug > 0:
-                    print '[{}] Child process {} completed successfully {}.'. \
+                    print '[{}] Child process {!r} completed successfully {}.'. \
                         format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
                 break
 
         else:
             if debug > 0:
-                print "[{}] BSF Runnable '{}' exceeded the maximum re-run counter {}." \
+                print '[{}] BSF Runnable {!r} exceeded the maximum re-run counter {}.' \
                     .format(datetime.datetime.now().isoformat(), executable.name, max_loop_counter)
 
         return child_return_code
@@ -2724,11 +2737,11 @@ class Runnable(object):
         """
 
         if return_code > 0:
-            print "[{}] Child process '{}' failed with return code {}". \
+            print '[{}] Child process {!r} failed with return code {}'. \
                 format(datetime.datetime.now().isoformat(), executable.name, +return_code)
         elif return_code < 0:
-            print "[{}] Child process '{}' received signal {}.". \
+            print '[{}] Child process {!r} received signal {}.'. \
                 format(datetime.datetime.now().isoformat(), executable.name, -return_code)
         else:
-            print "[{}] Child process '{}' completed with return code {}.". \
+            print '[{}] Child process {!r} completed with return code {}.'. \
                 format(datetime.datetime.now().isoformat(), executable.name, +return_code)
