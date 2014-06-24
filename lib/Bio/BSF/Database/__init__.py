@@ -289,11 +289,12 @@ class DatabaseAdaptor(object):
 
         cursor = self.database_connection.connection.cursor()
         try:
-            cursor.execute("INSERT INTO {!r} ({}) VALUES ({})".format(
-                self.table_name,
-                self.expression_column_result(),
-                self.expression_column_insert()),
-                           value_list)
+            cursor.execute(
+                "INSERT INTO {!r} ({}) VALUES ({})".format(
+                    self.table_name,
+                    self.expression_column_result(),
+                    self.expression_column_insert()),
+                value_list)
         except sqlite3.IntegrityError:
             print "Encountered Integrity error for table name '{}' on the following SQL fields:". \
                 format(self.table_name)
