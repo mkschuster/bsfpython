@@ -208,11 +208,12 @@ def submit(self, debug=0):
             child_return_code = child_process.returncode
 
             if child_return_code:
-                message = "SGE qsub exit code {!r}\n".format(child_return_code)
-                message += "STDOUT: {}\n".format(child_stdout)
-                message += "STDERR: {}\n".format(child_stderr)
-                message += "Command list representation: {!r}".format(command)
-                raise Exception(message)
+                raise Exception(
+                    "SGE qsub returned exit code {!r}\n"
+                    "STDOUT: {}\n"
+                    "STDERR: {}\n"
+                    "Command list representation: {!r}".
+                    format(child_return_code, child_stdout, child_stderr, command))
 
             # Parse the multi-line STDOUT string to get the SGE process identifier and name.
             # The response to the SGE qsub command looks like:
@@ -233,7 +234,7 @@ def submit(self, debug=0):
         output += string.join(words=command, sep=' ') + "\n"
         output += "\n"
 
-    script_path = os.path.join(self.work_directory, 'bsfpython_sge_{}.sh'.format(self.name))
+    script_path = os.path.join(self.work_directory, 'bsfpython_sge_{}.bash'.format(self.name))
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()

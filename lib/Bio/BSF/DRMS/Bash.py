@@ -59,7 +59,7 @@ def submit(self, debug=0):
         output += "\n"
         output += "\n"
 
-    script_path = os.path.join(self.work_directory, 'bsfpython_bash_{}.sh'.format(self.name))
+    script_path = os.path.join(self.work_directory, 'bsfpython_bash_{}.bash'.format(self.name))
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()

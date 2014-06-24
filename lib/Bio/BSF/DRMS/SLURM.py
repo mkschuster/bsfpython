@@ -191,10 +191,12 @@ def submit(self, debug=0):
                     # Dependencies can only be calculated if jobs have been submitted.
                     # TODO: This means, it is no longer possible to submit jobs in analysis stages.
                     # It is thus necessary to write sample annotation sheets that contain SLURM job identifiers.
-                    message = "While submitting Executable with name {!r}, " \
-                              "Executable with name {!r} that it depends on, has not been submitted before.". \
-                        format(executable.name, executable_name)
-                    warnings.warn(message, UserWarning)
+                    warnings.warn(
+                        "While submitting Executable with name {!r}, "
+                        "Executable with name {!r} that it depends on, "
+                        "has not been submitted before.".
+                        format(executable.name, executable_name),
+                        UserWarning)
             if len(identifier_list):
                 # If no jobs have been submitted before, the identifier list is empty.
                 command.append('--dependency')
@@ -228,11 +230,12 @@ def submit(self, debug=0):
             child_return_code = child_process.returncode
 
             if child_return_code:
-                message = "SLURM sbatch exit code {!r}\n".format(child_return_code)
-                message += "STDOUT: {}\n".format(child_stdout)
-                message += "STDERR: {}\n".format(child_stderr)
-                message += "Command list representation: {!r}".format(command)
-                raise Exception(message)
+                raise Exception(
+                    "SLURM sbatch returned exit code {!r}\n"
+                    "STDOUT: {}\n"
+                    "STDERR: {}\n"
+                    "Command list representation: {!r}".
+                    format(child_return_code, child_stdout, child_stderr, command))
 
             # Parse the multi-line STDOUT string to get the SGE process identifier and name.
             # The response to the SGE qsub command looks like:
@@ -244,10 +247,11 @@ def submit(self, debug=0):
                     executable.process_identifier = match.group(1)
                     # Correlate Executable.name and Executable.process_identifier information.
                     if executable.name in executable_name_dict:
-                        message = "Overwriting Executable with name {!r} and process identifier {!r} " \
-                                  "that has been submitted to SLURM before.". \
-                            format(executable.name, executable.process_identifier)
-                        warnings.warn(message, UserWarning)
+                        warnings.warn(
+                            "Overwriting Executable with name {!r} and process identifier {!r} "
+                            "that has been submitted to SLURM before.".
+                            format(executable.name, executable.process_identifier),
+                            UserWarning)
                     executable_name_dict[executable.name] = executable.process_identifier
                 else:
                     print('Could not parse SLURM sbatch response line {}'.format(line))
@@ -265,7 +269,7 @@ def submit(self, debug=0):
                                        command='')
         job_submission_adaptor.store(data_object=job_submission)
 
-    script_path = os.path.join(self.work_directory, 'bsfpython_slurm_{}.sh'.format(self.name))
+    script_path = os.path.join(self.work_directory, 'bsfpython_slurm_{}.bash'.format(self.name))
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()
