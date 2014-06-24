@@ -47,8 +47,7 @@ if not os.path.isabs(prf_path):
     prf_path = os.path.join(Default.absolute_sequences(), prf_path)
 
 if not os.path.exists(path=prf_path):
-    message = 'Could not find processed run folder directory {!r}'.format(prf_path)
-    raise Exception(message)
+    raise Exception('Could not find processed run folder directory {!r}'.format(prf_path))
 
 for file_name in os.listdir(prf_path):
     file_path = os.path.join(prf_path, file_name)

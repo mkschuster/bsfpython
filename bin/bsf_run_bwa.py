@@ -75,8 +75,7 @@ key = 'replicate_key'
 if key in pickler_dict and pickler_dict[key]:
     replicate_key = pickler_dict[key]
 else:
-    message = "The pickler dict in the pickler file needs to contain a 'replicate_key' entry."
-    raise Exception(message)
+    raise Exception('The pickler dict in the pickler file needs to contain key {!r}.'.format(key))
 
 key = 'classpath_picard'
 if key in pickler_dict and pickler_dict[key]:
@@ -122,6 +121,8 @@ run_bwa.stdout_path = path_aligned_sam
 # align them separately and set the correct read group for each.
 # Picard writes out a file per platform unit PU, with special characters replaced by underscores and
 # '_1.fastq', as well as '_2.fastq' appended.
+# See function makeFileNameSafe
+# https://github.com/samtools/htsjdk/blob/1.114/src/java/htsjdk/samtools/util/IOUtil.java#L719
 # TODO: Once this works, it should be turned into a generic method useful in the ChIPSeq and RNASeq analyses, too.
 
 if run_bwa.sub_command.command == 'mem' and run_bwa.sub_command.arguments[1][-4:] == '.bam':
@@ -140,8 +141,9 @@ if run_bwa.sub_command.command == 'mem' and run_bwa.sub_command.arguments[1][-4:
     child_return_code = Runnable.run(executable=samtools)
 
     if child_return_code:
-        message = 'Could not complete the samtools view step on the BAM file for the replicate.'
-        raise Exception(message)
+        raise Exception(
+            'Could not complete the {!r} step on the BAM file for the replicate.'.
+            format(samtools.name))
 
     sam_temporary_handle = open(path_temporary_sam, 'r')
     for line in sam_temporary_handle:
@@ -173,17 +175,16 @@ if run_bwa.sub_command.command == 'mem' and run_bwa.sub_command.arguments[1][-4:
     child_return_code = Runnable.run(executable=java_process)
 
     if child_return_code:
-        message = 'Could not complete the Picard SamToFastq step.'
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(java_process.name))
 
     # The Read Group (@RG) option needs inserting at the BWA stage,
     # otherwise reads are not associated with a read group in the aligned SAM file.
 
     # TODO: So far, this module only works with one read group per BAM file.
     if len(sam_header_rg) > 1:
-        message = "BAM file '{}' contains more than one read group line, which is not supported, yet. RGs: {!r}". \
-            format(run_bwa.sub_command.arguments[1], sam_header_rg)
-        raise Exception(message)
+        raise Exception(
+            "BAM file {!r} contains more than one read group line, which is not supported, yet.\n"
+            "RGs: {!r}".format(run_bwa.sub_command.arguments[1], sam_header_rg))
 
     run_bwa.sub_command.add_OptionShort(key='R', value=str(sam_header_rg[0]).rstrip().replace("\t", "\\t"))
 
@@ -197,8 +198,7 @@ if run_bwa.sub_command.command == 'mem' and run_bwa.sub_command.arguments[1][-4:
 child_return_code = Runnable.run(executable=run_bwa)
 
 if child_return_code:
-    message = 'Could not complete the BWA step.'
-    raise Exception(message)
+    raise Exception('Could not complete the {!r} step.'.format(run_bwa.name))
 
 # Remove the temporary, uncompressed FASTQ files if they exist.
 if os.path.exists(path=path_fastq_1):
@@ -226,8 +226,7 @@ clean_sam.add_OptionPair(key='VALIDATION_STRINGENCY', value='STRICT')
 child_return_code = Runnable.run(executable=java_process)
 
 if child_return_code:
-    message = 'Could not complete the Picard CleanSam step.'
-    raise Exception(message)
+    raise Exception('Could not complete the {!r} step.'.format(java_process.name))
 
 # Retrofit the stored SAM header lines if required.
 
@@ -246,8 +245,9 @@ if len(sam_header_pg) or len(sam_header_rg):
     child_return_code = Runnable.run(executable=samtools)
 
     if child_return_code:
-        message = 'Could not complete the samtools view step on the SAM file after CleanSam.'
-        raise Exception(message)
+        raise Exception(
+            'Could not complete the {!r} step on the SAM file after CleanSam.'.
+            format(samtools.name))
 
     sam_temporary_handle = open(path_temporary_sam, 'r')
     sam_header_handle = open(path_header_sam, 'w')
@@ -289,8 +289,7 @@ if len(sam_header_pg) or len(sam_header_rg):
     child_return_code = Runnable.run(executable=java_process)
 
     if child_return_code:
-        message = 'Could not complete the Picard ReplaceSamHeader step.'
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(java_process.name))
 
     # Remove the now redundant cleaned SAM file.
     os.remove(path_cleaned_sam)
@@ -327,8 +326,7 @@ sort_sam.add_OptionPair(key='CREATE_MD5_FILE', value='true')
 child_return_code = Runnable.run(executable=java_process)
 
 if child_return_code:
-    message = 'Could not complete the Picard ReplaceSamHeader step.'
-    raise Exception(message)
+    raise Exception('Could not complete the {!r} step.'.format(java_process.name))
 
 # Remove the cleaned SAM file.
 

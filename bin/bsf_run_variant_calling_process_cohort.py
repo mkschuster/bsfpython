@@ -60,8 +60,7 @@ def run_gatk_combine_gvcfs(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_genotype_gvcfs(pickler_dict):
@@ -82,8 +81,7 @@ def run_gatk_genotype_gvcfs(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_variant_recalibrator_snp(pickler_dict):
@@ -104,8 +102,7 @@ def run_gatk_variant_recalibrator_snp(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_variant_recalibrator_indel(pickler_dict):
@@ -126,8 +123,7 @@ def run_gatk_variant_recalibrator_indel(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_apply_recalibration_snp(pickler_dict):
@@ -148,8 +144,7 @@ def run_gatk_apply_recalibration_snp(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_apply_recalibration_indel(pickler_dict):
@@ -170,8 +165,7 @@ def run_gatk_apply_recalibration_indel(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_snpeff(pickler_dict):
@@ -192,8 +186,7 @@ def run_snpeff(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_variant_annotator(pickler_dict):
@@ -214,8 +207,7 @@ def run_gatk_variant_annotator(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {}!r step.'.format(executable.name))
 
 
 def run_gatk_select_variants(pickler_dict):
@@ -240,8 +232,7 @@ def run_gatk_select_variants(pickler_dict):
         child_return_code = Runnable.run(executable=executable)
 
         if child_return_code:
-            message = "Could not complete the '{}' step.".format(executable.name)
-            raise Exception(message)
+            raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_variants_to_table(pickler_dict):
@@ -266,8 +257,7 @@ def run_gatk_variants_to_table(pickler_dict):
         child_return_code = Runnable.run(executable=executable)
 
         if child_return_code:
-            message = "Could not complete the '{}' step.".format(executable.name)
-            raise Exception(message)
+            raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 # Set the environment consistently.

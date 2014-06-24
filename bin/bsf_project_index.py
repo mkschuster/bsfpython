@@ -114,8 +114,7 @@ if not os.path.isabs(project_directory):
         project_name = scan_projects(project_name=args.project)
 
         if not project_name:
-            message = 'Cannot locate project directory for project {}'.format(args.project)
-            raise Exception(message)
+            raise Exception('Cannot locate project directory for project {!r}.'.format(args.project))
 
         project_directory = os.path.join(Default.absolute_public_html(), 'projects', project_name)
 

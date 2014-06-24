@@ -58,8 +58,7 @@ def run_picard_merge_sam_files(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_picard_mark_duplicates(pickler_dict):
@@ -85,8 +84,7 @@ def run_picard_mark_duplicates(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
     if args.debug < 1:
         if os.path.exists(path=pickler_dict['file_path_dict']['merged_bam']):
@@ -115,8 +113,7 @@ def run_gatk_realigner_target_creator(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_indel_realigner(pickler_dict):
@@ -137,8 +134,7 @@ def run_gatk_indel_realigner(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
     if args.debug < 1:
         if os.path.exists(path=pickler_dict['file_path_dict']['duplicates_marked_bam']):
@@ -174,8 +170,7 @@ def run_picard_collect_alignment_summary_metrics(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_haplotype_caller(pickler_dict):
@@ -196,8 +191,7 @@ def run_gatk_haplotype_caller(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 # Set the environment consistently.

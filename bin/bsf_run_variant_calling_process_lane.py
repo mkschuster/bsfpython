@@ -64,8 +64,7 @@ def run_picard_mark_duplicates(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
     # It may not be the best idea to remove the aligned BAM file from the previous lane-specific alignment step here.
     # For the moment, keep pipeline steps independent from each other.
@@ -96,8 +95,7 @@ def run_gatk_realigner_target_creator(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_indel_realigner(pickler_dict):
@@ -118,8 +116,7 @@ def run_gatk_indel_realigner(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
     if args.debug < 1:
         if os.path.exists(path=pickler_dict['file_path_dict']['duplicates_marked_bam']):
@@ -148,8 +145,7 @@ def run_gatk_base_recalibrator_pre(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_base_recalibrator_post(pickler_dict):
@@ -170,8 +166,7 @@ def run_gatk_base_recalibrator_post(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_analyze_covariates(pickler_dict):
@@ -192,8 +187,7 @@ def run_gatk_analyze_covariates(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_print_reads(pickler_dict):
@@ -214,8 +208,7 @@ def run_gatk_print_reads(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
     if args.debug < 1:
         if os.path.exists(path=pickler_dict['file_path_dict']['realigned_bam']):
@@ -242,8 +235,7 @@ def run_picard_collect_alignment_summary_metrics(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        message = "Could not complete the '{}' step.".format(executable.name)
-        raise Exception(message)
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 # Set the environment consistently.
