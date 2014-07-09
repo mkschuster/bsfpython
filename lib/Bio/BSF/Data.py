@@ -311,23 +311,28 @@ class PairedReads(object):
     :type reads1: Reads
     :ivar reads2: Second BSF Reads
     :type reads2: Reads
+    :ivar read_group: SAM read group (@RG) information
+    :type read_group: str
     :ivar weak_reference_sample: Weak Reference to a BSF Sample
     :type weak_reference_sample: Sample
     """
 
-    def __init__(self, reads1=None, reads2=None, weak_reference_sample=None):
+    def __init__(self, reads1=None, reads2=None, read_group=None, weak_reference_sample=None):
 
         """Initialise a BSF PairedReads object.
 
         For the file_type 'CASAVA' the reads object will be
         automatically assigned on the basis of the Reads.read
         attribute (i.e. R1 or R2).
+        :param read_group:
         :param self: BSF PairedReads
         :type self: PairedReads
         :param reads1: First BSF Reads
         :type reads1: Reads
         :param reads2: Second BSF Reads
         :type reads2: Reads
+        :param read_group: SAM read group (@RG) information
+        :type read_group: str
         :param weak_reference_sample: Weak Reference to a BSF Sample
         :type weak_reference_sample: Sample
         :return: Nothing
@@ -374,6 +379,11 @@ class PairedReads(object):
                 self.reads2 = reads2
                 reads2.weak_reference_paired_reads = weakref.ref(self)
 
+        if read_group:
+            self.read_group = read_group
+        else:
+            self.read_group = str()
+
         if weak_reference_sample:
             self.weak_reference_sample = weak_reference_sample
         else:
@@ -397,6 +407,7 @@ class PairedReads(object):
         output += '{}  weak_reference_sample: {!r}\n'.format(indent, self.weak_reference_sample)
         output += '{}  reads1: {!r}\n'.format(indent, self.reads1)
         output += '{}  reads2: {!r}\n'.format(indent, self.reads2)
+        output += '{}  read_group: {!r}\n'.format(indent, self.read_group)
 
         if isinstance(self.reads1, Reads):
             output += self.reads1.trace(level + 1)
@@ -487,6 +498,9 @@ class PairedReads(object):
         :return: True if both objects match, False otherwise
         :rtype: bool
         """
+
+        if not self.read_group == paired_reads.read_group:
+            return False
 
         if not self.reads1.match(reads=paired_reads.reads1):
             return False
@@ -1615,10 +1629,6 @@ class Collection(object):
         :rtype: None
         """
 
-        # Get or create a BSF ProcessedRunFolder.
-        # A '[Prefix ]ProcessedRunFolder' key is optional,
-        # its value defaults to 'Default'.
-
         if not prefix:
             prefix = str()
 
@@ -1628,12 +1638,13 @@ class Collection(object):
         sample = self._process_sample(row_dict=row_dict, prefix=prefix, file_type=file_type, project=project)
         reads1 = self._process_reads(row_dict=row_dict, prefix=prefix, file_type=file_type, suffix='1')
         reads2 = self._process_reads(row_dict=row_dict, prefix=prefix, file_type=file_type, suffix='2')
+        read_group = self._process_read_group(row_dict=row_dict, prefix=prefix)
 
         # If none of the BSF Reads objects has been defined, the BSF Sample
         # may have been automatically loaded from a CASAVA ProcessedRunFolder.
 
         if reads1 or reads2:
-            sample.add_PairedReads(paired_reads=PairedReads(reads1=reads1, reads2=reads2))
+            sample.add_PairedReads(paired_reads=PairedReads(reads1=reads1, reads2=reads2, read_group=read_group))
 
         # Optionally group the BSF Sample objects.
 
@@ -1792,10 +1803,6 @@ class Collection(object):
 
     def _process_reads(self, row_dict, prefix, file_type, suffix):
 
-        # Get or create a BSF Reads object.
-        # The '[Prefix ]Reads{suffix}' and '[Prefix ]File{suffix}' keys are optional,
-        # in which case the default is a None object.
-
         """Get or create a BSF Reads object.
 
         A '[Prefix] Reads{suffix}' key is optional, in which case the default is a None object.
@@ -1834,6 +1841,31 @@ class Collection(object):
             reads = None
 
         return reads
+
+    def _process_read_group(self, row_dict, prefix):
+
+        """Get or create a read group.
+
+        A '[Prefix] ReadGroup' key is optional, in which case the default is an empty string.
+        :param self: BSF Collection
+        :type self: Collection
+        :param row_dict: A Python dict of row entries of a Python csv object
+        :type row_dict: dict
+        :param prefix: Optional configuration prefix
+                       (e.g. '[Control] ReadsN', '[Treatment] ReadsN')
+        :type prefix: str
+        :return: Read group string
+        :rtype: str
+        """
+
+        key = '{} ReadGroup'.format(prefix).lstrip(' ')
+
+        if key in row_dict and row_dict[key]:
+            read_group = row_dict[key]
+        else:
+            read_group = str()
+
+        return read_group
 
     def get_Sample_from_row_dict(self, row_dict, prefix=None):
 
