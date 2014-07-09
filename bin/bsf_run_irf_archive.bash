@@ -18,7 +18,7 @@
 #  9. Run the GNU tar utility over the remaining Illumina Run folder.
 # 10. Record the archive file sizes via the ls utility.
 #
-# Usage: bsf_irf_archive.sh illumina_run_folder [output_directory] [force]
+# Usage: bsf_run_irf_archive.bash illumina_run_folder [output_directory] [force]
 #
 #   illumina_run_folder: Path to the Illumina Run Folder
 #

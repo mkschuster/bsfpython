@@ -10,7 +10,7 @@
 #  4. Extract the Lane directories.
 #  5. All done.
 #
-# Usage: bsf_irf_restore.sh archive_directory [output_directory] [force]
+# Usage: bsf_run_irf_restore.bash archive_directory [output_directory] [force]
 #
 #   archive_directory: Path to the archive directory containing
 #                      tape archive files.
