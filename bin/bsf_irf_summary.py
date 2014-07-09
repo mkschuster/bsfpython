@@ -86,5 +86,9 @@ if os.path.exists(file_path_end):
 
 print 'Experiment:     {}'.format(irf.run_parameters.get_experiment_name())
 print 'Flow Cell:      {}'.format(irf.run_parameters.get_flow_cell_barcode())
-print 'Position:       {}'.format(irf.run_parameters.get_position())
+
+position = irf.run_parameters.get_position()
+if position:
+    print 'Position:       {}'.format(irf.run_parameters.get_position())
+
 print 'Run Identifier: {}'.format(irf.run_information.run_identifier)

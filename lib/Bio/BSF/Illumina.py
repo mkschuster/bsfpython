@@ -41,9 +41,9 @@ class RunInformationFlowcellLayout(object):
     """
 
     def __init__(self, lane_count=0, surface_count=0, swath_count=0, tile_count=0):
-        """Initialise a Bio.BSF.Data.Illumina.RunInformationFlowcellLayout object
+        """Initialise a Bio.BSF.Illumina.RunInformationFlowcellLayout object
 
-        :param self: Bio.BSF.Data.Illumina.RunInformationFlowcellLayout
+        :param self: Bio.BSF.Illumina.RunInformationFlowcellLayout
         :type self: RunInformationFlowcellLayout
         :param lane_count: Number of lanes
         :type lane_count: int
@@ -66,14 +66,14 @@ class RunInformationFlowcellLayout(object):
 class RunInformationRead(object):
     """BSF Illumina Run Information Reads class.
 
-    The Bio.BSF.Data.Illumina.RunInformationRead class models
+    The Bio.BSF.Illumina.RunInformationRead class models
     one <Read> element in a BSF Illumina Run Information (RunInfo.xml) document.
     """
 
     def __init__(self, number=0, cycles=0, index=False):
-        """Initialise a Bio.BSF.Data.Illumina.RunInformationRead object.
+        """Initialise a Bio.BSF.Illumina.RunInformationRead object.
 
-        :param self: Bio.BSF.Data.Illumina.RunInformationRead object
+        :param self: Bio.BSF.Illumina.RunInformationRead object
         :type self: RunInformationRead
         :param number: Read number
         :type number: int
@@ -93,7 +93,7 @@ class RunInformationRead(object):
 class RunInformation(object):
     """BSF Illumina Run Information class.
 
-    The Bio.BSF.Data.Illumina.RunInformation class represents an Illumina
+    The Bio.BSF.Illumina.RunInformation class represents an Illumina
     run information XML (RunInfo.xml) document.
 
     Attributes:
@@ -115,13 +115,40 @@ class RunInformation(object):
     :type instrument: str
     :ivar date: Date in YYMMDD format e.g. 130724
     :type date: str
-    :ivar reads: Python list of Bio.BSF.Data.Illumina.RunInformationRead objects
+    :ivar reads: Python list of Bio.BSF.Illumina.RunInformationRead objects
     :type reads: list
     """
 
+    @staticmethod
+    def parse_run_identifier(run_identifier):
+        """Split an Illumina Run Identifier into its components.
+
+        Splits the Illumina Run Identifier into <Date>_<Instrument>_<Number>_<FCPosition><Flowcell>.
+        This method is particularly useful for older version of RunInfo.xml files, that lack
+        <Run>/<Date> and <Run>/<Flowcell> elements.
+        :param run_identifier: Illumina Run Identifier (e.g. 130724_SN815_0089_BC26JBACXX)
+        :type run_identifier: str
+        :return: Python list of Python str objects
+        :rtype: list
+        """
+
+        # Split into <Date>_<Instrument>_<Number>_<FCPosition><Flowcell>
+        components = string.split(run_identifier, sep='_')
+
+        if len(components) != 4:
+            warnings.warn('Cannot split Illumina Run Identifier {!r} into ist components.'.format(run_identifier))
+            return
+
+        # Strip leading zeros from the <Number>, split <FCPosition> and >Flowcell> elements.
+        components[2] = components[2].lstrip('0')
+        components.append(components[3][1:])
+        components[3] = components[3][:1]
+
+        return components
+
     @classmethod
     def from_file_path(cls, file_path):
-        """Create a Bio.BSF.Data.Illumina.RunInformation object from a file path.
+        """Create a Bio.BSF.Illumina.RunInformation object from a file path.
 
         :param cls: Class
         :type cls: RunInformation
@@ -131,7 +158,7 @@ class RunInformation(object):
         :rtype: RunInformation
         """
 
-        file_name = os.path.basename(file_path)
+        file_name = os.path.basename(file_path.rstrip('/ '))
 
         run_info_tree = ET.parse(source=file_path)
         run_info_root = run_info_tree.getroot()
@@ -140,30 +167,88 @@ class RunInformation(object):
 
         run_identifier = run_info_root.find('Run').attrib['Id']  # e.g. 130724_SN815_0089_BC26JBACXX
         run_number = run_info_root.find('Run').attrib['Number']  # e.g. 91
-        flow_cell = run_info_root.find('Run/Flowcell').text  # e.g. C26JBACXX
-        instrument = run_info_root.find('Run/Instrument').text  # e.g. SN815
-        date = run_info_root.find('Run/Date').text  # e.g. 130724
+        run_identifier_components = RunInformation.parse_run_identifier(run_identifier=run_identifier)
 
-        xml_list_reads = run_info_tree.find("Run/Reads")
+        xml_flow_cell = run_info_root.find('Run/Flowcell')
+        if xml_flow_cell is not None:
+            flow_cell = xml_flow_cell.text  # e.g. C26JBACXX
+        else:
+            flow_cell = run_identifier_components[4]
+
+        xml_instrument = run_info_root.find('Run/Instrument')
+        if xml_instrument is not None:
+            instrument = xml_instrument.text  # e.g. SN815
+        else:
+            instrument = run_identifier_components[1]
+
+        xml_date = run_info_root.find('Run/Date')
+        if xml_date is not None:
+            date = xml_date.text  # e.g. 130724
+        else:
+            date = run_identifier_components[0]
+
+        xml_second_read = run_info_root.find('Run/SecondRead')
+        if xml_second_read is not None:
+            second_read = xml_second_read.attrib['FirstCycle']
+        else:
+            second_read = 0
 
         reads = list()
+        number = 1
 
-        for xml_read in xml_list_reads:
+        for xml_read in run_info_root.find('Run/Reads'):
 
-            is_index = bool(0)
+            # <ApplicationName>HiSeq Control Software</ApplicationName>
+            # <ApplicationVersion>2.0.12.0</ApplicationVersion>
+            #
+            # <Reads>
+            #   <Read Number="1" NumCycles="100" IsIndexedRead="N" />
+            #   <Read Number="2" NumCycles="8" IsIndexedRead="Y" />
+            #   <Read Number="3" NumCycles="100" IsIndexedRead="N" />
+            # </Reads>
 
-            if xml_read.attrib['IsIndexedRead'] == 'Y':
-                is_index = True
-            elif xml_read.attrib['IsIndexedRead'] == 'N':
-                is_index = False
-            else:
-                warning = 'Unexpected value {} in Read element attribute IsIndexedRead '. \
-                    format(xml_read.attrib['IsIndexedRead'])
-                warnings.warn(warning)
+            if 'NumCycles' in xml_read.attrib:
+                is_index = bool(0)
 
-            reads.append(RunInformationRead(number=int(xml_read.attrib['Number']),
-                                            cycles=int(xml_read.attrib['NumCycles']),
-                                            index=is_index))
+                if xml_read.attrib['IsIndexedRead'] == 'Y':
+                    is_index = True
+                elif xml_read.attrib['IsIndexedRead'] == 'N':
+                    is_index = False
+                else:
+                    warning = 'Unexpected value {} in Read element attribute IsIndexedRead '. \
+                        format(xml_read.attrib['IsIndexedRead'])
+                    warnings.warn(warning)
+
+                reads.append(RunInformationRead(
+                    number=int(xml_read.attrib['Number']),
+                    cycles=int(xml_read.attrib['NumCycles']),
+                    index=is_index))
+
+            # <ApplicationName>HiSeq Control Software</ApplicationName>
+            # <ApplicationVersion>1.1.37</ApplicationVersion>
+            #
+            # <Reads>
+            #   <Read FirstCycle="1" LastCycle="51" />
+            #   <Read FirstCycle="52" LastCycle="102" />
+            # </Reads>
+            # <SecondRead FirstCycle="52" />
+
+            elif 'FirstCycle' in xml_read.attrib:
+
+                # This is a bit convoluted. If a read after the first has a FirstCycle attribute of less than the
+                # FirstCycle attribute of the SecondRead, then it must be the index read. Sigh!
+
+                if number > 1 and xml_read.attrib['FirstCycle'] < second_read:
+                    is_index = True
+                else:
+                    is_index = False
+
+                reads.append(RunInformationRead(
+                    number=number,
+                    cycles=int(xml_read.attrib['LastCycle']) - int(xml_read.attrib['FirstCycle']),
+                    index=is_index))
+
+                number += 1
 
         reads.sort(key=lambda read: read.number)
 
@@ -177,14 +262,17 @@ class RunInformation(object):
 
         # Set a paired_end attribute if more than one read without index is defined?
 
-        # Get the Flow-Cell Layout.
+        # Get the Flow-Cell Layout if it exits.
 
         xml_flow_cell_layout = run_info_root.find('Run/FlowcellLayout')
-        flow_cell_layout = RunInformationFlowcellLayout(
-            lane_count=int(xml_flow_cell_layout.attrib['LaneCount']),
-            surface_count=int(xml_flow_cell_layout.attrib['SurfaceCount']),
-            swath_count=int(xml_flow_cell_layout.attrib['SwathCount']),
-            tile_count=int(xml_flow_cell_layout.attrib['TileCount']))
+        if xml_flow_cell_layout is not None:
+            flow_cell_layout = RunInformationFlowcellLayout(
+                lane_count=int(xml_flow_cell_layout.attrib['LaneCount']),
+                surface_count=int(xml_flow_cell_layout.attrib['SurfaceCount']),
+                swath_count=int(xml_flow_cell_layout.attrib['SwathCount']),
+                tile_count=int(xml_flow_cell_layout.attrib['TileCount']))
+        else:
+            flow_cell_layout = None
 
         iri = cls(file_path=file_path, file_type='xml', name=file_name,
                   run_identifier=run_identifier, run_number=run_number,
@@ -196,9 +284,9 @@ class RunInformation(object):
     def __init__(self, file_path=None, file_type=None, name=None,
                  run_identifier=None, run_number=None, flow_cell=None, instrument=None, date=None,
                  reads=None, flow_cell_layout=None):
-        """Initialise a Bio.BSF.Data.Illumina.RunInformation object.
+        """Initialise a Bio.BSF.Illumina.RunInformation object.
 
-        :param self: Bio.BSF.Data.Illumina.RunInformation
+        :param self: Bio.BSF.Illumina.RunInformation
         :type self: RunInformation
         :param file_path: File path
         :type file_path: str, unicode
@@ -216,9 +304,9 @@ class RunInformation(object):
         :type instrument: str
         :param date: Date in YYMMDD format
         :type date: str
-        :param reads: Python list of Bio.BSF.Data.Illumina.RunInformationRead objects
+        :param reads: Python list of Bio.BSF.Illumina.RunInformationRead objects
         :type reads: list
-        :param flow_cell_layout: Bio.BSF.Data.Illumina.RunInformationFlowcellLayout object
+        :param flow_cell_layout: Bio.BSF.Illumina.RunInformationFlowcellLayout object
         :type flow_cell_layout: RunInformationFlowcellLayout
         :return: Nothing
         :rtype: None
@@ -281,7 +369,7 @@ class RunInformation(object):
         T ... Template
         B ... Barcode
         S ... Skip
-        :param self: Bio.BSF.Data.Illumina.RunInformation object
+        :param self: Bio.BSF.Illumina.RunInformation object
         :type self: RunInformation
         :return: Read structure string for Picard ExtractIlluminaBarcodes
         :rtype: str
@@ -305,6 +393,8 @@ class RunInformation(object):
 class RunParameters(object):
     """BSF Illumina Run Parameters class.
 
+    The BSF Illumina RunParameters class models the contents of runParameters.xml
+    files inside an Illumina Run Folder.
     Attributes:
     :ivar file_path: File path
     :type file_path: str, unicode
@@ -314,7 +404,7 @@ class RunParameters(object):
 
     @classmethod
     def from_file_path(cls, file_path):
-        """Create a Bio.BSF.Data.Illumina.RunParameters object from a file path.
+        """Create a Bio.BSF.Illumina.RunParameters object from a file path.
 
         :param cls: Class
         :type cls: RunParameters
@@ -354,6 +444,7 @@ class RunParameters(object):
     def get_experiment_name(self):
         """Get the experiment name of a BSF Illumina Run Parameters object.
 
+        Get the text representation of the <Setup>/<ExperimentName> value.
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Experiment name e.g BSF_0001
@@ -365,6 +456,7 @@ class RunParameters(object):
     def get_flow_cell_barcode(self):
         """Get the flow-cell barcode of a BSF Illumina Run Parameters object.
 
+        Get the text representation of the <Setup>/<Barcode> value.
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Flow-cell barcode e.g BSF_0001
@@ -376,6 +468,7 @@ class RunParameters(object):
     def get_flow_cell_type(self):
         """Get the flow cell of a BSF Illumina Run Parameters object.
 
+        Get the text representation of the <Setup>/<Flowcell> value.
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Flow-cell type
@@ -387,17 +480,24 @@ class RunParameters(object):
     def get_position(self):
         """Get the flow-cell position of a BSF Illumina Run Parameters object.
 
+        Get the text representation of the <Setup>/<FCPosition> value.
+        Since the element does not exist in older versions an empty string may be returned.
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Flow-cell position e.g. A or B
         :rtype: str
         """
 
-        return self.element_tree.getroot().find('Setup/FCPosition').text
+        element = self.element_tree.getroot().find('Setup/FCPosition')
+        if element is not None:
+            return element.text
+        else:
+            return str()
 
     def get_run_identifier(self):
         """Get the run identifier of a BSF Illumina Run Parameters object.
 
+        Get the text representation of the <Setup>/<RunID> value.
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Run identifier
@@ -409,6 +509,7 @@ class RunParameters(object):
     def get_read1(self):
         """Get the read 1 cycle number of a BSF Illumina Run Parameters object.
 
+        Get the text representation of the <Setup>/<Read1> value.
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Number of cycles in read 1
@@ -420,6 +521,7 @@ class RunParameters(object):
     def get_read2(self):
         """Get the read 2 cycle number of a BSF Illumina Run Parameters object.
 
+        Get the text representation of the <Setup>/<Read2> value.
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Number of cycles in read 2
@@ -431,24 +533,40 @@ class RunParameters(object):
     def get_index_read1(self):
         """Get the index read 1 cycle number of a BSF Illumina Run Parameters object.
 
+        Normally, this corresponds to the text representation of the <IndexRead1> element,
+        while older implementations of Illumina runParameters.xml have only an <IndexRead> element.
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Number of cycles in index read 1
         :rtype: str
         """
 
-        return self.element_tree.getroot().find('Setup/IndexRead1').text
+        element = self.element_tree.getroot().find('Setup/IndexRead1')
+        if element is not None:
+            return element.text
+
+        element = self.element_tree.getroot().find('Setup/IndexRead')
+        if element is not None:
+            return element.text
+        else:
+            return str()
 
     def get_index_read2(self):
         """Get the index read 2 cycle number of a BSF Illumina Run Parameters object.
 
+        Normally, this corresponds to the text representation of the <IndexRead2> element,
+        while older implementations of Illumina runParameters.xml have only an <IndexRead> element.
         :param self: BSF Run Parameters
         :type self: RunParameters
         :return: Number of cycles in index read 2
         :rtype: str
         """
 
-        return self.element_tree.getroot().find('Setup/IndexRead2').text
+        element = self.element_tree.getroot().find('Setup/IndexRead2')
+        if element is not None:
+            return element.text
+        else:
+            return str()
 
 
 class RunFolder(object):
@@ -474,19 +592,19 @@ class RunFolder(object):
     :type run: str
     :ivar flow_cell: Flow-cell identifier.
     :type flow_cell: str
-    :ivar run_information: Bio.BSF.Data.Illumina.RunInformation object
+    :ivar run_information: Bio.BSF.Illumina.RunInformation object
     :type run_information: RunInformation
     """
 
     @classmethod
     def from_file_path(cls, file_path):
-        """Construct a Bio.BSF.Data.Illumina.RunFolder object from a file path.
+        """Construct a Bio.BSF.Illumina.RunFolder object from a file path.
 
         :param cls: Class
         :type cls: Class
         :param file_path: File path
         :type file_path: str, unicode
-        :return: Bio.BSF.Data.Illumina.RunFolder object
+        :return: Bio.BSF.Illumina.RunFolder object
         :rtype: RunFolder
         """
 
@@ -513,9 +631,9 @@ class RunFolder(object):
     def __init__(self, file_path=None, file_type=None, name=None,
                  date=None, instrument=None, run=None, flow_cell=None,
                  run_information=None, run_parameters=None):
-        """Initialise a Bio.BSF.Data.Illumina.RunFolder object.
+        """Initialise a Bio.BSF.Illumina.RunFolder object.
 
-        :param self: Bio.BSF.Data.Illumina.RunFolder
+        :param self: Bio.BSF.Illumina.RunFolder
         :type self: RunFolder
         :param file_path: File path
         :type file_path: str, unicode
