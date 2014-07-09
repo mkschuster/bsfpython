@@ -482,11 +482,22 @@ class VariantCallingGATK(Analysis):
                 reads1 = list()
                 reads2 = list()
 
+                # Propagate the SAM read group information around FASTQ files if required.
+                # Please note that only the first read group can be propagated per
+                # BSF PairedReads object.
+
+                read_group = str()
+
                 for paired_reads in replicate_dict[replicate_key]:
                     if paired_reads.reads1:
                         reads1.append(paired_reads.reads1.file_path)
                     if paired_reads.reads2:
                         reads2.append(paired_reads.reads2.file_path)
+                    if not read_group and paired_reads.read_group:
+                        read_group = paired_reads.read_group
+
+                if read_group:
+                    bwa_mem.add_OptionShort(key='R', value=read_group)
 
                 if len(reads1) and not len(reads2):
                     bwa_mem.arguments.append(string.join(reads1, ','))
@@ -987,7 +998,7 @@ class VariantCallingGATK(Analysis):
             java_process = Executable(name='gatk_haplotype_caller', program='java', sub_command=Command(command=str()))
             java_process.add_SwitchShort(key='d64')
             java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
-            java_process.add_SwitchShort(key='Xmx6G')
+            java_process.add_SwitchShort(key='Xmx8G')
             java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_sample['temporary_sample'])
 
             sub_command = java_process.sub_command
@@ -998,7 +1009,7 @@ class VariantCallingGATK(Analysis):
             for interval in include_intervals_list:
                 sub_command.add_OptionLong(key='intervals', value=interval)
             # TODO: The number of threads should be configurable.
-            # sub_command.add_OptionLong(key='num_cpu_threads_per_data_thread', value='8')
+            # sub_command.add_OptionLong(key='num_cpu_threads_per_data_thread', value='1')
             sub_command.add_OptionLong(key='genotyping_mode', value='DISCOVERY')
             sub_command.add_OptionLong(key='standard_min_confidence_threshold_for_emitting', value='10')
             sub_command.add_OptionLong(key='standard_min_confidence_threshold_for_calling', value='30')
