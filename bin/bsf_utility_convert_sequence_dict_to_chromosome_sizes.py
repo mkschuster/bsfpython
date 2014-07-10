@@ -67,15 +67,15 @@ for line in input_file:
     sequence_length = str()
 
     # Find the column with the SN: tag.
-    for i in range(0, len(columns) - 1):
-        if columns[i].startswith('SN:'):
-            sequence_name = columns[i][3:]
+    for column in columns:
+        if column.startswith('SN:'):
+            sequence_name = column[3:]
             break
 
     # Find the column with the LN: tag.
-    for i in range(0, len(columns) - 1):
-        if columns[i].startswith('LN:'):
-            sequence_length = columns[i][3:]
+    for column in columns:
+        if column.startswith('LN:'):
+            sequence_length = column[3:]
             break
 
     output_file.write(string.join((sequence_name, sequence_length), sep="\t") + "\n")
