@@ -64,10 +64,10 @@ In the context of the ChIPSeq analysis, BSF Paired Reads objects of BSF Sample o
 
 RNASeq
 
-The RNASeq pipeline is based on the Tuxedo suite. NGS reads are aligned with Tophat2 [] an aligner that
+The RNA-Seq pipeline is based on the Tuxedo suite. NGS reads are aligned with Tophat2 [] an aligner that
 implements a splice site model and uses a reference transcriptome as the base. is based on the Bowtie2 [] short read aligner.
 
-In the context of the RNASeq analysis, BSF Sample objects are aligned and assembled into transcriptomes individually.
+In the context of the Tuxedo analysis, BSF Sample objects are aligned and assembled into transcriptomes individually.
 According to a group_replicates configuration option, each BSF Paired Reads object of a BSF Sample object can be
 processed individually by TopHat and Cufflinks or pooled before alignment. The resulting transcriptome assemblies
 for each BSF Sample resulting from each BSF Paired Reads object are then merged via Cuffmerge. Cuffdiff then compares

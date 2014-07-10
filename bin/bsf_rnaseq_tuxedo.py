@@ -27,7 +27,7 @@
 
 import argparse
 
-from Bio.BSF.Analyses import RNASeq
+from Bio.BSF.Analyses.RNASeq import Tuxedo
 
 
 parser = argparse.ArgumentParser(description='RNA-Seq analysis driver script.')
@@ -45,18 +45,18 @@ args = parser.parse_args()
 
 # Create a BSF ChIPSeq analysis and run it.
 
-rnaseq = RNASeq.from_config_file(config_file=args.configuration)
+tuxedo = Tuxedo.from_config_file(config_file=args.configuration)
 
 if args.debug:
-    rnaseq.debug = args.debug
+    tuxedo.debug = args.debug
 
-rnaseq.run()
+tuxedo.run()
 
 # Submit all Executable objects of all Distributed Resource Management System objects.
 
 submit = 0
 
-for drms in rnaseq.drms_list:
+for drms in tuxedo.drms_list:
 
     if args.stage:
         if args.stage == drms.name:
@@ -64,25 +64,25 @@ for drms in rnaseq.drms_list:
         else:
             continue
 
-    drms.submit(debug=rnaseq.debug)
+    drms.submit(debug=tuxedo.debug)
 
-    if rnaseq.debug:
+    if tuxedo.debug:
         print repr(drms)
         print drms.trace(1)
 
 if args.stage:
     if args.stage == 'report':
-        rnaseq.report()
+        tuxedo.report()
         pass
     elif not submit:
-        name_list = [drms.name for drms in rnaseq.drms_list]
+        name_list = [drms.name for drms in tuxedo.drms_list]
         name_list.append('report')
         print 'Valid Analysis stages are: {!r}'.format(name_list)
 
 print 'RNA-Seq Analysis'
-print 'Project name:      ', rnaseq.project_name
-print 'Genome version:    ', rnaseq.genome_version
-print 'Input directory:   ', rnaseq.input_directory
-print 'Output directory:  ', rnaseq.output_directory
-print 'Project directory: ', rnaseq.project_directory
-print 'Genome directory:  ', rnaseq.genome_directory
+print 'Project name:      ', tuxedo.project_name
+print 'Genome version:    ', tuxedo.genome_version
+print 'Input directory:   ', tuxedo.input_directory
+print 'Output directory:  ', tuxedo.output_directory
+print 'Project directory: ', tuxedo.project_directory
+print 'Genome directory:  ', tuxedo.genome_directory
