@@ -64,7 +64,7 @@ for line in input_fh:
 
     info_fields = string.split(s=vcf_fields[8], sep=':')
 
-    for i in range(0, len(info_fields) - 1):
+    for i in range(0, len(info_fields)):
         if info_fields[i] == 'GT':
             genotype_index = i
             break
