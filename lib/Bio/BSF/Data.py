@@ -1584,7 +1584,7 @@ class Collection(object):
         :param sas: BSF SampleAnnotationSheet
         :type sas: SampleAnnotationSheet
         :param prefix: Optional configuration prefix
-                       (e.g. '[Control] Sample', '[Treatment] Sample')
+                       (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
         :type prefix: str
         :return: Nothing
         :rtype: None
@@ -1623,7 +1623,7 @@ class Collection(object):
         :param row_dict: A Python dict of row entries of a Python csv object
         :type row_dict: dict
         :param prefix: Optional configuration prefix
-                       (e.g. '[Control] Sample', '[Treatment] Sample')
+                       (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
         :type prefix: str
         :return: Nothing
         :rtype: None
@@ -1673,7 +1673,7 @@ class Collection(object):
         :param row_dict: A Python dict of row entries of a Python csv object
         :type row_dict: dict
         :param prefix: Optional configuration prefix
-                       (e.g. '[Control] ProcessedRunFolder', '[Treatment] ProcessedRunFolder')
+                       (e.g. '[Control] FileType', '[Treatment] FileType', '[Point N]  FileType', ...)
         :type prefix: str
         :return: File type
         :rtype: str
@@ -1698,7 +1698,8 @@ class Collection(object):
         :param row_dict: A Python dict of row entries of a Python csv object
         :type row_dict: dict
         :param prefix: Optional configuration prefix
-                       (e.g. '[Control] ProcessedRunFolder', '[Treatment] ProcessedRunFolder')
+                       (e.g. '[Control] ProcessedRunFolder', '[Treatment] ProcessedRunFolder',
+                        '[Point N] ProcessedRunFolder', ...)
         :type prefix: str
         :param file_type: File type
         :type file_type: str
@@ -1737,7 +1738,7 @@ class Collection(object):
         :param row_dict: A Python dict of row entries of a Python csv object
         :type row_dict: dict
         :param prefix: Optional configuration prefix
-                       (e.g. '[Control] Project', '[Treatment] Project')
+                       (e.g. '[Control] Project', '[Treatment] Project', '[Point N] Project', ...)
         :type prefix: str
         :param file_type: File type
         :type file_type: str
@@ -1774,7 +1775,7 @@ class Collection(object):
         :param row_dict: A Python dict of row entries of a Python csv object
         :type row_dict: dict
         :param prefix: Optional configuration prefix
-                       (e.g. '[Control] Sample', '[Treatment] Sample')
+                       (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
         :type prefix: str
         :param file_type: File type
         :type file_type: str
@@ -1811,7 +1812,7 @@ class Collection(object):
         :param row_dict: A Python dict of row entries of a Python csv object
         :type row_dict: dict
         :param prefix: Optional configuration prefix
-                       (e.g. '[Control] ReadsN', '[Treatment] ReadsN')
+                       (e.g. '[Control] ReadsN', '[Treatment] ReadsN', '[Point N] ReadsN', ...)
         :type prefix: str
         :param file_type: File type
         :type file_type: str
@@ -1852,7 +1853,7 @@ class Collection(object):
         :param row_dict: A Python dict of row entries of a Python csv object
         :type row_dict: dict
         :param prefix: Optional configuration prefix
-                       (e.g. '[Control] ReadsN', '[Treatment] ReadsN')
+                       (e.g. '[Control] ReadGroup', '[Treatment] ReadGroup', '[Point N] ReadGroup', ...)
         :type prefix: str
         :return: Read group string
         :rtype: str
@@ -1879,7 +1880,7 @@ class Collection(object):
         :param row_dict: BSF SampleAnnotationSheet row Python dict
         :type row_dict: dict
         :param prefix: Optional configuration prefix
-                       (e.g. '[Control] Sample', '[Treatment] Sample')
+                       (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample')
         :type prefix: str
         :return: BSF Sample
         :rtype: Sample
@@ -1935,7 +1936,7 @@ class Collection(object):
         :param row_dict: Comparison CSV file row Python dict
         :type row_dict: dict
         :param prefix: Optional configuration prefix
-                       (e.g. '[Control] Sample', '[Treatment] Sample')
+                       (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
         :type prefix: str
         :return: Tuple of Python str of '[Prefix] Group' column value and
          Python list of BSF Sample objects
