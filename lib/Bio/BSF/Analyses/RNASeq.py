@@ -164,20 +164,20 @@ class Tuxedo(Analysis):
 
     def _read_comparisons(self, cmp_file):
 
-        """Read a SampleAnnotationSheet CSV file from disk.
+        """Read a SampleAnnotationSheet CSV file specifying comparisons from disk.
 
         Column headers for CASAVA folders:
-          Treatment/Control ProcessedRunFolder:
+          Treatment/Control/Point N ProcessedRunFolder:
             CASAVA processed run folder name or
             Analysis input_directory by default.
-          Treatment/Control Project:
+          Treatment/Control/Point N Project:
             CASAVA Project name or
             Analysis project_name by default.
-          Treatment/Control Sample:
+          Treatment/Control/Point N Sample:
             CASAVA Sample name, no default.
         Column headers for independent samples:
-          Treatment/Control Sample:
-          Treatment/Control File:
+          Treatment/Control/Point N Sample:
+          Treatment/Control/Point N File:
         :param self: Tuxedo
         :type self: Tuxedo
         :param cmp_file: Comparisons file path
@@ -194,82 +194,60 @@ class Tuxedo(Analysis):
 
         for row_dict in sas._csv_reader:
 
-            # In addition to defining samples allow the definition of groups.
-            # If the row dictionary has a 'Group' key then the Sample in the same row gets added to the group.
-            # So 'ProcessedRunFolder',Project','Sample','Group' defines the groups, while ...
+            # In addition to defining samples, allow also the definition of groups in comparison files.
+            # If the row dictionary has a 'Group' key, then the Sample in the same row gets added to the group.
+            # So, 'ProcessedRunFolder','Project','Sample','Group' defines the groups, while ...
             # 'Control Group','Treatment Group' defines a comparison, as does ...
             # 'Control Group','Treatment ProcessedRunFolder','Treatment Project','Treatment Sample'
-            # Define groups of Sample objects to compare these groups rather than
-            # individual Sample objects.
 
-            # This can be one or more Sample objects depending on 'Group' or 'Sample' column entries.
-            c_name, c_samples = self.collection.get_Samples_from_row_dict(row_dict=row_dict, prefix='Control')
-            t_name, t_samples = self.collection.get_Samples_from_row_dict(row_dict=row_dict, prefix='Treatment')
-
-            # TODO: This should be extended to cope with a time-series...
-
-            # TODO: There are two ways to interpret a group. RNA-Seq needs the pool variant of merging.
-
-            if 0:
-
-                # Run each Sample in the first (control) group against
-                # each Sample in the second (treatment) group.
-
-                for c_sample in c_samples:
-
-                    if self.debug > 1:
-                        print '  Control Sample name: {}'.format(c_sample.name)
-                        # print c_sample.trace(1)
-
-                    self.add_Sample(sample=c_sample)
-
-                    for t_sample in t_samples:
-
+            # Get Sample objects for classical 'Control' and 'Treatment' keys,
+            # before looking up a series of 'Point N' keys.
+            i = -2
+            key = str()
+            comparison_groups = list()
+            while 1:
+                i += 1
+                if i == -1:
+                    prefix = 'Control'
+                elif i == 0:
+                    prefix = 'Treatment'
+                else:
+                    prefix = 'Point {}'.format(i)
+                # Get Sample objects for 'Point N' keys for as long as they are defined.
+                # The Bio.BSF.Data.Collection.get_Sample_from_row_dict method can return one or more Sample objects,
+                # depending on 'Group' or 'Sample' column entries.
+                # In RNA-Seq experiments, entire pools of Sample objects (replicates) are compared with each other.
+                group_name, group_samples = self.collection.get_Samples_from_row_dict(row_dict=row_dict, prefix=prefix)
+                if group_name and len(group_samples):
+                    key += group_name
+                    key += '__'
+                    # key = string.join((key, group_name), sep='__')
+                    comparison_groups.append((group_name, group_samples))
+                    # Also expand each Python list of Sample objects to get all those Sample objects
+                    # that this Analysis needs considering.
+                    for sample in group_samples:
                         if self.debug > 1:
-                            print '    Treatment Sample name: {}'.format(t_sample.name)
-                            # print t_sample.trace(2)
-
-                        self.add_Sample(sample=t_sample)
-
-                        key = '{}__{}'.format(c_sample.name, t_sample.name)
-                        self.comparisons[key] = ([c_sample], [t_sample])
-
-            else:
-
-                # Run a pool of all Sample objects in the first group against
-                # a pool of all Sample objects in the second group.
-
-                # For a successful comparison, both Python list objects of Sample objects have to be defined.
-
-                if not (len(t_samples) and len(c_samples)):
-                    if self.debug > 1:
-                        print 'Comparison line with {} Treatment samples and {} Control samples'. \
-                            format(len(t_samples), len(c_samples))
+                            print '  {} Sample name: {!r} file_path:{!r}'.format(prefix, sample.name, sample.file_path)
+                            # print sample.trace(1)
+                        self.add_Sample(sample=sample)
+                elif i < 1:
+                    # A Control and Treatment prefix is not required.
                     continue
+                else:
+                    # Only break if there is no further 'Point N' prefix.
+                    break
 
-                # Add all control Sample objects to the Sample dictionary.
+            # For a successful comparison, mor ethan one Sample (pool) has to be defined.
 
-                for c_sample in c_samples:
+            if len(comparison_groups) < 2:
+                if self.debug > 1:
+                    print 'Comparison line with less than two Sample or Group keys. {!r}'. \
+                        format(row_dict)
+                continue
 
-                    if self.debug > 1:
-                        print '  Control Sample name: {!r} file_path:{!r}'.format(c_sample.name, c_sample.file_path)
-                        # print c_sample.trace(1)
+            # Truncate the last '__' separator off the key string.
 
-                    self.add_Sample(sample=c_sample)
-
-                # Add all treatment Sample objects to the Sample dictionary.
-
-                for t_sample in t_samples:
-
-                    if self.debug > 1:
-                        print '  Treatment Sample name: {!r} file_path:{!r}'.format(t_sample.name, t_sample.file_path)
-                        # print t_sample.trace(1)
-
-                    self.add_Sample(sample=t_sample)
-
-                # TODO: Use a RNASeqComparison object here?
-                key = '{}__{}'.format(c_name, t_name)
-                self.comparisons[key] = (c_samples, t_samples)
+            self.comparisons[key[:-2]] = comparison_groups
 
         sas.csv_reader_close()
 
@@ -649,8 +627,6 @@ class Tuxedo(Analysis):
 
         for key in keys:
 
-            c_samples, t_samples = self.comparisons[key]
-
             # Create a new rnaseq_cuffmerge Executable.
 
             cuffmerge = Cuffmerge(
@@ -686,92 +662,68 @@ class Tuxedo(Analysis):
 
             # Set rnaseq_cuffdiff options.
 
-            (c_name, t_name) = key.split('__')
-
             cuffdiff.add_OptionLong(key='output-dir',
                                     value=os.path.join(self.genome_directory, cuffdiff.name))
             cuffdiff.add_OptionLong(key='num-threads',
                                     value=str(run_cuffdiff_drms.threads))
-            cuffdiff.add_OptionLong(key='labels',
-                                    value=string.join((c_name, t_name), sep=','))
             cuffdiff.add_OptionLong(key='frag-bias-correct',
                                     value=genome_fasta)
 
             # Process rnaseq_cuffmerge and rnaseq_cuffdiff arguments in parallel.
 
-            c_alignments = list()
-            t_alignments = list()
+            # Keep a Python list of Python lists of TopHat aligned BAM files per comparison group.
+            cuffdiff_alignments = list()
+            cuffdiff_labels = list()
 
-            for c_sample in c_samples:
+            for group_name, group_samples in self.comparisons[key]:
 
-                # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
-                # Python str key and Python list of Python list objects
-                # of Bio.BSF.Data.PairedReads objects.
+                cuffdiff_labels.append(group_name)
+                alignments_list = list()
+                cuffdiff_alignments.append(alignments_list)
 
-                c_replicate_dict = c_sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
+                for sample in group_samples:
 
-                c_replicate_keys = c_replicate_dict.keys()
-                c_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+                    # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
+                    # Python str key and Python list of Python list objects
+                    # of Bio.BSF.Data.PairedReads objects.
 
-                for c_replicate_key in c_replicate_keys:
-                    # Add the Cufflinks assembled transcripts to the Cuffmerge manifest.
-                    transcripts_path = os.path.join(self.genome_directory,
-                                                    string.join(('rnaseq_cufflinks', c_replicate_key), sep='_'),
-                                                    'transcripts.gtf')
-                    assembly_file.write(transcripts_path + '\n')
+                    replicate_dict = sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
 
-                    # Wait for each TopHat and Cufflinks replicate to finish,
-                    # before Cuffmerge can run.
+                    replicate_keys = replicate_dict.keys()
+                    replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
-                    cuffmerge.dependencies.append(string.join(('rnaseq_cufflinks', c_replicate_key), sep='_'))
+                    for replicate_key in replicate_keys:
+                        # Add the Cufflinks assembled transcripts to the Cuffmerge manifest.
+                        transcripts_path = os.path.join(self.genome_directory,
+                                                        string.join(('rnaseq_cufflinks', replicate_key), sep='_'),
+                                                        'transcripts.gtf')
+                        assembly_file.write(transcripts_path + '\n')
 
-                    # Add the control BAM file to Cuffdiff ...
+                        # Wait for each TopHat and Cufflinks replicate to finish,
+                        # before Cuffmerge can run.
 
-                    c_alignments.append(os.path.join(self.genome_directory,
-                                                     string.join(('rnaseq_tophat', c_replicate_key), sep='_'),
-                                                     'accepted_hits.bam'))
+                        cuffmerge.dependencies.append(string.join(('rnaseq_cufflinks', replicate_key), sep='_'))
 
-            for t_sample in t_samples:
+                        # Add the TopHat accepted hits BAM file to Cuffdiff ...
 
-                # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
-                # Python str key and Python list of Python list objects
-                # of Bio.BSF.Data.PairedReads objects.
-
-                t_replicate_dict = t_sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
-
-                t_replicate_keys = t_replicate_dict.keys()
-                t_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-                for t_replicate_key in t_replicate_keys:
-                    # Add the Cufflinks assembled transcripts to the Cuffmerge manifest.
-                    transcripts_path = os.path.join(self.genome_directory,
-                                                    string.join(('rnaseq_cufflinks', t_replicate_key), sep='_'),
-                                                    'transcripts.gtf')
-                    assembly_file.write(transcripts_path + '\n')
-
-                    # Wait for each TopHat and Cufflinks replicate to finish,
-                    # before Cuffmerge can run.
-
-                    cuffmerge.dependencies.append(string.join(('rnaseq_cufflinks', t_replicate_key), sep='_'))
-
-                    # Add the treatment BAM file to Cuffdiff ...
-
-                    t_alignments.append(os.path.join(self.genome_directory,
-                                                     string.join(('rnaseq_tophat', t_replicate_key), sep='_'),
-                                                     'accepted_hits.bam'))
+                        alignments_list.append(os.path.join(self.genome_directory,
+                                                            string.join(('rnaseq_tophat', replicate_key), sep='_'),
+                                                            'accepted_hits.bam'))
 
             assembly_file.close()
 
             # Add the assembly manifest file as Cuffmerge argument.
             cuffmerge.arguments.append(assembly_path)
 
+            cuffdiff.add_OptionLong(key='labels', value=string.join(cuffdiff_labels, sep=','))
+
             # Add the Cuffmerge merged assembly as Cuffdiff output.
             cuffdiff.arguments.append(os.path.join(cuffmerge.options['output-dir'][0].value,
                                                    'merged.gtf'))
 
-            # Add the aligned BAM files as Cuffdiff argument.
-            cuffdiff.arguments.append(string.join(c_alignments, ','))
-            cuffdiff.arguments.append(string.join(t_alignments, ','))
+            # Add the TopHat aligned BAM files per point as Cuffdiff arguments.
+            for alignments_list in cuffdiff_alignments:
+                cuffdiff.arguments.append(string.join(alignments_list, sep=','))
 
             # Create a new rnaseq_run_cuffdiff Executable.
 
