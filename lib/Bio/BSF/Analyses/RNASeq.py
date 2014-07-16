@@ -77,7 +77,7 @@ class Tuxedo(Analysis):
 
         # A "Bio.BSF.Analysis.RNASeq.Tuxedo" section specifies defaults for this Analysis sub-class.
 
-        section = string.join((__name__, cls.__name__), sep='.')
+        section = string.join(words=(__name__, cls.__name__), sep='.')
         rnaseq.set_Configuration(rnaseq.configuration, section=section)
 
         return rnaseq
@@ -221,7 +221,7 @@ class Tuxedo(Analysis):
                 if group_name and len(group_samples):
                     key += group_name
                     key += '__'
-                    # key = string.join((key, group_name), sep='__')
+                    # key = string.join(words=(key, group_name), sep='__')
                     comparison_groups.append((group_name, group_samples))
                     # Also expand each Python list of Sample objects to get all those Sample objects
                     # that this Analysis needs considering.
@@ -394,15 +394,12 @@ class Tuxedo(Analysis):
 
             for replicate_key in replicate_keys:
 
-                # Create a new rnaseq_tophat Executable.
+                # Create a new rnaseq_tophat Executable, which is run via the rnaseq_run_tophat Executable below.
 
-                tophat = TopHat(name=string.join(('rnaseq_tophat', replicate_key), sep='_'),
-                                analysis=self)
+                tophat = TopHat(
+                    name=string.join(words=('rnaseq_tophat', replicate_key), sep='_'),
+                    analysis=self)
                 tophat.hold = tophat_hold
-
-                # The Tophat Executable does no longer get directly submitted.
-                # It is now run via the run_tophat script.
-                # tophat_drms.add_Executable(tophat)
 
                 # Set rnaseq_tophat options.
 
@@ -439,8 +436,8 @@ class Tuxedo(Analysis):
                     if paired_reads.reads2:
                         reads2.append(paired_reads.reads2.file_path)
 
-                tophat.arguments.append(string.join(reads1, ','))
-                tophat.arguments.append(string.join(reads2, ','))
+                tophat.arguments.append(string.join(words=reads1, sep=','))
+                tophat.arguments.append(string.join(words=reads2, sep=','))
 
                 # Create a new rnaseq_run_tophat Executable.
 
@@ -458,10 +455,11 @@ class Tuxedo(Analysis):
                 pickler_file.close()
 
                 run_tophat = Executable.from_Analysis(
-                    name=string.join((run_tophat_drms.name, replicate_key), sep='_'),
+                    name=string.join(words=(run_tophat_drms.name, replicate_key), sep='_'),
                     program='bsf_run_rnaseq_tophat.py',
                     analysis=self)
                 run_tophat_drms.add_Executable(run_tophat)
+                # The rnaseq_run_tophat Executable requires no DRMS.dependencies.
 
                 # Set rnaseq_run_tophat options.
 
@@ -471,7 +469,7 @@ class Tuxedo(Analysis):
                 # Create a new rnaseq_process_tophat Executable
 
                 process_tophat = Executable.from_Analysis(
-                    name=string.join((process_tophat_drms.name, replicate_key), sep='_'),
+                    name=string.join(words=(process_tophat_drms.name, replicate_key), sep='_'),
                     program='bsf_rnaseq_process_tophat2.sh',
                     analysis=self)
                 process_tophat_drms.add_Executable(process_tophat)
@@ -484,13 +482,11 @@ class Tuxedo(Analysis):
                 process_tophat.arguments.append(os.path.join(self.genome_directory, tophat.name))
                 process_tophat.arguments.append(genome_sizes)
 
-                # Create a new rnaseq_cufflinks Executable.
+                # Create a new rnaseq_cufflinks Executable, which is run via the rnaseq_run_cufflinks Executable below.
 
                 cufflinks = Cufflinks(
-                    name=string.join(('rnaseq_cufflinks', replicate_key), sep='_'),
+                    name=string.join(words=('rnaseq_cufflinks', replicate_key), sep='_'),
                     analysis=self)
-                # The rnaseq_cufflinks Executable is run via the rnaseq_run_cufflinks Executable below.
-                cufflinks.dependencies.append(tophat.name)
 
                 # Set rnaseq_cufflinks options.
 
@@ -524,8 +520,7 @@ class Tuxedo(Analysis):
 
                 # Set rnaseq_cufflinks arguments.
 
-                aligned_reads = os.path.join(tophat.options['output-dir'][0].value, 'accepted_hits.bam')
-                cufflinks.arguments.append(aligned_reads)
+                cufflinks.arguments.append(os.path.join(self.genome_directory, tophat.name, 'accepted_hits.bam'))
 
                 # Create a new rnaseq_run_cufflinks Executable.
 
@@ -543,10 +538,11 @@ class Tuxedo(Analysis):
                 pickler_file.close()
 
                 run_cufflinks = Executable.from_Analysis(
-                    name=string.join((run_cufflinks_drms.name, replicate_key), sep='_'),
+                    name=string.join(words=(run_cufflinks_drms.name, replicate_key), sep='_'),
                     program='bsf_run_rnaseq_cufflinks.py',
                     analysis=self)
                 run_cufflinks_drms.add_Executable(run_cufflinks)
+                run_cufflinks.dependencies.append(run_tophat.name)
 
                 # Set rnaseq_run_cufflinks options.
 
@@ -556,11 +552,11 @@ class Tuxedo(Analysis):
                 # Create a new rnaseq_process_cufflinks Executable.
 
                 process_cufflinks = Executable.from_Analysis(
-                    name=string.join((process_cufflinks_drms.name, replicate_key), sep='_'),
+                    name=string.join(words=(process_cufflinks_drms.name, replicate_key), sep='_'),
                     program='bsf_rnaseq_process_cufflinks.R',
                     analysis=self)
                 process_cufflinks_drms.add_Executable(process_cufflinks)
-                process_cufflinks.dependencies.append(cufflinks.name)
+                process_cufflinks.dependencies.append(run_cufflinks.name)
 
                 # Set rnaseq_process_cufflinks options.
 
@@ -630,9 +626,10 @@ class Tuxedo(Analysis):
             # Create a new rnaseq_cuffmerge Executable.
 
             cuffmerge = Cuffmerge(
-                name=string.join((cuffmerge_drms.name, key), sep='_'),
+                name=string.join(words=(cuffmerge_drms.name, key), sep='_'),
                 analysis=self)
             cuffmerge_drms.add_Executable(cuffmerge)
+            # DRMS.dependencies for rnaseq_cuffmerge are added for each rnaseq_run_cufflinks replicate below.
 
             # Set rnaseq_cuffmerge options.
 
@@ -649,14 +646,14 @@ class Tuxedo(Analysis):
 
             # Create an assembly manifest file to merge all replicates of each Sample object ...
 
-            assembly_name = string.join((cuffmerge.name, 'assembly.txt'), sep='_')
+            assembly_name = string.join(words=(cuffmerge.name, 'assembly.txt'), sep='_')
             assembly_path = os.path.join(self.genome_directory, assembly_name)
             assembly_file = open(name=assembly_path, mode='w')
 
             # Create a new rnaseq_cuffdiff Executable.
 
             cuffdiff = Cuffdiff(
-                name=string.join(('rnaseq_cuffdiff', key), sep='_'),
+                name=string.join(words=('rnaseq_cuffdiff', key), sep='_'),
                 analysis=self)
             # The rnaseq_cuffdiff Executable is run via the rnaseq_run_cuffdiff Executable below.
 
@@ -694,36 +691,38 @@ class Tuxedo(Analysis):
 
                     for replicate_key in replicate_keys:
                         # Add the Cufflinks assembled transcripts to the Cuffmerge manifest.
-                        transcripts_path = os.path.join(self.genome_directory,
-                                                        string.join(('rnaseq_cufflinks', replicate_key), sep='_'),
-                                                        'transcripts.gtf')
+                        transcripts_path = os.path.join(
+                            self.genome_directory,
+                            string.join(words=('rnaseq_cufflinks', replicate_key), sep='_'),
+                            'transcripts.gtf')
                         assembly_file.write(transcripts_path + '\n')
 
                         # Wait for each TopHat and Cufflinks replicate to finish,
                         # before Cuffmerge can run.
 
-                        cuffmerge.dependencies.append(string.join(('rnaseq_cufflinks', replicate_key), sep='_'))
+                        cuffmerge.dependencies.append(
+                            string.join(words=('rnaseq_run_cufflinks', replicate_key), sep='_'))
 
                         # Add the TopHat accepted hits BAM file to Cuffdiff ...
 
-                        alignments_list.append(os.path.join(self.genome_directory,
-                                                            string.join(('rnaseq_tophat', replicate_key), sep='_'),
-                                                            'accepted_hits.bam'))
+                        alignments_list.append(os.path.join(
+                            self.genome_directory,
+                            string.join(words=('rnaseq_tophat', replicate_key), sep='_'),
+                            'accepted_hits.bam'))
 
             assembly_file.close()
 
             # Add the assembly manifest file as Cuffmerge argument.
             cuffmerge.arguments.append(assembly_path)
 
-            cuffdiff.add_OptionLong(key='labels', value=string.join(cuffdiff_labels, sep=','))
+            cuffdiff.add_OptionLong(key='labels', value=string.join(words=cuffdiff_labels, sep=','))
 
             # Add the Cuffmerge merged assembly as Cuffdiff output.
-            cuffdiff.arguments.append(os.path.join(cuffmerge.options['output-dir'][0].value,
-                                                   'merged.gtf'))
+            cuffdiff.arguments.append(os.path.join(self.genome_directory, cuffmerge.name, 'merged.gtf'))
 
             # Add the TopHat aligned BAM files per point as Cuffdiff arguments.
             for alignments_list in cuffdiff_alignments:
-                cuffdiff.arguments.append(string.join(alignments_list, sep=','))
+                cuffdiff.arguments.append(string.join(words=alignments_list, sep=','))
 
             # Create a new rnaseq_run_cuffdiff Executable.
 
@@ -741,7 +740,7 @@ class Tuxedo(Analysis):
             pickler_file.close()
 
             run_cuffdiff = Executable.from_Analysis(
-                name=string.join((run_cuffdiff_drms.name, key), sep='_'),
+                name=string.join(words=(run_cuffdiff_drms.name, key), sep='_'),
                 program='bsf_run_rnaseq_cuffdiff.py',
                 analysis=self)
             run_cuffdiff_drms.add_Executable(run_cuffdiff)
@@ -755,11 +754,11 @@ class Tuxedo(Analysis):
             # Create a new rnaseq_process_cuffdiff Executable.
 
             process_cuffdiff = Executable.from_Analysis(
-                name=string.join((process_cuffdiff_drms.name, key), sep='_'),
+                name=string.join(words=(process_cuffdiff_drms.name, key), sep='_'),
                 program='bsf_rnaseq_process_cuffdiff.R',
                 analysis=self)
             process_cuffdiff_drms.add_Executable(process_cuffdiff)
-            process_cuffdiff.dependencies.append(cuffdiff.name)
+            process_cuffdiff.dependencies.append(run_cuffdiff.name)
 
             # Set rnaseq_process_cuffdiff options.
 
@@ -770,7 +769,7 @@ class Tuxedo(Analysis):
 
             # Set rnaseq_process_cuffdiff arguments.
 
-            # None.
+            # None so far.
 
     def report(self):
 
