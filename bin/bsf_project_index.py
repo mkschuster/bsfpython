@@ -128,7 +128,7 @@ scan_directory(report_dict=report_dict, directory_root=project_directory, direct
 
 components = project_name.split('_')
 if re.search(pattern=r'^[0-9a-f]{32,32}$', string=components[-1]):
-    project_name = string.join(components[:-1], '_')
+    project_name = string.join(words=components[:-1], sep='_')
 
 # Now evaluate the report_dictionary.
 

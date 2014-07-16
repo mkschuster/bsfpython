@@ -92,7 +92,7 @@ class Reads(object):
             components = file_name.split('.')
             components[0] = components[0].split('_')
 
-            name = string.join(components[0][:-4], '_')
+            name = string.join(words=components[0][:-4], sep='_')
             barcode = components[0][-4]
             lane = components[0][-3]
             read = components[0][-2]
@@ -535,9 +535,9 @@ class PairedReads(object):
 
         if reads.file_type == 'CASAVA':
             if full:
-                name = string.join([reads.name, reads.barcode, reads.lane, reads.read, reads.chunk], '_')
+                name = string.join(words=(reads.name, reads.barcode, reads.lane, reads.read, reads.chunk), sep='_')
             else:
-                name = string.join([reads.name, reads.barcode, reads.lane], '_')
+                name = string.join(words=(reads.name, reads.barcode, reads.lane), sep='_')
         else:
             name = reads.name
 
@@ -597,7 +597,7 @@ class Sample(object):
 
             components = file_name.split('_')
 
-            name = string.join(components[1:], '_')
+            name = string.join(words=components[1:], sep='_')
 
             sample = cls(file_path=file_path, file_type=file_type, name=name)
 
@@ -920,7 +920,7 @@ class Project(object):
 
             components = file_name.split('_')
 
-            name = string.join(components[1:], '_')
+            name = string.join(words=components[1:], sep='_')
 
             project = cls(file_path=file_path, file_type=file_type, name=name)
 
@@ -1151,7 +1151,7 @@ class ProcessedRunFolder(object):
 
             components = file_name.split('_')
 
-            name = string.join(components[:], '_')
+            name = string.join(words=components[:], sep='_')
             prefix = components[0]
             flow_cell = components[1]
             version = components[2]

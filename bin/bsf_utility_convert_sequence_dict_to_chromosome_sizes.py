@@ -78,7 +78,7 @@ for line in input_file:
             sequence_length = column[3:]
             break
 
-    output_file.write(string.join((sequence_name, sequence_length), sep="\t") + "\n")
+    output_file.write(string.join(words=(sequence_name, sequence_length), sep="\t") + "\n")
 
 input_file.close()
 output_file.close()

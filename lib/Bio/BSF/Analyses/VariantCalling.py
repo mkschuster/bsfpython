@@ -76,7 +76,7 @@ class VariantCallingGATK(Analysis):
 
         # A "Bio.BSF.Analysis.VariantCalling.VariantCallingGATK" section specifies defaults for this BSF Analysis.
 
-        section = string.join((__name__, cls.__name__), sep='.')
+        section = string.join(words=(__name__, cls.__name__), sep='.')
         variant_calling.set_Configuration(variant_calling.configuration, section=section)
 
         return variant_calling
@@ -212,11 +212,11 @@ class VariantCallingGATK(Analysis):
 
         vqsr_dict = dict()
 
-        resource_option = string.join(('vqsr_resources', variation_type), sep='_')
+        resource_option = string.join(words=('vqsr_resources', variation_type), sep='_')
         if config_parser.has_option(section=config_section, option=resource_option):
             temporary_str = config_parser.get(section=config_section, option=resource_option)
             for resource in string.split(s=temporary_str, sep=','):
-                resource_section = string.join(('vqsr', variation_type, resource), sep='_')
+                resource_section = string.join(words=('vqsr', variation_type, resource), sep='_')
                 if config_parser.has_section(section=resource_section):
                     if resource in vqsr_dict:
                         resource_dict = vqsr_dict[resource]
@@ -500,10 +500,10 @@ class VariantCallingGATK(Analysis):
                     bwa_mem.add_OptionShort(key='R', value=read_group)
 
                 if len(reads1) and not len(reads2):
-                    bwa_mem.arguments.append(string.join(reads1, ','))
+                    bwa_mem.arguments.append(string.join(words=reads1, sep=','))
                 elif len(reads1) and len(reads2):
-                    bwa_mem.arguments.append(string.join(reads1, ','))
-                    bwa_mem.arguments.append(string.join(reads2, ','))
+                    bwa_mem.arguments.append(string.join(words=reads1, sep=','))
+                    bwa_mem.arguments.append(string.join(words=reads2, sep=','))
                 if len(reads2):
                     warning = 'Only second reads, but no first reads have been defined.'
                     warnings.warn(warning)
@@ -529,7 +529,7 @@ class VariantCallingGATK(Analysis):
                 # Create a bsf_run_bwa.py job to run the pickled object.
 
                 run_bwa = Executable.from_Analysis(
-                    name=string.join((vc_align_lane_drms.name, replicate_key), sep='_'),
+                    name=string.join(words=(vc_align_lane_drms.name, replicate_key), sep='_'),
                     program='bsf_run_bwa.py',
                     analysis=self)
                 vc_align_lane_drms.add_Executable(executable=run_bwa)
@@ -539,7 +539,7 @@ class VariantCallingGATK(Analysis):
                 run_bwa.add_OptionLong(key='pickler_path', value=pickler_path)
                 run_bwa.add_OptionLong(key='debug', value=str(self.debug))
 
-                prefix_lane = string.join((vc_process_lane_drms.name, replicate_key), sep='_')
+                prefix_lane = string.join(words=(vc_process_lane_drms.name, replicate_key), sep='_')
 
                 # Lane-specific file paths
 
@@ -822,7 +822,7 @@ class VariantCallingGATK(Analysis):
             #   Picard CollectAlignmentSummaryMetrics
             #   GATK HaplotypeCaller
 
-            prefix_sample = string.join((vc_process_sample_drms.name, sample.name), sep='_')
+            prefix_sample = string.join(words=(vc_process_sample_drms.name, sample.name), sep='_')
 
             file_path_sample = dict(
                 temporary_sample=prefix_sample + '_temporary',
@@ -1061,7 +1061,7 @@ class VariantCallingGATK(Analysis):
         #   GATK ApplyRecalibration for SNPs
         #   GATK ApplyRecalibration for INDELs
 
-        prefix_cohort = string.join((vc_process_cohort_drms.name, cohort_name), sep='_')
+        prefix_cohort = string.join(words=(vc_process_cohort_drms.name, cohort_name), sep='_')
 
         file_path_cohort = dict(
             temporary_cohort=prefix_cohort + '_temporary',

@@ -74,7 +74,7 @@ if data_read2 and data_read2 != '0':
 
 print 'Flow Cell Identifier: {}_{}'.format(irf.run_parameters.get_experiment_name(),
                                            irf.run_parameters.get_flow_cell_barcode())
-print 'Read Structure: {}'.format(string.join(run_format, sep=' + '))
+print 'Read Structure: {}'.format(string.join(words=run_format, sep=' + '))
 
 file_path_start = os.path.join(file_path, 'runParameters.xml')
 if os.path.exists(file_path_start):

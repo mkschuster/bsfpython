@@ -217,7 +217,7 @@ class ChIPSeq(Analysis):
 
         # A "Bio.BSF.Analysis.ChIPSeq" section specifies defaults for this BSF Analysis.
 
-        section = string.join((__name__, cls.__name__), sep='.')
+        section = string.join(words=(__name__, cls.__name__), sep='.')
         chipseq.set_Configuration(chipseq.configuration, section=section)
 
         return chipseq
@@ -575,11 +575,11 @@ class ChIPSeq(Analysis):
                         reads2.append(paired_reads.reads2.file_path)
 
                 if len(reads1) and not len(reads2):
-                    bowtie2.add_OptionShort(key='U', value=string.join(reads1, ','))
+                    bowtie2.add_OptionShort(key='U', value=string.join(words=reads1, sep=','))
                 elif len(reads1) and len(reads2):
-                    bowtie2.add_OptionShort(key='1', value=string.join(reads1, ','))
+                    bowtie2.add_OptionShort(key='1', value=string.join(words=reads1, sep=','))
                 if len(reads2):
-                    bowtie2.add_OptionShort(key='2', value=string.join(reads2, ','))
+                    bowtie2.add_OptionShort(key='2', value=string.join(words=reads2, sep=','))
 
                 # TODO: The following options are properties of the Sample,
                 # PairedReads and Reads objects.
@@ -2070,7 +2070,7 @@ class RunFastQC(Analysis):
 
         # A "Bio.BSF.Analysis.RunFastQC" section specifies defaults for this BSF Analysis.
 
-        section = string.join((__name__, cls.__name__), sep='.')
+        section = string.join(words=(__name__, cls.__name__), sep='.')
         run_fastqc.set_Configuration(run_fastqc.configuration, section=section)
 
         return run_fastqc
@@ -2336,7 +2336,7 @@ class RunFastQC(Analysis):
                     if paired_reads.reads2:
                         reads2.append(paired_reads.reads2.file_path)
 
-                fastqc.arguments.append(string.join(reads1 + reads2, ' '))
+                fastqc.arguments.append(string.join(words=reads1 + reads2, sep=' '))
 
         self.drms_list.append(fastqc_drms)
 
@@ -2479,7 +2479,7 @@ class RunBamToFastq(Analysis):
 
         # A "Bio.BSF.Analysis.RunBamToFastq" section specifies defaults for this BSF Analysis.
 
-        section = string.join((__name__, cls.__name__), sep='.')
+        section = string.join(words=(__name__, cls.__name__), sep='.')
         run_bam_to_fastq.set_Configuration(run_bam_to_fastq.configuration, section=section)
 
         return run_bam_to_fastq

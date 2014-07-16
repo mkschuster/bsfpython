@@ -618,7 +618,7 @@ class RunFolder(object):
 
         components = file_name.split('_')
 
-        irf = cls(file_path=file_path, file_type='Illumina', name=string.join(components[:], '_'),
+        irf = cls(file_path=file_path, file_type='Illumina', name=string.join(words=components[:], sep='_'),
                   date=components[0],
                   instrument=components[1],
                   run=components[2],

@@ -120,7 +120,7 @@ def submit(self, debug=0):
         if len(resource_list):
 
             command.append('-l')
-            command.append(string.join(resource_list, sep=','))
+            command.append(string.join(words=resource_list, sep=','))
 
         # Parallel environment
 
@@ -178,7 +178,7 @@ def submit(self, debug=0):
 
         if len(executable.dependencies):
             command.append('-hold_jid')
-            command.append(string.join(executable.dependencies, ','))
+            command.append(string.join(words=executable.dependencies, sep=','))
 
         command.extend(executable.command_list())
 

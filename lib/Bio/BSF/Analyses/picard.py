@@ -104,7 +104,7 @@ def extract_illumina_barcodes(config_file):
     analysis = Analysis.from_config_file(config_file=config_file)
 
     cp = analysis.configuration.config_parser
-    section = string.join((__name__, analysis.__name__), sep='.')
+    section = string.join(words=(__name__, analysis.__name__), sep='.')
 
     if cp.has_option(section=section, option='max_mismatches'):
         max_mismatches = cp.get(section=section, option='max_mismatches')
@@ -525,7 +525,7 @@ def illumina_to_bam(analysis):
     # Run Information of the Illumina Run Folder.
 
     if not analysis.project_name:
-        analysis.project_name = string.join((experiment_name, irf.run_information.flow_cell), sep='_')
+        analysis.project_name = string.join(words=(experiment_name, irf.run_information.flow_cell), sep='_')
 
     # In contrast to normal analyses that use the samples directory, this one needs to use the
     # sequences directory. Make sure an absolute path is defined, before Bio.BSF.Analysis.run
@@ -742,7 +742,7 @@ def bam_index_decoder(analysis):
             sample_dict['ProcessedRunFolder'] = analysis.project_name
             sample_dict['Project'] = row_dict['library_name']
             sample_dict['Sample'] = row_dict['sample_name']
-            sample_dict['Reads1'] = string.join((analysis.project_name, key, row_dict['sample_name']), sep='_')
+            sample_dict['Reads1'] = string.join(words=(analysis.project_name, key, row_dict['sample_name']), sep='_')
             sample_dict['File1'] = os.path.join(analysis.genome_directory,
                                                 '{}_{}_samples'.format(analysis.project_name, key),
                                                 '{}_{}#{}.bam'.format(analysis.project_name, key,

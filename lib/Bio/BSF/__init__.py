@@ -118,7 +118,7 @@ class Analysis(object):
 
         # A "Bio.BSF.Analysis.*" section specifies defaults for this BSF Analysis.
 
-        section = string.join((__name__, cls.__name__), sep='.')
+        section = string.join(words=(__name__, cls.__name__), sep='.')
         analysis.set_Configuration(analysis.configuration, section=section)
 
         return analysis
@@ -500,7 +500,7 @@ class Analysis(object):
         # The link_name consists of the absolute public_html directory,
         # the analysis-specific sub-directory, the project name and a 128 bit hexadecimal UUID string.
 
-        link_name = os.path.join(html_path, string.join([self.project_name, uuid.uuid4().hex], '_'))
+        link_name = os.path.join(html_path, string.join(words=(self.project_name, uuid.uuid4().hex), sep='_'))
 
         # While checking for already existing symbolic links,
         # the path_name holds the complete path for each link in the sub-directory.
@@ -1448,7 +1448,7 @@ class Default(object):
 
         default = Default.get_global_default()
 
-        return string.join((default.url_absolute_base(), default.url_relative_projects), sep='/')
+        return string.join(words=(default.url_absolute_base(), default.url_relative_projects), sep='/')
 
     @staticmethod
     def url_absolute_chip_seq():
@@ -1463,7 +1463,7 @@ class Default(object):
 
         default = Default.get_global_default()
 
-        return string.join((default.url_absolute_base(), default.url_relative_chip_seq), sep='/')
+        return string.join(words=(default.url_absolute_base(), default.url_relative_chip_seq), sep='/')
 
     @staticmethod
     def url_absolute_dna_seq():
@@ -1478,7 +1478,7 @@ class Default(object):
 
         default = Default.get_global_default()
 
-        return string.join((default.url_absolute_base(), default.url_relative_dna_seq), sep='/')
+        return string.join(words=(default.url_absolute_base(), default.url_relative_dna_seq), sep='/')
 
     @staticmethod
     def url_absolute_rna_seq():
@@ -1493,7 +1493,7 @@ class Default(object):
 
         default = Default.get_global_default()
 
-        return string.join((default.url_absolute_base(), default.url_relative_rna_seq), sep='/')
+        return string.join(words=(default.url_absolute_base(), default.url_relative_rna_seq), sep='/')
 
 
 class DRMS(object):
@@ -1557,7 +1557,7 @@ class DRMS(object):
 
         # A "Bio.BSF.DRMS" section specifies defaults for all BSF DRMS objects of a BSF Analysis.
 
-        section = string.join((__name__, cls.__name__), sep='.')
+        section = string.join(words=(__name__, cls.__name__), sep='.')
         drms.set_Configuration(configuration=analysis.configuration, section=section)
 
         if analysis.debug > 1:
@@ -1566,7 +1566,7 @@ class DRMS(object):
         # A "Bio.BSF.Analysis.*.DRMS" pseudo-class section specifies
         # BSF Analysis-specific options for the BSF DRMS.
 
-        section = string.join((analysis.configuration.section_from_instance(analysis), 'DRMS'), sep='.')
+        section = string.join(words=(analysis.configuration.section_from_instance(analysis), 'DRMS'), sep='.')
         drms.set_Configuration(configuration=analysis.configuration, section=section)
 
         if analysis.debug > 1:
@@ -1575,7 +1575,7 @@ class DRMS(object):
         # A "Bio.BSF.Analysis.*.DRMS.name" section specifies defaults
         # for a particular BSF DRMS objects of a BSF Analysis.
 
-        section = string.join((Configuration.section_from_instance(analysis), 'DRMS', drms.name), sep='.')
+        section = string.join(words=(Configuration.section_from_instance(analysis), 'DRMS', drms.name), sep='.')
         drms.set_Configuration(configuration=analysis.configuration, section=section)
 
         if analysis.debug > 1:
@@ -1922,7 +1922,7 @@ class DRMS(object):
 
         # Dynamically import the module specific for the configured DRMS implementation.
 
-        module = importlib.import_module(string.join((__name__, 'DRMS', self.implementation), sep='.'))
+        module = importlib.import_module(string.join(words=(__name__, 'DRMS', self.implementation), sep='.'))
 
         module.submit(self, debug=debug)
 
