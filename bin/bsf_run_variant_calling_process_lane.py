@@ -86,10 +86,10 @@ def run_gatk_realigner_target_creator(pickler_dict):
     :rtype: None
     """
 
-    run_picard_mark_duplicates(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['realigner_targets']):
         return
+
+    run_picard_mark_duplicates(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_realigner_target_creator']
     child_return_code = Runnable.run(executable=executable)
@@ -107,10 +107,10 @@ def run_gatk_indel_realigner(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_realigner_target_creator(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['realigned_bam']):
         return
+
+    run_gatk_realigner_target_creator(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_indel_realigner']
     child_return_code = Runnable.run(executable=executable)
@@ -136,10 +136,10 @@ def run_gatk_base_recalibrator_pre(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_indel_realigner(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['recalibration_table_pre']):
         return
+
+    run_gatk_indel_realigner(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_base_recalibrator_pre']
     child_return_code = Runnable.run(executable=executable)
@@ -157,10 +157,10 @@ def run_gatk_base_recalibrator_post(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_base_recalibrator_pre(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['recalibration_table_post']):
         return
+
+    run_gatk_base_recalibrator_pre(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_base_recalibrator_post']
     child_return_code = Runnable.run(executable=executable)
@@ -178,10 +178,10 @@ def run_gatk_analyze_covariates(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_base_recalibrator_post(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['recalibration_plot']):
         return
+
+    run_gatk_base_recalibrator_post(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_analyze_covariates']
     child_return_code = Runnable.run(executable=executable)
@@ -199,10 +199,10 @@ def run_gatk_print_reads(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_analyze_covariates(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['recalibrated_bam']):
         return
+
+    run_gatk_analyze_covariates(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_print_reads']
     child_return_code = Runnable.run(executable=executable)
@@ -226,10 +226,10 @@ def run_picard_collect_alignment_summary_metrics(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_print_reads(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['alignment_summary_metrics']):
         return
+
+    run_gatk_print_reads(pickler_dict=pickler_dict)
 
     executable = pickler_dict['picard_collect_alignment_summary_metrics']
     child_return_code = Runnable.run(executable=executable)

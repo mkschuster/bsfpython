@@ -71,10 +71,10 @@ def run_picard_mark_duplicates(pickler_dict):
     :rtype: None
     """
 
-    run_picard_merge_sam_files(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['duplicates_marked_bam']):
         return
+
+    run_picard_merge_sam_files(pickler_dict=pickler_dict)
 
     # The Picard MarkDuplicates step may be skipped.
     if not 'picard_mark_duplicates' in pickler_dict:
@@ -104,10 +104,10 @@ def run_gatk_realigner_target_creator(pickler_dict):
     :rtype: None
     """
 
-    run_picard_mark_duplicates(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['realigner_targets']):
         return
+
+    run_picard_mark_duplicates(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_realigner_target_creator']
     child_return_code = Runnable.run(executable=executable)
@@ -125,10 +125,10 @@ def run_gatk_indel_realigner(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_realigner_target_creator(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['realigned_bam']):
         return
+
+    run_gatk_realigner_target_creator(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_indel_realigner']
     child_return_code = Runnable.run(executable=executable)
@@ -161,10 +161,10 @@ def run_picard_collect_alignment_summary_metrics(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_indel_realigner(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['alignment_summary_metrics']):
         return
+
+    run_gatk_indel_realigner(pickler_dict=pickler_dict)
 
     executable = pickler_dict['picard_collect_alignment_summary_metrics']
     child_return_code = Runnable.run(executable=executable)
@@ -182,10 +182,10 @@ def run_gatk_haplotype_caller(pickler_dict):
     :rtype: None
     """
 
-    run_picard_collect_alignment_summary_metrics(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['raw_variants']):
         return
+
+    run_picard_collect_alignment_summary_metrics(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_haplotype_caller']
     child_return_code = Runnable.run(executable=executable)

@@ -72,10 +72,10 @@ def run_gatk_genotype_gvcfs(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_combine_gvcfs(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['gvcf_genotyped_raw']):
         return
+
+    run_gatk_combine_gvcfs(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_genotype_gvcfs']
     child_return_code = Runnable.run(executable=executable)
@@ -93,10 +93,10 @@ def run_gatk_variant_recalibrator_snp(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_genotype_gvcfs(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['recalibration_snp']):
         return
+
+    run_gatk_genotype_gvcfs(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_variant_recalibrator_snp']
     child_return_code = Runnable.run(executable=executable)
@@ -114,10 +114,10 @@ def run_gatk_variant_recalibrator_indel(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_variant_recalibrator_snp(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['recalibration_indel']):
         return
+
+    run_gatk_variant_recalibrator_snp(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_variant_recalibrator_indel']
     child_return_code = Runnable.run(executable=executable)
@@ -135,10 +135,10 @@ def run_gatk_apply_recalibration_snp(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_variant_recalibrator_indel(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['gvcf_recalibrated_snp_raw_indel']):
         return
+
+    run_gatk_variant_recalibrator_indel(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_apply_recalibration_snp']
     child_return_code = Runnable.run(executable=executable)
@@ -156,10 +156,10 @@ def run_gatk_apply_recalibration_indel(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_apply_recalibration_snp(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['gvcf_recalibrated_snp_recalibrated_indel']):
         return
+
+    run_gatk_apply_recalibration_snp(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_apply_recalibration_indel']
     child_return_code = Runnable.run(executable=executable)
@@ -177,10 +177,10 @@ def run_snpeff(pickler_dict):
     :rtype: None
     """
 
-    run_gatk_apply_recalibration_indel(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['snpeff_annotated']):
         return
+
+    run_gatk_apply_recalibration_indel(pickler_dict=pickler_dict)
 
     executable = pickler_dict['snpeff']
     child_return_code = Runnable.run(executable=executable)
@@ -198,10 +198,10 @@ def run_gatk_variant_annotator(pickler_dict):
     :rtype: None
     """
 
-    run_snpeff(pickler_dict=pickler_dict)
-
     if os.path.exists(pickler_dict['file_path_dict']['gvcf_annotated']):
         return
+
+    run_snpeff(pickler_dict=pickler_dict)
 
     executable = pickler_dict['gatk_variant_annotator']
     child_return_code = Runnable.run(executable=executable)
@@ -218,6 +218,16 @@ def run_gatk_select_variants(pickler_dict):
     :return: Nothing
     :rtype: None
     """
+
+    # Check that all files of this function have already been created.
+
+    complete = True
+    for sample_name in pickler_dict['sample_names']:
+        if not os.path.exists(pickler_dict['file_path_dict']['sample_vcf_' + sample_name]):
+            complete = False
+            break
+    if complete:
+        return
 
     run_gatk_variant_annotator(pickler_dict=pickler_dict)
 
@@ -243,6 +253,16 @@ def run_gatk_variants_to_table(pickler_dict):
     :return: Nothing
     :rtype: None
     """
+
+    # Check that all files of this function have already been created.
+
+    complete = True
+    for sample_name in pickler_dict['sample_names']:
+        if not os.path.exists(pickler_dict['file_path_dict']['sample_csv_' + sample_name]):
+            complete = False
+            break
+    if complete:
+        return
 
     run_gatk_select_variants(pickler_dict=pickler_dict)
 
