@@ -779,7 +779,8 @@ class ChIPSeq(Analysis):
                             # Set process_macs14 options.
                             # Set process_macs14 arguments.
 
-                            process_macs14.arguments.append(macs14.options['name'][0].value)
+                            # Specify the output path as in the macs14 --name option.
+                            process_macs14.arguments.append(os.path.join('.', prefix, prefix))
                             process_macs14.arguments.append(genome_sizes)
 
     def _create_Macs2_jobs(self):
