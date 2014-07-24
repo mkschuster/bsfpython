@@ -837,7 +837,8 @@ class VariantCallingGATK(Analysis):
                 realigned_bam=prefix_sample + '_realigned.bam',
                 realigned_bai=prefix_sample + '_realigned.bai',
                 alignment_summary_metrics=prefix_sample + '_alignment_summary_metrics.csv',
-                raw_variants=prefix_sample + '_raw_variants.vcf')
+                raw_variants_gvcf_vcf=prefix_sample + '_raw_variants_gvcf.vcf',
+                raw_variants_gvcf_idx=prefix_sample + '_raw_variants_gvcf.vcf.idx')
 
             # Sample-specific pickler_dict
 
@@ -1010,6 +1011,7 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_OptionLong(key='intervals', value=interval)
             # TODO: The number of threads should be configurable.
             # sub_command.add_OptionLong(key='num_cpu_threads_per_data_thread', value='1')
+            sub_command.add_OptionLong(key='pair_hmm_implementation', value='VECTOR_LOGLESS_CACHING')
             sub_command.add_OptionLong(key='genotyping_mode', value='DISCOVERY')
             sub_command.add_OptionLong(key='standard_min_confidence_threshold_for_emitting', value='10')
             sub_command.add_OptionLong(key='standard_min_confidence_threshold_for_calling', value='30')
@@ -1017,7 +1019,7 @@ class VariantCallingGATK(Analysis):
             if known_sites_discovery:
                 sub_command.add_OptionLong(key='dbsnp', value=known_sites_discovery)
             sub_command.add_OptionLong(key='input_file', value=file_path_sample['realigned_bam'])
-            sub_command.add_OptionLong(key='out', value=file_path_sample['raw_variants'])
+            sub_command.add_OptionLong(key='out', value=file_path_sample['raw_variants_gvcf_vcf'])
             # Parameter to pass to the VCF/BCF IndexCreator
             sub_command.add_OptionLong(key='variant_index_type', value='LINEAR')
             sub_command.add_OptionLong(key='variant_index_parameter', value='128000')
@@ -1050,7 +1052,7 @@ class VariantCallingGATK(Analysis):
             # Record dependencies for the next stage.
             vc_process_cohort_dependencies.append(vc_process_sample.name)
             # Add the result of the bsf_run_variant_calling_process_sample.py script.
-            vc_process_cohort_replicates.append(file_path_sample['raw_variants'])
+            vc_process_cohort_replicates.append(file_path_sample['raw_variants_gvcf_vcf'])
 
         # Step 3: Process per cohort.
         #
@@ -1065,13 +1067,19 @@ class VariantCallingGATK(Analysis):
 
         file_path_cohort = dict(
             temporary_cohort=prefix_cohort + '_temporary',
-            gvcf_combined=prefix_cohort + '_gvcf_combined.vcf',
-            gvcf_genotyped_raw=prefix_cohort + '_gvcf_genotyped_raw_snp_raw_indel.vcf',
-            gvcf_recalibrated_snp_raw_indel=prefix_cohort + '_gvcf_recalibrated_snp_raw_indel.vcf',
-            gvcf_recalibrated_snp_recalibrated_indel=prefix_cohort + '_gvcf_recalibrated_snp_recalibrated_indel.vcf',
-            snpeff_annotated=prefix_cohort + '_snpeff.vcf',
+            combined_gvcf_vcf=prefix_cohort + '_combined_gvcf.vcf',
+            combined_gvcf_idx=prefix_cohort + '_combined_gvcf.vcf.idx',
+            genotyped_raw_vcf=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf',
+            genotyped_raw_idx=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.idx',
+            recalibrated_snp_raw_indel_vcf=prefix_cohort + '_recalibrated_snp_raw_indel.vcf',
+            recalibrated_snp_raw_indel_idx=prefix_cohort + '_recalibrated_snp_raw_indel.vcf.idx',
+            recalibrated_snp_recalibrated_indel_vcf=prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf',
+            recalibrated_snp_recalibrated_indel_idx=prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.idx',
+            snpeff_vcf=prefix_cohort + '_snpeff.vcf',
+            snpeff_idx=prefix_cohort + '_snpeff.vcf.idx',
             snpeff_stats=prefix_cohort + '_snpeff_summary.html',
-            gvcf_annotated=prefix_cohort + '_gvcf_annotated.vcf',
+            annotated_vcf=prefix_cohort + '_annotated.vcf',
+            annotated_idx=prefix_cohort + '_annotated.vcf.idx',
             recalibration_indel=prefix_cohort + '_recalibration_indel.recal',
             recalibration_snp=prefix_cohort + '_recalibration_snp.recal',
             tranches_indel=prefix_cohort + '_recalibration_indel.tranches',
@@ -1106,7 +1114,7 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionLong(key='intervals', value=interval)
         for file_path in vc_process_cohort_replicates:
             sub_command.add_OptionLong(key='variant', value=file_path)
-        sub_command.add_OptionLong(key='out', value=file_path_cohort['gvcf_combined'])
+        sub_command.add_OptionLong(key='out', value=file_path_cohort['combined_gvcf_vcf'])
 
         pickler_dict_process_cohort[java_process.name] = java_process
 
@@ -1129,8 +1137,8 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionLong(key='intervals', value=interval)
         if known_sites_discovery:
             sub_command.add_OptionLong(key='dbsnp', value=known_sites_discovery)
-        sub_command.add_OptionLong(key='variant', value=file_path_cohort['gvcf_combined'])
-        sub_command.add_OptionLong(key='out', value=file_path_cohort['gvcf_genotyped_raw'])
+        sub_command.add_OptionLong(key='variant', value=file_path_cohort['combined_gvcf_vcf'])
+        sub_command.add_OptionLong(key='out', value=file_path_cohort['genotyped_raw_vcf'])
 
         pickler_dict_process_cohort[java_process.name] = java_process
 
@@ -1162,7 +1170,7 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionLong(key=resource_option, value=vqsr_resources_snp_dict[resource]['file_path'])
         for annotation in vqsr_annotations_snp_list:
             sub_command.add_OptionLong(key='use_annotation', value=annotation)
-        sub_command.add_OptionLong(key='input', value=file_path_cohort['gvcf_genotyped_raw'])
+        sub_command.add_OptionLong(key='input', value=file_path_cohort['genotyped_raw_vcf'])
         sub_command.add_OptionLong(key='recal_file', value=file_path_cohort['recalibration_snp'])
         sub_command.add_OptionLong(key='tranches_file', value=file_path_cohort['tranches_snp'])
         sub_command.add_OptionLong(key='rscript_file', value=file_path_cohort['plots_snp'])
@@ -1198,7 +1206,7 @@ class VariantCallingGATK(Analysis):
         for annotation in vqsr_annotations_indel_list:
             sub_command.add_OptionLong(key='use_annotation', value=annotation)
         sub_command.add_OptionLong(key='maxGaussians', value='4')  # TODO: Would be good to have this configurable.
-        sub_command.add_OptionLong(key='input', value=file_path_cohort['gvcf_genotyped_raw'])
+        sub_command.add_OptionLong(key='input', value=file_path_cohort['genotyped_raw_vcf'])
         sub_command.add_OptionLong(key='recal_file', value=file_path_cohort['recalibration_indel'])
         sub_command.add_OptionLong(key='tranches_file', value=file_path_cohort['tranches_indel'])
         sub_command.add_OptionLong(key='rscript_file', value=file_path_cohort['plots_indel'])
@@ -1223,10 +1231,10 @@ class VariantCallingGATK(Analysis):
         for interval in include_intervals_list:
             sub_command.add_OptionLong(key='intervals', value=interval)
         sub_command.add_OptionLong(key='mode', value='SNP')
-        sub_command.add_OptionLong(key='input', value=file_path_cohort['gvcf_genotyped_raw'])
+        sub_command.add_OptionLong(key='input', value=file_path_cohort['genotyped_raw_vcf'])
         sub_command.add_OptionLong(key='recal_file', value=file_path_cohort['recalibration_snp'])
         sub_command.add_OptionLong(key='tranches_file', value=file_path_cohort['tranches_snp'])
-        sub_command.add_OptionLong(key='out', value=file_path_cohort['gvcf_recalibrated_snp_raw_indel'])
+        sub_command.add_OptionLong(key='out', value=file_path_cohort['recalibrated_snp_raw_indel_vcf'])
         # TODO: The lodCutoff (VQSLOD score) filter is not applied for the moment.
         if truth_sensitivity_filter_level_snp:
             sub_command.add_OptionLong(key='ts_filter_level', value=truth_sensitivity_filter_level_snp)
@@ -1251,10 +1259,10 @@ class VariantCallingGATK(Analysis):
         for interval in include_intervals_list:
             sub_command.add_OptionLong(key='intervals', value=interval)
         sub_command.add_OptionLong(key='mode', value='INDEL')
-        sub_command.add_OptionLong(key='input', value=file_path_cohort['gvcf_recalibrated_snp_raw_indel'])
+        sub_command.add_OptionLong(key='input', value=file_path_cohort['recalibrated_snp_raw_indel_vcf'])
         sub_command.add_OptionLong(key='recal_file', value=file_path_cohort['recalibration_indel'])
         sub_command.add_OptionLong(key='tranches_file', value=file_path_cohort['tranches_indel'])
-        sub_command.add_OptionLong(key='out', value=file_path_cohort['gvcf_recalibrated_snp_recalibrated_indel'])
+        sub_command.add_OptionLong(key='out', value=file_path_cohort['recalibrated_snp_recalibrated_indel_vcf'])
         # TODO: The lodCutoff (VQSLOD score) filter is not applied for the moment.
         if truth_sensitivity_filter_level_indel:
             sub_command.add_OptionLong(key='ts_filter_level', value=truth_sensitivity_filter_level_indel)
@@ -1270,7 +1278,7 @@ class VariantCallingGATK(Analysis):
         java_process.add_OptionShort(key='jar', value=os.path.join(classpath_snpeff, 'snpEff.jar'))
         java_process.add_SwitchShort(key='Xmx6G')
         java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_cohort['temporary_cohort'])
-        java_process.stdout_path = file_path_cohort['snpeff_annotated']
+        java_process.stdout_path = file_path_cohort['snpeff_vcf']
 
         sub_command = java_process.sub_command
         sub_command.add_SwitchShort(key='download')
@@ -1279,7 +1287,7 @@ class VariantCallingGATK(Analysis):
         sub_command.add_OptionShort(key='config', value=os.path.join(classpath_snpeff, 'snpEff.config'))
 
         sub_command.arguments.append(snpeff_genome_version)
-        sub_command.arguments.append(file_path_cohort['gvcf_recalibrated_snp_recalibrated_indel'])
+        sub_command.arguments.append(file_path_cohort['recalibrated_snp_recalibrated_indel_vcf'])
 
         pickler_dict_process_cohort[java_process.name] = java_process
 
@@ -1302,10 +1310,12 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionLong(key='intervals', value=interval)
         if known_sites_discovery:
             sub_command.add_OptionLong(key='dbsnp', value=known_sites_discovery)
-        sub_command.add_OptionLong(key='variant', value=file_path_cohort['gvcf_recalibrated_snp_recalibrated_indel'])
+        sub_command.add_OptionLong(key='variant', value=file_path_cohort['recalibrated_snp_recalibrated_indel_vcf'])
+        # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
+        # sub_command.add_OptionLong(key='annotation', value='AlleleBalanceBySample')
         sub_command.add_OptionLong(key='annotation', value='SnpEff')
-        sub_command.add_OptionLong(key='snpEffFile', value=file_path_cohort['snpeff_annotated'])
-        sub_command.add_OptionLong(key='out', value=file_path_cohort['gvcf_annotated'])
+        sub_command.add_OptionLong(key='snpEffFile', value=file_path_cohort['snpeff_vcf'])
+        sub_command.add_OptionLong(key='out', value=file_path_cohort['annotated_vcf'])
 
         pickler_dict_process_cohort[java_process.name] = java_process
 
@@ -1337,7 +1347,7 @@ class VariantCallingGATK(Analysis):
             for interval in include_intervals_list:
                 sub_command.add_OptionLong(key='intervals', value=interval)
 
-            sub_command.add_OptionLong(key='variant', value=file_path_cohort['gvcf_annotated'])
+            sub_command.add_OptionLong(key='variant', value=file_path_cohort['annotated_vcf'])
             sub_command.add_OptionLong(key='out', value=file_path_cohort['sample_vcf_' + sample.name])
             sub_command.add_OptionLong(key='sample_name', value=sample.name)
             sub_command.add_SwitchLong(key='excludeNonVariants')

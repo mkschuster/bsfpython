@@ -182,7 +182,7 @@ def run_gatk_haplotype_caller(pickler_dict):
     :rtype: None
     """
 
-    if os.path.exists(pickler_dict['file_path_dict']['raw_variants']):
+    if os.path.exists(pickler_dict['file_path_dict']['raw_variants_gvcf_idx']):
         return
 
     run_picard_collect_alignment_summary_metrics(pickler_dict=pickler_dict)

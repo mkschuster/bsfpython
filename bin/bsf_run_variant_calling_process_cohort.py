@@ -53,7 +53,7 @@ def run_gatk_combine_gvcfs(pickler_dict):
     :rtype: None
     """
 
-    if os.path.exists(pickler_dict['file_path_dict']['gvcf_combined']):
+    if os.path.exists(pickler_dict['file_path_dict']['combined_gvcf_idx']):
         return
 
     executable = pickler_dict['gatk_combine_gvcfs']
@@ -72,7 +72,7 @@ def run_gatk_genotype_gvcfs(pickler_dict):
     :rtype: None
     """
 
-    if os.path.exists(pickler_dict['file_path_dict']['gvcf_genotyped_raw']):
+    if os.path.exists(pickler_dict['file_path_dict']['genotyped_raw_idx']):
         return
 
     run_gatk_combine_gvcfs(pickler_dict=pickler_dict)
@@ -135,7 +135,7 @@ def run_gatk_apply_recalibration_snp(pickler_dict):
     :rtype: None
     """
 
-    if os.path.exists(pickler_dict['file_path_dict']['gvcf_recalibrated_snp_raw_indel']):
+    if os.path.exists(pickler_dict['file_path_dict']['recalibrated_snp_raw_indel_idx']):
         return
 
     run_gatk_variant_recalibrator_indel(pickler_dict=pickler_dict)
@@ -156,7 +156,7 @@ def run_gatk_apply_recalibration_indel(pickler_dict):
     :rtype: None
     """
 
-    if os.path.exists(pickler_dict['file_path_dict']['gvcf_recalibrated_snp_recalibrated_indel']):
+    if os.path.exists(pickler_dict['file_path_dict']['recalibrated_snp_recalibrated_indel_idx']):
         return
 
     run_gatk_apply_recalibration_snp(pickler_dict=pickler_dict)
@@ -177,7 +177,7 @@ def run_snpeff(pickler_dict):
     :rtype: None
     """
 
-    if os.path.exists(pickler_dict['file_path_dict']['snpeff_annotated']):
+    if os.path.exists(pickler_dict['file_path_dict']['snpeff_vcf']):
         return
 
     run_gatk_apply_recalibration_indel(pickler_dict=pickler_dict)
@@ -198,7 +198,7 @@ def run_gatk_variant_annotator(pickler_dict):
     :rtype: None
     """
 
-    if os.path.exists(pickler_dict['file_path_dict']['gvcf_annotated']):
+    if os.path.exists(pickler_dict['file_path_dict']['annotated_idx']):
         return
 
     run_snpeff(pickler_dict=pickler_dict)
