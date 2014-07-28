@@ -917,7 +917,7 @@ class Tuxedo(Analysis):
 
         track_output += 'track Alignments\n'
         track_output += 'shortLabel Alignments\n'
-        track_output += 'longLabel Tophat2 alignments tracks\n'
+        track_output += 'longLabel TopHat RNA-Seq read alignments\n'
         track_output += 'visibility hide\n'
         track_output += 'superTrack on\n'
         track_output += 'group alignments\n'
@@ -925,15 +925,15 @@ class Tuxedo(Analysis):
 
         track_output += 'track Coverage\n'
         track_output += 'shortLabel Coverage\n'
-        track_output += 'longLabel TopHat alignment coverage\n'
-        track_output += 'visibility full\n'  # full or show?
+        track_output += 'longLabel TopHat RNA-Seq alignment coverage\n'
+        track_output += 'visibility full\n'
         track_output += 'superTrack on\n'
         track_output += 'group coverage\n'
         track_output += '\n'
 
         track_output += 'track Deletions\n'
         track_output += 'shortLabel Deletions\n'
-        track_output += 'longLabel Tophat2 deletions tracks\n'
+        track_output += 'longLabel TopHat RNA-Seq deletions\n'
         track_output += 'visibility hide\n'
         track_output += 'superTrack on\n'
         track_output += 'group alignments\n'
@@ -941,7 +941,7 @@ class Tuxedo(Analysis):
 
         track_output += 'track Insertions\n'
         track_output += 'shortLabel Insertions\n'
-        track_output += 'longLabel Tophat2 insertions tracks\n'
+        track_output += 'longLabel TopHat RNA-Seq insertions\n'
         track_output += 'visibility hide\n'
         track_output += 'superTrack on\n'
         track_output += 'group alignments\n'
@@ -949,7 +949,7 @@ class Tuxedo(Analysis):
 
         track_output += 'track Junctions\n'
         track_output += 'shortLabel Junctions\n'
-        track_output += 'longLabel Tophat2 exon junctions tracks\n'
+        track_output += 'longLabel TopHat RNA-Seq splice junctions\n'
         track_output += 'visibility show\n'
         track_output += 'superTrack on\n'
         track_output += 'group alignments\n'
@@ -981,12 +981,12 @@ class Tuxedo(Analysis):
 
                 # Common trackDb settings.
 
-                track_output += 'track alignments_{}\n'. \
+                track_output += 'track {}_alignments\n'. \
                     format(replicate_key)
                 track_output += 'type bam\n'
-                track_output += 'shortLabel alignments_{}\n'. \
+                track_output += 'shortLabel {}_alignments\n'. \
                     format(replicate_key)
-                track_output += 'longLabel {} RNA-Seq read alignments\n'. \
+                track_output += 'longLabel {} TopHat RNA-Seq read alignments\n'. \
                     format(replicate_key)
                 track_output += 'bigDataUrl ./rnaseq_tophat_{}/accepted_hits.bam\n'. \
                     format(replicate_key)
@@ -1013,14 +1013,14 @@ class Tuxedo(Analysis):
 
                 # Common trackDB settings.
 
-                track_output += 'track coverage_{}\n'. \
+                track_output += 'track {}_coverage\n'. \
                     format(replicate_key)
                 # TODO: The bigWig type must declare the expected signal range.
                 # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
                 track_output += 'type bigWig\n'
-                track_output += 'shortLabel coverage_{}\n'. \
+                track_output += 'shortLabel {}_coverage\n'. \
                     format(replicate_key)
-                track_output += 'longLabel {} RNA-Seq alignment coverage\n'. \
+                track_output += 'longLabel {} TopHat RNA-Seq alignment coverage\n'. \
                     format(replicate_key)
                 track_output += 'bigDataUrl ./rnaseq_tophat_{}/accepted_hits.bw\n'. \
                     format(replicate_key)
@@ -1058,12 +1058,12 @@ class Tuxedo(Analysis):
                 # Add a trackDB entry for each deletions.bb file.
                 #
 
-                track_output += 'track deletions_{}\n'. \
+                track_output += 'track {}_deletions\n'. \
                     format(replicate_key)
                 track_output += 'type bigBed\n'
-                track_output += 'shortLabel deletions_{}\n'. \
+                track_output += 'shortLabel {}_deletions\n'. \
                     format(replicate_key)
-                track_output += 'longLabel RNA-Seq deletions for {}\n'. \
+                track_output += 'longLabel {} TopHat RNA-Seq deletions\n'. \
                     format(replicate_key)
                 track_output += 'bigDataUrl ./rnaseq_tophat_{}/deletions.bb\n'. \
                     format(replicate_key)
@@ -1085,9 +1085,9 @@ class Tuxedo(Analysis):
                 track_output += 'track insertions_{}\n'. \
                     format(replicate_key)
                 track_output += 'type bigBed\n'
-                track_output += 'shortLabel insertions_{}\n'. \
+                track_output += 'shortLabel {}_insertions\n'. \
                     format(replicate_key)
-                track_output += 'longLabel RNA-Seq insertions for {}\n'. \
+                track_output += 'longLabel {} TopHat RNA-Seq insertions\n'. \
                     format(replicate_key)
                 track_output += 'bigDataUrl ./rnaseq_tophat_{}/insertions.bb\n'. \
                     format(replicate_key)
@@ -1106,12 +1106,12 @@ class Tuxedo(Analysis):
 
                 # Junctions
 
-                track_output += 'track junctions_{}\n'. \
+                track_output += 'track {}_junctions\n'. \
                     format(replicate_key)
                 track_output += 'type bigBed\n'
-                track_output += 'shortLabel junctions_{}\n'. \
+                track_output += 'shortLabel {}_junctions\n'. \
                     format(replicate_key)
-                track_output += 'longLabel RNA-Seq junctions for {}\n'. \
+                track_output += 'longLabel {} TopHat RNA-Seq splice junctions\n'. \
                     format(replicate_key)
                 track_output += 'bigDataUrl ./rnaseq_tophat_{}/junctions.bb\n'. \
                     format(replicate_key)
@@ -1141,9 +1141,9 @@ class Tuxedo(Analysis):
                 # UCSC track dictionary.
 
                 track_dict = dict()
-                track_dict['name'] = 'transcripts_{}'. \
+                track_dict['name'] = '{}_transcripts'. \
                     format(replicate_key)
-                track_dict['description'] = '"Cufflinks transcript assembly of {}"'. \
+                track_dict['description'] = '"{} Cufflinks RNA-Seq transcript assembly"'. \
                     format(replicate_key)
                 track_dict['track_type'] = 'gtf'
                 track_dict['visibility'] = '3'  # Visibility pack
