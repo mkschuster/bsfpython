@@ -197,8 +197,12 @@ class VariantCallingGATK(Analysis):
     def _read_vqsr_configuration(self, variation_type=None, gatk_bundle_version=None):
         """Private method to read variant quality score recalibration (VQSR) configuration information.
 
+        :param self: BSF VariantCallingGATK
+        :type self: VariantCallingGATK
         :param variation_type: Variation type 'indel' or 'snp'
         :type variation_type: str
+        :param gatk_bundle_version: GATK bundle version
+        :type gatk_bundle_version: str
         :return: :rtype: Python dict of Python str (resource name) and Python dict values
         :rtype: dict
         """
@@ -1310,6 +1314,23 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionLong(key='intervals', value=interval)
         if known_sites_discovery:
             sub_command.add_OptionLong(key='dbsnp', value=known_sites_discovery)
+            # Re-define the dbSNP file as resource and import as set of INFO fields.
+            sub_command.add_OptionLong(key='resource:db_snp', value=known_sites_discovery)
+            sub_command.add_OptionLong(key='expression', value='db_snp.CAF')
+            sub_command.add_OptionLong(key='expression', value='db_snp.COMMON')
+            sub_command.add_OptionLong(key='expression', value='db_snp.CLNDBN')
+            sub_command.add_OptionLong(key='expression', value='db_snp.CLNDSDBID')
+            sub_command.add_OptionLong(key='expression', value='db_snp.CLNHGVS')
+            sub_command.add_OptionLong(key='expression', value='db_snp.G5')
+            sub_command.add_OptionLong(key='expression', value='db_snp.MUT')
+            sub_command.add_OptionLong(key='expression', value='db_snp.OM')
+            sub_command.add_OptionLong(key='expression', value='db_snp.PM')
+            sub_command.add_OptionLong(key='expression', value='db_snp.SAO')
+            sub_command.add_OptionLong(key='expression', value='db_snp.SSR')
+            sub_command.add_OptionLong(key='expression', value='db_snp.VC')
+            sub_command.add_OptionLong(key='expression', value='db_snp.VLD')
+            sub_command.add_OptionLong(key='expression', value='db_snp.dbSNPBuildID')
+
         sub_command.add_OptionLong(key='variant', value=file_path_cohort['recalibrated_snp_recalibrated_indel_vcf'])
         # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
         # sub_command.add_OptionLong(key='annotation', value='AlleleBalanceBySample')
@@ -1378,6 +1399,7 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionLong(key='out', value=file_path_cohort['sample_csv_' + sample.name])
             sub_command.add_SwitchLong(key='allowMissingData')
             sub_command.add_SwitchLong(key='showFiltered')
+            # Set of standard VCF fields.
             sub_command.add_OptionLong(key='fields', value='CHROM')
             sub_command.add_OptionLong(key='fields', value='POS')
             sub_command.add_OptionLong(key='fields', value='ID')
@@ -1385,13 +1407,15 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionLong(key='fields', value='ALT')
             sub_command.add_OptionLong(key='fields', value='QUAL')
             sub_command.add_OptionLong(key='fields', value='FILTER')
-            sub_command.add_OptionLong(key='fields', value='AF')
+            #
             sub_command.add_OptionLong(key='fields', value='VQSLOD')
+            sub_command.add_OptionLong(key='fields', value='AF')
             sub_command.add_OptionLong(key='genotypeFields', value='GT')
             sub_command.add_OptionLong(key='genotypeFields', value='AD')
             sub_command.add_OptionLong(key='genotypeFields', value='DP')
             sub_command.add_OptionLong(key='genotypeFields', value='GQ')
             sub_command.add_OptionLong(key='genotypeFields', value='PL')
+            # Set of snpEff fields.
             sub_command.add_OptionLong(key='fields', value='SNPEFF_EFFECT')
             sub_command.add_OptionLong(key='fields', value='SNPEFF_IMPACT')
             sub_command.add_OptionLong(key='fields', value='SNPEFF_FUNCTIONAL_CLASS')
@@ -1401,6 +1425,21 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionLong(key='fields', value='SNPEFF_GENE_BIOTYPE')
             sub_command.add_OptionLong(key='fields', value='SNPEFF_TRANSCRIPT_ID')
             sub_command.add_OptionLong(key='fields', value='SNPEFF_EXON_ID')
+            # Set of dbSNP resource INFO fields.
+            sub_command.add_OptionLong(key='fields', value='db_snp.CAF')
+            sub_command.add_OptionLong(key='fields', value='db_snp.COMMON')
+            sub_command.add_OptionLong(key='fields', value='db_snp.CLNDBN')
+            sub_command.add_OptionLong(key='fields', value='db_snp.CLNDSDBID')
+            sub_command.add_OptionLong(key='fields', value='db_snp.CLNHGVS')
+            sub_command.add_OptionLong(key='fields', value='db_snp.G5')
+            sub_command.add_OptionLong(key='fields', value='db_snp.MUT')
+            sub_command.add_OptionLong(key='fields', value='db_snp.OM')
+            sub_command.add_OptionLong(key='fields', value='db_snp.PM')
+            sub_command.add_OptionLong(key='fields', value='db_snp.SAO')
+            sub_command.add_OptionLong(key='fields', value='db_snp.SSR')
+            sub_command.add_OptionLong(key='fields', value='db_snp.VC')
+            sub_command.add_OptionLong(key='fields', value='db_snp.VLD')
+            sub_command.add_OptionLong(key='fields', value='db_snp.dbSNPBuildID')
 
             pickler_dict_process_cohort[java_process.name] = java_process
 
