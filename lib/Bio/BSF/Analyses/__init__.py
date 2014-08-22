@@ -1183,7 +1183,7 @@ class ChIPSeq(Analysis):
             format(Default.url_absolute_projects(), link_name)
 
         output += '<p>\n'
-        output += 'View Bowtie2 <strong>read alignments</strong> tracks for each sample\n'
+        output += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
         output += 'in their genomic context via the project-specific\n'
         output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'. \
             format(Defaults.web.ucsc_track_url(options_dict=options_dict, host_name=default.ucsc_host_name),
@@ -1361,10 +1361,10 @@ class ChIPSeq(Analysis):
 
                 # Common trackDb settings.
 
-                track_output += 'track Alignments_{}\n'.format(replicate_key)
+                track_output += 'track Alignment_{}\n'.format(replicate_key)
                 track_output += 'type bam\n'
-                track_output += 'shortLabel Alignments_{}\n'.format(replicate_key)
-                track_output += 'longLabel Bowtie2 alignments of {}\n'. \
+                track_output += 'shortLabel Alignment_{}\n'.format(replicate_key)
+                track_output += 'longLabel Bowtie2 alignment of {}\n'. \
                     format(replicate_key)
                 track_output += 'bigDataUrl ./{}.aligned.sorted.bam\n'. \
                     format(replicate_key)
@@ -1438,7 +1438,7 @@ class ChIPSeq(Analysis):
         output += 'Next-Generation Sequencing reads are aligned with the short read aligner\n'
         output += '<strong><a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie2</a></strong>,\n'
         output += 'before peaks are called with <a href="http://liulab.dfci.harvard.edu/MACS/index.html">MACS 2</a>\n'
-        output += 'on a treatment and control sample pair.\n'
+        output += 'on an enrichment and background sample pair.\n'
         output += '</p>\n'
         output += '\n'
 
@@ -1450,7 +1450,7 @@ class ChIPSeq(Analysis):
             format(Default.url_absolute_projects(), link_name)
 
         output += '<p>\n'
-        output += 'View Bowtie2 <strong>read alignments</strong> tracks for each sample\n'
+        output += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
         output += 'in their genomic context via the project-specific\n'
         output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'. \
             format(Defaults.web.ucsc_track_url(options_dict=options_dict, host_name=default.ucsc_host_name),
@@ -1469,49 +1469,49 @@ class ChIPSeq(Analysis):
 
         # Group via UCSC super tracks.
 
-        track_output += 'track Alignments\n'
-        track_output += 'shortLabel Alignments\n'
-        track_output += 'longLabel Bowtie2 ChIP-Seq read alignments\n'
+        track_output += 'track Alignment\n'
+        track_output += 'shortLabel QC Alignment\n'
+        track_output += 'longLabel ChIP Read Alignment\n'
         track_output += 'visibility hide\n'
         track_output += 'superTrack on\n'
-        track_output += 'group alignments\n'
+        track_output += 'group alignment\n'
         track_output += '\n'
 
-        track_output += 'track Control\n'
-        track_output += 'shortLabel Control\n'
-        track_output += 'longLabel MACS2 ChIP-Seq Control (local lambda)\n'
+        track_output += 'track Background\n'
+        track_output += 'shortLabel QC Background\n'
+        track_output += 'longLabel ChIP Background Signal\n'
         track_output += 'visibility hide\n'
         track_output += 'superTrack on\n'
-        track_output += 'group control\n'
+        track_output += 'group background\n'
         track_output += '\n'
 
-        track_output += 'track Treatment\n'
-        track_output += 'shortLabel Treatment\n'
-        track_output += 'longLabel MACS2 ChIP-Seq Treatment\n'
+        track_output += 'track Enrichment\n'
+        track_output += 'shortLabel QC Enrichment\n'
+        track_output += 'longLabel ChIP Enrichment Signal\n'
         track_output += 'visibility hide\n'
         track_output += 'superTrack on\n'
-        track_output += 'group treatment\n'
+        track_output += 'group enrichment\n'
         track_output += '\n'
 
         track_output += 'track Comparison\n'
-        track_output += 'shortLabel Comparison\n'
-        track_output += 'longLabel Comparison of Treatment with Control\n'
+        track_output += 'shortLabel ChIP Intensity\n'
+        track_output += 'longLabel ChIP Intensity\n'
         track_output += 'visibility full\n'
         track_output += 'superTrack on\n'
         track_output += 'group comparison\n'
         track_output += '\n'
 
         track_output += 'track Peaks\n'
-        track_output += 'shortLabel Peaks\n'
-        track_output += 'longLabel MACS2 ChIP-Seq Peaks\n'
+        track_output += 'shortLabel ChIP Peaks\n'
+        track_output += 'longLabel ChIP Peaks\n'
         track_output += 'visibility hide\n'
         track_output += 'superTrack on\n'
         track_output += 'group peaks\n'
         track_output += '\n'
 
         track_output += 'track Summits\n'
-        track_output += 'shortLabel Summits\n'
-        track_output += 'longLabel MACS2 ChIP-Seq Summits\n'
+        track_output += 'shortLabel ChIP Summits\n'
+        track_output += 'longLabel ChIP Summits\n'
         track_output += 'visibility hide\n'
         track_output += 'superTrack on\n'
         track_output += 'group summits\n'
@@ -1563,31 +1563,31 @@ class ChIPSeq(Analysis):
                             # Add a UCSC trackDB entry for each NAME_control_lambda.bw file.
                             #
 
-                            composite_group = '{}_control'.format(factor)
+                            composite_group = '{}_background'.format(factor)
                             if composite_group not in composite_groups:
                                 composite_groups[composite_group] = 1
                                 track_output += 'track {}\n'.format(composite_group)
                                 track_output += 'type bigWig\n'
                                 track_output += 'shortLabel {}\n'.format(composite_group)
-                                track_output += 'longLabel ChIP-Seq control track for factor {!r}\n'. \
+                                track_output += 'longLabel ChIP background signal for factor {!r}\n'. \
                                     format(factor)
                                 track_output += 'visibility dense\n'
                                 track_output += 'compositeTrack on\n'
-                                track_output += 'parent Control\n'
+                                track_output += 'parent Background\n'
                                 track_output += 'allButtonPair on\n'
                                 track_output += 'centerLabelsDense on\n'
                                 track_output += '\n'
 
                             # Common trackDb settings.
 
-                            track_output += 'track {}__{}_control\n'. \
+                            track_output += 'track {}__{}_background\n'. \
                                 format(t_replicate_key, c_replicate_key)
                             # TODO: The bigWig type must declare the expected signal range.
                             # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
                             track_output += 'type bigWig\n'
-                            track_output += 'shortLabel {}__{}_ctl\n'. \
+                            track_output += 'shortLabel {}__{}_bkg\n'. \
                                 format(t_replicate_key, c_replicate_key)
-                            track_output += 'longLabel ChIP-Seq control lambda of {} versus {}\n'. \
+                            track_output += 'longLabel ChIP background signal {} versus {}\n'. \
                                 format(t_replicate_key, c_replicate_key)
                             track_output += 'bigDataUrl ./{}/{}_control_lambda.bw\n'. \
                                 format(prefix, prefix)
@@ -1625,30 +1625,30 @@ class ChIPSeq(Analysis):
                             # Add a UCSC trackDB entry for each NAME_treat_pileup.bw file.
                             #
 
-                            composite_group = '{}_treatment'.format(factor)
+                            composite_group = '{}_enrichment'.format(factor)
                             if composite_group not in composite_groups:
                                 composite_groups[composite_group] = 1
                                 track_output += 'track {}\n'.format(composite_group)
                                 track_output += 'type bigWig\n'
-                                track_output += 'shortLabel {}_treatment\n'.format(factor)
-                                track_output += 'longLabel {!r} ChIP-Seq Treatment\n'. \
+                                track_output += 'shortLabel {}_enrichment\n'.format(factor)
+                                track_output += 'longLabel ChIP enrichment signal for factor {!r}\n'. \
                                     format(factor)
                                 track_output += 'visibility dense\n'
                                 track_output += 'compositeTrack on\n'
-                                track_output += 'parent Treatment\n'
+                                track_output += 'parent Enrichment\n'
                                 track_output += 'allButtonPair on\n'
                                 track_output += 'centerLabelsDense on\n'
                                 track_output += '\n'
 
                             # Common trackDb settings.
 
-                            track_output += 'track {}__{}_treatment\n'. \
+                            track_output += 'track {}__{}_enrichment\n'. \
                                 format(t_replicate_key, c_replicate_key)
                             # TODO: The bigWig type must declare the expected signal range.
                             track_output += 'type bigWig\n'
-                            track_output += 'shortLabel {}__{}_trt\n'. \
+                            track_output += 'shortLabel {}__{}_enr\n'. \
                                 format(t_replicate_key, c_replicate_key)
-                            track_output += 'longLabel ChIP-Seq pileup for treatment of {} versus {}\n'. \
+                            track_output += 'longLabel ChIP enrichment signal {} versus {}\n'. \
                                 format(t_replicate_key, c_replicate_key)
                             track_output += 'bigDataUrl ./{}/{}_treat_pileup.bw\n'. \
                                 format(prefix, prefix)
@@ -1686,13 +1686,13 @@ class ChIPSeq(Analysis):
                             # Add a UCSC trackDB entry for each NAME_bdgcmp.bw file.
                             #
 
-                            composite_group = '{}_comparison'.format(factor)
+                            composite_group = '{}_intensity'.format(factor)
                             if composite_group not in composite_groups:
                                 composite_groups[composite_group] = 1
                                 track_output += 'track {}\n'.format(composite_group)
                                 track_output += 'type bigWig\n'
                                 track_output += 'shortLabel {}\n'.format(composite_group)
-                                track_output += 'longLabel ChIP-Seq comparison track for factor {!r}\n'. \
+                                track_output += 'longLabel ChIP intensity for factor {!r}\n'. \
                                     format(factor)
                                 track_output += 'visibility full\n'
                                 track_output += 'compositeTrack on\n'
@@ -1703,13 +1703,13 @@ class ChIPSeq(Analysis):
 
                             # Common trackDb settings.
 
-                            track_output += 'track {}__{}_comparison\n'. \
+                            track_output += 'track {}__{}_intensity\n'. \
                                 format(t_replicate_key, c_replicate_key)
                             # TODO: The bigWig type must declare the expected signal range.
                             track_output += 'type bigWig\n'
-                            track_output += 'shortLabel {}__{}_cmp\n'. \
+                            track_output += 'shortLabel {}__{}_int\n'. \
                                 format(t_replicate_key, c_replicate_key)
-                            track_output += 'longLabel ChIP-Seq comparison for treatment of {} versus {}\n'. \
+                            track_output += 'longLabel ChIP intensity {} versus {}\n'. \
                                 format(t_replicate_key, c_replicate_key)
                             track_output += 'bigDataUrl ./{}/{}_bdgcmp.bw\n'. \
                                 format(prefix, prefix)
@@ -1754,7 +1754,7 @@ class ChIPSeq(Analysis):
                             track_output += 'type bigBed\n'
                             track_output += 'shortLabel {}__{}_peaks\n'. \
                                 format(t_replicate_key, c_replicate_key)
-                            track_output += 'longLabel ChIP-Seq peaks for {} versus {}\n'. \
+                            track_output += 'longLabel ChIP peaks {} versus {}\n'. \
                                 format(t_replicate_key, c_replicate_key)
                             track_output += 'bigDataUrl ./{}/{}_peaks.bb\n'. \
                                 format(prefix, prefix)
@@ -1784,7 +1784,7 @@ class ChIPSeq(Analysis):
                             track_output += 'type bigBed\n'
                             track_output += 'shortLabel {}__{}_summits\n'. \
                                 format(t_replicate_key, c_replicate_key)
-                            track_output += 'longLabel ChIP-Seq summits for {} versus {}\n'. \
+                            track_output += 'longLabel ChIP summits {} versus {}\n'. \
                                 format(t_replicate_key, c_replicate_key)
                             track_output += 'bigDataUrl ./{}/{}_summits.bb\n'. \
                                 format(prefix, prefix)
@@ -1843,10 +1843,10 @@ class ChIPSeq(Analysis):
 
                 # Common trackDb settings.
 
-                track_output += 'track {}_alignments\n'.format(replicate_key)
+                track_output += 'track {}_alignment\n'.format(replicate_key)
                 track_output += 'type bam\n'
-                track_output += 'shortLabel {}_alignments\n'.format(replicate_key)
-                track_output += 'longLabel {} Bowtie2 ChIP-Seq read alignments\n'. \
+                track_output += 'shortLabel {}_alignment\n'.format(replicate_key)
+                track_output += 'longLabel {} ChIP read alignment\n'. \
                     format(replicate_key)
                 track_output += 'bigDataUrl ./chipseq_bowtie2_{}/{}.aligned.sorted.bam\n'. \
                     format(replicate_key, replicate_key)
@@ -1861,7 +1861,7 @@ class ChIPSeq(Analysis):
 
                 # Supertrack settings.
 
-                track_output += 'parent Alignments\n'
+                track_output += 'parent Alignment\n'
                 track_output += '\n'
 
         # Differential binding analysis.
