@@ -207,7 +207,7 @@ def run_gatk_variant_annotator(pickler_dict):
     child_return_code = Runnable.run(executable=executable)
 
     if child_return_code:
-        raise Exception('Could not complete the {}!r step.'.format(executable.name))
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
 def run_gatk_select_variants(pickler_dict):
