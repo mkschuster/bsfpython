@@ -206,10 +206,9 @@ class VariantCallingGATK(Analysis):
         :return: :rtype: Python dict of Python str (resource name) and Python dict values
         :rtype: dict
         """
+
         if variation_type not in ('indel', 'snp'):
-            warnings.warn(
-                "Variation type has to be 'indel' or 'snp', not {!r}.".format(variation_type),
-                UserWarning)
+            raise Exception("Variation type has to be 'indel' or 'snp', not {!r}.".format(variation_type))
 
         config_parser = self.configuration.config_parser
         config_section = self.configuration.section_from_instance(self)
@@ -218,8 +217,7 @@ class VariantCallingGATK(Analysis):
 
         resource_option = string.join(words=('vqsr_resources', variation_type), sep='_')
         if config_parser.has_option(section=config_section, option=resource_option):
-            temporary_str = config_parser.get(section=config_section, option=resource_option)
-            for resource in string.split(s=temporary_str, sep=','):
+            for resource in config_parser.get(section=config_section, option=resource_option).split(','):
                 resource_section = string.join(words=('vqsr', variation_type, resource), sep='_')
                 if config_parser.has_section(section=resource_section):
                     if resource in vqsr_dict:
@@ -236,18 +234,19 @@ class VariantCallingGATK(Analysis):
                     if config_parser.has_option(section=resource_section, option='prior'):
                         resource_dict['prior'] = config_parser.get(section=resource_section, option='prior')
                     if config_parser.has_option(section=resource_section, option='file_path'):
-                        temporary_str = str(config_parser.get(section=resource_section, option='file_path'))
-                        if not os.path.isabs(temporary_str):
-                            temporary_str = os.path.join(
-                                Default.absolute_gatk_bundle(gatk_bundle_version=gatk_bundle_version,
-                                                             genome_version=self.genome_version),
-                                temporary_str)
-                        resource_dict['file_path'] = temporary_str
+                        file_path = str(config_parser.get(section=resource_section, option='file_path'))
+                        if not os.path.isabs(file_path):
+                            file_path = os.path.join(
+                                Default.absolute_gatk_bundle(
+                                    gatk_bundle_version=gatk_bundle_version,
+                                    genome_version=self.genome_version),
+                                file_path)
+                        resource_dict['file_path'] = file_path
                 else:
-                    warnings.warn(
-                        'Missing configuration section {!r} declared in option resource_section {!r}.'.
-                        format(config_section, temporary_str),
-                        UserWarning)
+                    raise Exception(
+                        'Missing configuration section {!r} declared in option {!r} {!r}.'.
+                        format(resource_section, resource_option,
+                               config_parser.get(section=config_section, option=resource_option)))
 
         return vqsr_dict
 
@@ -296,6 +295,11 @@ class VariantCallingGATK(Analysis):
 
         replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
 
+        if config_parser.has_option(section=config_section, option='cohort_name'):
+            cohort_name = config_parser.get(section=config_section, option='cohort_name')
+        else:
+            cohort_name = 'default'
+
         if config_parser.has_option(section=config_section, option='gatk_bundle_version'):
             gatk_bundle_version = config_parser.get(section=config_section, option='gatk_bundle_version')
         else:
@@ -333,20 +337,19 @@ class VariantCallingGATK(Analysis):
 
         include_intervals_list = list()
         if config_parser.has_option(section=config_section, option='include_intervals'):
-            temporary_str = config_parser.get(section=config_section, option='include_intervals')
-            include_intervals_list.extend(temporary_str.split(','))
+            include_intervals_list.extend(
+                config_parser.get(section=config_section, option='include_intervals').split(','))
 
         exclude_intervals_list = list()
         if config_parser.has_option(section=config_section, option='exclude_intervals'):
-            temporary_str = config_parser.get(section=config_section, option='exclude_intervals')
-            exclude_intervals_list.extend(temporary_str.split(','))
+            exclude_intervals_list.extend(
+                config_parser.get(section=config_section, option='exclude_intervals').split(','))
 
         # Comma-separated list of VCF files with known variant sites for the
         # GATK RealignerTargetCreator and IndelRealigner steps.
         known_sites_realignment = list()
         if config_parser.has_option(section=config_section, option='known_sites_realignment'):
-            temporary_str = config_parser.get(section=config_section, option='known_sites_realignment')
-            for file_path in temporary_str.split(','):
+            for file_path in config_parser.get(section=config_section, option='known_sites_realignment').split(','):
                 if not os.path.isabs(file_path):
                     file_path = os.path.join(Default.absolute_gatk_bundle(gatk_bundle_version=gatk_bundle_version,
                                                                           genome_version=self.genome_version),
@@ -357,8 +360,7 @@ class VariantCallingGATK(Analysis):
         # GATK BaseRecalibrator and PrintReads steps.
         known_sites_recalibration = list()
         if config_parser.has_option(section=config_section, option='known_sites_recalibration'):
-            temporary_str = config_parser.get(section=config_section, option='known_sites_recalibration')
-            for file_path in temporary_str.split(','):
+            for file_path in config_parser.get(section=config_section, option='known_sites_recalibration').split(','):
                 if not os.path.isabs(file_path):
                     file_path = os.path.join(Default.absolute_gatk_bundle(gatk_bundle_version=gatk_bundle_version,
                                                                           genome_version=self.genome_version),
@@ -390,53 +392,96 @@ class VariantCallingGATK(Analysis):
 
         vqsr_annotations_indel_list = list()
         if config_parser.has_option(section=config_section, option='vqsr_annotations_indel'):
-            temporary_str = config_parser.get(section=config_section, option='vqsr_annotations_indel')
-            for annotation in string.split(s=temporary_str, sep=','):
-                vqsr_annotations_indel_list.append(annotation)
+            vqsr_annotations_indel_list.extend(
+                config_parser.get(section=config_section, option='vqsr_annotations_indel').split(','))
 
         vqsr_annotations_snp_list = list()
         if config_parser.has_option(section=config_section, option='vqsr_annotations_snp'):
-            temporary_str = config_parser.get(section=config_section, option='vqsr_annotations_snp')
-            for annotation in string.split(s=temporary_str, sep=','):
-                vqsr_annotations_snp_list.append(annotation)
+            vqsr_annotations_snp_list.extend(
+                config_parser.get(section=config_section, option='vqsr_annotations_snp').split(','))
 
         vqsr_resources_indel_dict = self._read_vqsr_configuration(variation_type='indel',
                                                                   gatk_bundle_version=gatk_bundle_version)
         vqsr_resources_snp_dict = self._read_vqsr_configuration(variation_type='snp',
                                                                 gatk_bundle_version=gatk_bundle_version)
 
-        # Initialise the Distributed Management System objects for the run_bwa script.
+        # Read additionally requested annotation resources for the GATK AnnotateVariants step.
 
-        vc_align_lane_drms = DRMS.from_Analysis(name='variant_calling_align_lane',
-                                                work_directory=self.genome_directory,
-                                                analysis=self)
+        # Python dict of Python str (annotation resource name) key and
+        # Python tuple of
+        # Python str (file path) and Python list of Python str (annotation) value data.
+        annotation_resources_dict = dict()
+
+        if config_parser.has_option(section=config_section, option='annotation_resources'):
+            for annotation_resource in \
+                    config_parser.get(section=config_section, option='annotation_resources').split(','):
+                resource_section = string.join(words=(annotation_resource, 'resource'), sep='_')
+                if config_parser.has_section(section=resource_section):
+                    annotation_list = list()
+                    if config_parser.has_option(section=resource_section, option='file_path'):
+                        file_path = str(config_parser.get(section=resource_section, option='file_path'))
+                        if not os.path.isabs(file_path):
+                            file_path = os.path.join(
+                                Default.absolute_gatk_bundle(
+                                    gatk_bundle_version=gatk_bundle_version,
+                                    genome_version=self.genome_version),
+                                file_path)
+                    else:
+                        raise Exception(
+                            "Missing configuration option 'file_path' in configuration section {!r}.".
+                            format(resource_section))
+                    if config_parser.has_option(section=resource_section, option='annotations'):
+                        annotation_list.extend(
+                            config_parser.get(section=resource_section, option='annotations').split(','))
+                    else:
+                        raise Exception(
+                            "Missing configuration option 'annotations' in configuration section {!r}.".
+                            format(resource_section))
+                    # Create a dict key and a tuple of a Python str and Python list.
+                    if annotation_resource not in annotation_resources_dict:
+                        annotation_resources_dict[annotation_resource] = file_path, annotation_list
+                else:
+                    raise Exception(
+                        'Missing configuration section {!r} declared in option annotation_resources {!r}.'.
+                        format(resource_section,
+                               config_parser.get(section=config_section, option='annotation_resources')))
+
+        # Initialise a Distributed Resource Management System (DRMS) object for the
+        # bsf_run_bwa.py script.
+
+        vc_align_lane_drms = DRMS.from_Analysis(
+            name='variant_calling_align_lane',
+            work_directory=self.genome_directory,
+            analysis=self)
         self.drms_list.append(vc_align_lane_drms)
 
-        # Initialise the Distributed Resource Management System object for the
+        # Initialise a Distributed Resource Management System (DRMS) object for the
         # bsf_run_variant_calling_process_lane.py script.
 
-        vc_process_lane_drms = DRMS.from_Analysis(name='variant_calling_process_lane',
-                                                  work_directory=self.genome_directory,
-                                                  analysis=self)
+        vc_process_lane_drms = DRMS.from_Analysis(
+            name='variant_calling_process_lane',
+            work_directory=self.genome_directory,
+            analysis=self)
         self.drms_list.append(vc_process_lane_drms)
 
-        # Initialise the Distributed Resource Management System object for the
+        # Initialise a Distributed Resource Management System (DRMS) object for the
         # bsf_run_variant_calling_process_sample.py script.
 
-        vc_process_sample_drms = DRMS.from_Analysis(name='variant_calling_process_sample',
-                                                    work_directory=self.genome_directory,
-                                                    analysis=self)
+        vc_process_sample_drms = DRMS.from_Analysis(
+            name='variant_calling_process_sample',
+            work_directory=self.genome_directory,
+            analysis=self)
         self.drms_list.append(vc_process_sample_drms)
 
-        # Initialise the Distributed Resource Management System object for the
+        # Initialise a Distributed Resource Management System (DRMS) object for the
         # bsf_run_variant_calling_process_cohort.py script.
 
-        vc_process_cohort_drms = DRMS.from_Analysis(name='variant_calling_process_cohort',
-                                                    work_directory=self.genome_directory,
-                                                    analysis=self)
+        vc_process_cohort_drms = DRMS.from_Analysis(
+            name='variant_calling_process_cohort',
+            work_directory=self.genome_directory,
+            analysis=self)
         self.drms_list.append(vc_process_cohort_drms)
 
-        cohort_name = 'cohort'
         vc_process_cohort_dependencies = list()
         vc_process_cohort_replicates = list()
 
@@ -512,6 +557,14 @@ class VariantCallingGATK(Analysis):
                     warning = 'Only second reads, but no first reads have been defined.'
                     warnings.warn(warning)
 
+                file_path_align_lane = dict(
+                    # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
+                    # It is currently based on the vc_align_lane_drms.name and replicate_key.
+                    # The script should also be changed to pre-set all file names beforehand.
+                    aligned_bam='{}_{}.bam'.format(vc_align_lane_drms.name, replicate_key),
+                    aligned_bai='{}_{}.bai'.format(vc_align_lane_drms.name, replicate_key),
+                    aligned_md5='{}_{}.bam.md5'.format(vc_align_lane_drms.name, replicate_key))
+
                 # Normally, the bwa object would be pushed onto the drms list.
                 # Experimentally, use Pickler to serialize the Executable object into a file.
 
@@ -536,7 +589,12 @@ class VariantCallingGATK(Analysis):
                     name=string.join(words=(vc_align_lane_drms.name, replicate_key), sep='_'),
                     program='bsf_run_bwa.py',
                     analysis=self)
-                vc_align_lane_drms.add_Executable(executable=run_bwa)
+                # Only submit this Executable if the final result file does not exist.
+                if not (os.path.exists(
+                        os.path.join(self.genome_directory, file_path_align_lane['aligned_md5']))
+                        and os.path.getsize(
+                        os.path.join(self.genome_directory, file_path_align_lane['aligned_md5']))):
+                    vc_align_lane_drms.add_Executable(executable=run_bwa)
 
                 # Set run_bwa options.
 
@@ -803,7 +861,12 @@ class VariantCallingGATK(Analysis):
                     name=prefix_lane,
                     program='bsf_run_variant_calling_process_lane.py',
                     analysis=self)
-                vc_process_lane_drms.add_Executable(vc_process_lane)
+                # Only submit this Executable if the final result file does not exist.
+                if not (os.path.exists(
+                        os.path.join(self.genome_directory, file_path_lane['alignment_summary_metrics']))
+                        and os.path.getsize(
+                        os.path.join(self.genome_directory, file_path_lane['alignment_summary_metrics']))):
+                    vc_process_lane_drms.add_Executable(vc_process_lane)
 
                 vc_process_lane.dependencies.append(run_bwa.name)
 
@@ -1314,22 +1377,18 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionLong(key='intervals', value=interval)
         if known_sites_discovery:
             sub_command.add_OptionLong(key='dbsnp', value=known_sites_discovery)
-            # Re-define the dbSNP file as resource and import as set of INFO fields.
-            sub_command.add_OptionLong(key='resource:db_snp', value=known_sites_discovery)
-            sub_command.add_OptionLong(key='expression', value='db_snp.CAF')
-            sub_command.add_OptionLong(key='expression', value='db_snp.COMMON')
-            sub_command.add_OptionLong(key='expression', value='db_snp.CLNDBN')
-            sub_command.add_OptionLong(key='expression', value='db_snp.CLNDSDBID')
-            sub_command.add_OptionLong(key='expression', value='db_snp.CLNHGVS')
-            sub_command.add_OptionLong(key='expression', value='db_snp.G5')
-            sub_command.add_OptionLong(key='expression', value='db_snp.MUT')
-            sub_command.add_OptionLong(key='expression', value='db_snp.OM')
-            sub_command.add_OptionLong(key='expression', value='db_snp.PM')
-            sub_command.add_OptionLong(key='expression', value='db_snp.SAO')
-            sub_command.add_OptionLong(key='expression', value='db_snp.SSR')
-            sub_command.add_OptionLong(key='expression', value='db_snp.VC')
-            sub_command.add_OptionLong(key='expression', value='db_snp.VLD')
-            sub_command.add_OptionLong(key='expression', value='db_snp.dbSNPBuildID')
+
+        # Add annotation resources and their corresponding expression options.
+        for annotation_resource in annotation_resources_dict.keys():
+            if len(annotation_resources_dict[annotation_resource][0]) \
+                    and len(annotation_resources_dict[annotation_resource][1]):
+                sub_command.add_OptionLong(
+                    key=string.join(words=('resource', annotation_resource), sep=':'),
+                    value=annotation_resources_dict[annotation_resource][0])
+                for annotation in annotation_resources_dict[annotation_resource][1]:
+                    sub_command.add_OptionLong(
+                        key='expression',
+                        value=string.join(words=(annotation_resource, annotation), sep='.'))
 
         sub_command.add_OptionLong(key='variant', value=file_path_cohort['recalibrated_snp_recalibrated_indel_vcf'])
         # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
@@ -1425,21 +1484,15 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionLong(key='fields', value='SNPEFF_GENE_BIOTYPE')
             sub_command.add_OptionLong(key='fields', value='SNPEFF_TRANSCRIPT_ID')
             sub_command.add_OptionLong(key='fields', value='SNPEFF_EXON_ID')
-            # Set of dbSNP resource INFO fields.
-            sub_command.add_OptionLong(key='fields', value='db_snp.CAF')
-            sub_command.add_OptionLong(key='fields', value='db_snp.COMMON')
-            sub_command.add_OptionLong(key='fields', value='db_snp.CLNDBN')
-            sub_command.add_OptionLong(key='fields', value='db_snp.CLNDSDBID')
-            sub_command.add_OptionLong(key='fields', value='db_snp.CLNHGVS')
-            sub_command.add_OptionLong(key='fields', value='db_snp.G5')
-            sub_command.add_OptionLong(key='fields', value='db_snp.MUT')
-            sub_command.add_OptionLong(key='fields', value='db_snp.OM')
-            sub_command.add_OptionLong(key='fields', value='db_snp.PM')
-            sub_command.add_OptionLong(key='fields', value='db_snp.SAO')
-            sub_command.add_OptionLong(key='fields', value='db_snp.SSR')
-            sub_command.add_OptionLong(key='fields', value='db_snp.VC')
-            sub_command.add_OptionLong(key='fields', value='db_snp.VLD')
-            sub_command.add_OptionLong(key='fields', value='db_snp.dbSNPBuildID')
+
+            # Automatically add all fields defined for the Variant Annotator resources, above.
+            for annotation_resource in annotation_resources_dict.keys():
+                if len(annotation_resources_dict[annotation_resource][0]) \
+                        and len(annotation_resources_dict[annotation_resource][1]):
+                    for annotation in annotation_resources_dict[annotation_resource][1]:
+                        sub_command.add_OptionLong(
+                            key='fields',
+                            value=string.join(words=(annotation_resource, annotation), sep='.'))
 
             pickler_dict_process_cohort[java_process.name] = java_process
 
