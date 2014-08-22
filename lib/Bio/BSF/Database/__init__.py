@@ -141,30 +141,49 @@ class DatabaseAdaptor(object):
         else:
             self.connection = sqlite3.connect(database=self.database_connection.file_path)
 
-    def expression_column_result(self):
-        """Build an SQL expression for column results typically used in SELECT statements.
+    def _get_column_name_list_with_primary(self):
+        """Build a Python list of column names including the primary key.
 
+        :param self: DatabaseAdaptor
+        :type self: DatabaseAdaptor
+        :return: Python list of SQL column name Python str objects
+        :rtype: list
+        """
+
+        return map(lambda x: x[0], self.column_definition)
+
+    def _get_column_name_list_without_primary(self):
+        """Build a Python list of column names excluding the primary key.
+
+        This method excludes PRIMARY KEY columns with definition AUTOINCREMENT,
+        which must not be assigned a value in INSERT or UPDATE statements.
+        :param self: DatabaseAdaptor
+        :type self: DatabaseAdaptor
+        :return: Python list of SQL column name Python str objects
+        :rtype: list
+        """
+
+        return map(lambda x: x[0], filter(lambda x: 'AUTOINCREMENT' not in x[1], self.column_definition))
+
+    def _get_column_name_for_primary(self):
+
+        name_list = map(lambda x: x[0], filter(lambda x: 'AUTOINCREMENT' in x[1], self.column_definition))
+        return name_list[0]
+
+    def _build_column_result_expression(self):
+        """Build an SQL expression of column names in typically used in SELECT statements.
+
+        This method simply lists all column names of the column definition.
         :param self: DatabaseAdaptor
         :type self: DatabaseAdaptor
         :return: Column result columns expression string
         :rtype: str
         """
 
-        return string.join(map(lambda x: x[0], self.column_definition), sep=", ")
+        return string.join(words=self._get_column_name_list_with_primary(), sep=', ')
 
-    def expression_column_definition(self):
-        """Build an SQL expression for column definitions typically used in CREATE TABLE statements.
-
-        :param self: DatabaseAdaptor
-        :type self: DatabaseAdaptor
-        :return: Column definition expression string
-        :rtype: str
-        """
-
-        return string.join(map(lambda x: '{} {}'.format(x[0], x[1]), self.column_definition), sep=", ")
-
-    def expression_column_insert(self):
-        """Build an SQL expression for columns and values typically used in INSERT statements.
+    def _build_column_definition_expression(self):
+        """Build an SQL expression of column definitions typically used in CREATE TABLE statements.
 
         :param self: DatabaseAdaptor
         :type self: DatabaseAdaptor
@@ -172,7 +191,49 @@ class DatabaseAdaptor(object):
         :rtype: str
         """
 
-        return string.join(map(lambda x: '?', self.column_definition), sep=", ")
+        return string.join(
+            words=map(lambda x: string.join(words=(x[0], x[1]), sep=' '), self.column_definition),
+            sep=', ')
+
+    def _build_column_insert_expression(self):
+        """Build an SQL expression of column names typically used in INSERT statements.
+
+        This method excludes PRIMARY KEY columns with definition AUTOINCREMENT,
+        which must not be assigned a value.
+        :param self: DatabaseAdaptor
+        :type self: DatabaseAdaptor
+        :return: Column definition expression string
+        :rtype: str
+        """
+
+        return string.join(words=self._get_column_name_list_without_primary(), sep=', ')
+
+    def _build_value_insert_expression(self):
+        """Build an SQL expression of value placeholders (?) typically used in INSERT statements.
+
+        :param self: DatabaseAdaptor
+        :type self: DatabaseAdaptor
+        :return: Column definition expression string
+        :rtype: str
+        """
+
+        return string.join(
+            words=map(lambda x: '?', self._get_column_name_list_without_primary()),
+            sep=', ')
+
+    def _build_column_update_expression(self):
+        """Build an SQL expression of column name and value placeholder pairs typically used in SQL UPDATE statements.
+
+        As in INSERT expressions leave out the PRIMARY KEY columns with definition AUTOINCREMENT.
+        :param self: DatabaseAdaptor
+        :type self: DatabaseAdaptor
+        :return: SQL column name and value placeholder pair expression string
+        :rtype: str
+        """
+
+        return string.join(
+            words=map(lambda x: '{} = ?'.format(x), self._get_column_name_list_without_primary()),
+            sep=', ')
 
     def statement_create_table(self):
         """Build an SQL CREATE TABLE statement.
@@ -183,7 +244,7 @@ class DatabaseAdaptor(object):
         :rtype: str
         """
 
-        return "CREATE TABLE {!r} ({})".format(self.table_name, self.expression_column_definition())
+        return "CREATE TABLE {!r} ({})".format(self.table_name, self._build_column_definition_expression())
 
     def statement_select(self, where_clause=None, group_clause=None, having_clause=None):
         """Build an SQL SELECT statement.
@@ -201,7 +262,7 @@ class DatabaseAdaptor(object):
         """
 
         statement = str()
-        statement += "SELECT {} FROM {!r}".format(self.expression_column_result(), self.table_name)
+        statement += "SELECT {} FROM {!r}".format(self._build_column_result_expression(), self.table_name)
 
         if where_clause:
             statement += " WHERE "
@@ -271,34 +332,39 @@ class DatabaseAdaptor(object):
 
         return self._objects_from_statement(statement=statement)
 
-    def store(self, data_object):
-        """Store a canonical object corresponding to the DatabaseAdaptor sub-class.
+    def insert(self, data_object):
+        """Insert a canonical object corresponding to the DatabaseAdaptor sub-class.
 
         :param self: BSF DatabaseAdaptor
         :type self: DatabaseAdaptor
         :param data_object: BSF Data object
         :type data_object: object
+        :return: Nothing
+        :rtype: None
         """
 
         # Get the list of values by using the column definition and reading attributes of the same name
         # from the Python object.
 
-        value_list = list()
-        for name in map(lambda x: x[0], self.column_definition):
-            value_list.append(data_object.__getattribute__(name))
+        value_list = map(lambda x: data_object.__getattribute__(x), self._get_column_name_list_without_primary())
 
         cursor = self.database_connection.connection.cursor()
         try:
             cursor.execute(
                 "INSERT INTO {!r} ({}) VALUES ({})".format(
                     self.table_name,
-                    self.expression_column_result(),
-                    self.expression_column_insert()),
+                    self._build_column_insert_expression(),
+                    self._build_value_insert_expression()),
                 value_list)
         except sqlite3.IntegrityError:
-            print "Encountered Integrity error for table name '{}' on the following SQL fields:". \
+            print "Encountered sqlite3.IntegrityError for table name '{}' on the following SQL fields:". \
                 format(self.table_name)
-            print "Fields: {}".format(self.expression_column_result())
+            print "Fields: {}".format(self._build_column_insert_expression())
+            print "Values: {!r}".format(value_list)
+        except sqlite3.OperationalError:
+            print "Encountered sqlite3.OperationalError for table name '{}' on the following SQL fields:". \
+                format(self.table_name)
+            print "Fields: {}".format(self._build_column_insert_expression())
             print "Values: {!r}".format(value_list)
 
         # Update the canonical attribute containing the primary key with the last row identifier.
@@ -306,6 +372,40 @@ class DatabaseAdaptor(object):
         column_name = self.table_name + '_id'
         if last_row_identifier and hasattr(data_object, column_name):
             data_object.__setattr__(column_name, last_row_identifier)
+
+    def update(self, data_object):
+        """Update a canonical object corresponding to the DatabaseAdaptor sub-class.
+
+        :param self: BSF DatabaseAdaptor
+        :type self: DatabaseAdaptor
+        :param data_object: BSF Data object
+        :type data_object: object
+        :return: Nothing
+        :rtype: None
+        """
+        # Get the list of values by using the column definition and reading attributes of the same name
+        # from the Python object.
+
+        value_list = map(lambda x: data_object.__getattribute__(x), self._get_column_name_list_without_primary())
+
+        primary_name = self._get_column_name_for_primary()
+        if primary_name:
+            value_list.append(data_object.__getattribute__(primary_name))
+        else:
+            raise Exception("Cannot update table {!r} without primary key.".format(self.table_name))
+
+        statement = "UPDATE {!r} SET {} WHERE {} = ?".format(
+            self.table_name,
+            self._build_column_update_expression(),
+            primary_name)
+
+        cursor = self.database_connection.connection.cursor()
+        try:
+            cursor.execute(statement, value_list)
+        except sqlite3.IntegrityError:
+            print "Encountered SQLite3 integrity error\n" \
+                  "  SQL statement: {!r}\n" \
+                  "  Values: {!r}".format(statement, value_list)
 
 
 class JobSubmission(object):
@@ -360,7 +460,7 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
             table_name='executable',
             column_definition=[
                 # Primary key
-                ['executable_id', 'INTEGER PRIMARY KEY AUTOINCREMENT'],
+                ['executable_id', 'INTEGER PRIMARY KEY ASC AUTOINCREMENT'],
                 # Name
                 ['name', 'TEXT UNIQUE'],
                 # Command as submitted into the DRMS
@@ -398,22 +498,30 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
 
         return object_list
 
-    def select_all_by_name(self, name):
-        """Select all BSF Job Submission objects by name.
+    def select_by_name(self, name):
+        """Select one BSF Job Submission object by name.
 
         :param self: BSF Job Submission Adaptor
         :type self: JobSubmissionAdaptor
         :param name: Name
         :type name: str
-        :return: Python list of BSF JobSubmission objects
-        :rtype: list
+        :return: BSF JobSubmission or None
+        :rtype: JobSubmission, None
         """
         parameters = list()
 
         statement = self.statement_select(where_clause='name = ?')
         parameters.append(name)
 
-        return self._objects_from_statement(statement=statement, parameters=parameters)
+        object_list = self._objects_from_statement(statement=statement, parameters=parameters)
+        object_length = len(object_list)
+
+        if object_length > 1:
+            raise Exception("SQL database returned more than one row for unique field 'name'.")
+        elif object_length == 1:
+            return object_list[0]
+        else:
+            return
 
 
 class ProcessSLURM(object):
@@ -561,10 +669,10 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
             table_name='process_slurm',
             column_definition=[
                 # Primary key
-                ['process_slurm_id', 'INTEGER PRIMARY KEY AUTOINCREMENT'],
+                ['process_slurm_id', 'INTEGER PRIMARY KEY ASC AUTOINCREMENT'],
                 # JobID
                 # The number of the job or job step.  It is in the form: job.jobstep.
-                ['job_id', 'TEXT'],
+                ['job_id', 'TEXT UNIQUE'],
                 # JobName
                 # The name of the job or job step.
                 ['job_name', 'TEXT'],
@@ -630,11 +738,13 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 ['elapsed', 'TEXT'],
                 # State
                 # Displays the job status, or state.
-                # Output can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or NODE_FAIL.
+                # Output can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or
+                # NODE_FAIL.
                 ['state', 'TEXT'],
                 # ExitCode
                 # The exit code returned by the job script or salloc, typically as set by the exit() function.
-                # Following the colon is the signal that caused the process to  terminate if it was terminated by a signal.
+                # Following the colon is the signal that caused the process to  terminate if it was terminated by
+                # a signal.
                 ['exit_code', 'TEXT'],
                 # AveCPUFreq
                 # Average weighted CPU frequency of all tasks in job, in kHz.
@@ -708,6 +818,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
     def select_all_by_job_name(self, name):
         """Select all BSF Job Submission objects by job_name.
 
+        The same Executable can be submitted more than once into the DRMS.
         :param self: BSF Job Submission Adaptor
         :type self: JobSubmissionAdaptor
         :param name: Job name
@@ -721,8 +832,8 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
 
         return self._objects_from_statement(statement=statement, parameters=parameters)
 
-    def select_all_by_job_id(self, job_id):
-        """Select all BSF Job Submission objects by job_id.
+    def select_by_job_id(self, job_id):
+        """Select one BSF Job Submission object by job_id.
 
         :param self: BSF Job Submission Adaptor
         :type self: JobSubmissionAdaptor
@@ -735,7 +846,15 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         parameters = list()
         parameters.append(job_id)
 
-        return self._objects_from_statement(statement=statement, parameters=parameters)
+        object_list = self._objects_from_statement(statement=statement, parameters=parameters)
+        object_length = len(object_list)
+
+        if object_length > 1:
+            raise Exception("SQL database returned more than one row for unique field 'job_id'.")
+        elif object_length == 1:
+            return object_list[0]
+        else:
+            return
 
 
 class ProcessSGE(object):
@@ -852,7 +971,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
             table_name='process_sge',
             column_definition=[
                 # Primary key
-                ['process_sge_id', 'INTEGER PRIMARY KEY AUTOINCREMENT'],
+                ['process_sge_id', 'INTEGER PRIMARY KEY ASC AUTOINCREMENT'],
                 # qname
                 # Name of the cluster queue in which the job has run.
                 ['qname', 'TEXT'],
