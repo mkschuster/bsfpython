@@ -221,7 +221,6 @@ class Tuxedo(Analysis):
                 if group_name and len(group_samples):
                     key += group_name
                     key += '__'
-                    # key = string.join(words=(key, group_name), sep='__')
                     comparison_groups.append((group_name, group_samples))
                     # Also expand each Python list of Sample objects to get all those Sample objects
                     # that this Analysis needs considering.
@@ -237,7 +236,7 @@ class Tuxedo(Analysis):
                     # Only break if there is no further 'Point N' prefix.
                     break
 
-            # For a successful comparison, mor ethan one Sample (pool) has to be defined.
+            # For a successful comparison, more than one Sample (pool) has to be defined.
 
             if len(comparison_groups) < 2:
                 if self.debug > 1:
@@ -910,6 +909,8 @@ class Tuxedo(Analysis):
         output += '<th>Transcript FPKM</th>\n'
         output += '<th>Genes (Symbols)</th>\n'
         output += '<th>Isoforms (Symbols)</th>\n'
+        output += '<th>Aligned BAM file</th>\n'
+        output += '<th>Aligned BAI file</th>\n'
         output += '</tr>\n'
         output += '\n'
 
@@ -1167,6 +1168,10 @@ class Tuxedo(Analysis):
                     format(prefix, prefix)
                 output += '<td><a href="./{}/{}_isoforms_fpkm_tracking.txt">Isoforms (Symbols)</a></td>\n'. \
                     format(prefix, prefix)
+                output += '<td><a href="./{}/rnaseq_tophat_{}_accepted_hits.bam">Aligned BAM</td>\n'. \
+                    format(prefix, replicate_key)
+                output += '<td><a href="./{}/rnaseq_tophat_{}_accepted_hits.bam.bai">Aligned BAI</td>\n'. \
+                    format(prefix, replicate_key)
                 output += '</tr>\n'
                 output += '\n'
 
