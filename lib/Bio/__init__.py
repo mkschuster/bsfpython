@@ -29,3 +29,11 @@ http://www.open-bio.org/
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+
+from pkgutil import extend_path
+
+# For compatibility with the BioPython project, extend the path.
+# Importantly, in the PYTHONPATH environment variable, the bsfpython module
+# needs to be specified after BioPython.
+
+__path__ = extend_path(__path__, __name__)
