@@ -42,6 +42,24 @@ import shutil
 from Bio.BSF import Runnable
 
 
+def run_executable(pickler_dict, key):
+    """Run an Executable defined in the Pickler dict.
+
+    :param pickler_dict: Pickler dict
+    :type pickler_dict: dict
+    :param key: Key for the Executable
+    :type key: str
+    :return: Nothing
+    :rtype: None
+    """
+
+    executable = pickler_dict[key]
+    child_return_code = Runnable.run(executable=executable)
+
+    if child_return_code:
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+
+
 def run_gatk_combine_gvcfs(pickler_dict):
     """Run the GATK CombineGVCFs step.
 
@@ -56,11 +74,7 @@ def run_gatk_combine_gvcfs(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['combined_gvcf_idx']):
         return
 
-    executable = pickler_dict['gatk_combine_gvcfs']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='gatk_combine_gvcfs')
 
 
 def run_gatk_genotype_gvcfs(pickler_dict):
@@ -76,12 +90,7 @@ def run_gatk_genotype_gvcfs(pickler_dict):
         return
 
     run_gatk_combine_gvcfs(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['gatk_genotype_gvcfs']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='gatk_genotype_gvcfs')
 
 
 def run_gatk_variant_recalibrator_snp(pickler_dict):
@@ -97,12 +106,7 @@ def run_gatk_variant_recalibrator_snp(pickler_dict):
         return
 
     run_gatk_genotype_gvcfs(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['gatk_variant_recalibrator_snp']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='gatk_variant_recalibrator_snp')
 
 
 def run_gatk_variant_recalibrator_indel(pickler_dict):
@@ -118,12 +122,7 @@ def run_gatk_variant_recalibrator_indel(pickler_dict):
         return
 
     run_gatk_variant_recalibrator_snp(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['gatk_variant_recalibrator_indel']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='gatk_variant_recalibrator_indel')
 
 
 def run_gatk_apply_recalibration_snp(pickler_dict):
@@ -139,12 +138,7 @@ def run_gatk_apply_recalibration_snp(pickler_dict):
         return
 
     run_gatk_variant_recalibrator_indel(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['gatk_apply_recalibration_snp']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='gatk_apply_recalibration_snp')
 
 
 def run_gatk_apply_recalibration_indel(pickler_dict):
@@ -160,12 +154,7 @@ def run_gatk_apply_recalibration_indel(pickler_dict):
         return
 
     run_gatk_apply_recalibration_snp(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['gatk_apply_recalibration_indel']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='gatk_apply_recalibration_indel')
 
 
 def run_snpeff(pickler_dict):
@@ -181,12 +170,7 @@ def run_snpeff(pickler_dict):
         return
 
     run_gatk_apply_recalibration_indel(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['snpeff']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='snpeff')
 
 
 def run_gatk_variant_annotator(pickler_dict):
@@ -202,12 +186,7 @@ def run_gatk_variant_annotator(pickler_dict):
         return
 
     run_snpeff(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['gatk_variant_annotator']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='gatk_variant_annotator')
 
 
 def run_gatk_select_variants(pickler_dict):
@@ -234,15 +213,9 @@ def run_gatk_select_variants(pickler_dict):
     # The GATK SelectVariants step has to be run for each sample name separately.
 
     for sample_name in pickler_dict['sample_names']:
-
         if os.path.exists(pickler_dict['file_path_dict']['sample_vcf_' + sample_name]):
             continue
-
-        executable = pickler_dict['gatk_select_variants_sample_' + sample_name]
-        child_return_code = Runnable.run(executable=executable)
-
-        if child_return_code:
-            raise Exception('Could not complete the {!r} step.'.format(executable.name))
+        run_executable(pickler_dict=pickler_dict, key='gatk_select_variants_sample_' + sample_name)
 
 
 def run_gatk_variants_to_table(pickler_dict):
@@ -269,15 +242,9 @@ def run_gatk_variants_to_table(pickler_dict):
     # The GATK SelectVariants step has to be run for each sample name separately.
 
     for sample_name in pickler_dict['sample_names']:
-
         if os.path.exists(pickler_dict['file_path_dict']['sample_csv_' + sample_name]):
             continue
-
-        executable = pickler_dict['gatk_variants_to_table_sample_' + sample_name]
-        child_return_code = Runnable.run(executable=executable)
-
-        if child_return_code:
-            raise Exception('Could not complete the {!r} step.'.format(executable.name))
+        run_executable(pickler_dict=pickler_dict, key='gatk_variants_to_table_sample_' + sample_name)
 
 
 # Set the environment consistently.

@@ -44,6 +44,24 @@ import shutil
 from Bio.BSF import Runnable
 
 
+def run_executable(pickler_dict, key):
+    """Run an Executable defined in the Pickler dict.
+
+    :param pickler_dict: Pickler dict
+    :type pickler_dict: dict
+    :param key: Key for the Executable
+    :type key: str
+    :return: Nothing
+    :rtype: None
+    """
+
+    executable = pickler_dict[key]
+    child_return_code = Runnable.run(executable=executable)
+
+    if child_return_code:
+        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+
+
 def run_picard_mark_duplicates(pickler_dict):
     """Run the Picard MarkDuplicates step.
 
@@ -60,21 +78,14 @@ def run_picard_mark_duplicates(pickler_dict):
     if not 'picard_mark_duplicates' in pickler_dict:
         return
 
-    executable = pickler_dict['picard_mark_duplicates']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='picard_mark_duplicates')
 
     # It may not be the best idea to remove the aligned BAM file from the previous lane-specific alignment step here.
     # For the moment, keep pipeline steps independent from each other.
     # if args.debug < 1:
-    #     if os.path.exists(path=pickler_dict['file_path_dict']['aligned_bam']):
-    #         os.remove(pickler_dict['file_path_dict']['aligned_bam'])
-    #     if os.path.exists(path=pickler_dict['file_path_dict']['aligned_bai']):
-    #         os.remove(pickler_dict['file_path_dict']['aligned_bai'])
-    #     if os.path.exists(path=pickler_dict['file_path_dict']['aligned_md5']):
-    #         os.remove(pickler_dict['file_path_dict']['aligned_md5'])
+    #     for file_key in ('aligned_bam', 'aligned_bai', 'aligned_md5'):
+    #         if os.path.exists(pickler_dict['file_path_dict'][file_key]):
+    #             os.remove(pickler_dict['file_path_dict'][file_key])
 
 
 def run_gatk_realigner_target_creator(pickler_dict):
@@ -90,12 +101,7 @@ def run_gatk_realigner_target_creator(pickler_dict):
         return
 
     run_picard_mark_duplicates(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['gatk_realigner_target_creator']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='gatk_realigner_target_creator')
 
 
 def run_gatk_indel_realigner(pickler_dict):
@@ -111,20 +117,12 @@ def run_gatk_indel_realigner(pickler_dict):
         return
 
     run_gatk_realigner_target_creator(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['gatk_indel_realigner']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='gatk_indel_realigner')
 
     if args.debug < 1:
-        if os.path.exists(path=pickler_dict['file_path_dict']['duplicates_marked_bam']):
-            os.remove(pickler_dict['file_path_dict']['duplicates_marked_bam'])
-        if os.path.exists(path=pickler_dict['file_path_dict']['duplicates_marked_bai']):
-            os.remove(pickler_dict['file_path_dict']['duplicates_marked_bai'])
-        if os.path.exists(path=pickler_dict['file_path_dict']['duplicates_marked_md5']):
-            os.remove(pickler_dict['file_path_dict']['duplicates_marked_md5'])
+        for file_key in ('duplicates_marked_bam', 'duplicates_marked_bai', 'duplicates_marked_md5'):
+            if os.path.exists(pickler_dict['file_path_dict'][file_key]):
+                os.remove(pickler_dict['file_path_dict'][file_key])
 
 
 def run_gatk_base_recalibrator_pre(pickler_dict):
@@ -140,12 +138,7 @@ def run_gatk_base_recalibrator_pre(pickler_dict):
         return
 
     run_gatk_indel_realigner(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['gatk_base_recalibrator_pre']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='gatk_base_recalibrator_pre')
 
 
 def run_gatk_base_recalibrator_post(pickler_dict):
@@ -161,12 +154,7 @@ def run_gatk_base_recalibrator_post(pickler_dict):
         return
 
     run_gatk_base_recalibrator_pre(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['gatk_base_recalibrator_post']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='gatk_base_recalibrator_post')
 
 
 def run_gatk_analyze_covariates(pickler_dict):
@@ -182,12 +170,7 @@ def run_gatk_analyze_covariates(pickler_dict):
         return
 
     run_gatk_base_recalibrator_post(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['gatk_analyze_covariates']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='gatk_analyze_covariates')
 
 
 def run_gatk_print_reads(pickler_dict):
@@ -203,18 +186,12 @@ def run_gatk_print_reads(pickler_dict):
         return
 
     run_gatk_analyze_covariates(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['gatk_print_reads']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='gatk_print_reads')
 
     if args.debug < 1:
-        if os.path.exists(path=pickler_dict['file_path_dict']['realigned_bam']):
-            os.remove(pickler_dict['file_path_dict']['realigned_bam'])
-        if os.path.exists(path=pickler_dict['file_path_dict']['realigned_bai']):
-            os.remove(pickler_dict['file_path_dict']['realigned_bai'])
+        for file_key in ('realigned_bam', 'realigned_bai'):
+            if os.path.exists(pickler_dict['file_path_dict'][file_key]):
+                os.remove(pickler_dict['file_path_dict'][file_key])
 
 
 def run_picard_collect_alignment_summary_metrics(pickler_dict):
@@ -230,12 +207,7 @@ def run_picard_collect_alignment_summary_metrics(pickler_dict):
         return
 
     run_gatk_print_reads(pickler_dict=pickler_dict)
-
-    executable = pickler_dict['picard_collect_alignment_summary_metrics']
-    child_return_code = Runnable.run(executable=executable)
-
-    if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(executable.name))
+    run_executable(pickler_dict=pickler_dict, key='picard_collect_alignment_summary_metrics')
 
 
 # Set the environment consistently.
