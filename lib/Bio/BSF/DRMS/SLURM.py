@@ -36,23 +36,12 @@ import warnings
 
 from Bio.BSF.Database import DatabaseConnection, \
     JobSubmission, JobSubmissionAdaptor, \
-    ProcessSLURMAdaptor
-
-# Global dictionary to map from Executable.name entries to SLURM job identifiers,
-# which are required for specifying job dependencies. Isn't that what a DRMS should do for us?
-
-executable_name_dict = dict()
-
-# TODO: This module could create a file that records SLURM Process identifiers, which could be used by
-# further scripts to query the state of jobs.
-# Since SLURM only reports job identifiers upon submission via sbatch, it is no longer possible to submit
-# analysis jobs in stages. The only way to record job identifiers of previous analyses is via a file. Sigh.
+    ProcessSLURM, ProcessSLURMAdaptor
 
 
 def submit(self, debug=0):
-
     """Submit BSF Executable objects into the Simple Linux Utility for Resource Management (SLURM)
-     Distributed Resource Management System.
+     Distributed Resource Management System (DRMS).
 
     :param self: BSF DRMS
     :type self: DRMS
@@ -64,7 +53,7 @@ def submit(self, debug=0):
 
     # Open or create a database.
 
-    database_path = os.path.join(self.work_directory, 'bsfpython_slurm.db')
+    database_path = os.path.join(self.work_directory, 'bsfpython_slurm_jobs.db')
 
     database_connection = DatabaseConnection(file_path=database_path)
     database_connection.create_schema()
@@ -104,8 +93,8 @@ def submit(self, debug=0):
         # TODO: The memory must be specified in MB.
         # Maybe it would be worth having a routine that converts suffixes into MB.
         # This should use memory_limit_soft or memory_limit_hard.
-        # TODO: Not sure how to use this in a situation like BWA where a multi threaded application does not use
-        # memory fo reach thread.
+        # TODO: Not sure how to use this in a situation like BWA where a multi-threaded application does not use
+        # memory for each thread.
 
         if self.memory_limit_hard:
             # command.append('--mem-per-cpu')
@@ -181,26 +170,30 @@ def submit(self, debug=0):
             command.append(executable.name)
 
         # Job hold conditions
+        # A particular feature of SLURM is its inability to set process dependencies on process names.
+        # Rather, dependencies need setting on the process identifier, which is only obtained after
+        # submitting the process. Isn't that exactly what we have a scheduler for? Sigh.
+        # Consequently, SLURM process identifiers need to be tracked here, by means of an SQLite database.
 
-        if len(executable.dependencies):
-            identifier_list = list()
-            for executable_name in executable.dependencies:
-                if executable_name in executable_name_dict:
-                    identifier_list.append(executable_name_dict[executable_name])
-                elif debug == 0:
-                    # Dependencies can only be calculated if jobs have been submitted.
-                    # TODO: This means, it is no longer possible to submit jobs in analysis stages.
-                    # It is thus necessary to write sample annotation sheets that contain SLURM job identifiers.
-                    warnings.warn(
-                        "While submitting Executable with name {!r}, "
-                        "Executable with name {!r} that it depends on, "
-                        "has not been submitted before.".
-                        format(executable.name, executable_name),
-                        UserWarning)
-            if len(identifier_list):
-                # If no jobs have been submitted before, the identifier list is empty.
-                command.append('--dependency')
-                command.append(string.join(map(lambda x: 'afterok:' + x, identifier_list), ','))
+        process_identifier_list = list()
+        for executable_name in executable.dependencies:
+            process_slurm_list = process_slurm_adaptor.select_all_by_job_name(name=executable_name)
+            if len(process_slurm_list):
+                # This Executable has been submitted at least once before.
+                # For the moment, set the dependency on the last submission.
+                process_identifier_list.append(process_slurm_list[-1].job_id)
+            elif debug == 0:
+                warnings.warn(
+                    "While submitting Executable with name {!r}, "
+                    "Executable with name {!r} that it depends on, "
+                    "has not been submitted before.".
+                    format(executable.name, executable_name),
+                    UserWarning)
+        if len(process_identifier_list):
+            # Only set the dependency option if there are some on the process identifier list.
+            # The identifier list may be empty if no dependencies exist or no Executable has been submitted before.
+            command.append('--dependency')
+            command.append(string.join(words=map(lambda x: 'afterok:' + x, process_identifier_list), sep=','))
 
         command.extend(executable.command_list())
 
@@ -223,7 +216,7 @@ def submit(self, debug=0):
 
             # Although subprocess.communicate() may block when memory buffers
             # have been filled up, not much STDOUT and STDERR is expected from
-            # SGE qsub.
+            # SLURM sbatch.
 
             (child_stdout, child_stderr) = child_process.communicate(input=None)
 
@@ -237,37 +230,46 @@ def submit(self, debug=0):
                     "Command list representation: {!r}".
                     format(child_return_code, child_stdout, child_stderr, command))
 
-            # Parse the multi-line STDOUT string to get the SGE process identifier and name.
-            # The response to the SGE qsub command looks like:
-            # Your job 137657 ("ls") has been submitted
+            # Parse the multi-line STDOUT string to get the SLURM process identifier and name.
+            # The response to the SLURM sbatch command looks like:
+            # Submitted batch job 137657
+            # Set the result in the Executable.process_identifier instance variable.
 
             for line in child_stdout.splitlines(False):
                 match = re.search(pattern=r'Submitted batch job (\d+)', string=line)
                 if match:
                     executable.process_identifier = match.group(1)
-                    # Correlate Executable.name and Executable.process_identifier information.
-                    if executable.name in executable_name_dict:
-                        warnings.warn(
-                            "Overwriting Executable with name {!r} and process identifier {!r} "
-                            "that has been submitted to SLURM before.".
-                            format(executable.name, executable.process_identifier),
-                            UserWarning)
-                    executable_name_dict[executable.name] = executable.process_identifier
                 else:
-                    print('Could not parse SLURM sbatch response line {}'.format(line))
+                    print('Could not parse the process identifier from the SLURM sbatch response line {}'.format(line))
 
         # Copy the SLURM command line to the Bash script.
 
         output += string.join(words=command, sep=' ') + "\n"
         output += "\n"
 
-        # Write this into the SQLite database.
+        # Regardless of an actual Executable submission, UPDATE it in or INSERT it into the SQLite database.
 
-        # For the moment, leave the command out since it has to contain the dependencies in numeric form.
-        job_submission = JobSubmission(executable_id=executable.process_identifier,
-                                       name=executable.name,
-                                       command='')
-        job_submission_adaptor.store(data_object=job_submission)
+        job_submission = job_submission_adaptor.select_by_name(name=executable.name)
+        if job_submission:
+            job_submission.command = executable.command_str()
+            job_submission_adaptor.update(data_object=job_submission)
+        else:
+            job_submission = JobSubmission(
+                executable_id=0,
+                name=executable.name,
+                command=executable.command_str())
+            job_submission_adaptor.insert(data_object=job_submission)
+
+        # Only store a ProcessSLURM object, if an Executable has been submitted into SLURM.
+
+        if executable.process_identifier:
+            process_slurm = process_slurm_adaptor.select_by_job_id(job_id=executable.process_identifier)
+            if not process_slurm:
+                process_slurm = ProcessSLURM(job_id=executable.process_identifier, job_name=executable.name)
+                process_slurm_adaptor.insert(data_object=process_slurm)
+
+        # The commit statement should affect both insert statements above.
+        job_submission_adaptor.database_connection.connection.commit()
 
     script_path = os.path.join(self.work_directory, 'bsfpython_slurm_{}.bash'.format(self.name))
     script_file = open(name=script_path, mode='w')
