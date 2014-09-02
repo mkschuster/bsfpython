@@ -1205,6 +1205,7 @@ class Tuxedo(Analysis):
         output += '<th>Promoters</th>\n'
         output += '<th>Splicing</th>\n'
         output += '<th>Transcription Start Sites</th>\n'
+        output += '<th>Replicates</th>\n'
         output += '<th>Gene FPKM Replicates</th>\n'
         output += '<th>Isoform FPKM Replicates</th>\n'
         output += '</tr>\n'
@@ -1245,6 +1246,8 @@ class Tuxedo(Analysis):
             output += '<td><a href="./{}/{}_splicing_diff.txt">Splicing</a></td>\n'. \
                 format(prefix, prefix)
             output += '<td><a href="./{}/{}_tss_group_exp_diff.txt">Transcription Start Sites</a></td>\n'. \
+                format(prefix, prefix)
+            output += '<td><a href="./{}/{}_replicates.txt">Replicates</a></td>\n'. \
                 format(prefix, prefix)
             output += '<td><a href="./{}/{}_genes_fpkm_replicates.txt">Gene FPKM Replicates</a></td>\n'. \
                 format(prefix, prefix)
