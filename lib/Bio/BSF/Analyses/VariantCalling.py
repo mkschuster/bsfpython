@@ -218,6 +218,7 @@ class VariantCallingGATK(Analysis):
         resource_option = string.join(words=('vqsr_resources', variation_type), sep='_')
         if config_parser.has_option(section=config_section, option=resource_option):
             for resource in config_parser.get(section=config_section, option=resource_option).split(','):
+                resource = resource.strip()
                 resource_section = string.join(words=('vqsr', variation_type, resource), sep='_')
                 if config_parser.has_section(section=resource_section):
                     if resource in vqsr_dict:
@@ -337,19 +338,45 @@ class VariantCallingGATK(Analysis):
 
         include_intervals_list = list()
         if config_parser.has_option(section=config_section, option='include_intervals'):
-            include_intervals_list.extend(
-                config_parser.get(section=config_section, option='include_intervals').split(','))
+            include_intervals = config_parser.get(section=config_section, option='include_intervals')
+            if include_intervals[-10:] == '.intervals' or include_intervals[-14:] == '.interval_list':
+                # For Picard-style interval lists prepend the current directory if necessary.
+                if not os.path.isabs(include_intervals):
+                    include_intervals = os.path.join(os.path.realpath(os.path.curdir), include_intervals)
+                if not os.path.exists(include_intervals):
+                    raise Exception('Include intervals file {!r} does not exist.'.format(include_intervals))
+                include_intervals_list.append(include_intervals)
+            else:
+                # For comma-separated interval lists split into components on commas, strip white space and
+                # push them onto the list individually.
+                include_intervals_list.extend(map(lambda x: x.strip(), include_intervals.split(',')))
 
         exclude_intervals_list = list()
         if config_parser.has_option(section=config_section, option='exclude_intervals'):
-            exclude_intervals_list.extend(
-                config_parser.get(section=config_section, option='exclude_intervals').split(','))
+            exclude_intervals = config_parser.get(section=config_section, option='exclude_intervals')
+            if exclude_intervals[-10:] == '.intervals' or exclude_intervals[-14:] == '.interval_list':
+                # For Picard-style interval lists prepend the current directory if necessary.
+                if not os.path.isabs(exclude_intervals):
+                    exclude_intervals = os.path.join(os.path.realpath(os.path.curdir), exclude_intervals)
+                if not os.path.exists(exclude_intervals):
+                    raise Exception('Exclude intervals file {!r} does not exist.'.format(exclude_intervals))
+                exclude_intervals_list.append(exclude_intervals)
+            else:
+                # For comma-separated interval lists split into components on commas, strip white space
+                # and push them onto the list individually.
+                exclude_intervals_list.extend(map(lambda x: x.strip(), exclude_intervals.split(',')))
+
+        if config_parser.has_option(section=config_section, option='downsample_to_fraction'):
+            downsample_to_fraction = config_parser.get(section=config_section, option='downsample_to_fraction')
+        else:
+            downsample_to_fraction = str()
 
         # Comma-separated list of VCF files with known variant sites for the
         # GATK RealignerTargetCreator and IndelRealigner steps.
         known_sites_realignment = list()
         if config_parser.has_option(section=config_section, option='known_sites_realignment'):
             for file_path in config_parser.get(section=config_section, option='known_sites_realignment').split(','):
+                file_path = file_path.strip()  # Strip white space around commas.
                 if not os.path.isabs(file_path):
                     file_path = os.path.join(Default.absolute_gatk_bundle(gatk_bundle_version=gatk_bundle_version,
                                                                           genome_version=self.genome_version),
@@ -361,6 +388,7 @@ class VariantCallingGATK(Analysis):
         known_sites_recalibration = list()
         if config_parser.has_option(section=config_section, option='known_sites_recalibration'):
             for file_path in config_parser.get(section=config_section, option='known_sites_recalibration').split(','):
+                file_path = file_path.strip()  # Strip white space around commas.
                 if not os.path.isabs(file_path):
                     file_path = os.path.join(Default.absolute_gatk_bundle(gatk_bundle_version=gatk_bundle_version,
                                                                           genome_version=self.genome_version),
@@ -392,13 +420,13 @@ class VariantCallingGATK(Analysis):
 
         vqsr_annotations_indel_list = list()
         if config_parser.has_option(section=config_section, option='vqsr_annotations_indel'):
-            vqsr_annotations_indel_list.extend(
-                config_parser.get(section=config_section, option='vqsr_annotations_indel').split(','))
+            for annotation in config_parser.get(section=config_section, option='vqsr_annotations_indel').split(','):
+                vqsr_annotations_indel_list.append(annotation.strip())
 
         vqsr_annotations_snp_list = list()
         if config_parser.has_option(section=config_section, option='vqsr_annotations_snp'):
-            vqsr_annotations_snp_list.extend(
-                config_parser.get(section=config_section, option='vqsr_annotations_snp').split(','))
+            for annotation in config_parser.get(section=config_section, option='vqsr_annotations_snp').split(','):
+                vqsr_annotations_snp_list.append(annotation.strip())
 
         vqsr_resources_indel_dict = self._read_vqsr_configuration(variation_type='indel',
                                                                   gatk_bundle_version=gatk_bundle_version)
@@ -415,6 +443,7 @@ class VariantCallingGATK(Analysis):
         if config_parser.has_option(section=config_section, option='annotation_resources'):
             for annotation_resource in \
                     config_parser.get(section=config_section, option='annotation_resources').split(','):
+                annotation_resource = annotation_resource.strip()  # Strip white space around commas.
                 resource_section = string.join(words=(annotation_resource, 'resource'), sep='_')
                 if config_parser.has_section(section=resource_section):
                     annotation_list = list()
@@ -431,8 +460,8 @@ class VariantCallingGATK(Analysis):
                             "Missing configuration option 'file_path' in configuration section {!r}.".
                             format(resource_section))
                     if config_parser.has_option(section=resource_section, option='annotations'):
-                        annotation_list.extend(
-                            config_parser.get(section=resource_section, option='annotations').split(','))
+                        for annotation in config_parser.get(section=resource_section, option='annotations').split(','):
+                            annotation_list.append(annotation.strip())
                     else:
                         raise Exception(
                             "Missing configuration option 'annotations' in configuration section {!r}.".
@@ -682,6 +711,8 @@ class VariantCallingGATK(Analysis):
                 sub_command = java_process.sub_command
                 sub_command.add_OptionLong(key='analysis_type', value='RealignerTargetCreator')
                 sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+                if downsample_to_fraction:
+                    sub_command.add_OptionLong(key='downsample_to_fraction', value=downsample_to_fraction)
                 for interval in exclude_intervals_list:
                     sub_command.add_OptionLong(key='excludeIntervals', value=interval)
                 for interval in include_intervals_list:
@@ -709,6 +740,8 @@ class VariantCallingGATK(Analysis):
                 sub_command = java_process.sub_command
                 sub_command.add_OptionLong(key='analysis_type', value='IndelRealigner')
                 sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+                if downsample_to_fraction:
+                    sub_command.add_OptionLong(key='downsample_to_fraction', value=downsample_to_fraction)
                 for interval in exclude_intervals_list:
                     sub_command.add_OptionLong(key='excludeIntervals', value=interval)
                 for interval in include_intervals_list:
@@ -737,6 +770,8 @@ class VariantCallingGATK(Analysis):
                 sub_command = java_process.sub_command
                 sub_command.add_OptionLong(key='analysis_type', value='BaseRecalibrator')
                 sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+                if downsample_to_fraction:
+                    sub_command.add_OptionLong(key='downsample_to_fraction', value=downsample_to_fraction)
                 for interval in exclude_intervals_list:
                     sub_command.add_OptionLong(key='excludeIntervals', value=interval)
                 for interval in include_intervals_list:
@@ -761,6 +796,8 @@ class VariantCallingGATK(Analysis):
                 sub_command = java_process.sub_command
                 sub_command.add_OptionLong(key='analysis_type', value='BaseRecalibrator')
                 sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+                if downsample_to_fraction:
+                    sub_command.add_OptionLong(key='downsample_to_fraction', value=downsample_to_fraction)
                 for interval in exclude_intervals_list:
                     sub_command.add_OptionLong(key='excludeIntervals', value=interval)
                 for interval in include_intervals_list:
@@ -786,6 +823,8 @@ class VariantCallingGATK(Analysis):
                 sub_command = java_process.sub_command
                 sub_command.add_OptionLong(key='analysis_type', value='AnalyzeCovariates')
                 sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+                if downsample_to_fraction:
+                    sub_command.add_OptionLong(key='downsample_to_fraction', value=downsample_to_fraction)
                 for interval in exclude_intervals_list:
                     sub_command.add_OptionLong(key='excludeIntervals', value=interval)
                 for interval in include_intervals_list:
@@ -810,6 +849,8 @@ class VariantCallingGATK(Analysis):
                 sub_command = java_process.sub_command
                 sub_command.add_OptionLong(key='analysis_type', value='PrintReads')
                 sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+                if downsample_to_fraction:
+                    sub_command.add_OptionLong(key='downsample_to_fraction', value=downsample_to_fraction)
                 for interval in exclude_intervals_list:
                     sub_command.add_OptionLong(key='excludeIntervals', value=interval)
                 for interval in include_intervals_list:
@@ -990,6 +1031,8 @@ class VariantCallingGATK(Analysis):
             sub_command = java_process.sub_command
             sub_command.add_OptionLong(key='analysis_type', value='RealignerTargetCreator')
             sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+            if downsample_to_fraction:
+                sub_command.add_OptionLong(key='downsample_to_fraction', value=downsample_to_fraction)
             for interval in exclude_intervals_list:
                 sub_command.add_OptionLong(key='excludeIntervals', value=interval)
             for interval in include_intervals_list:
@@ -1017,6 +1060,8 @@ class VariantCallingGATK(Analysis):
             sub_command = java_process.sub_command
             sub_command.add_OptionLong(key='analysis_type', value='IndelRealigner')
             sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+            if downsample_to_fraction:
+                sub_command.add_OptionLong(key='downsample_to_fraction', value=downsample_to_fraction)
             for interval in exclude_intervals_list:
                 sub_command.add_OptionLong(key='excludeIntervals', value=interval)
             for interval in include_intervals_list:
@@ -1072,6 +1117,8 @@ class VariantCallingGATK(Analysis):
             sub_command = java_process.sub_command
             sub_command.add_OptionLong(key='analysis_type', value='HaplotypeCaller')
             sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+            if downsample_to_fraction:
+                sub_command.add_OptionLong(key='downsample_to_fraction', value=downsample_to_fraction)
             for interval in exclude_intervals_list:
                 sub_command.add_OptionLong(key='excludeIntervals', value=interval)
             for interval in include_intervals_list:
@@ -1107,7 +1154,12 @@ class VariantCallingGATK(Analysis):
                 name=prefix_sample,
                 program='bsf_run_variant_calling_process_sample.py',
                 analysis=self)
-            vc_process_sample_drms.add_Executable(vc_process_sample)
+            # Only submit this Executable if the final result file does not exist.
+            if not (os.path.exists(
+                    os.path.join(self.genome_directory, file_path_sample['raw_variants_gvcf_idx']))
+                    and os.path.getsize(
+                    os.path.join(self.genome_directory, file_path_sample['raw_variants_gvcf_idx']))):
+                vc_process_sample_drms.add_Executable(vc_process_sample)
 
             vc_process_sample.dependencies.extend(vc_process_sample_dependencies)
 
@@ -1169,7 +1221,7 @@ class VariantCallingGATK(Analysis):
                                   sub_command=Command(command=str()))
         java_process.add_SwitchShort(key='d64')
         java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
-        java_process.add_SwitchShort(key='Xmx8G')
+        java_process.add_SwitchShort(key='Xmx4G')
         java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_cohort['temporary_cohort'])
 
         sub_command = java_process.sub_command
@@ -1192,7 +1244,7 @@ class VariantCallingGATK(Analysis):
                                   sub_command=Command(command=str()))
         java_process.add_SwitchShort(key='d64')
         java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
-        java_process.add_SwitchShort(key='Xmx8G')
+        java_process.add_SwitchShort(key='Xmx6G')
         java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_cohort['temporary_cohort'])
 
         sub_command = java_process.sub_command
@@ -1287,7 +1339,7 @@ class VariantCallingGATK(Analysis):
                                   sub_command=Command(command=str()))
         java_process.add_SwitchShort(key='d64')
         java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
-        java_process.add_SwitchShort(key='Xmx8G')
+        java_process.add_SwitchShort(key='Xmx4G')
         java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_cohort['temporary_cohort'])
 
         sub_command = java_process.sub_command
@@ -1315,7 +1367,7 @@ class VariantCallingGATK(Analysis):
                                   sub_command=Command(command=str()))
         java_process.add_SwitchShort(key='d64')
         java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
-        java_process.add_SwitchShort(key='Xmx8G')
+        java_process.add_SwitchShort(key='Xmx4G')
         java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_cohort['temporary_cohort'])
 
         sub_command = java_process.sub_command
@@ -1365,7 +1417,7 @@ class VariantCallingGATK(Analysis):
                                   sub_command=Command(command=str()))
         java_process.add_SwitchShort(key='d64')
         java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
-        java_process.add_SwitchShort(key='Xmx6G')
+        java_process.add_SwitchShort(key='Xmx4G')
         java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_cohort['temporary_cohort'])
 
         sub_command = java_process.sub_command
@@ -1416,7 +1468,7 @@ class VariantCallingGATK(Analysis):
                                       sub_command=Command(command=str()))
             java_process.add_SwitchShort(key='d64')
             java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
-            java_process.add_SwitchShort(key='Xmx6G')
+            java_process.add_SwitchShort(key='Xmx4G')
             java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_cohort['temporary_cohort'])
 
             sub_command = java_process.sub_command
@@ -1443,7 +1495,7 @@ class VariantCallingGATK(Analysis):
                                       sub_command=Command(command=str()))
             java_process.add_SwitchShort(key='d64')
             java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
-            java_process.add_SwitchShort(key='Xmx6G')
+            java_process.add_SwitchShort(key='Xmx4G')
             java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_cohort['temporary_cohort'])
 
             sub_command = java_process.sub_command
@@ -1469,6 +1521,7 @@ class VariantCallingGATK(Analysis):
             #
             sub_command.add_OptionLong(key='fields', value='VQSLOD')
             sub_command.add_OptionLong(key='fields', value='AF')
+            # GATK Haplotype Caller genotype fields: GT:AD:DP:GQ:PL
             sub_command.add_OptionLong(key='genotypeFields', value='GT')
             sub_command.add_OptionLong(key='genotypeFields', value='AD')
             sub_command.add_OptionLong(key='genotypeFields', value='DP')
