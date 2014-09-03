@@ -618,14 +618,16 @@ class VariantCallingGATK(Analysis):
                     name=string.join(words=(vc_align_lane_drms.name, replicate_key), sep='_'),
                     program='bsf_run_bwa.py',
                     analysis=self)
-                # Only submit this Executable if the final result file does not exist.
-                if not (os.path.exists(
-                        os.path.join(self.genome_directory, file_path_align_lane['aligned_md5']))
-                        and os.path.getsize(
-                        os.path.join(self.genome_directory, file_path_align_lane['aligned_md5']))):
-                    vc_align_lane_drms.add_Executable(executable=run_bwa)
+                vc_align_lane_drms.add_Executable(executable=run_bwa)
 
-                # Set run_bwa options.
+                # Only submit this Executable if the final result file does not exist.
+                if (os.path.exists(
+                        os.path.join(self.genome_directory, file_path_align_lane['aligned_md5']))
+                    and os.path.getsize(
+                        os.path.join(self.genome_directory, file_path_align_lane['aligned_md5']))):
+                    run_bwa.submit = False
+
+                    # Set run_bwa options.
 
                 run_bwa.add_OptionLong(key='pickler_path', value=pickler_path)
                 run_bwa.add_OptionLong(key='debug', value=str(self.debug))
@@ -902,12 +904,14 @@ class VariantCallingGATK(Analysis):
                     name=prefix_lane,
                     program='bsf_run_variant_calling_process_lane.py',
                     analysis=self)
+                vc_process_lane_drms.add_Executable(vc_process_lane)
+
                 # Only submit this Executable if the final result file does not exist.
-                if not (os.path.exists(
+                if (os.path.exists(
                         os.path.join(self.genome_directory, file_path_lane['alignment_summary_metrics']))
-                        and os.path.getsize(
+                    and os.path.getsize(
                         os.path.join(self.genome_directory, file_path_lane['alignment_summary_metrics']))):
-                    vc_process_lane_drms.add_Executable(vc_process_lane)
+                    vc_process_lane.submit = False
 
                 vc_process_lane.dependencies.append(run_bwa.name)
 
@@ -1154,12 +1158,14 @@ class VariantCallingGATK(Analysis):
                 name=prefix_sample,
                 program='bsf_run_variant_calling_process_sample.py',
                 analysis=self)
+            vc_process_sample_drms.add_Executable(vc_process_sample)
+
             # Only submit this Executable if the final result file does not exist.
-            if not (os.path.exists(
+            if (os.path.exists(
                     os.path.join(self.genome_directory, file_path_sample['raw_variants_gvcf_idx']))
-                    and os.path.getsize(
+                and os.path.getsize(
                     os.path.join(self.genome_directory, file_path_sample['raw_variants_gvcf_idx']))):
-                vc_process_sample_drms.add_Executable(vc_process_sample)
+                vc_process_sample.submit = False
 
             vc_process_sample.dependencies.extend(vc_process_sample_dependencies)
 

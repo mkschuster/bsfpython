@@ -187,9 +187,9 @@ def submit(self, debug=0):
         if executable.stderr_path:
             command.append("2>{}".format(executable.stderr_path))
 
-        # Finally, submit this command if not in debug mode.
+        # Finally, submit this command if requested and not in debug mode.
 
-        if debug == 0:
+        if executable.submit and debug == 0:
 
             child_process = subprocess.Popen(args=command,
                                              bufsize=4096,

@@ -2299,6 +2299,8 @@ class Executable(Command):
     :type dependencies: list
     :ivar hold: Hold on job scheduling
     :type hold: str
+    :ivar submit: Submit the Executable into the DRMS
+    :type submit: bool
     :ivar process_identifier: Process identifier
     :type process_identifier: str
     :ivar process_name: Process name
@@ -2374,7 +2376,7 @@ class Executable(Command):
     def __init__(self, name,
                  program=None, options=None, arguments=None, sub_command=None,
                  stdout_path=None, stderr_path=None, dependencies=None, hold=None,
-                 process_identifier=None, process_name=None):
+                 submit=True, process_identifier=None, process_name=None):
 
         """Initialise a BSF Executable object.
 
@@ -2398,6 +2400,8 @@ class Executable(Command):
         :type dependencies: list
         :param hold: Hold on job scheduling
         :type hold: str
+        :param submit: Submit the Executable into the DRMS
+        :type submit: bool
         :param process_identifier: Process identifier
         :type process_identifier: str
         :param process_name: Process name
@@ -2430,6 +2434,8 @@ class Executable(Command):
             self.hold = hold
         else:
             self.hold = str()
+
+        self.submit = submit
 
         if process_identifier:
             self.process_identifier = process_identifier
@@ -2464,6 +2470,8 @@ class Executable(Command):
             format(indent, self.stderr_path)
         output += '{}  hold:               {!r}\n'. \
             format(indent, self.hold)
+        output += '{}  submit:             {!r}\n'. \
+            format(indent, self.submit)
         output += '{}  process_identifier: {!r}\n'. \
             format(indent, self.process_identifier)
         output += '{}  process_name:       {!r}\n'. \
@@ -2538,7 +2546,7 @@ class Runnable(object):
         :param file_handle: The STDOUT or STDERR file handle
         :type file_handle: file
         :param thread_lock: A Python threading.Lock object
-        :type thread_lock: threading.Lock
+        :type thread_lock: thread.lock
         :param file_path: STDOUT file path
         :type file_path: str, unicode
         :param debug: Debug level
@@ -2587,7 +2595,7 @@ class Runnable(object):
         :param stdout_handle: The STDOUT file handle
         :type stdout_handle: file
         :param thread_lock: A Python threading.Lock object
-        :type thread_lock: threading.Lock
+        :type thread_lock: thread.lock
         :param stdout_path: STDOUT file path
         :type stdout_path: str, unicode
         :param debug: Debug level
@@ -2607,7 +2615,7 @@ class Runnable(object):
         :param stderr_handle: The STDERR file handle
         :type stderr_handle: file
         :param thread_lock: A Python threading.Lock object
-        :type thread_lock: threading.Lock
+        :type thread_lock: thread.lock
         :param stderr_path: STDOUT file path
         :type stderr_path: str, unicode
         :param debug: Debug level

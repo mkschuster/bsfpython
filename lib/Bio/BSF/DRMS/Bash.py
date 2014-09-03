@@ -51,6 +51,8 @@ def submit(self, debug=0):
         output += "\n"
 
     for executable in self.executables:
+        if not executable.submit:
+            output += '# '
         output += executable.command_str()
         if executable.stdout_path:
             output += " 1>{}".format(executable.stdout_path)
