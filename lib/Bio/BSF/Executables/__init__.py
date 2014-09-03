@@ -224,18 +224,19 @@ class Cuffmerge(Executable):
         """
 
         # super(Cuffmerge, self).__init__(name=name, program='cuffmerge')
-        # TODO: Experimentally change this so that the new bsf_runner.py script gets used.
+        # TODO: Experimentally change this so that the new bsf_run_rnaseq_cuffmerge.py script gets used.
         # Although this seems rather successful, so far, the runnable option is not ideal.
         # Maybe the DRMS object should supply a mechanism to execute via the BSF Runner script.
 
         # assert isinstance(analysis, Analysis)
 
-        super(Cuffmerge, self).__init__(name=name, program='bsf_runner.py')
+        super(Cuffmerge, self).__init__(name=name, program='bsf_run_rnaseq_cuffmerge.py')
 
         section = analysis.configuration.section_from_instance(self)
         self.set_Configuration(configuration=analysis.configuration, section=section)
 
-        # TODO: Should this be refactored so that the bsf_runner.py script can be used from a DRMS or Executable object?
+        # TODO: Should this be refactored so that the bsf_run_rnaseq_cuffmerge.py script can be used from a DRMS or
+        # Executable object?
         self.add_OptionLong(key='runnable', value='Cuffmerge')
 
         # Set default Cuffmerge options.

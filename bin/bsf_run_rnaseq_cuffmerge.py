@@ -53,7 +53,7 @@ module = importlib.import_module(name='Bio.BSF.Runnables.' + args.runnable)
 
 # TODO: How to set the binary executable as first option needs re-thinking.
 # A BSF Executable, Command and subordinate command infrastructure exists.
-# This module would need to remove the bsf_runner.py, as well as all options specific to the
+# This module would need to remove the bsf_run_rnaseq_cuffmerge.py, as well as all options specific to the
 # BSF Runner script from the arguments list.
 
 arguments.insert(0, module.executable)
