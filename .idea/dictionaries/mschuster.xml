@@ -2,6 +2,7 @@
   <dictionary name="mschuster">
     <words>
       <w>barcodes</w>
+      <w>basecalls</w>
       <w>bioconductor</w>
       <w>bioinformatics</w>
       <w>biomedicine</w>
@@ -29,6 +30,7 @@
       <w>fpkm</w>
       <w>gatk</w>
       <w>genomics</w>
+      <w>genotyper</w>
       <w>gzip</w>
       <w>haplotype</w>
       <w>hapmap</w>

@@ -33,6 +33,7 @@ import datetime
 import errno
 import importlib
 import os
+from pickle import Pickler, Unpickler, HIGHEST_PROTOCOL
 import re
 from stat import *
 import string
@@ -72,6 +73,8 @@ class Analysis(object):
     :type genome_directory: str, unicode
     :ivar drms_list: Python list of BSF DRMS objects
     :type drms_list: list
+    :ivar runnable_dict: Python dict of Python str (BSF Runnable.name) key data and BSF Runnable value data
+    :type runnable_dict: dict
     :ivar collection: BSF Collection
     :type collection: Collection
     :ivar comparisons: Python dict of comparisons
@@ -124,7 +127,7 @@ class Analysis(object):
                  input_directory=None, output_directory=None,
                  project_directory=None, genome_directory=None,
                  sas_file=None, sas_prefix=None, e_mail=None, debug=0, drms_list=None,
-                 collection=None, comparisons=None, samples=None):
+                 runnable_dict=None, collection=None, comparisons=None, samples=None):
 
         """Initialise a Bio.BSF.Analysis object.
 
@@ -155,6 +158,8 @@ class Analysis(object):
         :type debug: int
         :param drms_list: Python list of BSF DRMS objects
         :type drms_list: list
+        :param runnable_dict: Python dict of Python str (BSF Runnable.name) and BSF Runnable value data
+        :type runnable_dict: dict
         :param collection: BSF Collection
         :type collection: Collection
         :param comparisons: Python dict of Analysis-specific objects
@@ -223,6 +228,11 @@ class Analysis(object):
         else:
             self.drms_list = list()
 
+        if runnable_dict:
+            self.runnable_dict = runnable_dict
+        else:
+            self.runnable_dict = dict()
+
         self.collection = collection
 
         if comparisons:
@@ -248,19 +258,20 @@ class Analysis(object):
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
-        output += '{}  project_name:     {!r}\n'.format(indent, self.project_name)
-        output += '{}  genome_version:   {!r}\n'.format(indent, self.genome_version)
-        output += '{}  input_directory:  {!r}\n'.format(indent, self.input_directory)
+        output += '{}  project_name: {!r}\n'.format(indent, self.project_name)
+        output += '{}  genome_version: {!r}\n'.format(indent, self.genome_version)
+        output += '{}  input_directory: {!r}\n'.format(indent, self.input_directory)
         output += '{}  output_directory: {!r}\n'.format(indent, self.output_directory)
         output += '{}  genome_directory: {!r}\n'.format(indent, self.genome_directory)
-        output += '{}  sas_file:         {!r}\n'.format(indent, self.sas_file)
-        output += '{}  sas_prefix        {!r}\n'.format(indent, self.sas_prefix)
-        output += '{}  e_mail:           {!r}\n'.format(indent, self.e_mail)
-        output += '{}  debug:            {!r}\n'.format(indent, self.debug)
-        output += '{}  drms_list         {!r}\n'.format(indent, self.drms_list)
-        output += '{}  collection        {!r}\n'.format(indent, self.collection)
-        output += '{}  comparisons       {!r}\n'.format(indent, self.comparisons)
-        output += '{}  samples           {!r}\n'.format(indent, self.samples)
+        output += '{}  sas_file: {!r}\n'.format(indent, self.sas_file)
+        output += '{}  sas_prefix: {!r}\n'.format(indent, self.sas_prefix)
+        output += '{}  e_mail: {!r}\n'.format(indent, self.e_mail)
+        output += '{}  debug: {!r}\n'.format(indent, self.debug)
+        output += '{}  drms_list: {!r}\n'.format(indent, self.drms_list)
+        output += '{}  runnable_dict: {!r}\n'.format(indent, self.runnable_dict)
+        output += '{}  collection: {!r}\n'.format(indent, self.collection)
+        output += '{}  comparisons: {!r}\n'.format(indent, self.comparisons)
+        output += '{}  samples: {!r}\n'.format(indent, self.samples)
 
         output += '{}  Python List of BSF Sample objects:'.format(indent)
         for sample in self.samples:
@@ -270,6 +281,25 @@ class Analysis(object):
             output += self.collection.trace(level + 1)
 
         return output
+
+    def add_runnable(self, runnable):
+
+        """Add a BSF Runnable.
+
+        :param runnable: BSF Runnable
+        :type runnable: Runnable
+        :return: Nothing
+        :rtype: None
+        :raise Exception: A Runnable.name already exists in the Analysis
+        """
+
+        assert isinstance(runnable, Runnable)
+
+        if runnable.name in self.runnable_dict:
+            raise Exception("A BSF Runnable object with name {!r} already exists in BSF Analysis {!r}".
+                            format(runnable.name, self.project_name))
+        else:
+            self.runnable_dict[runnable.name] = runnable
 
     def add_Sample(self, sample):
 
@@ -346,6 +376,7 @@ class Analysis(object):
 
         :return: Nothing
         :rtype: None
+        :raise Exception: An Analysis.project_name has not been defined
         """
 
         if not self.project_name:
@@ -431,6 +462,7 @@ class Analysis(object):
 
         :return: Nothing
         :rtype: None
+        :raise Exception: Output (genome) directory does not exist
         """
 
         if not os.path.isdir(self.genome_directory):
@@ -460,6 +492,7 @@ class Analysis(object):
         :type sub_directory: str
         :return: Symbolic link to the project directory
         :rtype: str
+        :raise Exception: Public HTML path does not exist
         """
 
         # The html_path consists of the absolute public_html directory and
@@ -644,6 +677,84 @@ class Analysis(object):
         file_handle.write(output)
         file_handle.close()
 
+    @property
+    def pickler_path(self):
+        """Get the file path to a Python Pickler file.
+
+        :return: Python Pickler file path
+        :rtype: str, unicode
+        """
+
+        return os.path.join(self.genome_directory, 'bsfpython_project_' + self.project_name + '.pkl')
+
+    def to_pickler_file(self):
+        """Write this object as a Python Pickler file into the current working directory.
+
+        :return: Nothing
+        :rtype: None
+        """
+
+        pickler_file = open(self.pickler_path, 'wb')
+        pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
+        pickler.dump(obj=self)
+        pickler_file.close()
+
+    @classmethod
+    def from_picker_file(cls, file_path):
+        """Create a BSF Analysis object from a Python Pickler file via Python Unpickler.
+
+        :param file_path: File path to a Picker file
+        :type file_path: str, unicode
+        :return: BSF Analysis
+        :rtype: Analysis
+        """
+
+        pickler_file = open(file_path, 'rb')
+        unpickler = Unpickler(file=pickler_file)
+        analysis = unpickler.load()
+        pickler_file.close()
+
+        assert isinstance(analysis, Analysis)
+
+        return analysis
+
+    def submit(self, drms_name=None):
+        """Write a Python pickler file and submit each DRMS object.
+
+        :param drms_name: Only submit Executables linked to DRMS name
+        :type drms_name: str
+        :return: Nothing
+        :rtype: None
+        """
+
+        self.to_pickler_file()
+
+        # Submit all Executable objects of all Distributed Resource Management System objects.
+
+        submit = 0
+
+        for drms in self.drms_list:
+
+            if drms_name:
+                if drms_name == drms.name:
+                    submit += 1
+                else:
+                    continue
+
+            drms.submit(debug=self.debug)
+
+            if self.debug:
+                print repr(drms)
+                print drms.trace(1)
+
+        if drms_name:
+            if drms_name == 'report':
+                self.report()
+            elif not submit:
+                name_list = [drms.name for drms in self.drms_list]
+                name_list.append('report')
+                print 'Valid Analysis DRMS names are: {!r}'.format(name_list)
+
 
 class Configuration(object):
     """BSF Configuration class.
@@ -686,9 +797,10 @@ class Configuration(object):
         :type config_file: str, unicode
         :return: BSF Configuration
         :rtype: Configuration
+        :raise Exception: Configuration file does not exist
         """
 
-        assert isinstance(config_file, basestring)
+        assert isinstance(config_file, (str, unicode))
 
         config_file = os.path.expanduser(path=config_file)
         config_file = os.path.expandvars(path=config_file)
@@ -706,7 +818,7 @@ class Configuration(object):
 
         if len(files) == 0:
             raise Exception(
-                'Could not find configuration file {!r}.'.format(configuration.config_file))
+                'Configuration file {!r} does not exist.'.format(configuration.config_file))
 
         return configuration
 
@@ -815,6 +927,10 @@ class Default(object):
     :type drms_memory_limit_soft: str
     :ivar drms_time_limit: DRMS time limit
     :type drms_time_limit: str
+    :ivar drms_parallel_environment: DRMS parallel environment
+    :type drms_parallel_environment: str
+    :ivar drms_queue: DRMS queue
+    :type drms_queue: str
     :ivar operator_e_mail: Operator e-mail
     :type operator_e_mail: str
     :ivar ucsc_host_name: UCSC Genome Browser host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
@@ -825,12 +941,6 @@ class Default(object):
     :type url_host_name:str
     :ivar url_relative_projects: Sub-directory for analysis projects
     :type url_relative_projects: str
-    :ivar url_relative_chip_seq: Sub-directory for ChIPSeq experiments
-    :type url_relative_chip_seq:str
-    :ivar url_relative_dna_seq: Sub-directory for general DNA sequencing
-    :type url_relative_dna_seq: str
-    :ivar url_relative_rna_seq: Sub-directory for RNA-Seq experiments
-    :type url_relative_rna_seq: str
     """
 
     global_default = None
@@ -902,10 +1012,9 @@ class Default(object):
                  directory_annotations=None, directory_gatk_bundle=None, directory_snpeff_data=None,
                  indices=None, drms_implementation=None,
                  drms_maximum_threads=None, drms_memory_limit_hard=None, drms_memory_limit_soft=None,
-                 drms_time_limit=None,
+                 drms_time_limit=None, drms_parallel_environment=None, drms_queue=None,
                  operator_e_mail=None, operator_sequencing_centre=None, ucsc_host_name=None, url_protocol=None,
-                 url_host_name=None, url_relative_projects=None, url_relative_chip_seq=None, url_relative_dna_seq=None,
-                 url_relative_rna_seq=None):
+                 url_host_name=None, url_relative_projects=None):
 
         """Initialise a BSF Default object.
 
@@ -949,6 +1058,10 @@ class Default(object):
         :type drms_memory_limit_soft: str
         :param drms_time_limit: DRMS time limit
         :type drms_time_limit: str
+        :param drms_parallel_environment: DRMS parallel environment
+        :type drms_parallel_environment: str
+        :param drms_queue: DRMS queue
+        :type drms_queue: str
         :param operator_e_mail: Operator e-mail
         :type operator_e_mail: str
         :param operator_sequencing_centre: BAM sequencing centre code
@@ -961,12 +1074,6 @@ class Default(object):
         :type url_host_name:str
         :param url_relative_projects: Sub-directory for analysis projects
         :type url_relative_projects: str
-        :param url_relative_chip_seq: Sub-directory for ChIPSeq experiments
-        :type url_relative_chip_seq:str
-        :param url_relative_dna_seq: Sub-directory for general DNA sequencing
-        :type url_relative_dna_seq: str
-        :param url_relative_rna_seq: Sub-directory for RNA-Seq experiments
-        :type url_relative_rna_seq: str
         :return: Nothing
         :rtype: None
         """
@@ -1079,6 +1186,16 @@ class Default(object):
         else:
             self.drms_time_limit = str()
 
+        if drms_parallel_environment:
+            self.drms_parallel_environment = drms_parallel_environment
+        else:
+            self.drms_parallel_environment = str()
+
+        if drms_queue:
+            self.drms_queue = drms_queue
+        else:
+            self.drms_queue = str()
+
         # Set operator information.
 
         if operator_e_mail:
@@ -1114,21 +1231,6 @@ class Default(object):
             self.url_relative_projects = url_relative_projects
         else:
             self.url_relative_projects = str()
-
-        if url_relative_chip_seq:
-            self.url_relative_chip_seq = url_relative_chip_seq
-        else:
-            self.url_relative_chip_seq = str()
-
-        if url_relative_dna_seq:
-            self.url_relative_dna_seq = url_relative_dna_seq
-        else:
-            self.url_relative_dna_seq = str()
-
-        if url_relative_rna_seq:
-            self.url_relative_rna_seq = url_relative_rna_seq
-        else:
-            self.url_relative_rna_seq = str()
 
     def set_Configuration(self, configuration):
 
@@ -1200,10 +1302,6 @@ class Default(object):
         self.url_protocol = cp.get(section=section, option='protocol')
         self.url_host_name = cp.get(section=section, option='host_name')
         self.url_relative_projects = cp.get(section=section, option='relative_projects')
-        # TODO: With the new public_html/projects directory, these should become obsolete.
-        self.url_relative_chip_seq = cp.get(section=section, option='relative_chip_seq')
-        self.url_relative_dna_seq = cp.get(section=section, option='relative_dna_seq')
-        self.url_relative_rna_seq = cp.get(section=section, option='relative_rna_seq')
 
     @staticmethod
     def absolute_home():
@@ -1212,7 +1310,7 @@ class Default(object):
         Get the absolute directory path for the home directory.
 
         :return: Absolute path to the home directory
-        :rtype; str, unicode
+        :rtype: str, unicode
         """
 
         default = Default.get_global_default()
@@ -1367,6 +1465,7 @@ class Default(object):
         :type genome_index: str
         :return: Absolute path to the genome FASTA file
         :rtype: str, unicode
+        :raise Exception: Unknown genome index name
         """
 
         default = Default.get_global_default()
@@ -1404,51 +1503,6 @@ class Default(object):
         default = Default.get_global_default()
 
         return string.join(words=(default.url_absolute_base(), default.url_relative_projects), sep='/')
-
-    @staticmethod
-    def url_absolute_chip_seq():
-
-        """Return the absolute URL to ChIP-Seq experiments.
-
-        :return: URL string
-        :rtype: str
-        """
-
-        # TODO: With the new public_html/projects directory, this should become obsolete.
-
-        default = Default.get_global_default()
-
-        return string.join(words=(default.url_absolute_base(), default.url_relative_chip_seq), sep='/')
-
-    @staticmethod
-    def url_absolute_dna_seq():
-
-        """Return the absolute URL to DNA sequencing experiments.
-
-        :return: URL string
-        :rtype: str
-        """
-
-        # TODO: With the new public_html/projects directory, this should become obsolete.
-
-        default = Default.get_global_default()
-
-        return string.join(words=(default.url_absolute_base(), default.url_relative_dna_seq), sep='/')
-
-    @staticmethod
-    def url_absolute_rna_seq():
-
-        """Return the absolute URL to RNA-Seq experiments.
-
-        :return: URL string
-        :rtype: str
-        """
-
-        # TODO: With the new public_html/projects directory, this should become obsolete.
-
-        default = Default.get_global_default()
-
-        return string.join(words=(default.url_absolute_base(), default.url_relative_rna_seq), sep='/')
 
 
 class DRMS(object):
@@ -2255,10 +2309,39 @@ class Executable(Command):
             section += '.'
             section += executable.command
 
-        if analysis.debug > 0:
+        if analysis.debug > 1:
             print 'Executable configuration section: {!r}.'.format(section)
 
         executable.set_Configuration(configuration=analysis.configuration, section=section)
+
+        return executable
+
+    @classmethod
+    def from_analysis_runnable(cls, analysis, runnable_name):
+
+        """Create a BSF Executable to submit a BSF Runnable into a DRMS.
+
+        :param analysis: Analysis
+        :type analysis: Analysis
+        :param runnable_name: BSF Runnable name
+        :type runnable_name: str
+        :return: BSF Executable
+        :rtype: Executable
+        :raise Exception: A Runnable.name does not exist in Analysis.name
+        """
+
+        assert isinstance(analysis, Analysis)
+
+        if not runnable_name in analysis.runnable_dict:
+            raise Exception("A Runnable object with name {!r} does not exist in the Analysis object with name {!r}.".
+                            format(runnable_name, analysis.project_name))
+
+        runnable = analysis.runnable_dict[runnable_name]
+        executable = cls(name=runnable.name, program=Runnable.runner_script)
+        executable.set_Configuration(configuration=analysis.configuration, section=runnable.code_module)
+        executable.add_OptionLong(key='pickler_path', value=analysis.pickler_path)
+        executable.add_OptionLong(key='runnable_name', value=runnable.name)
+        executable.add_OptionLong(key='debug', value=str(analysis.debug))
 
         return executable
 
@@ -2439,10 +2522,24 @@ class Executable(Command):
 class Runnable(object):
     """BSF Runnable class.
 
-    The BSF Runnable class represents a sub process.
+    The BSF Runnable class holds all information to run one or more BSF Executable objects through the
+    BSF Runner script.
 
     Attributes:
+    :ivar name: Name
+    :type name: str
+    :ivar code_module: The name of a module, usually in Bio.BSF.Runnables that implements the logic required to run
+     BSF Executable objects via the BSF Runner script.
+    :type code_module: str
+    :ivar executable_dict: Python dict of Python str (Executable.name) key data and BSF Executable value data
+    :type executable_dict: dict
+    :ivar file_path_dict: Python dict of Python str (name) key data and Python str (file_path) value data
+    :type file_path_dict: dict
+    :ivar working_directory: Working directory to write Pickler files
+    :type working_directory: str, unicode
     """
+
+    runner_script = 'bsf_runner.py'
 
     @staticmethod
     def process_stream(file_type, file_handle, thread_lock, file_path=None, debug=0):
@@ -2460,6 +2557,7 @@ class Runnable(object):
         :type debug: int
         :return: Nothing
         :rtype: None
+        :raise Exception: The file_type has to be either STDOUT or STDERR
         """
 
         if file_type not in ('STDOUT', 'STDERR'):
@@ -2550,7 +2648,7 @@ class Runnable(object):
         :param debug: Debug level
         :type debug: int
         :return: Return value of the child in the Python subprocess.
-        Negative values indicate that the child received a signal.
+         Negative values indicate that the child received a signal.
         :rtype: int
         """
 
@@ -2562,7 +2660,7 @@ class Runnable(object):
         while loop_counter < max_loop_counter:
 
             child_process = Popen(args=executable.command_list(),
-                                  bufsize=-1,
+                                  bufsize=0,
                                   stdin=PIPE,
                                   stdout=PIPE,
                                   stderr=PIPE,
@@ -2643,6 +2741,7 @@ class Runnable(object):
     @staticmethod
     def evaluate_return_code(executable, return_code):
         """Evaluate a return code from the run method.
+
         :param executable: BSF Executable
         :type executable: Executable
         :param return_code: Return code
@@ -2660,3 +2759,73 @@ class Runnable(object):
         else:
             print '[{}] Child process {!r} completed with return code {}.'. \
                 format(datetime.datetime.now().isoformat(), executable.name, +return_code)
+
+    def __init__(self, name, code_module, working_directory, file_path_dict=None, executable_dict=None):
+        """Initialise a BSF Runnable object.
+
+        :param name: Name
+        :type name: str
+        :param code_module: The Bio.BSF.Runnables module that implements the logic for this runnable.
+        :type code_module: str
+        :param working_directory: Working directory for writing a Python Pickler file
+        :type working_directory: str, unicode
+        :param file_path_dict: Python dict of Python str (name) key data and Python str (file_path) value data
+        :type file_path_dict: dict
+        :param executable_dict: Python dict of Python str (Executable.name) key data and BSF Executable value data
+        :type executable_dict: dict
+        :return: Nothing
+        :rtype: None
+        """
+
+        self.name = name
+        self.code_module = code_module
+        self.working_directory = working_directory
+
+        if file_path_dict:
+            self.file_path_dict = file_path_dict
+        else:
+            self.file_path_dict = dict()
+
+        if executable_dict:
+            self.executable_dict = executable_dict
+        else:
+            self.executable_dict = dict()
+
+    def add_executable(self, executable):
+        """Add a BSF Executable
+
+        :param executable: BSF Executable
+        :type executable: Executable
+        :return: Nothing
+        :rtype: None
+        :raise Exception: An Executable.name already exists in the Runnable object
+        """
+
+        if not executable:
+            return
+
+        if executable.name in self.executable_dict:
+            raise Exception("An Executable object with name {!r} already exists in Runnable object {!r}.".
+                            format(executable.name, self.name))
+        else:
+            self.executable_dict[executable.name] = executable
+
+    def run_executable(self, name):
+        """Run a BSF Executable defined in a BSF Runnable.
+
+        :param name: Executable name
+        :type name: str
+        :return: Nothing
+        :rtype: None
+        :raise Exception: Child process failed with return code or received a signal
+        """
+
+        executable = self.executable_dict[name]
+        child_return_code = Runnable.run(executable=executable)
+
+        if child_return_code > 0:
+            raise Exception('[{}] Child process {!r} failed with return code {}'.
+                            format(datetime.datetime.now().isoformat(), executable.name, +child_return_code))
+        elif child_return_code < 0:
+            raise Exception('[{}] Child process {!r} received signal {}.'.
+                            format(datetime.datetime.now().isoformat(), executable.name, -child_return_code))
