@@ -30,12 +30,12 @@ A package of methods supporting the GNU Bourne-Again Shell (Bash).
 import os
 
 
-def submit(self, debug=0):
+def submit(drms, debug=0):
 
     """Submit BSF Executable objects by writing a GNU Bourne-Again Shell (BASH) script into the DRMS.work_directory.
 
-    :param self: BSF DRMS
-    :type self: DRMS
+    :param drms: BSF DRMS
+    :type drms: DRMS
     :param debug: Debug level
     :type debug: int
     :return: Nothing
@@ -50,7 +50,7 @@ def submit(self, debug=0):
         output += "# BSF-Python debug mode: {}\n".format(debug)
         output += "\n"
 
-    for executable in self.executables:
+    for executable in drms.executables:
         if not executable.submit:
             output += '# '
         output += executable.command_str()
@@ -61,7 +61,7 @@ def submit(self, debug=0):
         output += "\n"
         output += "\n"
 
-    script_path = os.path.join(self.work_directory, 'bsfpython_bash_{}.bash'.format(self.name))
+    script_path = os.path.join(drms.work_directory, 'bsfpython_bash_{}.bash'.format(drms.name))
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()

@@ -37,12 +37,12 @@ import subprocess
 # further scripts to query the state of jobs.
 
 
-def submit(self, debug=0):
+def submit(drms, debug=0):
 
     """Submit BSF Executable objects into the Son of Grid Engine (SGE) Distributed Resource Management System.
 
-    :param self: BSF DRMS
-    :type self: DRMS
+    :param drms: BSF DRMS
+    :type drms: DRMS
     :param debug: Debug level
     :type debug: int
     :return: Nothing
@@ -57,7 +57,7 @@ def submit(self, debug=0):
         output += "# BSF-Python debug mode: {}\n".format(debug)
         output += "\n"
 
-    for executable in self.executables:
+    for executable in drms.executables:
 
         command = list()
 
@@ -80,7 +80,7 @@ def submit(self, debug=0):
         # Binary or script
 
         command.append('-b')
-        if self.is_script:
+        if drms.is_script:
             command.append('no')
         else:
             command.append('yes')
@@ -91,31 +91,31 @@ def submit(self, debug=0):
 
         # If a hard memory limit has been set, use it as the minimum free required.
 
-        if self.memory_limit_hard:
-            if not self.memory_free_virtual:
-                self.memory_free_virtual = self.memory_limit_hard
+        if drms.memory_limit_hard:
+            if not drms.memory_free_virtual:
+                drms.memory_free_virtual = drms.memory_limit_hard
 
         resource_list = list()
 
         # Require physical memory to be free ...
-        if self.memory_free_mem:
-            resource_list.append('mem_free={}'.format(self.memory_free_mem))
+        if drms.memory_free_mem:
+            resource_list.append('mem_free={}'.format(drms.memory_free_mem))
 
         # Require swap memory to be free ...
-        if self.memory_free_swap:
-            resource_list.append('swap_free={}'.format(self.memory_free_swap))
+        if drms.memory_free_swap:
+            resource_list.append('swap_free={}'.format(drms.memory_free_swap))
 
         # Require virtual memory to be free ...
-        if self.memory_free_virtual:
-            resource_list.append('virtual_free={}'.format(self.memory_free_virtual))
+        if drms.memory_free_virtual:
+            resource_list.append('virtual_free={}'.format(drms.memory_free_virtual))
 
         # Set hard virtual memory limit ...
-        if self.memory_limit_hard:
-            resource_list.append('h_vmem={}'.format(self.memory_limit_hard))
+        if drms.memory_limit_hard:
+            resource_list.append('h_vmem={}'.format(drms.memory_limit_hard))
 
         # Set soft virtual memory limit ...
-        if self.memory_limit_soft:
-            resource_list.append('s_vmem={}'.format(self.memory_limit_soft))
+        if drms.memory_limit_soft:
+            resource_list.append('s_vmem={}'.format(drms.memory_limit_soft))
 
         if len(resource_list):
 
@@ -124,27 +124,27 @@ def submit(self, debug=0):
 
         # Parallel environment
 
-        if self.parallel_environment:
+        if drms.parallel_environment:
             command.append('-pe')
-            command.append(self.parallel_environment)
-            command.append(str(self.threads))
+            command.append(drms.parallel_environment)
+            command.append(str(drms.threads))
 
         # Queue name
 
-        if self.queue:
+        if drms.queue:
             command.append('-q')
-            command.append(self.queue)
+            command.append(drms.queue)
 
         # Working directory, standard output and standard error streams.
 
-        if self.work_directory:
+        if drms.work_directory:
             command.append('-wd')
-            command.append(self.work_directory)
+            command.append(drms.work_directory)
 
             # Write standard output and standard error streams into a
             # 'bsfpython_sge_output' directory under the 'working_directory'.
 
-            sge_output_directory = os.path.join(self.work_directory, 'bsfpython_sge_output')
+            sge_output_directory = os.path.join(drms.work_directory, 'bsfpython_sge_output')
 
             if not os.path.isdir(sge_output_directory):
                 # In principle, a race condition could occur as the directory
@@ -234,7 +234,7 @@ def submit(self, debug=0):
         output += string.join(words=command, sep=' ') + "\n"
         output += "\n"
 
-    script_path = os.path.join(self.work_directory, 'bsfpython_sge_{}.bash'.format(self.name))
+    script_path = os.path.join(drms.work_directory, 'bsfpython_sge_{}.bash'.format(drms.name))
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()

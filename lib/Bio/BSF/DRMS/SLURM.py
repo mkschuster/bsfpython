@@ -39,12 +39,12 @@ from Bio.BSF.Database import DatabaseConnection, \
     ProcessSLURM, ProcessSLURMAdaptor
 
 
-def submit(self, debug=0):
+def submit(drms, debug=0):
     """Submit BSF Executable objects into the Simple Linux Utility for Resource Management (SLURM)
      Distributed Resource Management System (DRMS).
 
-    :param self: BSF DRMS
-    :type self: DRMS
+    :param drms: BSF DRMS
+    :type drms: DRMS
     :param debug: Debug level
     :type debug: int
     :return: Nothing
@@ -53,7 +53,7 @@ def submit(self, debug=0):
 
     # Open or create a database.
 
-    database_path = os.path.join(self.work_directory, 'bsfpython_slurm_jobs.db')
+    database_path = os.path.join(drms.work_directory, 'bsfpython_slurm_jobs.db')
 
     database_connection = DatabaseConnection(file_path=database_path)
     database_connection.create_schema()
@@ -70,7 +70,7 @@ def submit(self, debug=0):
         output += "# BSF-Python debug mode: {}\n".format(debug)
         output += "\n"
 
-    for executable in self.executables:
+    for executable in drms.executables:
 
         command = list()
 
@@ -86,9 +86,9 @@ def submit(self, debug=0):
 
         # If a hard memory limit has been set, use it as the minimum free required.
 
-        if self.memory_limit_hard:
-            if not self.memory_free_virtual:
-                self.memory_free_virtual = self.memory_limit_hard
+        if drms.memory_limit_hard:
+            if not drms.memory_free_virtual:
+                drms.memory_free_virtual = drms.memory_limit_hard
 
         # TODO: The memory must be specified in MB.
         # Maybe it would be worth having a routine that converts suffixes into MB.
@@ -96,13 +96,13 @@ def submit(self, debug=0):
         # TODO: Not sure how to use this in a situation like BWA where a multi-threaded application does not use
         # memory for each thread.
 
-        if self.memory_limit_hard:
+        if drms.memory_limit_hard:
             # command.append('--mem-per-cpu')
             command.append('--mem')
-            command.append(self.memory_limit_hard)
+            command.append(drms.memory_limit_hard)
 
         command.append('--time')
-        command.append(self.time_limit)
+        command.append(drms.time_limit)
 
         # Propagate none of the environment variables.
 
@@ -116,13 +116,13 @@ def submit(self, debug=0):
 
         # Parallel environment
 
-        if self.parallel_environment:
+        if drms.parallel_environment:
             command.append('--distribution')
-            command.append(self.parallel_environment)
+            command.append(drms.parallel_environment)
             command.append('--ntasks')
             command.append('1')
             command.append('--cpus-per-task')
-            command.append(str(self.threads))
+            command.append(str(drms.threads))
 
         command.append('--requeue')
 
@@ -131,22 +131,22 @@ def submit(self, debug=0):
 
         # Queue name
 
-        if self.queue:
+        if drms.queue:
             command.append('--partition')
-            command.append(self.queue)
+            command.append(drms.queue)
 
         # Working directory, standard output and standard error streams.
 
-        if self.work_directory:
+        if drms.work_directory:
             command.append('--workdir')
-            command.append(self.work_directory)
+            command.append(drms.work_directory)
 
             # Write standard output and standard error streams into a
             # 'bsfpython_slurm_output' directory under the 'working_directory'.
 
             # TODO: Use slurm_output_name to keep --error and --output relative to the --workdir and
             # slurm_output_path to create the directory.
-            slurm_output_directory = os.path.join(self.work_directory, 'bsfpython_slurm_output')
+            slurm_output_directory = os.path.join(drms.work_directory, 'bsfpython_slurm_output')
 
             if not os.path.isdir(slurm_output_directory):
                 # In principle, a race condition could occur as the directory
@@ -271,7 +271,7 @@ def submit(self, debug=0):
         # The commit statement should affect both insert statements above.
         job_submission_adaptor.database_connection.connection.commit()
 
-    script_path = os.path.join(self.work_directory, 'bsfpython_slurm_{}.bash'.format(self.name))
+    script_path = os.path.join(drms.work_directory, 'bsfpython_slurm_{}.bash'.format(drms.name))
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()
