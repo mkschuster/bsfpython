@@ -1862,7 +1862,7 @@ class DRMS(object):
 
         module = importlib.import_module(string.join(words=(__name__, 'DRMS', self.implementation), sep='.'))
 
-        module.submit(self, debug=debug)
+        module.submit(drms=self, debug=debug)
 
 
 class Command(object):
