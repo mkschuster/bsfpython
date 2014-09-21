@@ -85,8 +85,6 @@ class Analysis(object):
 
         """Create a new BSF Analysis object from a UNIX-style configuration file via the BSF Configuration class.
 
-        :param cls: Class
-        :type cls: Analysis
         :param config_file: UNIX-style configuration file
         :type config_file: str, unicode
         :return: BSF Analysis
@@ -100,8 +98,6 @@ class Analysis(object):
 
         """Create a new BSF Analysis object from a BSF Configuration object.
 
-        :param cls: Class
-        :type cls: Analysis
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :return: BSF Analysis
@@ -132,8 +128,6 @@ class Analysis(object):
 
         """Initialise a Bio.BSF.Analysis object.
 
-        :param self: BSF Analysis
-        :type self: Analysis
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :param project_name: Project name
@@ -245,8 +239,6 @@ class Analysis(object):
 
         """Trace a BSF Analysis object.
 
-        :param self: BSF Analysis
-        :type self: Analysis
         :param level: Indentation level
         :type level: int
         :return: Trace information
@@ -285,8 +277,6 @@ class Analysis(object):
 
         The check is based on the >Python 'in' comparison operator and in lack of a specific
         Bio.BSF.Data.__cmp__ method, relies on object identity (i.e. address).
-        :param self: BSF Analysis
-        :type self: Analysis
         :param sample: BSF Sample
         :type sample: Sample
         :return: Nothing
@@ -306,8 +296,6 @@ class Analysis(object):
         """Set instance variables of a BSF Analysis object via a section of a BSF Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param self: BSF Analysis
-        :type self: Analysis
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :param section: Configuration file section
@@ -356,8 +344,6 @@ class Analysis(object):
 
         """Run the BSF Analysis.
 
-        :param self: BSF Analysis
-        :type self: Analysis
         :return: Nothing
         :rtype: None
         """
@@ -431,8 +417,6 @@ class Analysis(object):
 
         """Create a BSF Analysis report.
 
-        :param self: BSF Analysis
-        :type self: Analysis
         :return: Nothing
         :rtype: None
         """
@@ -445,8 +429,6 @@ class Analysis(object):
 
         """Check and create a BSF Analysis project_directory or genome_directory if necessary.
 
-        :parm self: BSF Analysis
-        :type self: Analysis
         :return: Nothing
         :rtype: None
         """
@@ -474,8 +456,6 @@ class Analysis(object):
 
         The link will be placed in the sub directory and contain
         the project name followed by a 128 bit hexadecimal UUID string.
-        :param self: BSF Analysis
-        :type self: Analysis
         :param sub_directory: BSF Analysis-specific directory
         :type sub_directory: str
         :return: Symbolic link to the project directory
@@ -579,8 +559,6 @@ class Analysis(object):
 
         """Write a UCSC Track Hub hub.txt file into the project directory, above the genome directory.
 
-        :param self: BSF Analysis
-        :type self: Analysis
         :param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         :type prefix: str
         :return: Nothing
@@ -618,8 +596,6 @@ class Analysis(object):
 
         """Write a UCSC Track Hub genomes.txt file into the project directory, above the genome directory.
 
-        :param self: BSF Analysis
-        :type self: Analysis
         :param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         :type prefix: str
         :return: Nothing
@@ -650,8 +626,6 @@ class Analysis(object):
 
         """Write a UCSC Track Hub trackDB.txt file into the genome directory.
 
-        :param self: BSF Analysis
-        :type self: Analysis
         :param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         :type prefix: str
         :return: Nothing
@@ -707,8 +681,6 @@ class Configuration(object):
 
         """Create a new BSF Configuration object based on a configuration file path.
 
-        :param cls: Class
-        :type cls: Configuration
         :param config_file: Configuration file path.
         Both, user and variable expansion gets applied.
         :type config_file: str, unicode
@@ -742,8 +714,6 @@ class Configuration(object):
 
         """Initialise a BSF Configuration object.
 
-        :param self: BSF Configuration
-        :type self: Configuration
         :param config_file: Configuration file path
         :type config_file: str, unicode
         :param config_parser: Python SafeConfigParser
@@ -766,8 +736,6 @@ class Configuration(object):
 
         """Trace a BSF Configuration object.
 
-        :param self: BSF Configuration
-        :type self: Configuration
         :param level: Indentation level
         :type level: int
         :return: Trace information
@@ -788,8 +756,6 @@ class Configuration(object):
 
         The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
         any environment variables i.e. on UNIX ${NAME} or $NAME.
-        :param self: BSF Configuration
-        :type self: Configuration
         :param config_section: Configuration section string
         :type config_section: str
         :param config_option: Configuration option string
@@ -889,8 +855,6 @@ class Default(object):
         """Create a new BSF Default object from the global default configuration file.
 
         The default configuration is based on the file $HOME/.bsfpython.ini in the user's home directory.
-        :param cls: Class
-        :type cls: Default
         :return: BSF Default
         :rtype: Default
         """
@@ -905,8 +869,6 @@ class Default(object):
 
         """Create a new BSF Default object from a UNIX-style configuration file.
 
-        :param cls: Class
-        :type cls: Default
         :param config_file: UNIX-style configuration file
         :type config_file: str, unicode
         :return: BSF Default
@@ -920,8 +882,6 @@ class Default(object):
 
         """Create a new BSF Default objects from a BSF Configuration object.
 
-        :param cls: Class
-        :type cls: Default
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :return: BSF Default
@@ -949,9 +909,6 @@ class Default(object):
 
         """Initialise a BSF Default object.
 
-        :param classpath_gatk:
-        :param self: BSF Default
-        :type self: Default
         :param classpath_gatk: Genome Analysis Toolkit Java Archive (JAR) class path directory
         :type classpath_gatk: str, unicode
         :param classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
@@ -1178,8 +1135,6 @@ class Default(object):
         """Set instance variables of a BSF Default object via a section of a BSF Configuration object.
 
         For each instance variable a configuration option has to be present.
-        :param self: BSF Default
-        :type self: Default
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :return: Nothing
@@ -1535,8 +1490,6 @@ class DRMS(object):
 
         """Create a BSF DRMS object from a BSF Analysis object.
 
-        :param cls: Class
-        :type cls: DRMS
         :param name: Name
         :type name: str
         :param work_directory: Work directory
@@ -1588,8 +1541,6 @@ class DRMS(object):
 
         """Create a BSF DRMS object from a BSF Configuration object.
 
-        :param cls: Class
-        :type cls: DRMS
         :param name: Name
         :type name: str
         :param work_directory: Work directory
@@ -1630,9 +1581,6 @@ class DRMS(object):
 
         """Initialise a BSF DRMS object.
 
-        :param memory_limit_soft:
-        :param self: BSF DRMS
-        :type self: DRMS
         :param name: Name
         :type name: str
         :param work_directory: Work directory
@@ -1741,8 +1689,6 @@ class DRMS(object):
 
         """Trace a BSF DRMS object.
 
-        :param self: BSF DRMS
-        :type self: DRMS
         :param level: Indentation level
         :type level: int
         :return: Trace information
@@ -1793,8 +1739,6 @@ class DRMS(object):
         """Set instance variables of a BSF DRMS object via a section of a BSF Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param self: BSF DRMS
-        :type self: DRMS
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :param section: Configuration file section
@@ -1870,8 +1814,6 @@ class DRMS(object):
 
         """Set instance variables of a BSF DRMS object via a BSF Default object.
 
-        :param self: BSF DRMS
-        :type self: DRMS
         :param default: BSF Default
         :type default: Default
         :return: Nothing
@@ -1896,8 +1838,6 @@ class DRMS(object):
 
         """Add a BSF Executable object.
 
-        :param self: BSF DRMS
-        :type self: DRMS
         :param executable: BSF Executable
         :type executable: Executable
         :return: Nothing
@@ -1912,8 +1852,6 @@ class DRMS(object):
 
         """Submit a command line for each BSF Executable object.
 
-        :param self: BSF DRMS
-        :type self: DRMS
         :param debug: Debug level
         :type debug: int
         :return: Nothing
@@ -1978,8 +1916,6 @@ class Command(object):
 
         """Trace a BSF Command object.
 
-        :param self: BSF Command
-        :type self: Command
         :param level: Indentation level
         :type level: int
         :return: Trace information
@@ -2026,8 +1962,6 @@ class Command(object):
         Bio.BSF.Argument.OptionLong,
         Bio.BSF.Argument.OptionShort or
         Bio.BSF.Argument.OptionPair.
-        :param self: Bio.BSF.Command
-        :type self: Command
         :param argument: Bio.BSF.Argument or sub-class thereof
         (Bio.BSF.Argument.Option or Bio.BSF.Argument.Switch)
         :type argument: Argument
@@ -2058,8 +1992,6 @@ class Command(object):
 
         """Initialise a Bio.BSF.Argument.SwitchLong object and add it to this Bio.BSF.Command object.
 
-        :param self: BSF Command
-        :type self: Command
         :param key: Key
         :type key: str
         :return: Nothing
@@ -2072,8 +2004,6 @@ class Command(object):
 
         """Initialise a Bio.BSF.Argument.SwitchShort object and add it to this Bio.BSF.Command object.
 
-        :param self: BSF Command
-        :type self: Command
         :param key: Key
         :type key: str
         :return: Nothing
@@ -2086,8 +2016,6 @@ class Command(object):
 
         """Initialise a Bio.BSF.Argument.OptionLong object and add it to this Bio.BSF.Command object.
 
-        :param self: BSF Command
-        :type self: Command
         :param key: Key
         :type key: str
         :param value: Value
@@ -2102,8 +2030,6 @@ class Command(object):
 
         """Initialise a Bio.BSF.Argument.OptionShort object and add it to this Bio.BSF.Command object.
 
-        :param self: BSF Command
-        :type self: Command
         :param key: Key
         :type key: str
         :param value: Value
@@ -2118,8 +2044,6 @@ class Command(object):
 
         """Initialise a Bio.BSF.Argument.OptionPair object and add it to this Bio.BSF.Command object.
 
-        :param self: BSF Command
-        :type self: Command
         :param key: Key
         :type key: str
         :param value: Value
@@ -2135,8 +2059,6 @@ class Command(object):
         """Set instance variables of a BSF Command object via a section of a BSF Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param self: BSF Command
-        :type self: Command
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :param section: Configuration file section, defaults to instance class
@@ -2168,8 +2090,6 @@ class Command(object):
 
         """Assemble the command line from program, options and arguments.
 
-        :param self: BSF Command
-        :type self: Command
         :return: Python list of program, options, switches and arguments
         :rtype: list
         """
@@ -2223,8 +2143,6 @@ class Command(object):
 
         """Assemble the command line from program, options, switches and arguments.
 
-        :param self: BSF Command
-        :type self: Command
         :return: A Python str of program, options, switches and arguments
         :rtype: str
         """
@@ -2312,8 +2230,6 @@ class Executable(Command):
 
         """Create a BSF Executable object from a BSF Analysis object.
 
-        :param cls: Class
-        :type cls: Executable
         :param name: Name
         :type name: str
         :param program: Program
@@ -2351,8 +2267,6 @@ class Executable(Command):
 
         """Create a BSF Executable object from a BSF Configuration object.
 
-        :param cls: Class
-        :type cls: Executable
         :param name: Name
         :type name: str
         :param program: Program
@@ -2380,9 +2294,8 @@ class Executable(Command):
 
         """Initialise a BSF Executable object.
 
-        :param name:
-        :param self: BSF Executable
-        :type self: Executable
+        :param name: Name
+        :type name: str
         :param program: Program
         :type program: str
         :param options: Python dict of program option and value pairs
@@ -2451,8 +2364,6 @@ class Executable(Command):
 
         """Trace a BSF Executable object.
 
-        :param self: BSF Executable
-        :type self: Executable
         :param level: Indentation level
         :type level: int
         :return: Trace information
@@ -2496,8 +2407,6 @@ class Executable(Command):
 
         """Assemble the command line from program, options and arguments.
 
-        :param self: BSF Executable
-        :type self: Executable
         :return: Python list of program, options and arguments
         :rtype: list
         """
@@ -2514,8 +2423,6 @@ class Executable(Command):
 
         """Assemble the command line from program, options, switches and arguments.
 
-        :param self: BSF Executable
-        :type self: Executable
         :return: A Python str of program, options, switches and arguments
         :rtype: str
         """

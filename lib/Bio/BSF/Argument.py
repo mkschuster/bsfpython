@@ -101,8 +101,6 @@ class Argument(object):
 
         """Trace a Bio.BSF.Argument.Argument object.
 
-        :param self: Bio.BSF.Argument.Argument
-        :type self: Argument
         :param level: Indentation level
         :type level: int
         :return: Trace information
@@ -145,8 +143,6 @@ class Switch(Argument):
     def trace(self, level):
         """Trace a Bio.BSF.Argument.Switch object.
 
-        :param self: Bio.BSF.Argument.Switch
-        :type self: Switch
         :param level: Indentation level
         :type level: int
         :return: Trace information
@@ -183,8 +179,6 @@ class SwitchLong(Switch):
     def trace(self, level):
         """Trace a Bio.BSF.Argument.SwitchLong object.
 
-        :param self: Bio.BSF.Argument.SwitchLong
-        :type self: SwitchLong
         :param level: Indentation level
         :type level: int
         :return: Trace information
@@ -220,8 +214,6 @@ class SwitchShort(Switch):
     def trace(self, level):
         """Trace a Bio.BSF.Argument.SwitchShort object.
 
-        :param self: Bio.BSF.Argument.SwitchShort
-        :type self: SwitchShort
         :param level: Indentation level
         :type level: int
         :return: Trace information
@@ -276,8 +268,6 @@ class Option(Switch):
     def trace(self, level):
         """Trace a Bio.BSF.Argument.Option object.
 
-        :param self: Bio.BSF.Argument.Option
-        :type self: Option
         :param level: Indentation level
         :type level: int
         :return: Trace information
@@ -317,8 +307,6 @@ class OptionLong(Option):
     def trace(self, level):
         """Trace a Bio.BSF.Argument.OptionLong object.
 
-        :param self: Bio.BSF.Argument.OptionLong
-        :type self: OptionLong
         :param level: Indentation level
         :type level: int
         :return: Trace information
@@ -356,8 +344,6 @@ class OptionShort(Option):
     def trace(self, level):
         """Trace a Bio.BSF.Argument.OptionShort object.
 
-        :param self: Bio.BSF.Argument.OptionShort
-        :type self: OptionShort
         :param level: Indentation level
         :type level: int
         :return: Trace information
@@ -399,8 +385,6 @@ class OptionPair(Option):
     def trace(self, level):
         """Trace a Bio.BSF.Argument.OptionPair object.
 
-        :param self: Bio.BSF.Argument.OptionPair
-        :type self: OptionPair
         :param level: Indentation level
         :type level: int
         :return: Trace information

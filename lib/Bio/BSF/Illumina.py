@@ -43,8 +43,6 @@ class RunInformationFlowcellLayout(object):
     def __init__(self, lane_count=0, surface_count=0, swath_count=0, tile_count=0):
         """Initialise a Bio.BSF.Illumina.RunInformationFlowcellLayout object
 
-        :param self: Bio.BSF.Illumina.RunInformationFlowcellLayout
-        :type self: RunInformationFlowcellLayout
         :param lane_count: Number of lanes
         :type lane_count: int
         :param surface_count: Number of surfaces
@@ -73,8 +71,6 @@ class RunInformationRead(object):
     def __init__(self, number=0, cycles=0, index=False):
         """Initialise a Bio.BSF.Illumina.RunInformationRead object.
 
-        :param self: Bio.BSF.Illumina.RunInformationRead object
-        :type self: RunInformationRead
         :param number: Read number
         :type number: int
         :param cycles: Cycle number
@@ -150,8 +146,6 @@ class RunInformation(object):
     def from_file_path(cls, file_path):
         """Create a Bio.BSF.Illumina.RunInformation object from a file path.
 
-        :param cls: Class
-        :type cls: RunInformation
         :param file_path: File path
         :type file_path: str, unicode
         :return: BSF RunInformation object
@@ -286,8 +280,6 @@ class RunInformation(object):
                  reads=None, flow_cell_layout=None):
         """Initialise a Bio.BSF.Illumina.RunInformation object.
 
-        :param self: Bio.BSF.Illumina.RunInformation
-        :type self: RunInformation
         :param file_path: File path
         :type file_path: str, unicode
         :param file_type: File type (e.g. CASAVA, External or Automatic)
@@ -369,8 +361,6 @@ class RunInformation(object):
         T ... Template
         B ... Barcode
         S ... Skip
-        :param self: Bio.BSF.Illumina.RunInformation object
-        :type self: RunInformation
         :return: Read structure string for Picard ExtractIlluminaBarcodes
         :rtype: str
         """
@@ -406,8 +396,6 @@ class RunParameters(object):
     def from_file_path(cls, file_path):
         """Create a Bio.BSF.Illumina.RunParameters object from a file path.
 
-        :param cls: Class
-        :type cls: RunParameters
         :param file_path: File path
         :type file_path: str, unicode
         :return: BSF RunParameters object
@@ -421,8 +409,6 @@ class RunParameters(object):
     def __init__(self, file_path=None, element_tree=None):
         """Initialise a BSF Illumina Run Parameters object.
 
-        :param self: BSF Illumina Run Parameters
-        :type self: RunParameters
         :param file_path: File path
         :type file_path: str, unicode
         :param element_tree: XML Element Tree
@@ -445,8 +431,6 @@ class RunParameters(object):
         """Get the experiment name of a BSF Illumina Run Parameters object.
 
         Get the text representation of the <Setup>/<ExperimentName> value.
-        :param self: BSF Run Parameters
-        :type self: RunParameters
         :return: Experiment name e.g BSF_0001
         :rtype: str
         """
@@ -457,8 +441,6 @@ class RunParameters(object):
         """Get the flow-cell barcode of a BSF Illumina Run Parameters object.
 
         Get the text representation of the <Setup>/<Barcode> value.
-        :param self: BSF Run Parameters
-        :type self: RunParameters
         :return: Flow-cell barcode e.g BSF_0001
         :rtype: str
         """
@@ -469,8 +451,6 @@ class RunParameters(object):
         """Get the flow cell of a BSF Illumina Run Parameters object.
 
         Get the text representation of the <Setup>/<Flowcell> value.
-        :param self: BSF Run Parameters
-        :type self: RunParameters
         :return: Flow-cell type
         :rtype: str
         """
@@ -482,8 +462,6 @@ class RunParameters(object):
 
         Get the text representation of the <Setup>/<FCPosition> value.
         Since the element does not exist in older versions an empty string may be returned.
-        :param self: BSF Run Parameters
-        :type self: RunParameters
         :return: Flow-cell position e.g. A or B
         :rtype: str
         """
@@ -498,8 +476,6 @@ class RunParameters(object):
         """Get the run identifier of a BSF Illumina Run Parameters object.
 
         Get the text representation of the <Setup>/<RunID> value.
-        :param self: BSF Run Parameters
-        :type self: RunParameters
         :return: Run identifier
         :rtype: str
         """
@@ -510,8 +486,6 @@ class RunParameters(object):
         """Get the read 1 cycle number of a BSF Illumina Run Parameters object.
 
         Get the text representation of the <Setup>/<Read1> value.
-        :param self: BSF Run Parameters
-        :type self: RunParameters
         :return: Number of cycles in read 1
         :rtype: str
         """
@@ -522,8 +496,6 @@ class RunParameters(object):
         """Get the read 2 cycle number of a BSF Illumina Run Parameters object.
 
         Get the text representation of the <Setup>/<Read2> value.
-        :param self: BSF Run Parameters
-        :type self: RunParameters
         :return: Number of cycles in read 2
         :rtype: str
         """
@@ -535,8 +507,6 @@ class RunParameters(object):
 
         Normally, this corresponds to the text representation of the <IndexRead1> element,
         while older implementations of Illumina runParameters.xml have only an <IndexRead> element.
-        :param self: BSF Run Parameters
-        :type self: RunParameters
         :return: Number of cycles in index read 1
         :rtype: str
         """
@@ -556,8 +526,6 @@ class RunParameters(object):
 
         Normally, this corresponds to the text representation of the <IndexRead2> element,
         while older implementations of Illumina runParameters.xml have only an <IndexRead> element.
-        :param self: BSF Run Parameters
-        :type self: RunParameters
         :return: Number of cycles in index read 2
         :rtype: str
         """
@@ -600,8 +568,6 @@ class RunFolder(object):
     def from_file_path(cls, file_path):
         """Construct a Bio.BSF.Illumina.RunFolder object from a file path.
 
-        :param cls: Class
-        :type cls: Class
         :param file_path: File path
         :type file_path: str, unicode
         :return: Bio.BSF.Illumina.RunFolder object
@@ -633,8 +599,6 @@ class RunFolder(object):
                  run_information=None, run_parameters=None):
         """Initialise a Bio.BSF.Illumina.RunFolder object.
 
-        :param self: Bio.BSF.Illumina.RunFolder
-        :type self: RunFolder
         :param file_path: File path
         :type file_path: str, unicode
         :param file_type: File type (e.g. CASAVA, External or Automatic)
@@ -703,8 +667,6 @@ class RunFolder(object):
     def get_base_calls_directory(self):
         """Get the Base-calls directory in the RunFolder/Data/Intensities/BaseCalls hierarchy.
 
-        :param self: Illumina Run Folder
-        :type self:RunFolder
         :return: Illumina Base-calls Directory
         :rtype: str, unicode
         """

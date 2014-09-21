@@ -43,8 +43,6 @@ class ChIPSeqComparison(object):
                  factor, tissue=None, condition=None, treatment=None, replicate=None):
 
         """Initialise a BSF ChIPSeqComparison object.
-        :param self: BSF ChIPSeqComparison object
-        :type self: ChIPSeqComparison
         :param c_name: Control name
         :type c_name: str
         :param t_name: Treatment name
@@ -133,8 +131,6 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     def __init__(self, file_path=None, file_type=None, name=None, row_dicts=None):
         """Initialise a BSF ChIPSeq DiffBind Sheet object.
 
-        :param self: BSF ChIPSeq DiffBind Sheet
-        :type self: ChIPSeqDiffBindSheet
         :param file_path: File path
         :type file_path: str, unicode
         :param file_type: File type (e.g. ...)
@@ -164,8 +160,6 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     def write_to_file(self):
         """Write a BSF ChIPSeq DiffBind Sheet to a file.
 
-        :param self: BSF ChIPSeq DiffBind Sheet
-        :type self: ChIPSeqDiffBindSheet
         :return: Nothing
         :rtype: None
         """
@@ -188,8 +182,6 @@ class ChIPSeq(Analysis):
 
         """Create a new BSF ChIPSeq object from a UNIX-style configuration file via the BSF Configuration class.
 
-        :param cls: Class
-        :type cls: ChIPSeq
         :param config_file: UNIX-style configuration file
         :type config_file: str, unicode
         :return: BSF ChIPSeq
@@ -203,8 +195,6 @@ class ChIPSeq(Analysis):
 
         """Create a new BSF ChIPSeq object from a BSF Configuration object.
 
-        :param cls: Class
-        :type cls: ChIPSeq
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :return: BSF ChIPSeq
@@ -232,8 +222,6 @@ class ChIPSeq(Analysis):
 
         """Initialise a Bio.BSF.Analysis.ChIPSeq object.
 
-        :param self: BSF ChIPSeq
-        :type self: ChIPSeq
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :param project_name: Project name
@@ -289,8 +277,6 @@ class ChIPSeq(Analysis):
 
         Instance variables without a
         configuration option remain unchanged.
-        :param self: BSF ChIPSeq
-        :type self: ChIPSeq
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :param section: Configuration file section
@@ -321,8 +307,6 @@ class ChIPSeq(Analysis):
           Treatment/Control Sample:
           Treatment/Control File:
           Treatment/Control Group:
-        :param self: BSF ChIPSeq
-        :type self: ChIPSeq
         :param cmp_file: Comparison file path
         :type cmp_file: str, unicode
         :return: Nothing
@@ -461,8 +445,6 @@ class ChIPSeq(Analysis):
 
         """Run this BSF ChIPSeq analysis.
 
-        :param self: BSF ChIPSeq
-        :type self: ChIPSeq
         :return: Nothing
         :rtype: None
         """
@@ -502,8 +484,6 @@ class ChIPSeq(Analysis):
 
         """Create Bowtie2 alignment jobs.
 
-        :param self: BSF ChIPSeq
-        :type self: ChIPSeq
         :return: Nothing
         :rtype: None
         """
@@ -627,8 +607,6 @@ class ChIPSeq(Analysis):
 
         """Create MACS14 peak caller jobs.
 
-        :param self: BSF ChIPSeq
-        :type self: ChIPSeq
         :return: Nothing
         :rtype: None
         """
@@ -787,8 +765,6 @@ class ChIPSeq(Analysis):
 
         """Create MACS2 peak caller jobs.
 
-        :param self: BSF ChIPSeq
-        :type self: ChIPSeq
         :return: Nothing
         :rtype: None
         """
@@ -991,8 +967,6 @@ class ChIPSeq(Analysis):
 
         """Create Bioconductor DiffBind jobs.
 
-        :param self: BSF ChIPSeq
-        :type self: ChIPSeq
         :return: Nothing
         :rtype: None
         """
@@ -1136,8 +1110,6 @@ class ChIPSeq(Analysis):
 
         """Create a BSF ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
 
-        :param self: BSF ChIPSeq
-        :type self: ChIPSeq
         :return: Nothing
         :rtype: None
         """
@@ -1402,8 +1374,6 @@ class ChIPSeq(Analysis):
 
         """Create a BSF ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
 
-        :param self: BSF ChIPSeq
-        :type self: ChIPSeq
         :return: Nothing
         :rtype: None
         """
@@ -2042,8 +2012,6 @@ class RunFastQC(Analysis):
 
         """Create a new BSF RunFastQC object from a UNIX-style configuration file via the BSF Configuration class.
 
-        :param cls: Class
-        :type cls: RunFastQC
         :param config_file: UNIX-style configuration file
         :type config_file: str, unicode
         :return: BSF RunFastQC
@@ -2057,8 +2025,6 @@ class RunFastQC(Analysis):
 
         """Create a new BSF RunFastQC object from a BSF Configuration object.
 
-        :param cls: Class
-        :type cls: RunFastQC
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :return: BSF RunFastQC
@@ -2085,8 +2051,6 @@ class RunFastQC(Analysis):
 
         """Initialise a Bio.BSF.Analysis.RunFastQC object.
 
-        :param self: BSF RunFastQC
-        :type self: RunFastQC
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :param project_name: Project name
@@ -2133,8 +2097,6 @@ class RunFastQC(Analysis):
         """Set instance variables of a BSF RunFastQC object via a section of a BSF Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param self: BSF RunFastQC
-        :type self: RunFastQC
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :param section: Configuration file section
@@ -2167,8 +2129,6 @@ class RunFastQC(Analysis):
         Column headers for independent samples:
           Treatment/Control Sample:
           Treatment/Control File:
-        :param self: BSF RunFastQC
-        :type self: RunFastQC
         :param cmp_file: Comparisons file path
         :type cmp_file: str, unicode
         :return: Nothing
@@ -2187,8 +2147,6 @@ class RunFastQC(Analysis):
 
         """Run this BSF RunFastQC analysis.
 
-        :param self: BSF RunFastQC analysis
-        :type self: RunFastQC
         :return: Nothing
         :rtype: None
         """
@@ -2215,8 +2173,6 @@ class RunFastQC(Analysis):
 
         """Initialise a BSF RunFastQC object.
 
-        :param self: BSF RunFastQC
-        :type self: RunFastQC
         :return: Nothing
         :rtype: None
         """
@@ -2345,8 +2301,6 @@ class RunFastQC(Analysis):
 
         """Create a RunFastQC report in HTML format.
 
-        :param self: BSF RunFastQC
-        :type self: RunFastQC
         :return: Nothing
         :rtype: None
         """
@@ -2451,8 +2405,6 @@ class RunBamToFastq(Analysis):
 
         """Create a new BSF RunBamToFastq object from a UNIX-style configuration file via the BSF Configuration class.
 
-        :param cls: Class
-        :type cls: RunBamToFastq
         :param config_file: UNIX-style configuration file
         :type config_file: str, unicode
         :return: BSF RunBamToFastq
@@ -2466,8 +2418,6 @@ class RunBamToFastq(Analysis):
 
         """Create a new BSF RunBamToFastq object from a BSF Configuration object.
 
-        :param cls: Class
-        :type cls: RunBamToFastq
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :return: BSF RunBamToFastq
@@ -2494,8 +2444,6 @@ class RunBamToFastq(Analysis):
 
         """Initialise a Bio.BSF.Analysis.RunBamToFastq object.
 
-        :param self: BSF RunBamToFastq
-        :type self: RunBamToFastq
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :param project_name: Project name
@@ -2542,8 +2490,6 @@ class RunBamToFastq(Analysis):
         """Set instance variables of a BSF RunBamToFastq object via a section of a BSF Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param self: BSF RunBamToFastq
-        :type self: RunBamToFastq
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :param section: Configuration file section
@@ -2558,8 +2504,6 @@ class RunBamToFastq(Analysis):
 
         """Run this BSF RunBamToFastq analysis.
 
-        :param self: BSF RunBamToFastq analysis
-        :type self: RunBamToFastq
         :return: Nothing
         :rtype: None
         """
@@ -2572,8 +2516,6 @@ class RunBamToFastq(Analysis):
 
         """Private method to convert all Reads objects in BAM or SAM format into FASTQ format.
 
-        :param self: BSF RunBamToFastq
-        :type self: RunBamToFastq
         :return: Nothing
         :rtype: None
         """

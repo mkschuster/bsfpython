@@ -48,8 +48,6 @@ class Tuxedo(Analysis):
 
         """Create a new Tuxedo object from a UNIX-style configuration file via the Configuration class.
 
-        :param cls: Class
-        :type cls: Tuxedo
         :param config_file: UNIX-style configuration file
         :type config_file: str, unicode
         :return: Tuxedo
@@ -63,8 +61,6 @@ class Tuxedo(Analysis):
 
         """Create a new Tuxedo object from a Configuration object.
 
-        :param cls: Class
-        :type cls: Tuxedo
         :param configuration: Configuration
         :type configuration: Configuration
         :return: Tuxedo
@@ -92,8 +88,6 @@ class Tuxedo(Analysis):
 
         """Initialise a Bio.BSF.Analysis.RNASeq.Tuxedo object.
 
-        :param self: Tuxedo
-        :type self: Tuxedo
         :param configuration: Configuration
         :type configuration: Configuration
         :param project_name: Project name
@@ -147,8 +141,6 @@ class Tuxedo(Analysis):
         """Set instance variables of a Tuxedo object via a section of a Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param self: Tuxedo
-        :type self: Tuxedo
         :param configuration: Configuration
         :type configuration: Configuration
         :param section: Configuration file section
@@ -178,8 +170,6 @@ class Tuxedo(Analysis):
         Column headers for independent samples:
           Treatment/Control/Point N Sample:
           Treatment/Control/Point N File:
-        :param self: Tuxedo
-        :type self: Tuxedo
         :param cmp_file: Comparisons file path
         :type cmp_file: str, unicode
         :return: Nothing
@@ -254,8 +244,6 @@ class Tuxedo(Analysis):
 
         """Run this Tuxedo analysis.
 
-        :param self: Tuxedo
-        :type self: Tuxedo
         :return: Nothing
         :rtype: None
         """
@@ -293,8 +281,6 @@ class Tuxedo(Analysis):
 
         """Create TopHat aligner jobs and Cufflinks transcript assembler jobs.
 
-        :param self: Tuxedo
-        :type self: Tuxedo
         :return: Nothing
         :rtype: None
         """
@@ -575,8 +561,6 @@ class Tuxedo(Analysis):
 
         """Create Cuffdiff differential expression jobs.
 
-        :param self: Tuxedo
-        :type self: Tuxedo
         :return: Nothing
         :rtype: None
         """
@@ -774,8 +758,6 @@ class Tuxedo(Analysis):
 
         """Create a Tuxedo report in HTML format and a UCSC Genome Browser Track Hub.
 
-        :param self: Tuxedo
-        :type self: Tuxedo
         :return: Nothing
         :rtype: None
         """

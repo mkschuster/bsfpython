@@ -48,8 +48,6 @@ class VariantCallingGATK(Analysis):
         """Create a new BSF VariantCallingGATK object from a UNIX-style configuration file via the
         BSF Configuration class.
 
-        :param cls: Class
-        :type cls: VariantCallingGATK
         :param config_file: UNIX-style configuration file
         :type config_file: str, unicode
         :return: BSF VariantCallingGATK
@@ -62,8 +60,6 @@ class VariantCallingGATK(Analysis):
     def from_Configuration(cls, configuration):
         """Create a new BSF VariantCallingGATK object from a BSF Configuration object.
 
-        :param cls: Class
-        :type cls: VariantCallingGATK
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :return: BSF VariantCallingGATK
@@ -90,8 +86,6 @@ class VariantCallingGATK(Analysis):
                  cmp_file=None):
         """Initialise a Bio.BSF.Analysis.VariantCalling.VariantCallingGATK object.
 
-        :param self: BSF VariantCallingGATK
-        :type self: VariantCallingGATK
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :param project_name: Project name
@@ -145,8 +139,6 @@ class VariantCallingGATK(Analysis):
         """Set instance variables of a BSF VariantCallingGATK object via a section of a BSF Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param self: BSF VariantCallingGATK
-        :type self: VariantCallingGATK
         :param configuration: BSF Configuration
         :type configuration: Configuration
         :param section: Configuration file section
@@ -178,8 +170,6 @@ class VariantCallingGATK(Analysis):
         Column headers for independent samples:
           Treatment/Control Sample:
           Treatment/Control File:
-        :param self: BSF RunFastQC
-        :type self: RunFastQC
         :param cmp_file: Comparisons file path
         :type cmp_file: str, unicode
         :return: Nothing
@@ -197,8 +187,6 @@ class VariantCallingGATK(Analysis):
     def _read_vqsr_configuration(self, variation_type=None, gatk_bundle_version=None):
         """Private method to read variant quality score recalibration (VQSR) configuration information.
 
-        :param self: BSF VariantCallingGATK
-        :type self: VariantCallingGATK
         :param variation_type: Variation type 'indel' or 'snp'
         :type variation_type: str
         :param gatk_bundle_version: GATK bundle version
@@ -254,8 +242,6 @@ class VariantCallingGATK(Analysis):
     def run(self):
         """Run this BSF VariantCallingGATK analysis.
 
-        :param self: BSF VariantCallingGATK
-        :type self: VariantCallingGATK
         :return: Nothing
         :rtype: None
         """

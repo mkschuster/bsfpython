@@ -39,8 +39,6 @@ class Bowtie1(Executable):
     def __init__(self, name, analysis):
         """Initialise a Bowtie1 object.
 
-        :param self: BSF Bowtie1 object
-        :type self: Bowtie1
         :param name: Name
         :type name: str
         :param analysis: Bio.BSF.Analysis object or a sub-class thereof
@@ -65,8 +63,6 @@ class Bowtie2(Executable):
     def __init__(self, name, analysis):
         """Initialise a Bowtie2 object.
 
-        :param self: BSF Bowtie2 object
-        :type self: Bowtie2
         :param name: Name
         :type name: str
         :param analysis: Bio.BSF.Analysis object or a sub-class thereof
@@ -95,8 +91,6 @@ class BWA(Executable):
     def __init__(self, name, analysis):
         """Initialise a BWA object.
 
-        :param self: BSF BWA object
-        :type self: BWA
         :param name: Name
         :type name: str
         :param analysis: Bio.BSF.Analysis object or a sub-class thereof
@@ -129,8 +123,6 @@ class Cuffdiff(Executable):
     def __init__(self, name, analysis):
         """Initialise a Cuffdiff object.
 
-        :param self: BSF Cuffdiff object
-        :type self: Cuffdiff
         :param name: Name
         :type name: str
         :param analysis: Bio.BSF.Analysis object or a sub-class thereof
@@ -171,8 +163,6 @@ class Cufflinks(Executable):
     def __init__(self, name, analysis):
         """Initialise a Cufflinks object.
 
-        :param self: BSF Cufflinks object
-        :type self: Cufflinks
         :param name: Name
         :type name: str
         :param analysis: Bio.BSF.Analysis object or a sub-class thereof
@@ -213,8 +203,6 @@ class Cuffmerge(Executable):
     def __init__(self, name, analysis):
         """Initialise a Cuffmerge object.
 
-        :param self: BSF Cuffmerge object
-        :type self: Cuffmerge
         :param name: Name
         :type name: str
         :param analysis: Bio.BSF.Analysis object or a sub-class thereof
@@ -259,8 +247,6 @@ class TopHat(Executable):
     def __init__(self, name, analysis):
         """Initialise a TopHat object.
 
-        :param self: BSF TopHat object
-        :type self: TopHat
         :param name: Name
         :type name: str
         :param analysis: Bio.BSF.Analysis object or a sub-class thereof
@@ -297,8 +283,6 @@ class Macs14(Executable):
     def __init__(self, name, analysis):
         """Initialise a Macs14 object.
 
-        :param self: BSF Macs14 object
-        :type self: Macs14
         :param name: Name
         :type name: str
         :param analysis: Bio.BSF.Analysis object or a sub-class thereof
@@ -331,8 +315,6 @@ class Macs2Bdgcmp(Executable):
     def __init__(self, name, analysis):
         """Initialise a MACS2 BedGraph Comparison object.
 
-        :param self: BSF Macs2Bdgmp object
-        :type self: Macs2Bdgcmp
         :param name: Name
         :type name: str
         :param analysis: Bio.BSF.Analysis object or a sub-class thereof
@@ -361,8 +343,6 @@ class Macs2Callpeak(Executable):
     def __init__(self, name, analysis):
         """Initialise a Macs2Callpeak object.
 
-        :param self: BSF Macs2Callpeak object
-        :type self: Macs2Callpeak
         :param name: Name
         :type name: str
         :param analysis: Bio.BSF.Analysis object or a sub-class thereof
@@ -396,8 +376,6 @@ class FastQC(Executable):
     def __init__(self, name, analysis):
         """Initialise a FastQC object.
 
-        :param self: BSF FastQC object
-        :type self: FastQC
         :param name: Name
         :type name: str
         :param analysis: Bio.BSF.Analysis object or a sub-class thereof

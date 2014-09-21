@@ -42,8 +42,6 @@ class DatabaseConnection(object):
     def __init__(self, file_path):
         """Initialise a Database Connection object and connect to the sqlite3 database behind.
 
-        :param self: Database Connection
-        :type self: DatabaseConnection
         :param file_path: File path
         :type file_path: str, unicode
         :return: Nothing
@@ -60,8 +58,6 @@ class DatabaseConnection(object):
     def create_schema(self):
         """Create the database schema.
 
-        :param self: BSF Database Connection
-        :type self: DatabaseConnection
         :return: Nothing
         :rtype: None
         """
@@ -99,8 +95,6 @@ class DatabaseAdaptor(object):
                  connection=None):
         """Initialise a Database Adaptor object.
 
-        :param self: Database Adaptor
-        :type self: DatabaseAdaptor
         :param table_name: SQL database table name
         :type table_name: str
         :param column_definition: Python list of Python list objects with
@@ -144,8 +138,6 @@ class DatabaseAdaptor(object):
     def _get_column_name_list_with_primary(self):
         """Build a Python list of column names including the primary key.
 
-        :param self: DatabaseAdaptor
-        :type self: DatabaseAdaptor
         :return: Python list of SQL column name Python str objects
         :rtype: list
         """
@@ -157,8 +149,6 @@ class DatabaseAdaptor(object):
 
         This method excludes PRIMARY KEY columns with definition AUTOINCREMENT,
         which must not be assigned a value in INSERT or UPDATE statements.
-        :param self: DatabaseAdaptor
-        :type self: DatabaseAdaptor
         :return: Python list of SQL column name Python str objects
         :rtype: list
         """
@@ -174,8 +164,6 @@ class DatabaseAdaptor(object):
         """Build an SQL expression of column names in typically used in SELECT statements.
 
         This method simply lists all column names of the column definition.
-        :param self: DatabaseAdaptor
-        :type self: DatabaseAdaptor
         :return: Column result columns expression string
         :rtype: str
         """
@@ -185,8 +173,6 @@ class DatabaseAdaptor(object):
     def _build_column_definition_expression(self):
         """Build an SQL expression of column definitions typically used in CREATE TABLE statements.
 
-        :param self: DatabaseAdaptor
-        :type self: DatabaseAdaptor
         :return: Column definition expression string
         :rtype: str
         """
@@ -200,8 +186,6 @@ class DatabaseAdaptor(object):
 
         This method excludes PRIMARY KEY columns with definition AUTOINCREMENT,
         which must not be assigned a value.
-        :param self: DatabaseAdaptor
-        :type self: DatabaseAdaptor
         :return: Column definition expression string
         :rtype: str
         """
@@ -211,8 +195,6 @@ class DatabaseAdaptor(object):
     def _build_value_insert_expression(self):
         """Build an SQL expression of value placeholders (?) typically used in INSERT statements.
 
-        :param self: DatabaseAdaptor
-        :type self: DatabaseAdaptor
         :return: Column definition expression string
         :rtype: str
         """
@@ -225,8 +207,6 @@ class DatabaseAdaptor(object):
         """Build an SQL expression of column name and value placeholder pairs typically used in SQL UPDATE statements.
 
         As in INSERT expressions leave out the PRIMARY KEY columns with definition AUTOINCREMENT.
-        :param self: DatabaseAdaptor
-        :type self: DatabaseAdaptor
         :return: SQL column name and value placeholder pair expression string
         :rtype: str
         """
@@ -238,8 +218,6 @@ class DatabaseAdaptor(object):
     def statement_create_table(self):
         """Build an SQL CREATE TABLE statement.
 
-        :param self: BSF DatabaseAdaptor
-        :type self: DatabaseAdaptor
         :return: SQL CREATE TABLE statement
         :rtype: str
         """
@@ -249,8 +227,6 @@ class DatabaseAdaptor(object):
     def statement_select(self, where_clause=None, group_clause=None, having_clause=None):
         """Build an SQL SELECT statement.
 
-        :param self: BSF DatabaseAdaptor
-        :type self: DatabaseAdaptor
         :param where_clause: SQL WHERE clause
         :type where_clause: str
         :param group_clause: SQL GROUP BY clause
@@ -283,8 +259,6 @@ class DatabaseAdaptor(object):
 
         Before attempting to create the table, this method checks in 'sqlite_master',
         whether the table already exists in the SQLite database.
-        :param self: BSF DatabaseAdaptor
-        :type self: DatabaseAdaptor
         :return: Nothing
         :rtype: None
         """
@@ -322,8 +296,6 @@ class DatabaseAdaptor(object):
     def select_all(self):
         """Select all canonical objects corresponding to the DatabaseAdaptor sub-class.
 
-        :param self: BSF DatabaseAdaptor
-        :type self: DatabaseAdaptor
         :return: Python list of BSF Objects
         :rtype: list
         """
@@ -335,8 +307,6 @@ class DatabaseAdaptor(object):
     def insert(self, data_object):
         """Insert a canonical object corresponding to the DatabaseAdaptor sub-class.
 
-        :param self: BSF DatabaseAdaptor
-        :type self: DatabaseAdaptor
         :param data_object: BSF Data object
         :type data_object: object
         :return: Nothing
@@ -376,8 +346,6 @@ class DatabaseAdaptor(object):
     def update(self, data_object):
         """Update a canonical object corresponding to the DatabaseAdaptor sub-class.
 
-        :param self: BSF DatabaseAdaptor
-        :type self: DatabaseAdaptor
         :param data_object: BSF Data object
         :type data_object: object
         :return: Nothing
@@ -424,8 +392,6 @@ class JobSubmission(object):
     def __init__(self, executable_id=0, name=None, command=None):
         """Initialise a BSF Job Submission object.
 
-        :param self: BSF Job Submission object
-        :type self: JobSubmission
         :param executable_id: Primary key
         :type executable_id: int
         :param name: Executable name
@@ -447,8 +413,6 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
     def __init__(self, database_connection):
         """Initialise a BSF Job Submission Adaptor object.
 
-        :param self: BSF Job Submission Adaptor object.
-        :type self: JobSubmissionAdaptor
         :param database_connection: BSF Database Connection
         :type database_connection: DatabaseConnection
         :return: Nothing
@@ -501,8 +465,6 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
     def select_by_name(self, name):
         """Select one BSF Job Submission object by name.
 
-        :param self: BSF Job Submission Adaptor
-        :type self: JobSubmissionAdaptor
         :param name: Name
         :type name: str
         :return: BSF JobSubmission or None
@@ -819,8 +781,6 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         """Select all BSF Job Submission objects by job_name.
 
         The same Executable can be submitted more than once into the DRMS.
-        :param self: BSF Job Submission Adaptor
-        :type self: JobSubmissionAdaptor
         :param name: Job name
         :type name: str
         :return: Python list of BSF JobSubmission objects
@@ -835,8 +795,6 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
     def select_by_job_id(self, job_id):
         """Select one BSF Job Submission object by job_id.
 
-        :param self: BSF Job Submission Adaptor
-        :type self: JobSubmissionAdaptor
         :param job_id: Job identifier
         :type job_id: str
         :return: Python list of BSF JobSubmission objects
