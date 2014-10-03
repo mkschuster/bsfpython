@@ -1,9 +1,10 @@
-#! /usr/bin/env python
+"""Bio.BSF.Runnables.Bowtie2
+
+A package of classes and methods to run the Bowtie2 short read aligner.
+"""
+
 #
-# BSF Python wrapper script that runs BSF Runnable modules.
-#
-#
-# Copyright 2014 Michael K. Schuster
+# Copyright 2013 - 2014 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -25,31 +26,4 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-from argparse import ArgumentParser
-import importlib
 
-from Bio.BSF import Runnable
-
-
-argument_parser = ArgumentParser(
-    description='Generic BSF runner script.')
-
-# argument_parser.add_argument(
-#     '--debug', required=False, type=int,
-#     help='Debug level')
-#
-# argument_parser.add_argument(
-#     '--runnable_name', required=True,
-#     help='BSF Runnable name')
-
-argument_parser.add_argument(
-    '--pickler_path', required=True,
-    help='File path to a pickled Runnable object.')
-
-arguments = argument_parser.parse_args()
-
-runnable = Runnable.from_picker_file(file_path=arguments.pickler_path)
-
-module = importlib.import_module(name=runnable.code_module)
-
-module.run(runnable=runnable)

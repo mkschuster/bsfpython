@@ -26,24 +26,72 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+import argparse
 from collections import OrderedDict
 import platform
 import os
+import string
+from subprocess import PIPE, Popen
 import sys
+from threading import Lock, Thread
+
+from Bio.BSF import Command, Executable, Runnable
+
+
+# Set the environment consistently.
+
+os.environ['LANG'] = 'C'
+
+# Parse the arguments.
+
+parser = argparse.ArgumentParser(
+    description='BSF barcode index scanner.')
+
+parser.add_argument('--debug', required=False, type=int,
+                    help='debug level')
+
+parser.add_argument('input_file', help='file path to a BAM file.')
+
+args = parser.parse_args()
 
 
 # TODO: dual indices not supported
 # TODO: GNU Zip FASTQ files could be read directly: http://docs.python.org/2/library/gzip.html
-# TODO: Use the argparse module for command-line options.
 
-if len(sys.argv) < 2:
-    print "input filename is missing!"
-    exit(1)
-
-input_filename = sys.argv[1]
-file_type = os.path.splitext(input_filename)[-1]     # supported formats: .fastq/.sam/.bam
+file_type = os.path.splitext(args.input_file)[-1]     # supported formats: .fastq/.sam/.bam
 
 log_after_x_processed_reads = 1000000
+
+# Global variable
+
+barcode_dict = dict()
+
+
+def parse_sam_format(file_handle):
+    """Parses SAM format columns.
+    This function identifies the column with the barcode based on its suffix BC:X:
+    and increments the respective count in a Python dict.
+
+    :param file_handle: File handle
+    :type file_handle: file
+    :return: Python dict of barcode key and count value data
+    :rtype: dict
+    """
+
+    for line in file_handle:
+        if line.startswith("@"):
+            continue
+        columns = string.split(s=line.rstrip(), sep='\t')
+        # Find the column with the BC:X: tag.
+        # The first 11 columns are fixed.
+        for i in range(10, len(columns)):
+            if columns[i].startswith("BC:Z:"):
+                barcode = columns[i][5:]
+                if barcode in barcode_dict:
+                    barcode_dict[barcode] += 1
+                else:
+                    barcode_dict[barcode] = 1
+                break
 
 
 def parse_sam_file(input_filename):
@@ -104,7 +152,7 @@ def parse_bam_file(input_filename):
 
     print "Processing BAM file, running samtools view <bamfile> > <tmp_samfile> (samtools required in PATH!)"
 
-    tmp_samfile = os.path.splitext(input_filename)[0]+ ".tmp.sam"
+    tmp_samfile = os.path.splitext(input_filename)[0] + ".tmp.sam"
 
     exit_code = os.system("samtools view -h " + input_filename + " > " + tmp_samfile)
 
@@ -145,29 +193,63 @@ def parse_fastq_file(input_filename):
 
 
 if file_type == ".fastq":
-    barcodes = parse_fastq_file(input_filename)
-
+    barcodes = parse_fastq_file(args.input_file)
 elif file_type == ".sam":
-    barcodes = parse_sam_file(input_filename)
-
+    file_handle = open(args.input_file, 'r')
+    parse_sam_format(file_handle=file_handle)
+    file_handle.close()
 elif file_type == ".bam":
-    barcodes = parse_bam_file(input_filename)
+    executable = Executable(name='samtools_view', program='samtools', sub_command=Command(command='view'))
+    sub_command = executable.sub_command
+    sub_command.add_SwitchShort(key='h')
+    sub_command.arguments.append(args.input_file)
 
+    on_posix = 'posix' in sys.builtin_module_names
+
+    child_process = Popen(args=executable.command_list(),
+                          bufsize=-1,
+                          stdin=PIPE,
+                          stdout=PIPE,
+                          stderr=PIPE,
+                          shell=False,
+                          close_fds=on_posix)
+
+    # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
+    # should make sure that buffers are not filling up.
+
+    thread_lock = Lock()
+
+    thread_out = Thread(target=parse_sam_format,
+                        kwargs={'file_handle': child_process.stdout})
+    thread_out.daemon = True  # Thread dies with the program.
+    thread_out.start()
+
+    thread_err = Thread(target=Runnable.process_stderr,
+                        kwargs={'stderr_handle': child_process.stderr,
+                                'thread_lock': thread_lock,
+                                'stderr_path': executable.stderr_path,
+                                'debug': 0})
+    thread_err.daemon = True  # Thread dies with the program.
+    thread_err.start()
+
+    # Wait for the child process to finish.
+
+    child_return_code = child_process.wait()
 else:
     raise Exception()
 
 
 # write report
-outfile = open("unmatched_barcode_report.csv", "w")
+# outfile = open("unmatched_barcode_report.csv", "w")
 # print dict sorted by highest number of occurence
-for bc in OrderedDict(sorted(barcodes.items(), reverse=True, key=lambda t: t[1])):
-    message = bc + ";" + str(barcodes[bc])
+for barcode in OrderedDict(sorted(barcode_dict.items(), reverse=True, key=lambda t: t[1])):
+    message = barcode + ";" + str(barcode_dict[barcode])
 
-    outfile.write(message + "\n")
+    # outfile.write(message + "\n")
     print message
 
 # Check again for Illumina Barcodes:
-outfile.close()
+# outfile.close()
 
 print "--------"
 
@@ -176,16 +258,16 @@ illumina_adapters = ["ATCACG","CGATGT","TTAGGC","TGACCA","ACAGTG","GCCAAT",
                      "AGTCAA","AGTTCC","ATGTCA","CCGTCC","GTCCGC","GTGAAA",
                      "GTGGCC","GTTTCG","CGTACG","GAGTGG","ACTGAT","ATTCCT"]
 
-outfile = open("unmatched_barcode_report.illumina.csv", "w")
+# outfile = open("unmatched_barcode_report.illumina.csv", "w")
 
 for adapter in illumina_adapters:
     count=0
-    if barcodes.has_key(adapter):
-        count = barcodes[adapter]
+    if barcode_dict.has_key(adapter):
+        count = barcode_dict[adapter]
 
     message = adapter + ";" + str(count)
 
-    outfile.write(message + "\n")
+    # outfile.write(message + "\n")
     print message
 
-outfile.close()
+# outfile.close()

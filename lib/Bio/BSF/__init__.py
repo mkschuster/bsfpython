@@ -332,17 +332,16 @@ class Analysis(object):
         :type section: str
         :return: Nothing
         :rtype: None
+        :raise Exception: The specified section does not exist
         """
 
         assert isinstance(configuration, Configuration)
+        assert isinstance(section, str)
 
         if not configuration.config_parser.has_section(section=section):
-            warnings.warn(
+            raise Exception(
                 'Section {!r} not defined in BSF Configuration file {!r}.'.
-                format(section, configuration.config_file),
-                UserWarning)
-
-            return
+                format(section, configuration.config_file))
 
         # The configuration section is available.
 
@@ -677,49 +676,8 @@ class Analysis(object):
         file_handle.write(output)
         file_handle.close()
 
-    @property
-    def pickler_path(self):
-        """Get the file path to a Python Pickler file.
-
-        :return: Python Pickler file path
-        :rtype: str, unicode
-        """
-
-        return os.path.join(self.genome_directory, 'bsfpython_project_' + self.project_name + '.pkl')
-
-    def to_pickler_file(self):
-        """Write this object as a Python Pickler file into the current working directory.
-
-        :return: Nothing
-        :rtype: None
-        """
-
-        pickler_file = open(self.pickler_path, 'wb')
-        pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
-        pickler.dump(obj=self)
-        pickler_file.close()
-
-    @classmethod
-    def from_picker_file(cls, file_path):
-        """Create a BSF Analysis object from a Python Pickler file via Python Unpickler.
-
-        :param file_path: File path to a Picker file
-        :type file_path: str, unicode
-        :return: BSF Analysis
-        :rtype: Analysis
-        """
-
-        pickler_file = open(file_path, 'rb')
-        unpickler = Unpickler(file=pickler_file)
-        analysis = unpickler.load()
-        pickler_file.close()
-
-        assert isinstance(analysis, Analysis)
-
-        return analysis
-
     def submit(self, drms_name=None):
-        """Write a Python pickler file and submit each DRMS object.
+        """Submit each DRMS object and pickle each Runnable object.
 
         :param drms_name: Only submit Executables linked to DRMS name
         :type drms_name: str
@@ -727,7 +685,10 @@ class Analysis(object):
         :rtype: None
         """
 
-        self.to_pickler_file()
+        # Pickle all Runnable objects.
+
+        for key in self.runnable_dict.keys():
+            self.runnable_dict[key].to_pickler_file()
 
         # Submit all Executable objects of all Distributed Resource Management System objects.
 
@@ -1788,7 +1749,7 @@ class DRMS(object):
 
         return output
 
-    def set_Configuration(self, configuration, section, warning=True):
+    def set_Configuration(self, configuration, section):
 
         """Set instance variables of a BSF DRMS object via a section of a BSF Configuration object.
 
@@ -1797,22 +1758,17 @@ class DRMS(object):
         :type configuration: Configuration
         :param section: Configuration file section
         :type section: str
-        :param warning: Warn if the configuration section does not exist
-        :type warning: bool
         :return: Nothing
         :rtype: None
         """
 
         assert isinstance(configuration, Configuration)
+        assert isinstance(section, str)
 
         if not configuration.config_parser.has_section(section=section):
-            if warning:
-                warnings.warn(
-                    'Section {!r} not defined in BSF Configuration file {!r}.'.
-                    format(section, configuration.config_file),
-                    UserWarning)
-
-            return
+            raise Exception(
+                'Section {!r} not defined in BSF Configuration file {!r}.'.
+                format(section, configuration.config_file))
 
         # The configuration section is available.
 
@@ -2026,6 +1982,7 @@ class Command(object):
         """
 
         assert isinstance(argument, Argument)
+        assert isinstance(override, bool)
 
         if not override and argument.key in self.options:
             warnings.warn(
@@ -2044,10 +2001,12 @@ class Command(object):
 
     def add_SwitchLong(self, key, override=False):
 
-        """Initialise a Bio.BSF.Argument.SwitchLong object and add it to this Bio.BSF.Command object.
+        """Initialise and add a Bio.BSF.Argument.SwitchLong object.
 
         :param key: Key
         :type key: str
+        :param override: Override existing switch or option without warning.
+        :type override: bool
         :return: Nothing
         :rtype: None
         """
@@ -2056,10 +2015,12 @@ class Command(object):
 
     def add_SwitchShort(self, key, override=False):
 
-        """Initialise a Bio.BSF.Argument.SwitchShort object and add it to this Bio.BSF.Command object.
+        """Initialise and add a Bio.BSF.Argument.SwitchShort object.
 
         :param key: Key
         :type key: str
+        :param override: Override existing switch or option without warning.
+        :type override: bool
         :return: Nothing
         :rtype: None
         """
@@ -2068,12 +2029,14 @@ class Command(object):
 
     def add_OptionLong(self, key, value, override=False):
 
-        """Initialise a Bio.BSF.Argument.OptionLong object and add it to this Bio.BSF.Command object.
+        """Initialise and add a Bio.BSF.Argument.OptionLong object.
 
         :param key: Key
         :type key: str
         :param value: Value
         :type value: str, unicode
+        :param override: Override existing switch or option without warning.
+        :type override: bool
         :return: Nothing
         :rtype: None
         """
@@ -2082,12 +2045,14 @@ class Command(object):
 
     def add_OptionShort(self, key, value, override=False):
 
-        """Initialise a Bio.BSF.Argument.OptionShort object and add it to this Bio.BSF.Command object.
+        """Initialise and add a Bio.BSF.Argument.OptionShort object.
 
         :param key: Key
         :type key: str
         :param value: Value
         :type value: str, unicode
+        :param override: Override existing switch or option without warning.
+        :type override: bool
         :return: Nothing
         :rtype: None
         """
@@ -2096,16 +2061,114 @@ class Command(object):
 
     def add_OptionPair(self, key, value, override=False):
 
-        """Initialise a Bio.BSF.Argument.OptionPair object and add it to this Bio.BSF.Command object.
+        """Initialise and add a Bio.BSF.Argument.OptionPair object.
 
         :param key: Key
         :type key: str
         :param value: Value
         :type value: str, unicode
+        :param override: Override existing switch or option without warning.
+        :type override: bool
         :return: Nothing
         :rtype: None
         """
 
+        self.add_Argument(argument=OptionPair(key=key, value=value), override=override)
+
+    def set_argument(self, argument, override):
+        """Set a Switch, Option or one of its sub-classes.
+
+        The sub-classes are
+        Bio.BSF.Argument.SwitchLong,
+        Bio.BSF.Argument.SwitchShort,
+        Bio.BSF.Argument.Option,
+        Bio.BSF.Argument.OptionLong,
+        Bio.BSF.Argument.OptionShort or
+        Bio.BSF.Argument.OptionPair.
+        :param argument: Bio.BSF.Argument or sub-class thereof
+        (Bio.BSF.Argument.Option or Bio.BSF.Argument.Switch)
+        :type argument: Argument
+        :param override: Override existing switch or option without warning.
+        :type override: bool
+        :return: Nothing
+        :rtype: None
+        """
+        assert isinstance(argument, Argument)
+        assert isinstance(override, bool)
+
+        if not override and argument.key in self.options:
+            warnings.warn(
+                'Setting a Bio.BSF.Argument.Switch or Bio.BSF.Argument.Option '
+                'with key {!r} that exits already in Command {!r}.'.
+                format(argument.key, self.command),
+                UserWarning)
+
+        self.options[argument.key] = [argument]
+
+    def set_switch_long(self, key, override=False):
+        """Initialise and set a Bio.BSF.Argument.SwitchLong object.
+
+        :param key: Key
+        :type key: str
+        :param override: Override existing switch or option without warning.
+        :type override: bool
+        :return: Nothing
+        :rtype: None
+        """
+        self.add_Argument(argument=SwitchLong(key=key), override=override)
+
+    def set_switch_short(self, key, override=False):
+        """Initialise and set a Bio.BSF.Argument.SwitchShort object.
+
+        :param key: Key
+        :type key: str
+        :param override: Override existing switch or option without warning.
+        :type override: bool
+        :return: Nothing
+        :rtype: None
+        """
+        self.add_Argument(argument=SwitchShort(key=key), override=override)
+
+    def set_option_long(self, key, value, override=False):
+        """Initialise and set a Bio.BSF.Argument.OptionLong object.
+
+        :param key: Key
+        :type key: str
+        :param value: Value
+        :param override: Override existing switch or option without warning.
+        :type override: bool
+        :type value: str, unicode
+        :return: Nothing
+        :rtype: None
+        """
+        self.add_Argument(argument=OptionLong(key=key, value=value), override=override)
+
+    def set_option_short(self, key, value, override=False):
+        """Initialise and set a Bio.BSF.Argument.OptionShort object.
+
+        :param key: Key
+        :type key: str
+        :param value: Value
+        :type value: str, unicode
+        :param override: Override existing switch or option without warning.
+        :type override: bool
+        :return: Nothing
+        :rtype: None
+        """
+        self.add_Argument(argument=OptionShort(key=key, value=value), override=override)
+
+    def set_option_pair(self, key, value, override=False):
+        """Initialise and set a Bio.BSF.Argument.OptionPair object.
+
+        :param key: Key
+        :type key: str
+        :param value: Value
+        :type value: str, unicode
+        :param override: Override existing switch or option without warning.
+        :type override: bool
+        :return: Nothing
+        :rtype: None
+        """
         self.add_Argument(argument=OptionPair(key=key, value=value), override=override)
 
     def set_Configuration(self, configuration, section):
@@ -2122,6 +2185,7 @@ class Command(object):
         """
 
         assert isinstance(configuration, Configuration)
+        assert isinstance(section, str)
 
         if not configuration.config_parser.has_section(section=section):
             warnings.warn(
@@ -2339,7 +2403,7 @@ class Executable(Command):
         runnable = analysis.runnable_dict[runnable_name]
         executable = cls(name=runnable.name, program=Runnable.runner_script)
         executable.set_Configuration(configuration=analysis.configuration, section=runnable.code_module)
-        executable.add_OptionLong(key='pickler_path', value=analysis.pickler_path)
+        executable.add_OptionLong(key='pickler_path', value=runnable.pickler_path)
         executable.add_OptionLong(key='runnable_name', value=runnable.name)
         executable.add_OptionLong(key='debug', value=str(analysis.debug))
 
@@ -2829,3 +2893,44 @@ class Runnable(object):
         elif child_return_code < 0:
             raise Exception('[{}] Child process {!r} received signal {}.'.
                             format(datetime.datetime.now().isoformat(), executable.name, -child_return_code))
+
+    @property
+    def pickler_path(self):
+        """Get the Python Pickler file path.
+
+        :return: Python Pickler file path
+        :rtype: str
+        """
+
+        return os.path.join(self.working_directory, string.join(words=(self.name, 'pkl'), sep='.'))
+
+    def to_pickler_file(self):
+        """Write this object as a Python Pickler file into the working directory.
+
+        :return: Nothing
+        :rtype: None
+        """
+
+        pickler_file = open(self.pickler_path, 'wb')
+        pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
+        pickler.dump(obj=self)
+        pickler_file.close()
+
+    @classmethod
+    def from_picker_file(cls, file_path):
+        """Create a BSF Runnable object from a Python Pickler file via Python Unpickler.
+
+        :param file_path: File path to a Picker file
+        :type file_path: str, unicode
+        :return: BSF Runnable
+        :rtype: Runnable
+        """
+
+        pickler_file = open(file_path, 'rb')
+        unpickler = Unpickler(file=pickler_file)
+        runnable = unpickler.load()
+        pickler_file.close()
+
+        assert isinstance(runnable, Runnable)
+
+        return runnable
