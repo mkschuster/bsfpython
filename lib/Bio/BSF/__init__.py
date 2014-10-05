@@ -379,7 +379,7 @@ class Analysis(object):
         """
 
         if not self.project_name:
-            raise Exception('A BSF Analysis project_name has not been defined.')
+            raise Exception('An Analysis project_name has not been defined.')
 
         # Some analyses such as FastQC do not require a genome_version,
         # nor a genome_version-specific output directory.
@@ -402,6 +402,11 @@ class Analysis(object):
         if not os.path.isabs(self.output_directory):
             self.output_directory = os.path.join(Default.absolute_projects(), self.output_directory)
 
+        # As a safety measure, to prevent creation of rogue directory paths, the output_directory has to exist.
+
+        if not os.path.isdir(self.output_directory):
+            raise Exception('The Analysis output_directory {!r} does not exist.'.format(self.output_directory))
+
         # Define project_directory and genome_directory instance variables.
         # If a genome_version option is present, append
         # it to the project_directory instance variable.
@@ -414,6 +419,13 @@ class Analysis(object):
             self.genome_directory = os.path.join(self.project_directory, self.genome_version)
         else:
             self.genome_directory = self.project_directory
+
+        if not os.path.isdir(self.genome_directory):
+            try:
+                os.makedirs(self.genome_directory)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise
 
         if self.sas_file:
 
@@ -440,8 +452,6 @@ class Analysis(object):
             # Create an empty BSF Collection.
 
             self.collection = Collection()
-
-        self.create_project_genome_directory()
 
     def report(self):
 
@@ -502,12 +512,12 @@ class Analysis(object):
         if sub_directory:
             html_path = os.path.join(html_path, sub_directory)
 
-        # Do not automatically create "new" paths based on mis-spelt sub_directory names.
+        # As a safety measure, to prevent creation of rogue directory paths, the html_path directory has to exist.
 
         if not os.path.isdir(html_path):
             raise Exception(
-                "Public HTML path {!r} does not exist.\n"
-                "Check sub-directory {!r} name.".format(html_path, sub_directory))
+                "The public HTML path {!r} does not exist.\n"
+                "Please check the optional sub-directory name {!r}.".format(html_path, sub_directory))
 
         # The link_name consists of the absolute public_html directory,
         # the analysis-specific sub-directory, the project name and a 128 bit hexadecimal UUID string.
@@ -532,7 +542,7 @@ class Analysis(object):
             if S_ISLNK(mode):
                 target_name = os.readlink(path_name)
                 if not os.path.isabs(target_name):
-                    target_name = os.path.join(os.path.dirname(html_path), target_name)
+                    target_name = os.path.join(html_path, target_name)
                 if not os.path.exists(path=target_name):
                     # Both paths for os.path.samefile have to exist.
                     # Check for dangling symbolic links.
@@ -850,6 +860,8 @@ class Default(object):
     Attributes:
     :cvar global_default: Global BSF Default
     :type global_default: Default
+    :cvar global_file_path: Global configuration file
+    :type global_file_path: str, unicode
     :ivar classpath_picard: Picard Java Archive (JAR) class path directory
     :type classpath_picard: str, unicode
     :ivar classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
@@ -906,6 +918,10 @@ class Default(object):
 
     global_default = None
 
+    global_file_path = '~/.bsfpython.ini'
+    global_file_path = os.path.expanduser(path=global_file_path)
+    global_file_path = os.path.expandvars(path=global_file_path)
+
     @staticmethod
     def get_global_default():
 
@@ -930,10 +946,7 @@ class Default(object):
         :rtype: Default
         """
 
-        config_file = '~/.bsfpython.ini'
-        config_file = os.path.expanduser(path=config_file)
-
-        return cls.from_config_file(config_file=config_file)
+        return cls.from_config_file(config_file=Default.global_file_path)
 
     @classmethod
     def from_config_file(cls, config_file):
@@ -2404,8 +2417,8 @@ class Executable(Command):
         executable = cls(name=runnable.name, program=Runnable.runner_script)
         executable.set_Configuration(configuration=analysis.configuration, section=runnable.code_module)
         executable.add_OptionLong(key='pickler_path', value=runnable.pickler_path)
-        executable.add_OptionLong(key='runnable_name', value=runnable.name)
-        executable.add_OptionLong(key='debug', value=str(analysis.debug))
+        # executable.add_OptionLong(key='runnable_name', value=runnable.name)
+        # executable.add_OptionLong(key='debug', value=str(analysis.debug))
 
         return executable
 
