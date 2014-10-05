@@ -1908,6 +1908,7 @@ class AnnotationSheet(object):
     non_alpha_expression = re.compile(pattern='\W')
     non_numeric_expression = re.compile(pattern='\D')
     non_sequence_expression = re.compile(pattern='[^ACGTacgt]')
+    multiple_underscore_expression = re.compile(pattern='_{2,}')
 
     @classmethod
     def check_column(cls, row_number, row_dict, column_name, require_column=True, require_value=True):
@@ -2060,6 +2061,88 @@ class AnnotationSheet(object):
         """
         return cls.check_sequence(row_number=row_number, row_dict=row_dict, column_name=column_name,
                                   require_column=True, require_value=False)
+
+    @classmethod
+    def check_underscore_leading(cls, row_number, row_dict, column_name):
+
+        """Validate a particular column value for leading underscore characters.
+
+         Check that the particular column name key exists in the row dictionary and that
+         its associated value has no leading underscore.
+
+        :param row_number: Row number for warning messages
+        :type row_number: int
+        :param row_dict: A Python dict of row entries of a Python csv object
+        :type row_dict: dict
+        :param column_name: Column name
+        :type column_name: str
+        :return: Warning messages
+        :rtype: str
+        """
+
+        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
+
+        if column_value:
+            if column_value[:1] == '_':
+                messages += 'Column {!r} in row {} contains a value {!r} with a leading underscore character.\n'. \
+                    format(column_name, row_number, row_dict[column_name])
+
+        return messages
+
+    @classmethod
+    def check_underscore_trailing(cls, row_number, row_dict, column_name):
+
+        """Validate a particular column value for trailing underscore characters.
+
+         Check that the particular column name key exists in the row dictionary and that
+         its associated value has no trailing underscore.
+
+        :param row_number: Row number for warning messages
+        :type row_number: int
+        :param row_dict: A Python dict of row entries of a Python csv object
+        :type row_dict: dict
+        :param column_name: Column name
+        :type column_name: str
+        :return: Warning messages
+        :rtype: str
+        """
+
+        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
+
+        if column_value:
+            if column_value[-1:] == '_':
+                messages += 'Column {!r} in row {} contains a value {!r} with a trailing underscore character.\n'. \
+                    format(column_name, row_number, row_dict[column_name])
+
+        return messages
+
+    @classmethod
+    def check_underscore_multiple(cls, row_number, row_dict, column_name):
+
+        """Validate a particular column value for multiple underscore characters.
+
+         Check that the particular column name key exists in the row dictionary and that
+         its associated value has not multiple underscore adjacent to each other.
+
+        :param row_number: Row number for warning messages
+        :type row_number: int
+        :param row_dict: A Python dict of row entries of a Python csv object
+        :type row_dict: dict
+        :param column_name: Column name
+        :type column_name: str
+        :return: Warning messages
+        :rtype: str
+        """
+
+        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
+
+        if column_value:
+            match = re.search(pattern=cls.multiple_underscore_expression, string=row_dict[column_name])
+            if match:
+                messages += 'Column {!r} in row {} contains a value {!r} with multiple underscore characters.\n'. \
+                    format(column_name, row_number, row_dict[column_name])
+
+        return messages
 
     @classmethod
     def read_from_file(cls, file_path=None, file_type=None, name=None):
@@ -2267,10 +2350,13 @@ class AnnotationSheet(object):
             row_number += 1
             for field_name in self.field_names:
                 if field_name in test_methods:
-                    # Only validate fields, for which instructions exist in the tests dict.
-                    messages += test_methods[field_name](row_number=row_number,
-                                                         row_dict=row_dict,
-                                                         column_name=field_name)
+                    for class_method_pointer in test_methods[field_name]:
+                        # Only validate fields, for which instructions exist in the tests dict.
+                        messages += class_method_pointer(
+                            row_number=row_number,
+                            row_dict=row_dict,
+                            column_name=field_name
+                        )
 
         return messages
 
@@ -2302,13 +2388,31 @@ class BamIndexDecoderSheet(AnnotationSheet):
 
     field_names = ['lane', 'barcode_sequence_1', 'barcode_sequence_2', 'sample_name', 'library_name']
 
-    # Python dict to correlate columns with validation methods.
+    # Python dict to correlate columns with lists of validation method pointers.
 
-    test_methods = dict(lane=AnnotationSheet.check_alphanumeric,
-                        barcode_sequence_1=AnnotationSheet.check_sequence_mandatory,
-                        barcode_sequence_2=AnnotationSheet.check_sequence_optional,
-                        sample_name=AnnotationSheet.check_alphanumeric,
-                        library_name=AnnotationSheet.check_alphanumeric)
+    test_methods = dict(
+        lane=[
+            AnnotationSheet.check_alphanumeric
+        ],
+        barcode_sequence_1=[
+            AnnotationSheet.check_sequence_optional
+        ],
+        barcode_sequence_2=[
+            AnnotationSheet.check_sequence_optional
+        ],
+        sample_name=[
+            AnnotationSheet.check_alphanumeric,
+            AnnotationSheet.check_underscore_leading,
+            AnnotationSheet.check_underscore_trailing,
+            AnnotationSheet.check_underscore_multiple
+        ],
+        library_name=[
+            AnnotationSheet.check_alphanumeric,
+            AnnotationSheet.check_underscore_leading,
+            AnnotationSheet.check_underscore_trailing,
+            AnnotationSheet.check_underscore_multiple
+        ]
+    )
 
     @classmethod
     def read_from_file(cls, file_path=None, file_type=None, name=None):
@@ -2347,13 +2451,15 @@ class BamIndexDecoderSheet(AnnotationSheet):
                                                    field_names=BamIndexDecoderSheet.field_names,
                                                    row_dicts=row_dicts)
 
-    def validate(self, test_methods=None):
+    def validate(self, test_methods=None, lanes=8):
 
         """
         Validate a BSF BamIndexDecoder Sheet.
 
         :param test_methods:
         :type test_methods: dict
+        :param lanes: Number of lanes to validate
+        :type lanes: int
         :return: Warning messages
         :rtype: str
         """
@@ -2401,9 +2507,13 @@ class BamIndexDecoderSheet(AnnotationSheet):
 
             if 'barcode_sequence_1' in row_dict and row_dict['barcode_sequence_1']:
                 barcode_sequence += row_dict['barcode_sequence_1']
+            else:
+                barcode_sequence += '-NoIndex-'
 
             if 'barcode_sequence_2' in row_dict and row_dict['barcode_sequence_2']:
                 barcode_sequence += row_dict['barcode_sequence_2']
+            else:
+                barcode_sequence += '-NoIndex-'
 
             if barcode_sequence in barcode_dict:
                 messages += 'Barcode sequence {!r} from row {} duplicated in row {}.\n'. \
@@ -2424,12 +2534,35 @@ class BamIndexDecoderSheet(AnnotationSheet):
                 messages += 'Library name {!r} in row {} does not match previous name {!r}.\n'. \
                     format(row_dict['library_name'], row_number, library_name)
 
-        # TODO: The lane number needs to be configurable. Maybe this needs checking at the point where the
-        # Annotation Sheet gets used?
-        for lane_number in range(1, 9):
+        for lane_number in range(0 + 1, lanes + 1):
             lane_string = str(lane_number)
+
+            # Check that all lanes have annotation.
             if lane_string not in lane_index:
                 messages += 'No annotation for lane number {!r}.\n'.format(lane_number)
+            barcode_dict, sample_dict, library_name = lane_index[lane_string]
+
+            # Check that all or none of the rows has barcode sequence 1 or 2 populated.
+            no_index_1 = 0
+            no_index_2 = 0
+            for key in barcode_dict.keys():
+                if key[:9] == '-NoIndex-':
+                    no_index_1 += 1
+                if key[-9:] == '-NoIndex-':
+                    no_index_2 += 1
+
+            if not (no_index_1 == 0 or no_index_1 == len(barcode_dict)):
+                messages += 'Some empty barcode_sequence_1 fields in lane {}.\n'.format(lane_number)
+            if not (no_index_2 == 0 or no_index_2 == len(barcode_dict)):
+                messages += 'Some empty barcode_sequence_2 fields in lane {}.\n'.format(lane_number)
+
+            # Check that all barcode sequences have the same length.
+            # This test also finds cases of missing sequences tested for above.
+            key_list = barcode_dict.keys()
+            key_length = len(key_list[0])
+            for key in key_list[1:]:
+                if len(key) != key_length:
+                    messages += 'Mismatching barcode sequence lengths in lane {}.\n'.format(lane_number)
 
         return messages
 
