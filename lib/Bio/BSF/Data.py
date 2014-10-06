@@ -1517,7 +1517,7 @@ class Collection(object):
 
         sas.csv_reader_open()
 
-        for row_dict in sas._csv_reader:
+        for row_dict in sas._csv_reader_object:
             self._process_row_dict(row_dict=row_dict, prefix=prefix)
 
         sas.csv_reader_close()
@@ -2161,7 +2161,7 @@ class AnnotationSheet(object):
 
         annotation_sheet.csv_reader_open()
 
-        for row_dict in annotation_sheet._csv_reader:
+        for row_dict in annotation_sheet._csv_reader_object:
             annotation_sheet.row_dicts.append(row_dict)
 
         annotation_sheet.csv_reader_close()
@@ -2211,6 +2211,12 @@ class AnnotationSheet(object):
         else:
             self.row_dicts = list()
 
+        self._csv_reader_file = None
+        self._csv_reader_object = None
+
+        self._csv_writer_file = None
+        self._csv_writer_object = None
+
     def csv_reader_open(self, header=True):
 
         """Open a Comma-Separated Value (CSV) file for reading and initialise a Python csv.DictWriter object.
@@ -2232,13 +2238,13 @@ class AnnotationSheet(object):
             field_names = None
 
         self._csv_reader_file = open(name=self.file_path, mode='rb')
-        self._csv_reader = csv.DictReader(f=self._csv_reader_file, fieldnames=field_names)
+        self._csv_reader_object = csv.DictReader(f=self._csv_reader_file, fieldnames=field_names)
 
         # Automatically set the field names from the DictReader,
         # if the field_names list is empty and if possible.
 
-        if len(self._csv_reader.fieldnames) and not len(self.field_names):
-            self.field_names.extend(self._csv_reader.fieldnames)
+        if len(self._csv_reader_object.fieldnames) and not len(self.field_names):
+            self.field_names.extend(self._csv_reader_object.fieldnames)
 
     def csv_reader_next(self):
 
@@ -2248,7 +2254,7 @@ class AnnotationSheet(object):
         :rtype: dict
         """
 
-        return self._csv_reader.next()
+        return self._csv_reader_object.next()
 
     def csv_reader_close(self):
 
@@ -2258,7 +2264,7 @@ class AnnotationSheet(object):
         :rtype: None
         """
 
-        self._csv_reader = None
+        self._csv_reader_object = None
         self._csv_reader_file.close()
         self._csv_reader_file = None
 
@@ -2286,15 +2292,16 @@ class AnnotationSheet(object):
 
     def csv_writer_open(self):
 
-        """Open a Comma-Separated Value (CSV) file for writing and initialise a Python csv.DictWriter object.
+        """Open a Comma-Separated Value (CSV) file for writing, initialise a Python csv.DictWriter object and
+        write the header line if one has been defined.
 
         :return: Nothing
         :rtype: None
         """
 
         self._csv_writer_file = open(name=self.file_path, mode='wb')
-        self._csv_writer = csv.DictWriter(f=self._csv_writer_file, fieldnames=self.field_names)
-        self._csv_writer.writeheader()
+        self._csv_writer_object = csv.DictWriter(f=self._csv_writer_file, fieldnames=self.field_names)
+        self._csv_writer_object.writeheader()
 
     def csv_writer_next(self, row_dict):
 
@@ -2306,7 +2313,7 @@ class AnnotationSheet(object):
         :rtype: None
         """
 
-        self._csv_writer.writerow(rowdict=row_dict)
+        self._csv_writer_object.writerow(rowdict=row_dict)
 
     def csv_writer_close(self):
 
@@ -2316,8 +2323,9 @@ class AnnotationSheet(object):
         :rtype: None
         """
 
-        self._csv_writer = None
+        self._csv_writer_object = None
         self._csv_writer_file.close()
+        self._csv_writer_file = None
 
     def sort(self):
 
@@ -2568,7 +2576,53 @@ class BamIndexDecoderSheet(AnnotationSheet):
 
 
 class SampleAnnotationSheet(AnnotationSheet):
-    pass
+    """BSF SampleAnnotationSheet class.
+
+    """
+
+    # Column header names.
+
+    field_names = ['ProcessedRunFolder', 'Project', 'Sample', 'Reads1', 'File1', 'Reads2', 'File2']
+
+    test_methods = dict()
+
+    @classmethod
+    def read_from_file(cls, file_path=None, file_type=None, name=None):
+
+        """Construct a SampleAnnotationSheet from a comma-separated value (CSV) file.
+
+        :param file_path: File path
+        :type file_path: str, unicode
+        :param file_type: File type (e.g. ...)
+        :type file_type: str
+        :return: BSF SampleAnnotationSheet
+        :rtype: SampleAnnotationSheet
+        """
+
+        return super(SampleAnnotationSheet, cls).read_from_file(file_path=file_path)
+
+    def __init__(self, file_path=None, file_type=None, name=None, row_dicts=None):
+
+        """Initialise a BSF SampleAnnotationSheet object.
+
+        :param file_path: File path
+        :type file_path: str, unicode
+        :param file_type: File type (e.g. ...)
+        :type file_type: str
+        :param name: Name
+        :type name: str
+        :param row_dicts: Python list of Python dict objects
+        :type row_dicts: list
+        :return: Nothing
+        :rtype: None
+        """
+
+        super(SampleAnnotationSheet, self).__init__(
+            file_path=file_path,
+            file_type=file_type,
+            name=name,
+            field_names=SampleAnnotationSheet.field_names,
+            row_dicts=row_dicts)
 
 
 class SampleGroup(object):
