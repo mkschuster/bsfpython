@@ -2,6 +2,7 @@
 
 A package of classes and methods to run IlluminaToBam processes.
 """
+
 #
 # Copyright 2013 - 2014 Michael K. Schuster
 #
@@ -89,7 +90,7 @@ def run(runnable):
             if exception.errno != errno.EEXIST:
                 raise
 
-    #  Run all Executable objects of this Runnable..
+    #  Run all Executable objects of this Runnable.
 
     run_picard_sort_sam(runnable=runnable)
 

@@ -2,6 +2,7 @@
 
 A package of classes and methods to run BamIndexDecoder processes.
 """
+
 #
 # Copyright 2013 - 2014 Michael K. Schuster
 #
@@ -98,7 +99,7 @@ def run(runnable):
             if exception.errno != errno.EEXIST:
                 raise
 
-    #  Run all Executable objects of this Runnable..
+    #  Run all Executable objects of this Runnable.
 
     if 'bam_index_decoder' in runnable.executable_dict:
         run_bam_index_decoder(runnable=runnable)
