@@ -27,20 +27,45 @@
 
 from argparse import ArgumentParser
 
+from Bio.BSF import Default
 from Bio.BSF.Analyses.IlluminaToBamTools import BamIndexDecoder
 
 
 argument_parser = ArgumentParser(
     description='IlluminaToBamTools BamIndexDecoder analysis driver script.')
 
-argument_parser.add_argument('--debug', required=False, type=int,
-                             help='Debug level')
+argument_parser.add_argument(
+    '--debug',
+    help='Debug level',
+    required=False,
+    type=int)
 
-argument_parser.add_argument('--stage', required=False, type=str,
-                             help='Limit job submission to a particular Analysis stage')
+argument_parser.add_argument(
+    '--stage',
+    help='Limit job submission to a particular Analysis stage',
+    required=False,
+    type=str)
 
-argument_parser.add_argument('configuration', type=str,
-                             help='Configuration file (*.ini)')
+argument_parser.add_argument(
+    '--configuration',
+    default=Default.global_file_path,
+    help='Configuration (*.ini) file',
+    required=False,
+    type=str)
+
+argument_parser.add_argument(
+    '--project-name',
+    dest='project_name',
+    help='Project name i.e. flow-cell identifier',
+    required=False,
+    type=str)
+
+argument_parser.add_argument(
+    '--library-file',
+    dest='library_file',
+    help='Library annotation sheet',
+    required=False,
+    type=str)
 
 arguments = argument_parser.parse_args()
 
@@ -53,12 +78,19 @@ bid = BamIndexDecoder.from_config_file(config_file=arguments.configuration)
 if arguments.debug:
     bid.debug = arguments.debug
 
+if arguments.project_name:
+    bid.project_name = arguments.project_name
+
+if arguments.library_file:
+    bid.library_file = arguments.library_file
+
 # Do the work.
 
 bid.run()
 bid.submit(drms_name=arguments.stage)
 
 print 'IlluminaToBamTools BamIndexDecoder Analysis'
-print 'Project name:      ', bid.project_name
-print 'Input directory:   ', bid.input_directory
-print 'Project directory: ', bid.project_directory
+print 'Project name:         ', bid.project_name
+print 'Project directory:    ', bid.project_directory
+print 'Sequences directory:  ', bid.sequences_directory
+print 'Experiment directory: ', bid.experiment_directory

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 #
-# BSF Python script to drive the IlluminaToBamTools IlluminaToBam analysis.
+# BSF Python script to process an Illumina Run Folder (IRF) after sequencing and
+# drive the IlluminaToBamTools IlluminaToBam and BamIndexDecoder analyses.
 #
 #
 # Copyright 2014 Michael K. Schuster
@@ -28,11 +29,11 @@
 from argparse import ArgumentParser
 
 from Bio.BSF import Default
-from Bio.BSF.Analyses.IlluminaToBamTools import IlluminaToBam
+from Bio.BSF.Analyses.IlluminaToBamTools import BamIndexDecoder, IlluminaToBam
 
 
 argument_parser = ArgumentParser(
-    description='IlluminaToBamTools Illumina2bam analysis driver script.')
+    description='IlluminaToBamTools Illumina2bam and BamIndexDecoder analysis driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -49,6 +50,13 @@ argument_parser.add_argument(
 argument_parser.add_argument(
     '--irf',
     help='Illumina Run Folder name or file path',
+    required=False,
+    type=str)
+
+argument_parser.add_argument(
+    '--library-file',
+    dest='library_file',
+    help='Library annotation sheet',
     required=False,
     type=str)
 
@@ -78,8 +86,35 @@ if arguments.irf:
 itb.run()
 itb.submit(drms_name=arguments.stage)
 
+# Create a BSF BamIndexDecoder analysis, run and submit it.
+
+bid = BamIndexDecoder.from_config_file(config_file=arguments.configuration)
+
+# Transfer the project name from the IlluminaToBam to the BamIndexDecoder analysis.
+
+bid.project_name = itb.project_name
+
+# Set arguments that override the configuration file.
+
+if arguments.debug:
+    bid.debug = arguments.debug
+
+if arguments.library_file:
+    bid.library_file = arguments.library_file
+
+# Do the work.
+
+bid.run()
+bid.submit(drms_name=arguments.stage)
+
 print 'IlluminaToBamTools IlluminaToBam Analysis'
 print 'Project name:         ', itb.project_name
 print 'Project directory:    ', itb.project_directory
 print 'Illumina Run Folder:  ', itb.illumina_run_folder
 print 'Experiment directory: ', itb.experiment_directory
+print ''
+print 'IlluminaToBamTools BamIndexDecoder Analysis'
+print 'Project name:         ', bid.project_name
+print 'Project directory:    ', bid.project_directory
+print 'Sequences directory:  ', bid.sequences_directory
+print 'Experiment directory: ', bid.experiment_directory
