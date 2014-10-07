@@ -2,6 +2,7 @@
 
 A package of classes and methods supporting analyses of the Illumina2Bam-Tools package.
 """
+
 #
 # Copyright 2014 Michael K. Schuster
 #
@@ -26,12 +27,13 @@ A package of classes and methods supporting analyses of the Illumina2Bam-Tools p
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import csv
+import errno
 import os
 import string
+import warnings
 
 from Bio.BSF import Analysis, Command, Configuration, Default, DRMS, Executable, Runnable
-from Bio.BSF.Data import SampleAnnotationSheet
+from Bio.BSF.Data import BamIndexDecoderSheet, SampleAnnotationSheet
 from Bio.BSF.Illumina import RunFolder
 
 
@@ -80,7 +82,11 @@ class IlluminaToBam(Analysis):
                  input_directory=None, output_directory=None,
                  project_directory=None, genome_directory=None,
                  e_mail=None, debug=0, drms_list=None,
-                 collection=None, comparisons=None, samples=None):
+                 collection=None, comparisons=None, samples=None,
+                 illumina_run_folder=None, experiment_name=None, sequencing_centre=None,
+                 sequences_directory=None, experiment_directory=None,
+                 classpath_illumina2bam=None, classpath_picard=None,
+                 force=False):
         """Initialise a Bio.BSF.Analyses.Illumina2BamTools.IlluminaToBam object.
 
         :param configuration: Configuration
@@ -111,6 +117,23 @@ class IlluminaToBam(Analysis):
         :type comparisons: dict
         :param samples: Python list of Sample objects
         :type samples: list
+        :param illumina_run_folder: File path to an Illumina Run Folder
+        :type illumina_run_folder: str, unicode
+        :param experiment_name: Experiment name (i.e. flow-cell identifier) normally automatically read from
+        Illumina Run Folder parameters
+        :type experiment_name: str
+        :param sequencing_centre: Sequencing centre
+        :type sequencing_centre: str
+        :param sequences_directory: Sequences directory to store archive BAM files
+        :type sequences_directory: str, unicode
+        :param experiment_directory: Experiment-specific directory
+        :type experiment_directory: str, unicode
+        :param classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
+        :type classpath_illumina2bam: str, unicode
+        :param classpath_picard: Picard tools Java Archive (JAR) class path directory
+        :type classpath_picard: str, unicode
+        :param force: Force processing of incomplete Illumina Run Folders
+        :type force: bool
         """
 
         super(IlluminaToBam, self).__init__(
@@ -130,6 +153,43 @@ class IlluminaToBam(Analysis):
 
         # Sub-class specific ...
 
+        if illumina_run_folder:
+            self.illumina_run_folder = illumina_run_folder
+        else:
+            self.illumina_run_folder = str()
+
+        if experiment_name:
+            self.experiment_name = experiment_name
+        else:
+            self.experiment_name = str()
+
+        if sequencing_centre:
+            self.sequencing_centre = sequencing_centre
+        else:
+            self.sequencing_centre = str()
+
+        if sequences_directory:
+            self.sequences_directory = sequences_directory
+        else:
+            self.sequences_directory = str()
+
+        if experiment_directory:
+            self.experiment_directory = experiment_directory
+        else:
+            self.experiment_directory = str()
+
+        if classpath_illumina2bam:
+            self.classpath_illumina2bam = classpath_illumina2bam
+        else:
+            self.classpath_illumina2bam = str()
+
+        if classpath_picard:
+            self.classpath_picard = classpath_picard
+        else:
+            self.classpath_picard = str()
+
+        self.force = force
+
     def set_Configuration(self, configuration, section):
 
         """Set instance variables of an IlluminaToBam object via a section of a Configuration object.
@@ -141,9 +201,59 @@ class IlluminaToBam(Analysis):
         :type section: str
         """
 
+        assert isinstance(configuration, Configuration)
+        assert isinstance(section, str)
+
         super(IlluminaToBam, self).set_Configuration(configuration=configuration, section=section)
 
         # Sub-class specific ...
+
+        # Get Illumina Run Folder information.
+
+        if configuration.config_parser.has_option(section=section, option='illumina_run_folder'):
+            self.illumina_run_folder = configuration.config_parser.get(
+                section=section,
+                option='illumina_run_folder')
+
+        # Get the experiment name.
+
+        if configuration.config_parser.has_option(section=section, option='experiment_name'):
+            self.experiment_name = configuration.config_parser.get(
+                section=section,
+                option='experiment_name')
+
+        # Get sequencing centre information.
+
+        if configuration.config_parser.has_option(section=section, option='sequencing_centre'):
+            self.sequencing_centre = configuration.config_parser.get(
+                section=section,
+                option='sequencing_centre')
+
+        # Get the sequences directory information.
+
+        if configuration.config_parser.has_option(section=section, option='sequences_directory'):
+            self.sequences_directory = configuration.config_parser.get(
+                section=section,
+                option='sequences_directory')
+
+        # Get the Illumina2Bam tools Java Archive (JAR) class path directory.
+
+        if configuration.config_parser.has_option(section=section, option='classpath_illumina2bam'):
+            self.classpath_illumina2bam = configuration.config_parser.get(
+                section=section,
+                option='classpath_illumina2bam')
+
+        # Get the Picard tools Java Archive (JAR) class path directory.
+
+        if configuration.config_parser.has_option(section=section, option='classpath_picard'):
+            self.classpath_picard = configuration.config_parser.get(
+                section=section,
+                option='classpath_picard')
+
+        if configuration.config_parser.has_option(section=section, option='force'):
+            self.force = configuration.config_parser.getboolean(
+                section=section,
+                option='force')
 
     def run(self):
 
@@ -154,99 +264,98 @@ class IlluminaToBam(Analysis):
         To convert an Illumina flow cell, Illumina2bam is run first, setting the SAM Read Group (@RG)
         library name (LB) and sample name (SM) to 'flow-cell identifier.lane'.
         The resulting archive BAM file is then sorted by query name with Picard SortSam.
-        Depends on the bsf_illumina2bam.sh Bash script to run this efficiently.
         """
 
         # Read configuration options.
 
-        config_parser = self.configuration.config_parser
-        config_section = self.configuration.section_from_instance(self)
+        # config_parser = self.configuration.config_parser
+        # config_section = self.configuration.section_from_instance(self)
 
         default = Default.get_global_default()
 
-        # Get the Illumina Run Folder
+        # Define an Illumina Run Folder directory.
+        # Expand an eventual user part i.e. on UNIX ~ or ~user and
+        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Check if an absolute path has been provided, if not,
+        # automatically prepend standard BSF directory paths.
 
-        illumina_run_folder = config_parser.get(section=config_section, option='illumina_run_folder')
-        illumina_run_folder = os.path.expanduser(path=illumina_run_folder)
-        illumina_run_folder = os.path.expandvars(path=illumina_run_folder)
+        if not self.illumina_run_folder:
+            raise Exception('An Illumina Run Folder name or file path has not been defined.')
 
-        if not os.path.isabs(illumina_run_folder):
-            illumina_run_folder = os.path.join(Default.absolute_runs_illumina(), illumina_run_folder)
+        self.illumina_run_folder = os.path.expanduser(path=self.illumina_run_folder)
+        self.illumina_run_folder = os.path.expandvars(path=self.illumina_run_folder)
 
-        irf = RunFolder.from_file_path(file_path=illumina_run_folder)
+        if not os.path.isabs(self.illumina_run_folder):
+            self.illumina_run_folder = os.path.join(Default.absolute_runs_illumina(), self.illumina_run_folder)
 
-        if not os.path.exists(path=os.path.join(illumina_run_folder, 'RTAComplete.txt')):
-            raise Exception('Run folder {!r} is not complete.'.format(illumina_run_folder))
+        # Check that the Illumina Run Folder is complete and that it contains the Data/Intensities directories.
+
+        if not os.path.exists(path=os.path.join(self.illumina_run_folder, 'RTAComplete.txt')) and not self.force:
+            raise Exception(
+                'The Illumina Run Folder {!r} is not complete.'.format(self.illumina_run_folder))
+
+        if not os.path.isdir(os.path.join(self.illumina_run_folder, 'Data', 'Intensities')):
+            raise Exception(
+                'The Illumina Run Folder {!r} has no Data/Intensities directory.'.format(self.illumina_run_folder))
+
+        irf = RunFolder.from_file_path(file_path=self.illumina_run_folder)
 
         # The experiment name (e.g. BSF_0000) is used as the prefix for archive BAM files.
         # Read it from the configuration file or from the
         # Run Parameters of the Illumina Run Folder.
 
-        if config_parser.has_option(section=config_section, option='experiment_name'):
-            experiment_name = config_parser.get(section=config_section, option='experiment_name')
-        else:
-            experiment_name = str()
-
-        if not experiment_name:
-            experiment_name = irf.run_parameters.get_experiment_name()
+        if not self.experiment_name:
+            self.experiment_name = irf.run_parameters.get_experiment_name()
 
         # The project name is a concatenation of the experiment name and the Illumina flow cell identifier.
         # In case it has not been specified in the configuration file, read it from the
         # Run Information of the Illumina Run Folder.
 
         if not self.project_name:
-            self.project_name = string.join(words=(experiment_name, irf.run_information.flow_cell), sep='_')
-
-        # In contrast to normal analyses that use the Default.absolute_samples() as input directory,
-        # this one needs to use the Default.absolute_runs_illumina() directory.
-        # Make sure an absolute path is defined, before the super-class method Bio.BSF.Analysis.run() is called.
-
-        self.input_directory = os.path.expanduser(path=self.input_directory)
-        self.input_directory = os.path.expandvars(path=self.input_directory)
-
-        if not os.path.isabs(self.input_directory):
-            self.input_directory = os.path.join(Default.absolute_runs_illumina(), self.input_directory)
-
-        # In contrast to normal analyses that use the Default.absolute_projects() output directory,
-        # this one needs to use the Default.absolute_sequences() directory.
-        # Make sure an absolute path is defined, before the super-class method Bio.BSF.Analysis.run() is called.
-
-        self.output_directory = os.path.expanduser(path=self.output_directory)
-        self.output_directory = os.path.expandvars(path=self.output_directory)
-
-        if not os.path.isabs(self.output_directory):
-            self.output_directory = os.path.join(Default.absolute_sequences(), self.output_directory)
+            self.project_name = string.join(words=(self.experiment_name, irf.run_information.flow_cell), sep='_')
 
         # Get sequencing centre information.
 
-        if config_parser.has_option(section=config_section, option='sequencing_centre'):
-            sequencing_centre = config_parser.get(section=config_section, option='sequencing_centre')
-        else:
-            sequencing_centre = str()
+        if not self.sequencing_centre:
+            self.sequencing_centre = default.operator_sequencing_centre
 
-        if not sequencing_centre:
-            sequencing_centre = default.operator_sequencing_centre
+        # Define the sequences directory in which to create the experiment directory.
+        # Expand an eventual user part i.e. on UNIX ~ or ~user and
+        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Check if an absolute path has been provided, if not,
 
-        # Get the Illumina2bam Java class path.
+        self.sequences_directory = os.path.expanduser(path=self.sequences_directory)
+        self.sequences_directory = os.path.expandvars(path=self.sequences_directory)
 
-        if config_parser.has_option(section=config_section, option='classpath_illumina2bam'):
-            classpath_illumina2bam = config_parser.get(section=config_section, option='classpath_illumina2bam')
-        else:
-            classpath_illumina2bam = str()
+        if not os.path.isabs(self.sequences_directory):
+            self.sequences_directory = os.path.join(Default.absolute_sequences(), self.sequences_directory)
 
-        if not classpath_illumina2bam:
-            classpath_illumina2bam = default.classpath_illumina2bam
+        # As a safety measure, to prevent creation of rogue directory paths, the sequences_directory has to exist.
 
-        # Get the Picard Java class path.
+        if not os.path.isdir(self.sequences_directory):
+            raise Exception(
+                'The IlluminaToBam sequences_directory {!r} does not exist.'.format(self.sequences_directory))
 
-        if config_parser.has_option(section=config_section, option='classpath_picard'):
-            classpath_picard = config_parser.get(section=config_section, option='classpath_picard')
-        else:
-            classpath_picard = str()
-        if not classpath_picard:
-            classpath_picard = default.classpath_picard
+        self.experiment_directory = os.path.join(self.sequences_directory, self.project_name)
 
-        # At this stage the configuration is set. Now call run on the super-class to create the necessary directories.
+        if not os.path.isdir(self.experiment_directory):
+            try:
+                os.makedirs(self.experiment_directory)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise
+
+        # Get the Illumina2Bam tools Java Archive (JAR) class path directory.
+
+        if not self.classpath_illumina2bam:
+            self.classpath_illumina2bam = default.classpath_illumina2bam
+
+        # Get the Picard tools Java Archive (JAR) class path directory
+
+        if not self.classpath_picard:
+            self.classpath_picard = default.classpath_picard
+
+        # Call the run method of the super class after the project_name has been defined.
 
         super(IlluminaToBam, self).run()
 
@@ -262,13 +371,22 @@ class IlluminaToBam(Analysis):
             prefix = string.join(words=(itb_drms.name, self.project_name, lane_str), sep='_')
 
             file_path_dict = dict(
-                # In contrast to other code modules,
-                # sequence archive file names do not use the 'illumina_to_bam' prefix.
-                temporary_directory=string.join((self.project_name, lane_str, 'temporary'), sep='_'),
-                sorted_bam=string.join((self.project_name, lane_str, 'sorted.bam'), sep='_'),
-                sorted_md5=string.join((self.project_name, lane_str, 'sorted.bam.md5'), sep='_'),
-                unsorted_bam=string.join((self.project_name, lane_str, 'unsorted.bam'), sep='_'),
-                unsorted_md5=string.join((self.project_name, lane_str, 'unsorted.bam.md5'), sep='_')
+                temporary_directory=string.join((prefix, 'temporary'), sep='_'),
+                illumina_directory=self.illumina_run_folder,  # contains full path information
+                sequences_directory=self.sequences_directory,  # contains full path information
+                experiment_directory=self.experiment_directory,  # contains full path information
+                sorted_bam=os.path.join(
+                    self.experiment_directory,
+                    string.join((self.project_name, lane_str, 'sorted.bam'), sep='_')),
+                sorted_md5=os.path.join(
+                    self.experiment_directory,
+                    string.join((self.project_name, lane_str, 'sorted.bam.md5'), sep='_')),
+                unsorted_bam=os.path.join(
+                    self.experiment_directory,
+                    string.join((self.project_name, lane_str, 'unsorted.bam'), sep='_')),
+                unsorted_md5=os.path.join(
+                    self.experiment_directory,
+                    string.join((self.project_name, lane_str, 'unsorted.bam.md5'), sep='_'))
             )
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
@@ -279,13 +397,15 @@ class IlluminaToBam(Analysis):
                 file_path_dict=file_path_dict)
             self.add_runnable(runnable=runnable)
 
-            # Run Illumina2Bam-Tools Illumina2bam
+            # Run Illumina2Bam tools Illumina2bam.
 
             java_process = Executable(name='illumina_to_bam', program='java', sub_command=Command(command=str()))
             runnable.add_executable(executable=java_process)
 
             java_process.add_SwitchShort(key='d64')
-            java_process.add_OptionShort(key='jar', value=os.path.join(classpath_illumina2bam, 'Illumina2bam.jar'))
+            java_process.add_OptionShort(
+                key='jar',
+                value=os.path.join(self.classpath_illumina2bam, 'Illumina2bam.jar'))
             java_process.add_SwitchShort(key='Xmx4G')
             java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_dict['temporary_directory'])
 
@@ -294,7 +414,7 @@ class IlluminaToBam(Analysis):
             # RUN_FOLDER
             sub_command.add_OptionPair(
                 key='INTENSITY_DIR',
-                value=os.path.join(illumina_run_folder, 'Data', 'Intensities'))
+                value=os.path.join(self.illumina_run_folder, 'Data', 'Intensities'))
             # BASECALLS_DIR
             sub_command.add_OptionPair(
                 key='LANE',
@@ -320,7 +440,7 @@ class IlluminaToBam(Analysis):
             # RUN_START_DATE
             sub_command.add_OptionPair(
                 key='SEQUENCING_CENTER',
-                value=sequencing_centre)
+                value=self.sequencing_centre)
             # PLATFORM
             # FIRST_TILE
             # TILE_LIMIT
@@ -343,7 +463,7 @@ class IlluminaToBam(Analysis):
             # COMPRESSION_LEVEL
             sub_command.add_OptionPair(
                 key='MAX_RECORDS_IN_RAM',
-                value='4000000')
+                value='2000000')
             sub_command.add_OptionPair(
                 key='CREATE_INDEX',
                 value='false')
@@ -361,8 +481,8 @@ class IlluminaToBam(Analysis):
             runnable.add_executable(executable=java_process)
 
             java_process.add_SwitchShort(key='d64')
-            java_process.add_OptionShort(key='jar', value=os.path.join(classpath_picard, 'SortSam.jar'))
-            java_process.add_SwitchShort(key='Xmx6G')
+            java_process.add_OptionShort(key='jar', value=os.path.join(self.classpath_picard, 'SortSam.jar'))
+            java_process.add_SwitchShort(key='Xmx4G')
             java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_dict['temporary_directory'])
 
             sub_command = java_process.sub_command
@@ -387,7 +507,7 @@ class IlluminaToBam(Analysis):
             # COMPRESSION_LEVEL
             sub_command.add_OptionPair(
                 key='MAX_RECORDS_IN_RAM',
-                value='4000000')
+                value='2000000')
             sub_command.add_OptionPair(
                 key='CREATE_INDEX',
                 value='false')
@@ -403,10 +523,8 @@ class IlluminaToBam(Analysis):
             itb_drms.add_Executable(executable=itb)
 
             # Only submit this Executable if the final result file does not exist.
-            if (os.path.exists(
-                    os.path.join(self.project_directory, file_path_dict['sorted_md5']))
-                and os.path.getsize(
-                    os.path.join(self.project_directory, file_path_dict['sorted_md5']))):
+            if (os.path.exists(file_path_dict['sorted_md5'])
+                    and os.path.getsize(file_path_dict['sorted_md5'])):
                 itb.submit = False
 
 
@@ -455,8 +573,12 @@ class BamIndexDecoder(Analysis):
                  input_directory=None, output_directory=None,
                  project_directory=None, genome_directory=None,
                  e_mail=None, debug=0, drms_list=None,
-                 collection=None, comparisons=None, samples=None):
-        """Initialise a Bio.BSF.Analyses.Illumina2BamTools.BamIndexDecoder object.
+                 collection=None, comparisons=None, samples=None,
+                 library_file=None,
+                 sequences_directory=None, samples_directory=None, experiment_directory=None,
+                 classpath_illumina2bam=None, classpath_picard=None,
+                 force=False):
+        """Initialise a Bio.BSF.Analyses.IlluminaToBamTools.BamIndexDecoder object.
 
         :param configuration: Configuration
         :type configuration: Configuration
@@ -486,6 +608,20 @@ class BamIndexDecoder(Analysis):
         :type comparisons: dict
         :param samples: Python list of Sample objects
         :type samples: list
+        :param library_file: Library annotation file
+        :type library_file: str, unicode
+        :param sequences_directory: BSF sequences directory
+        :type sequences_directory: str, unicode
+        :param samples_directory: BSF samples directory
+        :type samples_directory: str, unicode
+        :param experiment_directory: Experiment directory
+        :type experiment_directory: str, unicode
+        :param classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
+        :type classpath_illumina2bam: str, unicode
+        :param classpath_picard: Picard tools Java Archive (JAR) class path directory
+        :type classpath_picard: str, unicode
+        :param force: Force de-multiplexing with a Library Annotation sheet failing validation
+        :type force: bool
         """
 
         super(BamIndexDecoder, self).__init__(
@@ -505,6 +641,38 @@ class BamIndexDecoder(Analysis):
 
         # Sub-class specific ...
 
+        if library_file:
+            self.library_file = library_file
+        else:
+            self.library_file = str()
+
+        if sequences_directory:
+            self.sequences_directory = sequences_directory
+        else:
+            self.sequences_directory = str()
+
+        if samples_directory:
+            self.samples_directory = samples_directory
+        else:
+            self.samples_directory = str()
+
+        if experiment_directory:
+            self.experiment_directory = experiment_directory
+        else:
+            self.experiment_directory = str()
+
+        if classpath_illumina2bam:
+            self.classpath_illumina2bam = classpath_illumina2bam
+        else:
+            self.classpath_illumina2bam = str()
+
+        if classpath_picard:
+            self.classpath_picard = classpath_picard
+        else:
+            self.classpath_picard = str()
+
+        self.force = force
+
     def set_Configuration(self, configuration, section):
 
         """Set instance variables of a BamIndexDecoder object via a section of a Configuration object.
@@ -520,87 +688,138 @@ class BamIndexDecoder(Analysis):
 
         # Sub-class specific ...
 
+        # Get the library annotation file.
+
+        if configuration.config_parser.has_option(section=section, option='library_file'):
+            self.library_file = configuration.config_parser.get(section=section, option='library_file')
+
+        # Get the BSF samples directory.
+
+        if configuration.config_parser.has_option(section=section, option='sequences_directory'):
+            self.sequences_directory = configuration.config_parser.get(
+                section=section,
+                option='sequences_directory')
+
+        if configuration.config_parser.has_option(section=section, option='samples_directory'):
+            self.samples_directory = configuration.config_parser.get(
+                section=section,
+                option='samples_directory')
+
+        # Get the Illumina2Bam tools Java Archive (JAR) class path directory.
+
+        if configuration.config_parser.has_option(section=section, option='classpath_illumina2bam'):
+            self.classpath_illumina2bam = configuration.config_parser.get(
+                section=section,
+                option='classpath_illumina2bam')
+
+        # Get the Picard tools Java Archive (JAR) class path directory.
+
+        if configuration.config_parser.has_option(section=section, option='classpath_picard'):
+            self.classpath_picard = configuration.config_parser.get(
+                section=section,
+                option='classpath_picard')
+
+        if configuration.config_parser.has_option(section=section, option='force'):
+            self.force = configuration.config_parser.getboolean(
+                section=section,
+                option='force')
+
     def run(self):
 
-        """Decode an archive BAM file produced with Illumina2bam into sample-specific BAM files.
+        """Decode an archive BAM file produced with Illumina2Bam tools into sample-specific BAM files.
 
         :return: Nothing
         :rtype: None
         """
 
         # The standard BSF Python *comma-separated* value sample sheet needs to be transformed into
-        # a Picard *tab-separated* value sample sheet.
+        # a Picard tools *tab-separated* value (TSV) sample sheet.
         # lane, barcode_sequence_1, barcode_sequence_2, sample_name, library_name
         # barcode_sequence, barcode_name, library_name, sample_name, description
 
+        super(BamIndexDecoder, self).run()
+
         # Read configuration options.
 
-        config_parser = self.configuration.config_parser
-        config_section = self.configuration.section_from_instance(self)
+        # config_parser = self.configuration.config_parser
+        # config_section = self.configuration.section_from_instance(self)
 
         default = Default.get_global_default()
 
         # Load from the configuration file and override with the default if necessary.
 
-        # In contrast to normal analyses that use the Default.absolute_samples() as input directory,
-        # this one needs to use the Default.absolute_sequences() directory.
-        # Make sure an absolute path is defined, before the super-class method Bio.BSF.Analysis.run() is called.
+        # Define the sequences and samples directory.
+        # Expand an eventual user part i.e. on UNIX ~ or ~user and
+        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Check if an absolute path has been provided, if not,
+        # automatically prepend standard BSF directory paths.
 
-        self.input_directory = os.path.expanduser(path=self.input_directory)
-        self.input_directory = os.path.expandvars(path=self.input_directory)
+        if not self.sequences_directory:
+            self.sequences_directory = self.project_name
 
-        if not os.path.isabs(self.input_directory):
-            self.input_directory = os.path.join(Default.absolute_sequences(), self.input_directory)
+        self.sequences_directory = os.path.expanduser(path=self.sequences_directory)
+        self.sequences_directory = os.path.expandvars(path=self.sequences_directory)
 
-        # In contrast to normal analyses that use the Defaults.absolute_projects() output directory,
-        # this one needs to use the Default.absolute_samples() directory.
-        # Make sure an absolute path is defined, before the super-class method Bio.BSF.Analysis.run() is called.
+        if not os.path.isabs(self.sequences_directory):
+            self.sequences_directory = os.path.join(Default.absolute_sequences(), self.sequences_directory)
 
-        self.output_directory = os.path.expanduser(path=self.output_directory)
-        self.output_directory = os.path.expandvars(path=self.output_directory)
+        self.samples_directory = os.path.expanduser(path=self.samples_directory)
+        self.samples_directory = os.path.expandvars(path=self.samples_directory)
 
-        if not os.path.isabs(self.output_directory):
-            self.output_directory = os.path.join(Default.absolute_samples(), self.output_directory)
+        if not os.path.isabs(self.samples_directory):
+            self.samples_directory = os.path.join(Default.absolute_samples(), self.samples_directory)
+
+        # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
+
+        if not os.path.isdir(self.samples_directory):
+            raise Exception(
+                'The BamIndexDecoder samples_directory {!r} does not exist.'.format(self.samples_directory))
+
+        self.experiment_directory = os.path.join(self.samples_directory, self.project_name)
+
+        if not os.path.isdir(self.experiment_directory):
+            try:
+                os.makedirs(self.experiment_directory)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise
 
         # Get the library annotation sheet.
         # The library annotation sheet is deliberately not passed in via sas_file,
         # as the Analysis.run() method reads that option into a BSF Collection object.
 
-        if config_parser.has_option(section=config_section, option='library_file'):
-            library_file = config_parser.get(section=config_section, option='library_file')
-        else:
-            library_file = '{}_libraries.csv'.format(self.project_name)
+        self.library_file = os.path.expanduser(path=self.library_file)
+        self.library_file = os.path.expandvars(path=self.library_file)
 
-        library_file = os.path.expanduser(path=library_file)
-        library_file = os.path.expandvars(path=library_file)
+        if not self.library_file:
+            self.library_file = string.join(words=(self.project_name, 'libraries.csv'), sep='_')
 
-        if not os.path.exists(path=library_file):
-            raise Exception(
-                'A library_file option is missing from configuration file section {!r}.'.
-                format(config_section))
+        if not os.path.exists(path=self.library_file):
+            raise Exception('Library annotation file {!r} does not exist.'.format(self.library_file))
 
-        # Get the Illumina2bam Java class path.
+        # Load the library annotation sheet file and validate.
 
-        if config_parser.has_option(section=config_section, option='classpath_illumina2bam'):
-            classpath_illumina2bam = config_parser.get(section=config_section, option='classpath_illumina2bam')
-        else:
-            classpath_illumina2bam = str()
+        library_annotation_sheet = BamIndexDecoderSheet.read_from_file(file_path=self.library_file)
 
-        if not classpath_illumina2bam:
-            classpath_illumina2bam = default.classpath_illumina2bam
+        validation_messages = library_annotation_sheet.validate()
 
-        # Get the Picard Java class path.
+        if validation_messages:
+            if self.force:
+                warnings.warn('Validation of library annotation sheet {!r}:\n{}'.
+                              format(self.library_file, validation_messages))
+            else:
+                raise Exception('Validation of library annotation sheet {!r}:\n{}'.
+                                format(self.library_file, validation_messages))
 
-        if config_parser.has_option(section=config_section, option='classpath_picard'):
-            classpath_picard = config_parser.get(section=config_section, option='classpath_picard')
-        else:
-            classpath_picard = str()
-        if not classpath_picard:
-            classpath_picard = default.classpath_picard
+        # Get the Illumina2Bam tools Java Archive (JAR) class path directory.
 
-        # At this stage the configuration is set. Now call run on the super-class to create the necessary directories.
+        if not self.classpath_illumina2bam:
+            self.classpath_illumina2bam = default.classpath_illumina2bam
 
-        super(BamIndexDecoder, self).run()
+        # Get the Picard tools Java Archive (JAR) class path directory.
+
+        if not self.classpath_picard:
+            self.classpath_picard = default.classpath_picard
 
         bid_drms = DRMS.from_Analysis(
             name='bam_index_decoder',
@@ -610,31 +829,20 @@ class BamIndexDecoder(Analysis):
 
         index_by_lane = dict()
 
-        field_names_1 = ['lane', 'barcode_sequence_1', 'barcode_sequence_2', 'sample_name', 'library_name']
         field_names_2 = ['barcode_sequence', 'barcode_name', 'library_name', 'sample_name', 'description']
-        field_names_3 = ['ProcessedRunFolder', 'Project', 'Sample', 'Reads1', 'File1']
 
-        sas = SampleAnnotationSheet(file_path=library_file, field_names=field_names_1)
-
-        sas.csv_reader_open()
-
-        for row_dict in sas._csv_reader:
-
+        for row_dict in library_annotation_sheet.row_dicts:
             if row_dict['lane'] in index_by_lane:
                 lane_list = index_by_lane[row_dict['lane']]
             else:
                 lane_list = list()
                 index_by_lane[row_dict['lane']] = lane_list
-
             lane_list.append(row_dict)
 
-        sas.csv_reader_close()
-
-        sample_csv_name = os.path.join(self.project_directory,
-                                       '{}_samples.csv'.format(self.project_name))
-        sample_csv_file = open(name=sample_csv_name, mode='wb')
-        sample_csv_writer = csv.DictWriter(f=sample_csv_file, fieldnames=field_names_3)
-        sample_csv_writer.writeheader()
+        sas = SampleAnnotationSheet(
+            file_path=os.path.join(
+                self.experiment_directory,
+                string.join(words=(self.project_name, 'samples.csv'), sep='_')))
 
         keys = index_by_lane.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -646,17 +854,29 @@ class BamIndexDecoder(Analysis):
             prefix = string.join(words=(bid_drms.name, self.project_name, key), sep='_')
 
             file_path_dict = dict(
-                temporary_directory=string.join(words=(self.project_name, key, 'temporary'), sep='_'),
-                samples_directory=string.join(words=(self.project_name, key, 'samples'), sep='_'),
-                barcode=string.join(words=(self.project_name, key, 'barcode.tsv'), sep='_'),
-                metrics=string.join(words=(self.project_name, key, 'metrics.tsv'), sep='_'),
-                input=os.path.join(self.input_directory,
-                                   self.project_name,
-                                   string.join(words=(self.project_name, key, 'sorted.bam'), sep='_'))
+                temporary_directory=string.join(words=(prefix, 'temporary'), sep='_'),
+                samples_directory=os.path.join(
+                    self.experiment_directory,
+                    string.join(words=(self.project_name, key, 'samples'), sep='_')),
+                barcode=os.path.join(
+                    self.experiment_directory,
+                    string.join(words=(self.project_name, key, 'barcode.tsv'), sep='_')),
+                metrics=os.path.join(
+                    self.experiment_directory,
+                    string.join(words=(self.project_name, key, 'metrics.tsv'), sep='_')),
+                input=os.path.join(
+                    self.sequences_directory,
+                    string.join(words=(self.project_name, key, 'sorted.bam'), sep='_'))
             )
 
+            # Do not check whether the sorted BAM file exists, because at the time of
+            # BamIndexDecoder submission the IlluminaToBam analysis may not have finished.
+            #
+            # if not os.path.exists(file_path_dict['input']):
+            #     raise Exception('Sequence archive BAM file {!r} does not exist.'.format(file_path_dict['input']))
+
             require_decoding = 0
-            file_handle_barcode = open(name=os.path.join(self.project_directory, file_path_dict['barcode']), mode='w')
+            file_handle_barcode = open(name=file_path_dict['barcode'], mode='w')
             file_handle_barcode.write(string.join(words=field_names_2, sep='\t') + '\n')
 
             for row_dict in index_by_lane[key]:
@@ -664,7 +884,7 @@ class BamIndexDecoder(Analysis):
                 if len(row_dict['barcode_sequence_1']) or len(row_dict['barcode_sequence_2']):
                     require_decoding = 1
 
-                # Write the lane-specific tab-delimited Picard barcode file.
+                # Write the lane-specific tab-delimited Picard tools barcode file.
                 file_handle_barcode.write(
                     string.join(words=(row_dict['barcode_sequence_1'] + row_dict['barcode_sequence_2'],
                                        row_dict['sample_name'],
@@ -678,10 +898,11 @@ class BamIndexDecoder(Analysis):
                     Project=row_dict['library_name'],
                     Sample=row_dict['sample_name'],
                     Reads1=string.join(words=(self.project_name, key, row_dict['sample_name']), sep='_'),
-                    File1=os.path.join(self.genome_directory, file_path_dict['samples_directory'],
-                                       '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])))
+                    File1=os.path.join(
+                        file_path_dict['samples_directory'],
+                        '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])))
 
-                sample_csv_writer.writerow(rowdict=sample_dict)
+                sas.row_dicts.append(sample_dict)
 
             file_handle_barcode.close()
 
@@ -706,7 +927,7 @@ class BamIndexDecoder(Analysis):
                 java_process.add_SwitchShort(key='d64')
                 java_process.add_OptionShort(
                     key='jar',
-                    value=os.path.join(classpath_illumina2bam, 'BamIndexDecoder.jar'))
+                    value=os.path.join(self.classpath_illumina2bam, 'BamIndexDecoder.jar'))
                 java_process.add_SwitchShort(key='Xmx4G')
                 java_process.add_OptionPair(
                     key='-Djava.io.tmpdir',
@@ -772,8 +993,8 @@ class BamIndexDecoder(Analysis):
                 java_process.add_SwitchShort(key='d64')
                 java_process.add_OptionShort(
                     key='jar',
-                    value=os.path.join(classpath_picard, 'CollectAlignmentSummaryMetrics.jar'))
-                java_process.add_SwitchShort(key='Xmx6G')
+                    value=os.path.join(self.classpath_picard, 'CollectAlignmentSummaryMetrics.jar'))
+                java_process.add_SwitchShort(key='Xmx4G')
                 java_process.add_OptionPair(
                     key='-Djava.io.tmpdir',
                     value=file_path_dict['temporary_directory'])
@@ -821,6 +1042,7 @@ class BamIndexDecoder(Analysis):
                     value='true')
                 # OPTIONS_FILE
 
+                # TODO: It would be better to run Picard AddOrReplaceReadGroups.
                 # Add a symbolic link to the BSF Sequence Archive file.
                 file_path_dict['link_name'] = string.join(words=(self.project_name, key, '.bam'), sep='_')
 
@@ -840,4 +1062,6 @@ class BamIndexDecoder(Analysis):
                     os.path.join(self.project_directory, file_path_dict['metrics']))):
                 bid.submit = False
 
-        sample_csv_file.close()
+        # sample_csv_file.close()
+        # Finally, write the sample annotation sheet to the file.
+        sas.write_to_file()
