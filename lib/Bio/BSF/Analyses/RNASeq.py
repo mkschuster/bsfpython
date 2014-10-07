@@ -1,4 +1,4 @@
-"""Bio.BSF.Analysis.RNASeq
+"""Bio.BSF.Analyses.RNASeq
 
 A package of classes and methods supporting RNA-Seq analyses.
 """
@@ -182,7 +182,8 @@ class Tuxedo(Analysis):
         sas = SampleAnnotationSheet(file_path=cmp_file)
         sas.csv_reader_open()
 
-        for row_dict in sas._csv_reader:
+        # TODO: Adjust by introducing a new class RNASeqComparisonSheet(AnnotationSheet) in this module?
+        for row_dict in sas._csv_reader_object:
 
             # In addition to defining samples, allow also the definition of groups in comparison files.
             # If the row dictionary has a 'Group' key, then the Sample in the same row gets added to the group.
@@ -274,10 +275,10 @@ class Tuxedo(Analysis):
 
         self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
-        self._create_TopHat_Cufflinks_jobs()
-        self._create_Cuffmerge_Cuffdiff_jobs()
+        self._create_tophat_cufflinks_jobs()
+        self._create_cuffmerge_cuffdiff_jobs()
 
-    def _create_TopHat_Cufflinks_jobs(self):
+    def _create_tophat_cufflinks_jobs(self):
 
         """Create TopHat aligner jobs and Cufflinks transcript assembler jobs.
 
@@ -557,7 +558,7 @@ class Tuxedo(Analysis):
                 process_cufflinks.add_OptionLong(key='genome_directory',
                                                  value=self.genome_directory)
 
-    def _create_Cuffmerge_Cuffdiff_jobs(self):
+    def _create_cuffmerge_cuffdiff_jobs(self):
 
         """Create Cuffdiff differential expression jobs.
 
