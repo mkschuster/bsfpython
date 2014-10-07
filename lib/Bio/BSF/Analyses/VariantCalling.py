@@ -176,13 +176,10 @@ class VariantCallingGATK(Analysis):
         :rtype: None
         """
 
-        sas = SampleAnnotationSheet(file_path=cmp_file)
-        sas.csv_reader_open()
+        sas = SampleAnnotationSheet.read_from_file(file_path=cmp_file)
 
-        for row_dict in sas._csv_reader:
+        for row_dict in sas.row_dicts:
             self.add_Sample(sample=self.collection.get_Sample_from_row_dict(row_dict=row_dict))
-
-        sas.csv_reader_close()
 
     def _read_vqsr_configuration(self, variation_type=None, gatk_bundle_version=None):
         """Private method to read variant quality score recalibration (VQSR) configuration information.
@@ -534,7 +531,7 @@ class VariantCallingGATK(Analysis):
                 bwa_mem.add_OptionShort(key='t', value=str(vc_align_lane_drms.threads))
                 # Append FASTA/Q comment to SAM output.
                 bwa_mem.add_SwitchShort(key='C')
-                # Mark  shorter split hits as secondary (for Picard compatibility).
+                # Mark shorter split hits as secondary (for Picard compatibility).
                 bwa_mem.add_SwitchShort(key='M')
                 # Output warnings and errors only.
                 bwa_mem.add_OptionShort(key='v', value='2')
@@ -569,8 +566,7 @@ class VariantCallingGATK(Analysis):
                     bwa_mem.arguments.append(string.join(words=reads1, sep=','))
                     bwa_mem.arguments.append(string.join(words=reads2, sep=','))
                 if len(reads2):
-                    warning = 'Only second reads, but no first reads have been defined.'
-                    warnings.warn(warning)
+                    warnings.warn('Only second reads, but no first reads have been defined.')
 
                 file_path_align_lane = dict(
                     # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
