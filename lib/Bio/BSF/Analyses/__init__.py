@@ -327,7 +327,7 @@ class ChIPSeq(Analysis):
 
         # First pass, merge BSF Sample objects, if they have the same name.
         sas.csv_reader_open()
-        for row_dict in sas._csv_reader:
+        for row_dict in sas._csv_reader_object:
             for prefix in ('Control', 'Treatment'):
                 name, samples = self.collection.get_Samples_from_row_dict(row_dict=row_dict, prefix=prefix)
                 for o_sample in samples:
@@ -342,7 +342,7 @@ class ChIPSeq(Analysis):
         level1_dict = dict()
 
         sas.csv_reader_open()
-        for row_dict in sas._csv_reader:
+        for row_dict in sas._csv_reader_object:
 
             c_name, c_samples = self.collection.get_Samples_from_row_dict(row_dict=row_dict, prefix='Control')
             t_name, t_samples = self.collection.get_Samples_from_row_dict(row_dict=row_dict, prefix='Treatment')
@@ -464,7 +464,7 @@ class ChIPSeq(Analysis):
         self.cmp_file = os.path.expanduser(path=self.cmp_file)
         self.cmp_file = os.path.expandvars(path=self.cmp_file)
 
-        if not os.path.isabs(self.cmp_file):
+        if not os.path.isabs(self.cmp_file) and not os.path.exists(path=self.cmp_file):
             self.cmp_file = os.path.join(self.project_directory, self.cmp_file)
 
         self._read_comparisons(cmp_file=self.cmp_file)
@@ -475,12 +475,12 @@ class ChIPSeq(Analysis):
 
         self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
-        self._create_Bowtie2_jobs()
+        self._create_bowtie2_jobs()
         # self._create_Macs14_jobs()
-        self._create_Macs2_jobs()
+        self._create_macs2_jobs()
         self._create_diffbind_jobs()
 
-    def _create_Bowtie2_jobs(self):
+    def _create_bowtie2_jobs(self):
 
         """Create Bowtie2 alignment jobs.
 
@@ -603,7 +603,7 @@ class ChIPSeq(Analysis):
                                                       replicate_directory,
                                                       replicate_key))
 
-    def _create_Macs14_jobs(self):
+    def _create_macs14_jobs(self):
 
         """Create MACS14 peak caller jobs.
 
@@ -761,7 +761,7 @@ class ChIPSeq(Analysis):
                             process_macs14.arguments.append(os.path.join('.', prefix, prefix))
                             process_macs14.arguments.append(genome_sizes)
 
-    def _create_Macs2_jobs(self):
+    def _create_macs2_jobs(self):
 
         """Create MACS2 peak caller jobs.
 
@@ -1921,7 +1921,7 @@ class ChIPSeq(Analysis):
             sas = SampleAnnotationSheet(file_path=file_path, field_names=contrast_field_names)
             sas.csv_reader_open()
 
-            for row_dict in sas._csv_reader:
+            for row_dict in sas._csv_reader_object:
                 suffix = '{}__{}'.format(row_dict['Group1'], row_dict['Group2'])
 
                 output += '<tr>\n'
@@ -2138,7 +2138,7 @@ class RunFastQC(Analysis):
         sas = SampleAnnotationSheet(file_path=cmp_file)
         sas.csv_reader_open()
 
-        for row_dict in sas._csv_reader:
+        for row_dict in sas._csv_reader_object:
             self.add_Sample(sample=self.collection.get_Sample_from_row_dict(row_dict=row_dict))
 
         sas.csv_reader_close()
