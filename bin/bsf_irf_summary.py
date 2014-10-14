@@ -76,7 +76,7 @@ print 'Flow Cell Identifier: {}_{}'.format(irf.run_parameters.get_experiment_nam
                                            irf.run_parameters.get_flow_cell_barcode())
 print 'Read Structure: {}'.format(string.join(words=run_format, sep=' + '))
 
-file_path_start = os.path.join(file_path, 'runParameters.xml')
+file_path_start = os.path.join(file_path, 'First_Base_Report.htm')
 if os.path.exists(file_path_start):
     print 'Start date:     {}'.format(datetime.date.fromtimestamp(os.stat(file_path_start).st_mtime))
 
