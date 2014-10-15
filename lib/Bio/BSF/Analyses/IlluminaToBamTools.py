@@ -37,6 +37,10 @@ from Bio.BSF.Data import BamIndexDecoderSheet, SampleAnnotationSheet
 from Bio.BSF.Illumina import RunFolder
 
 
+class IlluminaRunFolderNotComplete(Exception):
+    pass
+
+
 class IlluminaToBam(Analysis):
     """IlluminaToBam Analysis sub-class to convert Illumina BCL to a BAM or SAM file.
 
@@ -291,7 +295,7 @@ class IlluminaToBam(Analysis):
         # Check that the Illumina Run Folder is complete and that it contains the Data/Intensities directories.
 
         if not os.path.exists(path=os.path.join(self.illumina_run_folder, 'RTAComplete.txt')) and not self.force:
-            raise Exception(
+            raise IlluminaRunFolderNotComplete(
                 'The Illumina Run Folder {!r} is not complete.'.format(self.illumina_run_folder))
 
         if not os.path.isdir(os.path.join(self.illumina_run_folder, 'Data', 'Intensities')):
