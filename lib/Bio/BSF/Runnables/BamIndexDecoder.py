@@ -70,6 +70,7 @@ def run_picard_collect_alignment_summary_metrics(runnable):
 
     os.chdir(runnable.file_path_dict['samples_directory'])
     os.symlink(os.path.relpath(runnable.file_path_dict['input']), runnable.file_path_dict['link_name'])
+    os.chdir(runnable.working_directory)
 
 
 def run(runnable):
