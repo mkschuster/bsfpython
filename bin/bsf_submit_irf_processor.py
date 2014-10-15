@@ -27,9 +27,13 @@
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 from argparse import ArgumentParser
+import datetime
+import os
+import string
+import time
 
 from Bio.BSF import Default
-from Bio.BSF.Analyses.IlluminaToBamTools import BamIndexDecoder, IlluminaToBam
+from Bio.BSF.Analyses.IlluminaToBamTools import BamIndexDecoder, IlluminaToBam, IlluminaRunFolderNotComplete
 
 
 argument_parser = ArgumentParser(
@@ -67,6 +71,17 @@ argument_parser.add_argument(
     required=False,
     type=str)
 
+argument_parser.add_argument(
+    '--loop',
+    action='store_true',
+    help='Loop until an RTAComplete.txt file has been copied by the Illumina Real-Time Analysis (RTA) software')
+
+argument_parser.add_argument(
+    '--interval',
+    help='Loop interval [s]',
+    default=120,
+    type=int)
+
 arguments = argument_parser.parse_args()
 
 # Create a BSF IlluminaToBam analysis, run and submit it.
@@ -83,8 +98,30 @@ if arguments.irf:
 
 # Do the work.
 
-itb.run()
+if arguments.loop:
+    # If the --loop option has been set, wait until RTAComplete.txt has been copied.
+    loop_counter = 1
+    while 1:
+        print '[{}] Loop {}:'.format(datetime.datetime.now().isoformat(), loop_counter)
+        loop_counter += 1
+        try:
+            itb.run()
+        except IlluminaRunFolderNotComplete as exception:
+            print exception
+        else:
+            print 'Illumina Run Folder seems complete.'
+            break
+        time.sleep(arguments.interval)
+else:
+    itb.run()
+
 itb.submit(drms_name=arguments.stage)
+
+print 'IlluminaToBamTools IlluminaToBam Analysis'
+print 'Project name:         ', itb.project_name
+print 'Project directory:    ', itb.project_directory
+print 'Illumina Run Folder:  ', itb.illumina_run_folder
+print 'Experiment directory: ', itb.experiment_directory
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
@@ -102,19 +139,24 @@ if arguments.debug:
 if arguments.library_file:
     bid.library_file = arguments.library_file
 
-# Do the work.
+# If a library file has not been defined so far, check,
+# if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
 
-bid.run()
-bid.submit(drms_name=arguments.stage)
+if not bid.library_file:
+    library_file = string.join(words=(bid.project_name, 'libraries.csv'), sep='_')
+    if os.path.exists(path=library_file):
+        bid.library_file = library_file
 
-print 'IlluminaToBamTools IlluminaToBam Analysis'
-print 'Project name:         ', itb.project_name
-print 'Project directory:    ', itb.project_directory
-print 'Illumina Run Folder:  ', itb.illumina_run_folder
-print 'Experiment directory: ', itb.experiment_directory
-print ''
-print 'IlluminaToBamTools BamIndexDecoder Analysis'
-print 'Project name:         ', bid.project_name
-print 'Project directory:    ', bid.project_directory
-print 'Sequences directory:  ', bid.sequences_directory
-print 'Experiment directory: ', bid.experiment_directory
+if bid.library_file:
+
+    # Do the work if, at this stage, a library file has been set.
+
+    bid.run()
+    bid.submit(drms_name=arguments.stage)
+
+    print ''
+    print 'IlluminaToBamTools BamIndexDecoder Analysis'
+    print 'Project name:         ', bid.project_name
+    print 'Project directory:    ', bid.project_directory
+    print 'Sequences directory:  ', bid.sequences_directory
+    print 'Experiment directory: ', bid.experiment_directory
