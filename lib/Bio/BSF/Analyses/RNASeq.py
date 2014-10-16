@@ -820,9 +820,11 @@ class Tuxedo(Analysis):
         output += '<p>\n'
         output += 'View TopHat <strong>read alignments</strong> tracks for each sample\n'
         output += 'in their genomic context via the project-specific\n'
-        output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'. \
-            format(Defaults.web.ucsc_track_url(options_dict=options_dict, host_name=default.ucsc_host_name),
-                   self.project_name)
+        output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'.format(
+            Defaults.web.ucsc_track_url(
+                options_dict=options_dict,
+                host_name=default.ucsc_host_name),
+            self.project_name)
         output += '</p>\n'
         output += '\n'
 
@@ -843,9 +845,11 @@ class Tuxedo(Analysis):
         output += '<p>\n'
         output += 'View the corresponding TopHat tracks for junctions, deletions and insertions\n'
         output += 'for each sample in their genomic context via the project-specific\n'
-        output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'. \
-            format(Defaults.web.ucsc_track_url(options_dict=options_dict, host_name=default.ucsc_host_name),
-                   self.project_name)
+        output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'.format(
+            Defaults.web.ucsc_track_url(
+                options_dict=options_dict,
+                host_name=default.ucsc_host_name),
+            self.project_name)
         output += '</p>\n'
         output += '\n'
 
@@ -884,7 +888,7 @@ class Tuxedo(Analysis):
         output += '</p>\n'
 
         output += '<table>\n'
-        output += '\n'
+        output += '<thead>\n'
         output += '<tr>\n'
         output += '<th>Sample</th>\n'
         output += '<th>Assembled Transcripts</th>\n'
@@ -895,7 +899,8 @@ class Tuxedo(Analysis):
         output += '<th>Aligned BAM file</th>\n'
         output += '<th>Aligned BAI file</th>\n'
         output += '</tr>\n'
-        output += '\n'
+        output += '</thead>\n'
+        output += '<tbody>\n'
 
         # Group via UCSC super tracks.
 
@@ -1119,6 +1124,8 @@ class Tuxedo(Analysis):
 
                 options_dict = dict()
                 options_dict['db'] = self.genome_version
+                options_dict['hgt.customText'] = '{}/{}/{}/rnaseq_cufflinks_{}/transcripts.gtf'.format(
+                    Default.url_absolute_projects(), link_name, self.genome_version, replicate_key)
                 if ucsc_location:
                     options_dict['position'] = ucsc_location
 
@@ -1130,7 +1137,7 @@ class Tuxedo(Analysis):
                 track_dict['description'] = '"{} Cufflinks RNA-Seq transcript assembly"'. \
                     format(replicate_key)
                 track_dict['track_type'] = 'gtf'
-                track_dict['visibility'] = '3'  # Visibility pack
+                track_dict['visibility'] = 'squish'
                 track_dict['color'] = '0,0,0'
                 track_dict['db'] = self.genome_version
 
@@ -1138,10 +1145,15 @@ class Tuxedo(Analysis):
 
                 output += '<tr>\n'
                 output += '<td>{}</td>\n'.format(replicate_key)
-                output += '<td><a href="{}">Transcript Assembly</a></td>\n'. \
-                    format(Defaults.web.ucsc_track_url(options_dict=options_dict,
-                                                       track_dict=track_dict,
-                                                       host_name=default.ucsc_host_name))
+                output += '<td><a href="{}">Transcript Assembly</a></td>\n'.format(
+                    Defaults.web.ucsc_track_url(
+                        options_dict=options_dict,
+                        # It does not seem as if a GTF file could be attached via a track line.
+                        # The URL has to be supplied via the hgt.customText option.
+                        # To get around this problem the GTF file would have to be converted into BigBED format,
+                        # yet convincing tools to do this do not seem to be available.
+                        # track_dict=track_dict,
+                        host_name=default.ucsc_host_name))
                 output += '<td><a href="./{}/genes.fpkm_tracking">Genes FPKM</a></td>\n'. \
                     format(prefix)
                 output += '<td><a href="./{}/isoforms.fpkm_tracking">Isoforms FPKM</a></td>\n'. \
@@ -1151,13 +1163,13 @@ class Tuxedo(Analysis):
                     format(prefix, prefix)
                 output += '<td><a href="./{}/{}_isoforms_fpkm_tracking.txt">Isoforms (Symbols)</a></td>\n'. \
                     format(prefix, prefix)
-                output += '<td><a href="./{}/rnaseq_tophat_{}_accepted_hits.bam">Aligned BAM</td>\n'. \
+                output += '<td><a href="./{}/rnaseq_tophat_{}_accepted_hits.bam">Aligned BAM</a></td>\n'. \
                     format(prefix, replicate_key)
-                output += '<td><a href="./{}/rnaseq_tophat_{}_accepted_hits.bam.bai">Aligned BAI</td>\n'. \
+                output += '<td><a href="./{}/rnaseq_tophat_{}_accepted_hits.bam.bai">Aligned BAI</a></td>\n'. \
                     format(prefix, replicate_key)
                 output += '</tr>\n'
-                output += '\n'
 
+        output += '</tbody>\n'
         output += '</table>\n'
         output += '\n'
 
@@ -1178,8 +1190,7 @@ class Tuxedo(Analysis):
         output += '\n'
 
         output += '<table>\n'
-        output += '\n'
-
+        output += '<thead>\n'
         output += '<tr>\n'
         output += '<th>Comparison</th>\n'
         output += '<th>Coding Sequences</th>\n'
@@ -1192,6 +1203,8 @@ class Tuxedo(Analysis):
         output += '<th>Gene FPKM Replicates</th>\n'
         output += '<th>Isoform FPKM Replicates</th>\n'
         output += '</tr>\n'
+        output += '</thead>\n'
+        output += '<tbody>\n'
 
         keys = self.comparisons.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -1239,6 +1252,7 @@ class Tuxedo(Analysis):
 
             output += '</tr>\n'
 
+        output += '</tbody>\n'
         output += '</table>\n'
         output += '\n'
 
@@ -1252,7 +1266,7 @@ class Tuxedo(Analysis):
         output += '\n'
 
         output += '<table>\n'
-
+        output += '<thead>\n'
         output += '<tr>\n'
         output += '<th>Comparison</th>\n'
         output += '<th>Dispersion Plot - Genes</th>\n'
@@ -1273,6 +1287,8 @@ class Tuxedo(Analysis):
         output += '<th>Multidimensional Scaling Plot - Genes</th>\n'
         output += '<th>Principal Component Analysis Plot - Genes</th>\n'
         output += '</tr>\n'
+        output += '</thead>\n'
+        output += '<tbody>\n'
 
         for key in keys:
 
@@ -1415,6 +1431,7 @@ class Tuxedo(Analysis):
 
             output += '</tr>\n'
 
+        output += '</tbody>\n'
         output += '</table>\n'
 
         output += '</body>\n'
