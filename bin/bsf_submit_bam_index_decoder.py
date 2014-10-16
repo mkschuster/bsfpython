@@ -26,6 +26,8 @@
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 from argparse import ArgumentParser
+import os
+import string
 
 from Bio.BSF import Default
 from Bio.BSF.Analyses.IlluminaToBamTools import BamIndexDecoder
@@ -83,6 +85,14 @@ if arguments.project_name:
 
 if arguments.library_file:
     bid.library_file = arguments.library_file
+
+# If a library file has not been defined so far, check,
+# if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
+
+if not bid.library_file:
+    library_file = string.join(words=(bid.project_name, 'libraries.csv'), sep='_')
+    if os.path.exists(path=library_file):
+        bid.library_file = library_file
 
 # Do the work.
 
