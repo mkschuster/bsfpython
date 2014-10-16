@@ -87,7 +87,8 @@ class IlluminaToBam(Analysis):
                  project_directory=None, genome_directory=None,
                  e_mail=None, debug=0, drms_list=None,
                  collection=None, comparisons=None, samples=None,
-                 illumina_run_folder=None, experiment_name=None, sequencing_centre=None,
+                 illumina_run_folder=None, intensity_directory=None, basecalls_directory=None,
+                 experiment_name=None, sequencing_centre=None,
                  sequences_directory=None, experiment_directory=None,
                  classpath_illumina2bam=None, classpath_picard=None,
                  force=False):
@@ -123,6 +124,12 @@ class IlluminaToBam(Analysis):
         :type samples: list
         :param illumina_run_folder: File path to an Illumina Run Folder
         :type illumina_run_folder: str, unicode
+        :param intensity_directory: File path to the 'Intensities' directory.
+        Defaults to illumina_run_folder/Data/Intensities.
+        :type intensity_directory: str, unicode
+        :param basecalls_directory: File path to the 'BaseCalls' directory.
+        Defaults to illumina_run_folder/Data/Intensities/BaseCalls.
+        :type basecalls_directory: str, unicode
         :param experiment_name: Experiment name (i.e. flow-cell identifier) normally automatically read from
         Illumina Run Folder parameters
         :type experiment_name: str
@@ -161,6 +168,16 @@ class IlluminaToBam(Analysis):
             self.illumina_run_folder = illumina_run_folder
         else:
             self.illumina_run_folder = str()
+
+        if intensity_directory:
+            self.intensity_directory = intensity_directory
+        else:
+            self.intensity_directory = str()
+
+        if basecalls_directory:
+            self.basecalls_directory = basecalls_directory
+        else:
+            self.basecalls_directory = str()
 
         if experiment_name:
             self.experiment_name = experiment_name
@@ -218,6 +235,16 @@ class IlluminaToBam(Analysis):
             self.illumina_run_folder = configuration.config_parser.get(
                 section=section,
                 option='illumina_run_folder')
+
+        if configuration.config_parser.has_option(section=section, option='intensity_directory'):
+            self.intensity_directory = configuration.config_parser.get(
+                section=section,
+                option='intensity_directory')
+
+        if configuration.config_parser.has_option(section=section, option='basecalls_directory'):
+            self.basecalls_directory = configuration.config_parser.get(
+                section=section,
+                option='basecalls_directory')
 
         # Get the experiment name.
 
@@ -292,15 +319,59 @@ class IlluminaToBam(Analysis):
         if not os.path.isabs(self.illumina_run_folder):
             self.illumina_run_folder = os.path.join(Default.absolute_runs_illumina(), self.illumina_run_folder)
 
-        # Check that the Illumina Run Folder is complete and that it contains the Data/Intensities directories.
+        # Check that the Illumina Run Folder exists.
+
+        if not os.path.isdir(self.illumina_run_folder):
+            raise Exception(
+                'The Illumina Run Folder {!r} does not exist.'.format(self.illumina_run_folder))
+
+        # Check that the Illumina Run Folder is complete.
 
         if not os.path.exists(path=os.path.join(self.illumina_run_folder, 'RTAComplete.txt')) and not self.force:
             raise IlluminaRunFolderNotComplete(
                 'The Illumina Run Folder {!r} is not complete.'.format(self.illumina_run_folder))
 
-        if not os.path.isdir(os.path.join(self.illumina_run_folder, 'Data', 'Intensities')):
+        # Define an 'Intensities' directory.
+        # Expand an eventual user part i.e. on UNIX ~ or ~user and
+        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Check if an absolute path has been provided, if not,
+        # automatically prepend the Illumina Run Folder path.
+
+        if self.intensity_directory:
+            intensity_directory = self.intensity_directory
+            intensity_directory = os.path.expandvars(intensity_directory)
+            intensity_directory = os.path.expanduser(intensity_directory)
+            if not os.path.isabs(intensity_directory):
+                intensity_directory = os.path.join(self.illumina_run_folder, intensity_directory)
+        else:
+            intensity_directory = os.path.join(self.illumina_run_folder, 'Data', 'Intensities')
+
+        # Check that the Intensities directory exists.
+
+        if not os.path.isdir(intensity_directory):
             raise Exception(
-                'The Illumina Run Folder {!r} has no Data/Intensities directory.'.format(self.illumina_run_folder))
+                'The Intensity directory {!r} does not exist.'.format(intensity_directory))
+
+        # Define a 'BaseCalls' directory.
+        # Expand an eventual user part i.e. on UNIX ~ or ~user and
+        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Check if an absolute path has been provided, if not,
+        # automatically prepend the Intensities directory path.
+
+        if self.basecalls_directory:
+            basecalls_directory = self.basecalls_directory
+            basecalls_directory = os.path.expanduser(basecalls_directory)
+            basecalls_directory = os.path.expandvars(basecalls_directory)
+            if not os.path.isabs(basecalls_directory):
+                basecalls_directory = os.path.join(intensity_directory, basecalls_directory)
+        else:
+            basecalls_directory = os.path.join(intensity_directory, 'BaseCalls')
+
+        # Check that the BAseCalls directory exists.
+
+        if not os.path.isdir(basecalls_directory):
+            raise Exception(
+                'The BaseCalls directory {!r} does not exist.'.format(basecalls_directory))
 
         irf = RunFolder.from_file_path(file_path=self.illumina_run_folder)
 
@@ -415,11 +486,21 @@ class IlluminaToBam(Analysis):
 
             sub_command = java_process.sub_command
 
-            # RUN_FOLDER
+            if self.intensity_directory:
+                # Only set the RUN_FOLDER option, if a separate 'Intensities' directory has been configured.
+                # The default is to use the directory two up from the INTENSITY_DIR.
+                sub_command.add_OptionPair(
+                    key='RUN_FOLDER',
+                    value=self.illumina_run_folder)
             sub_command.add_OptionPair(
                 key='INTENSITY_DIR',
-                value=os.path.join(self.illumina_run_folder, 'Data', 'Intensities'))
-            # BASECALLS_DIR
+                value=intensity_directory)
+            if self.basecalls_directory:
+                # Only set the BASECALLS_DIR option, if a separate 'BaseCalls' directory has been configured.
+                # The default is to use the 'BaseCalls' directory under the INTENSITY_DIR.
+                sub_command.add_OptionPair(
+                    key='BASECALLS_DIR',
+                    value=basecalls_directory)
             sub_command.add_OptionPair(
                 key='LANE',
                 value=lane_str)
