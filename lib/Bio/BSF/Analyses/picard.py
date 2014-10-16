@@ -35,7 +35,7 @@ import string
 import warnings
 
 from Bio.BSF import Analysis, Default, DRMS, Executable
-from Bio.BSF.Data import SampleAnnotationSheet
+from Bio.BSF.Data import BamIndexDecoderSheet, SampleAnnotationSheet
 from Bio.BSF.Illumina import RunFolder
 
 
@@ -137,12 +137,10 @@ def extract_illumina_barcodes(config_file):
 
     barcode_dict = dict()
 
-    sas = SampleAnnotationSheet(file_path=barcode_path)
+    library_annotation_sheet = BamIndexDecoderSheet.read_from_file(file_path=barcode_path)
 
-    sas.csv_reader_open()
-    for row_dict in sas._csv_reader:
+    for row_dict in library_annotation_sheet.row_dicts:
         _process_row_dict(row_dict=row_dict, prefix=analysis.sas_prefix, barcode_dict=barcode_dict)
-    sas.csv_reader_close()
 
     # Picard ExtractIlluminaBarcodes
 
@@ -691,15 +689,11 @@ def bam_index_decoder(analysis):
 
     index_by_lane = dict()
 
-    field_names_1 = ['lane', 'barcode_sequence_1', 'barcode_sequence_2', 'sample_name', 'library_name']
     field_names_2 = ['barcode_sequence', 'barcode_name', 'library_name', 'sample_name', 'description']
-    field_names_3 = ['ProcessedRunFolder', 'Project', 'Sample', 'Reads1', 'File1']
 
-    sas = SampleAnnotationSheet(file_path=library_file, field_names=field_names_1)
+    library_annotation_sheet = BamIndexDecoderSheet.read_from_file(file_path=library_file)
 
-    sas.csv_reader_open()
-
-    for row_dict in sas._csv_reader:
+    for row_dict in library_annotation_sheet.row_dicts:
 
         if row_dict['lane'] in index_by_lane:
             lane_list = index_by_lane[row_dict['lane']]
@@ -709,20 +703,17 @@ def bam_index_decoder(analysis):
 
         lane_list.append(row_dict)
 
-    sas.csv_reader_close()
-
-    sample_csv_name = os.path.join(analysis.project_directory,
-                                   '{}_samples.csv'.format(analysis.project_name))
-    sample_csv_file = open(name=sample_csv_name, mode='wb')
-    sample_csv_writer = csv.DictWriter(f=sample_csv_file, fieldnames=field_names_3)
-    sample_csv_writer.writeheader()
+    sample_annotation_sheet = SampleAnnotationSheet(
+        file_path=os.path.join(
+            analysis.project_directory,
+            string.join(words=(analysis.project_name, 'samples.csv'), sep='_')))
 
     keys = index_by_lane.keys()
     keys.sort(cmp=lambda x, y: cmp(x, y))
 
     for key in keys:
 
-        # file_name_metrics = os.path.join(analysis.genome_directory, '{}_{}_metrics.txt'.format(prefix, key))
+        # file_name_metrics = os.path.join(analysis.genome_directory, '{}_{}_metrics.tsv'.format(prefix, key))
         file_name_barcode = os.path.join(analysis.project_directory,
                                          '{}_{}_barcode.csv'.format(analysis.project_name, key))
 
@@ -730,25 +721,28 @@ def bam_index_decoder(analysis):
         file_handle_barcode.write(string.join(words=field_names_2, sep='\t') + '\n')
 
         for row_dict in index_by_lane[key]:
+
             # Write the lane-specific tab-delimited Picard barcode file.
-            file_handle_barcode.write(string.join(words=(row_dict['barcode_sequence_1']
-                                                         + row_dict['barcode_sequence_2'],
-                                                         row_dict['sample_name'],
-                                                         row_dict['library_name'],
-                                                         row_dict['sample_name'], ''), sep='\t') + '\n')
 
-            # Write the flow-cell-specific sample annotation sheet.
-            sample_dict = dict()
-            sample_dict['ProcessedRunFolder'] = analysis.project_name
-            sample_dict['Project'] = row_dict['library_name']
-            sample_dict['Sample'] = row_dict['sample_name']
-            sample_dict['Reads1'] = string.join(words=(analysis.project_name, key, row_dict['sample_name']), sep='_')
-            sample_dict['File1'] = os.path.join(analysis.genome_directory,
-                                                '{}_{}_samples'.format(analysis.project_name, key),
-                                                '{}_{}#{}.bam'.format(analysis.project_name, key,
-                                                                      row_dict['sample_name']))
+            file_handle_barcode.write(string.join(
+                words=(row_dict['barcode_sequence_1'] + row_dict['barcode_sequence_2'],
+                       row_dict['sample_name'],
+                       row_dict['library_name'],
+                       row_dict['sample_name'],
+                       ''),
+                sep='\t') + '\n')
 
-            sample_csv_writer.writerow(rowdict=sample_dict)
+            # Append to the flow-cell-specific sample annotation sheet.
+
+            sample_annotation_sheet.row_dicts.append(dict(
+                ProcessedRunFolder=analysis.project_name,
+                Project=row_dict['library_name'],
+                Sample=row_dict['sample_name'],
+                Reads1=string.join(words=(analysis.project_name, key, row_dict['sample_name']), sep='_'),
+                File1=os.path.join(
+                    analysis.genome_directory,
+                    string.join(words=(analysis.project_name, key, 'samples'), sep='_'),
+                    '{}_{}#{}.bam'.format(analysis.project_name, key, row_dict['sample_name']))))
 
         file_handle_barcode.close()
 
@@ -783,4 +777,4 @@ def bam_index_decoder(analysis):
         bid.arguments.append(itb_file)
         bid.arguments.append(os.path.join(classpath_illumina2bam, 'BamIndexDecoder.jar'))
 
-    sample_csv_file.close()
+    sample_annotation_sheet.write_to_file()
