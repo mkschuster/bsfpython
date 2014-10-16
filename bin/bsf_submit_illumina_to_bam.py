@@ -59,6 +59,11 @@ argument_parser.add_argument(
     required=False,
     type=str)
 
+argument_parser.add_argument(
+    '--force',
+    action='store_true',
+    help='Force processing of an incomplete Illumina Run Folder')
+
 arguments = argument_parser.parse_args()
 
 # Create a BSF IlluminaToBam analysis, run and submit it.
@@ -72,6 +77,9 @@ if arguments.debug:
 
 if arguments.irf:
     itb.illumina_run_folder = arguments.irf
+
+if arguments.force:
+    itb.force = arguments.force
 
 # Do the work.
 
