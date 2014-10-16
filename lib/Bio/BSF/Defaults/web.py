@@ -36,7 +36,7 @@ import urllib
 
 def html_header(title, creator=None, source=None, strict=False):
 
-    """Return the header section of an HTML 4.01 document.
+    """Return the header section of an XHTML 1.0 document.
 
     :param title: Title element value
     :type title: str
@@ -46,7 +46,7 @@ def html_header(title, creator=None, source=None, strict=False):
     :param source: Dublin Core DC.Source meta field value,
     defaults to the Python script file path
     :type source: str
-    :param strict: HTML 4.01 (strict) or HTML 4.01 Transitional
+    :param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional
     :type strict: bool
     :return: HTML header section as multi-line string
     :rtype: str
@@ -63,23 +63,29 @@ def html_header(title, creator=None, source=None, strict=False):
     output = str()
 
     if strict:
-        output += '<!DOCTYPE HTML PUBLIC ' \
-                  '"-//W3C//DTD HTML 4.01//EN" ' \
-                  '"http://www.w3.org/TR/html4/strict.dtd">\n'
+        output += '<!DOCTYPE html PUBLIC ' \
+                  '"-//W3C//DTD XHTML 1.0 Strict//EN" ' \
+                  '"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n'
+        # output += '<!DOCTYPE HTML PUBLIC ' \
+        #           '"-//W3C//DTD HTML 4.01//EN" ' \
+        #           '"http://www.w3.org/TR/html4/strict.dtd">\n'
     else:
-        output += '<!DOCTYPE HTML PUBLIC ' \
-                  '"-//W3C//DTD HTML 4.01 Transitional//EN" ' \
-                  '"http://www.w3.org/TR/html4/loose.dtd">\n'
+        output += '<!DOCTYPE html PUBLIC ' \
+                  '"-//W3C//DTD XHTML 1.0 Transitional//EN" ' \
+                  '"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n'
+        # output += '<!DOCTYPE HTML PUBLIC ' \
+        #           '"-//W3C//DTD HTML 4.01 Transitional//EN" ' \
+        #           '"http://www.w3.org/TR/html4/loose.dtd">\n'
 
     output += '\n'
-    output += '<html>\n'
+    output += '<html xmlns="http://www.w3.org/1999/xhtml">\n'
     output += '<head>\n'
-    output += '<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">\n'
-    output += '<link rel="schema.DC" href="http://purl.org/DC/elements/1.0/">\n'
-    output += '<meta name="DC.Creator" content="{}">\n'.format(creator)
-    output += '<meta name="DC.Date" content="{}">\n'.format(datetime.datetime.now().isoformat())
-    output += '<meta name="DC.Source" content="{}">\n'.format(source)
-    output += '<meta name="DC.Title" content="{}">\n'.format(title)
+    output += '<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />\n'
+    output += '<link rel="schema.DC" href="http://purl.org/DC/elements/1.0/" />\n'
+    output += '<meta name="DC.Creator" content="{}" />\n'.format(creator)
+    output += '<meta name="DC.Date" content="{}" />\n'.format(datetime.datetime.now().isoformat())
+    output += '<meta name="DC.Source" content="{}" />\n'.format(source)
+    output += '<meta name="DC.Title" content="{}" />\n'.format(title)
     output += '<title>{}</title>\n'.format(title)
     output += '</head>\n'
     output += '\n'
@@ -89,9 +95,9 @@ def html_header(title, creator=None, source=None, strict=False):
 
 def html_footer():
 
-    """Return the footer section of a HTML 4.01 document.
+    """Return the footer section of a XHTML 1.0 document.
 
-    :return: HTML footer section as multi-line string
+    :return: XHTML 1.0 footer section as multi-line string
     :rtype: str
     """
 
