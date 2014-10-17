@@ -42,11 +42,9 @@ import shutil
 from Bio.BSF import Runnable
 
 
-def run_executable(pickler_dict, key):
+def run_executable(key):
     """Run an Executable defined in the Pickler dict.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :param key: Key for the Executable
     :type key: str
     :return: Nothing
@@ -60,11 +58,9 @@ def run_executable(pickler_dict, key):
         raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
-def run_picard_merge_sam_files(pickler_dict):
+def run_picard_merge_sam_files():
     """Run the Picard MergeSamFiles step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -72,15 +68,13 @@ def run_picard_merge_sam_files(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['merged_bam']):
         return
 
-    run_executable(pickler_dict=pickler_dict, key='picard_merge_sam_files')
+    run_executable(key='picard_merge_sam_files')
 
 
-def run_picard_mark_duplicates(pickler_dict):
+def run_picard_mark_duplicates():
     """Run the Picard MarkDuplicates step.
 
     Optical duplicates should already have been flagged in the lane-specific processing step.
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -88,13 +82,13 @@ def run_picard_mark_duplicates(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['duplicates_marked_bam']):
         return
 
-    run_picard_merge_sam_files(pickler_dict=pickler_dict)
+    run_picard_merge_sam_files()
 
     # The Picard MarkDuplicates step may be skipped.
     if not 'picard_mark_duplicates' in pickler_dict:
         return
 
-    run_executable(pickler_dict=pickler_dict, key='picard_mark_duplicates')
+    run_executable(key='picard_mark_duplicates')
 
     if args.debug < 1:
         for file_key in ('merged_bam', 'merged_bai', 'merged_md5'):
@@ -102,11 +96,9 @@ def run_picard_mark_duplicates(pickler_dict):
                 os.remove(pickler_dict['file_path_dict'][file_key])
 
 
-def run_gatk_realigner_target_creator(pickler_dict):
+def run_gatk_realigner_target_creator():
     """Run the GATK RealignerTargetCreator step as the first-pass walker for the IndelRealigner step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -114,15 +106,13 @@ def run_gatk_realigner_target_creator(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['realigner_targets']):
         return
 
-    run_picard_mark_duplicates(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_realigner_target_creator')
+    run_picard_mark_duplicates()
+    run_executable(key='gatk_realigner_target_creator')
 
 
-def run_gatk_indel_realigner(pickler_dict):
+def run_gatk_indel_realigner():
     """Run the GATK IndelRealigner step as a second-pass walker after the GATK RealignerTargetCreator step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -130,23 +120,21 @@ def run_gatk_indel_realigner(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['realigned_bam']):
         return
 
-    run_gatk_realigner_target_creator(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_indel_realigner')
+    run_gatk_realigner_target_creator()
+    run_executable(key='gatk_indel_realigner')
 
     if args.debug < 1:
         # Remove file from the previous Picard MarkDuplicates step and additionally,
         # if the Picard MarkDuplicates step was skipped, remove the merged BAM files here.
         for file_key in ('duplicates_marked_bam', 'duplicates_marked_bai', 'duplicates_marked_md5',
-                          'merged_bam', 'merged_bai', 'merged_md5'):
+                         'merged_bam', 'merged_bai', 'merged_md5'):
             if os.path.exists(pickler_dict['file_path_dict'][file_key]):
                 os.remove(pickler_dict['file_path_dict'][file_key])
 
 
-def run_picard_collect_alignment_summary_metrics(pickler_dict):
+def run_picard_collect_alignment_summary_metrics():
     """Run the Picard CollectAlignmentSummaryMetrics step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -154,15 +142,13 @@ def run_picard_collect_alignment_summary_metrics(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['alignment_summary_metrics']):
         return
 
-    run_gatk_indel_realigner(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='picard_collect_alignment_summary_metrics')
+    run_gatk_indel_realigner()
+    run_executable(key='picard_collect_alignment_summary_metrics')
 
 
-def run_gatk_haplotype_caller(pickler_dict):
+def run_gatk_haplotype_caller():
     """Run the GATK HaplotypeCaller per sample.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -170,8 +156,8 @@ def run_gatk_haplotype_caller(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['raw_variants_gvcf_idx']):
         return
 
-    run_picard_collect_alignment_summary_metrics(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_haplotype_caller')
+    run_picard_collect_alignment_summary_metrics()
+    run_executable(key='gatk_haplotype_caller')
 
 
 # Set the environment consistently.
@@ -214,7 +200,7 @@ if not os.path.isdir(path_temporary):
 # Run the chain of executables back up the function hierarchy so that
 # dependencies on temporarily created files become simple to manage.
 
-run_gatk_haplotype_caller(pickler_dict=pickler_dict)
+run_gatk_haplotype_caller()
 
 # Remove the temporary directory and everything within it.
 

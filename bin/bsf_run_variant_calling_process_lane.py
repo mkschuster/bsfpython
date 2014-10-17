@@ -44,11 +44,9 @@ import shutil
 from Bio.BSF import Runnable
 
 
-def run_executable(pickler_dict, key):
+def run_executable(key):
     """Run an Executable defined in the Pickler dict.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :param key: Key for the Executable
     :type key: str
     :return: Nothing
@@ -62,11 +60,9 @@ def run_executable(pickler_dict, key):
         raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
-def run_picard_mark_duplicates(pickler_dict):
+def run_picard_mark_duplicates():
     """Run the Picard MarkDuplicates step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -78,7 +74,7 @@ def run_picard_mark_duplicates(pickler_dict):
     if not 'picard_mark_duplicates' in pickler_dict:
         return
 
-    run_executable(pickler_dict=pickler_dict, key='picard_mark_duplicates')
+    run_executable(key='picard_mark_duplicates')
 
     # It may not be the best idea to remove the aligned BAM file from the previous lane-specific alignment step here.
     # For the moment, keep pipeline steps independent from each other.
@@ -88,11 +84,9 @@ def run_picard_mark_duplicates(pickler_dict):
     #             os.remove(pickler_dict['file_path_dict'][file_key])
 
 
-def run_gatk_realigner_target_creator(pickler_dict):
+def run_gatk_realigner_target_creator():
     """Run the GATK RealignerTargetCreator step as the first-pass walker for the IndelRealigner step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -100,15 +94,13 @@ def run_gatk_realigner_target_creator(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['realigner_targets']):
         return
 
-    run_picard_mark_duplicates(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_realigner_target_creator')
+    run_picard_mark_duplicates()
+    run_executable(key='gatk_realigner_target_creator')
 
 
-def run_gatk_indel_realigner(pickler_dict):
+def run_gatk_indel_realigner():
     """Run the GATK IndelRealigner step as a second-pass walker after the GATK RealignerTargetCreator step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -116,8 +108,8 @@ def run_gatk_indel_realigner(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['realigned_bam']):
         return
 
-    run_gatk_realigner_target_creator(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_indel_realigner')
+    run_gatk_realigner_target_creator()
+    run_executable(key='gatk_indel_realigner')
 
     if args.debug < 1:
         for file_key in ('duplicates_marked_bam', 'duplicates_marked_bai', 'duplicates_marked_md5'):
@@ -125,11 +117,9 @@ def run_gatk_indel_realigner(pickler_dict):
                 os.remove(pickler_dict['file_path_dict'][file_key])
 
 
-def run_gatk_base_recalibrator_pre(pickler_dict):
+def run_gatk_base_recalibrator_pre():
     """Run the GATK BaseRecalibrator step as a first-pass walker for the GATK PrintReads step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -137,15 +127,13 @@ def run_gatk_base_recalibrator_pre(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['recalibration_table_pre']):
         return
 
-    run_gatk_indel_realigner(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_base_recalibrator_pre')
+    run_gatk_indel_realigner()
+    run_executable(key='gatk_base_recalibrator_pre')
 
 
-def run_gatk_base_recalibrator_post(pickler_dict):
+def run_gatk_base_recalibrator_post():
     """Run the GATK BaseRecalibrator on-the-fly recalibration step to generate plots.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -153,15 +141,13 @@ def run_gatk_base_recalibrator_post(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['recalibration_table_post']):
         return
 
-    run_gatk_base_recalibrator_pre(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_base_recalibrator_post')
+    run_gatk_base_recalibrator_pre()
+    run_executable(key='gatk_base_recalibrator_post')
 
 
-def run_gatk_analyze_covariates(pickler_dict):
+def run_gatk_analyze_covariates():
     """Run the GATK AnalyzeCovariates step to create a recalibration plot.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -169,15 +155,13 @@ def run_gatk_analyze_covariates(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['recalibration_plot']):
         return
 
-    run_gatk_base_recalibrator_post(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_analyze_covariates')
+    run_gatk_base_recalibrator_post()
+    run_executable(key='gatk_analyze_covariates')
 
 
-def run_gatk_print_reads(pickler_dict):
+def run_gatk_print_reads():
     """Run the GATK PrintReads step as second-pass walker after the BaseRecalibrator step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -185,8 +169,8 @@ def run_gatk_print_reads(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['recalibrated_bam']):
         return
 
-    run_gatk_analyze_covariates(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_print_reads')
+    run_gatk_analyze_covariates()
+    run_executable(key='gatk_print_reads')
 
     if args.debug < 1:
         for file_key in ('realigned_bam', 'realigned_bai'):
@@ -194,11 +178,9 @@ def run_gatk_print_reads(pickler_dict):
                 os.remove(pickler_dict['file_path_dict'][file_key])
 
 
-def run_picard_collect_alignment_summary_metrics(pickler_dict):
+def run_picard_collect_alignment_summary_metrics():
     """Run the Picard CollectAlignmentSummaryMetrics step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -206,8 +188,8 @@ def run_picard_collect_alignment_summary_metrics(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['alignment_summary_metrics']):
         return
 
-    run_gatk_print_reads(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='picard_collect_alignment_summary_metrics')
+    run_gatk_print_reads()
+    run_executable(key='picard_collect_alignment_summary_metrics')
 
 
 # Set the environment consistently.
@@ -251,7 +233,7 @@ if not os.path.isdir(path_temporary):
 # Run the chain of executables back up the function hierarchy so that
 # dependencies on temporarily created files become simple to manage.
 
-run_picard_collect_alignment_summary_metrics(pickler_dict=pickler_dict)
+run_picard_collect_alignment_summary_metrics()
 
 # Remove the temporary directory and everything within it.
 

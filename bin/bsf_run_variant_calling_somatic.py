@@ -35,11 +35,9 @@ import shutil
 from Bio.BSF import Runnable
 
 
-def run_executable(pickler_dict, key):
+def run_executable(key):
     """Run an Executable defined in the Pickler dict.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :param key: Key for the Executable
     :type key: str
     :return: Nothing
@@ -53,11 +51,9 @@ def run_executable(pickler_dict, key):
         raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
-def run_mutect(pickler_dict):
+def run_mutect():
     """Run MuTect.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -66,14 +62,12 @@ def run_mutect(pickler_dict):
             and os.path.getsize(pickler_dict['file_path_dict']['mutect_vcf']):
         return
 
-    run_executable(pickler_dict=pickler_dict, key='mutect')
+    run_executable(key='mutect')
 
 
-def run_indel_genotyper(pickler_dict):
+def run_indel_genotyper():
     """Run the Indel Genotyper
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -82,16 +76,14 @@ def run_indel_genotyper(pickler_dict):
             and os.path.getsize(pickler_dict['file_path_dict']['indel_idx']):
         return
 
-    run_mutect(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='indel_genotyper')
+    run_mutect()
+    run_executable(key='indel_genotyper')
 
 
-def run_gatk_combine_variants(pickler_dict):
+def run_gatk_combine_variants():
     """Run the GATK Combine Variants
 
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -100,8 +92,8 @@ def run_gatk_combine_variants(pickler_dict):
             and os.path.getsize(pickler_dict['file_path_dict']['combined_idx']):
         return
 
-    run_indel_genotyper(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_combine_variants')
+    run_indel_genotyper()
+    run_executable(key='gatk_combine_variants')
 
     # if args.debug < 1:
     #     for file_key in ('mutect_vcf', 'mutect_idx', 'indel_vcf', 'indel_idx'):
@@ -109,11 +101,9 @@ def run_gatk_combine_variants(pickler_dict):
     #             os.remove(pickler_dict['file_path_dict'][file_key])
 
 
-def run_snpeff(pickler_dict):
+def run_snpeff():
     """Run the snpEff tool.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -122,15 +112,13 @@ def run_snpeff(pickler_dict):
             and os.path.getsize(pickler_dict['file_path_dict']['snpeff_vcf']):
         return
 
-    run_gatk_combine_variants(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='snpeff')
+    run_gatk_combine_variants()
+    run_executable(key='snpeff')
 
 
-def run_gatk_variant_annotator(pickler_dict):
+def run_gatk_variant_annotator():
     """Run the GATK VariantAnnotator step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -139,8 +127,8 @@ def run_gatk_variant_annotator(pickler_dict):
             and os.path.getsize(pickler_dict['file_path_dict']['annotated_idx']):
         return
 
-    run_snpeff(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_variant_annotator')
+    run_snpeff()
+    run_executable(key='gatk_variant_annotator')
 
     # if args.debug < 1:
     #     for file_key in ('combined_vcf', 'combined_idx'):
@@ -148,11 +136,9 @@ def run_gatk_variant_annotator(pickler_dict):
     #             os.remove(pickler_dict['file_path_dict'][file_key])
 
 
-def run_gatk_variant_to_table(pickler_dict):
+def run_gatk_variant_to_table():
     """Run the GATK VariantsToTable step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -161,8 +147,8 @@ def run_gatk_variant_to_table(pickler_dict):
             and os.path.getsize(pickler_dict['file_path_dict']['annotated_csv']):
         return
 
-    run_gatk_variant_annotator(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_variants_to_table')
+    run_gatk_variant_annotator()
+    run_executable(key='gatk_variants_to_table')
 
 
 # Set the environment consistently.
@@ -206,7 +192,7 @@ if not os.path.isdir(path_temporary):
 # Run the chain of executables back up the function hierarchy so that
 # dependencies on temporarily created files become simple to manage.
 
-run_gatk_variant_to_table(pickler_dict=pickler_dict)
+run_gatk_variant_to_table()
 
 # Remove the temporary directory and everything within it.
 

@@ -42,11 +42,9 @@ import shutil
 from Bio.BSF import Runnable
 
 
-def run_executable(pickler_dict, key):
+def run_executable(key):
     """Run an Executable defined in the Pickler dict.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :param key: Key for the Executable
     :type key: str
     :return: Nothing
@@ -60,13 +58,11 @@ def run_executable(pickler_dict, key):
         raise Exception('Could not complete the {!r} step.'.format(executable.name))
 
 
-def run_gatk_combine_gvcfs(pickler_dict):
+def run_gatk_combine_gvcfs():
     """Run the GATK CombineGVCFs step.
 
     It is only required for hierarchically merging samples before GenotypeGVCFs,
     if too many samples need processing.
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -74,14 +70,12 @@ def run_gatk_combine_gvcfs(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['combined_gvcf_idx']):
         return
 
-    run_executable(pickler_dict=pickler_dict, key='gatk_combine_gvcfs')
+    run_executable(key='gatk_combine_gvcfs')
 
 
-def run_gatk_genotype_gvcfs(pickler_dict):
+def run_gatk_genotype_gvcfs():
     """Run the GATK GenotypeGVCFs step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -89,15 +83,13 @@ def run_gatk_genotype_gvcfs(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['genotyped_raw_idx']):
         return
 
-    run_gatk_combine_gvcfs(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_genotype_gvcfs')
+    run_gatk_combine_gvcfs()
+    run_executable(key='gatk_genotype_gvcfs')
 
 
-def run_gatk_variant_recalibrator_snp(pickler_dict):
+def run_gatk_variant_recalibrator_snp():
     """Run the GATK VariantRecalibrator for SNPs.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -105,15 +97,13 @@ def run_gatk_variant_recalibrator_snp(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['recalibration_snp']):
         return
 
-    run_gatk_genotype_gvcfs(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_variant_recalibrator_snp')
+    run_gatk_genotype_gvcfs()
+    run_executable(key='gatk_variant_recalibrator_snp')
 
 
-def run_gatk_variant_recalibrator_indel(pickler_dict):
+def run_gatk_variant_recalibrator_indel():
     """Run the GATK VariantRecalibrator for INDELs.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -121,15 +111,13 @@ def run_gatk_variant_recalibrator_indel(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['recalibration_indel']):
         return
 
-    run_gatk_variant_recalibrator_snp(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_variant_recalibrator_indel')
+    run_gatk_variant_recalibrator_snp()
+    run_executable(key='gatk_variant_recalibrator_indel')
 
 
-def run_gatk_apply_recalibration_snp(pickler_dict):
+def run_gatk_apply_recalibration_snp():
     """Run the GATK ApplyRecalibration step for SNPs.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -137,15 +125,13 @@ def run_gatk_apply_recalibration_snp(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['recalibrated_snp_raw_indel_idx']):
         return
 
-    run_gatk_variant_recalibrator_indel(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_apply_recalibration_snp')
+    run_gatk_variant_recalibrator_indel()
+    run_executable(key='gatk_apply_recalibration_snp')
 
 
-def run_gatk_apply_recalibration_indel(pickler_dict):
+def run_gatk_apply_recalibration_indel():
     """Run the GATK ApplyRecalibration step for INDELs.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -153,15 +139,13 @@ def run_gatk_apply_recalibration_indel(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['recalibrated_snp_recalibrated_indel_idx']):
         return
 
-    run_gatk_apply_recalibration_snp(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_apply_recalibration_indel')
+    run_gatk_apply_recalibration_snp()
+    run_executable(key='gatk_apply_recalibration_indel')
 
 
-def run_snpeff(pickler_dict):
+def run_snpeff():
     """Run the snpEff tool.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -169,15 +153,13 @@ def run_snpeff(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['snpeff_vcf']):
         return
 
-    run_gatk_apply_recalibration_indel(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='snpeff')
+    run_gatk_apply_recalibration_indel()
+    run_executable(key='snpeff')
 
 
-def run_gatk_variant_annotator(pickler_dict):
+def run_gatk_variant_annotator():
     """Run the GATK VariantAnnotator step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -185,15 +167,13 @@ def run_gatk_variant_annotator(pickler_dict):
     if os.path.exists(pickler_dict['file_path_dict']['annotated_idx']):
         return
 
-    run_snpeff(pickler_dict=pickler_dict)
-    run_executable(pickler_dict=pickler_dict, key='gatk_variant_annotator')
+    run_snpeff()
+    run_executable(key='gatk_variant_annotator')
 
 
-def run_gatk_select_variants(pickler_dict):
+def run_gatk_select_variants():
     """Run the GATK SelectVariants step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -208,21 +188,19 @@ def run_gatk_select_variants(pickler_dict):
     if complete:
         return
 
-    run_gatk_variant_annotator(pickler_dict=pickler_dict)
+    run_gatk_variant_annotator()
 
     # The GATK SelectVariants step has to be run for each sample name separately.
 
     for sample_name in pickler_dict['sample_names']:
         if os.path.exists(pickler_dict['file_path_dict']['sample_vcf_' + sample_name]):
             continue
-        run_executable(pickler_dict=pickler_dict, key='gatk_select_variants_sample_' + sample_name)
+        run_executable(key='gatk_select_variants_sample_' + sample_name)
 
 
-def run_gatk_variants_to_table(pickler_dict):
+def run_gatk_variants_to_table():
     """Run the GATK VariantsToTable step.
 
-    :param pickler_dict: Pickler dict
-    :type pickler_dict: dict
     :return: Nothing
     :rtype: None
     """
@@ -237,14 +215,14 @@ def run_gatk_variants_to_table(pickler_dict):
     if complete:
         return
 
-    run_gatk_select_variants(pickler_dict=pickler_dict)
+    run_gatk_select_variants()
 
     # The GATK SelectVariants step has to be run for each sample name separately.
 
     for sample_name in pickler_dict['sample_names']:
         if os.path.exists(pickler_dict['file_path_dict']['sample_csv_' + sample_name]):
             continue
-        run_executable(pickler_dict=pickler_dict, key='gatk_variants_to_table_sample_' + sample_name)
+        run_executable(key='gatk_variants_to_table_sample_' + sample_name)
 
 
 # Set the environment consistently.
@@ -288,7 +266,7 @@ if not os.path.isdir(path_temporary):
 # Run the chain of executables back up the function hierarchy so that
 # dependencies on temporarily created files become simple to manage.
 
-run_gatk_variants_to_table(pickler_dict=pickler_dict)
+run_gatk_variants_to_table()
 
 # Remove the temporary directory and everything within it.
 
