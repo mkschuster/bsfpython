@@ -61,8 +61,6 @@ def run_executable(key):
 def run_gatk_combine_gvcfs():
     """Run the GATK CombineGVCFs step.
 
-    It is only required for hierarchically merging samples before GenotypeGVCFs,
-    if too many samples need processing.
     :return: Nothing
     :rtype: None
     """
@@ -71,6 +69,23 @@ def run_gatk_combine_gvcfs():
         return
 
     run_executable(key='gatk_combine_gvcfs')
+
+
+def run_gatk_combine_gvcfs_accessory():
+    """Run the GATK CombineGVCFs step on accessory GVCF files.
+
+    It is only required for hierarchically merging samples before GenotypeGVCFs,
+    if accessory samples for recalibration need processing.
+    :return: Nothing
+    :rtype: None
+    """
+
+    if os.path.exists(pickler_dict['file_path_dict']['temporary_gvcf_idx']):
+        return
+
+    run_gatk_combine_gvcfs()
+    if 'gatk_combine_gvcfs_accessory' in pickler_dict:
+        run_executable(key='gatk_combine_gvcfs_accessory')
 
 
 def run_gatk_genotype_gvcfs():
@@ -83,7 +98,7 @@ def run_gatk_genotype_gvcfs():
     if os.path.exists(pickler_dict['file_path_dict']['genotyped_raw_idx']):
         return
 
-    run_gatk_combine_gvcfs()
+    run_gatk_combine_gvcfs_accessory()
     run_executable(key='gatk_genotype_gvcfs')
 
 
@@ -143,6 +158,21 @@ def run_gatk_apply_recalibration_indel():
     run_executable(key='gatk_apply_recalibration_indel')
 
 
+def run_gatk_select_variants_cohort():
+    """Run the GATK SelectVariants step only, if accessory GVCF files have been used.
+
+    :return: Nothing
+    :rtype: None
+    """
+
+    if os.path.exists(pickler_dict['file_path_dict']['multi_sample_idx']):
+        return
+
+    run_gatk_apply_recalibration_indel()
+    if 'gatk_select_variants_cohort' in pickler_dict:
+        run_executable(key='gatk_select_variants_cohort')
+
+
 def run_snpeff():
     """Run the snpEff tool.
 
@@ -153,7 +183,7 @@ def run_snpeff():
     if os.path.exists(pickler_dict['file_path_dict']['snpeff_vcf']):
         return
 
-    run_gatk_apply_recalibration_indel()
+    run_gatk_select_variants_cohort()
     run_executable(key='snpeff')
 
 

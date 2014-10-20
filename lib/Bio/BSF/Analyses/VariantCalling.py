@@ -378,6 +378,24 @@ class VariantCallingGATK(Analysis):
                                              file_path)
                 known_sites_recalibration.append(file_path)
 
+        # Comma-separated list of GVCF files from accessory cohorts
+        # that should be used in the recalibration procedure.
+        accessory_cohort_gvcfs = list()
+        if config_parser.has_option(section=config_section, option='accessory_cohort_gvcfs'):
+            for file_path in config_parser.get(section=config_section, option='accessory_cohort_gvcfs').split(','):
+                file_path = file_path.strip()  # Strip white space around commas.
+                # TODO: Should all files in the configuration section be expanded by user and variables before
+                # testing for an absolute path?
+                if not os.path.isabs(file_path):
+                    file_path = os.path.join(Default.absolute_projects(), file_path)
+                if os.path.exists(file_path):
+                    accessory_cohort_gvcfs.append(file_path)
+                else:
+                    raise Exception('The accessory_cohort_gvcf {!r} does not exist.'.format(file_path))
+                # TODO: Should all other files in this configuration section also be checked for their existence?
+                # It would make sense to catch errors early.
+                # TODO: Check the cohorts so that their sample names do not clash.
+
         # Single VCF file of known sites for the
         # GATK HaplotypeCaller and GenotypeGVCFs steps.
         known_sites_discovery = str()
@@ -1174,14 +1192,20 @@ class VariantCallingGATK(Analysis):
 
         file_path_cohort = dict(
             temporary_cohort=prefix_cohort + '_temporary',
+            # Combined GVCF file for the cohort defined in this project.
             combined_gvcf_vcf=prefix_cohort + '_combined_gvcf.vcf',
             combined_gvcf_idx=prefix_cohort + '_combined_gvcf.vcf.idx',
+            # Temporary GVCF file with other cohorts merged in to facilitate recalibration.
+            temporary_gvcf_vcf=prefix_cohort + '_temporary_gvcf.vcf',
+            temporary_gvcf_idx=prefix_cohort + '_temporary_gvcf.vcf.idx',
             genotyped_raw_vcf=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf',
             genotyped_raw_idx=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.idx',
             recalibrated_snp_raw_indel_vcf=prefix_cohort + '_recalibrated_snp_raw_indel.vcf',
             recalibrated_snp_raw_indel_idx=prefix_cohort + '_recalibrated_snp_raw_indel.vcf.idx',
             recalibrated_snp_recalibrated_indel_vcf=prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf',
             recalibrated_snp_recalibrated_indel_idx=prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.idx',
+            multi_sample_vcf=prefix_cohort + '_multi_sample.vcf',
+            multi_sample_idx=prefix_cohort + '_multi_sample.vcf.idx',
             snpeff_vcf=prefix_cohort + '_snpeff.vcf',
             snpeff_idx=prefix_cohort + '_snpeff.vcf.idx',
             snpeff_stats=prefix_cohort + '_snpeff_summary.html',
@@ -1201,8 +1225,26 @@ class VariantCallingGATK(Analysis):
             prefix=vc_process_cohort_drms.name,
             cohort_key=cohort_name)
 
-        # Run the GATK CombineGVCFs step. It is only required for hierarchically merging samples before GenotypeGVCFs,
+        # It is only required for hierarchically merging samples before GenotypeGVCFs,
         # if too many samples need processing.
+        # TODO: It would be good to do the merging in three steps.
+        #
+        # First, merge all samples from this analysis project into a project-specific cohort.
+        # Ideally, an VariantCallingGATK-specific sub-class of the SampleAnnotationSheet extends it with
+        # another column 'cohort', so that samples of the same project could be merged into one or multiple cohorts.
+        #
+        # Second, allow merging with other cohorts to facilitate recalibration of project with too few samples.
+        # This would generate a temporary cohort file on which all recalibration steps are run on.
+        #
+        # Third, it would be good to run another GATK SelectVariants step to select all samples from this cohort,
+        # so that a clean multi-sample VCF file can be delivered.
+        #
+        # The cohorts to merge in need to be configurable and it would be essential,
+        # to check for sample name clashes beforehand. How should this be done?
+        # Should sample annotation sheets be read or can the combined GVCF file be read in
+        # to extract the actual sample names?
+
+        # Run the GATK CombineGVCFs step for the cohort defined in this project.
 
         java_process = Executable(name='gatk_combine_gvcfs',
                                   program='java',
@@ -1225,6 +1267,32 @@ class VariantCallingGATK(Analysis):
 
         pickler_dict_process_cohort[java_process.name] = java_process
 
+        # Run an additional GATK CombineGVCFs step to merge into a super-cohort.
+
+        if len(accessory_cohort_gvcfs):
+            java_process = Executable(
+                name='gatk_combine_gvcfs_accessory',
+                program='java',
+                sub_command=Command(command=str()))
+            java_process.add_SwitchShort(key='d64')
+            java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
+            java_process.add_SwitchShort(key='Xmx4G')
+            java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_cohort['temporary_cohort'])
+
+            sub_command = java_process.sub_command
+            sub_command.add_OptionLong(key='analysis_type', value='CombineGVCFs')
+            sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+            for interval in exclude_intervals_list:
+                sub_command.add_OptionLong(key='excludeIntervals', value=interval)
+            for interval in include_intervals_list:
+                sub_command.add_OptionLong(key='intervals', value=interval)
+            for file_path in accessory_cohort_gvcfs:
+                sub_command.add_OptionLong(key='variant', value=file_path)
+            sub_command.add_OptionLong(key='variant', value=file_path_cohort['combined_gvcf_vcf'])
+            sub_command.add_OptionLong(key='out', value=file_path_cohort['temporary_gvcf_vcf'])
+
+            pickler_dict_process_cohort[java_process.name] = java_process
+
         # Run the GATK GenotypeGVCFs step.
 
         java_process = Executable(name='gatk_genotype_gvcfs',
@@ -1244,7 +1312,10 @@ class VariantCallingGATK(Analysis):
             sub_command.add_OptionLong(key='intervals', value=interval)
         if known_sites_discovery:
             sub_command.add_OptionLong(key='dbsnp', value=known_sites_discovery)
-        sub_command.add_OptionLong(key='variant', value=file_path_cohort['combined_gvcf_vcf'])
+        if len(accessory_cohort_gvcfs):
+            sub_command.add_OptionLong(key='variant', value=file_path_cohort['temporary_gvcf_vcf'])
+        else:
+            sub_command.add_OptionLong(key='variant', value=file_path_cohort['combined_gvcf_vcf'])
         sub_command.add_OptionLong(key='out', value=file_path_cohort['genotyped_raw_vcf'])
 
         pickler_dict_process_cohort[java_process.name] = java_process
@@ -1376,6 +1447,37 @@ class VariantCallingGATK(Analysis):
 
         pickler_dict_process_cohort[java_process.name] = java_process
 
+        # In case accessory GVCF files have been used, re-create a multi-sample VCF file with just the samples
+        # in this cohort.
+
+        if len(accessory_cohort_gvcfs):
+            java_process = Executable(
+                name='gatk_select_variants_cohort',
+                program='java',
+                sub_command=Command(command=str()))
+            java_process.add_SwitchShort(key='d64')
+            java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
+            java_process.add_SwitchShort(key='Xmx4G')
+            java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_cohort['temporary_cohort'])
+
+            sub_command = java_process.sub_command
+            sub_command.add_OptionLong(key='analysis_type', value='SelectVariants')
+            sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+            for interval in exclude_intervals_list:
+                sub_command.add_OptionLong(key='excludeIntervals', value=interval)
+            for interval in include_intervals_list:
+                sub_command.add_OptionLong(key='intervals', value=interval)
+
+            sub_command.add_OptionLong(
+                key='variant',
+                value=file_path_cohort['recalibrated_snp_recalibrated_indel_vcf'])
+            sub_command.add_OptionLong(key='out', value=file_path_cohort['multi_sample_vcf'])
+            for sample in self.samples:
+                sub_command.add_OptionLong(key='sample_name', value=sample.name)
+            sub_command.add_SwitchLong(key='excludeNonVariants')
+
+            pickler_dict_process_cohort[java_process.name] = java_process
+
         # Run the snpEff tool for functional variant annotation.
 
         java_process = Executable(name='snpeff',
@@ -1394,7 +1496,10 @@ class VariantCallingGATK(Analysis):
         sub_command.add_OptionShort(key='config', value=os.path.join(classpath_snpeff, 'snpEff.config'))
 
         sub_command.arguments.append(snpeff_genome_version)
-        sub_command.arguments.append(file_path_cohort['recalibrated_snp_recalibrated_indel_vcf'])
+        if len(accessory_cohort_gvcfs):
+            sub_command.arguments.append(file_path_cohort['multi_sample_vcf'])
+        else:
+            sub_command.arguments.append(file_path_cohort['recalibrated_snp_recalibrated_indel_vcf'])
 
         pickler_dict_process_cohort[java_process.name] = java_process
 
@@ -1430,7 +1535,10 @@ class VariantCallingGATK(Analysis):
                         key='expression',
                         value=string.join(words=(annotation_resource, annotation), sep='.'))
 
-        sub_command.add_OptionLong(key='variant', value=file_path_cohort['recalibrated_snp_recalibrated_indel_vcf'])
+        if len(accessory_cohort_gvcfs):
+            sub_command.add_OptionLong(key='variant', value=file_path_cohort['multi_sample_vcf'])
+        else:
+            sub_command.add_OptionLong(key='variant', value=file_path_cohort['recalibrated_snp_recalibrated_indel_vcf'])
         # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
         # sub_command.add_OptionLong(key='annotation', value='AlleleBalanceBySample')
         sub_command.add_OptionLong(key='annotation', value='SnpEff')
