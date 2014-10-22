@@ -37,6 +37,9 @@ import subprocess
 # further scripts to query the state of jobs.
 
 
+output_directory = 'bsfpython_sge_output'
+
+
 def submit(drms, debug=0):
 
     """Submit BSF Executable objects into the Son of Grid Engine (SGE) Distributed Resource Management System.
@@ -144,22 +147,22 @@ def submit(drms, debug=0):
             # Write standard output and standard error streams into a
             # 'bsfpython_sge_output' directory under the 'working_directory'.
 
-            sge_output_directory = os.path.join(drms.work_directory, 'bsfpython_sge_output')
+            output_directory_path = os.path.join(drms.work_directory, output_directory)
 
-            if not os.path.isdir(sge_output_directory):
+            if not os.path.isdir(output_directory_path):
                 # In principle, a race condition could occur as the directory
                 # could have been created after its existence has been checked.
                 try:
-                    os.makedirs(sge_output_directory)
+                    os.makedirs(output_directory_path)
                 except OSError as exception:
                     if exception.errno != errno.EEXIST:
                         raise
 
             command.append('-e')
-            command.append(sge_output_directory)
+            command.append(output_directory)
 
             command.append('-o')
-            command.append(sge_output_directory)
+            command.append(output_directory)
 
         # Add Executable-specific options.
 

@@ -39,6 +39,9 @@ from Bio.BSF.Database import DatabaseConnection, \
     ProcessSLURM, ProcessSLURMAdaptor
 
 
+output_directory = 'bsfpython_slurm_output'
+
+
 def submit(drms, debug=0):
     """Submit BSF Executable objects into the Simple Linux Utility for Resource Management (SLURM)
      Distributed Resource Management System (DRMS).
@@ -146,22 +149,22 @@ def submit(drms, debug=0):
 
             # TODO: Use slurm_output_name to keep --error and --output relative to the --workdir and
             # slurm_output_path to create the directory.
-            slurm_output_directory = os.path.join(drms.work_directory, 'bsfpython_slurm_output')
+            output_directory_path = os.path.join(drms.work_directory, output_directory)
 
-            if not os.path.isdir(slurm_output_directory):
+            if not os.path.isdir(output_directory_path):
                 # In principle, a race condition could occur as the directory
                 # could have been created after its existence has been checked.
                 try:
-                    os.makedirs(slurm_output_directory)
+                    os.makedirs(output_directory_path)
                 except OSError as exception:
                     if exception.errno != errno.EEXIST:
                         raise
 
             command.append('--error')
-            command.append(os.path.join(slurm_output_directory, '{}_%j.err'.format(executable.name)))
+            command.append(os.path.join(output_directory, string.join(words=(executable.name, '%j.err'), sep='_')))
 
             command.append('--output')
-            command.append(os.path.join(slurm_output_directory, '{}_%j.out'.format(executable.name)))
+            command.append(os.path.join(output_directory, string.join(words=(executable.name, '%j.out'), sep='_')))
 
         # Job name
 
