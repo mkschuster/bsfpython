@@ -573,7 +573,7 @@ class Analysis(object):
                     if exception.errno != errno.ENOENT:
                         raise
                 try:
-                    os.symlink(self.project_directory, link_name)
+                    os.symlink(os.path.relpath(self.project_directory, html_path), link_name)
                 except OSError as exception:
                     if exception.errno != errno.EEXIST:
                         raise
@@ -587,7 +587,7 @@ class Analysis(object):
                 # In principle, a race condition could occur as the directory
                 # could have been created after its existence has been checked.
                 try:
-                    os.symlink(self.project_directory, link_name)
+                    os.symlink(os.path.relpath(self.project_directory, html_path), link_name)
                 except OSError as exception:
                     if exception.errno != errno.EEXIST:
                         raise
