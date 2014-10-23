@@ -338,7 +338,7 @@ class IlluminaToBam(Analysis):
         # automatically prepend the Illumina Run Folder path.
 
         if self.intensity_directory:
-            intensity_directory = self.intensity_directory
+            intensity_directory = str(self.intensity_directory)
             intensity_directory = os.path.expandvars(intensity_directory)
             intensity_directory = os.path.expanduser(intensity_directory)
             if not os.path.isabs(intensity_directory):
@@ -359,7 +359,7 @@ class IlluminaToBam(Analysis):
         # automatically prepend the Intensities directory path.
 
         if self.basecalls_directory:
-            basecalls_directory = self.basecalls_directory
+            basecalls_directory = str(self.basecalls_directory)
             basecalls_directory = os.path.expanduser(basecalls_directory)
             basecalls_directory = os.path.expandvars(basecalls_directory)
             if not os.path.isabs(basecalls_directory):
@@ -367,7 +367,7 @@ class IlluminaToBam(Analysis):
         else:
             basecalls_directory = os.path.join(intensity_directory, 'BaseCalls')
 
-        # Check that the BAseCalls directory exists.
+        # Check that the BaseCalls directory exists.
 
         if not os.path.isdir(basecalls_directory):
             raise Exception(
@@ -1127,9 +1127,11 @@ class BamIndexDecoder(Analysis):
                     value='true')
                 # OPTIONS_FILE
 
-                # TODO: It would be better to run Picard AddOrReplaceReadGroups.
-                # Add a symbolic link to the BSF Sequence Archive file.
-                file_path_dict['link_name'] = string.join(words=(self.project_name, key, '.bam'), sep='_')
+                # TODO: It would be even better to run Picard AddOrReplaceReadGroups to get a correct SAM header.
+                # Add a symbolic link to the BSF Sequence Archive file within the samples directory.
+                file_path_dict['link'] = os.path.join(
+                    file_path_dict['samples_directory'],
+                    string.join(words=(self.project_name, key, '.bam'), sep='_'))
 
             # Submit the corresponding BSF Executable for the BSF Runner job into the DRMS.
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.

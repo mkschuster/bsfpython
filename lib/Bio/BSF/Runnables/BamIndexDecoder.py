@@ -65,12 +65,11 @@ def run_picard_collect_alignment_summary_metrics(runnable):
 
     runnable.run_executable(name='picard_collect_alignment_summary_metrics')
 
-    # Create a *_samples sub-directory normally created by BamIndexDecoder and add a
-    # symbolic link to the original BSF sequence archive file.
+    # Add a relative symbolic link to the original BSF sequence archive file.
 
-    os.chdir(runnable.file_path_dict['samples_directory'])
-    os.symlink(os.path.relpath(runnable.file_path_dict['input']), runnable.file_path_dict['link_name'])
-    os.chdir(runnable.working_directory)
+    os.symlink(
+        os.path.relpath(runnable.file_path_dict['input'], runnable.file_path_dict['samples_directory']),
+        runnable.file_path_dict['link'])
 
 
 def run(runnable):
