@@ -28,10 +28,11 @@ A package of classes and methods supporting RNA-Seq analyses.
 
 import os.path
 from pickle import Pickler, HIGHEST_PROTOCOL
+import re
 import string
 
 from Bio.BSF import Analysis, Configuration, Default, Defaults, DRMS, Executable
-from Bio.BSF.Data import SampleAnnotationSheet
+from Bio.BSF.Data import AnnotationSheet
 from Bio.BSF.Executables import Cuffdiff, Cufflinks, Cuffmerge, TopHat
 
 
@@ -156,7 +157,9 @@ class Tuxedo(Analysis):
 
     def _read_comparisons(self, cmp_file):
 
-        """Read a SampleAnnotationSheet CSV file specifying comparisons from disk.
+        """Read an AnnotationSheet CSV file specifying comparisons from disk.
+
+        All Sample objects referenced in a comparison are added from the Collection to the Analysis object.
 
         Column headers for CASAVA folders:
           Treatment/Control/Point N ProcessedRunFolder:
@@ -179,11 +182,12 @@ class Tuxedo(Analysis):
         if self.debug > 1:
             print '{!r} method _read_comparisons:'.format(self)
 
-        sas = SampleAnnotationSheet(file_path=cmp_file)
-        sas.csv_reader_open()
+        regular_expression = re.compile(pattern='\W')
+
+        annotation_sheet = AnnotationSheet.read_from_file(file_path=cmp_file)
 
         # TODO: Adjust by introducing a new class RNASeqComparisonSheet(AnnotationSheet) in this module?
-        for row_dict in sas._csv_reader_object:
+        for row_dict in annotation_sheet.row_dicts:
 
             # In addition to defining samples, allow also the definition of groups in comparison files.
             # If the row dictionary has a 'Group' key, then the Sample in the same row gets added to the group.
@@ -235,11 +239,16 @@ class Tuxedo(Analysis):
                         format(row_dict)
                 continue
 
-            # Truncate the last '__' separator off the key string.
+            if 'Comparison Name' in row_dict:
+                # For ridiculously large comparisons involving loads of groups or samples a comparison name can be
+                # explicitly specified. Any non-word characters get replaced by underscore characters.
+                key = str(row_dict['Comparison Name'])
+                key = re.sub(pattern=regular_expression, repl='_', string=key)
+            else:
+                # Truncate the last '__' separator off the key string.
+                key = key[:-2]
 
-            self.comparisons[key[:-2]] = comparison_groups
-
-        sas.csv_reader_close()
+            self.comparisons[key] = comparison_groups
 
     def run(self):
 
@@ -256,18 +265,26 @@ class Tuxedo(Analysis):
         if not self.genome_version:
             raise Exception('A Tuxedo analysis requires a genome_version configuration option.')
 
-        # Expand an eventual user part i.e. on UNIX ~ or ~user and
-        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
-        # Check if an absolute path has been provided, if not,
-        # automatically prepend standard directory paths.
+        if self.cmp_file:
+            # A comparison file path has been provided.
+            # Expand an eventual user part i.e. on UNIX ~ or ~user and
+            # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+            # Check if an absolute path has been provided, if not,
+            # automatically prepend standard directory paths.
 
-        self.cmp_file = os.path.expanduser(path=self.cmp_file)
-        self.cmp_file = os.path.expandvars(path=self.cmp_file)
+            self.cmp_file = os.path.expanduser(path=self.cmp_file)
+            self.cmp_file = os.path.expandvars(path=self.cmp_file)
 
-        if not os.path.isabs(self.cmp_file) and not os.path.exists(path=self.cmp_file):
-            self.cmp_file = os.path.join(self.project_directory, self.cmp_file)
+            if not os.path.isabs(self.cmp_file) and not os.path.exists(path=self.cmp_file):
+                self.cmp_file = os.path.join(self.project_directory, self.cmp_file)
 
-        self._read_comparisons(cmp_file=self.cmp_file)
+            # Read and process the comparison file, which includes adding only those sample objects,
+            # which are referenced in a comparison.
+
+            self._read_comparisons(cmp_file=self.cmp_file)
+        else:
+            # Without a comparison file path, simply add all Sample objects from the Collection.
+            self.samples.extend(self.collection.get_all_Samples())
 
         # Experimentally, sort the Python list of Sample objects by the Sample name.
         # This cannot be done in the super-class, because Sample objects are only put into the
@@ -280,7 +297,8 @@ class Tuxedo(Analysis):
 
     def _create_tophat_cufflinks_jobs(self):
 
-        """Create TopHat aligner jobs and Cufflinks transcript assembler jobs.
+        """Create a TopHat aligner process and a Cufflinks transcript assembler process
+        for each sample or replicate.
 
         :return: Nothing
         :rtype: None
@@ -560,7 +578,7 @@ class Tuxedo(Analysis):
 
     def _create_cuffmerge_cuffdiff_jobs(self):
 
-        """Create Cuffdiff differential expression jobs.
+        """Create a Cuffmerge and a Cuffdiff process for each comparison.
 
         :return: Nothing
         :rtype: None
