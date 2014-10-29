@@ -42,15 +42,15 @@ from Bio.BSF.Illumina import RunFolder
 def _process_row_dict(barcode_dict, row_dict, prefix=None):
     """Private function to read fields from a Python row_dict object, index by the 'lane' field in the barcode_dict.
 
-    :param barcode_dict: A Python dict of 'lane' key data and Python list objects of lane_dict value data
-    :type barcode_dict: dict
-    :param row_dict: Python row_dict object
-    :type row_dict: dict
-    :param prefix: Optional prefix
-                   (e.g. '[Control] lane', ...)
-    :type prefix: str
-    :return: Nothing
-    :rtype: None
+    @param barcode_dict: A Python dict of 'lane' key data and Python list objects of lane_dict value data
+    @type barcode_dict: dict
+    @param row_dict: Python row_dict object
+    @type row_dict: dict
+    @param prefix: Optional prefix
+        (e.g. '[Control] lane', ...)
+    @type prefix: str
+    @return: Nothing
+    @rtype: None
     """
 
     sample_dict = dict()
@@ -93,10 +93,10 @@ def _process_row_dict(barcode_dict, row_dict, prefix=None):
 def extract_illumina_barcodes(config_file):
     """Convert an Illumina Run Folder into BAM files.
 
-    :param config_file: Configuration file
-    :type config_file: str, unicode
-    :return: Nothing
-    :rtype: None
+    @param config_file: Configuration file
+    @type config_file: str | unicode
+    @return: Nothing
+    @rtype: None
     """
 
     default = Default.get_global_default()
@@ -329,10 +329,10 @@ def extract_illumina_barcodes(config_file):
 def picard_sam_to_fastq(analysis):
     """Convert a [BS]AM file into FASTQ format.
 
-    :param analysis: BSF Analysis
-    :type analysis: Analysis
-    :return: Nothing
-    :rtype: None
+    @param analysis: BSF Analysis
+    @type analysis: Analysis
+    @return: Nothing
+    @rtype: None
     """
 
     assert isinstance(analysis, Analysis)
@@ -480,10 +480,10 @@ def illumina_to_bam(analysis):
     library name (LB) and sample name (SM) to 'flow-cell identifier.lane'.
     The resulting archive BAM file is then sorted by query name with Picard SortSam.
     Depends on the bsf_illumina2bam.sh Bash script to run this efficiently.
-    :param analysis: BSF Analysis
-    :type analysis: Analysis
-    :return: Nothing
-    :rtype: None
+    @param analysis: BSF Analysis
+    @type analysis: Analysis
+    @return: Nothing
+    @rtype: None
     """
 
     assert isinstance(analysis, Analysis)
@@ -601,10 +601,10 @@ def illumina_to_bam(analysis):
 def bam_index_decoder(analysis):
     """Decode an archive BAM file produced with Illumina2bam into sample-specific BAM files.
 
-    :param analysis: BSF Analysis
-    :type analysis: Analysis
-    :return: Nothing
-    :rtype: None
+    @param analysis: BSF Analysis
+    @type analysis: Analysis
+    @return: Nothing
+    @rtype: None
     """
 
     # The standard GATK *comma-separated* value sample sheet needs to be transformed into
