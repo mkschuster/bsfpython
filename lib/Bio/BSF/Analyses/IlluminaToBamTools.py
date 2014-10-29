@@ -51,10 +51,10 @@ class IlluminaToBam(Analysis):
     def from_config_file(cls, config_file):
         """Create a new IlluminaToBam object from a UNIX-style configuration file via the Configuration class.
 
-        :param config_file: UNIX-style configuration file
-        :type config_file: str, unicode
-        :return: IlluminaToBam
-        :rtype: IlluminaToBam
+        @param config_file: UNIX-style configuration file
+        @type config_file: str | unicode
+        @return: IlluminaToBam
+        @rtype: IlluminaToBam
         """
 
         return cls.from_Configuration(configuration=Configuration.from_config_file(config_file=config_file))
@@ -63,10 +63,10 @@ class IlluminaToBam(Analysis):
     def from_Configuration(cls, configuration):
         """Create a new IlluminaToBam object from a Configuration object.
 
-        :param configuration: Configuration
-        :type configuration: Configuration
-        :return: IlluminaToBam
-        :rtype: IlluminaToBam
+        @param configuration: Configuration
+        @type configuration: Configuration
+        @return: IlluminaToBam
+        @rtype: IlluminaToBam
         """
 
         assert isinstance(configuration, Configuration)
@@ -94,57 +94,57 @@ class IlluminaToBam(Analysis):
                  force=False):
         """Initialise a Bio.BSF.Analyses.Illumina2BamTools.IlluminaToBam object.
 
-        :param configuration: Configuration
-        :type configuration: Configuration
-        :param project_name: Project name
-        :type project_name: str
-        :param genome_version: Genome version
-        :type genome_version: str
-        :param input_directory: Analysis-wide input directory
-        :type input_directory: str
-        :param output_directory: Analysis-wide output directory
-        :type output_directory: str
-        :param project_directory: Analysis-wide project directory,
-        normally under the Analysis-wide output directory
-        :type project_directory: str
-        :param genome_directory: Analysis-wide genome directory,
-        normally under the Analysis-wide project directory
-        :type genome_directory: str
-        :param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        :type e_mail: str
-        :param debug: Integer debugging level
-        :type debug: int
-        :param drms_list: Python list of DRMS objects
-        :type drms_list: list
-        :param collection: Collection
-        :type collection: Collection
-        :param comparisons: Python dict of Python tuple objects of Sample objects
-        :type comparisons: dict
-        :param samples: Python list of Sample objects
-        :type samples: list
-        :param illumina_run_folder: File path to an Illumina Run Folder
-        :type illumina_run_folder: str, unicode
-        :param intensity_directory: File path to the 'Intensities' directory.
-        Defaults to illumina_run_folder/Data/Intensities.
-        :type intensity_directory: str, unicode
-        :param basecalls_directory: File path to the 'BaseCalls' directory.
-        Defaults to illumina_run_folder/Data/Intensities/BaseCalls.
-        :type basecalls_directory: str, unicode
-        :param experiment_name: Experiment name (i.e. flow-cell identifier) normally automatically read from
-        Illumina Run Folder parameters
-        :type experiment_name: str
-        :param sequencing_centre: Sequencing centre
-        :type sequencing_centre: str
-        :param sequences_directory: Sequences directory to store archive BAM files
-        :type sequences_directory: str, unicode
-        :param experiment_directory: Experiment-specific directory
-        :type experiment_directory: str, unicode
-        :param classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
-        :type classpath_illumina2bam: str, unicode
-        :param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        :type classpath_picard: str, unicode
-        :param force: Force processing of incomplete Illumina Run Folders
-        :type force: bool
+        @param configuration: Configuration
+        @type configuration: Configuration
+        @param project_name: Project name
+        @type project_name: str
+        @param genome_version: Genome version
+        @type genome_version: str
+        @param input_directory: Analysis-wide input directory
+        @type input_directory: str
+        @param output_directory: Analysis-wide output directory
+        @type output_directory: str
+        @param project_directory: Analysis-wide project directory,
+            normally under the Analysis-wide output directory
+        @type project_directory: str
+        @param genome_directory: Analysis-wide genome directory,
+            normally under the Analysis-wide project directory
+        @type genome_directory: str
+        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        @type e_mail: str
+        @param debug: Integer debugging level
+        @type debug: int
+        @param drms_list: Python list of DRMS objects
+        @type drms_list: list
+        @param collection: Collection
+        @type collection: Collection
+        @param comparisons: Python dict of Python tuple objects of Sample objects
+        @type comparisons: dict
+        @param samples: Python list of Sample objects
+        @type samples: list
+        @param illumina_run_folder: File path to an Illumina Run Folder
+        @type illumina_run_folder: str | unicode
+        @param intensity_directory: File path to the 'Intensities' directory.
+            Defaults to illumina_run_folder/Data/Intensities.
+        @type intensity_directory: str | unicode
+        @param basecalls_directory: File path to the 'BaseCalls' directory.
+            Defaults to illumina_run_folder/Data/Intensities/BaseCalls.
+        @type basecalls_directory: str | unicode
+        @param experiment_name: Experiment name (i.e. flow-cell identifier) normally automatically read from
+            Illumina Run Folder parameters
+        @type experiment_name: str
+        @param sequencing_centre: Sequencing centre
+        @type sequencing_centre: str
+        @param sequences_directory: Sequences directory to store archive BAM files
+        @type sequences_directory: str | unicode
+        @param experiment_directory: Experiment-specific directory
+        @type experiment_directory: str | unicode
+        @param classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
+        @type classpath_illumina2bam: str | unicode
+        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
+        @type classpath_picard: str | unicode
+        @param force: Force processing of incomplete Illumina Run Folders
+        @type force: bool
         """
 
         super(IlluminaToBam, self).__init__(
@@ -212,14 +212,13 @@ class IlluminaToBam(Analysis):
         self.force = force
 
     def set_Configuration(self, configuration, section):
-
         """Set instance variables of an IlluminaToBam object via a section of a Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param configuration: Configuration
-        :type configuration: Configuration
-        :param section: Configuration file section
-        :type section: str
+        @param configuration: Configuration
+        @type configuration: Configuration
+        @param section: Configuration file section
+        @type section: str
         """
 
         assert isinstance(configuration, Configuration)
@@ -287,7 +286,6 @@ class IlluminaToBam(Analysis):
                 option='force')
 
     def run(self):
-
         """Run this IlluminaToBam analysis.
 
         Convert an Illumina flow-cell into lane-specific archive BAM files.
@@ -623,10 +621,10 @@ class BamIndexDecoder(Analysis):
     def from_config_file(cls, config_file):
         """Create a new BamIndexDecoder object from a UNIX-style configuration file via the Configuration class.
 
-        :param config_file: UNIX-style configuration file
-        :type config_file: str, unicode
-        :return: BamIndexDecoder
-        :rtype: BamIndexDecoder
+        @param config_file: UNIX-style configuration file
+        @type config_file: str | unicode
+        @return: BamIndexDecoder
+        @rtype: BamIndexDecoder
         """
 
         return cls.from_Configuration(configuration=Configuration.from_config_file(config_file=config_file))
@@ -635,10 +633,10 @@ class BamIndexDecoder(Analysis):
     def from_Configuration(cls, configuration):
         """Create a new BamIndexDecoder object from a Configuration object.
 
-        :param configuration: Configuration
-        :type configuration: Configuration
-        :return: BamIndexDecoder
-        :rtype: BamIndexDecoder
+        @param configuration: Configuration
+        @type configuration: Configuration
+        @return: BamIndexDecoder
+        @rtype: BamIndexDecoder
         """
 
         assert isinstance(configuration, Configuration)
@@ -665,48 +663,48 @@ class BamIndexDecoder(Analysis):
                  force=False):
         """Initialise a Bio.BSF.Analyses.IlluminaToBamTools.BamIndexDecoder object.
 
-        :param configuration: Configuration
-        :type configuration: Configuration
-        :param project_name: Project name
-        :type project_name: str
-        :param genome_version: Genome version
-        :type genome_version: str
-        :param input_directory: Analysis-wide input directory
-        :type input_directory: str
-        :param output_directory: Analysis-wide output directory
-        :type output_directory: str
-        :param project_directory: Analysis-wide project directory,
-        normally under the Analysis-wide output directory
-        :type project_directory: str
-        :param genome_directory: Analysis-wide genome directory,
-        normally under the Analysis-wide project directory
-        :type genome_directory: str
-        :param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        :type e_mail: str
-        :param debug: Integer debugging level
-        :type debug: int
-        :param drms_list: Python list of DRMS objects
-        :type drms_list: list
-        :param collection: Collection
-        :type collection: Collection
-        :param comparisons: Python dict of Python tuple objects of Sample objects
-        :type comparisons: dict
-        :param samples: Python list of Sample objects
-        :type samples: list
-        :param library_file: Library annotation file
-        :type library_file: str, unicode
-        :param sequences_directory: BSF sequences directory
-        :type sequences_directory: str, unicode
-        :param samples_directory: BSF samples directory
-        :type samples_directory: str, unicode
-        :param experiment_directory: Experiment directory
-        :type experiment_directory: str, unicode
-        :param classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
-        :type classpath_illumina2bam: str, unicode
-        :param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        :type classpath_picard: str, unicode
-        :param force: Force de-multiplexing with a Library Annotation sheet failing validation
-        :type force: bool
+        @param configuration: Configuration
+        @type configuration: Configuration
+        @param project_name: Project name
+        @type project_name: str
+        @param genome_version: Genome version
+        @type genome_version: str
+        @param input_directory: Analysis-wide input directory
+        @type input_directory: str
+        @param output_directory: Analysis-wide output directory
+        @type output_directory: str
+        @param project_directory: Analysis-wide project directory,
+            normally under the Analysis-wide output directory
+        @type project_directory: str
+        @param genome_directory: Analysis-wide genome directory,
+            normally under the Analysis-wide project directory
+        @type genome_directory: str
+        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        @type e_mail: str
+        @param debug: Integer debugging level
+        @type debug: int
+        @param drms_list: Python list of DRMS objects
+        @type drms_list: list
+        @param collection: Collection
+        @type collection: Collection
+        @param comparisons: Python dict of Python tuple objects of Sample objects
+        @type comparisons: dict
+        @param samples: Python list of Sample objects
+        @type samples: list
+        @param library_file: Library annotation file
+        @type library_file: str | unicode
+        @param sequences_directory: BSF sequences directory
+        @type sequences_directory: str | unicode
+        @param samples_directory: BSF samples directory
+        @type samples_directory: str | unicode
+        @param experiment_directory: Experiment directory
+        @type experiment_directory: str | unicode
+        @param classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
+        @type classpath_illumina2bam: str | unicode
+        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
+        @type classpath_picard: str | unicode
+        @param force: Force de-multiplexing with a Library Annotation sheet failing validation
+        @type force: bool
         """
 
         super(BamIndexDecoder, self).__init__(
@@ -759,14 +757,13 @@ class BamIndexDecoder(Analysis):
         self.force = force
 
     def set_Configuration(self, configuration, section):
-
         """Set instance variables of a BamIndexDecoder object via a section of a Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param configuration: Configuration
-        :type configuration: Configuration
-        :param section: Configuration file section
-        :type section: str
+        @param configuration: Configuration
+        @type configuration: Configuration
+        @param section: Configuration file section
+        @type section: str
         """
 
         super(BamIndexDecoder, self).set_Configuration(configuration=configuration, section=section)
@@ -810,11 +807,10 @@ class BamIndexDecoder(Analysis):
                 option='force')
 
     def run(self):
-
         """Decode an archive BAM file produced with Illumina2Bam tools into sample-specific BAM files.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         # The standard BSF Python *comma-separated* value sample sheet needs to be transformed into
@@ -958,7 +954,7 @@ class BamIndexDecoder(Analysis):
             # BamIndexDecoder submission the IlluminaToBam analysis may not have finished.
             #
             # if not os.path.exists(file_path_dict['input']):
-            #     raise Exception('Sequence archive BAM file {!r} does not exist.'.format(file_path_dict['input']))
+            # raise Exception('Sequence archive BAM file {!r} does not exist.'.format(file_path_dict['input']))
 
             require_decoding = 0
             file_handle_barcode = open(name=file_path_dict['barcode'], mode='w')
