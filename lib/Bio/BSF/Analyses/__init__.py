@@ -41,28 +41,28 @@ from Bio.BSF.Executables import Bowtie2, Macs14, Macs2Bdgcmp, Macs2Callpeak, Fas
 class ChIPSeqComparison(object):
     def __init__(self, c_name, t_name, c_samples, t_samples,
                  factor, tissue=None, condition=None, treatment=None, replicate=None):
-
         """Initialise a BSF ChIPSeqComparison object.
-        :param c_name: Control name
-        :type c_name: str
-        :param t_name: Treatment name
-        :type t_name: str
-        :param c_samples: Python list of control BSF Sample objects
-        :type c_samples: list
-        :param t_samples: Python list of treatment BSF Sample objects
-        :type t_samples:list
-        :param factor: ChIP factor
-        :type factor: str
-        :param tissue: Tissue
-        :type tissue: str
-        :param condition: Condition
-        :type condition: str
-        :param treatment: Treatment
-        :type treatment: str
-        :param replicate: replicate number
-        :type replicate: int
-        :return Nothing
-        :rtype: None
+
+        @param c_name: Control name
+        @type c_name: str
+        @param t_name: Treatment name
+        @type t_name: str
+        @param c_samples: Python list of control BSF Sample objects
+        @type c_samples: list
+        @param t_samples: Python list of treatment BSF Sample objects
+        @type t_samples:list
+        @param factor: ChIP factor
+        @type factor: str
+        @param tissue: Tissue
+        @type tissue: str
+        @param condition: Condition
+        @type condition: str
+        @param treatment: Treatment
+        @type treatment: str
+        @param replicate: replicate number
+        @type replicate: int
+        @return: Nothing
+        @rtype: None
         """
 
         # Condition', 'Treatment', 'Replicate',
@@ -131,16 +131,16 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     def __init__(self, file_path=None, file_type=None, name=None, row_dicts=None):
         """Initialise a BSF ChIPSeq DiffBind Sheet object.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type (e.g. ...)
-        :type file_type: str
-        :param name: Name
-        :type name: str
-        :param row_dicts: Python list of Python dict objects
-        :type row_dicts: list
-        :return: Nothing
-        :rtype: None
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type (e.g. ...)
+        @type file_type: str
+        @param name: Name
+        @type name: str
+        @param row_dicts: Python list of Python dict objects
+        @type row_dicts: list
+        @return: Nothing
+        @rtype: None
         """
 
         super(ChIPSeqDiffBindSheet, self).__init__(file_path=file_path,
@@ -150,18 +150,24 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
                                                    row_dicts=row_dicts)
 
     def sort(self):
-        self.row_dicts.sort(cmp=lambda x, y:
-                            cmp(x['Tissue'], y['Tissue']) or
-                            cmp(x['Factor'], y['Factor']) or
-                            cmp(x['Condition'], y['Condition']) or
-                            cmp(x['Treatment'], y['Treatment']) or
-                            cmp(int(x['Replicate']), int(y['Replicate'])))
+        """Sort by columns Tissue, Factor, Condition, Treatment and Replicate.
+
+        @return: Nothing
+        @rtype: None
+        """
+        self.row_dicts.sort(
+            cmp=lambda x, y:
+            cmp(x['Tissue'], y['Tissue']) or
+            cmp(x['Factor'], y['Factor']) or
+            cmp(x['Condition'], y['Condition']) or
+            cmp(x['Treatment'], y['Treatment']) or
+            cmp(int(x['Replicate']), int(y['Replicate'])))
 
     def write_to_file(self):
         """Write a BSF ChIPSeq DiffBind Sheet to a file.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         # Override the method from the super-class to automatically sort before writing to a file.
@@ -179,26 +185,24 @@ class ChIPSeq(Analysis):
 
     @classmethod
     def from_config_file(cls, config_file):
-
         """Create a new BSF ChIPSeq object from a UNIX-style configuration file via the BSF Configuration class.
 
-        :param config_file: UNIX-style configuration file
-        :type config_file: str, unicode
-        :return: BSF ChIPSeq
-        :rtype: ChIPSeq
+        @param config_file: UNIX-style configuration file
+        @type config_file: str | unicode
+        @return: BSF ChIPSeq
+        @rtype: ChIPSeq
         """
 
         return cls.from_Configuration(configuration=Configuration.from_config_file(config_file=config_file))
 
     @classmethod
     def from_Configuration(cls, configuration):
-
         """Create a new BSF ChIPSeq object from a BSF Configuration object.
 
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :return: BSF ChIPSeq
-        :rtype: ChIPSeq
+        @param configuration: BSF Configuration
+        @type configuration: Configuration
+        @return: BSF ChIPSeq
+        @rtype: ChIPSeq
         """
 
         assert isinstance(configuration, Configuration)
@@ -219,41 +223,40 @@ class ChIPSeq(Analysis):
                  e_mail=None, debug=0, drms_list=None,
                  collection=None, comparisons=None, samples=None,
                  cmp_file=None):
-
         """Initialise a Bio.BSF.Analysis.ChIPSeq object.
 
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :param project_name: Project name
-        :type project_name: str
-        :param genome_version: Genome version
-        :type genome_version: str
-        :param input_directory: BSF Analysis-wide input directory
-        :type input_directory: str
-        :param output_directory: BSF Analysis-wide output directory
-        :type output_directory: str
-        :param project_directory: BSF Analysis-wide project directory,
-         normally under the BSF Analysis-wide output directory
-        :type project_directory: str
-        :param genome_directory: BSF Analysis-wide genome directory,
-         normally under the BSF Analysis-wide project directory
-        :type genome_directory: str
-        :param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        :type e_mail: str
-        :param debug: Integer debugging level
-        :type debug: int
-        :param drms_list: Python list of BSF DRMS objects
-        :type drms_list: list
-        :param collection: BSF Collection
-        :type collection: Collection
-        :param comparisons: Python dict of Python list objects of BSF Sample objects
-        :type comparisons: dict
-        :param samples: Python list of BSF Sample objects
-        :type samples: list
-        :param cmp_file: Comparison file
-        :type cmp_file: str, unicode
-        :return: Nothing
-        :rtype: None
+        @param configuration: BSF Configuration
+        @type configuration: Configuration
+        @param project_name: Project name
+        @type project_name: str
+        @param genome_version: Genome version
+        @type genome_version: str
+        @param input_directory: BSF Analysis-wide input directory
+        @type input_directory: str
+        @param output_directory: BSF Analysis-wide output directory
+        @type output_directory: str
+        @param project_directory: BSF Analysis-wide project directory,
+            normally under the BSF Analysis-wide output directory
+        @type project_directory: str
+        @param genome_directory: BSF Analysis-wide genome directory,
+            normally under the BSF Analysis-wide project directory
+        @type genome_directory: str
+        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        @type e_mail: str
+        @param debug: Integer debugging level
+        @type debug: int
+        @param drms_list: Python list of BSF DRMS objects
+        @type drms_list: list
+        @param collection: BSF Collection
+        @type collection: Collection
+        @param comparisons: Python dict of Python list objects of BSF Sample objects
+        @type comparisons: dict
+        @param samples: Python list of BSF Sample objects
+        @type samples: list
+        @param cmp_file: Comparison file
+        @type cmp_file: str | unicode
+        @return: Nothing
+        @rtype: None
         """
 
         super(ChIPSeq, self).__init__(configuration=configuration,
@@ -271,16 +274,15 @@ class ChIPSeq(Analysis):
             self.cmp_file = str()
 
     def set_Configuration(self, configuration, section):
-
         """Set instance variables of a BSF ChIPSeq object via a section of a
         BSF Configuration object.
 
         Instance variables without a
         configuration option remain unchanged.
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :param section: Configuration file section
-        :type section: str
+        @param configuration: BSF Configuration
+        @type configuration: Configuration
+        @param section: Configuration file section
+        @type section: str
         """
 
         super(ChIPSeq, self).set_Configuration(configuration=configuration, section=section)
@@ -291,26 +293,25 @@ class ChIPSeq(Analysis):
             self.cmp_file = configuration.config_parser.get(section=section, option='cmp_file')
 
     def _read_comparisons(self, cmp_file):
-
         """Read a BSF SampleAnnotationSheet CSV file from disk.
 
         Column headers for CASAVA folders:
-          Treatment/Control ProcessedRunFolder:
-            CASAVA processed run folder name or
-            Bio.BSF.Analysis.input_directory by default.
-          Treatment/Control Project:
-            CASAVA Project name or
-            Bio.BSF.Analysis.project_name by default.
-          Treatment/Control Sample:
-            CASAVA Sample name, no default.
+            Treatment/Control ProcessedRunFolder:
+                CASAVA processed run folder name or
+                Bio.BSF.Analysis.input_directory by default.
+            Treatment/Control Project:
+                CASAVA Project name or
+                Bio.BSF.Analysis.project_name by default.
+            Treatment/Control Sample:
+                CASAVA Sample name, no default.
         Column headers for independent samples:
-          Treatment/Control Sample:
-          Treatment/Control File:
-          Treatment/Control Group:
-        :param cmp_file: Comparison file path
-        :type cmp_file: str, unicode
-        :return: Nothing
-        :rtype: None
+            Treatment/Control Sample
+            Treatment/Control File
+            Treatment/Control Group
+        @param cmp_file: Comparison file path
+        @type cmp_file: str | unicode
+        @return: Nothing
+        @rtype: None
         """
 
         if self.debug > 1:
@@ -442,11 +443,10 @@ class ChIPSeq(Analysis):
                 i += 1
 
     def run(self):
-
         """Run this BSF ChIPSeq analysis.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         super(ChIPSeq, self).run()
@@ -481,11 +481,10 @@ class ChIPSeq(Analysis):
         self._create_diffbind_jobs()
 
     def _create_bowtie2_jobs(self):
-
         """Create Bowtie2 alignment jobs.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -604,11 +603,10 @@ class ChIPSeq(Analysis):
                                                       replicate_key))
 
     def _create_macs14_jobs(self):
-
         """Create MACS14 peak caller jobs.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -762,11 +760,10 @@ class ChIPSeq(Analysis):
                             process_macs14.arguments.append(genome_sizes)
 
     def _create_macs2_jobs(self):
-
         """Create MACS2 peak caller jobs.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -964,11 +961,10 @@ class ChIPSeq(Analysis):
                             process_macs2.arguments.append(genome_sizes)
 
     def _create_diffbind_jobs(self):
-
         """Create Bioconductor DiffBind jobs.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -1081,14 +1077,14 @@ class ChIPSeq(Analysis):
                                 # row_dict['Counts'] = str()
 
                                 # TODO: Remove once the code works.
-                                ### sas.csv_writer_next(row_dict=row_dict)
+                                # ## sas.csv_writer_next(row_dict=row_dict)
                                 dbs.row_dicts.append(row_dict)
 
                                 job_dependency = 'chipseq_process_macs2_{}__{}'.format(t_replicate_key, c_replicate_key)
                                 job_dependencies.append(job_dependency)
 
             # TODO: Remove once the code works.
-            ### sas.csv_writer_close()
+            # ## sas.csv_writer_close()
             dbs.write_to_file()
 
             # Create the DiffBind job.
@@ -1107,11 +1103,10 @@ class ChIPSeq(Analysis):
             diffbind.add_OptionLong(key='sample_annotation', value=file_path)
 
     def _report_macs14(self):
-
         """Create a BSF ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -1287,9 +1282,9 @@ class ChIPSeq(Analysis):
                             output += '<tr>\n'
 
                             # if treatment and absolute:
-                            #     output += '<td><strong>{}</strong></td>\n'.format(t_replicate_key)
+                            # output += '<td><strong>{}</strong></td>\n'.format(t_replicate_key)
                             # if not treatment and absolute:
-                            #     output += '<td><strong>{}</strong></td>\n'.format(c_replicate_key)
+                            # output += '<td><strong>{}</strong></td>\n'.format(c_replicate_key)
 
                             output += '<td><a href="./{}__{}_peaks.xls">Peaks {} versus {}</a></td>\n'. \
                                 format(t_replicate_key, c_replicate_key,
@@ -1353,7 +1348,7 @@ class ChIPSeq(Analysis):
 
                 # TODO: Including FastQC results would require rearranging the above HTML code.
                 # output += '{}__{}_fastqc/fastqc_report.html'. \
-                #     format(t_replicate_key, c_replicate_key)
+                # format(t_replicate_key, c_replicate_key)
 
         output += '</body>\n'
         output += Defaults.web.html_footer()
@@ -1371,11 +1366,10 @@ class ChIPSeq(Analysis):
         self.ucsc_hub_write_tracks(output=track_output, prefix='chipseq')
 
     def report(self):
-
         """Create a BSF ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -2009,26 +2003,24 @@ class RunFastQC(Analysis):
 
     @classmethod
     def from_config_file(cls, config_file):
-
         """Create a new BSF RunFastQC object from a UNIX-style configuration file via the BSF Configuration class.
 
-        :param config_file: UNIX-style configuration file
-        :type config_file: str, unicode
-        :return: BSF RunFastQC
-        :rtype: RunFastQC
+        @param config_file: UNIX-style configuration file
+        @type config_file: str | unicode
+        @return: BSF RunFastQC
+        @rtype: RunFastQC
         """
 
         return cls.from_Configuration(configuration=Configuration.from_config_file(config_file=config_file))
 
     @classmethod
     def from_Configuration(cls, configuration):
-
         """Create a new BSF RunFastQC object from a BSF Configuration object.
 
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :return: BSF RunFastQC
-        :rtype: RunFastQC
+        @param configuration: BSF Configuration
+        @type configuration: Configuration
+        @return: BSF RunFastQC
+        @rtype: RunFastQC
         """
 
         assert isinstance(configuration, Configuration)
@@ -2048,39 +2040,38 @@ class RunFastQC(Analysis):
                  project_directory=None, genome_directory=None,
                  e_mail=None, debug=0, drms_list=None,
                  collection=None, comparisons=None, samples=None):
-
         """Initialise a Bio.BSF.Analysis.RunFastQC object.
 
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :param project_name: Project name
-        :type project_name: str
-        :param genome_version: Genome version
-        :type genome_version: str
-        :param input_directory: BSF Analysis-wide input directory
-        :type input_directory: str
-        :param output_directory: BSF Analysis-wide output directory
-        :type output_directory: str
-        :param project_directory: BSF Analysis-wide project directory,
-        normally under the BSF Analysis-wide output directory
-        :type project_directory: str
-        :param genome_directory: BSF Analysis-wide genome directory,
-        normally under the BSF Analysis-wide project directory
-        :type genome_directory: str
-        :param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        :type e_mail: str
-        :param debug: Integer debugging level
-        :type debug: int
-        :param drms_list: Python list of BSF DRMS objects
-        :type drms_list: list
-        :param collection: BSF Collection
-        :type collection: Collection
-        :param comparisons: Python dict of Python tuple objects of BSF Sample objects
-        :type comparisons: dict
-        :param samples: Python list of BSF Sample objects
-        :type samples: list
-        :return: Nothing
-        :rtype: None
+        @param configuration: BSF Configuration
+        @type configuration: Configuration
+        @param project_name: Project name
+        @type project_name: str
+        @param genome_version: Genome version
+        @type genome_version: str
+        @param input_directory: BSF Analysis-wide input directory
+        @type input_directory: str
+        @param output_directory: BSF Analysis-wide output directory
+        @type output_directory: str
+        @param project_directory: BSF Analysis-wide project directory,
+            normally under the BSF Analysis-wide output directory
+        @type project_directory: str
+        @param genome_directory: BSF Analysis-wide genome directory,
+            normally under the BSF Analysis-wide project directory
+        @type genome_directory: str
+        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        @type e_mail: str
+        @param debug: Integer debugging level
+        @type debug: int
+        @param drms_list: Python list of BSF DRMS objects
+        @type drms_list: list
+        @param collection: BSF Collection
+        @type collection: Collection
+        @param comparisons: Python dict of Python tuple objects of BSF Sample objects
+        @type comparisons: dict
+        @param samples: Python list of BSF Sample objects
+        @type samples: list
+        @return: Nothing
+        @rtype: None
         """
 
         super(RunFastQC, self).__init__(configuration=configuration,
@@ -2093,14 +2084,13 @@ class RunFastQC(Analysis):
         # Nothing else to do for this sub-class ...
 
     def set_Configuration(self, configuration, section):
-
         """Set instance variables of a BSF RunFastQC object via a section of a BSF Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :param section: Configuration file section
-        :type section: str
+        @param configuration: BSF Configuration
+        @type configuration: Configuration
+        @param section: Configuration file section
+        @type section: str
         """
 
         super(RunFastQC, self).set_Configuration(configuration=configuration, section=section)
@@ -2108,31 +2098,30 @@ class RunFastQC(Analysis):
         # Read a comparison file.
 
         # if configuration.config_parser.has_option(section=section, option='cmp_file'):
-        #     self.cmp_file = configuration.config_parser.get(section=section, option='cmp_file')
+        # self.cmp_file = configuration.config_parser.get(section=section, option='cmp_file')
         # Use the sample annotation sheet instead of a separate comparison file.
         if configuration.config_parser.has_option(section=section, option='sas_file'):
             self.cmp_file = configuration.config_parser.get(section=section, option='sas_file')
 
     def _read_comparisons(self, cmp_file):
-
         """Read a BSF SampleAnnotationSheet CSV file from disk.
 
         Column headers for CASAVA folders:
-          Treatment/Control ProcessedRunFolder:
-            CASAVA processed run folder name or
-            Bio.BSF.Analysis input_directory by default.
-          Treatment/Control Project:
-            CASAVA Project name or
-            Bio.BSF.Analysis project_name by default.
-          Treatment/Control Sample:
-            CASAVA Sample name, no default.
+            Treatment/Control ProcessedRunFolder:
+                CASAVA processed run folder name or
+                Bio.BSF.Analysis input_directory by default.
+            Treatment/Control Project:
+                CASAVA Project name or
+                Bio.BSF.Analysis project_name by default.
+            Treatment/Control Sample:
+                CASAVA Sample name, no default.
         Column headers for independent samples:
-          Treatment/Control Sample:
-          Treatment/Control File:
-        :param cmp_file: Comparisons file path
-        :type cmp_file: str, unicode
-        :return: Nothing
-        :rtype: None
+            Treatment/Control Sample:
+            Treatment/Control File:
+        @param cmp_file: Comparisons file path
+        @type cmp_file: str | unicode
+        @return: Nothing
+        @rtype: None
         """
 
         sas = SampleAnnotationSheet(file_path=cmp_file)
@@ -2144,11 +2133,10 @@ class RunFastQC(Analysis):
         sas.csv_reader_close()
 
     def run(self):
-
         """Run this BSF RunFastQC analysis.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         super(RunFastQC, self).run()
@@ -2170,11 +2158,10 @@ class RunFastQC(Analysis):
         self._create_FastQC_jobs()
 
     def _create_FastQC_jobs(self):
-
         """Initialise a BSF RunFastQC object.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         # Read configuration options.
@@ -2237,7 +2224,7 @@ class RunFastQC(Analysis):
             # sas.open_csv()
             #
             # for row_dict in sas._csv_reader:
-            #     self.add_sample(sample=self.collection.get_Sample_from_row_dict(row_dict=row_dict))
+            # self.add_sample(sample=self.collection.get_Sample_from_row_dict(row_dict=row_dict))
             #
             # sas.close_csv()
 
@@ -2298,11 +2285,10 @@ class RunFastQC(Analysis):
         self.drms_list.append(fastqc_drms)
 
     def report(self):
-
         """Create a RunFastQC report in HTML format.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -2402,26 +2388,24 @@ class RunBamToFastq(Analysis):
 
     @classmethod
     def from_config_file(cls, config_file):
-
         """Create a new BSF RunBamToFastq object from a UNIX-style configuration file via the BSF Configuration class.
 
-        :param config_file: UNIX-style configuration file
-        :type config_file: str, unicode
-        :return: BSF RunBamToFastq
-        :rtype: RunBamToFastq
+        @param config_file: UNIX-style configuration file
+        @type config_file: str | unicode
+        @return: BSF RunBamToFastq
+        @rtype: RunBamToFastq
         """
 
         return cls.from_Configuration(configuration=Configuration.from_config_file(config_file=config_file))
 
     @classmethod
     def from_Configuration(cls, configuration):
-
         """Create a new BSF RunBamToFastq object from a BSF Configuration object.
 
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :return: BSF RunBamToFastq
-        :rtype: RunBamToFastq
+        @param configuration: BSF Configuration
+        @type configuration: Configuration
+        @return: BSF RunBamToFastq
+        @rtype: RunBamToFastq
         """
 
         assert isinstance(configuration, Configuration)
@@ -2441,39 +2425,38 @@ class RunBamToFastq(Analysis):
                  project_directory=None, genome_directory=None,
                  e_mail=None, debug=0, drms_list=None,
                  collection=None, comparisons=None, samples=None):
-
         """Initialise a Bio.BSF.Analysis.RunBamToFastq object.
 
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :param project_name: Project name
-        :type project_name: str
-        :param genome_version: Genome version
-        :type genome_version: str
-        :param input_directory: BSF Analysis-wide input directory
-        :type input_directory: str
-        :param output_directory: BSF Analysis-wide output directory
-        :type output_directory: str
-        :param project_directory: BSF Analysis-wide project directory,
-        normally under the BSF Analysis-wide output directory
-        :type project_directory: str
-        :param genome_directory: BSF Analysis-wide genome directory,
-        normally under the BSF Analysis-wide project directory
-        :type genome_directory: str
-        :param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        :type e_mail: str
-        :param debug: Integer debugging level
-        :type debug: int
-        :param drms_list: Python list of BSF DRMS objects
-        :type drms_list: list
-        :param collection: BSF Collection
-        :type collection: Collection
-        :param comparisons: Python dict of Python list objects of BSF Sample objects
-        :type comparisons: dict
-        :param samples: Python list of BSF Sample objects
-        :type samples: list
-        :return: Nothing
-        :rtype: None
+        @param configuration: BSF Configuration
+        @type configuration: Configuration
+        @param project_name: Project name
+        @type project_name: str
+        @param genome_version: Genome version
+        @type genome_version: str
+        @param input_directory: BSF Analysis-wide input directory
+        @type input_directory: str
+        @param output_directory: BSF Analysis-wide output directory
+        @type output_directory: str
+        @param project_directory: BSF Analysis-wide project directory,
+            normally under the BSF Analysis-wide output directory
+        @type project_directory: str
+        @param genome_directory: BSF Analysis-wide genome directory,
+            normally under the BSF Analysis-wide project directory
+        @type genome_directory: str
+        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        @type e_mail: str
+        @param debug: Integer debugging level
+        @type debug: int
+        @param drms_list: Python list of BSF DRMS objects
+        @type drms_list: list
+        @param collection: BSF Collection
+        @type collection: Collection
+        @param comparisons: Python dict of Python list objects of BSF Sample objects
+        @type comparisons: dict
+        @param samples: Python list of BSF Sample objects
+        @type samples: list
+        @return: Nothing
+        @rtype: None
         """
 
         super(RunBamToFastq, self).__init__(configuration=configuration,
@@ -2486,14 +2469,13 @@ class RunBamToFastq(Analysis):
         # Nothing else to do for this sub-class ...
 
     def set_Configuration(self, configuration, section):
-
         """Set instance variables of a BSF RunBamToFastq object via a section of a BSF Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :param section: Configuration file section
-        :type section: str
+        @param configuration: BSF Configuration
+        @type configuration: Configuration
+        @param section: Configuration file section
+        @type section: str
         """
 
         super(RunBamToFastq, self).set_Configuration(configuration=configuration, section=section)
@@ -2501,11 +2483,10 @@ class RunBamToFastq(Analysis):
         # Nothing else to do for this sub-class ...
 
     def run(self):
-
         """Run this BSF RunBamToFastq analysis.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         super(RunBamToFastq, self).run()
@@ -2513,11 +2494,10 @@ class RunBamToFastq(Analysis):
         self._convert_BamToFastq()
 
     def _convert_BamToFastq(self):
-
         """Private method to convert all Reads objects in BAM or SAM format into FASTQ format.
 
-        :return: Nothing
-        :rtype: None
+        @return: Nothing
+        @rtype: None
         """
 
         # config_parser = self.configuration.config_parser
