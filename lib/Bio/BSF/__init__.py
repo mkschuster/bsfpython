@@ -2128,7 +2128,7 @@ class Command(object):
         :return: Nothing
         :rtype: None
         """
-        self.add_Argument(argument=SwitchLong(key=key), override=override)
+        self.set_argument(argument=SwitchLong(key=key), override=override)
 
     def set_switch_short(self, key, override=False):
         """Initialise and set a Bio.BSF.Argument.SwitchShort object.
@@ -2140,7 +2140,7 @@ class Command(object):
         :return: Nothing
         :rtype: None
         """
-        self.add_Argument(argument=SwitchShort(key=key), override=override)
+        self.set_argument(argument=SwitchShort(key=key), override=override)
 
     def set_option_long(self, key, value, override=False):
         """Initialise and set a Bio.BSF.Argument.OptionLong object.
@@ -2154,7 +2154,7 @@ class Command(object):
         :return: Nothing
         :rtype: None
         """
-        self.add_Argument(argument=OptionLong(key=key, value=value), override=override)
+        self.set_argument(argument=OptionLong(key=key, value=value), override=override)
 
     def set_option_short(self, key, value, override=False):
         """Initialise and set a Bio.BSF.Argument.OptionShort object.
@@ -2168,7 +2168,7 @@ class Command(object):
         :return: Nothing
         :rtype: None
         """
-        self.add_Argument(argument=OptionShort(key=key, value=value), override=override)
+        self.set_argument(argument=OptionShort(key=key, value=value), override=override)
 
     def set_option_pair(self, key, value, override=False):
         """Initialise and set a Bio.BSF.Argument.OptionPair object.
@@ -2182,7 +2182,7 @@ class Command(object):
         :return: Nothing
         :rtype: None
         """
-        self.add_Argument(argument=OptionPair(key=key, value=value), override=override)
+        self.set_argument(argument=OptionPair(key=key, value=value), override=override)
 
     def set_Configuration(self, configuration, section):
 
