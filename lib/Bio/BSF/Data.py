@@ -43,39 +43,36 @@ class Reads(object):
     like a FASTQ or unmapped BAM file.
 
     Attributes:
-    :ivar file_path: File path
-    :type file_path: str, unicode
-    :ivar file_type: File type
-                     CASAVA: FASTQ file after post-processing with CASAVA
-                     External: other data files
-    :type file_type: str
-    :ivar name: Name
-    :type name: str
-    :ivar barcode: Barcode used for sample multiplexing
-    :type barcode: str
-    :ivar lane: Lane number
-    :type lane: str
-    :ivar read: Read number (e.g. R1, R2, ...)
-    :type read: str
-    :ivar chunk: Chunk number (e.g. 001, 002, ...)
-    :type chunk: str
-    :ivar weak_reference_paired_reads: Weak Reference to a BSF PairedReads object
-    :type weak_reference_paired_reads: PairedReads
-    :return: Nothing
-    :rtype: None
+    @ivar file_path: File path
+    @type file_path: str | unicode
+    @ivar file_type: File type
+        CASAVA: FASTQ file after post-processing with CASAVA
+        External: other data files
+    @type file_type: str
+    @ivar name: Name
+    @type name: str
+    @ivar barcode: Barcode used for sample multiplexing
+    @type barcode: str
+    @ivar lane: Lane number
+    @type lane: str
+    @ivar read: Read number (e.g. R1, R2, ...)
+    @type read: str
+    @ivar chunk: Chunk number (e.g. 001, 002, ...)
+    @type chunk: str
+    @ivar weak_reference_paired_reads: Weak Reference to a BSF PairedReads object
+    @type weak_reference_paired_reads: PairedReads
     """
 
     @classmethod
     def from_file_path(cls, file_path, file_type):
-
         """Construct a BSF Reads object from a file path.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type
-        :type file_type: str
-        :return: BSF Reads object
-        :rtype: Reads
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type
+        @type file_type: str
+        @return: BSF Reads object
+        @rtype: Reads
         """
 
         if file_type == 'CASAVA':
@@ -107,30 +104,27 @@ class Reads(object):
     def __init__(self, file_path=None, file_type=None, name=None,
                  barcode=None, lane=None, read=None, chunk=None,
                  weak_reference_paired_reads=None):
-
         """Initialise a BSF Reads object.
 
         For the file_type 'CASAVA', the name, barcode, lane, read and chunk
         attributes can be automatically parsed from the file_path.
         For file_type 'External' the attributes need to be populated manually.
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type (e.g. CASAVA, External, ...)
-        :type file_type: str
-        :param name: Name
-        :type name: str
-        :param barcode: Barcode used for sample multiplexing
-        :type barcode: str
-        :param lane: Lane number
-        :type lane: str
-        :param read: Read number (e.g. R1, R2, ...)
-        :type read: str
-        :param chunk: Chunk number (e.g. 001, 002, ...)
-        :type chunk:str
-        :param weak_reference_paired_reads: Weak Reference to a BSF PairedReads object
-        :type weak_reference_paired_reads: PairedReads
-        :return: Nothing
-        :rtype: None
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type (e.g. CASAVA, External, ...)
+        @type file_type: str
+        @param name: Name
+        @type name: str
+        @param barcode: Barcode used for sample multiplexing
+        @type barcode: str
+        @param lane: Lane number
+        @type lane: str
+        @param read: Read number (e.g. R1, R2, ...)
+        @type read: str
+        @param chunk: Chunk number (e.g. 001, 002, ...)
+        @type chunk:str
+        @param weak_reference_paired_reads: Weak Reference to a BSF PairedReads object
+        @type weak_reference_paired_reads: PairedReads
         """
 
         if file_path:
@@ -174,13 +168,12 @@ class Reads(object):
             self.weak_reference_paired_reads = None
 
     def trace(self, level):
-
         """Trace a BSF Reads object.
 
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -198,13 +191,12 @@ class Reads(object):
         return output
 
     def match(self, reads):
-
         """Match BSF Reads objects.
 
-        :param reads: Second BSF Reads object
-        :type reads: Reads
-        :return: True if both objects match, False otherwise
-        :rtype: bool
+        @param reads: Second BSF Reads object
+        @type reads: Reads
+        @return: True if both objects match, False otherwise
+        @rtype: bool
         """
 
         assert isinstance(reads, Reads)
@@ -247,13 +239,12 @@ class Reads(object):
             return True
 
     def match_paired(self, reads):
-
         """Match paired BSF Reads objects, by relaxing matching criteria.
 
-        :param reads: Second BSF Reads object
-        :type reads: Reads
-        :return: True if both objects match, False otherwise
-        :rtype: bool
+        @param reads: Second BSF Reads object
+        @type reads: Reads
+        @return: True if both objects match, False otherwise
+        @rtype: bool
         """
 
         assert isinstance(reads, Reads)
@@ -297,34 +288,31 @@ class PairedReads(object):
     representing a read pair (i.e. R1 and R2).
 
     Attributes:
-    :ivar reads1: First BSF Reads
-    :type reads1: Reads
-    :ivar reads2: Second BSF Reads
-    :type reads2: Reads
-    :ivar read_group: SAM read group (@RG) information
-    :type read_group: str
-    :ivar weak_reference_sample: Weak Reference to a BSF Sample
-    :type weak_reference_sample: Sample
+    @ivar reads1: First BSF Reads
+    @type reads1: Reads
+    @ivar reads2: Second BSF Reads
+    @type reads2: Reads
+    @ivar read_group: SAM read group (@RG) information
+    @type read_group: str
+    @ivar weak_reference_sample: Weak Reference to a BSF Sample
+    @type weak_reference_sample: Sample
     """
 
     def __init__(self, reads1=None, reads2=None, read_group=None, weak_reference_sample=None):
-
         """Initialise a BSF PairedReads object.
 
         For the file_type 'CASAVA' the reads object will be
         automatically assigned on the basis of the Reads.read
         attribute (i.e. R1 or R2).
-        :param reads1: First BSF Reads
-        :type reads1: Reads
-        :param reads2: Second BSF Reads
-        :type reads2: Reads
-        :param read_group: SAM read group (@RG) information
-        :type read_group: str
-        :param weak_reference_sample: Weak Reference to a BSF Sample
-        :type weak_reference_sample: Sample
-        :return: Nothing
-        :rtype: None
-        :raise Exception: For file_type 'CASAVA', 'R1' or 'R2' must be set in the
+        @param reads1: First BSF Reads
+        @type reads1: Reads
+        @param reads2: Second BSF Reads
+        @type reads2: Reads
+        @param read_group: SAM read group (@RG) information
+        @type read_group: str
+        @param weak_reference_sample: Weak Reference to a BSF Sample
+        @type weak_reference_sample: Sample
+        @raise Exception: For file_type 'CASAVA', 'R1' or 'R2' must be set in the
         Reads object.
         """
 
@@ -377,13 +365,12 @@ class PairedReads(object):
             self.weak_reference_sample = None
 
     def trace(self, level):
-
         """Trace a BSF PairedReads object.
 
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -402,15 +389,14 @@ class PairedReads(object):
         return output
 
     def add_Reads(self, reads):
-
         """Add a BSF Reads object.
 
         For a file_type 'CASAVA' the BSF Reads object can be automatically
         assigned on the basis of the Reads.read attribute (i.e. R1 or R2).
-        :param reads: BSF Reads
-        :type reads: Reads
-        :return: True upon success, False otherwise
-        :rtype: bool
+        @param reads: BSF Reads
+        @type reads: Reads
+        @return: True upon success, False otherwise
+        @rtype: bool
         """
 
         # For CASAVA projects, reads are automatically added to either
@@ -471,13 +457,12 @@ class PairedReads(object):
         return False
 
     def match(self, paired_reads):
-
         """Match BSF PairedReads objects.
 
-        :param paired_reads: BSF PairedReads
-        :type paired_reads: PairedReads
-        :return: True if both objects match, False otherwise
-        :rtype: bool
+        @param paired_reads: BSF PairedReads
+        @type paired_reads: PairedReads
+        @return: True if both objects match, False otherwise
+        @rtype: bool
         """
 
         if not self.read_group == paired_reads.read_group:
@@ -492,17 +477,16 @@ class PairedReads(object):
         return True
 
     def get_name(self, full=False):
-
         """Get the name of a BSF PairedReads object.
 
         For the file_type 'CASAVA' the name is a concatenation of the
         name, barcode and lane attributes, preferentially derived from
         the first BSF Reads object in the BSF PairedReads object.
         If the full parameter is set, read and chunk are also added.
-        :param full: Return the full name including read and chunk information.
-        :type full: bool
-        :return: Name string
-        :rtype: str
+        @param full: Return the full name including read and chunk information.
+        @type full: bool
+        @return: Name string
+        @rtype: str
         """
 
         if self.reads1:
@@ -531,36 +515,35 @@ class Sample(object):
     that result from the same flow cell.
 
     Attributes:
-    :cvar default_key: Default key
-    :type default_key: str
-    :ivar file_path: File path
-    :type file_path: str, unicode
-    :ivar file_type: File type
-                     CASAVA: FASTQ file after post-processing with CASAVA
-                     External: other data files
-    :ivar name: Name
-    :type name: str
-    :ivar paired_reads_list: Python list of BSF PairedReads objects
-    :type paired_reads_list: list
-    :ivar weak_reference_project: Weak reference to a BSF Project object
-    :type weak_reference_project: Project
+    @cvar default_key: Default key
+    @type default_key: str
+    @ivar file_path: File path
+    @type file_path: str | unicode
+    @ivar file_type: File type
+        CASAVA: FASTQ file after post-processing with CASAVA
+        External: other data files
+    @ivar name: Name
+    @type name: str
+    @ivar paired_reads_list: Python list of BSF PairedReads objects
+    @type paired_reads_list: list
+    @ivar weak_reference_project: Weak reference to a BSF Project object
+    @type weak_reference_project: Project
     """
 
     default_key = 'Default'
 
     @classmethod
     def from_file_path(cls, file_path, file_type):
-
         """Construct a BSF Sample objects from a file path.
 
         For a file_type 'CASAVA' the name is automatically populated,
         while BSF PairedReads objects are automatically discovered.
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type
-        :type file_type: str
-        :return: BSF Sample object
-        :rtype: Sample
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type
+        @type file_type: str
+        @return: BSF Sample object
+        @rtype: Sample
         """
 
         if file_type == 'CASAVA':
@@ -594,15 +577,14 @@ class Sample(object):
 
     @classmethod
     def from_Samples(cls, sample1, sample2):
-
         """Create a merged BSF Sample from two BSF Sample objects.
 
-        :param sample1: BSF Sample
-        :type sample1: Sample
-        :param sample2: BSF Sample
-        :type sample2: Sample
-        :return: BSF Sample object
-        :rtype: Sample
+        @param sample1: BSF Sample
+        @type sample1: Sample
+        @param sample2: BSF Sample
+        @type sample2: Sample
+        @return: BSF Sample object
+        @rtype: Sample
         """
 
         assert isinstance(sample1, Sample)
@@ -632,21 +614,18 @@ class Sample(object):
         return sample
 
     def __init__(self, file_path=None, file_type=None, name=None, paired_reads_list=None, weak_reference_project=None):
-
         """Initialise a BSF Sample object.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type
-        :type file_type: str
-        :param name: Name
-        :type name: str
-        :param paired_reads_list: Python list of BSF PairedReads objects
-        :type paired_reads_list: list
-        :param weak_reference_project: Weak Reference to a BSF Project object
-        :type weak_reference_project: Project
-        :return: Nothing
-        :rtype: None
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type
+        @type file_type: str
+        @param name: Name
+        @type name: str
+        @param paired_reads_list: Python list of BSF PairedReads objects
+        @type paired_reads_list: list
+        @param weak_reference_project: Weak Reference to a BSF Project object
+        @type weak_reference_project: Project
         """
 
         if file_path:
@@ -679,13 +658,12 @@ class Sample(object):
             self.weak_reference_project = None
 
     def trace(self, level):
-
         """Trace a BSF Sample object.
 
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -703,13 +681,12 @@ class Sample(object):
         return output
 
     def match(self, sample):
-
         """Match BSF Sample objects.
 
-        :param sample: BSF Sample
-        :type sample: Sample
-        :return: True if both objects match, False otherwise
-        :rtype: bool
+        @param sample: BSF Sample
+        @type sample: Sample
+        @return: True if both objects match, False otherwise
+        @rtype: bool
         """
 
         # When BSF Sample objects get merged, the file_path does no longer make sense.
@@ -743,13 +720,10 @@ class Sample(object):
         return True
 
     def add_PairedReads(self, paired_reads):
-
         """Add a BSF Paired Reads object.
 
-        :param paired_reads: BSF PairedReads
-        :type paired_reads: PairedReads
-        :return: Nothing
-        :rtype: None
+        @param paired_reads: BSF PairedReads
+        @type paired_reads: PairedReads
         """
 
         if paired_reads:
@@ -758,13 +732,10 @@ class Sample(object):
             paired_reads.weak_reference_sample = weakref.ref(self)
 
     def add_Reads(self, reads):
-
         """Add a BSF Reads object.
 
-        :param reads: BSF Reads
-        :type reads: Reads
-        :return: Nothing
-        :rtype: None
+        @param reads: BSF Reads
+        @type reads: Reads
         """
 
         assert isinstance(reads, Reads)
@@ -784,7 +755,6 @@ class Sample(object):
             self.add_PairedReads(paired_reads=PairedReads(reads1=reads))
 
     def get_all_PairedReads(self, replicate_grouping, full=False):
-
         """Get all BSF PairedReads objects of a BSF Sample grouped or un-grouped.
 
         A BSF Sample object can hold several BSF PairedReads objects (i.e. biological or technical
@@ -793,14 +763,14 @@ class Sample(object):
         Depending on the replicate_grouping parameter they can be returned as a group or separately.
         BSF PairedReads objects that share the name, barcode and lane, but differ in chunk number
         are always grouped together.
-        :param replicate_grouping: Group all BSF PairedReads objects of a BSF Sample or
+        @param replicate_grouping: Group all BSF PairedReads objects of a BSF Sample or
          list them individually
-        :type replicate_grouping: bool
-        :param full: Return the full name including read and chunk information.
-        :type full: bool
-        :return: Python dict of Python str (sensible replicate name) key and
+        @type replicate_grouping: bool
+        @param full: Return the full name including read and chunk information.
+        @type full: bool
+        @return: Python dict of Python str (sensible replicate name) key and
          Python list object of BSF PairedReads objects value data
-        :rtype: dict
+        @rtype: dict
         """
 
         groups = dict()
@@ -839,35 +809,34 @@ class Project(object):
 
     Attributes:
 
-    :cvar default_key: Default key
-    :type default_key: str
-    :ivar file_path: File path.
-    :type file_path: str, unicode
-    :ivar file_type: File type.
-                     CASAVA: FASTQ file after post-processing with CASAVA
-                     External: other data files
-    :type file_type: str
-    :ivar name: Name.
-    :type name: str
-    :ivar samples: Python dict of BSF Sample objects
-    :type samples: dict
-    :ivar weak_reference_prf: Weak Reference to a BSF Processed Run Folder object
-    :type weak_reference_prf: ProcessedRunFolder
+    @cvar default_key: Default key
+    @type default_key: str
+    @ivar file_path: File path
+    @type file_path: str | unicode
+    @ivar file_type: File type
+        CASAVA: FASTQ file after post-processing with CASAVA
+        External: other data files
+    @type file_type: str
+    @ivar name: Name
+    @type name: str
+    @ivar samples: Python dict of BSF Sample objects
+    @type samples: dict
+    @ivar weak_reference_prf: Weak Reference to a BSF Processed Run Folder object
+    @type weak_reference_prf: ProcessedRunFolder
     """
 
     default_key = 'Default'
 
     @classmethod
     def from_file_path(cls, file_path, file_type):
-
         """Construct a BSF Project object from a file path.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type
-        :type file_type: str
-        :return: BSF Project object
-        :rtype: Project
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type
+        @type file_type: str
+        @return: BSF Project object
+        @rtype: Project
         """
 
         if file_type == 'CASAVA':
@@ -905,25 +874,21 @@ class Project(object):
 
     def __init__(self, file_path=None, file_type=None, name=None,
                  samples=None, weak_reference_prf=None):
-
         """Initialise a BSF Project object.
 
         For a file_type 'CASAVA' the name is automatically populated,
         while BSF Sample objects are automatically discovered.
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type (e.g. CASAVA, External, ...)
-        :type file_type: str
-        :param name: Name
-        :type name: str
-        :param samples: A Python dict of BSF Sample objects
-        :type samples: dict
-        :param weak_reference_prf: Weak Reference to a BSF Processed Run Folder object
-        :type weak_reference_prf: ProcessedRunFolder
-        :return: Nothing
-        :rtype: None
-        :raise Exception: For file_type 'CASAVA' BSF Sample name members
-        must be unique.
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type (e.g. CASAVA, External, ...)
+        @type file_type: str
+        @param name: Name
+        @type name: str
+        @param samples: A Python dict of BSF Sample objects
+        @type samples: dict
+        @param weak_reference_prf: Weak Reference to a BSF Processed Run Folder object
+        @type weak_reference_prf: ProcessedRunFolder
+        @raise Exception: For file_type 'CASAVA' BSF Sample name members must be unique.
         """
 
         if file_path:
@@ -952,13 +917,12 @@ class Project(object):
             self.weak_reference_prf = None
 
     def trace(self, level):
-
         """Trace a BSF Project object.
 
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -976,13 +940,10 @@ class Project(object):
         return output
 
     def add_Sample(self, sample):
-
         """Add a BSF Sample.
 
-        :param sample: BSF Sample
-        :type sample: Sample
-        :return: Nothing
-        :rtype: None
+        @param sample: BSF Sample
+        @type sample: Sample
         """
 
         if sample:
@@ -991,11 +952,10 @@ class Project(object):
             sample.weak_reference_project = weakref.ref(self)
 
     def get_all_Samples(self):
-
         """Get an ordered Python list of BSF Sample objects.
 
-        :return: Python list of BSF Sample objects
-        :rtype: list
+        @return: Python list of BSF Sample objects
+        @rtype: list
         """
 
         samples = list()
@@ -1016,45 +976,44 @@ class ProcessedRunFolder(object):
     run folder after processing with CASAVA.
 
     Attributes:
-    :cvar default_key: Default key
-    :type default_key: str
-    :ivar file_path: File path
-    :type file_path: str, unicode
-    :ivar file_type: File type
-                     CASAVA: FASTQ file after post-processing with CASAVA.
-                     External: other data files.
-    :type file_type: str
-    :ivar name: Name
-    :type name: str
-    :ivar prefix: Prefix.
-    :type prefix: str
-    :ivar flow_cell: Flow-cell identifier.
-    :type flow_cell: str
-    :ivar version: Version number
-    :type version: str
-    :ivar projects: Python dict of BSF Project objects
-    :type projects: dict
-    :ivar weak_reference_collection: Weak Reference to a BSF Collection object
-    :type weak_reference_collection: Collection
+    @cvar default_key: Default key
+    @type default_key: str
+    @ivar file_path: File path
+    @type file_path: str | unicode
+    @ivar file_type: File type
+        CASAVA: FASTQ file after post-processing with CASAVA.
+        External: other data files.
+    @type file_type: str
+    @ivar name: Name
+    @type name: str
+    @ivar prefix: Prefix.
+    @type prefix: str
+    @ivar flow_cell: Flow-cell identifier.
+    @type flow_cell: str
+    @ivar version: Version number
+    @type version: str
+    @ivar projects: Python dict of BSF Project objects
+    @type projects: dict
+    @ivar weak_reference_collection: Weak Reference to a BSF Collection object
+    @type weak_reference_collection: Collection
     """
 
     default_key = 'Default'
 
     @staticmethod
     def guess_file_type(file_path):
-
         """Guess the file_type of a BSF ProcessedRunFolder on the basis of the file_path.
 
         CASAVA Processed Run Folder objects obey a "Prefix_FCID_CASAVA182"
         schema. The following prefixes are currently in use:
-        BSF_ Biomedical Sequencing Facility
-        NGS_ Kaan Boztug group
-        MUW_ Medical University Vienna
-        SET_ Robert Kralovics group
-        :param file_path: File path
-        :type file_path: str, unicode
-        :return: File type (i.e. 'CASAVA' or 'External')
-        :rtype: str
+            - BSF_ Biomedical Sequencing Facility
+            - NGS_ Kaan Boztug group
+            - MUW_ Medical University Vienna
+            - SET_ Robert Kralovics group
+        @param file_path: File path
+        @type file_path: str | unicode
+        @return: File type (i.e. 'CASAVA' or 'External')
+        @rtype: str
         """
 
         file_name = os.path.basename(file_path.rstrip('/ '))
@@ -1070,15 +1029,14 @@ class ProcessedRunFolder(object):
 
     @classmethod
     def from_file_path(cls, file_path, file_type):
-
         """Construct a BSF ProcessedRunFolder object form a file path.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type
-        :type file_type: str
-        :return: BSF ProcessedRunFolder object
-        :rtype: ProcessedRunFolder
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type
+        @type file_type: str
+        @return: BSF ProcessedRunFolder object
+        @rtype: ProcessedRunFolder
         """
 
         # Try to determine the file_type if not explicitly specified.
@@ -1139,32 +1097,28 @@ class ProcessedRunFolder(object):
     def __init__(self, file_path=None, file_type=None, name=None,
                  prefix=None, flow_cell=None, version=None,
                  projects=None, weak_reference_collection=None):
-
         """Initialise a BSF ProcessedRunFolder object.
 
         For the file_type 'CASAVA', the name, prefix, flow_cell and version
         attributes can be automatically parsed from the file_path, while
         BSF Project objects can be automatically discovered.
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type (e.g. CASAVA, External or Automatic)
-        :type file_type: str
-        :param name: Name
-        :type name: str
-        :param prefix: Prefix
-        :type prefix: str
-        :param flow_cell: Flow-cell identifier
-        :type flow_cell: str
-        :param version: Version
-        :type version: str
-        :param projects: Python dict of BSF Project objects
-        :type projects: dict
-        :param weak_reference_collection: Weak Reference to a BSF Collection object
-        :type weak_reference_collection: Collection
-        :return: Nothing
-        :rtype: None
-        :raise Exception: For file_type 'CASAVA' BSF Project
-        members name have to be unique.
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type (e.g. CASAVA, External or Automatic)
+        @type file_type: str
+        @param name: Name
+        @type name: str
+        @param prefix: Prefix
+        @type prefix: str
+        @param flow_cell: Flow-cell identifier
+        @type flow_cell: str
+        @param version: Version
+        @type version: str
+        @param projects: Python dict of BSF Project objects
+        @type projects: dict
+        @param weak_reference_collection: Weak Reference to a BSF Collection object
+        @type weak_reference_collection: Collection
+        @raise Exception: For file_type 'CASAVA' BSF Project members name have to be unique.
         """
 
         if file_path:
@@ -1208,13 +1162,12 @@ class ProcessedRunFolder(object):
             self.weak_reference_collection = None
 
     def trace(self, level):
-
         """Trace a BSF ProcessedRunFolder object.
 
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -1235,13 +1188,10 @@ class ProcessedRunFolder(object):
         return output
 
     def add_Project(self, project):
-
         """Add a BSF Project object.
 
-        :param project: BSF Project
-        :type project: Project
-        :return: Nothing
-        :rtype: None
+        @param project: BSF Project
+        @type project: Project
         """
 
         if project:
@@ -1250,11 +1200,10 @@ class ProcessedRunFolder(object):
             project.weak_reference_prf = weakref.ref(self)
 
     def get_all_Projects(self):
-
         """Get an ordered Python list of BSF Project objects.
 
-        :return: A Python list of BSF Project objects
-        :rtype: list
+        @return: A Python list of BSF Project objects
+        @rtype: list
         """
 
         projects = list()
@@ -1275,42 +1224,41 @@ class Collection(object):
     one or more BSF ProcessedRunFolder objects.
 
     Attributes:
-    :cvar default_key: Default key
-    :type default_key: str
-    :ivar file_path: File path
-    :type file_path: str, unicode
-    :ivar file_type: File type
-                     CASAVA: FASTQ file after post-processing with CASAVA
-                     External: other data files
-    :type file_type: str
-    :ivar name: Name
-    :type name: str
-    :ivar processed_run_folders: Python dict of BSF ProcessedRunFolder objects
-    :type processed_run_folders: dict
-    :ivar sample_groups: Python dict of BSF Sample objects
-    :type sample_groups: dict
+    @cvar default_key: Default key
+    @type default_key: str
+    @ivar file_path: File path
+    @type file_path: str | unicode
+    @ivar file_type: File type
+        CASAVA: FASTQ file after post-processing with CASAVA
+        External: other data files
+    @type file_type: str
+    @ivar name: Name
+    @type name: str
+    @ivar processed_run_folders: Python dict of BSF ProcessedRunFolder objects
+    @type processed_run_folders: dict
+    @ivar sample_groups: Python dict of BSF Sample objects
+    @type sample_groups: dict
     """
 
     default_key = 'Default'
 
     @classmethod
     def from_sas(cls, file_path, file_type, name, sas_file, sas_prefix=None):
-
         """Construct a BSF Collection from a sample annotation sheet.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type (e.g. CASAVA, External, ...)
-        :type file_type: str
-        :param name: Name
-        :type name: str
-        :param sas_file: SampleAnnotationSheet file path
-        :type sas_file: str, unicode
-        :param sas_prefix: Optional column header prefix
-        (e.g. '[Control ]Sample', '[Treatment ]Sample', ...)
-        :type sas_prefix: str
-        :return: BSF Collection object
-        :rtype: Collection
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type (e.g. CASAVA, External, ...)
+        @type file_type: str
+        @param name: Name
+        @type name: str
+        @param sas_file: SampleAnnotationSheet file path
+        @type sas_file: str | unicode
+        @param sas_prefix: Optional column header prefix
+            (e.g. '[Control ]Sample', '[Treatment ]Sample', ...)
+        @type sas_prefix: str
+        @return: BSF Collection object
+        @rtype: Collection
         """
 
         collection = cls(file_path=file_path, file_type=file_type, name=name)
@@ -1322,22 +1270,19 @@ class Collection(object):
 
     def __init__(self, file_path=None, file_type=None, name=None,
                  processed_run_folders=None, sample_groups=None):
-
         """Initialise a BSF Collection object.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type (e.g. CASAVA, External, ...)
-        :type file_type: str
-        :param name: Name
-        :type name: str
-        :param processed_run_folders: Python dict of BSF ProcessedRunFolder objects
-        :type processed_run_folders: dict
-        :param sample_groups: Python dict of group name key data and second-level Python dict value data.
-        Second-level Python dict of BSF Sample name key data and BSF Sample object value data.
-        :type sample_groups: dict
-        :return: Nothing
-        :rtype: None
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type (e.g. CASAVA, External, ...)
+        @type file_type: str
+        @param name: Name
+        @type name: str
+        @param processed_run_folders: Python dict of BSF ProcessedRunFolder objects
+        @type processed_run_folders: dict
+        @param sample_groups: Python dict of group name key data and second-level Python dict value data.
+            Second-level Python dict of BSF Sample name key data and BSF Sample object value data.
+        @type sample_groups: dict
         """
 
         if file_path:
@@ -1366,13 +1311,12 @@ class Collection(object):
             self.sample_groups = dict()
 
     def trace(self, level):
-
         """Trace a BSF Collection object.
 
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -1403,13 +1347,10 @@ class Collection(object):
         return output
 
     def add_ProcessedRunFolder(self, prf):
-
         """Add a BSF ProcessedRunFolder object.
 
-        :param prf: BSF ProcessedRunFolder
-        :type prf: ProcessedRunFolder
-        :return: Nothing
-        :rtype: None
+        @param prf: BSF ProcessedRunFolder
+        @type prf: ProcessedRunFolder
         """
 
         if prf:
@@ -1418,17 +1359,16 @@ class Collection(object):
             prf.weak_reference_collection = weakref.ref(self)
 
     def get_ProcessedRunFolder(self, file_path, file_type=None):
-
         """Get a BSF ProcessedRunFolder by file path.
 
         If the BSF ProcessedRunFolder does not exist in the BSF Collection object,
         it will be automatically discovered and added.
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type
-        :type file_type: str
-        :return: BSF ProcessedRunFolder
-        :rtype: ProcessedRunFolder
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type
+        @type file_type: str
+        @return: BSF ProcessedRunFolder
+        @rtype: ProcessedRunFolder
         """
 
         # Since os.path.basename returns an empty string at trailing slashes,
@@ -1452,11 +1392,10 @@ class Collection(object):
             return prf
 
     def get_all_ProcessedRunFolders(self):
-
         """Get an ordered Python list of BSF ProcessedRunFolder objects.
 
-        :return: Python list of BSF ProcessedRunFolder objects
-        :rtype: list
+        @return: Python list of BSF ProcessedRunFolder objects
+        @rtype: list
         """
 
         processed_run_folders = list()
@@ -1470,11 +1409,10 @@ class Collection(object):
         return processed_run_folders
 
     def get_all_Projects(self):
-
         """Get an ordered Python list of BSF Project objects.
 
-        :return: Python list of BSF Project objects
-        :rtype: list
+        @return: Python list of BSF Project objects
+        @rtype: list
         """
 
         projects = list()
@@ -1485,11 +1423,10 @@ class Collection(object):
         return projects
 
     def get_all_Samples(self):
-
         """Get an ordered Python list of BSF Sample objects.
 
-        :return: Python list of BSF Sample objects
-        :rtype: list
+        @return: Python list of BSF Sample objects
+        @rtype: list
         """
 
         samples = list()
@@ -1500,19 +1437,18 @@ class Collection(object):
         return samples
 
     def read_SampleAnnotationSheet(self, sas, prefix=None):
-
         """Read a BSF SampleAnnotationSheet from a file.
 
         This method imports a hierarchy of BSF ProcessedRunFolder, BSF Project, BSF Sample,
         BSF PairedReads and BSF Reads objects into a BSF Collection.
 
-        :param sas: BSF SampleAnnotationSheet
-        :type sas: SampleAnnotationSheet
-        :param prefix: Optional configuration prefix
-                       (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
-        :type prefix: str
-        :return: Nothing
-        :rtype: None
+        @param sas: BSF SampleAnnotationSheet
+        @type sas: SampleAnnotationSheet
+        @param prefix: Optional configuration prefix
+            (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
+        @type prefix: str
+        @return: Nothing
+        @rtype: None
         """
 
         sas.csv_reader_open()
@@ -1523,7 +1459,6 @@ class Collection(object):
         sas.csv_reader_close()
 
     def _process_row_dict(self, row_dict, prefix=None):
-
         """Private method to read a hierarchy of BSF data objects.
 
         This method BSF Reads, BSF PairedReads, BSF Sample, BSF Project and BSF ProcessedRunFolder
@@ -1532,26 +1467,24 @@ class Collection(object):
         available from the Python row dict, new objects will be created
         with a default key.
         Sample Annotation Sheet format:
-         - FileType: BSF Data object file_type (i.e. 'CASAVA' or 'External'), defaults to 'External'.
-                     The FileType 'CASAVA' allows for auto-discovery of BSF ProcessedRunFolder objects.
-         - ProcessedRunFolder: BSF ProcessedRunFolder file_path, can be automatically registered.
-         - Project: BSF Project name
-         - Sample: BSF Sample name
-         - File1: BSF Reads file_name instance variable.
-                  Subjected to os.path.expanduser and os.path.expandvars.
-                  If still relative, the BSF Collection file_path is prepended.
-         - Reads1: BSF Reads name instance variable
-         - File2: Same as File1
-         - Reads2: Same as Reads1
-         - Group: BSF Sample objects can be grouped for further analysis in
-                  e.g. RNA-Seq or ChIP-Seq experiments.
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param prefix: Optional configuration prefix
-                       (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
-        :type prefix: str
-        :return: Nothing
-        :rtype: None
+            - FileType: BSF Data object file_type (i.e. 'CASAVA' or 'External'), defaults to 'External'.
+                The FileType 'CASAVA' allows for auto-discovery of BSF ProcessedRunFolder objects.
+            - ProcessedRunFolder: BSF ProcessedRunFolder file_path, can be automatically registered.
+            - Project: BSF Project name
+            - Sample: BSF Sample name
+            - File1: BSF Reads file_name instance variable.
+                Subjected to os.path.expanduser and os.path.expandvars.
+                If still relative, the BSF Collection file_path is prepended.
+            - Reads1: BSF Reads name instance variable
+            - File2: Same as File1
+            - Reads2: Same as Reads1
+            - Group: BSF Sample objects can be grouped for further analysis in
+                e.g. RNA-Seq or ChIP-Seq experiments.
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param prefix: Optional configuration prefix
+            (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
+        @type prefix: str
         """
 
         if not prefix:
@@ -1589,17 +1522,16 @@ class Collection(object):
                 sample_group.append(sample)
 
     def _process_file_type(self, row_dict, prefix):
-
         """Get file type information.
 
         A '[Prefix] FileType' key is optional, its value defaults to 'Automatic'.
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param prefix: Optional configuration prefix
-                       (e.g. '[Control] FileType', '[Treatment] FileType', '[Point N]  FileType', ...)
-        :type prefix: str
-        :return: File type
-        :rtype: str
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param prefix: Optional configuration prefix
+            (e.g. '[Control] FileType', '[Treatment] FileType', '[Point N]  FileType', ...)
+        @type prefix: str
+        @return: File type
+        @rtype: str
         """
 
         key = '{} FileType'.format(prefix).lstrip(' ')
@@ -1612,20 +1544,19 @@ class Collection(object):
         return file_type
 
     def _process_processed_run_folder(self, row_dict, prefix, file_type):
-
         """Get or create a BSF ProcessedRunFolder.
 
         A '[Prefix] ProcessedRunFolder' key is optional, its value defaults to 'Default'.
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param prefix: Optional configuration prefix
-                       (e.g. '[Control] ProcessedRunFolder', '[Treatment] ProcessedRunFolder',
-                        '[Point N] ProcessedRunFolder', ...)
-        :type prefix: str
-        :param file_type: File type
-        :type file_type: str
-        :return: BSF ProcessedRunFolder
-        :rtype: ProcessedRunFolder
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param prefix: Optional configuration prefix
+            (e.g. '[Control] ProcessedRunFolder', '[Treatment] ProcessedRunFolder',
+            '[Point N] ProcessedRunFolder', ...)
+        @type prefix: str
+        @param file_type: File type
+        @type file_type: str
+        @return: BSF ProcessedRunFolder
+        @rtype: ProcessedRunFolder
         """
 
         key = '{} ProcessedRunFolder'.format(prefix).lstrip(' ')
@@ -1650,21 +1581,20 @@ class Collection(object):
         return prf
 
     def _process_project(self, row_dict, prefix, file_type, prf):
-
         """Get or create a BSF Project.
 
         A '[Prefix] Project' key is optional, its value defaults to 'Default'.
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param prefix: Optional configuration prefix
-                       (e.g. '[Control] Project', '[Treatment] Project', '[Point N] Project', ...)
-        :type prefix: str
-        :param file_type: File type
-        :type file_type: str
-        :param prf: BSF ProcessedRunFolder
-        :type prf: ProcessedRunFolder
-        :return: BSF Project
-        :rtype: Project
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param prefix: Optional configuration prefix
+            (e.g. '[Control] Project', '[Treatment] Project', '[Point N] Project', ...)
+        @type prefix: str
+        @param file_type: File type
+        @type file_type: str
+        @param prf: BSF ProcessedRunFolder
+        @type prf: ProcessedRunFolder
+        @return: BSF Project
+        @rtype: Project
         """
 
         key = '{} Project'.format(prefix).lstrip(' ')
@@ -1685,21 +1615,20 @@ class Collection(object):
         return project
 
     def _process_sample(self, row_dict, prefix, file_type, project):
-
         """Get or create a BSF Sample.
 
         A '[Prefix] Sample' key is optional, its value defaults to 'Default'.
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param prefix: Optional configuration prefix
-                       (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
-        :type prefix: str
-        :param file_type: File type
-        :type file_type: str
-        :param project: BSF Project
-        :type project: Project
-        :return: BSF Sample
-        :rtype: Sample
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param prefix: Optional configuration prefix
+            (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
+        @type prefix: str
+        @param file_type: File type
+        @type file_type: str
+        @param project: BSF Project
+        @type project: Project
+        @return: BSF Sample
+        @rtype: Sample
         """
 
         key = '{} Sample'.format(prefix).lstrip(' ')
@@ -1720,21 +1649,20 @@ class Collection(object):
         return sample
 
     def _process_reads(self, row_dict, prefix, file_type, suffix):
-
         """Get or create a BSF Reads object.
 
         A '[Prefix] Reads{suffix}' key is optional, in which case the default is a None object.
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param prefix: Optional configuration prefix
-                       (e.g. '[Control] ReadsN', '[Treatment] ReadsN', '[Point N] ReadsN', ...)
-        :type prefix: str
-        :param file_type: File type
-        :type file_type: str
-        :param suffix: The read suffix (i.e. 1 or 2)
-        :type suffix: str
-        :return: BSF Reads
-        :rtype: Reads
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param prefix: Optional configuration prefix
+            (e.g. '[Control] ReadsN', '[Treatment] ReadsN', '[Point N] ReadsN', ...)
+        @type prefix: str
+        @param file_type: File type
+        @type file_type: str
+        @param suffix: The read suffix (i.e. 1 or 2)
+        @type suffix: str
+        @return: BSF Reads
+        @rtype: Reads
         """
 
         key1 = '{} File{}'.format(prefix, suffix).lstrip(' ')
@@ -1759,17 +1687,16 @@ class Collection(object):
         return reads
 
     def _process_read_group(self, row_dict, prefix):
-
         """Get or create a read group.
 
         A '[Prefix] ReadGroup' key is optional, in which case the default is an empty string.
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param prefix: Optional configuration prefix
-                       (e.g. '[Control] ReadGroup', '[Treatment] ReadGroup', '[Point N] ReadGroup', ...)
-        :type prefix: str
-        :return: Read group string
-        :rtype: str
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param prefix: Optional configuration prefix
+            (e.g. '[Control] ReadGroup', '[Treatment] ReadGroup', '[Point N] ReadGroup', ...)
+        @type prefix: str
+        @return: Read group string
+        @rtype: str
         """
 
         key = '{} ReadGroup'.format(prefix).lstrip(' ')
@@ -1782,7 +1709,6 @@ class Collection(object):
         return read_group
 
     def get_Sample_from_row_dict(self, row_dict, prefix=None):
-
         """Get a BSF Sample from a BSF SampleAnnotationSheet row Python dict.
 
         Look-up a hierarchy of BSF ProcessedRunFolder, BSF Project and BSF Sample objects
@@ -1790,13 +1716,13 @@ class Collection(object):
         BSF ProcessedRunFolder objects of file type 'CASAVA' can be
         automatically discovered and registered.
         Return the corresponding BSF Sample.
-        :param row_dict: BSF SampleAnnotationSheet row Python dict
-        :type row_dict: dict
-        :param prefix: Optional configuration prefix
-                       (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample')
-        :type prefix: str
-        :return: BSF Sample
-        :rtype: Sample
+        @param row_dict: BSF SampleAnnotationSheet row Python dict
+        @type row_dict: dict
+        @param prefix: Optional configuration prefix
+            (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample')
+        @type prefix: str
+        @return: BSF Sample
+        @rtype: Sample
         """
 
         # NOTE: For the moment, the row_dict has to include keys for 'ProcessedRunFolder',
@@ -1842,18 +1768,17 @@ class Collection(object):
         return sample
 
     def get_Samples_from_row_dict(self, row_dict, prefix=None):
-
         """Get a Python list of BSF Sample objects and a Python str of the Group column value as a Python tuple
         from a BSF SampleAnnotationSheet row Python dict.
 
-        :param row_dict: Comparison CSV file row Python dict
-        :type row_dict: dict
-        :param prefix: Optional configuration prefix
-                       (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
-        :type prefix: str
-        :return: Tuple of Python str of '[Prefix] Group' column value and
-         Python list of BSF Sample objects
-        :rtype: tuple
+        @param row_dict: Comparison CSV file row Python dict
+        @type row_dict: dict
+        @param prefix: Optional configuration prefix
+            (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
+        @type prefix: str
+        @return: Tuple of Python str of '[Prefix] Group' column value and
+            Python list of BSF Sample objects
+        @rtype: tuple
         """
 
         samples = list()
@@ -1893,16 +1818,16 @@ class AnnotationSheet(object):
     The BSF AnnotationSheet class represents comma-separated value (CSV) files.
 
     Attributes:
-    :ivar file_path: File path
-    :type file_path: str, unicode
-    :ivar file_type: File type (e.g. ...)
-    :type file_type: str
-    :ivar name: Name
-    :type name: str
-    :ivar field_names: Python list of field names
-    :type field_names: list
-    :ivar row_dicts: Python list of Python dict objects
-    :type row_dicts: list
+    @ivar file_path: File path
+    @type file_path: str | unicode
+    @ivar file_type: File type (e.g. ...)
+    @type file_type: str
+    @ivar name: Name
+    @type name: str
+    @ivar field_names: Python list of field names
+    @type field_names: list
+    @ivar row_dicts: Python list of Python dict objects
+    @type row_dicts: list
     """
 
     non_alpha_expression = re.compile(pattern='\W')
@@ -1912,21 +1837,20 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_column(cls, row_number, row_dict, column_name, require_column=True, require_value=True):
-
         """Check for a column name and return its associated value, if any.
 
-        :param row_number: Row number for warning messages
-        :type row_number: int
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param column_name: Column name
-        :type column_name: str
-        :param require_column: Require the column_name to be defined in teh row_dict
-        :type require_column: bool
-        :param require_value: Require a value
-        :type require_value: bool
-        :return: Tuple of warning message and column value
-        :rtype: tuple
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param column_name: Column name
+        @type column_name: str
+        @param require_column: Require the column_name to be defined in teh row_dict
+        @type require_column: bool
+        @param require_value: Require a value
+        @type require_value: bool
+        @return: Tuple of warning message and column value
+        @rtype: tuple
         """
 
         message = str()
@@ -1945,20 +1869,19 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_alphanumeric(cls, row_number, row_dict, column_name):
-
         """Validate a particular column value as alphanumeric.
 
-         Check that the particular column name key exists in the row dictionary and that
-         its associated value contains only alphanumeric characters.
+        Check that the particular column name key exists in the row dictionary and that
+        its associated value contains only alphanumeric characters.
 
-        :param row_number: Row number for warning messages
-        :type row_number: int
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param column_name: Column name
-        :type column_name: str
-        :return: Warning messages
-        :rtype: str
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
         """
 
         messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
@@ -1973,20 +1896,19 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_numeric(cls, row_number, row_dict, column_name):
-
         """Validate a particular column value as numeric.
 
-         Check that the particular column name key exists in the row dictionary and that
-         its associated value contains only numeric characters.
+        Check that the particular column name key exists in the row dictionary and that
+        its associated value contains only numeric characters.
 
-        :param row_number: Row number for warning messages
-        :type row_number: int
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param column_name: Column name
-        :type column_name: str
-        :return: Warning messages
-        :rtype: str
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
         """
 
         messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
@@ -2001,21 +1923,20 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_sequence(cls, row_number, row_dict, column_name, require_column=True, require_value=True):
-
         """Validate a particular column value as sequence.
 
-        :param row_number: Row number for warning messages
-        :type row_number: int
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param column_name: Column name
-        :type column_name: str
-        :param require_column: Require the column_name to be defined in teh row_dict
-        :type require_column: bool
-        :param require_value: Require a value
-        :type require_value: bool
-        :return: Warning messages
-        :rtype: str
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param column_name: Column name
+        @type column_name: str
+        @param require_column: Require the column_name to be defined in teh row_dict
+        @type require_column: bool
+        @param require_value: Require a value
+        @type require_value: bool
+        @return: Warning messages
+        @rtype: str
         """
         messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name,
                                                   require_column=require_column, require_value=require_value)
@@ -2030,54 +1951,51 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_sequence_mandatory(cls, row_number, row_dict, column_name):
-
         """Validate a particular column value as mandatory sequence.
 
-        :param row_number: Row number for warning messages
-        :type row_number: int
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param column_name: Column name
-        :type column_name: str
-        :return: Warning messages
-        :rtype: str
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
         """
         return cls.check_sequence(row_number=row_number, row_dict=row_dict, column_name=column_name,
                                   require_column=True, require_value=True)
 
     @classmethod
     def check_sequence_optional(cls, row_number, row_dict, column_name):
-
         """Validate a particular column value as optional sequence.
 
-        :param row_number: Row number for warning messages
-        :type row_number: int
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param column_name: Column name
-        :type column_name: str
-        :return: Warning messages
-        :rtype: str
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
         """
         return cls.check_sequence(row_number=row_number, row_dict=row_dict, column_name=column_name,
                                   require_column=True, require_value=False)
 
     @classmethod
     def check_underscore_leading(cls, row_number, row_dict, column_name):
-
         """Validate a particular column value for leading underscore characters.
 
-         Check that the particular column name key exists in the row dictionary and that
-         its associated value has no leading underscore.
+        Check that the particular column name key exists in the row dictionary and that
+        its associated value has no leading underscore.
 
-        :param row_number: Row number for warning messages
-        :type row_number: int
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param column_name: Column name
-        :type column_name: str
-        :return: Warning messages
-        :rtype: str
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
         """
 
         messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
@@ -2091,20 +2009,19 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_underscore_trailing(cls, row_number, row_dict, column_name):
-
         """Validate a particular column value for trailing underscore characters.
 
-         Check that the particular column name key exists in the row dictionary and that
-         its associated value has no trailing underscore.
+        Check that the particular column name key exists in the row dictionary and that
+        its associated value has no trailing underscore.
 
-        :param row_number: Row number for warning messages
-        :type row_number: int
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param column_name: Column name
-        :type column_name: str
-        :return: Warning messages
-        :rtype: str
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
         """
 
         messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
@@ -2118,20 +2035,19 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_underscore_multiple(cls, row_number, row_dict, column_name):
-
         """Validate a particular column value for multiple underscore characters.
 
          Check that the particular column name key exists in the row dictionary and that
          its associated value has not multiple underscore adjacent to each other.
 
-        :param row_number: Row number for warning messages
-        :type row_number: int
-        :param row_dict: A Python dict of row entries of a Python csv object
-        :type row_dict: dict
-        :param column_name: Column name
-        :type column_name: str
-        :return: Warning messages
-        :rtype: str
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python dict of row entries of a Python csv object
+        @type row_dict: dict
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
         """
 
         messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
@@ -2146,15 +2062,14 @@ class AnnotationSheet(object):
 
     @classmethod
     def read_from_file(cls, file_path=None, file_type=None, name=None):
-
         """Construct an Annotation Sheet from a comma-separated value (CSV) file.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type (e.g. ...)
-        :type file_type: str
-        :return: BSF Annotation Sheet
-        :rtype: AnnotationSheet
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type (e.g. ...)
+        @type file_type: str
+        @return: BSF Annotation Sheet
+        @rtype: AnnotationSheet
         """
 
         annotation_sheet = cls(file_path=file_path, file_type=file_type, name=name)
@@ -2169,21 +2084,18 @@ class AnnotationSheet(object):
         return annotation_sheet
 
     def __init__(self, file_path=None, file_type=None, name=None, field_names=None, row_dicts=None):
-
         """Initialise a BSF AnnotationSheet object.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type (e.g. ...)
-        :type file_type: str
-        :param name: Name
-        :type name: str
-        :param field_names: Python list of field names
-        :type field_names: list
-        :param row_dicts: Python list of Python dict objects
-        :type row_dicts: list
-        :return: Nothing
-        :rtype: None
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type (e.g. ...)
+        @type file_type: str
+        @param name: Name
+        @type name: str
+        @param field_names: Python list of field names
+        @type field_names: list
+        @param row_dicts: Python list of Python dict objects
+        @type row_dicts: list
         """
 
         if file_path:
@@ -2218,13 +2130,10 @@ class AnnotationSheet(object):
         self._csv_writer_object = None
 
     def csv_reader_open(self, header=True):
-
         """Open a Comma-Separated Value (CSV) file for reading and initialise a Python csv.DictWriter object.
 
-        :param header: A header line is present and populates the filed_names Python list.
-        :type header: bool
-        :return: Nothing
-        :rtype: None
+        @param header: A header line is present and populates the filed_names Python list.
+        @type header: bool
         """
 
         # Although the AnnotationSheet is initialised with an empty Python list object,
@@ -2247,21 +2156,16 @@ class AnnotationSheet(object):
             self.field_names.extend(self._csv_reader_object.fieldnames)
 
     def csv_reader_next(self):
-
         """Read the next line of a CSV file.
 
-        :return: Python dict of column key and row value data
-        :rtype: dict
+        @return: Python dict of column key and row value data
+        @rtype: dict
         """
 
         return self._csv_reader_object.next()
 
     def csv_reader_close(self):
-
         """Close a Comma-Separated Value (CSV) file for reading.
-
-        :return: Nothing
-        :rtype: None
         """
 
         self._csv_reader_object = None
@@ -2269,11 +2173,7 @@ class AnnotationSheet(object):
         self._csv_reader_file = None
 
     def read_tsv(self):
-
         """Read a Tab-Separated Value (TSV) file.
-
-        :return: Nothing
-        :rtype: None
         """
 
         self._tsv_file = open(name=self.file_path, mode='r')
@@ -2291,12 +2191,8 @@ class AnnotationSheet(object):
         self._tsv_file.close()
 
     def csv_writer_open(self):
-
         """Open a Comma-Separated Value (CSV) file for writing, initialise a Python csv.DictWriter object and
         write the header line if one has been defined.
-
-        :return: Nothing
-        :rtype: None
         """
 
         self._csv_writer_file = open(name=self.file_path, mode='wb')
@@ -2304,23 +2200,16 @@ class AnnotationSheet(object):
         self._csv_writer_object.writeheader()
 
     def csv_writer_next(self, row_dict):
-
         """Write the next line of a CSV file.
 
-        :param row_dict: Row dictionary
-        :type row_dict: dict
-        :return: Nothing
-        :rtype: None
+        @param row_dict: Row dictionary
+        @type row_dict: dict
         """
 
         self._csv_writer_object.writerow(rowdict=row_dict)
 
     def csv_writer_close(self):
-
         """Close a Comma-Separated Value (CSV) file for writing.
-
-        :return: Nothing
-        :rtype: None
         """
 
         self._csv_writer_object = None
@@ -2328,13 +2217,9 @@ class AnnotationSheet(object):
         self._csv_writer_file = None
 
     def sort(self):
-
         """Sort a BSF Annotation Sheet.
         This method has to implemented in the sub-class,
         as it requires information about field-specific sorting.
-
-        :return: Nothing
-        :rtype: None
         """
 
         warnings.warn(
@@ -2342,13 +2227,12 @@ class AnnotationSheet(object):
             UserWarning)
 
     def validate(self, test_methods):
-
         """Validate a BSF Annotation Sheet.
 
-        :param test_methods: Dict of column names and associated test methods,
+        @param test_methods: Dict of column names and associated test methods,
         i.e. AnnotationSheet.check_alphanumeric, AnnotationSheet.check_sequence, ...
-        :return: Warning messages
-        :rtype: str
+        @return: Warning messages
+        @rtype: str
         """
 
         messages = str()
@@ -2369,11 +2253,7 @@ class AnnotationSheet(object):
         return messages
 
     def write_to_file(self):
-
         """Write a BSF Annotation Sheet to a file.
-
-        :return: Nothing
-        :rtype: None
         """
 
         self.csv_writer_open()
@@ -2424,33 +2304,29 @@ class BamIndexDecoderSheet(AnnotationSheet):
 
     @classmethod
     def read_from_file(cls, file_path=None, file_type=None, name=None):
-
         """Construct a BamIndexDecoder Sheet from a comma-separated value (CSV) file.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type (e.g. ...)
-        :type file_type: str
-        :return: BSF BamIndexDecoder Sheet
-        :rtype: BamIndexDecoderSheet
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type (e.g. ...)
+        @type file_type: str
+        @return: BSF BamIndexDecoder Sheet
+        @rtype: BamIndexDecoderSheet
         """
 
         return super(BamIndexDecoderSheet, cls).read_from_file(file_path=file_path)
 
     def __init__(self, file_path=None, file_type=None, name=None, row_dicts=None):
-
         """Initialise a BSF BamIndexDecoder Sheet object.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type (e.g. ...)
-        :type file_type: str
-        :param name: Name
-        :type name: str
-        :param row_dicts: Python list of Python dict objects
-        :type row_dicts: list
-        :return: Nothing
-        :rtype: None
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type (e.g. ...)
+        @type file_type: str
+        @param name: Name
+        @type name: str
+        @param row_dicts: Python list of Python dict objects
+        @type row_dicts: list
         """
 
         super(BamIndexDecoderSheet, self).__init__(file_path=file_path,
@@ -2460,16 +2336,15 @@ class BamIndexDecoderSheet(AnnotationSheet):
                                                    row_dicts=row_dicts)
 
     def validate(self, test_methods=None, lanes=8):
-
         """
         Validate a BSF BamIndexDecoder Sheet.
 
-        :param test_methods:
-        :type test_methods: dict
-        :param lanes: Number of lanes to validate
-        :type lanes: int
-        :return: Warning messages
-        :rtype: str
+        @param test_methods:
+        @type test_methods: dict
+        @param lanes: Number of lanes to validate
+        @type lanes: int
+        @return: Warning messages
+        @rtype: str
         """
 
         messages = str()
@@ -2588,33 +2463,29 @@ class SampleAnnotationSheet(AnnotationSheet):
 
     @classmethod
     def read_from_file(cls, file_path=None, file_type=None, name=None):
-
         """Construct a SampleAnnotationSheet from a comma-separated value (CSV) file.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type (e.g. ...)
-        :type file_type: str
-        :return: BSF SampleAnnotationSheet
-        :rtype: SampleAnnotationSheet
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type (e.g. ...)
+        @type file_type: str
+        @return: BSF SampleAnnotationSheet
+        @rtype: SampleAnnotationSheet
         """
 
         return super(SampleAnnotationSheet, cls).read_from_file(file_path=file_path)
 
     def __init__(self, file_path=None, file_type=None, name=None, row_dicts=None):
-
         """Initialise a BSF SampleAnnotationSheet object.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :param file_type: File type (e.g. ...)
-        :type file_type: str
-        :param name: Name
-        :type name: str
-        :param row_dicts: Python list of Python dict objects
-        :type row_dicts: list
-        :return: Nothing
-        :rtype: None
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type (e.g. ...)
+        @type file_type: str
+        @param name: Name
+        @type name: str
+        @param row_dicts: Python list of Python dict objects
+        @type row_dicts: list
         """
 
         super(SampleAnnotationSheet, self).__init__(
@@ -2632,10 +2503,10 @@ class SampleGroup(object):
 
     The grouping is usually defined in a sample annotation sheet.
     Attributes:
-    :ivar name: Name
-    :type name: str
-    :ivar samples: Python list of BSF Sample objects
-    :type samples: list
+    @ivar name: Name
+    @type name: str
+    @ivar samples: Python list of BSF Sample objects
+    @type samples: list
     """
 
     # TODO: The BSF SampleGroup class is currently not in use.
@@ -2644,15 +2515,12 @@ class SampleGroup(object):
     # This would need further re-thinking.
 
     def __init__(self, name=None, samples=None):
-
         """Initialise a BSF SampleGroup object.
 
-        :param name: Name
-        :type name: str
-        :param samples: Python list of BSF Sample objects
-        :type samples: list
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param samples: Python list of BSF Sample objects
+        @type samples: list
         """
 
         if name:
@@ -2666,29 +2534,25 @@ class SampleGroup(object):
             self.samples = list()
 
     def add_Sample(self, sample):
-
         """Add a BSF Sample object.
 
-        :param sample: BSF Sample
-        :type sample: Sample
-        :return: Nothing
-        :rtype: None
+        @param sample: BSF Sample
+        @type sample: Sample
         """
 
         if sample not in self.samples:
             self.samples.append(sample)
 
     def get_all_PairedReads(self, replicate_grouping):
-
         """Get all BSF PairedReads objects of a BSF SampleGroup.
 
         For the moment, replicates are BSF PairedReads objects that do not share
         anything but the chunk number.
-        :param replicate_grouping: Group all BSF PairedReads objects of a BSF Sample or list them individually
-        :type replicate_grouping: bool
-        :return: Python dict of Python str (replicate name) key and
-         Python list object of BSF PairedReads objects value data
-        :rtype: dict
+        @param replicate_grouping: Group all BSF PairedReads objects of a BSF Sample or list them individually
+        @type replicate_grouping: bool
+        @return: Python dict of Python str (replicate name) key and
+            Python list object of BSF PairedReads objects value data
+        @rtype: dict
         """
 
         groups = dict()
