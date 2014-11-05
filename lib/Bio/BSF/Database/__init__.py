@@ -33,19 +33,17 @@ import string
 class DatabaseConnection(object):
     """The BSF Database Connection class wraps the sqlite3.Connection class.
 
-    :ivar file_path: File path
-    :type file_path: str, unicode
-    # :ivar connection: Connection to an sqlite3 database
-    # :type connection: sqlite3.Connection
+    @ivar file_path: File path
+    @type file_path: str | unicode
+    @ivar connection: Connection to an sqlite3 database
+    @type connection: sqlite3.Connection
     """
 
     def __init__(self, file_path):
         """Initialise a Database Connection object and connect to the sqlite3 database behind.
 
-        :param file_path: File path
-        :type file_path: str, unicode
-        :return: Nothing
-        :rtype: None
+        @param file_path: File path
+        @type file_path: str | unicode
         """
 
         if file_path:
@@ -57,9 +55,6 @@ class DatabaseConnection(object):
 
     def create_schema(self):
         """Create the database schema.
-
-        :return: Nothing
-        :rtype: None
         """
 
         job_submission_adaptor = JobSubmissionAdaptor(database_connection=self)
@@ -78,36 +73,34 @@ class DatabaseAdaptor(object):
     """The BSF DatabaseAdaptor serves as a super-class for object-specific adaptors.
 
     Instance variables should be overridden in sub-classes.
-    :ivar table_name: SQL database table name
-    :type table_name: str
-    :ivar column_definition: Python list of Python list objects with
-    SQL column name strings and SQL column constraint strings.
-    :type column_definition: list
-    :ivar table_constraint: SQL table constraint expression
-    :type table_constraint: list
-    :ivar database_connection: BSF DatabaseConnection
-    :type database_connection: DatabaseConnection
-    :ivar connection: SQLite connection
-    :type connection: sqlite3.Connection
+    @ivar table_name: SQL database table name
+    @type table_name: str
+    @ivar column_definition: Python list of Python list objects with
+        SQL column name strings and SQL column constraint strings.
+    @type column_definition: list
+    @ivar table_constraint: SQL table constraint expression
+    @type table_constraint: list
+    @ivar database_connection: BSF DatabaseConnection
+    @type database_connection: DatabaseConnection
+    @ivar connection: SQLite connection
+    @type connection: sqlite3.Connection
     """
 
     def __init__(self, database_connection, table_name=None, column_definition=None, table_constraint=None,
                  connection=None):
         """Initialise a Database Adaptor object.
 
-        :param table_name: SQL database table name
-        :type table_name: str
-        :param column_definition: Python list of Python list objects with
-        SQL column name strings and SQL column constraint strings.
-        :type column_definition: list
-        :param table_constraint: SQL table constraint expression
-        :type table_constraint: list
-        :param database_connection: Database Connection
-        :type database_connection: DatabaseConnection
-        :param connection: SQLite connection
-        :type connection: sqlite3.Connection
-        :return: Nothing
-        :rtype: None
+        @param table_name: SQL database table name
+        @type table_name: str
+        @param column_definition: Python list of Python list objects with
+            SQL column name strings and SQL column constraint strings.
+        @type column_definition: list
+        @param table_constraint: SQL table constraint expression
+        @type table_constraint: list
+        @param database_connection: Database Connection
+        @type database_connection: DatabaseConnection
+        @param connection: SQLite connection
+        @type connection: sqlite3.Connection
         """
 
         if table_name:
@@ -138,8 +131,8 @@ class DatabaseAdaptor(object):
     def _get_column_name_list_with_primary(self):
         """Build a Python list of column names including the primary key.
 
-        :return: Python list of SQL column name Python str objects
-        :rtype: list
+        @return: Python list of SQL column name Python str objects
+        @rtype: list
         """
 
         return map(lambda x: x[0], self.column_definition)
@@ -149,13 +142,17 @@ class DatabaseAdaptor(object):
 
         This method excludes PRIMARY KEY columns with definition AUTOINCREMENT,
         which must not be assigned a value in INSERT or UPDATE statements.
-        :return: Python list of SQL column name Python str objects
-        :rtype: list
+        @return: Python list of SQL column name Python str objects
+        @rtype: list
         """
 
         return map(lambda x: x[0], filter(lambda x: 'AUTOINCREMENT' not in x[1], self.column_definition))
 
     def _get_column_name_for_primary(self):
+        """Get the column name for the primary key.
+        @return: Column name for primary key
+        @rtype: str
+        """
 
         name_list = map(lambda x: x[0], filter(lambda x: 'AUTOINCREMENT' in x[1], self.column_definition))
         return name_list[0]
@@ -164,8 +161,8 @@ class DatabaseAdaptor(object):
         """Build an SQL expression of column names in typically used in SELECT statements.
 
         This method simply lists all column names of the column definition.
-        :return: Column result columns expression string
-        :rtype: str
+        @return: Column result columns expression string
+        @rtype: str
         """
 
         return string.join(words=self._get_column_name_list_with_primary(), sep=', ')
@@ -173,8 +170,8 @@ class DatabaseAdaptor(object):
     def _build_column_definition_expression(self):
         """Build an SQL expression of column definitions typically used in CREATE TABLE statements.
 
-        :return: Column definition expression string
-        :rtype: str
+        @return: Column definition expression string
+        @rtype: str
         """
 
         return string.join(
@@ -186,8 +183,8 @@ class DatabaseAdaptor(object):
 
         This method excludes PRIMARY KEY columns with definition AUTOINCREMENT,
         which must not be assigned a value.
-        :return: Column definition expression string
-        :rtype: str
+        @return: Column definition expression string
+        @rtype: str
         """
 
         return string.join(words=self._get_column_name_list_without_primary(), sep=', ')
@@ -195,8 +192,8 @@ class DatabaseAdaptor(object):
     def _build_value_insert_expression(self):
         """Build an SQL expression of value placeholders (?) typically used in INSERT statements.
 
-        :return: Column definition expression string
-        :rtype: str
+        @return: Column definition expression string
+        @rtype: str
         """
 
         return string.join(
@@ -207,8 +204,8 @@ class DatabaseAdaptor(object):
         """Build an SQL expression of column name and value placeholder pairs typically used in SQL UPDATE statements.
 
         As in INSERT expressions leave out the PRIMARY KEY columns with definition AUTOINCREMENT.
-        :return: SQL column name and value placeholder pair expression string
-        :rtype: str
+        @return: SQL column name and value placeholder pair expression string
+        @rtype: str
         """
 
         return string.join(
@@ -218,8 +215,8 @@ class DatabaseAdaptor(object):
     def statement_create_table(self):
         """Build an SQL CREATE TABLE statement.
 
-        :return: SQL CREATE TABLE statement
-        :rtype: str
+        @return: SQL CREATE TABLE statement
+        @rtype: str
         """
 
         return "CREATE TABLE {!r} ({})".format(self.table_name, self._build_column_definition_expression())
@@ -227,14 +224,14 @@ class DatabaseAdaptor(object):
     def statement_select(self, where_clause=None, group_clause=None, having_clause=None):
         """Build an SQL SELECT statement.
 
-        :param where_clause: SQL WHERE clause
-        :type where_clause: str
-        :param group_clause: SQL GROUP BY clause
-        :type group_clause: str
-        :param having_clause: SQL HAVING clause
-        :type having_clause: str
-        :return: SQL SELECT statement
-        :rtype: str
+        @param where_clause: SQL WHERE clause
+        @type where_clause: str
+        @param group_clause: SQL GROUP BY clause
+        @type group_clause: str
+        @param having_clause: SQL HAVING clause
+        @type having_clause: str
+        @return: SQL SELECT statement
+        @rtype: str
         """
 
         statement = str()
@@ -259,8 +256,6 @@ class DatabaseAdaptor(object):
 
         Before attempting to create the table, this method checks in 'sqlite_master',
         whether the table already exists in the SQLite database.
-        :return: Nothing
-        :rtype: None
         """
 
         cursor = self.connection.cursor()
@@ -283,12 +278,12 @@ class DatabaseAdaptor(object):
         """BSF Object-specific function to turn results of a SELECT statement into BSF Objects
 
         This needs to be overridden in the corresponding sub-class.
-        :param statement: Complete SQL SELECT statement
-        :type statement: str
-        :param parameters: Python list of Python str (parameter) objects or None
-        :type parameters: list
-        :return: Python list of BSF Objects
-        :rtype: list
+        @param statement: Complete SQL SELECT statement
+        @type statement: str
+        @param parameters: Python list of Python str (parameter) objects or None
+        @type parameters: list
+        @return: Python list of BSF Objects
+        @rtype: list
         """
 
         return []
@@ -296,8 +291,8 @@ class DatabaseAdaptor(object):
     def select_all(self):
         """Select all canonical objects corresponding to the DatabaseAdaptor sub-class.
 
-        :return: Python list of BSF Objects
-        :rtype: list
+        @return: Python list of BSF Objects
+        @rtype: list
         """
 
         statement = self.statement_select()
@@ -307,10 +302,8 @@ class DatabaseAdaptor(object):
     def insert(self, data_object):
         """Insert a canonical object corresponding to the DatabaseAdaptor sub-class.
 
-        :param data_object: BSF Data object
-        :type data_object: object
-        :return: Nothing
-        :rtype: None
+        @param data_object: BSF Data object
+        @type data_object: object
         """
 
         # Get the list of values by using the column definition and reading attributes of the same name
@@ -346,10 +339,8 @@ class DatabaseAdaptor(object):
     def update(self, data_object):
         """Update a canonical object corresponding to the DatabaseAdaptor sub-class.
 
-        :param data_object: BSF Data object
-        :type data_object: object
-        :return: Nothing
-        :rtype: None
+        @param data_object: BSF Data object
+        @type data_object: object
         """
         # Get the list of values by using the column definition and reading attributes of the same name
         # from the Python object.
@@ -381,25 +372,23 @@ class JobSubmission(object):
 
     This class is equivalent to the Executable and Command classes, but much less complex.
     Command lines are stored as submitted and not broken down into sub-commands, options and arguments.
-    :ivar executable_id: Primary key
-    :type executable_id: int
-    :ivar name: Executable name
-    :type name: str
-    :ivar command: Command line
-    :type command: str
+    @ivar executable_id: Primary key
+    @type executable_id: int
+    @ivar name: Executable name
+    @type name: str
+    @ivar command: Command line
+    @type command: str
     """
 
     def __init__(self, executable_id=0, name=None, command=None):
         """Initialise a BSF Job Submission object.
 
-        :param executable_id: Primary key
-        :type executable_id: int
-        :param name: Executable name
-        :type name: str
-        :param command: Command line
-        :type command: str
-        :return: Nothing
-        :rtype: None
+        @param executable_id: Primary key
+        @type executable_id: int
+        @param name: Executable name
+        @type name: str
+        @param command: Command line
+        @type command: str
         """
         self.executable_id = executable_id
         self.name = name
@@ -413,10 +402,8 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
     def __init__(self, database_connection):
         """Initialise a BSF Job Submission Adaptor object.
 
-        :param database_connection: BSF Database Connection
-        :type database_connection: DatabaseConnection
-        :return: Nothing
-        :rtype: None
+        @param database_connection: BSF Database Connection
+        @type database_connection: DatabaseConnection
         """
 
         super(JobSubmissionAdaptor, self).__init__(
@@ -435,12 +422,12 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
         """BSF JobSubmissionAdaptor-specific function to turn results of a SELECT statement into
         BSF JobSubmission objects.
 
-        :param statement: Complete SQL SELECT statement
-        :type statement: str
-        :param parameters: Python list of Python str (parameter) objects or None
-        :type parameters: list
-        :return: Python list of BSF Objects
-        :rtype: list
+        @param statement: Complete SQL SELECT statement
+        @type statement: str
+        @param parameters: Python list of Python str (parameter) objects or None
+        @type parameters: list
+        @return: Python list of BSF Objects
+        @rtype: list
         """
 
         object_list = list()
@@ -465,10 +452,10 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
     def select_by_name(self, name):
         """Select one BSF Job Submission object by name.
 
-        :param name: Name
-        :type name: str
-        :return: BSF JobSubmission or None
-        :rtype: JobSubmission, None
+        @param name: Name
+        @type name: str
+        @return: BSF JobSubmission or None
+        @rtype: JobSubmission, None
         """
         parameters = list()
 
@@ -491,43 +478,82 @@ class ProcessSLURM(object):
      Distributed Resource Management System.
 
     The instance variable names result from the SLURM command sacct --parsable --long
-    :ivar process_slurm_id:
-    :ivar job_id:
-    :ivar job_name:
-    :ivar partition:
-    :ivar max_vm_size:
-    :ivar max_vm_size_node:
-    :ivar max_vm_size_task:
-    :ivar average_vm_size:
-    :ivar max_rss:
-    :ivar max_rss_node:
-    :ivar max_rss_task:
-    :ivar average_rss:
-    :ivar max_pages:
-    :ivar max_pages_node:
-    :ivar max_pages_task:
-    :ivar average_pages:
-    :ivar min_cpu:
-    :ivar min_cpu_node:
-    :ivar min_cpu_task:
-    :ivar average_cpu:
-    :ivar number_tasks:
-    :ivar allocated_cpus:
-    :ivar elapsed:
-    :ivar state:
-    :ivar exit_code:
-    :ivar average_cpu_frequency:
-    :ivar requested_cpu_frequency:
-    :ivar requested_memory:
-    :ivar consumed_energy:
-    :ivar max_disk_read:
-    :ivar max_disk_read_node:
-    :ivar max_disk_read_task:
-    :ivar average_disk_read:
-    :ivar max_disk_write:
-    :ivar max_disk_write_node:
-    :ivar max_disk_write_task:
-    :ivar average_disk_write:
+    @ivar process_slurm_id:
+    @type process_slurm_id: int
+    @ivar job_id: The number of the job or job step. It is in the form: job.jobstep
+    @type job_id: str
+    @ivar job_name: The name of the job or job step
+    @type job_name: str
+    @ivar partition: Identifies the partition on which the job ran
+    @type partition: str
+    @ivar max_vm_size: Maximum virtual memory size of all tasks in job
+    @type max_vm_size: str
+    @ivar max_vm_size_node: The node on which the maximum virtual memory size occurred
+    @type max_vm_size_node: str
+    @ivar max_vm_size_task: The task identifier where the maximum virtual memory size occurred
+    @type max_vm_size_task: str
+    @ivar average_vm_size: Average virtual memory size of all tasks in job
+    @type average_vm_size: str
+    @ivar max_rss: Maximum resident set size of all tasks in job
+    @type max_rss: str
+    @ivar max_rss_node: The node on which the maximum resident set size occurred
+    @type max_rss_node: str
+    @ivar max_rss_task: The task identifier where the maximum resident set size occurred
+    @type max_rss_task: str
+    @ivar average_rss: Average resident set size of all tasks in job
+    @type average_rss: str
+    @ivar max_pages: Maximum number of page faults of all tasks in job
+    @type max_pages: str
+    @ivar max_pages_node: The node on which the maximum number of page faults occurred
+    @type max_pages_node: str
+    @ivar max_pages_task: The task identifier where the maximum number of page faults occurred
+    @type max_pages_task: str
+    @ivar average_pages: Average number of page faults of all tasks in job
+    @type average_pages: str
+    @ivar min_cpu: Minimum (system + user) CPU time of all tasks in job
+    @type min_cpu: str
+    @ivar min_cpu_node: The node on which the minimum CPU time occurred
+    @type min_cpu_node: str
+    @ivar min_cpu_task: The task identifier where the minimum CPU time occurred
+    @type min_cpu_task: str
+    @ivar average_cpu: Average (system + user) CPU time of all tasks in job
+    @type average_cpu: str
+    @ivar number_tasks: Total number of tasks in a job or step
+    @type number_tasks: str
+    @ivar allocated_cpus: Count of allocated CPUs
+    @type allocated_cpus: str
+    @ivar elapsed: The jobs elapsed time
+    @type elapsed: str
+    @ivar state: Displays the job status, or state.
+        Value can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or NODE_FAIL
+    @type state: str
+    @ivar exit_code: The exit code returned by the job script or salloc, typically as set by the exit() function.
+        Following the colon is the signal that caused the process to  terminate if it was terminated by a signal.
+    @type exit_code: str
+    @ivar average_cpu_frequency: Average weighted CPU frequency of all tasks in job, in kHz
+    @type average_cpu_frequency: str
+    @ivar requested_cpu_frequency: Requested CPU frequency for the step, in kHz
+    @type requested_cpu_frequency: str
+    @ivar requested_memory: Minimum required memory for the job, in MB
+    @type requested_memory: str
+    @ivar consumed_energy: Total energy consumed by all tasks in job, in joules
+    @type consumed_energy: str
+    @ivar max_disk_read: Maximum number of bytes read by all tasks in job
+    @type max_disk_read: str
+    @ivar max_disk_read_node: The node on which the maximum number of bytes read occurred
+    @type max_disk_read_node: str
+    @ivar max_disk_read_task: The task identifier where the maximum number of bytes read occurred
+    @type max_disk_read_task: str
+    @ivar average_disk_read: Average number of bytes read by all tasks in job
+    @type average_disk_read: str
+    @ivar max_disk_write: Maximum number of bytes written by all tasks in job
+    @type max_disk_write: str
+    @ivar max_disk_write_node: The node on which the maximum number of bytes written occurred
+    @type max_disk_write_node: str
+    @ivar max_disk_write_task: The task identifier where the maximum number of bytes written occurred
+    @type max_disk_write_task: str
+    @ivar average_disk_write: Average number of bytes written by all tasks in job
+    @type average_disk_write: str
     """
 
     def __init__(self, process_slurm_id=None, job_id=None, job_name=None, partition=None,
@@ -542,43 +568,82 @@ class ProcessSLURM(object):
                  max_disk_write=None, max_disk_write_node=None, max_disk_write_task=None, average_disk_write=None):
         """Initialise a BSF ProcessSLURM object.
 
-        :param process_slurm_id:
-        :param job_id:
-        :param job_name:
-        :param partition:
-        :param max_vm_size:
-        :param max_vm_size_node:
-        :param max_vm_size_task:
-        :param average_vm_size:
-        :param max_rss:
-        :param max_rss_node:
-        :param max_rss_task:
-        :param average_rss:
-        :param max_pages:
-        :param max_pages_node:
-        :param max_pages_task:
-        :param average_pages:
-        :param min_cpu:
-        :param min_cpu_node:
-        :param min_cpu_task:
-        :param average_cpu:
-        :param number_tasks:
-        :param allocated_cpus:
-        :param elapsed:
-        :param state:
-        :param exit_code:
-        :param average_cpu_frequency:
-        :param requested_cpu_frequency:
-        :param requested_memory:
-        :param consumed_energy:
-        :param max_disk_read:
-        :param max_disk_read_node:
-        :param max_disk_read_task:
-        :param average_disk_read:
-        :param max_disk_write:
-        :param max_disk_write_node:
-        :param max_disk_write_task:
-        :param average_disk_write:
+        @param process_slurm_id:
+        @type process_slurm_id: int
+        @param job_id: The number of the job or job step. It is in the form: job.jobstep
+        @type job_id: str
+        @param job_name: The name of the job or job step
+        @type job_name: str
+        @param partition: Identifies the partition on which the job ran
+        @type partition: str
+        @param max_vm_size: Maximum virtual memory size of all tasks in job
+        @type max_vm_size: str
+        @param max_vm_size_node: The node on which the maximum virtual memory size occurred
+        @type max_vm_size_node: str
+        @param max_vm_size_task: The task identifier where the maximum virtual memory size occurred
+        @type max_vm_size_task: str
+        @param average_vm_size: Average virtual memory size of all tasks in job
+        @type average_vm_size: str
+        @param max_rss: Maximum resident set size of all tasks in job
+        @type max_rss: str
+        @param max_rss_node: The node on which the maximum resident set size occurred
+        @type max_rss_node: str
+        @param max_rss_task: The task identifier where the maximum resident set size occurred
+        @type max_rss_task: str
+        @param average_rss: Average resident set size of all tasks in job
+        @type average_rss: str
+        @param max_pages: Maximum number of page faults of all tasks in job
+        @type max_pages: str
+        @param max_pages_node: The node on which the maximum number of page faults occurred
+        @type max_pages_node: str
+        @param max_pages_task: The task identifier where the maximum number of page faults occurred
+        @type max_pages_task: str
+        @param average_pages: Average number of page faults of all tasks in job
+        @type average_pages: str
+        @param min_cpu: Minimum (system + user) CPU time of all tasks in job
+        @type min_cpu: str
+        @param min_cpu_node: The node on which the minimum CPU time occurred
+        @type min_cpu_node: str
+        @param min_cpu_task: The task identifier where the minimum CPU time occurred
+        @type min_cpu_task: str
+        @param average_cpu: Average (system + user) CPU time of all tasks in job
+        @type average_cpu: str
+        @param number_tasks: Total number of tasks in a job or step
+        @type number_tasks: str
+        @param allocated_cpus: Count of allocated CPUs
+        @type allocated_cpus: str
+        @param elapsed: The jobs elapsed time
+        @type elapsed: str
+        @param state: Displays the job status, or state.
+            Value can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or NODE_FAIL
+        @type state: str
+        @param exit_code: The exit code returned by the job script or salloc, typically as set by the exit() function.
+            Following the colon is the signal that caused the process to  terminate if it was terminated by a signal.
+        @type exit_code: str
+        @param average_cpu_frequency: Average weighted CPU frequency of all tasks in job, in kHz
+        @type average_cpu_frequency: str
+        @param requested_cpu_frequency: Requested CPU frequency for the step, in kHz
+        @type requested_cpu_frequency: str
+        @param requested_memory: Minimum required memory for the job, in MB
+        @type requested_memory: str
+        @param consumed_energy: Total energy consumed by all tasks in job, in joules
+        @type consumed_energy: str
+        @param max_disk_read: Maximum number of bytes read by all tasks in job
+        @type max_disk_read: str
+        @param max_disk_read_node: The node on which the maximum number of bytes read occurred
+        @type max_disk_read_node: str
+        @param max_disk_read_task: The task identifier where the maximum number of bytes read occurred
+        @type max_disk_read_task: str
+        @param average_disk_read: Average number of bytes read by all tasks in job
+        @type average_disk_read: str
+        @param max_disk_write: Maximum number of bytes written by all tasks in job
+        @type max_disk_write: str
+        @param max_disk_write_node: The node on which the maximum number of bytes written occurred
+        @type max_disk_write_node: str
+        @param max_disk_write_task: The task identifier where the maximum number of bytes written occurred
+        @type max_disk_write_task: str
+        @param average_disk_write: Average number of bytes written by all tasks in job
+        @type average_disk_write: str
         """
         self.process_slurm_id = process_slurm_id
         self.job_id = job_id
@@ -625,6 +690,11 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
     """
 
     def __init__(self, database_connection):
+        """Initialise a ProcessSLURMAdaptor object.
+
+        @param database_connection: Database Connection
+        @type database_connection: DatabaseConnection
+        """
 
         super(ProcessSLURMAdaptor, self).__init__(
             database_connection=database_connection,
@@ -633,7 +703,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # Primary key
                 ['process_slurm_id', 'INTEGER PRIMARY KEY ASC AUTOINCREMENT'],
                 # JobID
-                # The number of the job or job step.  It is in the form: job.jobstep.
+                # The number of the job or job step. It is in the form: job.jobstep.
                 ['job_id', 'TEXT UNIQUE'],
                 # JobName
                 # The name of the job or job step.
@@ -642,25 +712,25 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # Identifies the partition on which the job ran.
                 ['partition', 'TEXT'],
                 # MaxVMSize
-                # Maximum Virtual Memory size of all tasks in job.
+                # Maximum virtual memory size of all tasks in job.
                 ['max_vm_size', 'TEXT'],
                 # MaxVMSizeNode
-                # The node on which the maxvmsize occurred.
+                # The node on which the maximum virtual memory size occurred.
                 ['max_vm_size_node', 'TEXT'],
                 # MaxVMSizeTask
-                # The task ID where the maxvmsize occurred.
+                # The task identifier where the maximum virtual memory size occurred.
                 ['max_vm_size_task', 'TEXT'],
                 # AveVMSize
-                # Average Virtual Memory size of all tasks in job.
+                # Average virtual memory size of all tasks in job.
                 ['average_vm_size', 'TEXT'],
                 # MaxRSS
                 # Maximum resident set size of all tasks in job.
                 ['max_rss', 'TEXT'],
                 # MaxRSSNode
-                # The node on which the maxrss occurred.
+                # The node on which the maximum resident set size occurred.
                 ['max_rss_node', 'TEXT'],
                 # MaxRSSTask
-                # The task ID where the maxrss occurred.
+                # The task identifier where the maximum resident set size occurred.
                 ['max_rss_task', 'TEXT'],
                 # AveRSS
                 # Average resident set size of all tasks in job.
@@ -669,10 +739,10 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # Maximum number of page faults of all tasks in job.
                 ['max_pages', 'TEXT'],
                 # MaxPagesNode
-                # The node on which the maxpages occurred.
+                # The node on which the maximum number of page faults occurred.
                 ['max_pages_node', 'TEXT'],
                 # MaxPagesTask
-                # The task ID where the maxpages occurred.
+                # The task identifier where the maximum number of page faults occurred.
                 ['max_pages_task', 'TEXT'],
                 # AvePages
                 # Average number of page faults of all tasks in job.
@@ -681,10 +751,10 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # Minimum (system + user) CPU time of all tasks in job.
                 ['min_cpu', 'TEXT'],
                 # MinCPUNode
-                # The node on which the mincpu occurred.
+                # The node on which the minimum CPU time occurred.
                 ['min_cpu_node', 'TEXT'],
                 # MinCPUTask
-                # The task ID where the mincpu occurred.
+                # The task identifier where the minimum CPU time occurred.
                 ['min_cpu_task', 'TEXT'],
                 # AveCPU
                 # Average (system + user) CPU time of all tasks in job.
@@ -693,14 +763,14 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # Total number of tasks in a job or step.
                 ['number_tasks', 'TEXT'],
                 # AllocCPUS
-                # Count of allocated CPUs
+                # Count of allocated CPUs.
                 ['allocated_cpus', 'TEXT'],
                 # Elapsed
                 # The jobs elapsed time.
                 ['elapsed', 'TEXT'],
                 # State
                 # Displays the job status, or state.
-                # Output can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or
+                # Value can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or
                 # NODE_FAIL.
                 ['state', 'TEXT'],
                 # ExitCode
@@ -724,10 +794,10 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # Maximum number of bytes read by all tasks in job.
                 ['max_disk_read', 'TEXT'],
                 # MaxDiskReadNode
-                # The node on which the maxdiskread occurred.
+                # The node on which the maximum number of bytes read occurred.
                 ['max_disk_read_node', 'TEXT'],
                 # MaxDiskReadTask
-                # The task ID where the maxdiskread occurred.
+                # The task identifier where the maximum number of bytes read occurred.
                 ['max_disk_read_task', 'TEXT'],
                 # AveDiskRead
                 # Average number of bytes read by all tasks in job.
@@ -736,10 +806,10 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # Maximum number of bytes written by all tasks in job.
                 ['max_disk_write', 'TEXT'],
                 # MaxDiskWriteNode
-                # The node on which the maxdiskwrite occurred.
+                # The node on which the maximum number of bytes written occurred.
                 ['max_disk_write_node', 'TEXT'],
                 # MaxDiskWriteTask
-                # The task ID where the maxdiskwrite occurred.
+                # The task identifier where the maximum number of bytes written occurred.
                 ['max_disk_write_task', 'TEXT'],
                 # AveDiskWrite
                 # Average number of bytes written by all tasks in job.
@@ -750,12 +820,12 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         """BSF ProcessSLURMAdaptor-specific function to turn results of a SELECT statement into
         BSF ProcessSLURM objects.
 
-        :param statement: Complete SQL SELECT statement
-        :type statement: str
-        :param parameters: Python list of Python str (parameter) objects or None
-        :type parameters: list
-        :return: Python list of BSF Objects
-        :rtype: list
+        @param statement: Complete SQL SELECT statement
+        @type statement: str
+        @param parameters: Python list of Python str (parameter) objects or None
+        @type parameters: list
+        @return: Python list of BSF Objects
+        @rtype: list
         """
 
         object_list = list()
@@ -781,10 +851,10 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         """Select all BSF Job Submission objects by job_name.
 
         The same Executable can be submitted more than once into the DRMS.
-        :param name: Job name
-        :type name: str
-        :return: Python list of BSF JobSubmission objects
-        :rtype: list
+        @param name: Job name
+        @type name: str
+        @return: Python list of BSF JobSubmission objects
+        @rtype: list
         """
         statement = self.statement_select(where_clause='job_name = ?')
         parameters = list()
@@ -795,10 +865,10 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
     def select_by_job_id(self, job_id):
         """Select one BSF Job Submission object by job_id.
 
-        :param job_id: Job identifier
-        :type job_id: str
-        :return: Python list of BSF JobSubmission objects
-        :rtype: list
+        @param job_id: Job identifier
+        @type job_id: str
+        @return: Python list of BSF JobSubmission objects
+        @rtype: list
         """
         statement = self.statement_select(where_clause='job_id = ?')
         parameters = list()
@@ -820,34 +890,69 @@ class ProcessSGE(object):
     Distributed Resource Management System.
 
     The instance variable names result from the SGE accounting file. See man 5 accounting.
-    :ivar process_sge_id:
-    :ivar qname:
-    :ivar hostname:
-    :ivar sge_group:
-    :ivar owner:
-    :ivar job_name:
-    :ivar job_number:
-    :ivar account:
-    :ivar priority:
-    :ivar submission_time:
-    :ivar start_date:
-    :ivar end_time:
-    :ivar failed:
-    :ivar exit_status:
-    :ivar ru_wallclock:
-    :ivar project:
-    :ivar department:
-    :ivar granted_pe:
-    :ivar slots:
-    :ivar task_number:
-    :ivar cpu:
-    :ivar mem:
-    :ivar io:
-    :ivar category:
-    :ivar iow:
-    :ivar pe_taskid:
-    :ivar maxvmem:
-    :ivar arid:
+    @ivar process_sge_id: Primary key
+    @type process_sge_id: int
+    @ivar qname: Name of the cluster queue in which the job has run
+    @type qname: str
+    @ivar hostname: Name of the execution host
+    @type hostname: str
+    @ivar sge_group: The effective group id of the job owner when executing the job
+    @type sge_group: str
+    @ivar owner: Owner of the Grid Engine job
+    @type owner: str
+    @ivar job_name: Job name
+    @type job_name: str
+    @ivar job_number: Job identifier (job number)
+    @type job_number: str
+    @ivar account: An account string as specified by the qsub(1) or qalter(1) -A option
+    @type account: str
+    @ivar priority: Priority value assigned to the job, corresponding to the priority parameter in the
+        queue configuration (see queue_conf(5))
+    @type priority: str
+    @ivar submission_time: Submission time
+    @type submission_time: str
+    @ivar start_date: Start time
+    @type start_date: str
+    @ivar end_time: End time
+    @type end_time: str
+    @ivar failed: Indicates the problem which occurred in case a job could not be started on the execution host
+    @type failed: str
+    @ivar exit_status: Exit status of the job script (or Grid Engine-specific status in case of certain error
+        conditions). The exit status is determined by following the normal shell conventions. If the command
+        terminates normally, the value of the command is its exit status. However, in the case that the command
+        exits abnormally, a value of 0200 (octal), 128 (decimal) is added to the value of the command to make up
+        the exit status.
+    @type exit_status: str
+    @ivar ru_wallclock: Difference between end_time and start_time (see above), except that if the job fails,
+        it is zero
+    @type ru_wallclock: str
+    @ivar project: The department which was assigned to the job
+    @type project: str
+    @ivar department: The parallel environment which was selected for the job
+    @type department: str
+    @ivar granted_pe: The number of slots which were dispatched to the job by the scheduler
+    @type granted_pe: str
+    @ivar slots: The number of slots which were dispatched to the job by the scheduler
+    @type slots: str
+    @ivar task_number: Array job task index number
+    @type task_number: str
+    @ivar cpu: The CPU time usage in seconds
+    @type cpu: str
+    @ivar mem: The integral memory usage in Gbytes seconds
+    @type mem: str
+    @ivar io: The amount of data transferred in input/output operations in GB (if available, otherwise 0)
+    @type io: str
+    @ivar category: A string specifying the job category
+    @type category: str
+    @ivar iow: The input/output wait time in seconds (if available, otherwise 0)
+    @type iow: str
+    @ivar pe_taskid: If this identifier is set, the task was part of a parallel job, and was passed to Grid Engine
+        via the qrsh -inherit interface.
+    @type pe_taskid: str
+    @ivar maxvmem: The maximum vmem size in bytes
+    @type maxvmem: str
+    @ivar arid: Advance reservation identifier.
+    @type arid: str
     """
 
     def __init__(self, process_sge_id=None, qname=None, hostname=None, sge_group=None, owner=None, job_name=None,
@@ -857,34 +962,69 @@ class ProcessSGE(object):
                  maxvmem=None, arid=None):
         """Initialise a BSF ProcessSGE object.
 
-        :param process_sge_id:
-        :param qname:
-        :param hostname:
-        :param sge_group:
-        :param owner:
-        :param job_name:
-        :param job_number:
-        :param account:
-        :param priority:
-        :param submission_time:
-        :param start_date:
-        :param end_time:
-        :param failed:
-        :param exit_status:
-        :param ru_wallclock:
-        :param project:
-        :param department:
-        :param granted_pe:
-        :param slots:
-        :param task_number:
-        :param cpu:
-        :param mem:
-        :param io:
-        :param category:
-        :param iow:
-        :param pe_taskid:
-        :param maxvmem:
-        :param arid:
+        @param process_sge_id: Primary key
+        @type process_sge_id: int
+        @param qname: Name of the cluster queue in which the job has run
+        @type qname: str
+        @param hostname: Name of the execution host
+        @type hostname: str
+        @param sge_group: The effective group id of the job owner when executing the job
+        @type sge_group: str
+        @param owner: Owner of the Grid Engine job
+        @type owner: str
+        @param job_name: Job name
+        @type job_name: str
+        @param job_number: Job identifier (job number)
+        @type job_number: str
+        @param account: An account string as specified by the qsub(1) or qalter(1) -A option
+        @type account: str
+        @param priority: Priority value assigned to the job, corresponding to the priority parameter in the
+            queue configuration (see queue_conf(5))
+        @type priority: str
+        @param submission_time: Submission time
+        @type submission_time: str
+        @param start_date: Start time
+        @type start_date: str
+        @param end_time: End time
+        @type end_time: str
+        @param failed: Indicates the problem which occurred in case a job could not be started on the execution host
+        @type failed: str
+        @param exit_status: Exit status of the job script (or Grid Engine-specific status in case of certain error
+            conditions). The exit status is determined by following the normal shell conventions. If the command
+            terminates normally, the value of the command is its exit status. However, in the case that the command
+            exits abnormally, a value of 0200 (octal), 128 (decimal) is added to the value of the command to make up
+            the exit status.
+        @type exit_status: str
+        @param ru_wallclock: Difference between end_time and start_time (see above), except that if the job fails,
+            it is zero
+        @type ru_wallclock: str
+        @param project: The department which was assigned to the job
+        @type project: str
+        @param department: The parallel environment which was selected for the job
+        @type department: str
+        @param granted_pe: The number of slots which were dispatched to the job by the scheduler
+        @type granted_pe: str
+        @param slots: The number of slots which were dispatched to the job by the scheduler
+        @type slots: str
+        @param task_number: Array job task index number
+        @type task_number: str
+        @param cpu: The CPU time usage in seconds
+        @type cpu: str
+        @param mem: The integral memory usage in Gbytes seconds
+        @type mem: str
+        @param io: The amount of data transferred in input/output operations in GB (if available, otherwise 0)
+        @type io: str
+        @param category: A string specifying the job category
+        @type category: str
+        @param iow: The input/output wait time in seconds (if available, otherwise 0)
+        @type iow: str
+        @param pe_taskid: If this identifier is set, the task was part of a parallel job, and was passed to Grid Engine
+            via the qrsh -inherit interface.
+        @type pe_taskid: str
+        @param maxvmem: The maximum vmem size in bytes
+        @type maxvmem: str
+        @param arid: Advance reservation identifier.
+        @type arid: str
         """
         self.process_sge_id = process_sge_id
         self.qname = qname
@@ -923,6 +1063,11 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
     """
 
     def __init__(self, database_connection):
+        """Initialise a ProcessSGEAdaptor object.
+
+        @param database_connection: Database Connection
+        @type database_connection: DatabaseConnection
+        """
 
         super(ProcessSGEAdaptor, self).__init__(
             database_connection=database_connection,
@@ -966,7 +1111,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
                 # End time.
                 ['end_time', 'TEXT'],
                 # failed
-                # Indicates  the  problem  which  occurred in case a job could not be started on the execution host
+                # Indicates the problem which occurred in case a job could not be started on the execution host
                 # (e.g. because the owner of the job did not have a valid account on that machine).
                 # If Grid Engine tries to start a job multiple times, this may lead to multiple entries in the
                 # reporting file corresponding to the same job ID.
@@ -1092,12 +1237,12 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
         """BSF ProcessSLURMAdaptor-specific function to turn results of a SELECT statement into
         BSF ProcessSLURM objects.
 
-        :param statement: Complete SQL SELECT statement
-        :type statement: str
-        :param parameters: Python list of Python str (parameter) objects or None
-        :type parameters: list
-        :return: Python list of BSF Objects
-        :rtype: list
+        @param statement: Complete SQL SELECT statement
+        @type statement: str
+        @param parameters: Python list of Python str (parameter) objects or None
+        @type parameters: list
+        @return: Python list of BSF Objects
+        @rtype: list
         """
 
         object_list = list()
