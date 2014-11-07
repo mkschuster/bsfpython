@@ -71,14 +71,17 @@ os.environ['LANG'] = 'C'
 argument_parser = ArgumentParser(
     description='BSF script to run MuTect.')
 
-argument_parser.add_argument('--debug', required=False, type=int,
-                             help='debug level')
+argument_parser.add_argument(
+    '--debug', required=False, type=int,
+    help='debug level')
 
-argument_parser.add_argument('--stage', dest='stage', required=False,
-                             help='Limit job submission to a particular Analysis stage')
+argument_parser.add_argument(
+    '--stage', dest='stage', required=False,
+    help='Limit job submission to a particular Analysis stage')
 
-argument_parser.add_argument('configuration',
-                             help='Configuration file (*.ini)')
+argument_parser.add_argument(
+    'configuration',
+    help='Configuration file (*.ini)')
 
 arguments = argument_parser.parse_args()
 
@@ -304,7 +307,7 @@ for key in key_list:
     # MESSAGE: --DBSNP (-D) argument currently does not support VCF.
     # To use dbSNP in VCF format, please use -B:dbsnp,vcf <filename>.
     # if known_sites_discovery:
-    #     sub_command.add_OptionLong(key='DBSNP', value=known_sites_discovery)
+    # sub_command.add_OptionLong(key='DBSNP', value=known_sites_discovery)
 
     sub_command.add_SwitchLong(key='somatic')
     sub_command.add_OptionLong(

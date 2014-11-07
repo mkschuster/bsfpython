@@ -160,11 +160,16 @@ os.environ['LANG'] = 'C'
 parser = argparse.ArgumentParser(
     description='BSF Runner for running the MuTect somatic variant caller.')
 
-parser.add_argument('--debug', required=False, type=int,
-                    help='debug level')
+parser.add_argument(
+    '--debug',
+    help='debug level',
+    required=False,
+    type=int)
 
-parser.add_argument('--pickler_path', required=True,
-                    help='file path to a Python Pickler file.')
+parser.add_argument(
+    '--pickler_path',
+    help='file path to a Python Pickler file',
+    required=True)
 
 args = parser.parse_args()
 
