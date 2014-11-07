@@ -1,0 +1,79 @@
+#! /usr/bin/env python
+#
+# BSF Python script to report the number of samples per lane.
+#
+#
+# Copyright 2014 Michael K. Schuster
+#
+# Biomedical Sequencing Facility (BSF), part of the genomics core facility
+# of the Research Center for Molecular Medicine (CeMM) of the
+# Austrian Academy of Sciences and the Medical University of Vienna (MUW).
+#
+#
+# This file is part of BSF Python.
+#
+# BSF Python is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# BSF Python is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+
+
+from argparse import ArgumentParser
+import os
+import string
+
+from Bio.BSF.Data import SampleAnnotationSheet
+
+argument_parser = ArgumentParser(
+    description='Count samples per lane based on BamIndexDecoder library annotation files.')
+
+argument_parser.add_argument(
+    '--debug', required=False, type=int,
+    help='Debug level')
+
+argument_parser.add_argument(
+    '--directory', required=False, type=str,
+    help='Directory of IlluminaToBam tools BamIndexDecoder library annotation files.')
+
+argument_parser.add_argument(
+    '--ascending',
+    action='store_true',
+    help='Sort flow cells in ascending order rather than in descending by default'
+)
+
+arguments = argument_parser.parse_args()
+
+print 'Lane,Sample Number,Comment'
+
+file_name_list = os.listdir(arguments.directory)
+file_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+if not arguments.ascending:
+    file_name_list.reverse()
+
+for file_name in file_name_list:
+    if file_name[-14:] == '_libraries.csv':
+        sas = SampleAnnotationSheet.read_from_file(file_path=os.path.join(arguments.directory, file_name))
+
+        lane_dict = dict()
+        for row_dict in sas.row_dicts:
+            if row_dict['lane'] in lane_dict:
+                lane_dict[row_dict['lane']] += 1
+            else:
+                lane_dict[row_dict['lane']] = 1
+
+        for i in range(1, 9):
+            key = str(i)
+            lane_name = string.join(words=(file_name[:-15], key), sep='_')
+            if key in lane_dict:
+                print lane_name + ',' + str(lane_dict[key])
+            else:
+                print lane_name + ',1,not annotated'

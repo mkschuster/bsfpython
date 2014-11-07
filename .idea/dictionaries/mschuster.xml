@@ -6,12 +6,15 @@
       <w>bioconductor</w>
       <w>bioinformatics</w>
       <w>biomedicine</w>
+      <w>biotype</w>
+      <w>bisulfite</w>
       <w>bourne</w>
       <w>bowtie</w>
       <w>bqsr</w>
       <w>bsfpython</w>
       <w>casava</w>
       <w>chipseq</w>
+      <w>codon</w>
       <w>covariates</w>
       <w>ctcf</w>
       <w>cuffdiff</w>
@@ -29,8 +32,12 @@
       <w>flowcell</w>
       <w>fpkm</w>
       <w>gatk</w>
+      <w>gaussians</w>
       <w>genomics</w>
+      <w>genotyped</w>
       <w>genotyper</w>
+      <w>genotyping</w>
+      <w>gvcf</w>
       <w>gzip</w>
       <w>haplotype</w>
       <w>hapmap</w>
@@ -61,6 +68,7 @@
       <w>truseq</w>
       <w>ucsc</w>
       <w>unstranded</w>
+      <w>vqslod</w>
       <w>vqsr</w>
     </words>
   </dictionary>
