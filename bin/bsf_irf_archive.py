@@ -61,14 +61,14 @@ irf_path = os.path.abspath(path=args.irf_path)
 if not os.path.exists(path=irf_path):
     raise Exception('Could not find Illumina Run Folder: {!r}'.format(irf_path))
 
-drms = DRMS(name='irf_archive', work_directory=os.path.dirname(p=irf_path))
+drms = DRMS(name='irf_archive', work_directory=os.path.dirname(irf_path))
 drms.set_Default(default=default)
 
-executable = Executable(name='irf_archive_' + os.path.basename(p=irf_path),
+executable = Executable(name='irf_archive_' + os.path.basename(irf_path),
                         program='bsf_run_irf_archive.bash')
 drms.add_Executable(executable=executable)
 
-executable.arguments.append(os.path.basename(p=irf_path))
+executable.arguments.append(os.path.basename(irf_path))
 
 print "Resulting DRMS:"
 print drms.trace(level=1)
