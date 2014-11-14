@@ -115,39 +115,57 @@ class ChIPSeqComparison(object):
 
 
 class ChIPSeqDiffBindSheet(AnnotationSheet):
-    field_names = ['SampleID', 'Tissue', 'Factor', 'Condition', 'Treatment', 'Replicate',
-                   'bamReads', 'bamControl', 'ControlID', 'Peaks', 'PeakCaller', 'PeakFormat']
+    """ChIP-Seq Bioconductor DiffBind annotation sheet class.
 
-    test_methods = dict(SampleID=AnnotationSheet.check_alphanumeric,
-                        Tissue=AnnotationSheet.check_alphanumeric,
-                        Factor=AnnotationSheet.check_alphanumeric,
-                        Condition=AnnotationSheet.check_alphanumeric,
-                        Treatment=AnnotationSheet.check_alphanumeric,
-                        Replicate=AnnotationSheet.check_numeric,
-                        ControlID=AnnotationSheet.check_alphanumeric,
-                        PeakCaller=AnnotationSheet.check_alphanumeric,
-                        PeakFormat=AnnotationSheet.check_alphanumeric)
+    Attributes:
+    @cvar _file_type: File type (i.e. 'excel' or 'excel-tab' defined in the csv module Dialect class)
+    @type _file_type: str
+    @cvar _header_line: Header line exists
+    @type _header_line: bool
+    @cvar _field_names: Python list of Python str (field name) objects
+    @type _field_names: list
+    @cvar _test_methods: Python dict of Python string (field name) key data and Python list of Python method value data
+    @type _test_methods: dict
+    """
 
-    def __init__(self, file_path=None, file_type=None, name=None, row_dicts=None):
-        """Initialise a BSF ChIPSeq DiffBind Sheet object.
+    _file_type = 'excel'
 
-        @param file_path: File path
-        @type file_path: str | unicode
-        @param file_type: File type (e.g. ...)
-        @type file_type: str
-        @param name: Name
-        @type name: str
-        @param row_dicts: Python list of Python dict objects
-        @type row_dicts: list
-        @return: Nothing
-        @rtype: None
-        """
+    _header_line = True
 
-        super(ChIPSeqDiffBindSheet, self).__init__(file_path=file_path,
-                                                   file_type=file_type,
-                                                   name=name,
-                                                   field_names=ChIPSeqDiffBindSheet.field_names,
-                                                   row_dicts=row_dicts)
+    _field_names = [
+        'SampleID', 'Tissue', 'Factor', 'Condition', 'Treatment', 'Replicate',
+        'bamReads', 'bamControl', 'ControlID', 'Peaks', 'PeakCaller', 'PeakFormat'
+    ]
+
+    _test_methods = dict(
+        SampleID=[
+            AnnotationSheet.check_alphanumeric
+        ],
+        Tissue=[
+            AnnotationSheet.check_alphanumeric
+        ],
+        Factor=[
+            AnnotationSheet.check_alphanumeric
+        ],
+        Condition=[
+            AnnotationSheet.check_alphanumeric
+        ],
+        Treatment=[
+            AnnotationSheet.check_alphanumeric
+        ],
+        Replicate=[
+            AnnotationSheet.check_numeric
+        ],
+        ControlID=[
+            AnnotationSheet.check_alphanumeric
+        ],
+        PeakCaller=[
+            AnnotationSheet.check_alphanumeric
+        ],
+        PeakFormat=[
+            AnnotationSheet.check_alphanumeric
+        ]
+    )
 
     def sort(self):
         """Sort by columns Tissue, Factor, Condition, Treatment and Replicate.
@@ -317,7 +335,7 @@ class ChIPSeq(Analysis):
         if self.debug > 1:
             print '{!r} method _read_comparisons:'.format(self)
 
-        sas = SampleAnnotationSheet(file_path=cmp_file)
+        sas = SampleAnnotationSheet.read_from_file(file_path=cmp_file)
 
         # Unfortunately, two passes through the comparison sheet are required.
         # In the first one merge all BSF Sample objects that share the name.
@@ -327,8 +345,7 @@ class ChIPSeq(Analysis):
         sample_dict = dict()
 
         # First pass, merge BSF Sample objects, if they have the same name.
-        sas.csv_reader_open()
-        for row_dict in sas._csv_reader_object:
+        for row_dict in sas.row_dicts:
             for prefix in ('Control', 'Treatment'):
                 name, samples = self.collection.get_Samples_from_row_dict(row_dict=row_dict, prefix=prefix)
                 for o_sample in samples:
@@ -337,13 +354,11 @@ class ChIPSeq(Analysis):
                     else:
                         n_sample = Sample.from_Samples(sample1=sample_dict[o_sample.name], sample2=o_sample)
                         sample_dict[n_sample.name] = n_sample
-        sas.csv_reader_close()
 
         # Second pass, add all BSF Sample objects mentioned in a comparison.
         level1_dict = dict()
 
-        sas.csv_reader_open()
-        for row_dict in sas._csv_reader_object:
+        for row_dict in sas.row_dicts:
 
             c_name, c_samples = self.collection.get_Samples_from_row_dict(row_dict=row_dict, prefix='Control')
             t_name, t_samples = self.collection.get_Samples_from_row_dict(row_dict=row_dict, prefix='Treatment')
@@ -424,8 +439,6 @@ class ChIPSeq(Analysis):
                                                                  condition=condition,
                                                                  treatment=treatment,
                                                                  replicate=0)
-
-        sas.csv_reader_close()
 
         # Sort the comparison keys alphabetically and assign replicate numbers into ChiPSeqComparison objects.
 
