@@ -1261,10 +1261,15 @@ class Collection(object):
         @rtype: Collection
         """
 
+        # TODO: This method should be renamed to from_sas_path.
+        # TODO: The sas_file option should be renamed to sas_path to keep it distinct from a Python file object.
+
         collection = cls(file_path=file_path, file_type=file_type, name=name)
 
-        sas = SampleAnnotationSheet(file_path=sas_file)
-        collection.read_SampleAnnotationSheet(sas=sas, prefix=sas_prefix)
+        sas = SampleAnnotationSheet.read_from_file(file_path=sas_file)
+
+        for row_dict in sas.row_dicts:
+            collection._process_row_dict(row_dict=row_dict, prefix=sas_prefix)
 
         return collection
 
@@ -1435,28 +1440,6 @@ class Collection(object):
             samples.extend(project.get_all_Samples())
 
         return samples
-
-    def read_SampleAnnotationSheet(self, sas, prefix=None):
-        """Read a BSF SampleAnnotationSheet from a file.
-
-        This method imports a hierarchy of BSF ProcessedRunFolder, BSF Project, BSF Sample,
-        BSF PairedReads and BSF Reads objects into a BSF Collection.
-
-        @param sas: BSF SampleAnnotationSheet
-        @type sas: SampleAnnotationSheet
-        @param prefix: Optional configuration prefix
-            (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
-        @type prefix: str
-        @return: Nothing
-        @rtype: None
-        """
-
-        sas.csv_reader_open()
-
-        for row_dict in sas._csv_reader_object:
-            self._process_row_dict(row_dict=row_dict, prefix=prefix)
-
-        sas.csv_reader_close()
 
     def _process_row_dict(self, row_dict, prefix=None):
         """Private method to read a hierarchy of BSF data objects.
@@ -1813,27 +1796,53 @@ class Collection(object):
 
 
 class AnnotationSheet(object):
-    """BSF Annotation Sheet class.
+    """BSF Annotation Sheet class representing comma-separated value (CSV) files.
 
-    The BSF AnnotationSheet class represents comma-separated value (CSV) files.
+    This class is a bit unusual in that values of instance variables around the
+    csv.DictReader and csv.DictWriter classes can be initialised from a corresponding set of class variables.
+    Therefore, sub-classes with fixed defaults can be defined, while generic objects can be initialised directly
+    via the AnnotationSheet.__init__ method without the need to create an AnnotationSheet sub-class in code.
 
     Attributes:
+    @cvar _regular_expression_non_alpha: Regular expression for non-alphanumeric characters
+    @type _regular_expression_non_alpha: __Regex
+    @cvar _regular_expression_non_numeric: Regular expression for non-numeric characters
+    @type _regular_expression_non_numeric: __Regex
+    @cvar _regular_expression_non_sequence: Regular expression for non-sequence characters
+    @type _regular_expression_non_sequence: __Regex
+    @cvar _regular_expression_multiple_underscore: Regular expression for multiple underscore characters
+    @type _regular_expression_multiple_underscore: __Regex
+    @cvar _file_type: File type (i.e. 'excel' or 'excel-tab' defined in the csv module Dialect class)
+    @type _file_type: str
+    @cvar _header_line: Header line exists
+    @type _header_line: bool
+    @cvar _field_names: Python list of Python str (field name) objects
+    @type _field_names: list
+    @cvar _test_methods: Python dict of Python string (field name) key data and Python list of Python method value data
+    @type _test_methods: dict
     @ivar file_path: File path
     @type file_path: str | unicode
-    @ivar file_type: File type (e.g. ...)
+    @ivar file_type: File type (i.e. 'excel' or 'excel-tab' defined in the csv module Dialect class)
     @type file_type: str
     @ivar name: Name
     @type name: str
     @ivar field_names: Python list of field names
     @type field_names: list
+    @ivar test_methods: Python dict of Python string (field name) key data and Python list of Python method value data
+    @type test_methods: dict
     @ivar row_dicts: Python list of Python dict objects
     @type row_dicts: list
     """
 
-    non_alpha_expression = re.compile(pattern='\W')
-    non_numeric_expression = re.compile(pattern='\D')
-    non_sequence_expression = re.compile(pattern='[^ACGTacgt]')
-    multiple_underscore_expression = re.compile(pattern='_{2,}')
+    _regular_expression_non_alpha = re.compile(pattern='\W')
+    _regular_expression_non_numeric = re.compile(pattern='\D')
+    _regular_expression_non_sequence = re.compile(pattern='[^ACGTacgt]')
+    _regular_expression_multiple_underscore = re.compile(pattern='_{2,}')
+
+    _file_type = 'excel'
+    _header_line = True
+    _field_names = list()
+    _test_methods = dict()
 
     @classmethod
     def check_column(cls, row_number, row_dict, column_name, require_column=True, require_value=True):
@@ -1887,7 +1896,7 @@ class AnnotationSheet(object):
         messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
 
         if column_value:
-            match = re.search(pattern=cls.non_alpha_expression, string=row_dict[column_name])
+            match = re.search(pattern=cls._regular_expression_non_alpha, string=row_dict[column_name])
             if match:
                 messages += 'Column {!r} in row {} contains a value {!r} with non-alphanumeric characters.\n'. \
                     format(column_name, row_number, row_dict[column_name])
@@ -1914,7 +1923,7 @@ class AnnotationSheet(object):
         messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
 
         if column_value:
-            match = re.search(pattern=cls.non_numeric_expression, string=row_dict[column_name])
+            match = re.search(pattern=cls._regular_expression_non_numeric, string=row_dict[column_name])
             if match:
                 messages += 'Column {!r} in row {} contains a value {!r} with non-numeric characters.\n'. \
                     format(column_name, row_number, row_dict[column_name])
@@ -1938,11 +1947,15 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name,
-                                                  require_column=require_column, require_value=require_value)
+        messages, column_value = cls.check_column(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=require_column,
+            require_value=require_value)
 
         if column_value:
-            match = re.search(pattern=cls.non_sequence_expression, string=row_dict[column_name])
+            match = re.search(pattern=cls._regular_expression_non_sequence, string=row_dict[column_name])
             if match:
                 messages += 'Field {!r} in row {} contains a sequence {!r} with illegal characters.\n'. \
                     format(column_name, row_number, row_dict[column_name])
@@ -1962,8 +1975,12 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-        return cls.check_sequence(row_number=row_number, row_dict=row_dict, column_name=column_name,
-                                  require_column=True, require_value=True)
+        return cls.check_sequence(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=True,
+            require_value=True)
 
     @classmethod
     def check_sequence_optional(cls, row_number, row_dict, column_name):
@@ -1978,8 +1995,12 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-        return cls.check_sequence(row_number=row_number, row_dict=row_dict, column_name=column_name,
-                                  require_column=True, require_value=False)
+        return cls.check_sequence(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=True,
+            require_value=False)
 
     @classmethod
     def check_underscore_leading(cls, row_number, row_dict, column_name):
@@ -2053,7 +2074,7 @@ class AnnotationSheet(object):
         messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
 
         if column_value:
-            match = re.search(pattern=cls.multiple_underscore_expression, string=row_dict[column_name])
+            match = re.search(pattern=cls._regular_expression_multiple_underscore, string=row_dict[column_name])
             if match:
                 messages += 'Column {!r} in row {} contains a value {!r} with multiple underscore characters.\n'. \
                     format(column_name, row_number, row_dict[column_name])
@@ -2064,14 +2085,17 @@ class AnnotationSheet(object):
     def read_from_file(cls, file_path=None, file_type=None, name=None):
         """Construct an Annotation Sheet from a comma-separated value (CSV) file.
 
+        This method reads the whole CSV file at once and stores a list of Python dict objects
+        representing each row. For large files, the AnnotationSheet.csv_reader_open, AnnotationSheet.csv_reader_next
+        and AnnotationSheet.csv_reader_close methods should be called explicitly.
         @param file_path: File path
         @type file_path: str | unicode
-        @param file_type: File type (e.g. ...)
+        @param file_type: File type (i.e. 'excel' or 'excel_tab' defined in the csv module Dialect class)
         @type file_type: str
         @return: BSF Annotation Sheet
         @rtype: AnnotationSheet
         """
-
+        # TODO: This method should be renamed to from_file_path.
         annotation_sheet = cls(file_path=file_path, file_type=file_type, name=name)
 
         annotation_sheet.csv_reader_open()
@@ -2083,17 +2107,23 @@ class AnnotationSheet(object):
 
         return annotation_sheet
 
-    def __init__(self, file_path=None, file_type=None, name=None, field_names=None, row_dicts=None):
+    def __init__(self, file_path=None, file_type=None, name=None, header=None, field_names=None, test_methods=None,
+                 row_dicts=None):
         """Initialise a BSF AnnotationSheet object.
 
         @param file_path: File path
         @type file_path: str | unicode
-        @param file_type: File type (e.g. ...)
+        @param file_type: File type (i.e. 'excel' or 'excel_tab' defined in the csv module Dialect class)
         @type file_type: str
         @param name: Name
         @type name: str
-        @param field_names: Python list of field names
+        @param header: Header line
+        @type header: bool
+        @param field_names: Python list of Python str (field name) objects
         @type field_names: list
+        @param test_methods: Python dict of Python string (field name) key data and
+            Python list of Python method value data
+        @type test_methods: dict
         @param row_dicts: Python list of Python dict objects
         @type row_dicts: list
         """
@@ -2106,17 +2136,27 @@ class AnnotationSheet(object):
         if file_type:
             self.file_type = file_type
         else:
-            self.file_type = str()
+            self.file_type = self._file_type
 
         if name:
             self.name = name
         else:
             self.name = str()
 
+        if header is None:
+            self.header = self._header_line
+        else:
+            self.header = header
+
         if field_names:
             self.field_names = field_names
         else:
-            self.field_names = list()
+            self.field_names = self._field_names
+
+        if test_methods:
+            self.test_methods = test_methods
+        else:
+            self.test_methods = self._test_methods
 
         if row_dicts:
             self.row_dicts = row_dicts
@@ -2129,11 +2169,8 @@ class AnnotationSheet(object):
         self._csv_writer_file = None
         self._csv_writer_object = None
 
-    def csv_reader_open(self, header=True):
+    def csv_reader_open(self):
         """Open a Comma-Separated Value (CSV) file for reading and initialise a Python csv.DictWriter object.
-
-        @param header: A header line is present and populates the filed_names Python list.
-        @type header: bool
         """
 
         # Although the AnnotationSheet is initialised with an empty Python list object,
@@ -2141,13 +2178,21 @@ class AnnotationSheet(object):
         # However, the DictReader should always do so, if a header line is expected since
         # otherwise, the header line would get repeated as data line.
 
-        if len(self.field_names) and not header:
-            field_names = self.field_names
+        if len(self.field_names) and not self.header:
+            csv_field_names = self.field_names
         else:
-            field_names = None
+            csv_field_names = None
+
+        if len(self.file_type):
+            csv_file_type = self.file_type
+        else:
+            csv_file_type = None
 
         self._csv_reader_file = open(name=self.file_path, mode='rb')
-        self._csv_reader_object = csv.DictReader(f=self._csv_reader_file, fieldnames=field_names)
+        self._csv_reader_object = csv.DictReader(
+            f=self._csv_reader_file,
+            fieldnames=csv_field_names,
+            dialect=csv_file_type)
 
         # Automatically set the field names from the DictReader,
         # if the field_names list is empty and if possible.
@@ -2172,24 +2217,6 @@ class AnnotationSheet(object):
         self._csv_reader_file.close()
         self._csv_reader_file = None
 
-    def read_tsv(self):
-        """Read a Tab-Separated Value (TSV) file.
-        """
-
-        self._tsv_file = open(name=self.file_path, mode='r')
-        self._tsv_rows = list()
-
-        for line in self._tsv_file:
-
-            # Exclude comment lines.
-
-            if re.search(pattern=r'\s*#', string=line):
-                continue
-
-            self._tsv_rows.append(line.split())
-
-        self._tsv_file.close()
-
     def csv_writer_open(self):
         """Open a Comma-Separated Value (CSV) file for writing, initialise a Python csv.DictWriter object and
         write the header line if one has been defined.
@@ -2197,7 +2224,8 @@ class AnnotationSheet(object):
 
         self._csv_writer_file = open(name=self.file_path, mode='wb')
         self._csv_writer_object = csv.DictWriter(f=self._csv_writer_file, fieldnames=self.field_names)
-        self._csv_writer_object.writeheader()
+        if self.header:
+            self._csv_writer_object.writeheader()
 
     def csv_writer_next(self, row_dict):
         """Write the next line of a CSV file.
@@ -2226,11 +2254,9 @@ class AnnotationSheet(object):
             'Sorting of BSF Annotation Sheets has to implemented in the sub-class.',
             UserWarning)
 
-    def validate(self, test_methods):
+    def validate(self):
         """Validate a BSF Annotation Sheet.
 
-        @param test_methods: Dict of column names and associated test methods,
-        i.e. AnnotationSheet.check_alphanumeric, AnnotationSheet.check_sequence, ...
         @return: Warning messages
         @rtype: str
         """
@@ -2241,9 +2267,9 @@ class AnnotationSheet(object):
         for row_dict in self.row_dicts:
             row_number += 1
             for field_name in self.field_names:
-                if field_name in test_methods:
-                    for class_method_pointer in test_methods[field_name]:
-                        # Only validate fields, for which instructions exist in the tests dict.
+                if field_name in self.test_methods:
+                    for class_method_pointer in self.test_methods[field_name]:
+                        # Only validate fields, for which instructions exist in the test_methods dict.
                         messages += class_method_pointer(
                             row_number=row_number,
                             row_dict=row_dict,
@@ -2255,7 +2281,7 @@ class AnnotationSheet(object):
     def write_to_file(self):
         """Write a BSF Annotation Sheet to a file.
         """
-
+        # TODO: This method should be renamed to to_file_path.
         self.csv_writer_open()
 
         for row_dict in self.row_dicts:
@@ -2270,15 +2296,23 @@ class BamIndexDecoderSheet(AnnotationSheet):
 
     The BSF BamIndexDecoder Sheet class represents a comma-separated value (CSV) table of
     library information for the Illumina2bam BamIndexDecoder.
+    @cvar _file_type: File type (i.e. 'excel' or 'excel-tab' defined in the csv module Dialect class)
+    @type _file_type: str
+    @cvar _header_line: Header line exists
+    @type _header_line: bool
+    @cvar _field_names: Python list of Python str (field name) objects
+    @type _field_names: list
+    @cvar _test_methods: Python dict of Python string (field name) key data and Python list of Python method value data
+    @type _test_methods: dict
     """
 
-    # Column header names.
+    _file_type = 'excel'
 
-    field_names = ['lane', 'barcode_sequence_1', 'barcode_sequence_2', 'sample_name', 'library_name']
+    _header_line = True
 
-    # Python dict to correlate columns with lists of validation method pointers.
+    _field_names = ['lane', 'barcode_sequence_1', 'barcode_sequence_2', 'sample_name', 'library_name']
 
-    test_methods = dict(
+    _test_methods = dict(
         lane=[
             AnnotationSheet.check_alphanumeric
         ],
@@ -2302,45 +2336,10 @@ class BamIndexDecoderSheet(AnnotationSheet):
         ]
     )
 
-    @classmethod
-    def read_from_file(cls, file_path=None, file_type=None, name=None):
-        """Construct a BamIndexDecoder Sheet from a comma-separated value (CSV) file.
-
-        @param file_path: File path
-        @type file_path: str | unicode
-        @param file_type: File type (e.g. ...)
-        @type file_type: str
-        @return: BSF BamIndexDecoder Sheet
-        @rtype: BamIndexDecoderSheet
-        """
-
-        return super(BamIndexDecoderSheet, cls).read_from_file(file_path=file_path)
-
-    def __init__(self, file_path=None, file_type=None, name=None, row_dicts=None):
-        """Initialise a BSF BamIndexDecoder Sheet object.
-
-        @param file_path: File path
-        @type file_path: str | unicode
-        @param file_type: File type (e.g. ...)
-        @type file_type: str
-        @param name: Name
-        @type name: str
-        @param row_dicts: Python list of Python dict objects
-        @type row_dicts: list
-        """
-
-        super(BamIndexDecoderSheet, self).__init__(file_path=file_path,
-                                                   file_type=file_type,
-                                                   name=name,
-                                                   field_names=BamIndexDecoderSheet.field_names,
-                                                   row_dicts=row_dicts)
-
-    def validate(self, test_methods=None, lanes=8):
+    def validate(self, lanes=8):
         """
         Validate a BSF BamIndexDecoder Sheet.
 
-        @param test_methods:
-        @type test_methods: dict
         @param lanes: Number of lanes to validate
         @type lanes: int
         @return: Warning messages
@@ -2351,22 +2350,19 @@ class BamIndexDecoderSheet(AnnotationSheet):
 
         # Check the header line via the pre-defined field names.
 
-        for index in range(0, len(BamIndexDecoderSheet.field_names)):
+        for index in range(0, len(self._field_names)):
             if not self.field_names[index]:
                 messages += 'Column with name {!r} is missing from the header line.\n'. \
-                    format(BamIndexDecoderSheet.field_names[index])
+                    format(self._field_names[index])
 
-            if self.field_names[index] != BamIndexDecoderSheet.field_names[index]:
+            if self.field_names[index] != self._field_names[index]:
                 messages += 'Column name {!r} in the header line does not match template {!r}.\n'. \
-                    format(self.field_names[index], BamIndexDecoderSheet.field_names[index])
+                    format(self.field_names[index], self._field_names[index])
 
         # Validate the field values for alphanumeric or sequence grade in the context of the
         # BSF Annotation Sheet super-class.
 
-        if not test_methods:
-            test_methods = BamIndexDecoderSheet.test_methods
-
-        messages += super(BamIndexDecoderSheet, self).validate(test_methods=test_methods)
+        messages += super(BamIndexDecoderSheet, self).validate()
 
         lane_index = dict()
 
@@ -2453,47 +2449,39 @@ class BamIndexDecoderSheet(AnnotationSheet):
 class SampleAnnotationSheet(AnnotationSheet):
     """BSF SampleAnnotationSheet class.
 
+    @cvar _file_type: File type (i.e. 'excel' or 'excel-tab' defined in the csv module Dialect class)
+    @type _file_type: str
+    @cvar _header_line: Header line exists
+    @type _header_line: bool
+    @cvar _field_names: Python list of Python str (field name) objects
+    @type _field_names: list
+    @cvar _test_methods: Python dict of Python string (field name) key data and Python list of Python method value data
+    @type _test_methods: dict
     """
 
-    # Column header names.
+    _file_type = 'excel'
 
-    field_names = ['ProcessedRunFolder', 'Project', 'Sample', 'Reads1', 'File1', 'Reads2', 'File2']
+    _header_line = True
 
-    test_methods = dict()
+    _field_names = ['ProcessedRunFolder', 'Project', 'Sample', 'Reads1', 'File1', 'Reads2', 'File2']
 
-    @classmethod
-    def read_from_file(cls, file_path=None, file_type=None, name=None):
-        """Construct a SampleAnnotationSheet from a comma-separated value (CSV) file.
-
-        @param file_path: File path
-        @type file_path: str | unicode
-        @param file_type: File type (e.g. ...)
-        @type file_type: str
-        @return: BSF SampleAnnotationSheet
-        @rtype: SampleAnnotationSheet
-        """
-
-        return super(SampleAnnotationSheet, cls).read_from_file(file_path=file_path)
-
-    def __init__(self, file_path=None, file_type=None, name=None, row_dicts=None):
-        """Initialise a BSF SampleAnnotationSheet object.
-
-        @param file_path: File path
-        @type file_path: str | unicode
-        @param file_type: File type (e.g. ...)
-        @type file_type: str
-        @param name: Name
-        @type name: str
-        @param row_dicts: Python list of Python dict objects
-        @type row_dicts: list
-        """
-
-        super(SampleAnnotationSheet, self).__init__(
-            file_path=file_path,
-            file_type=file_type,
-            name=name,
-            field_names=SampleAnnotationSheet.field_names,
-            row_dicts=row_dicts)
+    _test_methods = dict(
+        ProcessedRunFolder=[
+            AnnotationSheet.check_alphanumeric
+        ],
+        Project=[
+            AnnotationSheet.check_alphanumeric
+        ],
+        Sample=[
+            AnnotationSheet.check_alphanumeric
+        ],
+        Reads1=[
+            AnnotationSheet.check_alphanumeric
+        ],
+        Reads2=[
+            AnnotationSheet.check_alphanumeric
+        ]
+    )
 
 
 class SampleGroup(object):
