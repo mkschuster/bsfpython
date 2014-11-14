@@ -36,6 +36,26 @@ from Bio.BSF.Data import AnnotationSheet
 from Bio.BSF.Executables import Cuffdiff, Cufflinks, Cuffmerge, TopHat
 
 
+class TuxedoSamplePairSheet(AnnotationSheet):
+    """Tuxedo Sample Pair Sheet modelling BSF Sample pairs defined by
+    the bsf_rnaseq_process_cuffdiff.R script.
+
+    Attributes:
+    @cvar _file_type: File type (i.e. 'excel' or 'excel-tab' defined in the csv module Dialect class)
+    @type _file_type: str
+    @cvar _field_names: Python list of Python str (field name) objects
+    @type _field_names: list
+    @cvar _test_methods: Python dict of Python string (field name) key data and Python list of Python method value data
+    @type _test_methods: dict
+    """
+
+    _file_type = "excel-tab"
+
+    _field_names = ["V1", "V2"]
+
+    _test_methods = dict()
+
+
 class Tuxedo(Analysis):
     """Tuxedo RNASeq Analysis sub-class.
 
@@ -85,7 +105,7 @@ class Tuxedo(Analysis):
                  project_directory=None, genome_directory=None,
                  e_mail=None, debug=0, drms_list=None,
                  collection=None, comparisons=None, samples=None,
-                 cmp_file=None):
+                 cmp_file=None, genome_fasta=None, transcriptome_gtf=None):
 
         """Initialise a Bio.BSF.Analysis.RNASeq.Tuxedo object.
 
@@ -119,16 +139,21 @@ class Tuxedo(Analysis):
         :type samples: list
         :param cmp_file: Comparison file
         :type cmp_file: str, unicode
+        :param genome_fasta: Reference genome sequence FASTA file path
+        :type genome_fasta: str, unicode
+        :param transcriptome_gtf: Reference transcriptome GTF file path
+        :type transcriptome_gtf: str, unicode
         :return: Nothing
         :rtype: None
         """
 
-        super(Tuxedo, self).__init__(configuration=configuration,
-                                     project_name=project_name, genome_version=genome_version,
-                                     input_directory=input_directory, output_directory=output_directory,
-                                     project_directory=project_directory, genome_directory=genome_directory,
-                                     e_mail=e_mail, debug=debug, drms_list=drms_list,
-                                     collection=collection, comparisons=comparisons, samples=samples)
+        super(Tuxedo, self).__init__(
+            configuration=configuration,
+            project_name=project_name, genome_version=genome_version,
+            input_directory=input_directory, output_directory=output_directory,
+            project_directory=project_directory, genome_directory=genome_directory,
+            e_mail=e_mail, debug=debug, drms_list=drms_list,
+            collection=collection, comparisons=comparisons, samples=samples)
 
         # Sub-class specific ...
 
@@ -136,6 +161,16 @@ class Tuxedo(Analysis):
             self.cmp_file = cmp_file
         else:
             self.cmp_file = str()
+
+        if transcriptome_gtf:
+            self.transcriptome_gtf = transcriptome_gtf
+        else:
+            self.transcriptome_gtf = str()
+
+        if genome_fasta:
+            self.genome_fasta = genome_fasta
+        else:
+            self.genome_fasta = str()
 
     def set_Configuration(self, configuration, section):
 
@@ -154,6 +189,12 @@ class Tuxedo(Analysis):
 
         if configuration.config_parser.has_option(section=section, option='cmp_file'):
             self.cmp_file = configuration.config_parser.get(section=section, option='cmp_file')
+
+        if configuration.config_parser.has_option(section=section, option='transcriptome'):
+            self.transcriptome_gtf = configuration.config_parser.get(section=section, option='transcriptome')
+
+        if configuration.config_parser.has_option(section=section, option='genome_fasta'):
+            self.genome_fasta = configuration.config_parser.get(section=section, option='genome_fasta')
 
     def _read_comparisons(self, cmp_file):
 
@@ -292,6 +333,26 @@ class Tuxedo(Analysis):
 
         self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
+        # Define the reference genome FASTA file path.
+        # If it does not exist, construct it from defaults.
+
+        if not self.genome_fasta:
+            self.genome_fasta = Default.absolute_genome_fasta(
+                genome_version=self.genome_version,
+                genome_index='bowtie2')
+
+        # Define the reference transcriptome GTF file path.
+        # Check if transcriptome_gtf is an absolute path and
+        # prepend the annotation default if not.
+
+        if not os.path.isabs(self.transcriptome_gtf):
+            self.transcriptome_gtf = os.path.join(
+                Default.absolute_genome_annotation(self.genome_version),
+                self.transcriptome_gtf)
+
+        if self.transcriptome_gtf and not os.path.exists(self.transcriptome_gtf):
+            raise Exception("Reference transcriptome GTF file {!r} does not exist.".format(self.transcriptome_gtf))
+
         self._create_tophat_cufflinks_jobs()
         self._create_cuffmerge_cuffdiff_jobs()
 
@@ -313,7 +374,6 @@ class Tuxedo(Analysis):
         config_section = self.configuration.section_from_instance(self)
 
         replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
-        transcriptome = config_parser.get(section=config_section, option='transcriptome')
         # TODO: These really are properties of the Reads, PairedReads or Sample objects rather than an Analysis.
         insert_size = config_parser.getint(section=config_section, option='insert_size')
         read_length = config_parser.getint(section=config_section, option='read_length')
@@ -329,11 +389,6 @@ class Tuxedo(Analysis):
 
         mate_inner_dist = insert_size - 2 * read_length
 
-        if config_parser.has_option(section=config_section, option='genome_fasta'):
-            genome_fasta = config_parser.get(section=config_section, option='genome_fasta')
-        else:
-            genome_fasta = Default.absolute_genome_fasta(self.genome_version, 'bowtie2')
-
         # Get the Bowtie2 index
 
         if config_parser.has_option(section=config_section, option='bowtie2_index'):
@@ -346,13 +401,6 @@ class Tuxedo(Analysis):
             novel_transcripts = config_parser.getboolean(section=config_section, option='novel_transcripts')
         else:
             novel_transcripts = True
-
-        # Check if transcriptome is an absolute path and
-        # prepend the annotation default if not.
-
-        if not os.path.isabs(transcriptome):
-            aga = Default.absolute_genome_annotation
-            transcriptome = os.path.join(aga(self.genome_version), transcriptome)
 
         # Initialise the Distributed Resource Management System (DRMS) objects for
         # TopHat and Cufflinks Executable objects.
@@ -407,19 +455,23 @@ class Tuxedo(Analysis):
 
                 # Set rnaseq_tophat options.
 
-                tophat.add_OptionLong(key='GTF',
-                                      value=transcriptome)
-                tophat.add_OptionLong(key='output-dir',
-                                      value=os.path.join(self.genome_directory, tophat.name))
-                tophat.add_OptionLong(key='num-threads',
-                                      value=str(run_tophat_drms.threads))
+                tophat.add_OptionLong(
+                    key='GTF',
+                    value=self.transcriptome_gtf)
+                tophat.add_OptionLong(
+                    key='output-dir',
+                    value=os.path.join(self.genome_directory, tophat.name))
+                tophat.add_OptionLong(
+                    key='num-threads',
+                    value=str(run_tophat_drms.threads))
                 # TODO: These really are properties of the Reads, PairedReads or Sample objects.
-                tophat.add_OptionLong(key='mate-inner-dist',
-                                      value=str(mate_inner_dist))
+                tophat.add_OptionLong(
+                    key='mate-inner-dist',
+                    value=str(mate_inner_dist))
                 if config_parser.has_option(section=config_section, option='mate-std-dev'):
-                    tophat.add_OptionLong(key='mate-std-dev',
-                                          value=config_parser.getint(section=config_section,
-                                                                     option='mate-std-dev'))
+                    tophat.add_OptionLong(
+                        key='mate-std-dev',
+                        value=config_parser.getint(section=config_section, option='mate-std-dev'))
 
                 # Set rnaseq_tophat arguments.
 
@@ -494,28 +546,33 @@ class Tuxedo(Analysis):
 
                 # Set rnaseq_cufflinks options.
 
-                cufflinks.add_OptionLong(key='output-dir',
-                                         value=os.path.join(self.genome_directory, cufflinks.name))
-                cufflinks.add_OptionLong(key='num-threads',
-                                         value=str(run_cufflinks_drms.threads))
+                cufflinks.add_OptionLong(
+                    key='output-dir',
+                    value=os.path.join(self.genome_directory, cufflinks.name))
+                cufflinks.add_OptionLong(
+                    key='num-threads',
+                    value=str(run_cufflinks_drms.threads))
 
                 # Cufflinks has a GTF option, in which case it will not assemble
                 # novel transcripts and a GTF-guide option in which case it will
                 # assemble novel transcripts.
 
                 if novel_transcripts:
-                    cufflinks.add_OptionLong(key='GTF-guide',
-                                             value=transcriptome)
+                    cufflinks.add_OptionLong(
+                        key='GTF-guide',
+                        value=self.transcriptome_gtf)
                 else:
-                    cufflinks.add_OptionLong(key='GTF',
-                                             value=transcriptome)
+                    cufflinks.add_OptionLong(
+                        key='GTF',
+                        value=self.transcriptome_gtf)
 
                 # TODO: The 'mask-file' options would be good to implement.
                 # Annotated mitochondrial transcripts, rRNAs and other abundant
                 # transcripts should be excluded to make abundance estimates more robust.
 
-                cufflinks.add_OptionLong(key='frag-bias-correct',
-                                         value=genome_fasta)
+                cufflinks.add_OptionLong(
+                    key='frag-bias-correct',
+                    value=self.genome_fasta)
 
                 # TODO: The 'multi-read-correct' option may have to be configurable.
                 cufflinks.add_SwitchLong(key='multi-read-correct')
@@ -588,16 +645,6 @@ class Tuxedo(Analysis):
         config_section = self.configuration.section_from_instance(self)
 
         replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
-        transcriptome = config_parser.get(section=config_section, option='transcriptome')
-
-        # Check if transcriptome is an absolute path and
-        # prepend the annotation default if not.
-
-        if not os.path.isabs(transcriptome):
-            aga = Default.absolute_genome_annotation
-            transcriptome = os.path.join(aga(self.genome_version), transcriptome)
-
-        genome_fasta = Default.absolute_genome_fasta(self.genome_version, 'bowtie2')
 
         # Initialise the Distributed Resource Management System (DRMS) objects for
         # Cuffmerge and Cuffdiff Executable objects.
@@ -635,14 +682,18 @@ class Tuxedo(Analysis):
 
             # Set rnaseq_cuffmerge options.
 
-            cuffmerge.add_OptionLong(key='output-dir',
-                                     value=os.path.join(self.genome_directory, cuffmerge.name))
-            cuffmerge.add_OptionLong(key='num-threads',
-                                     value=str(cuffmerge_drms.threads))
-            cuffmerge.add_OptionLong(key='ref-gtf',
-                                     value=transcriptome)
-            cuffmerge.add_OptionLong(key='ref-sequence',
-                                     value=Default.absolute_genome_fasta(self.genome_version, 'bowtie2'))
+            cuffmerge.add_OptionLong(
+                key='output-dir',
+                value=os.path.join(self.genome_directory, cuffmerge.name))
+            cuffmerge.add_OptionLong(
+                key='num-threads',
+                value=str(cuffmerge_drms.threads))
+            cuffmerge.add_OptionLong(
+                key='ref-gtf',
+                value=self.transcriptome_gtf)
+            cuffmerge.add_OptionLong(
+                key='ref-sequence',
+                value=self.genome_fasta)
 
             # Set rnaseq_cuffmerge arguments.
 
@@ -661,12 +712,15 @@ class Tuxedo(Analysis):
 
             # Set rnaseq_cuffdiff options.
 
-            cuffdiff.add_OptionLong(key='output-dir',
-                                    value=os.path.join(self.genome_directory, cuffdiff.name))
-            cuffdiff.add_OptionLong(key='num-threads',
-                                    value=str(run_cuffdiff_drms.threads))
-            cuffdiff.add_OptionLong(key='frag-bias-correct',
-                                    value=genome_fasta)
+            cuffdiff.add_OptionLong(
+                key='output-dir',
+                value=os.path.join(self.genome_directory, cuffdiff.name))
+            cuffdiff.add_OptionLong(
+                key='num-threads',
+                value=str(run_cuffdiff_drms.threads))
+            cuffdiff.add_OptionLong(
+                key='frag-bias-correct',
+                value=self.genome_fasta)
 
             # Process rnaseq_cuffmerge and rnaseq_cuffdiff arguments in parallel.
 
@@ -764,10 +818,18 @@ class Tuxedo(Analysis):
 
             # Set rnaseq_process_cuffdiff options.
 
-            process_cuffdiff.add_OptionLong(key='comparison',
-                                            value=key)
-            process_cuffdiff.add_OptionLong(key='genome_directory',
-                                            value=self.genome_directory)
+            process_cuffdiff.add_OptionLong(
+                key='comparison-name',
+                value=key)
+            process_cuffdiff.add_OptionLong(
+                key='genome-directory',
+                value=self.genome_directory)
+            process_cuffdiff.add_OptionLong(
+                key='gtf-file',
+                value=self.transcriptome_gtf)
+            process_cuffdiff.add_OptionLong(
+                key='genome-version',
+                value=self.genome_version)
 
             # Set rnaseq_process_cuffdiff arguments.
 
@@ -1207,17 +1269,20 @@ class Tuxedo(Analysis):
         output += '</p>\n'
         output += '\n'
 
+        output += '<h3>All Genes</h3>\n'
+
         output += '<table>\n'
         output += '<thead>\n'
         output += '<tr>\n'
         output += '<th>Comparison</th>\n'
+        output += '<th>Samples</th>\n'
+        output += '<th>Replicates</th>\n'
         output += '<th>Coding Sequences</th>\n'
         output += '<th>Genes</th>\n'
         output += '<th>Isoforms</th>\n'
         output += '<th>Promoters</th>\n'
         output += '<th>Splicing</th>\n'
         output += '<th>Transcription Start Sites</th>\n'
-        output += '<th>Replicates</th>\n'
         output += '<th>Gene FPKM Replicates</th>\n'
         output += '<th>Isoform FPKM Replicates</th>\n'
         output += '</tr>\n'
@@ -1234,45 +1299,94 @@ class Tuxedo(Analysis):
             output += '<td>{}</td>\n'. \
                 format(key)
 
-            # output += '<td><a href="./rnaseq_cuffdiff_{}/cds_exp.diff">Coding Sequences</a></td>\n'. \
-            #     format(key)
-            # output += '<td><a href="./rnaseq_cuffdiff_{}/gene_exp.diff"><strong>Genes</strong></a></td>\n'. \
-            #     format(key)
-            # output += '<td><a href="./rnaseq_cuffdiff_{}/isoform_exp.diff">Isoforms</a></td>\n'. \
-            #     format(key)
-            # output += '<td><a href="./rnaseq_cuffdiff_{}/promoters.diff">Promoters</a></td>\n'. \
-            #     format(key)
-            # output += '<td><a href="./rnaseq_cuffdiff_{}/splicing.diff">Splicing</a></td>\n'. \
-            #     format(key)
-            # output += '<td><a href="./rnaseq_cuffdiff_{}/tss_group_exp.diff">Transcription Start Sites</a></td>\n'. \
-            #     format(key)
-
             # Link to comparison-specific symbolic links in the directory after cummeRbund processing.
 
-            output += '<td><a href="./{}/{}_cds_exp_diff.txt">Coding Sequences</a></td>\n'. \
+            output += '<td><a href="./{}/{}_samples.tsv">Samples</a></td>'. \
                 format(prefix, prefix)
-            output += '<td><a href="./{}/{}_gene_exp_diff.txt"><strong>Genes</strong></a></td>\n'. \
+            output += '<td><a href="./{}/{}_replicates.tsv">Replicates</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="./{}/{}_isoform_exp_diff.txt">Isoforms</a></td>\n'. \
+            output += '<td><a href="./{}/{}_cds_exp_diff.tsv">Coding Sequences</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="./{}/{}_promoters_diff.txt">Promoters</a></td>\n'. \
+            output += '<td><a href="./{}/{}_genes_exp_diff.tsv"><strong>Genes</strong></a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="./{}/{}_splicing_diff.txt">Splicing</a></td>\n'. \
+            output += '<td><a href="./{}/{}_isoforms_exp_diff.tsv">Isoforms</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="./{}/{}_tss_group_exp_diff.txt">Transcription Start Sites</a></td>\n'. \
+            output += '<td><a href="./{}/{}_promoters_diff.tsv">Promoters</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="./{}/{}_replicates.txt">Replicates</a></td>\n'. \
+            output += '<td><a href="./{}/{}_splicing_diff.tsv">Splicing</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="./{}/{}_genes_fpkm_replicates.txt">Gene FPKM Replicates</a></td>\n'. \
+            output += '<td><a href="./{}/{}_tss_group_exp_diff.tsv">Transcription Start Sites</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="./{}/{}_isoforms_fpkm_replicates.txt">Isoform FPKM Replicates</a></td>\n'. \
+            output += '<td><a href="./{}/{}_genes_fpkm_replicates.tsv">Gene FPKM Replicates</a></td>\n'. \
                 format(prefix, prefix)
+            output += '<td><a href="./{}/{}_isoforms_fpkm_replicates.tsv">Isoform FPKM Replicates</a></td>\n'. \
+                format(prefix, prefix)
+
+            output += '</tr>\n'
+
+            # Read sample pair information if available.
+
+            sample_pair_path = os.path.join(
+                self.genome_directory,
+                prefix,
+                string.join(words=(prefix, 'sample_pairs.tsv'), sep='_'))
+
+            if os.path.exists(sample_pair_path):
+
+                sample_pair_sheet = TuxedoSamplePairSheet.read_from_file(file_path=sample_pair_path)
+
+                for row_dict in sample_pair_sheet.row_dicts:
+
+                    output += '<tr>\n'
+                    output += '<td></td>'  # Comparison
+                    output += '<td colspan="3"><strong>{}</strong> versus <strong>{}</strong></td>\n'. \
+                        format(row_dict['V1'], row_dict['V2'])  # Sample
+                    output += '<td><a href="./{}/{}_{}_{}_genes_diff.tsv"><strong>Genes</strong></a></td>\n'. \
+                        format(prefix, prefix, row_dict['V1'], row_dict['V2'])
+                    output += '<td><a href="./{}/{}_{}_{}_isoforms_diff.tsv">Isoforms</a></td>\n'. \
+                        format(prefix, prefix, row_dict['V1'], row_dict['V2'])
+                    output += '<td colspan="5"></td>'
+                    output += '</tr>\n'
+
+        output += '</tbody>\n'
+        output += '</table>\n'
+        output += '\n'
+
+        output += '<h3>Significant Genes</h3>\n'
+
+        output += '<table>\n'
+        output += '<thead>\n'
+        output += '<tr>\n'
+        output += '<th>Comparison</th>\n'
+        output += '<th>Genes</th>\n'
+        output += '<th>Isoforms</th>\n'
+        output += '</tr>\n'
+        output += '</thead>\n'
+        output += '<tbody>\n'
+
+        for key in keys:
+
+            prefix = 'rnaseq_process_cuffdiff_{}'.format(key)
+
+            output += '<tr>\n'
+            output += '<td>{}</td>\n'.format(key)
+
+            img_source = './{}/{}_genes_significance_matrix.png'.format(prefix, prefix)
+            output += '<td><a href="{}">'.format(img_source)
+            output += '<img alt="Significance Matrix Plot - Genes - {}" ' \
+                      'src="{}" height="80" width="80" />'.format(key, img_source)
+            output += '</a></td>\n'
+
+            img_source = './{}/{}_isoforms_significance_matrix.png'.format(prefix, prefix)
+            output += '<td><a href="{}">'.format(img_source)
+            output += '<img alt="Significance Matrix Plot - Isoforms - {}" ' \
+                      'src="{}" height="80" width="80" />'.format(key, img_source)
+            output += '</a></td>\n'
 
             output += '</tr>\n'
 
         output += '</tbody>\n'
         output += '</table>\n'
-        output += '\n'
 
         # Show cummeRbund quality plots.
 
@@ -1301,6 +1415,7 @@ class Tuxedo(Analysis):
         # output += '<th>Box Plot with Replicates - Isoforms</th>\n'
         output += '<th>Scatter Matrix Plot - Genes</th>\n'
         output += '<th>Scatter Matrix Plot - Isoforms</th>\n'
+        output += '<th>Dendrogram Plot</th>\n'
         output += '<th>Volcano Matrix Plot - Genes</th>\n'
         output += '<th>Multidimensional Scaling Plot - Genes</th>\n'
         output += '<th>Principal Component Analysis Plot - Genes</th>\n'
@@ -1420,6 +1535,14 @@ class Tuxedo(Analysis):
                       'src="{}" height="80" width="80" />'.format(key, img_source)
             output += '</a></td>\n'
 
+            # Dendrogram Plot for Genes
+
+            img_source = './{}/{}_genes_dendrogram.png'.format(prefix, prefix)
+            output += '<td><a href="{}">'.format(img_source)
+            output += '<img alt="Dendrogram Plot - Genes - {}" ' \
+                      'src="{}" height="80" width="80" />'.format(key, img_source)
+            output += '</a></td>\n'
+
             # Volcano Matrix Plot for Genes
 
             img_source = './{}/{}_genes_volcano_matrix.png'.format(prefix, prefix)
@@ -1448,6 +1571,52 @@ class Tuxedo(Analysis):
             output += '</a></td>\n'
 
             output += '</tr>\n'
+
+            # Read sample pair information if available.
+
+            sample_pair_path = os.path.join(
+                self.genome_directory,
+                prefix,
+                string.join(words=(prefix, 'sample_pairs.tsv'), sep='_'))
+
+            if os.path.exists(sample_pair_path):
+
+                sample_pair_sheet = TuxedoSamplePairSheet.read_from_file(file_path=sample_pair_path)
+
+                for row_dict in sample_pair_sheet.row_dicts:
+
+                    output += '<tr>\n'
+
+                    output += '<td></td>\n'
+                    output += '<td colspan="10"><strong>{}</strong> versus <strong>{}</strong></td>\n'. \
+                        format(row_dict['V1'], row_dict['V2'])
+
+                    img_source = './{}/{}_{}_{}_genes_scatter.png'.\
+                        format(prefix, prefix, row_dict['V1'], row_dict['V2'])
+                    output += '<td><a href="{}">'.format(img_source)
+                    output += '<img alt="Scatter Plot on genes {} versus {}" ' \
+                              'src="{}" height="80" width="80" />'.format(row_dict['V1'], row_dict['V2'], img_source)
+                    output += '</a></td>\n'
+
+                    output += '<td></td>\n'
+
+                    img_source = './{}/{}_{}_{}_maplot.png'.\
+                        format(prefix, prefix, row_dict['V1'], row_dict['V2'])
+                    output += '<td><a href="{}">'.format(img_source)
+                    output += '<img alt="M vs A Plot on genes {} versus {}" ' \
+                              'src="{}" height="80" width="80" />'.format(row_dict['V1'], row_dict['V2'], img_source)
+                    output += '</a></td>\n'
+
+                    img_source = './{}/{}_{}_{}_genes_volcano.png'.\
+                        format(prefix, prefix, row_dict['V1'], row_dict['V2'])
+                    output += '<td><a href="{}">'.format(img_source)
+                    output += '<img alt="Volcano Plot on genes {} versus {}" ' \
+                              'src="{}" height="80" width="80" />'.format(row_dict['V1'], row_dict['V2'], img_source)
+                    output += '</a></td>\n'
+
+                    output += '<td colspan="2"></td>\n'
+
+                    output += '</tr>\n'
 
         output += '</tbody>\n'
         output += '</table>\n'
