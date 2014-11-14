@@ -106,8 +106,8 @@ database_connection.connection.commit()
 
 process_slurm_list_new = process_slurm_adaptor.select_all()
 
-process_slurm_list_new = process_slurm_adaptor.select_all_by_job_name(
-    name='variant_calling_align_lane_BSF_0038_C274CACXX_4_AD1')
+# process_slurm_list_new = process_slurm_adaptor.select_all_by_job_name(
+#    name='variant_calling_align_lane_BSF_0038_C274CACXX_4_AD1')
 
 for process_slurm in process_slurm_list_new:
     print "Job identifier: {!r} name: {!r}".format(process_slurm.job_id, process_slurm.job_name)
