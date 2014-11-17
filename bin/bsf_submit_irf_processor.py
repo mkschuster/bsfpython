@@ -58,16 +58,16 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
-    '--library-file',
-    dest='library_file',
-    help='Library annotation sheet',
+    '--library-path',
+    dest='library_path',
+    help='Library annotation sheet file path',
     required=False,
     type=str)
 
 argument_parser.add_argument(
     '--configuration',
     default=Default.global_file_path,
-    help='Configuration (*.ini) file',
+    help='Configuration (*.ini) file path',
     required=False,
     type=str)
 
@@ -136,18 +136,18 @@ bid.project_name = itb.project_name
 if arguments.debug:
     bid.debug = arguments.debug
 
-if arguments.library_file:
-    bid.library_file = arguments.library_file
+if arguments.library_path:
+    bid.library_path = arguments.library_path
 
 # If a library file has not been defined so far, check,
 # if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
 
-if not bid.library_file:
-    library_file = string.join(words=(bid.project_name, 'libraries.csv'), sep='_')
-    if os.path.exists(path=library_file):
-        bid.library_file = library_file
+if not bid.library_path:
+    library_path = string.join(words=(bid.project_name, 'libraries.csv'), sep='_')
+    if os.path.exists(path=library_path):
+        bid.library_path = library_path
 
-if bid.library_file:
+if bid.library_path:
 
     # Do the work if, at this stage, a library file has been set.
 

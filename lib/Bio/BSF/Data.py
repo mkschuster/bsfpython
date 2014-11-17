@@ -2198,8 +2198,20 @@ class AnnotationSheet(object):
         initialise a Python C{csv.DictWriter} object and write the header line if one has been defined.
         """
 
+        if not len(self.field_names):
+            raise Exception("A DictWriter requires a Python list of field_names.")
+
+        if len(self.file_type):
+            csv_file_type = self.file_type
+        else:
+            csv_file_type = None
+
         self._csv_writer_file = open(name=self.file_path, mode='wb')
-        self._csv_writer_object = csv.DictWriter(f=self._csv_writer_file, fieldnames=self.field_names)
+        self._csv_writer_object = csv.DictWriter(
+            f=self._csv_writer_file,
+            fieldnames=self.field_names,
+            dialect=csv_file_type)
+
         if self.header:
             self._csv_writer_object.writeheader()
 
@@ -2268,7 +2280,41 @@ class AnnotationSheet(object):
 
 
 class BamIndexDecoderSheet(AnnotationSheet):
-    """The C{BamIndexDecoderSheet} class represents a Comma-Separated Value (CSV) table of
+    """The C{BamIndexDecoderSheet} class represents a Tab-Separated Value (TSV) table of
+    library information for the C{IlluminaToBamTools.BamIndexDecoder} C{Analysis}.
+
+    Attributes:
+    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
+    @type _file_type: str
+    @cvar _header_line: Header line exists
+    @type _header_line: bool
+    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
+    @type _field_names: list
+    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
+        Python C{list} of Python C{function} value data
+    @type _test_methods: dict
+    """
+
+    _file_type = 'excel-tab'
+
+    # The field names are defined in the IndexDecoder.java source file.
+    # https://github.com/wtsi-npg/illumina2bam/blob/devel/src/uk/ac/sanger/npg/picard/IndexDecoder.java
+
+    _header_line = True
+
+    _field_names = [
+        'barcode_sequence',
+        'barcode_name',
+        'library_name',
+        'sample_name',
+        'description'
+    ]
+
+    _test_methods = dict()
+
+
+class LibraryAnnotationSheet(AnnotationSheet):
+    """The C{LibraryAnnotationSheet} class represents a Comma-Separated Value (CSV) table of
     library information for the C{IlluminaToBamTools.BamIndexDecoder} C{Analysis}.
 
     Attributes:
@@ -2287,7 +2333,14 @@ class BamIndexDecoderSheet(AnnotationSheet):
 
     _header_line = True
 
-    _field_names = ['lane', 'barcode_sequence_1', 'barcode_sequence_2', 'sample_name', 'library_name']
+    _field_names = [
+        'lane',  # Lane number
+        'barcode_sequence_1',  # Index read sequence 1
+        'barcode_sequence_2',  # Index read sequence 2
+        'sample_name',  # Sample name (alphanumeric including '_' characters)
+        'library_name',  # Library name (alphanumeric including '_' characters)
+        'library_size'  # Library size (numeric)
+    ]
 
     _test_methods = dict(
         lane=[
@@ -2315,7 +2368,7 @@ class BamIndexDecoderSheet(AnnotationSheet):
 
     def validate(self, lanes=8):
         """
-        Validate a C{BamIndexDecoderSheet}.
+        Validate a C{LibraryAnnotationSheet}.
 
         @param lanes: Number of lanes to validate
         @type lanes: int
@@ -2339,7 +2392,7 @@ class BamIndexDecoderSheet(AnnotationSheet):
         # Validate the field values for alphanumeric or sequence grade in the context of the
         # AnnotationSheet super-class.
 
-        messages += super(BamIndexDecoderSheet, self).validate()
+        messages += super(LibraryAnnotationSheet, self).validate()
 
         lane_index = dict()
 
@@ -2443,7 +2496,11 @@ class SampleAnnotationSheet(AnnotationSheet):
 
     _header_line = True
 
-    _field_names = ['ProcessedRunFolder', 'Project', 'Sample', 'Reads1', 'File1', 'Reads2', 'File2']
+    _field_names = [
+        'ProcessedRunFolder', 'Project', 'Sample',
+        'Reads1', 'File1', 'Reads2', 'File2',
+        'LibrarySize', 'Barcode1', 'Barcode2'
+    ]
 
     _test_methods = dict(
         ProcessedRunFolder=[
@@ -2460,6 +2517,12 @@ class SampleAnnotationSheet(AnnotationSheet):
         ],
         Reads2=[
             AnnotationSheet.check_alphanumeric
+        ],
+        Barcode1=[
+            AnnotationSheet.check_sequence_optional
+        ],
+        Barcode2=[
+            AnnotationSheet.check_sequence_optional
         ]
     )
 

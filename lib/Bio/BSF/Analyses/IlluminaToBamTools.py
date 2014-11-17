@@ -33,7 +33,7 @@ import string
 import warnings
 
 from Bio.BSF import Analysis, Command, Configuration, Default, DRMS, Executable, Runnable
-from Bio.BSF.Data import BamIndexDecoderSheet, SampleAnnotationSheet
+from Bio.BSF.Data import BamIndexDecoderSheet, LibraryAnnotationSheet, SampleAnnotationSheet
 from Bio.BSF.Illumina import RunFolder
 
 
@@ -42,14 +42,37 @@ class IlluminaRunFolderNotComplete(Exception):
 
 
 class IlluminaToBam(Analysis):
-    """IlluminaToBam Analysis sub-class to convert Illumina BCL to a BAM or SAM file.
+    """The C{IlluminaToBam} class represents the logic to convert Illumina BCL to a BAM or SAM files.
 
     Attributes:
+    @ivar illumina_run_folder: File path to an I{Illumina Run Folder}
+    @type illumina_run_folder: str | unicode
+    @ivar intensity_directory: File path to the I{Intensities} directory,
+        defaults to I{illumina_run_folder/Data/Intensities}
+    @type intensity_directory: str | unicode
+    @ivar basecalls_directory: File path to the I{BaseCalls} directory,
+        defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
+    @type basecalls_directory: str | unicode
+    @ivar experiment_name: Experiment name (i.e. flow-cell identifier) normally automatically read from
+        Illumina Run Folder parameters
+    @type experiment_name: str
+    @ivar sequencing_centre: Sequencing centre
+    @type sequencing_centre: str
+    @ivar sequences_directory: Sequences directory to store archive BAM files
+    @type sequences_directory: str | unicode
+    @ivar experiment_directory: Experiment-specific directory
+    @type experiment_directory: str | unicode
+    @ivar classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
+    @type classpath_illumina2bam: str | unicode
+    @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
+    @type classpath_picard: str | unicode
+    @ivar force: Force processing of incomplete Illumina Run Folders
+    @type force: bool
     """
 
     @classmethod
     def from_config_file(cls, config_file):
-        """Create a new IlluminaToBam object from a UNIX-style configuration file via the Configuration class.
+        """Create a new C{IlluminaToBam} object from a UNIX-style configuration file via the C{Configuration} class.
 
         @param config_file: UNIX-style configuration file
         @type config_file: str | unicode
@@ -61,11 +84,11 @@ class IlluminaToBam(Analysis):
 
     @classmethod
     def from_Configuration(cls, configuration):
-        """Create a new IlluminaToBam object from a Configuration object.
+        """Create a new C{IlluminaToBam} object from a C{Configuration} object.
 
-        @param configuration: Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return: IlluminaToBam
+        @return: C{IlluminaToBam}
         @rtype: IlluminaToBam
         """
 
@@ -92,43 +115,43 @@ class IlluminaToBam(Analysis):
                  sequences_directory=None, experiment_directory=None,
                  classpath_illumina2bam=None, classpath_picard=None,
                  force=False):
-        """Initialise a Bio.BSF.Analyses.Illumina2BamTools.IlluminaToBam object.
+        """Initialise a C{IlluminaToBam} object.
 
-        @param configuration: Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: Analysis-wide input directory
+        @param input_directory: C{Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: Analysis-wide output directory
+        @param output_directory: C{Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: Analysis-wide project directory,
-            normally under the Analysis-wide output directory
+        @param project_directory: C{Analysis}-wide project directory,
+            normally under the C{Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: Analysis-wide genome directory,
-            normally under the Analysis-wide project directory
+        @param genome_directory: C{Analysis}-wide genome directory,
+            normally under the C{Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python list of DRMS objects
+        @param drms_list: Python C{list} of C{DRMS} objects
         @type drms_list: list
-        @param collection: Collection
+        @param collection: C{Collection}
         @type collection: Collection
-        @param comparisons: Python dict of Python tuple objects of Sample objects
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{Sample} objects
         @type comparisons: dict
-        @param samples: Python list of Sample objects
+        @param samples: Python C{list} of C{Sample} objects
         @type samples: list
-        @param illumina_run_folder: File path to an Illumina Run Folder
+        @param illumina_run_folder: File path to an I{Illumina Run Folder}
         @type illumina_run_folder: str | unicode
-        @param intensity_directory: File path to the 'Intensities' directory,
-            defaults to illumina_run_folder/Data/Intensities
+        @param intensity_directory: File path to the I{Intensities} directory,
+            defaults to I{illumina_run_folder/Data/Intensities}
         @type intensity_directory: str | unicode
-        @param basecalls_directory: File path to the 'BaseCalls' directory,
-            defaults to illumina_run_folder/Data/Intensities/BaseCalls
+        @param basecalls_directory: File path to the I{BaseCalls} directory,
+            defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
         @type basecalls_directory: str | unicode
         @param experiment_name: Experiment name (i.e. flow-cell identifier) normally automatically read from
             Illumina Run Folder parameters
@@ -212,10 +235,10 @@ class IlluminaToBam(Analysis):
         self.force = force
 
     def set_Configuration(self, configuration, section):
-        """Set instance variables of an IlluminaToBam object via a section of a Configuration object.
+        """Set instance variables of an C{IlluminaToBam} object via a section of a C{Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
@@ -286,7 +309,7 @@ class IlluminaToBam(Analysis):
                 option='force')
 
     def run(self):
-        """Run this IlluminaToBam analysis.
+        """Run this C{IlluminaToBam} C{Analysis}.
 
         Convert an Illumina flow-cell into lane-specific archive BAM files.
 
@@ -294,11 +317,6 @@ class IlluminaToBam(Analysis):
         library name (LB) and sample name (SM) to 'flow-cell identifier.lane'.
         The resulting archive BAM file is then sorted by query name with Picard SortSam.
         """
-
-        # Read configuration options.
-
-        # config_parser = self.configuration.config_parser
-        # config_section = self.configuration.section_from_instance(self)
 
         default = Default.get_global_default()
 
@@ -612,18 +630,33 @@ class IlluminaToBam(Analysis):
 
 
 class BamIndexDecoder(Analysis):
-    """BamIndexDecoder Analysis sub-class to decode sequence archive BAM files into sample-specific BAM files.
+    """The C{BamIndexDecoder} class represents the logic to decode sequence archive BAM files into
+    sample-specific BAM files.
 
     Attributes:
+    @ivar library_path: Library annotation file path
+    @type library_path: str | unicode
+    @ivar sequences_directory: BSF sequences directory
+    @type sequences_directory: str | unicode
+    @ivar samples_directory: BSF samples directory
+    @type samples_directory: str | unicode
+    @ivar experiment_directory: Experiment directory
+    @type experiment_directory: str | unicode
+    @ivar classpath_illumina2bam: Illumina2Bam tools Java Archive (JAR) class path directory
+    @type classpath_illumina2bam: str | unicode
+    @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
+    @type classpath_picard: str | unicode
+    @ivar force: Force de-multiplexing with a Library Annotation sheet failing validation
+    @type force: bool
     """
 
     @classmethod
     def from_config_file(cls, config_file):
-        """Create a new BamIndexDecoder object from a UNIX-style configuration file via the Configuration class.
+        """Create a new C{BamIndexDecoder} object from a UNIX-style configuration file via the C{Configuration} class.
 
         @param config_file: UNIX-style configuration file
         @type config_file: str | unicode
-        @return: BamIndexDecoder
+        @return: C{BamIndexDecoder}
         @rtype: BamIndexDecoder
         """
 
@@ -631,11 +664,11 @@ class BamIndexDecoder(Analysis):
 
     @classmethod
     def from_Configuration(cls, configuration):
-        """Create a new BamIndexDecoder object from a Configuration object.
+        """Create a new C{BamIndexDecoder} object from a C{Configuration} object.
 
-        @param configuration: Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return: BamIndexDecoder
+        @return: C{BamIndexDecoder}
         @rtype: BamIndexDecoder
         """
 
@@ -651,48 +684,43 @@ class BamIndexDecoder(Analysis):
 
         return itb
 
-    def __init__(self, configuration=None,
-                 project_name=None, genome_version=None,
-                 input_directory=None, output_directory=None,
-                 project_directory=None, genome_directory=None,
-                 e_mail=None, debug=0, drms_list=None,
-                 collection=None, comparisons=None, samples=None,
-                 library_file=None,
+    def __init__(self, configuration=None, project_name=None, genome_version=None, input_directory=None,
+                 output_directory=None, project_directory=None, genome_directory=None, e_mail=None, debug=0,
+                 drms_list=None, collection=None, comparisons=None, samples=None, library_path=None,
                  sequences_directory=None, samples_directory=None, experiment_directory=None,
-                 classpath_illumina2bam=None, classpath_picard=None,
-                 force=False):
-        """Initialise a Bio.BSF.Analyses.IlluminaToBamTools.BamIndexDecoder object.
+                 classpath_illumina2bam=None, classpath_picard=None, force=False):
+        """Initialise a C{BamIndexDecoder} object.
 
-        @param configuration: Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: Analysis-wide input directory
+        @param input_directory: C{Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: Analysis-wide output directory
+        @param output_directory: C{Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: Analysis-wide project directory,
-            normally under the Analysis-wide output directory
+        @param project_directory: C{Analysis}-wide project directory,
+            normally under the C{Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: Analysis-wide genome directory,
-            normally under the Analysis-wide project directory
+        @param genome_directory: C{Analysis}-wide genome directory,
+            normally under the C{Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python list of DRMS objects
+        @param drms_list: Python C{list} of C{DRMS} objects
         @type drms_list: list
-        @param collection: Collection
+        @param collection: C{Collection}
         @type collection: Collection
-        @param comparisons: Python dict of Python tuple objects of Sample objects
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{Sample} objects
         @type comparisons: dict
-        @param samples: Python list of Sample objects
+        @param samples: Python C{list} of C{Sample} objects
         @type samples: list
-        @param library_file: Library annotation file
-        @type library_file: str | unicode
+        @param library_path: Library annotation file path
+        @type library_path: str | unicode
         @param sequences_directory: BSF sequences directory
         @type sequences_directory: str | unicode
         @param samples_directory: BSF samples directory
@@ -724,10 +752,10 @@ class BamIndexDecoder(Analysis):
 
         # Sub-class specific ...
 
-        if library_file:
-            self.library_file = library_file
+        if library_path:
+            self.library_path = library_path
         else:
-            self.library_file = str()
+            self.library_path = str()
 
         if sequences_directory:
             self.sequences_directory = sequences_directory
@@ -757,10 +785,10 @@ class BamIndexDecoder(Analysis):
         self.force = force
 
     def set_Configuration(self, configuration, section):
-        """Set instance variables of a BamIndexDecoder object via a section of a Configuration object.
+        """Set instance variables of a C{BamIndexDecoder} object via a section of a C{Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
@@ -772,8 +800,8 @@ class BamIndexDecoder(Analysis):
 
         # Get the library annotation file.
 
-        if configuration.config_parser.has_option(section=section, option='library_file'):
-            self.library_file = configuration.config_parser.get(section=section, option='library_file')
+        if configuration.config_parser.has_option(section=section, option='library_path'):
+            self.library_path = configuration.config_parser.get(section=section, option='library_path')
 
         # Get the BSF samples directory.
 
@@ -807,10 +835,8 @@ class BamIndexDecoder(Analysis):
                 option='force')
 
     def run(self):
-        """Decode an archive BAM file produced with Illumina2Bam tools into sample-specific BAM files.
-
-        @return: Nothing
-        @rtype: None
+        """Run the C{BamIndexDecoder} analysis to decode an archive BAM file produced with Illumina2Bam tools into
+        sample-specific BAM files.
         """
 
         # The standard BSF Python *comma-separated* value sample sheet needs to be transformed into
@@ -869,28 +895,28 @@ class BamIndexDecoder(Analysis):
         # The library annotation sheet is deliberately not passed in via sas_file,
         # as the Analysis.run() method reads that option into a BSF Collection object.
 
-        self.library_file = os.path.expanduser(path=self.library_file)
-        self.library_file = os.path.expandvars(path=self.library_file)
+        self.library_path = os.path.expanduser(path=self.library_path)
+        self.library_path = os.path.expandvars(path=self.library_path)
 
-        if not self.library_file:
-            self.library_file = string.join(words=(self.project_name, 'libraries.csv'), sep='_')
+        if not self.library_path:
+            self.library_path = string.join(words=(self.project_name, 'libraries.csv'), sep='_')
 
-        if not os.path.exists(path=self.library_file):
-            raise Exception('Library annotation file {!r} does not exist.'.format(self.library_file))
+        if not os.path.exists(path=self.library_path):
+            raise Exception('Library annotation file {!r} does not exist.'.format(self.library_path))
 
         # Load the library annotation sheet file and validate.
 
-        library_annotation_sheet = BamIndexDecoderSheet.read_from_file(file_path=self.library_file)
+        library_annotation_sheet = LibraryAnnotationSheet.read_from_file(file_path=self.library_path)
 
         validation_messages = library_annotation_sheet.validate()
 
         if validation_messages:
             if self.force:
                 warnings.warn('Validation of library annotation sheet {!r}:\n{}'.
-                              format(self.library_file, validation_messages))
+                              format(self.library_path, validation_messages))
             else:
                 raise Exception('Validation of library annotation sheet {!r}:\n{}'.
-                                format(self.library_file, validation_messages))
+                                format(self.library_path, validation_messages))
 
         # Get the Illumina2Bam tools Java Archive (JAR) class path directory.
 
@@ -910,8 +936,6 @@ class BamIndexDecoder(Analysis):
 
         index_by_lane = dict()
 
-        field_names_2 = ['barcode_sequence', 'barcode_name', 'library_name', 'sample_name', 'description']
-
         for row_dict in library_annotation_sheet.row_dicts:
             if row_dict['lane'] in index_by_lane:
                 lane_list = index_by_lane[row_dict['lane']]
@@ -920,7 +944,7 @@ class BamIndexDecoder(Analysis):
                 index_by_lane[row_dict['lane']] = lane_list
             lane_list.append(row_dict)
 
-        sas = SampleAnnotationSheet(
+        sample_annotation_sheet = SampleAnnotationSheet(
             file_path=os.path.join(
                 self.experiment_directory,
                 string.join(words=(self.project_name, 'samples.csv'), sep='_')))
@@ -957,21 +981,22 @@ class BamIndexDecoder(Analysis):
             # raise Exception('Sequence archive BAM file {!r} does not exist.'.format(file_path_dict['input']))
 
             require_decoding = 0
-            file_handle_barcode = open(name=file_path_dict['barcode'], mode='w')
-            file_handle_barcode.write(string.join(words=field_names_2, sep='\t') + '\n')
+            bam_index_decoder_sheet = BamIndexDecoderSheet(file_path=file_path_dict['barcode'])
 
             for row_dict in index_by_lane[key]:
 
                 if len(row_dict['barcode_sequence_1']) or len(row_dict['barcode_sequence_2']):
                     require_decoding = 1
 
-                # Write the lane-specific tab-delimited Picard tools barcode file.
-                file_handle_barcode.write(
-                    string.join(words=(row_dict['barcode_sequence_1'] + row_dict['barcode_sequence_2'],
-                                       row_dict['sample_name'],
-                                       row_dict['library_name'],
-                                       row_dict['sample_name'],
-                                       ''), sep='\t') + '\n')
+                # Add a row to the lane-specific tab-delimited IlluminaToBamTools BamIndexDecoder barcode file.
+
+                bam_index_decoder_sheet.row_dicts.append(dict(
+                    barcode_sequence=row_dict['barcode_sequence_1'] + row_dict['barcode_sequence_2'],
+                    barcode_name=row_dict['sample_name'],
+                    library_name=row_dict['library_name'],
+                    sample_name=row_dict['sample_name'],
+                    description=str()
+                ))
 
                 # Write the flow-cell-specific sample annotation sheet.
                 sample_dict = dict(
@@ -981,11 +1006,15 @@ class BamIndexDecoder(Analysis):
                     Reads1=string.join(words=(self.project_name, key, row_dict['sample_name']), sep='_'),
                     File1=os.path.join(
                         file_path_dict['samples_directory'],
-                        '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])))
+                        '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])),
+                    LibrarySize=row_dict['library_size'],
+                    Barcode1=row_dict['barcode_sequence_1'],
+                    Barcode2=row_dict['barcode_sequence_2'])
 
-                sas.row_dicts.append(sample_dict)
+                sample_annotation_sheet.row_dicts.append(sample_dict)
 
-            file_handle_barcode.close()
+            # Write the lane-specific BamIndexDecoderSheet to the internal file path.
+            bam_index_decoder_sheet.write_to_file()
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
             runnable = Runnable(
@@ -1145,6 +1174,6 @@ class BamIndexDecoder(Analysis):
                     os.path.join(self.project_directory, file_path_dict['metrics']))):
                 bid.submit = False
 
-        # sample_csv_file.close()
-        # Finally, write the sample annotation sheet to the file.
-        sas.write_to_file()
+        # Finally, write the flow-cell-specific SampleAnnotationSheet to the internal file path.
+
+        sample_annotation_sheet.write_to_file()

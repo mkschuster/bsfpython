@@ -35,7 +35,7 @@ import string
 import warnings
 
 from Bio.BSF import Analysis, Default, DRMS, Executable
-from Bio.BSF.Data import BamIndexDecoderSheet, SampleAnnotationSheet
+from Bio.BSF.Data import LibraryAnnotationSheet, SampleAnnotationSheet
 from Bio.BSF.Illumina import RunFolder
 
 
@@ -137,7 +137,7 @@ def extract_illumina_barcodes(config_file):
 
     barcode_dict = dict()
 
-    library_annotation_sheet = BamIndexDecoderSheet.read_from_file(file_path=barcode_path)
+    library_annotation_sheet = LibraryAnnotationSheet.read_from_file(file_path=barcode_path)
 
     for row_dict in library_annotation_sheet.row_dicts:
         _process_row_dict(row_dict=row_dict, prefix=analysis.sas_prefix, barcode_dict=barcode_dict)

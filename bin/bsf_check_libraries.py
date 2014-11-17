@@ -29,22 +29,26 @@
 import argparse
 import warnings
 
+from Bio.BSF.Data import LibraryAnnotationSheet
 
-from Bio.BSF.Data import BamIndexDecoderSheet
 
-parser = argparse.ArgumentParser(description='BSF library annotation sheet checking script.')
+argument_parser = argparse.ArgumentParser(description='BSF library annotation sheet checking script.')
 
-parser.add_argument('--debug', required=False, type=int,
-                    help='Debug level')
+argument_parser.add_argument(
+    '--debug',
+    help='Debug level',
+    required=False,
+    type=int)
 
-parser.add_argument('file_path',
-                    help='Library annotation file (*.csv)')
+argument_parser.add_argument(
+    'library_path',
+    help='Library annotation sheet file path (*.csv)')
 
-args = parser.parse_args()
+args = argument_parser.parse_args()
 
-annotation_sheet = BamIndexDecoderSheet.read_from_file(file_path=args.file_path)
+library_annotation_sheet = LibraryAnnotationSheet.read_from_file(file_path=args.library_path)
 
-messages = annotation_sheet.validate()
+messages = library_annotation_sheet.validate()
 
 if messages:
     warnings.warn('\n' + messages)
