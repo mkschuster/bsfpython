@@ -34,12 +34,10 @@ from Bio.BSF import Runnable
 
 
 def run_illumina_to_bam(runnable):
-    """Run the 'illumina_to_bam' Executable defined in the BSF Runnable.
+    """Run the 'illumina_to_bam' Executable defined in the Runnable.
 
-    :param runnable: BSF Runnable
-    :type runnable: Runnable
-    :return: Nothing
-    :rtype: None
+    @param runnable: Runnable
+    @type runnable: Runnable
     """
 
     if os.path.exists(path=runnable.file_path_dict['unsorted_md5']) \
@@ -50,12 +48,10 @@ def run_illumina_to_bam(runnable):
 
 
 def run_picard_sort_sam(runnable):
-    """Run the 'picard_sort_sam' Executable defined in the BSF Runnable.
+    """Run the 'picard_sort_sam' Executable defined in the Runnable.
 
-    :param runnable: BSF Runnable
-    :type runnable: Runnable
-    :return: Nothing
-    :rtype: None
+    @param runnable: Runnable
+    @type runnable: Runnable
     """
 
     if os.path.exists(path=runnable.file_path_dict['sorted_md5']) \
@@ -73,12 +69,10 @@ def run_picard_sort_sam(runnable):
 
 
 def run(runnable):
-    """Run the the BSF Runnable.
+    """Run the the Runnable.
 
-    :param runnable: BSF Runnable
-    :type runnable: Runnable
-    :return: Nothing
-    :rtype: None
+    @param runnable: Runnable
+    @type runnable: Runnable
     """
 
     path_temporary = runnable.file_path_dict['temporary_directory']

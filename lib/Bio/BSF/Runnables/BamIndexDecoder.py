@@ -35,12 +35,10 @@ from Bio.BSF import Runnable
 
 
 def run_bam_index_decoder(runnable):
-    """Run the 'bam_index_decoder' Executable defined in the BSF Runnable.
+    """Run the I{bam_index_decoder} Executable defined in the C{Runnable}.
 
-    :param runnable: BSF Runnable
-    :type runnable: Runnable
-    :return: Nothing
-    :rtype: None
+    @param runnable: C{Runnable}
+    @type runnable: Runnable
     """
 
     if os.path.exists(path=runnable.file_path_dict['metrics']) \
@@ -51,12 +49,10 @@ def run_bam_index_decoder(runnable):
 
 
 def run_picard_collect_alignment_summary_metrics(runnable):
-    """Run the 'picard_collect_alignment_summary_metrics' Executable defined in the BSF Runnable.
+    """Run the I{picard_collect_alignment_summary_metrics} Executable defined in the C{Runnable}.
 
-    :param runnable: BSF Runnable
-    :type runnable: Runnable
-    :return: Nothing
-    :rtype: None
+    @param runnable: C{Runnable}
+    @type runnable: Runnable
     """
 
     if os.path.exists(path=runnable.file_path_dict['metrics']) \
@@ -73,12 +69,10 @@ def run_picard_collect_alignment_summary_metrics(runnable):
 
 
 def run(runnable):
-    """Run the the BSF Runnable.
+    """Run the the C{Runnable}.
 
-    :param runnable: BSF Runnable
-    :type runnable: Runnable
-    :return: Nothing
-    :rtype: None
+    @param runnable: C{Runnable}
+    @type runnable: Runnable
     """
 
     path_temporary = runnable.file_path_dict['temporary_directory']

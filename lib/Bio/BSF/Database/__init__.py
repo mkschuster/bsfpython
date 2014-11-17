@@ -31,7 +31,7 @@ import string
 
 
 class DatabaseConnection(object):
-    """The BSF Database Connection class wraps the sqlite3.Connection class.
+    """The C{DatabaseConnection} class encapsulates the C{sqlite3.Connection} class.
 
     @ivar file_path: File path
     @type file_path: str | unicode
@@ -40,21 +40,18 @@ class DatabaseConnection(object):
     """
 
     def __init__(self, file_path):
-        """Initialise a Database Connection object and connect to the sqlite3 database behind.
+        """Initialise a C{DatabaseConnection} object and connect to the sqlite3 database behind.
 
         @param file_path: File path
         @type file_path: str | unicode
         """
 
-        if file_path:
-            self.file_path = file_path
-        else:
-            self.file_path = str()
+        self.file_path = file_path
 
         self.connection = sqlite3.connect(database=self.file_path)
 
     def create_schema(self):
-        """Create the database schema.
+        """Create and commit the database schema.
         """
 
         job_submission_adaptor = JobSubmissionAdaptor(database_connection=self)
@@ -70,17 +67,17 @@ class DatabaseConnection(object):
 
 
 class DatabaseAdaptor(object):
-    """The BSF DatabaseAdaptor serves as a super-class for object-specific adaptors.
+    """The C{DatabaseAdaptor} class represents as a super-class for object-specific table adaptors.
 
     Instance variables should be overridden in sub-classes.
     @ivar table_name: SQL database table name
     @type table_name: str
-    @ivar column_definition: Python list of Python list objects with
-        SQL column name strings and SQL column constraint strings.
+    @ivar column_definition: Python C{list} of Python C{list} objects with
+        Python C{str} (SQL column name) and Python C{str} (SQL column constraint) objects.
     @type column_definition: list
     @ivar table_constraint: SQL table constraint expression
     @type table_constraint: list
-    @ivar database_connection: BSF DatabaseConnection
+    @ivar database_connection: Database Connection
     @type database_connection: DatabaseConnection
     @ivar connection: SQLite connection
     @type connection: sqlite3.Connection
@@ -88,20 +85,22 @@ class DatabaseAdaptor(object):
 
     def __init__(self, database_connection, table_name=None, column_definition=None, table_constraint=None,
                  connection=None):
-        """Initialise a Database Adaptor object.
+        """Initialise a C{DatabaseAdaptor} object.
 
+        @param database_connection: Database Connection
+        @type database_connection: DatabaseConnection
         @param table_name: SQL database table name
         @type table_name: str
-        @param column_definition: Python list of Python list objects with
-            SQL column name strings and SQL column constraint strings.
+        @param column_definition: Python C{list} of Python C{list} objects with
+            Python C{str) (SQL column name) and Pyton C{str} (SQL column constraint) objects.
         @type column_definition: list
         @param table_constraint: SQL table constraint expression
         @type table_constraint: list
-        @param database_connection: Database Connection
-        @type database_connection: DatabaseConnection
         @param connection: SQLite connection
         @type connection: sqlite3.Connection
         """
+
+        self.database_connection = database_connection
 
         if table_name:
             self.table_name = table_name
@@ -118,38 +117,33 @@ class DatabaseAdaptor(object):
         else:
             self.table_constraint = list()
 
-        if database_connection:
-            self.database_connection = database_connection
-        else:
-            self.database_connection = DatabaseConnection(file_path=None)
-
         if connection:
             self.connection = connection
         else:
             self.connection = sqlite3.connect(database=self.database_connection.file_path)
 
     def _get_column_name_list_with_primary(self):
-        """Build a Python list of column names including the primary key.
+        """Build a Python C{list} of SQL column names including the primary key.
 
-        @return: Python list of SQL column name Python str objects
+        @return: Python C{list} of Python C{str} (SQL column name) objects
         @rtype: list
         """
 
         return map(lambda x: x[0], self.column_definition)
 
     def _get_column_name_list_without_primary(self):
-        """Build a Python list of column names excluding the primary key.
+        """Build a Python C{list} of SQL column names excluding the primary key.
 
-        This method excludes PRIMARY KEY columns with definition AUTOINCREMENT,
-        which must not be assigned a value in INSERT or UPDATE statements.
-        @return: Python list of SQL column name Python str objects
+        This method excludes C{PRIMARY KEY} columns with definition C{AUTOINCREMENT},
+        which must not be assigned a value in C{INSERT} or C{UPDATE} statements.
+        @return: Python C{list} of Python C{str} (SQL column name) objects
         @rtype: list
         """
 
         return map(lambda x: x[0], filter(lambda x: 'AUTOINCREMENT' not in x[1], self.column_definition))
 
     def _get_column_name_for_primary(self):
-        """Get the column name for the primary key.
+        """Get the SQL column name for the primary key.
         @return: Column name for primary key
         @rtype: str
         """
@@ -158,17 +152,17 @@ class DatabaseAdaptor(object):
         return name_list[0]
 
     def _build_column_result_expression(self):
-        """Build an SQL expression of column names in typically used in SELECT statements.
+        """Build an SQL expression of column names typically used in C{SELECT} statements.
 
         This method simply lists all column names of the column definition.
-        @return: Column result columns expression string
+        @return: Column result expression string
         @rtype: str
         """
 
         return string.join(words=self._get_column_name_list_with_primary(), sep=', ')
 
     def _build_column_definition_expression(self):
-        """Build an SQL expression of column definitions typically used in CREATE TABLE statements.
+        """Build an SQL expression of column definitions typically used in C{CREATE TABLE} statements.
 
         @return: Column definition expression string
         @rtype: str
@@ -179,9 +173,9 @@ class DatabaseAdaptor(object):
             sep=', ')
 
     def _build_column_insert_expression(self):
-        """Build an SQL expression of column names typically used in INSERT statements.
+        """Build an SQL expression of column names typically used in C{INSERT} statements.
 
-        This method excludes PRIMARY KEY columns with definition AUTOINCREMENT,
+        This method excludes C{PRIMARY KEY} columns with definition C{AUTOINCREMENT},
         which must not be assigned a value.
         @return: Column definition expression string
         @rtype: str
@@ -190,9 +184,9 @@ class DatabaseAdaptor(object):
         return string.join(words=self._get_column_name_list_without_primary(), sep=', ')
 
     def _build_value_insert_expression(self):
-        """Build an SQL expression of value placeholders (?) typically used in INSERT statements.
+        """Build an SQL expression of value placeholders (?) typically used in C{INSERT} statements.
 
-        @return: Column definition expression string
+        @return: Column value expression string
         @rtype: str
         """
 
@@ -201,9 +195,10 @@ class DatabaseAdaptor(object):
             sep=', ')
 
     def _build_column_update_expression(self):
-        """Build an SQL expression of column name and value placeholder pairs typically used in SQL UPDATE statements.
+        """Build an SQL expression of column name and value placeholder pairs
+        typically used in SQL C{UPDATE} statements.
 
-        As in INSERT expressions leave out the PRIMARY KEY columns with definition AUTOINCREMENT.
+        As in C{INSERT} expressions, leave out the C{PRIMARY KEY} columns with definition C{AUTOINCREMENT}.
         @return: SQL column name and value placeholder pair expression string
         @rtype: str
         """
@@ -213,22 +208,22 @@ class DatabaseAdaptor(object):
             sep=', ')
 
     def statement_create_table(self):
-        """Build an SQL CREATE TABLE statement.
+        """Build an SQL C{CREATE TABLE} statement.
 
-        @return: SQL CREATE TABLE statement
+        @return: SQL C{CREATE TABLE} statement
         @rtype: str
         """
 
         return "CREATE TABLE {!r} ({})".format(self.table_name, self._build_column_definition_expression())
 
     def statement_select(self, where_clause=None, group_clause=None, having_clause=None):
-        """Build an SQL SELECT statement.
+        """Build an SQL C{SELECT} statement.
 
-        @param where_clause: SQL WHERE clause
+        @param where_clause: SQL C{WHERE} clause
         @type where_clause: str
-        @param group_clause: SQL GROUP BY clause
+        @param group_clause: SQL C{GROUP BY} clause
         @type group_clause: str
-        @param having_clause: SQL HAVING clause
+        @param having_clause: SQL C{HAVING} clause
         @type having_clause: str
         @return: SQL SELECT statement
         @rtype: str
@@ -252,9 +247,9 @@ class DatabaseAdaptor(object):
         return statement
 
     def create_table(self):
-        """Create the canonical table for the DatabaseAdaptor sub-class.
+        """Create the canonical table for the C{DatabaseAdaptor} sub-class.
 
-        Before attempting to create the table, this method checks in 'sqlite_master',
+        Before attempting to execute the SQL C{CREATE TABLE} statement, this method checks in 'sqlite_master',
         whether the table already exists in the SQLite database.
         """
 
@@ -275,23 +270,23 @@ class DatabaseAdaptor(object):
             # self.database_connection.connection.commit()
 
     def _objects_from_statement(self, statement, parameters=None):
-        """BSF Object-specific function to turn results of a SELECT statement into BSF Objects
+        """Object-specific function to turn results of a C{SELECT} statement into objects.
 
-        This needs to be overridden in the corresponding sub-class.
-        @param statement: Complete SQL SELECT statement
+        This method needs overriding in the corresponding sub-class.
+        @param statement: Complete SQL C{SELECT} statement
         @type statement: str
-        @param parameters: Python list of Python str (parameter) objects or None
+        @param parameters: Python C{list} of Python C{str} (parameter) objects or None
         @type parameters: list
-        @return: Python list of BSF Objects
+        @return: Python C{list} of objects
         @rtype: list
         """
 
         return []
 
     def select_all(self):
-        """Select all canonical objects corresponding to the DatabaseAdaptor sub-class.
+        """Select all canonical objects corresponding to the C{DatabaseAdaptor} sub-class.
 
-        @return: Python list of BSF Objects
+        @return: Python C{list} of objects
         @rtype: list
         """
 
@@ -300,9 +295,9 @@ class DatabaseAdaptor(object):
         return self._objects_from_statement(statement=statement)
 
     def insert(self, data_object):
-        """Insert a canonical object corresponding to the DatabaseAdaptor sub-class.
+        """Insert a canonical object corresponding to the C{DatabaseAdaptor} sub-class.
 
-        @param data_object: BSF Data object
+        @param data_object: Object
         @type data_object: object
         """
 
@@ -337,9 +332,9 @@ class DatabaseAdaptor(object):
             data_object.__setattr__(column_name, last_row_identifier)
 
     def update(self, data_object):
-        """Update a canonical object corresponding to the DatabaseAdaptor sub-class.
+        """Update a canonical object corresponding to the C{DatabaseAdaptor} sub-class.
 
-        @param data_object: BSF Data object
+        @param data_object: Object
         @type data_object: object
         """
         # Get the list of values by using the column definition and reading attributes of the same name
@@ -368,24 +363,25 @@ class DatabaseAdaptor(object):
 
 
 class JobSubmission(object):
-    """The BSF Job Submission class models one job submitted into the DRMS.
+    """The C{JobSubmission} class representing one process submitted into the
+    Distributed Resource Management System (DRMS).
 
-    This class is equivalent to the Executable and Command classes, but much less complex.
+    This class is equivalent to the C{Executable} and C{Command} classes, but much less complex.
     Command lines are stored as submitted and not broken down into sub-commands, options and arguments.
     @ivar executable_id: Primary key
     @type executable_id: int
-    @ivar name: Executable name
+    @ivar name: C{Executable.name}
     @type name: str
     @ivar command: Command line
     @type command: str
     """
 
     def __init__(self, executable_id=0, name=None, command=None):
-        """Initialise a BSF Job Submission object.
+        """Initialise a C{JobSubmission} object.
 
         @param executable_id: Primary key
         @type executable_id: int
-        @param name: Executable name
+        @param name: C{Executable.name}
         @type name: str
         @param command: Command line
         @type command: str
@@ -396,13 +392,13 @@ class JobSubmission(object):
 
 
 class JobSubmissionAdaptor(DatabaseAdaptor):
-    """The BSF JobSubmissionAdaptor class provides database access for the BSF JobSubmission class.
+    """The C{JobSubmissionAdaptor} class provides database access for the C{JobSubmission} class.
     """
 
     def __init__(self, database_connection):
-        """Initialise a BSF Job Submission Adaptor object.
+        """Initialise a C{JobSubmissionAdaptor} object.
 
-        @param database_connection: BSF Database Connection
+        @param database_connection: Database Connection
         @type database_connection: DatabaseConnection
         """
 
@@ -419,14 +415,14 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
             ])
 
     def _objects_from_statement(self, statement, parameters=None):
-        """BSF JobSubmissionAdaptor-specific function to turn results of a SELECT statement into
-        BSF JobSubmission objects.
+        """C{JobSubmissionAdaptor}-specific function to turn results of a SQL C{SELECT} statement into
+        C{JobSubmission} objects.
 
-        @param statement: Complete SQL SELECT statement
+        @param statement: Complete SQL C{SELECT} statement
         @type statement: str
-        @param parameters: Python list of Python str (parameter) objects or None
+        @param parameters: Python C{list} of Python C{str} (parameter) objects or C{None}
         @type parameters: list
-        @return: Python list of BSF Objects
+        @return: Python C{list} of objects
         @rtype: list
         """
 
@@ -450,12 +446,12 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
         return object_list
 
     def select_by_name(self, name):
-        """Select one BSF Job Submission object by name.
+        """Select one C{JobSubmission} object by name.
 
         @param name: Name
         @type name: str
-        @return: BSF JobSubmission or None
-        @rtype: JobSubmission, None
+        @return: C{JobSubmission} or C{None}
+        @rtype: JobSubmission | None
         """
         parameters = list()
 
@@ -474,11 +470,11 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
 
 
 class ProcessSLURM(object):
-    """The ProcessSLURM class models one process in the Simple Linux Utility for Resource Management (SLURM)
-     Distributed Resource Management System.
+    """The C{ProcessSLURM} class models one process in the Simple Linux Utility for Resource Management (SLURM)
+     Distributed Resource Management System (DRMS).
 
-    The instance variable names result from the SLURM command sacct --parsable --long
-    @ivar process_slurm_id:
+    The instance variable names result from the SLURM command C{sacct --parsable --long}
+    @ivar process_slurm_id: Primary key
     @type process_slurm_id: int
     @ivar job_id: The number of the job or job step. It is in the form: job.jobstep
     @type job_id: str
@@ -524,11 +520,11 @@ class ProcessSLURM(object):
     @type allocated_cpus: str
     @ivar elapsed: The jobs elapsed time
     @type elapsed: str
-    @ivar state: Displays the job status, or state.
+    @ivar state: Displays the job status, or state
         Value can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or NODE_FAIL
     @type state: str
     @ivar exit_code: The exit code returned by the job script or salloc, typically as set by the exit() function.
-        Following the colon is the signal that caused the process to  terminate if it was terminated by a signal.
+        Following the colon is the signal that caused the process to terminate if it was terminated by a signal.
     @type exit_code: str
     @ivar average_cpu_frequency: Average weighted CPU frequency of all tasks in job, in kHz
     @type average_cpu_frequency: str
@@ -566,7 +562,7 @@ class ProcessSLURM(object):
                  consumed_energy=None,
                  max_disk_read=None, max_disk_read_node=None, max_disk_read_task=None, average_disk_read=None,
                  max_disk_write=None, max_disk_write_node=None, max_disk_write_task=None, average_disk_write=None):
-        """Initialise a BSF ProcessSLURM object.
+        """Initialise a ProcessSLURM object.
 
         @param process_slurm_id:
         @type process_slurm_id: int
@@ -685,7 +681,8 @@ class ProcessSLURM(object):
 
 
 class ProcessSLURMAdaptor(DatabaseAdaptor):
-    """The BSF ProcessSLURMAdaptor class provides database access for the BSF ProcessSLURM class.
+    """ProcessSLURMAdaptor class providing database access for the ProcessSLURM class.
+
     The SQL column names result from SLURM command sacct --parsable --long
     """
 
@@ -817,14 +814,14 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
             ])
 
     def _objects_from_statement(self, statement, parameters=None):
-        """BSF ProcessSLURMAdaptor-specific function to turn results of a SELECT statement into
-        BSF ProcessSLURM objects.
+        """ProcessSLURMAdaptor-specific function to turn results of a SELECT statement into
+        ProcessSLURM objects.
 
         @param statement: Complete SQL SELECT statement
         @type statement: str
         @param parameters: Python list of Python str (parameter) objects or None
         @type parameters: list
-        @return: Python list of BSF Objects
+        @return: Python list of objects
         @rtype: list
         """
 
@@ -848,12 +845,12 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         return object_list
 
     def select_all_by_job_name(self, name):
-        """Select all BSF Job Submission objects by job_name.
+        """Select all JobSubmission objects by job_name.
 
         The same Executable can be submitted more than once into the DRMS.
         @param name: Job name
         @type name: str
-        @return: Python list of BSF JobSubmission objects
+        @return: Python list of JobSubmission objects
         @rtype: list
         """
         statement = self.statement_select(where_clause='job_name = ?')
@@ -863,11 +860,11 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         return self._objects_from_statement(statement=statement, parameters=parameters)
 
     def select_by_job_id(self, job_id):
-        """Select one BSF Job Submission object by job_id.
+        """Select one JobSubmission object by job_id.
 
         @param job_id: Job identifier
         @type job_id: str
-        @return: Python list of BSF JobSubmission objects
+        @return: Python list of JobSubmission objects
         @rtype: list
         """
         statement = self.statement_select(where_clause='job_id = ?')
@@ -951,7 +948,7 @@ class ProcessSGE(object):
     @type pe_taskid: str
     @ivar maxvmem: The maximum vmem size in bytes
     @type maxvmem: str
-    @ivar arid: Advance reservation identifier.
+    @ivar arid: Advance reservation identifier
     @type arid: str
     """
 
@@ -960,7 +957,7 @@ class ProcessSGE(object):
                  failed=None, exit_status=None, ru_wallclock=None, project=None, department=None, granted_pe=None,
                  slots=None, task_number=None, cpu=None, mem=None, io=None, category=None, iow=None, pe_taskid=None,
                  maxvmem=None, arid=None):
-        """Initialise a BSF ProcessSGE object.
+        """Initialise a ProcessSGE object.
 
         @param process_sge_id: Primary key
         @type process_sge_id: int
@@ -1023,7 +1020,7 @@ class ProcessSGE(object):
         @type pe_taskid: str
         @param maxvmem: The maximum vmem size in bytes
         @type maxvmem: str
-        @param arid: Advance reservation identifier.
+        @param arid: Advance reservation identifier
         @type arid: str
         """
         self.process_sge_id = process_sge_id
@@ -1057,7 +1054,7 @@ class ProcessSGE(object):
 
 
 class ProcessSGEAdaptor(DatabaseAdaptor):
-    """The BSF ProcessSLURMAdaptor class provides database access for the BSF ProcessSLURM class.
+    """ProcessSLURMAdaptor class providing database access for the ProcessSLURM class.
 
     The SQL column names result from the SGE accounting file. See man 5 accounting.
     """
@@ -1234,14 +1231,14 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
             ])
 
     def _objects_from_statement(self, statement, parameters=None):
-        """BSF ProcessSLURMAdaptor-specific function to turn results of a SELECT statement into
-        BSF ProcessSLURM objects.
+        """ProcessSLURMAdaptor-specific function to turn results of a SELECT statement into
+        ProcessSLURM objects.
 
         @param statement: Complete SQL SELECT statement
         @type statement: str
         @param parameters: Python list of Python str (parameter) objects or None
         @type parameters: list
-        @return: Python list of BSF Objects
+        @return: Python list of objects
         @rtype: list
         """
 

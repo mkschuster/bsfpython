@@ -42,14 +42,12 @@ output_directory = 'bsfpython_sge_output'
 
 def submit(drms, debug=0):
 
-    """Submit BSF Executable objects into the Son of Grid Engine (SGE) Distributed Resource Management System.
+    """Submit C{Executable} objects into the Son of Grid Engine (SGE) Distributed Resource Management System (DRMS).
 
-    :param drms: BSF DRMS
-    :type drms: DRMS
-    :param debug: Debug level
-    :type debug: int
-    :return: Nothing
-    :rtype: None
+    @param drms: Distributed Resource Management System (C{DRMS})
+    @type drms: DRMS
+    @param debug: Debug level
+    @type debug: int
     """
 
     output = str()

@@ -49,62 +49,58 @@ from Bio.BSF.Argument import *
 
 
 class Analysis(object):
-    """BSF Analysis class.
-
-    The BSF Analysis class represents a high-level analysis that may use one or more
-    algorithms (BSF Executable).
+    """The Analysis class represents a high-level analysis that may use one or more
+    programs (Executable objects).
 
     Attributes:
-    :ivar configuration: BSF Configuration
-    :type configuration: Configuration
-    :ivar debug: Debug level
-    :type debug: int
-    :ivar project_name: Project name (arbitrary)
-    :type project_name: str
-    :ivar genome_version: Genome version (e.g. hg19, mm10, GRCh37, GRCm38, ...)
-    :type genome_version: str
-    :ivar input_directory: Input directory
-    :type input_directory: str, unicode
-    :ivar output_directory: Output directory, user-specified including a genome version sub-directory
-    :type output_directory: str, unicode
-    :ivar project_directory: Project-specific directory
-    :type project_directory: str, unicode
-    :ivar genome_directory: Genome-specific directory
-    :type genome_directory: str, unicode
-    :ivar drms_list: Python list of BSF DRMS objects
-    :type drms_list: list
-    :ivar runnable_dict: Python dict of Python str (BSF Runnable.name) key data and BSF Runnable value data
-    :type runnable_dict: dict
-    :ivar collection: BSF Collection
-    :type collection: Collection
-    :ivar comparisons: Python dict of comparisons
-    :type comparisons: dict
-    :ivar samples: Python list of BSF Sample objects
-    :type samples: list
+    @ivar configuration: Configuration
+    @type configuration: Configuration
+    @ivar debug: Debug level
+    @type debug: int
+    @ivar project_name: Project name (arbitrary)
+    @type project_name: str
+    @ivar genome_version: Genome version (e.g. hg19, mm10, GRCh37, GRCm38, ...)
+    @type genome_version: str
+    @ivar input_directory: Input directory
+    @type input_directory: str | unicode
+    @ivar output_directory: Output directory, user-specified including a genome version sub-directory
+    @type output_directory: str | unicode
+    @ivar project_directory: Project-specific directory
+    @type project_directory: str | unicode
+    @ivar genome_directory: Genome-specific directory
+    @type genome_directory: str | unicode
+    @ivar drms_list: Python list of DRMS objects
+    @type drms_list: list
+    @ivar runnable_dict: Python dict of Python str (Runnable.name) key data and Runnable value data
+    @type runnable_dict: dict
+    @ivar collection: Collection
+    @type collection: Collection
+    @ivar comparisons: Python dict of comparisons
+    @type comparisons: dict
+    @ivar samples: Python list of Sample objects
+    @type samples: list
     """
 
     @classmethod
     def from_config_file(cls, config_file):
+        """Create a new Analysis object from a UNIX-style configuration file via the Configuration class.
 
-        """Create a new BSF Analysis object from a UNIX-style configuration file via the BSF Configuration class.
-
-        :param config_file: UNIX-style configuration file
-        :type config_file: str, unicode
-        :return: BSF Analysis
-        :rtype: Analysis
+        @param config_file: UNIX-style configuration file
+        @type config_file: str | unicode
+        @return: Analysis
+        @rtype: Analysis
         """
 
         return cls.from_Configuration(configuration=Configuration.from_config_file(config_file=config_file))
 
     @classmethod
     def from_Configuration(cls, configuration):
+        """Create a new Analysis object from a Configuration object.
 
-        """Create a new BSF Analysis object from a BSF Configuration object.
-
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :return: BSF Analysis
-        :rtype: Analysis
+        @param configuration: Configuration
+        @type configuration: Configuration
+        @return: Analysis
+        @rtype: Analysis
         """
 
         assert isinstance(configuration, Configuration)
@@ -115,7 +111,7 @@ class Analysis(object):
 
         analysis = cls(configuration=configuration, e_mail=default.operator_e_mail)
 
-        # A "Bio.BSF.Analysis.*" section specifies defaults for this BSF Analysis.
+        # A "Bio.BSF.Analysis.*" section specifies defaults for this Analysis.
 
         section = string.join(words=(__name__, cls.__name__), sep='.')
         analysis.set_Configuration(analysis.configuration, section=section)
@@ -128,47 +124,44 @@ class Analysis(object):
                  project_directory=None, genome_directory=None,
                  sas_file=None, sas_prefix=None, e_mail=None, debug=0, drms_list=None,
                  runnable_dict=None, collection=None, comparisons=None, samples=None):
+        """Initialise an Analysis object.
 
-        """Initialise a Bio.BSF.Analysis object.
-
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :param project_name: Project name
-        :type project_name: str
-        :param genome_version: Genome version
-        :type genome_version: str
-        :param input_directory: BSF Analysis-wide input directory
-        :type input_directory: str
-        :param output_directory: BSF Analysis-wide output directory
-        :type output_directory: str
-        :param project_directory: BSF Analysis-wide project directory,
-        normally under the BSF Analysis-wide output directory
-        :type project_directory: str
-        :param genome_directory: BSF Analysis-wide genome directory,
-        normally under the BSF Analysis-wide project directory
-        :type genome_directory: str
-        :param sas_file: Sample Annotation Sheet (SAS) file path
-        :type sas_file: str, unicode
-        :param sas_prefix: A prefix to columns in a Sample Annotation Sheet
-        (e.g. Control Sample, Treatment Sample, ...)
-        :type sas_prefix: str
-        :param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        :type e_mail: str
-        :param debug: Integer debugging level
-        :type debug: int
-        :param drms_list: Python list of BSF DRMS objects
-        :type drms_list: list
-        :param runnable_dict: Python dict of Python str (BSF Runnable.name) and BSF Runnable value data
-        :type runnable_dict: dict
-        :param collection: BSF Collection
-        :type collection: Collection
-        :param comparisons: Python dict of Analysis-specific objects
-        (i.e. Python tuple for RNA-Seq and ChIPSeqComparison for ChIPSeq)
-        :type comparisons: dict
-        :param samples: Python list of BSF Sample objects
-        :type samples: list
-        :return: Nothing
-        :rtype: None
+        @param configuration: Configuration
+        @type configuration: Configuration
+        @param project_name: Project name
+        @type project_name: str
+        @param genome_version: Genome version
+        @type genome_version: str
+        @param input_directory: Analysis-wide input directory
+        @type input_directory: str
+        @param output_directory: Analysis-wide output directory
+        @type output_directory: str
+        @param project_directory: Analysis-wide project directory,
+            normally under the Analysis-wide output directory
+        @type project_directory: str
+        @param genome_directory: Analysis-wide genome directory,
+            normally under the Analysis-wide project directory
+        @type genome_directory: str
+        @param sas_file: Sample Annotation Sheet (SAS) file path
+        @type sas_file: str | unicode
+        @param sas_prefix: A prefix to columns in a Sample Annotation Sheet
+            (e.g. Control Sample, Treatment Sample, ...)
+        @type sas_prefix: str
+        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        @type e_mail: str
+        @param debug: Integer debugging level
+        @type debug: int
+        @param drms_list: Python list of DRMS objects
+        @type drms_list: list
+        @param runnable_dict: Python dict of Python str (Runnable.name) and Runnable value data
+        @type runnable_dict: dict
+        @param collection: Collection
+        @type collection: Collection
+        @param comparisons: Python dict of Analysis-specific objects
+            (i.e. Python tuple for RNA-Seq and ChIPSeqComparison for ChIPSeq)
+        @type comparisons: dict
+        @param samples: Python list of Sample objects
+        @type samples: list
         """
 
         if configuration:
@@ -246,13 +239,12 @@ class Analysis(object):
             self.samples = list()
 
     def trace(self, level):
+        """Trace an Analysis object.
 
-        """Trace a BSF Analysis object.
-
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -273,9 +265,9 @@ class Analysis(object):
         output += '{}  comparisons: {!r}\n'.format(indent, self.comparisons)
         output += '{}  samples: {!r}\n'.format(indent, self.samples)
 
-        output += '{}  Python List of BSF Sample objects:'.format(indent)
+        output += '{}  Python List of Sample objects:'.format(indent)
         for sample in self.samples:
-            output += '{}    BSF Sample name: {!r} file_path: {!r}'.format(indent, sample.name, sample.file_path)
+            output += '{}    Sample name: {!r} file_path: {!r}'.format(indent, sample.name, sample.file_path)
 
         if self.collection:
             output += self.collection.trace(level + 1)
@@ -283,34 +275,28 @@ class Analysis(object):
         return output
 
     def add_runnable(self, runnable):
+        """Add a Runnable.
 
-        """Add a BSF Runnable.
-
-        :param runnable: BSF Runnable
-        :type runnable: Runnable
-        :return: Nothing
-        :rtype: None
-        :raise Exception: A Runnable.name already exists in the Analysis
+        @param runnable: Runnable
+        @type runnable: Runnable
+        @raise Exception: A Runnable.name already exists in the Analysis
         """
 
         assert isinstance(runnable, Runnable)
 
         if runnable.name in self.runnable_dict:
-            raise Exception("A BSF Runnable object with name {!r} already exists in BSF Analysis {!r}".
+            raise Exception("A Runnable object with name {!r} already exists in Analysis {!r}".
                             format(runnable.name, self.project_name))
         else:
             self.runnable_dict[runnable.name] = runnable
 
     def add_Sample(self, sample):
+        """Add a Sample object to the Python list of Sample objects if it does not already exist.
 
-        """Add a BSF Sample object to the Python list of BSF Sample objects if it does not already exist.
-
-        The check is based on the >Python 'in' comparison operator and in lack of a specific
-        Bio.BSF.Data.__cmp__ method, relies on object identity (i.e. address).
-        :param sample: BSF Sample
-        :type sample: Sample
-        :return: Nothing
-        :rtype: None
+        The check is based on the Python 'in' comparison operator and in lack of a specific
+        __cmp__ method, relies on object identity (i.e. address).
+        @param sample: Sample
+        @type sample: Sample
         """
 
         if not sample:
@@ -322,17 +308,14 @@ class Analysis(object):
             self.samples.append(sample)
 
     def set_Configuration(self, configuration, section):
-
-        """Set instance variables of a BSF Analysis object via a section of a BSF Configuration object.
+        """Set instance variables of an Analysis object via a section of a Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :param section: Configuration file section
-        :type section: str
-        :return: Nothing
-        :rtype: None
-        :raise Exception: The specified section does not exist
+        @param configuration: Configuration
+        @type configuration: Configuration
+        @param section: Configuration file section
+        @type section: str
+        @raise Exception: The specified section does not exist
         """
 
         assert isinstance(configuration, Configuration)
@@ -340,7 +323,7 @@ class Analysis(object):
 
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
-                'Section {!r} not defined in BSF Configuration file {!r}.'.
+                'Section {!r} not defined in Configuration file {!r}.'.
                 format(section, configuration.config_file))
 
         # The configuration section is available.
@@ -370,12 +353,9 @@ class Analysis(object):
             self.e_mail = configuration.config_parser.get(section=section, option='e_mail')
 
     def run(self):
+        """Run the Analysis.
 
-        """Run the BSF Analysis.
-
-        :return: Nothing
-        :rtype: None
-        :raise Exception: An Analysis.project_name has not been defined
+        @raise Exception: An Analysis.project_name has not been defined
         """
 
         if not self.project_name:
@@ -388,7 +368,7 @@ class Analysis(object):
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
         # Check if an absolute path has been provided, if not,
-        # automatically prepend standard BSF directory paths.
+        # automatically prepend standard directory paths.
 
         self.input_directory = os.path.expanduser(path=self.input_directory)
         self.input_directory = os.path.expandvars(path=self.input_directory)
@@ -429,7 +409,7 @@ class Analysis(object):
 
         if self.sas_file:
 
-            # Populate a BSF Collection from a Sample Annotation Sheet.
+            # Populate a Collection from a SampleAnnotationSheet.
 
             self.sas_file = os.path.expanduser(path=self.sas_file)
             self.sas_file = os.path.expandvars(path=self.sas_file)
@@ -449,16 +429,12 @@ class Analysis(object):
 
         else:
 
-            # Create an empty BSF Collection.
+            # Create an empty Collection.
 
             self.collection = Collection()
 
     def report(self):
-
-        """Create a BSF Analysis report.
-
-        :return: Nothing
-        :rtype: None
+        """Create an Analysis report.
         """
 
         warnings.warn(
@@ -466,12 +442,9 @@ class Analysis(object):
             UserWarning)
 
     def create_project_genome_directory(self):
+        """Check and create an Analysis project_directory or genome_directory if necessary.
 
-        """Check and create a BSF Analysis project_directory or genome_directory if necessary.
-
-        :return: Nothing
-        :rtype: None
-        :raise Exception: Output (genome) directory does not exist
+        @raise Exception: Output (genome) directory does not exist
         """
 
         if not os.path.isdir(self.genome_directory):
@@ -492,16 +465,15 @@ class Analysis(object):
                     'Output (genome) directory {!r} does not exist.'.format(self.genome_directory))
 
     def create_public_project_link(self, sub_directory=None):
-
         """Create a symbolic link from the web directory to the project directory if not already there.
 
         The link will be placed in the sub directory and contain
         the project name followed by a 128 bit hexadecimal UUID string.
-        :param sub_directory: BSF Analysis-specific directory
-        :type sub_directory: str
-        :return: Symbolic link to the project directory
-        :rtype: str
-        :raise Exception: Public HTML path does not exist
+        @param sub_directory: Analysis-specific directory
+        @type sub_directory: str
+        @return: Symbolic link to the project directory
+        @rtype: str
+        @raise Exception: Public HTML path does not exist
         """
 
         # The html_path consists of the absolute public_html directory and
@@ -598,13 +570,10 @@ class Analysis(object):
         return link_final
 
     def ucsc_hub_write_hub(self, prefix=None):
-
         """Write a UCSC Track Hub hub.txt file into the project directory, above the genome directory.
 
-        :param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
-        :type prefix: str
-        :return: Nothing
-        :rtype: None
+        @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
+        @type prefix: str
         """
 
         if prefix:
@@ -635,13 +604,10 @@ class Analysis(object):
         file_handle.close()
 
     def ucsc_hub_write_genomes(self, prefix=None):
-
         """Write a UCSC Track Hub genomes.txt file into the project directory, above the genome directory.
 
-        :param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
-        :type prefix: str
-        :return: Nothing
-        :rtype: None
+        @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
+        @type prefix: str
         """
 
         if prefix:
@@ -665,13 +631,10 @@ class Analysis(object):
         file_handle.close()
 
     def ucsc_hub_write_tracks(self, output, prefix=None):
-
         """Write a UCSC Track Hub trackDB.txt file into the genome directory.
 
-        :param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
-        :type prefix: str
-        :return: Nothing
-        :rtype: None
+        @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
+        @type prefix: str
         """
 
         if prefix:
@@ -689,10 +652,8 @@ class Analysis(object):
     def submit(self, drms_name=None):
         """Submit each DRMS object and pickle each Runnable object.
 
-        :param drms_name: Only submit Executables linked to DRMS name
-        :type drms_name: str
-        :return: Nothing
-        :rtype: None
+        @param drms_name: Only submit Executables linked to DRMS name
+        @type drms_name: str
         """
 
         # Pickle all Runnable objects.
@@ -728,27 +689,24 @@ class Analysis(object):
 
 
 class Configuration(object):
-    """BSF Configuration class.
-
-    The BSF Configuration class represents a UNIX-style initialisation (*.ini) file and
+    """Configuration class representing a UNIX-style initialisation (*.ini) file and
     an associated Python SafeConfigParser object to parse the file.
 
     Attributes:
-    :ivar config_file: Configuration file path
-    :type config_file: str, unicode
-    :ivar config_parser: Python SafeConfigParser
-    :type config_parser: SafeConfigParser
+    @ivar config_file: Configuration file path
+    @type config_file: str | unicode
+    @ivar config_parser: Python SafeConfigParser
+    @type config_parser: SafeConfigParser
     """
 
     @staticmethod
     def section_from_instance(instance):
-
         """Get a configuration section from a Python instance.
 
-        :param instance: A Python instance (or object)
-        :type instance: object
-        :return: Configuration section string
-        :rtype: str
+        @param instance: A Python instance (or object)
+        @type instance: object
+        @return: Configuration section string
+        @rtype: str
         """
 
         match = re.search(pattern=r'^<([^ ]+)\s+', string=repr(instance))
@@ -760,15 +718,14 @@ class Configuration(object):
 
     @classmethod
     def from_config_file(cls, config_file):
+        """Create a new Configuration object based on a configuration file path.
 
-        """Create a new BSF Configuration object based on a configuration file path.
-
-        :param config_file: Configuration file path.
-        Both, user and variable expansion gets applied.
-        :type config_file: str, unicode
-        :return: BSF Configuration
-        :rtype: Configuration
-        :raise Exception: Configuration file does not exist
+        Both, user and variable expansion gets applied to the file path.
+        @param config_file: Configuration file path
+        @type config_file: str | unicode
+        @return: Configuration
+        @rtype: Configuration
+        @raise Exception: Configuration file does not exist
         """
 
         assert isinstance(config_file, (str, unicode))
@@ -794,15 +751,12 @@ class Configuration(object):
         return configuration
 
     def __init__(self, config_file=None, config_parser=None):
+        """Initialise a Configuration object.
 
-        """Initialise a BSF Configuration object.
-
-        :param config_file: Configuration file path
-        :type config_file: str, unicode
-        :param config_parser: Python SafeConfigParser
-        :type config_parser: SafeConfigParser
-        :return: Nothing
-        :rtype: None
+        @param config_file: Configuration file path
+        @type config_file: str | unicode
+        @param config_parser: Python SafeConfigParser
+        @type config_parser: SafeConfigParser
         """
 
         if config_file:
@@ -816,13 +770,12 @@ class Configuration(object):
             self.config_parser = SafeConfigParser()
 
     def trace(self, level):
+        """Trace a Configuration object.
 
-        """Trace a BSF Configuration object.
-
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -834,17 +787,16 @@ class Configuration(object):
         return output
 
     def get_expanded_directory(self, config_section, config_option):
-
         """Get configuration information for a directory and expand it.
 
         The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
         any environment variables i.e. on UNIX ${NAME} or $NAME.
-        :param config_section: Configuration section string
-        :type config_section: str
-        :param config_option: Configuration option string
-        :type config_option: str
-        :return: Expanded directory
-        :rtype: str
+        @param config_section: Configuration section string
+        @type config_section: str
+        @param config_option: Configuration option string
+        @type config_option: str
+        @return: Expanded directory
+        @rtype: str
         """
 
         directory = self.config_parser.get(config_section, config_option)
@@ -855,65 +807,65 @@ class Configuration(object):
 
 
 class Default(object):
-    """The BSF Default class specifies the application or library default configuration.
+    """The Default class specifies the application or library default configuration.
 
     Attributes:
-    :cvar global_default: Global BSF Default
-    :type global_default: Default
-    :cvar global_file_path: Global configuration file
-    :type global_file_path: str, unicode
-    :ivar classpath_picard: Picard Java Archive (JAR) class path directory
-    :type classpath_picard: str, unicode
-    :ivar classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
-    :type classpath_illumina2bam: str, unicode
-    :ivar classpath_snpeff: snpEff Java Archive (JAR) class path directory
-    :type classpath_snpeff: str, unicode
-    :ivar directory_home: Home directory for all data
-    :type directory_home: str, unicode
-    :ivar directory_runs_illumina: Sub-directory for Illumina runs
-    :type directory_runs_illumina: str, unicode
-    :ivar directory_sequences: Sub-directory for sequences
-    :type directory_sequences: str, unicode
-    :ivar directory_samples: Sub-directory for processed samples
-    :type directory_samples: str, unicode
-    :ivar directory_projects: Sub-directory for processed projects
-    :type directory_projects: str, unicode
-    :ivar directory_public_html: Sub-directory for the web server
-    :type directory_public_html: str, unicode
-    :ivar directory_genomes: Directory for genomes and their annotation
-    :type directory_genomes: str, unicode
-    :ivar directory_annotations: Sub-directory for genome annotations
-    :type directory_annotations: str, unicode
-    :ivar directory_gatk_bundle: Sub-directory for GATK bundle data
-    :type directory_gatk_bundle: str, unicode
-    :ivar directory_snpeff_data: snpEff database directory
-    :type directory_snpeff_data: str, unicode
-    :ivar indices: Python dict of program name key and index directory name value data
-    :type indices: dict
-    :ivar drms_implementation: DRMS implementation (e.g. Bash, SGE)
-    :type drms_implementation: str
-    :ivar drms_maximum_threads: DRMS maximum threads
-    :type drms_maximum_threads: str
-    :ivar drms_memory_limit_hard: DRMS memory limit hard
-    :type drms_memory_limit_hard: str
-    :ivar drms_memory_limit_soft: DRMS memory limit soft
-    :type drms_memory_limit_soft: str
-    :ivar drms_time_limit: DRMS time limit
-    :type drms_time_limit: str
-    :ivar drms_parallel_environment: DRMS parallel environment
-    :type drms_parallel_environment: str
-    :ivar drms_queue: DRMS queue
-    :type drms_queue: str
-    :ivar operator_e_mail: Operator e-mail
-    :type operator_e_mail: str
-    :ivar ucsc_host_name: UCSC Genome Browser host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
-    :type ucsc_host_name: str
-    :ivar url_protocol: URL protocol (i.e. HTTP)
-    :type url_protocol: str
-    :ivar url_host_name: URL host name
-    :type url_host_name:str
-    :ivar url_relative_projects: Sub-directory for analysis projects
-    :type url_relative_projects: str
+    @cvar global_default: Global Default
+    @type global_default: Default
+    @cvar global_file_path: Global configuration file
+    @type global_file_path: str | unicode
+    @ivar classpath_picard: Picard Java Archive (JAR) class path directory
+    @type classpath_picard: str | unicode
+    @ivar classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
+    @type classpath_illumina2bam: str | unicode
+    @ivar classpath_snpeff: snpEff Java Archive (JAR) class path directory
+    @type classpath_snpeff: str | unicode
+    @ivar directory_home: Home directory for all data
+    @type directory_home: str | unicode
+    @ivar directory_runs_illumina: Sub-directory for Illumina runs
+    @type directory_runs_illumina: str | unicode
+    @ivar directory_sequences: Sub-directory for sequences
+    @type directory_sequences: str | unicode
+    @ivar directory_samples: Sub-directory for processed samples
+    @type directory_samples: str | unicode
+    @ivar directory_projects: Sub-directory for processed projects
+    @type directory_projects: str | unicode
+    @ivar directory_public_html: Sub-directory for the web server
+    @type directory_public_html: str | unicode
+    @ivar directory_genomes: Directory for genomes and their annotation
+    @type directory_genomes: str | unicode
+    @ivar directory_annotations: Sub-directory for genome annotations
+    @type directory_annotations: str | unicode
+    @ivar directory_gatk_bundle: Sub-directory for GATK bundle data
+    @type directory_gatk_bundle: str | unicode
+    @ivar directory_snpeff_data: snpEff database directory
+    @type directory_snpeff_data: str | unicode
+    @ivar indices: Python dict of program name key and index directory name value data
+    @type indices: dict
+    @ivar drms_implementation: DRMS implementation (e.g. Bash, SGE)
+    @type drms_implementation: str
+    @ivar drms_maximum_threads: DRMS maximum threads
+    @type drms_maximum_threads: str
+    @ivar drms_memory_limit_hard: DRMS memory limit hard
+    @type drms_memory_limit_hard: str
+    @ivar drms_memory_limit_soft: DRMS memory limit soft
+    @type drms_memory_limit_soft: str
+    @ivar drms_time_limit: DRMS time limit
+    @type drms_time_limit: str
+    @ivar drms_parallel_environment: DRMS parallel environment
+    @type drms_parallel_environment: str
+    @ivar drms_queue: DRMS queue
+    @type drms_queue: str
+    @ivar operator_e_mail: Operator e-mail
+    @type operator_e_mail: str
+    @ivar ucsc_host_name: UCSC Genome Browser host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
+    @type ucsc_host_name: str
+    @ivar url_protocol: URL protocol (i.e. HTTP)
+    @type url_protocol: str
+    @ivar url_host_name: URL host name
+    @type url_host_name:str
+    @ivar url_relative_projects: Sub-directory for analysis projects
+    @type url_relative_projects: str
     """
 
     global_default = None
@@ -924,11 +876,10 @@ class Default(object):
 
     @staticmethod
     def get_global_default():
+        """Get the global Default configuration and initialise it, if not already done so.
 
-        """Get the global BSF Default configuration and initialise it, if not already done so.
-
-        :return: BSF Default
-        :rtype: Default
+        @return: Default
+        @rtype: Default
         """
 
         if not Default.global_default:
@@ -938,38 +889,35 @@ class Default(object):
 
     @classmethod
     def from_global_file(cls):
-
-        """Create a new BSF Default object from the global default configuration file.
+        """Create a new Default object from the global default configuration file.
 
         The default configuration is based on the file $HOME/.bsfpython.ini in the user's home directory.
-        :return: BSF Default
-        :rtype: Default
+        @return: Default
+        @rtype: Default
         """
 
         return cls.from_config_file(config_file=Default.global_file_path)
 
     @classmethod
     def from_config_file(cls, config_file):
+        """Create a new Default object from a UNIX-style configuration file.
 
-        """Create a new BSF Default object from a UNIX-style configuration file.
-
-        :param config_file: UNIX-style configuration file
-        :type config_file: str, unicode
-        :return: BSF Default
-        :rtype: Default
+        @param config_file: UNIX-style configuration file
+        @type config_file: str | unicode
+        @return: Default
+        @rtype: Default
         """
 
         return cls.from_Configuration(configuration=Configuration.from_config_file(config_file=config_file))
 
     @classmethod
     def from_Configuration(cls, configuration):
+        """Create a new Default objects from a Configuration object.
 
-        """Create a new BSF Default objects from a BSF Configuration object.
-
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :return: BSF Default
-        :rtype: Default
+        @param configuration: Configuration
+        @type configuration: Configuration
+        @return: Default
+        @rtype: Default
         """
 
         assert isinstance(configuration, Configuration)
@@ -989,67 +937,64 @@ class Default(object):
                  drms_time_limit=None, drms_parallel_environment=None, drms_queue=None,
                  operator_e_mail=None, operator_sequencing_centre=None, ucsc_host_name=None, url_protocol=None,
                  url_host_name=None, url_relative_projects=None):
+        """Initialise a Default object.
 
-        """Initialise a BSF Default object.
-
-        :param classpath_gatk: Genome Analysis Toolkit Java Archive (JAR) class path directory
-        :type classpath_gatk: str, unicode
-        :param classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
-        :type classpath_illumina2bam: str, unicode
-        :param classpath_picard: Picard Java Archive (JAR) class path directory
-        :type classpath_picard: str, unicode
-        :param classpath_snpeff: snpEff Java Archive (JAR) class path directory
-        :type classpath_snpeff: str, unicode
-        :param directory_home: Home directory for all data
-        :type directory_home: str, unicode
-        :param directory_runs_illumina: Sub-directory for Illumina runs
-        :type directory_runs_illumina: str, unicode
-        :param directory_sequences: Sub-directory for sequences
-        :type directory_sequences: str, unicode
-        :param directory_samples: Sub-directory for processed samples
-        :type directory_samples: str, unicode
-        :param directory_projects: Sub-directory for processed projects
-        :type directory_projects: str, unicode
-        :param directory_public_html: Sub-directory for the web server
-        :type directory_public_html: str, unicode
-        :param directory_genomes: Directory for genomes and their annotation
-        :type directory_genomes: str, unicode
-        :param directory_annotations: Sub-directory for genome annotations
-        :type directory_annotations: str, unicode
-        :param directory_gatk_bundle: Sub-directory for GATK bundle data
-        :type directory_gatk_bundle: str, unicode
-        :param directory_snpeff_data: snpEff database directory
-        :type directory_snpeff_data: str, unicode
-        :param indices: Python dict of program name key and index directory name value data
-        :type indices: dict
-        :param drms_implementation: DRMS implementation (e.g. Bash, SGE)
-        :type drms_implementation: str
-        :param drms_maximum_threads: DRMS maximum threads
-        :type drms_maximum_threads: str
-        :param drms_memory_limit_hard: DRMS memory limit hard
-        :type drms_memory_limit_hard: str
-        :param drms_memory_limit_soft: DRMS memory limit soft
-        :type drms_memory_limit_soft: str
-        :param drms_time_limit: DRMS time limit
-        :type drms_time_limit: str
-        :param drms_parallel_environment: DRMS parallel environment
-        :type drms_parallel_environment: str
-        :param drms_queue: DRMS queue
-        :type drms_queue: str
-        :param operator_e_mail: Operator e-mail
-        :type operator_e_mail: str
-        :param operator_sequencing_centre: BAM sequencing centre code
-        :type operator_sequencing_centre: str
-        :param ucsc_host_name: UCSC Genome Browser host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
-        :type ucsc_host_name: str
-        :param url_protocol: URL protocol (i.e. HTTP)
-        :type url_protocol: str
-        :param url_host_name: URL host name
-        :type url_host_name:str
-        :param url_relative_projects: Sub-directory for analysis projects
-        :type url_relative_projects: str
-        :return: Nothing
-        :rtype: None
+        @param classpath_gatk: Genome Analysis Toolkit Java Archive (JAR) class path directory
+        @type classpath_gatk: str | unicode
+        @param classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
+        @type classpath_illumina2bam: str | unicode
+        @param classpath_picard: Picard Java Archive (JAR) class path directory
+        @type classpath_picard: str | unicode
+        @param classpath_snpeff: snpEff Java Archive (JAR) class path directory
+        @type classpath_snpeff: str | unicode
+        @param directory_home: Home directory for all data
+        @type directory_home: str | unicode
+        @param directory_runs_illumina: Sub-directory for Illumina runs
+        @type directory_runs_illumina: str | unicode
+        @param directory_sequences: Sub-directory for sequences
+        @type directory_sequences: str | unicode
+        @param directory_samples: Sub-directory for processed samples
+        @type directory_samples: str | unicode
+        @param directory_projects: Sub-directory for processed projects
+        @type directory_projects: str | unicode
+        @param directory_public_html: Sub-directory for the web server
+        @type directory_public_html: str | unicode
+        @param directory_genomes: Directory for genomes and their annotation
+        @type directory_genomes: str | unicode
+        @param directory_annotations: Sub-directory for genome annotations
+        @type directory_annotations: str | unicode
+        @param directory_gatk_bundle: Sub-directory for GATK bundle data
+        @type directory_gatk_bundle: str | unicode
+        @param directory_snpeff_data: snpEff database directory
+        @type directory_snpeff_data: str | unicode
+        @param indices: Python dict of program name key and index directory name value data
+        @type indices: dict
+        @param drms_implementation: DRMS implementation (e.g. Bash, SGE)
+        @type drms_implementation: str
+        @param drms_maximum_threads: DRMS maximum threads
+        @type drms_maximum_threads: str
+        @param drms_memory_limit_hard: DRMS memory limit hard
+        @type drms_memory_limit_hard: str
+        @param drms_memory_limit_soft: DRMS memory limit soft
+        @type drms_memory_limit_soft: str
+        @param drms_time_limit: DRMS time limit
+        @type drms_time_limit: str
+        @param drms_parallel_environment: DRMS parallel environment
+        @type drms_parallel_environment: str
+        @param drms_queue: DRMS queue
+        @type drms_queue: str
+        @param operator_e_mail: Operator e-mail
+        @type operator_e_mail: str
+        @param operator_sequencing_centre: BAM sequencing centre code
+        @type operator_sequencing_centre: str
+        @param ucsc_host_name: UCSC Genome Browser host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
+        @type ucsc_host_name: str
+        @param url_protocol: URL protocol (i.e. HTTP)
+        @type url_protocol: str
+        @param url_host_name: URL host name
+        @type url_host_name:str
+        @param url_relative_projects: Sub-directory for analysis projects
+        @type url_relative_projects: str
         """
 
         # Set Java class path information.
@@ -1207,14 +1152,11 @@ class Default(object):
             self.url_relative_projects = str()
 
     def set_Configuration(self, configuration):
-
-        """Set instance variables of a BSF Default object via a section of a BSF Configuration object.
+        """Set instance variables of a Default object via a section of a Configuration object.
 
         For each instance variable a configuration option has to be present.
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :return: Nothing
-        :rtype: None
+        @param configuration: Configuration
+        @type configuration: Configuration
         """
 
         assert isinstance(configuration, Configuration)
@@ -1279,12 +1221,11 @@ class Default(object):
 
     @staticmethod
     def absolute_home():
-
         """
         Get the absolute directory path for the home directory.
 
-        :return: Absolute path to the home directory
-        :rtype: str, unicode
+        @return: Absolute path to the home directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1293,11 +1234,10 @@ class Default(object):
 
     @staticmethod
     def absolute_runs_illumina():
-
         """Get the absolute directory path for Illumina runs.
 
-        :return: Absolute path to the Illumina runs directory
-        :rtype: str, unicode
+        @return: Absolute path to the Illumina runs directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1309,11 +1249,10 @@ class Default(object):
 
     @staticmethod
     def absolute_sequences():
-
         """Get the absolute directory path for processed lanes.
 
-        :return: Absolute path to the processed lanes directory
-        :rtype: str, unicode
+        @return: Absolute path to the processed lanes directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1325,11 +1264,10 @@ class Default(object):
 
     @staticmethod
     def absolute_projects():
-
         """Get the absolute directory path for projects.
 
-        :return: Absolute path to the projects directory
-        :rtype: str, unicode
+        @return: Absolute path to the projects directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1341,11 +1279,10 @@ class Default(object):
 
     @staticmethod
     def absolute_samples():
-
         """Get the absolute directory path for processed samples.
 
-        :return: Absolute path to the processed samples directory
-        :rtype: str, unicode
+        @return: Absolute path to the processed samples directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1357,11 +1294,10 @@ class Default(object):
 
     @staticmethod
     def absolute_public_html():
-
         """Get the absolute directory path for public HTML documents.
 
-        :return: Absolute path to the public HTML directory
-        :rtype: str, unicode
+        @return: Absolute path to the public HTML directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1375,12 +1311,12 @@ class Default(object):
     def absolute_gatk_bundle(gatk_bundle_version, genome_version):
         """Get the absolute directory path for the Genome Analysis Toolkit bundle.
 
-        :param gatk_bundle_version: The GATK bundle version
-        :type gatk_bundle_version: str
-        :param genome_version: The genome version (e.g. b37, ...)
-        :type genome_version: str
-        :return Absolute path to the GATK bundle directory
-        :rtype: str, unicode
+        @param gatk_bundle_version: The GATK bundle version
+        @type gatk_bundle_version: str
+        @param genome_version: The genome version (e.g. b37, ...)
+        @type genome_version: str
+        @return Absolute path to the GATK bundle directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1397,13 +1333,12 @@ class Default(object):
 
     @staticmethod
     def absolute_genomes(genome_version):
-
         """Get the absolute directory path for genomes.
 
-        :param genome_version: The genome version (e.g. mm10, ...)
-        :type genome_version: str
-        :return: Absolute path to the genomes directory
-        :rtype: str, unicode
+        @param genome_version: The genome version (e.g. mm10, ...)
+        @type genome_version: str
+        @return: Absolute path to the genomes directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1415,13 +1350,12 @@ class Default(object):
 
     @staticmethod
     def absolute_genome_annotation(genome_version):
-
         """Get the absolute directory path for genome annotation.
 
-        :param genome_version: The genome version (e.g. mm10, ...)
-        :type genome_version: str
-        :return: Absolute path to the genome annotation directory
-        :rtype: str, unicode
+        @param genome_version: The genome version (e.g. mm10, ...)
+        @type genome_version: str
+        @return: Absolute path to the genome annotation directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1430,16 +1364,15 @@ class Default(object):
 
     @staticmethod
     def absolute_genome_fasta(genome_version, genome_index):
-
         """Get the absolute file path to a genome in FASTA format.
 
-        :param genome_version: Genome version (e.g. mm10, ...)
-        :type genome_version: str
-        :param genome_index: Genome index (e.g. bowtie2, ...)
-        :type genome_index: str
-        :return: Absolute path to the genome FASTA file
-        :rtype: str, unicode
-        :raise Exception: Unknown genome index name
+        @param genome_version: Genome version (e.g. mm10, ...)
+        @type genome_version: str
+        @param genome_index: Genome index (e.g. bowtie2, ...)
+        @type genome_index: str
+        @return: Absolute path to the genome FASTA file
+        @rtype: str | unicode
+        @raise Exception: Unknown genome index name
         """
 
         default = Default.get_global_default()
@@ -1454,11 +1387,10 @@ class Default(object):
 
     @staticmethod
     def url_absolute_base():
-
         """Return the absolute URL to the web site.
 
-        :return: URL string
-        :rtype: str
+        @return: URL string
+        @rtype: str
         """
 
         default = Default.get_global_default()
@@ -1467,11 +1399,10 @@ class Default(object):
 
     @staticmethod
     def url_absolute_projects():
-
         """Return the absolute URL to the analysis projects directory.
 
-        :return: URL string
-        :rtype: str
+        @return: URL string
+        @rtype: str
         """
 
         default = Default.get_global_default()
@@ -1480,52 +1411,49 @@ class Default(object):
 
 
 class DRMS(object):
-    """BSF Distributed Resource Management System (DRMS) class.
-
-    The BSF DRMS class represents a Distributed Resource Management System or
+    """The Distributed Resource Management System (DRMS) class represents a Distributed Resource Management System or
     batch job scheduler.
 
     Attributes:
-    :ivar name: Name
-    :type name: str
-    :ivar work_directory: Work directory path
-    :type work_directory: str
-    :ivar implementation: Implementation (e.g. SGE, ...)
-    :type implementation: str
-    :ivar memory_free_mem: Memory limit (free)
-    :type memory_free_mem: str
-    :ivar memory_limit_hard: Memory limit (hard)
-    :type memory_limit_hard: str
-    :ivar memory_limit_soft: Memory limit (soft)
-    :type memory_limit_soft: str
-    :ivar parallel_environment: Parallel environment
-    :type parallel_environment: str
-    :ivar queue: Queue
-    :type queue: str
-    :ivar threads: Number of threads
-    :type threads: int
-    :ivar hold: Hold on job scheduling
-    :type hold: str
-    :ivar is_script: BSF Executable objects represent shell scripts,
-    or alternatively binary programs
-    :type is_script: bool
-    :ivar executables: Python list of BSF Executable objects
-    :type executables: list
+    @ivar name: Name
+    @type name: str
+    @ivar work_directory: Work directory path
+    @type work_directory: str
+    @ivar implementation: Implementation (e.g. SGE, ...)
+    @type implementation: str
+    @ivar memory_free_mem: Memory limit (free)
+    @type memory_free_mem: str
+    @ivar memory_limit_hard: Memory limit (hard)
+    @type memory_limit_hard: str
+    @ivar memory_limit_soft: Memory limit (soft)
+    @type memory_limit_soft: str
+    @ivar parallel_environment: Parallel environment
+    @type parallel_environment: str
+    @ivar queue: Queue
+    @type queue: str
+    @ivar threads: Number of threads
+    @type threads: int
+    @ivar hold: Hold on job scheduling
+    @type hold: str
+    @ivar is_script: Executable objects represent shell scripts,
+        or alternatively binary programs
+    @type is_script: bool
+    @ivar executables: Python list of Executable objects
+    @type executables: list
     """
 
     @classmethod
     def from_Analysis(cls, name, work_directory, analysis):
+        """Create a DRMS object from an Analysis object.
 
-        """Create a BSF DRMS object from a BSF Analysis object.
-
-        :param name: Name
-        :type name: str
-        :param work_directory: Work directory
-        :type work_directory: str
-        :param analysis: BSF Analysis
-        :type analysis: Analysis
-        :return: BSF DRMS object
-        :rtype: DRMS
+        @param name: Name
+        @type name: str
+        @param work_directory: Work directory
+        @type work_directory: str
+        @param analysis: Analysis
+        @type analysis: Analysis
+        @return: DRMS object
+        @rtype: DRMS
         """
 
         assert isinstance(analysis, Analysis)
@@ -1536,7 +1464,7 @@ class DRMS(object):
 
         drms.set_Default(default=Default.get_global_default())
 
-        # A "Bio.BSF.DRMS" section specifies defaults for all BSF DRMS objects of a BSF Analysis.
+        # A "Bio.BSF.DRMS" section specifies defaults for all DRMS objects of an Analysis.
 
         section = string.join(words=(__name__, cls.__name__), sep='.')
         drms.set_Configuration(configuration=analysis.configuration, section=section)
@@ -1545,7 +1473,7 @@ class DRMS(object):
             print 'DRMS configuration section: {!r}.'.format(section)
 
         # A "Bio.BSF.Analysis.*.DRMS" pseudo-class section specifies
-        # BSF Analysis-specific options for the BSF DRMS.
+        # Analysis-specific options for the DRMS.
 
         section = string.join(words=(analysis.configuration.section_from_instance(analysis), 'DRMS'), sep='.')
         drms.set_Configuration(configuration=analysis.configuration, section=section)
@@ -1554,7 +1482,7 @@ class DRMS(object):
             print 'DRMS configuration section: {!r}.'.format(section)
 
         # A "Bio.BSF.Analysis.*.DRMS.name" section specifies defaults
-        # for a particular BSF DRMS objects of a BSF Analysis.
+        # for a particular DRMS objects of an Analysis.
 
         section = string.join(words=(Configuration.section_from_instance(analysis), 'DRMS', drms.name), sep='.')
         drms.set_Configuration(configuration=analysis.configuration, section=section)
@@ -1566,19 +1494,18 @@ class DRMS(object):
 
     @classmethod
     def from_Configuration(cls, name, work_directory, configuration, section):
+        """Create a DRMS object from a Configuration object.
 
-        """Create a BSF DRMS object from a BSF Configuration object.
-
-        :param name: Name
-        :type name: str
-        :param work_directory: Work directory
-        :type work_directory: str
-        :param configuration: BSF Configuration object
-        :type configuration: Configuration
-        :param section: Configuration section string
-        :type section: str
-        :return: BSF DRMS object
-        :rtype: DRMS
+        @param name: Name
+        @type name: str
+        @param work_directory: Work directory
+        @type work_directory: str
+        @param configuration: Configuration object
+        @type configuration: Configuration
+        @param section: Configuration section string
+        @type section: str
+        @return: DRMS object
+        @rtype: DRMS
         """
 
         assert isinstance(configuration, Configuration)
@@ -1606,42 +1533,39 @@ class DRMS(object):
                  hold=None,
                  is_script=False,
                  executables=None):
+        """Initialise a DRMS object.
 
-        """Initialise a BSF DRMS object.
-
-        :param name: Name
-        :type name: str
-        :param work_directory: Work directory
-        :type work_directory: str
-        :param implementation: Implementation (e.g. SGE, ...)
-        :type implementation: str
-        :param memory_free_mem: Memory limit (free physical)
-        :type memory_free_mem: str
-        :param memory_free_swap: Memory limit (free swap)
-        :type memory_free_swap: str
-        :param memory_free_virtual: Memory limit (free virtual)
-        :type memory_free_virtual: str
-        :param memory_limit_hard: Memory limit (hard)
-        :type memory_limit_hard: str
-        :param memory_limit_soft: Memory limit (soft)
-        :type memory_limit_soft: str
-        :param time_limit: Time limit
-        :type time_limit: str
-        :param parallel_environment: Parallel environment
-        :type parallel_environment: str
-        :param queue: Queue
-        :type queue: str
-        :param threads: Number of threads
-        :type threads: int
-        :param hold: Hold on job scheduling
-        :type hold: str
-        :param is_script: BSF Executable objects represent shell scripts,
-        or alternatively binary programs
-        :type is_script: bool
-        :param executables: Python list of BSF Executable objects
-        :type executables: list
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param work_directory: Work directory
+        @type work_directory: str
+        @param implementation: Implementation (e.g. SGE, ...)
+        @type implementation: str
+        @param memory_free_mem: Memory limit (free physical)
+        @type memory_free_mem: str
+        @param memory_free_swap: Memory limit (free swap)
+        @type memory_free_swap: str
+        @param memory_free_virtual: Memory limit (free virtual)
+        @type memory_free_virtual: str
+        @param memory_limit_hard: Memory limit (hard)
+        @type memory_limit_hard: str
+        @param memory_limit_soft: Memory limit (soft)
+        @type memory_limit_soft: str
+        @param time_limit: Time limit
+        @type time_limit: str
+        @param parallel_environment: Parallel environment
+        @type parallel_environment: str
+        @param queue: Queue
+        @type queue: str
+        @param threads: Number of threads
+        @type threads: int
+        @param hold: Hold on job scheduling
+        @type hold: str
+        @param is_script: Executable objects represent shell scripts,
+            or alternatively binary programs
+        @type is_script: bool
+        @param executables: Python list of Executable objects
+        @type executables: list
         """
 
         if name:
@@ -1714,13 +1638,12 @@ class DRMS(object):
             self.executables = list()
 
     def trace(self, level):
+        """Trace a DRMS object.
 
-        """Trace a BSF DRMS object.
-
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -1763,16 +1686,13 @@ class DRMS(object):
         return output
 
     def set_Configuration(self, configuration, section):
-
-        """Set instance variables of a BSF DRMS object via a section of a BSF Configuration object.
+        """Set instance variables of a DRMS object via a section of a Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :param section: Configuration file section
-        :type section: str
-        :return: Nothing
-        :rtype: None
+        @param configuration: Configuration
+        @type configuration: Configuration
+        @param section: Configuration file section
+        @type section: str
         """
 
         assert isinstance(configuration, Configuration)
@@ -1780,7 +1700,7 @@ class DRMS(object):
 
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
-                'Section {!r} not defined in BSF Configuration file {!r}.'.
+                'Section {!r} not defined in Configuration file {!r}.'.
                 format(section, configuration.config_file))
 
         # The configuration section is available.
@@ -1834,13 +1754,10 @@ class DRMS(object):
                                                            option='threads')
 
     def set_Default(self, default):
+        """Set instance variables of a DRMS object via a Default object.
 
-        """Set instance variables of a BSF DRMS object via a BSF Default object.
-
-        :param default: BSF Default
-        :type default: Default
-        :return: Nothing
-        :rtype: None
+        @param default: Default
+        @type default: Default
         """
 
         assert isinstance(default, Default)
@@ -1858,13 +1775,10 @@ class DRMS(object):
         # threads
 
     def add_Executable(self, executable):
+        """Add a Executable object.
 
-        """Add a BSF Executable object.
-
-        :param executable: BSF Executable
-        :type executable: Executable
-        :return: Nothing
-        :rtype: None
+        @param executable: Executable
+        @type executable: Executable
         """
 
         assert isinstance(executable, Executable)
@@ -1872,13 +1786,10 @@ class DRMS(object):
         self.executables.append(executable)
 
     def submit(self, debug=0):
+        """Submit a command line for each Executable object.
 
-        """Submit a command line for each BSF Executable object.
-
-        :param debug: Debug level
-        :type debug: int
-        :return: Nothing
-        :rtype: None
+        @param debug: Debug level
+        @type debug: int
         """
 
         # Dynamically import the module specific for the configured DRMS implementation.
@@ -1889,36 +1800,31 @@ class DRMS(object):
 
 
 class Command(object):
-    """BSF Command class.
-
-    The BSF Command class represents one (subordinate) command,
+    """Command class representing one (subordinate) command,
     its options and arguments and possibly another subordinate command.
 
     Attributes:
-    :ivar command: Command or program
-    :type command: str
-    :ivar options: Python dict of option keys and values
-    :type options: dict
-    :ivar arguments: Python list of arguments
-    :type arguments: list
-    :ivar sub_command: Subordinate BSF Command
-    :type sub_command: Command
+    @ivar command: Command or program
+    @type command: str
+    @ivar options: Python dict of option keys and values
+    @type options: dict
+    @ivar arguments: Python list of arguments
+    @type arguments: list
+    @ivar sub_command: Subordinate Command
+    @type sub_command: Command
     """
 
     def __init__(self, command, options=None, arguments=None, sub_command=None):
+        """Initialise a Command object.
 
-        """Initialise a BSF Command object.
-
-        :param command: Command
-        :type command: str
-        :param options: Python dict of program option and value pairs
-        :type options: dict
-        :param arguments: Python list of program arguments
-        :type arguments: list
-        :param sub_command: Subordinate BSF Command object
-        :type sub_command: Command
-        :return: Nothing
-        :rtype: None
+        @param command: Command
+        @type command: str
+        @param options: Python dict of program option and value pairs
+        @type options: dict
+        @param arguments: Python list of program arguments
+        @type arguments: list
+        @param sub_command: Subordinate Command object
+        @type sub_command: Command
         """
 
         self.command = command
@@ -1936,13 +1842,12 @@ class Command(object):
         self.sub_command = sub_command
 
     def trace(self, level):
+        """Trace a Command object.
 
-        """Trace a BSF Command object.
-
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -1975,23 +1880,12 @@ class Command(object):
         return output
 
     def add_Argument(self, argument, override):
+        """Add an Argument or one of its sub-classes.
 
-        """Add a Bio.BSF.Argument.Switch, Bio.BSF.Argument.Option or one of its sub-classes.
-
-        The sub-classes are
-        Bio.BSF.Argument.SwitchLong,
-        Bio.BSF.Argument.SwitchShort,
-        Bio.BSF.Argument.Option,
-        Bio.BSF.Argument.OptionLong,
-        Bio.BSF.Argument.OptionShort or
-        Bio.BSF.Argument.OptionPair.
-        :param argument: Bio.BSF.Argument or sub-class thereof
-        (Bio.BSF.Argument.Option or Bio.BSF.Argument.Switch)
-        :type argument: Argument
-        :param override: Override existing switch or option without warning.
-        :type override: bool
-        :return: Nothing
-        :rtype: None
+        @param argument: Argument
+        @type argument: Argument
+        @param override: Override existing Argument without warning
+        @type override: bool
         """
 
         assert isinstance(argument, Argument)
@@ -1999,8 +1893,7 @@ class Command(object):
 
         if not override and argument.key in self.options:
             warnings.warn(
-                'Adding a Bio.BSF.Argument.Switch or Bio.BSF.Argument.Option '
-                'with key {!r} that exits already in Command {!r}.'.
+                'Adding an Argument with key {!r} that exits already in Command {!r}.'.
                 format(argument.key, self.command),
                 UserWarning)
 
@@ -2013,188 +1906,149 @@ class Command(object):
         arguments_list.append(argument)
 
     def add_SwitchLong(self, key, override=False):
+        """Initialise and add a SwitchLong object.
 
-        """Initialise and add a Bio.BSF.Argument.SwitchLong object.
-
-        :param key: Key
-        :type key: str
-        :param override: Override existing switch or option without warning.
-        :type override: bool
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param override: Override existing Argument without warning
+        @type override: bool
         """
 
         self.add_Argument(argument=SwitchLong(key=key), override=override)
 
     def add_SwitchShort(self, key, override=False):
+        """Initialise and add a SwitchShort object.
 
-        """Initialise and add a Bio.BSF.Argument.SwitchShort object.
-
-        :param key: Key
-        :type key: str
-        :param override: Override existing switch or option without warning.
-        :type override: bool
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param override: Override existing Argument without warning
+        @type override: bool
         """
 
         self.add_Argument(argument=SwitchShort(key=key), override=override)
 
     def add_OptionLong(self, key, value, override=False):
+        """Initialise and add an OptionLong object.
 
-        """Initialise and add a Bio.BSF.Argument.OptionLong object.
-
-        :param key: Key
-        :type key: str
-        :param value: Value
-        :type value: str, unicode
-        :param override: Override existing switch or option without warning.
-        :type override: bool
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing Argument without warning
+        @type override: bool
         """
 
         self.add_Argument(argument=OptionLong(key=key, value=value), override=override)
 
     def add_OptionShort(self, key, value, override=False):
+        """Initialise and add an OptionShort object.
 
-        """Initialise and add a Bio.BSF.Argument.OptionShort object.
-
-        :param key: Key
-        :type key: str
-        :param value: Value
-        :type value: str, unicode
-        :param override: Override existing switch or option without warning.
-        :type override: bool
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing Argument without warning
+        @type override: bool
         """
 
         self.add_Argument(argument=OptionShort(key=key, value=value), override=override)
 
     def add_OptionPair(self, key, value, override=False):
+        """Initialise and add an OptionPair object.
 
-        """Initialise and add a Bio.BSF.Argument.OptionPair object.
-
-        :param key: Key
-        :type key: str
-        :param value: Value
-        :type value: str, unicode
-        :param override: Override existing switch or option without warning.
-        :type override: bool
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing Argument without warning
+        @type override: bool
         """
 
         self.add_Argument(argument=OptionPair(key=key, value=value), override=override)
 
     def set_argument(self, argument, override):
-        """Set a Switch, Option or one of its sub-classes.
+        """Set an Argument or one of its sub-classes.
 
-        The sub-classes are
-        Bio.BSF.Argument.SwitchLong,
-        Bio.BSF.Argument.SwitchShort,
-        Bio.BSF.Argument.Option,
-        Bio.BSF.Argument.OptionLong,
-        Bio.BSF.Argument.OptionShort or
-        Bio.BSF.Argument.OptionPair.
-        :param argument: Bio.BSF.Argument or sub-class thereof
-        (Bio.BSF.Argument.Option or Bio.BSF.Argument.Switch)
-        :type argument: Argument
-        :param override: Override existing switch or option without warning.
-        :type override: bool
-        :return: Nothing
-        :rtype: None
+        @param argument: Argument
+        @type argument: Argument
+        @param override: Override existing Argument without warning
+        @type override: bool
         """
         assert isinstance(argument, Argument)
         assert isinstance(override, bool)
 
         if not override and argument.key in self.options:
             warnings.warn(
-                'Setting a Bio.BSF.Argument.Switch or Bio.BSF.Argument.Option '
-                'with key {!r} that exits already in Command {!r}.'.
+                'Setting an Argument with key {!r} that exits already in Command {!r}.'.
                 format(argument.key, self.command),
                 UserWarning)
 
         self.options[argument.key] = [argument]
 
     def set_switch_long(self, key, override=False):
-        """Initialise and set a Bio.BSF.Argument.SwitchLong object.
+        """Initialise and set a SwitchLong object.
 
-        :param key: Key
-        :type key: str
-        :param override: Override existing switch or option without warning.
-        :type override: bool
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param override: Override existing Argument without warning
+        @type override: bool
         """
         self.set_argument(argument=SwitchLong(key=key), override=override)
 
     def set_switch_short(self, key, override=False):
-        """Initialise and set a Bio.BSF.Argument.SwitchShort object.
+        """Initialise and set a SwitchShort object.
 
-        :param key: Key
-        :type key: str
-        :param override: Override existing switch or option without warning.
-        :type override: bool
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param override: Override existing Argument without warning
+        @type override: bool
         """
         self.set_argument(argument=SwitchShort(key=key), override=override)
 
     def set_option_long(self, key, value, override=False):
-        """Initialise and set a Bio.BSF.Argument.OptionLong object.
+        """Initialise and set an OptionLong object.
 
-        :param key: Key
-        :type key: str
-        :param value: Value
-        :param override: Override existing switch or option without warning.
-        :type override: bool
-        :type value: str, unicode
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @param override: Override existing Argument without warning
+        @type override: bool
+        @type value: str | unicode
         """
         self.set_argument(argument=OptionLong(key=key, value=value), override=override)
 
     def set_option_short(self, key, value, override=False):
-        """Initialise and set a Bio.BSF.Argument.OptionShort object.
+        """Initialise and set an OptionShort object.
 
-        :param key: Key
-        :type key: str
-        :param value: Value
-        :type value: str, unicode
-        :param override: Override existing switch or option without warning.
-        :type override: bool
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing Argument without warning
+        @type override: bool
         """
         self.set_argument(argument=OptionShort(key=key, value=value), override=override)
 
     def set_option_pair(self, key, value, override=False):
-        """Initialise and set a Bio.BSF.Argument.OptionPair object.
+        """Initialise and set an OptionPair object.
 
-        :param key: Key
-        :type key: str
-        :param value: Value
-        :type value: str, unicode
-        :param override: Override existing switch or option without warning.
-        :type override: bool
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing Argument without warning
+        @type override: bool
         """
         self.set_argument(argument=OptionPair(key=key, value=value), override=override)
 
     def set_Configuration(self, configuration, section):
-
-        """Set instance variables of a BSF Command object via a section of a BSF Configuration object.
+        """Set instance variables of a Command object via a section of a Configuration object.
 
         Instance variables without a configuration option remain unchanged.
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :param section: Configuration file section, defaults to instance class
-        :type section: str
-        :return: Nothing
-        :rtype: None
+        @param configuration: Configuration
+        @type configuration: Configuration
+        @param section: Configuration file section, defaults to instance class
+        @type section: str
         """
 
         assert isinstance(configuration, Configuration)
@@ -2202,7 +2056,7 @@ class Command(object):
 
         if not configuration.config_parser.has_section(section=section):
             warnings.warn(
-                'Section {!r} not defined in BSF Configuration file {!r}.'.
+                'Section {!r} not defined in Configuration file {!r}.'.
                 format(section, configuration.config_file),
                 UserWarning)
 
@@ -2218,11 +2072,10 @@ class Command(object):
             self.add_Argument(argument=argument, override=False)
 
     def command_list(self):
-
         """Assemble the command line from program, options and arguments.
 
-        :return: Python list of program, options, switches and arguments
-        :rtype: list
+        @return: Python list of program, options, switches and arguments
+        @rtype: list
         """
 
         command_line = list()
@@ -2254,7 +2107,7 @@ class Command(object):
                     command_line.append('{}={}'.format(argument.key, argument.value))
                 else:
                     warnings.warn(
-                        'Unexpected object {!r} in Bio.BSF.Command.options dict.'.
+                        'Unexpected object {!r} in Command.options dict.'.
                         format(argument),
                         UserWarning)
 
@@ -2271,11 +2124,10 @@ class Command(object):
         return command_line
 
     def command_str(self):
-
         """Assemble the command line from program, options, switches and arguments.
 
-        :return: A Python str of program, options, switches and arguments
-        :rtype: str
+        @return: A Python str of program, options, switches and arguments
+        @rtype: str
         """
 
         command_line = str()
@@ -2303,7 +2155,7 @@ class Command(object):
                     command_line += ' {}={}'.format(argument.key, argument.value)
                 else:
                     warnings.warn(
-                        'Unexpected object {!r} in Bio.BSF.Command.options dict.'.
+                        'Unexpected object {!r} in Command.options dict.'.
                         format(argument),
                         UserWarning)
 
@@ -2323,64 +2175,61 @@ class Command(object):
 
 
 class Executable(Command):
-    """BSF Executable class.
-
-    The BSF Executable class represents an executable program,
+    """The Executable class represents an executable program,
     its options and arguments.
 
     Attributes:
-    :ivar name: Name in the context of a Bio.BSF.DRMS dependency
-    :type name: str
-    :ivar program: Program (executable or full file path)
-    :type program: str
-    :ivar options: Python dict of option keys and values
-    :type options: dict
-    :ivar arguments: Python list of arguments
-    :type arguments: list
-    :ivar sub_command: Subordinate BSF Command
-    :type sub_command: Command
-    :ivar stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
-    :type stdout_path: str, unicode
-    :ivar stderr_path: Standard error (STDERR) redirection in Bash (2>word)
-    :type stderr_path: str, unicode
-    :ivar dependencies: Python list of BSF Executable name strings in the
-                        context of BSF DRMS dependencies
-    :type dependencies: list
-    :ivar hold: Hold on job scheduling
-    :type hold: str
-    :ivar submit: Submit the Executable into the DRMS
-    :type submit: bool
-    :ivar process_identifier: Process identifier
-    :type process_identifier: str
-    :ivar process_name: Process name
-    :type process_name: str
+    @ivar name: Name in the context of a DRMS dependency
+    @type name: str
+    @ivar program: Program (executable or full file path)
+    @type program: str
+    @ivar options: Python dict of option keys and values
+    @type options: dict
+    @ivar arguments: Python list of arguments
+    @type arguments: list
+    @ivar sub_command: Subordinate Command
+    @type sub_command: Command
+    @ivar stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
+    @type stdout_path: str | unicode
+    @ivar stderr_path: Standard error (STDERR) redirection in Bash (2>word)
+    @type stderr_path: str | unicode
+    @ivar dependencies: Python list of Executable name strings in the
+        context of DRMS dependencies
+    @type dependencies: list
+    @ivar hold: Hold on job scheduling
+    @type hold: str
+    @ivar submit: Submit the Executable into the DRMS
+    @type submit: bool
+    @ivar process_identifier: Process identifier
+    @type process_identifier: str
+    @ivar process_name: Process name
+    @type process_name: str
     """
 
     @classmethod
     def from_Analysis(cls, name, program, analysis):
+        """Create an Executable object from an Analysis object.
 
-        """Create a BSF Executable object from a BSF Analysis object.
-
-        :param name: Name
-        :type name: str
-        :param program: Program
-        :type program: str
-        :param analysis: BSF Analysis
-        :type analysis: Analysis
-        :return: BSF Executable object
-        :rtype: Executable
+        @param name: Name
+        @type name: str
+        @param program: Program
+        @type program: str
+        @param analysis: Analysis
+        @type analysis: Analysis
+        @return: Executable object
+        @rtype: Executable
         """
 
         assert isinstance(analysis, Analysis)
 
-        # Initialise a BSF Executable object with default values.
+        # Initialise an Executable object with default values.
 
         executable = cls(name=name, program=program)
 
         section = Configuration.section_from_instance(executable)
 
-        # For plain Bio.BSF.Executable objects append the value of the
-        # Bio.BSF.Executable.command to make this more meaningful.
+        # For plain Executable objects append the value of the
+        # Executable.command to make this more meaningful.
 
         if section == 'Bio.BSF.Executable':
             section += '.'
@@ -2395,16 +2244,15 @@ class Executable(Command):
 
     @classmethod
     def from_analysis_runnable(cls, analysis, runnable_name):
+        """Create an Executable to submit a Runnable into a DRMS.
 
-        """Create a BSF Executable to submit a BSF Runnable into a DRMS.
-
-        :param analysis: Analysis
-        :type analysis: Analysis
-        :param runnable_name: BSF Runnable name
-        :type runnable_name: str
-        :return: BSF Executable
-        :rtype: Executable
-        :raise Exception: A Runnable.name does not exist in Analysis.name
+        @param analysis: Analysis
+        @type analysis: Analysis
+        @param runnable_name: Runnable name
+        @type runnable_name: str
+        @return: Executable
+        @rtype: Executable
+        @raise Exception: A Runnable.name does not exist in Analysis.name
         """
 
         assert isinstance(analysis, Analysis)
@@ -2424,19 +2272,18 @@ class Executable(Command):
 
     @classmethod
     def from_Configuration(cls, name, program, configuration, section):
+        """Create an Executable object from a Configuration object.
 
-        """Create a BSF Executable object from a BSF Configuration object.
-
-        :param name: Name
-        :type name: str
-        :param program: Program
-        :type program: str
-        :param configuration: BSF Configuration object
-        :type configuration: Configuration
-        :param section: Configuration section string
-        :type section: str
-        :return: BSF Executable object
-        :rtype: Executable
+        @param name: Name
+        @type name: str
+        @param program: Program
+        @type program: str
+        @param configuration: Configuration
+        @type configuration: Configuration
+        @param section: Configuration section string
+        @type section: str
+        @return: Executable
+        @rtype: Executable
         """
 
         assert isinstance(configuration, Configuration)
@@ -2451,36 +2298,33 @@ class Executable(Command):
                  program=None, options=None, arguments=None, sub_command=None,
                  stdout_path=None, stderr_path=None, dependencies=None, hold=None,
                  submit=True, process_identifier=None, process_name=None):
+        """Initialise an Executable object.
 
-        """Initialise a BSF Executable object.
-
-        :param name: Name
-        :type name: str
-        :param program: Program
-        :type program: str
-        :param options: Python dict of program option and value pairs
-        :type options: dict
-        :param arguments: Python list of program arguments
-        :type arguments: list
-        :param sub_command: Subordinate BSF Command
-        :type sub_command: Command
-        :param stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
-        :type stdout_path: str, unicode
-        :param stderr_path: Standard error (STDERR) redirection in Bash (2>word)
-        :type stderr_path: str, unicode
-        :param dependencies: Python list of BSF Executable
-         name strings in the context of BSF DRMS dependencies
-        :type dependencies: list
-        :param hold: Hold on job scheduling
-        :type hold: str
-        :param submit: Submit the Executable into the DRMS
-        :type submit: bool
-        :param process_identifier: Process identifier
-        :type process_identifier: str
-        :param process_name: Process name
-        :type process_name: str
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param program: Program
+        @type program: str
+        @param options: Python dict of program option and value pairs
+        @type options: dict
+        @param arguments: Python list of program arguments
+        @type arguments: list
+        @param sub_command: Subordinate Command
+        @type sub_command: Command
+        @param stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
+        @type stdout_path: str | unicode
+        @param stderr_path: Standard error (STDERR) redirection in Bash (2>word)
+        @type stderr_path: str | unicode
+        @param dependencies: Python list of Executable
+            name strings in the context of DRMS dependencies
+        @type dependencies: list
+        @param hold: Hold on job scheduling
+        @type hold: str
+        @param submit: Submit the Executable into the DRMS
+        @type submit: bool
+        @param process_identifier: Process identifier
+        @type process_identifier: str
+        @param process_name: Process name
+        @type process_name: str
         """
 
         self.name = name
@@ -2521,13 +2365,12 @@ class Executable(Command):
             self.process_name = str()
 
     def trace(self, level):
+        """Trace an Executable object.
 
-        """Trace a BSF Executable object.
-
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -2564,11 +2407,10 @@ class Executable(Command):
         return output
 
     def command_list(self):
-
         """Assemble the command line from program, options and arguments.
 
-        :return: Python list of program, options and arguments
-        :rtype: list
+        @return: Python list of program, options and arguments
+        @rtype: list
         """
 
         command = list()
@@ -2580,11 +2422,10 @@ class Executable(Command):
         return command
 
     def command_str(self):
-
         """Assemble the command line from program, options, switches and arguments.
 
-        :return: A Python str of program, options, switches and arguments
-        :rtype: str
+        @return: A Python str of program, options, switches and arguments
+        @rtype: str
         """
 
         command = str()
@@ -2597,44 +2438,42 @@ class Executable(Command):
 
 
 class Runnable(object):
-    """BSF Runnable class.
-
-    The BSF Runnable class holds all information to run one or more BSF Executable objects through the
-    BSF Runner script.
+    """The Runnable class holds all information to run one or more Executable objects through the
+    Runner script.
 
     Attributes:
-    :ivar name: Name
-    :type name: str
-    :ivar code_module: The name of a module, usually in Bio.BSF.Runnables that implements the logic required to run
-     BSF Executable objects via the BSF Runner script.
-    :type code_module: str
-    :ivar executable_dict: Python dict of Python str (Executable.name) key data and BSF Executable value data
-    :type executable_dict: dict
-    :ivar file_path_dict: Python dict of Python str (name) key data and Python str (file_path) value data
-    :type file_path_dict: dict
-    :ivar working_directory: Working directory to write Pickler files
-    :type working_directory: str, unicode
+    @cvar runner_script: Name of the Runner script
+    @type runner_script: str | unicode
+    @ivar name: Name
+    @type name: str
+    @ivar code_module: The name of a module, usually in Runnables that implements the logic required to run
+        Executable objects via the Runner script.
+    @type code_module: str
+    @ivar executable_dict: Python dict of Python str (Executable.name) key data and Executable value data
+    @type executable_dict: dict
+    @ivar file_path_dict: Python dict of Python str (name) key data and Python str (file_path) value data
+    @type file_path_dict: dict
+    @ivar working_directory: Working directory to write Pickler files
+    @type working_directory: str | unicode
     """
 
     runner_script = 'bsf_runner.py'
 
     @staticmethod
     def process_stream(file_type, file_handle, thread_lock, file_path=None, debug=0):
-        """BSF Runnable function to process STDOUT or STDERR from the child process as a thread.
+        """Runnable function to process STDOUT or STDERR from the child process as a thread.
 
-        :param file_type: File handle type STDOUT or STDERR
-        :type file_type: str
-        :param file_handle: The STDOUT or STDERR file handle
-        :type file_handle: file
-        :param thread_lock: A Python threading.Lock object
-        :type thread_lock: thread.lock
-        :param file_path: STDOUT file path
-        :type file_path: str, unicode
-        :param debug: Debug level
-        :type debug: int
-        :return: Nothing
-        :rtype: None
-        :raise Exception: The file_type has to be either STDOUT or STDERR
+        @param file_type: File handle type STDOUT or STDERR
+        @type file_type: str
+        @param file_handle: The STDOUT or STDERR file handle
+        @type file_handle: file
+        @param thread_lock: A Python threading.Lock object
+        @type thread_lock: thread.lock
+        @param file_path: STDOUT file path
+        @type file_path: str | unicode
+        @param debug: Debug level
+        @type debug: int
+        @raise Exception: The file_type has to be either STDOUT or STDERR
         """
 
         if file_type not in ('STDOUT', 'STDERR'):
@@ -2642,7 +2481,7 @@ class Runnable(object):
 
         thread_lock.acquire(True)
         if debug > 0:
-            print '[{}] Started BSF Runner {} processor in module {}.'. \
+            print '[{}] Started Runner {} processor in module {}.'. \
                 format(datetime.datetime.now().isoformat(), file_type, __name__)
         output_file = None
         if file_path:
@@ -2672,18 +2511,16 @@ class Runnable(object):
 
     @staticmethod
     def process_stdout(stdout_handle, thread_lock, stdout_path=None, debug=0):
-        """BSF Runnable function to process STDOUT from the child process as a thread.
+        """Runnable function to process STDOUT from the child process as a thread.
 
-        :param stdout_handle: The STDOUT file handle
-        :type stdout_handle: file
-        :param thread_lock: A Python threading.Lock object
-        :type thread_lock: thread.lock
-        :param stdout_path: STDOUT file path
-        :type stdout_path: str, unicode
-        :param debug: Debug level
-        :type debug: int
-        :return: Nothing
-        :rtype: None
+        @param stdout_handle: The STDOUT file handle
+        @type stdout_handle: file
+        @param thread_lock: A Python threading.Lock object
+        @type thread_lock: thread.lock
+        @param stdout_path: STDOUT file path
+        @type stdout_path: str | unicode
+        @param debug: Debug level
+        @type debug: int
         """
 
         return Runnable.process_stream(file_type='STDOUT', file_handle=stdout_handle,
@@ -2692,18 +2529,16 @@ class Runnable(object):
 
     @staticmethod
     def process_stderr(stderr_handle, thread_lock, stderr_path=None, debug=0):
-        """BSF Runnable function to process STDERR from the child process as a thread.
+        """Runnable function to process STDERR from the child process as a thread.
 
-        :param stderr_handle: The STDERR file handle
-        :type stderr_handle: file
-        :param thread_lock: A Python threading.Lock object
-        :type thread_lock: thread.lock
-        :param stderr_path: STDOUT file path
-        :type stderr_path: str, unicode
-        :param debug: Debug level
-        :type debug: int
-        :return: Nothing
-        :rtype: None
+        @param stderr_handle: The STDERR file handle
+        @type stderr_handle: file
+        @param thread_lock: A Python threading.Lock object
+        @type thread_lock: thread.lock
+        @param stderr_path: STDOUT file path
+        @type stderr_path: str | unicode
+        @param debug: Debug level
+        @type debug: int
         """
 
         return Runnable.process_stream(file_type='STDERR', file_handle=stderr_handle,
@@ -2712,21 +2547,21 @@ class Runnable(object):
 
     @staticmethod
     def run(executable, max_loop_counter=1, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """BSF Runnable function to run a BSF Executable object as Python subprocess.
+        """Runnable function to run an Executable object as Python subprocess.
 
-        :param executable: BSF Executable
-        :type executable: Executable
-        :param max_loop_counter: Maximum number of retries
-        :type max_loop_counter: int
-        :param max_thread_joins: Maximum number of attempts to join the output threads
-        :type max_thread_joins: int
-        :param thread_join_timeout: Timeout for each attempt to join the output threads
-        :type thread_join_timeout: int
-        :param debug: Debug level
-        :type debug: int
-        :return: Return value of the child in the Python subprocess.
-         Negative values indicate that the child received a signal.
-        :rtype: int
+        @param executable: Executable
+        @type executable: Executable
+        @param max_loop_counter: Maximum number of retries
+        @type max_loop_counter: int
+        @param max_thread_joins: Maximum number of attempts to join the output threads
+        @type max_thread_joins: int
+        @param thread_join_timeout: Timeout for each attempt to join the output threads
+        @type thread_join_timeout: int
+        @param debug: Debug level
+        @type debug: int
+        @return: Return value of the child in the Python subprocess,
+            negative values indicate that the child received a signal
+        @rtype: int
         """
 
         on_posix = 'posix' in sys.builtin_module_names
@@ -2810,7 +2645,7 @@ class Runnable(object):
 
         else:
             if debug > 0:
-                print '[{}] BSF Runnable {!r} exceeded the maximum re-run counter {}.' \
+                print '[{}] Runnable {!r} exceeded the maximum re-run counter {}.' \
                     .format(datetime.datetime.now().isoformat(), executable.name, max_loop_counter)
 
         return child_return_code
@@ -2819,12 +2654,10 @@ class Runnable(object):
     def evaluate_return_code(executable, return_code):
         """Evaluate a return code from the run method.
 
-        :param executable: BSF Executable
-        :type executable: Executable
-        :param return_code: Return code
-        :type return_code: int
-        :return: Nothing
-        :rtype: None
+        @param executable: Executable
+        @type executable: Executable
+        @param return_code: Return code
+        @type return_code: int
         """
 
         if return_code > 0:
@@ -2838,20 +2671,18 @@ class Runnable(object):
                 format(datetime.datetime.now().isoformat(), executable.name, +return_code)
 
     def __init__(self, name, code_module, working_directory, file_path_dict=None, executable_dict=None):
-        """Initialise a BSF Runnable object.
+        """Initialise a Runnable object.
 
-        :param name: Name
-        :type name: str
-        :param code_module: The Bio.BSF.Runnables module that implements the logic for this runnable.
-        :type code_module: str
-        :param working_directory: Working directory for writing a Python Pickler file
-        :type working_directory: str, unicode
-        :param file_path_dict: Python dict of Python str (name) key data and Python str (file_path) value data
-        :type file_path_dict: dict
-        :param executable_dict: Python dict of Python str (Executable.name) key data and BSF Executable value data
-        :type executable_dict: dict
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param code_module: The Runnables module that implements the logic for this Runnable
+        @type code_module: str
+        @param working_directory: Working directory for writing a Python Pickler file
+        @type working_directory: str | unicode
+        @param file_path_dict: Python dict of Python str (name) key data and Python str (file_path) value data
+        @type file_path_dict: dict
+        @param executable_dict: Python dict of Python str (Executable.name) key data and Executable value data
+        @type executable_dict: dict
         """
 
         self.name = name
@@ -2869,13 +2700,11 @@ class Runnable(object):
             self.executable_dict = dict()
 
     def add_executable(self, executable):
-        """Add a BSF Executable
+        """Add an Executable
 
-        :param executable: BSF Executable
-        :type executable: Executable
-        :return: Nothing
-        :rtype: None
-        :raise Exception: An Executable.name already exists in the Runnable object
+        @param executable: Executable
+        @type executable: Executable
+        @raise Exception: An Executable.name already exists in the Runnable object
         """
 
         if not executable:
@@ -2888,13 +2717,11 @@ class Runnable(object):
             self.executable_dict[executable.name] = executable
 
     def run_executable(self, name):
-        """Run a BSF Executable defined in a BSF Runnable.
+        """Run an Executable defined in a Runnable.
 
-        :param name: Executable name
-        :type name: str
-        :return: Nothing
-        :rtype: None
-        :raise Exception: Child process failed with return code or received a signal
+        @param name: Executable name
+        @type name: str
+        @raise Exception: Child process failed with return code or received a signal
         """
 
         executable = self.executable_dict[name]
@@ -2911,17 +2738,14 @@ class Runnable(object):
     def pickler_path(self):
         """Get the Python Pickler file path.
 
-        :return: Python Pickler file path
-        :rtype: str
+        @return: Python Pickler file path
+        @rtype: str
         """
 
         return os.path.join(self.working_directory, string.join(words=(self.name, 'pkl'), sep='.'))
 
     def to_pickler_file(self):
         """Write this object as a Python Pickler file into the working directory.
-
-        :return: Nothing
-        :rtype: None
         """
 
         pickler_file = open(self.pickler_path, 'wb')
@@ -2931,12 +2755,12 @@ class Runnable(object):
 
     @classmethod
     def from_picker_file(cls, file_path):
-        """Create a BSF Runnable object from a Python Pickler file via Python Unpickler.
+        """Create a Runnable object from a Python Pickler file via Python Unpickler.
 
-        :param file_path: File path to a Picker file
-        :type file_path: str, unicode
-        :return: BSF Runnable
-        :rtype: Runnable
+        @param file_path: File path to a Picker file
+        @type file_path: str | unicode
+        @return: Runnable
+        @rtype: Runnable
         """
 
         pickler_file = open(file_path, 'rb')

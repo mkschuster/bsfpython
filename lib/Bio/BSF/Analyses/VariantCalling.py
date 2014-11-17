@@ -37,7 +37,7 @@ from Bio.BSF.Executables import BWA
 
 
 class VariantCallingGATK(Analysis):
-    """BSF VariantCallingGATK sub-class.
+    """The C{VariantCallingGATK} class represents the logic to run the Genome Analysis Toolkit (GATK).
 
     Attributes:
     None
@@ -45,32 +45,32 @@ class VariantCallingGATK(Analysis):
 
     @classmethod
     def from_config_file(cls, config_file):
-        """Create a new BSF VariantCallingGATK object from a UNIX-style configuration file via the
-        BSF Configuration class.
+        """Create a new C{VariantCallingGATK} object from a UNIX-style configuration file via the
+        C{Configuration} class.
 
-        :param config_file: UNIX-style configuration file
-        :type config_file: str, unicode
-        :return: BSF VariantCallingGATK
-        :rtype: VariantCallingGATK
+        @param config_file: UNIX-style configuration file
+        @type config_file: str | unicode
+        @return: C{VariantCallingGATK}
+        @rtype: VariantCallingGATK
         """
 
         return cls.from_Configuration(configuration=Configuration.from_config_file(config_file=config_file))
 
     @classmethod
     def from_Configuration(cls, configuration):
-        """Create a new BSF VariantCallingGATK object from a BSF Configuration object.
+        """Create a new C{VariantCallingGATK} object from a C{Configuration} object.
 
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :return: BSF VariantCallingGATK
-        :rtype: VariantCallingGATK
+        @param configuration: C{Configuration}
+        @type configuration: Configuration
+        @return: C{VariantCallingGATK}
+        @rtype: VariantCallingGATK
         """
 
         assert isinstance(configuration, Configuration)
 
         variant_calling = cls(configuration=configuration)
 
-        # A "Bio.BSF.Analysis.VariantCalling.VariantCallingGATK" section specifies defaults for this BSF Analysis.
+        # A "Bio.BSF.Analysis.VariantCalling.VariantCallingGATK" section specifies defaults for this Analysis.
 
         section = string.join(words=(__name__, cls.__name__), sep='.')
         variant_calling.set_Configuration(variant_calling.configuration, section=section)
@@ -84,40 +84,38 @@ class VariantCallingGATK(Analysis):
                  e_mail=None, debug=0, drms_list=None,
                  collection=None, comparisons=None, samples=None,
                  cmp_file=None):
-        """Initialise a Bio.BSF.Analysis.VariantCalling.VariantCallingGATK object.
+        """Initialise a C{VariantCallingGATK} object.
 
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :param project_name: Project name
-        :type project_name: str
-        :param genome_version: Genome version
-        :type genome_version: str
-        :param input_directory: BSF Analysis-wide input directory
-        :type input_directory: str
-        :param output_directory: BSF Analysis-wide output directory
-        :type output_directory: str
-        :param project_directory: BSF Analysis-wide project directory,
-         normally under the BSF Analysis-wide output directory
-        :type project_directory: str
-        :param genome_directory: BSF Analysis-wide genome directory,
-         normally under the BSF Analysis-wide project directory
-        :type genome_directory: str
-        :param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        :type e_mail: str
-        :param debug: Integer debugging level
-        :type debug: int
-        :param drms_list: Python list of BSF DRMS objects
-        :type drms_list: list
-        :param collection: BSF Collection
-        :type collection: Collection
-        :param comparisons: Python dict of Python list objects of BSF Sample objects
-        :type comparisons: dict
-        :param samples: Python list of BSF Sample objects
-        :type samples: list
-        :param cmp_file: Comparison file
-        :type cmp_file: str, unicode
-        :return: Nothing
-        :rtype: None
+        @param configuration: C{Configuration}
+        @type configuration: Configuration
+        @param project_name: Project name
+        @type project_name: str
+        @param genome_version: Genome version
+        @type genome_version: str
+        @param input_directory: C{Analysis}-wide input directory
+        @type input_directory: str
+        @param output_directory: C{Analysis}-wide output directory
+        @type output_directory: str
+        @param project_directory: C{Analysis}-wide project directory,
+            normally under the C{Analysis}-wide output directory
+        @type project_directory: str
+        @param genome_directory: C{Analysis}-wide genome directory,
+            normally under the C{Analysis}-wide project directory
+        @type genome_directory: str
+        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        @type e_mail: str
+        @param debug: Integer debugging level
+        @type debug: int
+        @param drms_list: Python C{list} of C{DRMS} objects
+        @type drms_list: list
+        @param collection: C{Collection}
+        @type collection: Collection
+        @param comparisons: Python C{dict} of Python C{list} objects of C{Sample} objects
+        @type comparisons: dict
+        @param samples: Python C{list} of C{Sample} objects
+        @type samples: list
+        @param cmp_file: Comparison file
+        @type cmp_file: str | unicode
         """
 
         super(VariantCallingGATK, self).__init__(
@@ -136,13 +134,13 @@ class VariantCallingGATK(Analysis):
             self.cmp_file = str()
 
     def set_Configuration(self, configuration, section):
-        """Set instance variables of a BSF VariantCallingGATK object via a section of a BSF Configuration object.
+        """Set instance variables of a C{VariantCallingGATK} object via a section of a C{Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        :param configuration: BSF Configuration
-        :type configuration: Configuration
-        :param section: Configuration file section
-        :type section: str
+        @param configuration: C{Configuration}
+        @type configuration: Configuration
+        @param section: Configuration file section
+        @type section: str
         """
 
         super(VariantCallingGATK, self).set_Configuration(configuration=configuration, section=section)
@@ -156,24 +154,22 @@ class VariantCallingGATK(Analysis):
             self.cmp_file = configuration.config_parser.get(section=section, option='sas_file')
 
     def _read_comparisons(self, cmp_file):
-        """Read a BSF SampleAnnotationSheet CSV file from disk.
+        """Read a C{SampleAnnotationSheet} CSV file from disk.
 
         Column headers for CASAVA folders:
-          Treatment/Control ProcessedRunFolder:
-            CASAVA processed run folder name or
-            Bio.BSF.Analysis input_directory by default.
-          Treatment/Control Project:
-            CASAVA Project name or
-            Bio.BSF.Analysis project_name by default.
-          Treatment/Control Sample:
-            CASAVA Sample name, no default.
+            Treatment/Control ProcessedRunFolder:
+                CASAVA processed run folder name or
+                C{Analysis.input_directory} by default
+            Treatment/Control Project:
+                CASAVA Project name or
+                C{Analysis.project_name} by default
+            Treatment/Control Sample:
+                CASAVA Sample name, no default
         Column headers for independent samples:
-          Treatment/Control Sample:
-          Treatment/Control File:
-        :param cmp_file: Comparisons file path
-        :type cmp_file: str, unicode
-        :return: Nothing
-        :rtype: None
+            Treatment/Control Sample:
+            Treatment/Control File:
+        @param cmp_file: Comparisons file path
+        @type cmp_file: str | unicode
         """
 
         sas = SampleAnnotationSheet.read_from_file(file_path=cmp_file)
@@ -184,12 +180,12 @@ class VariantCallingGATK(Analysis):
     def _read_vqsr_configuration(self, variation_type=None, gatk_bundle_version=None):
         """Private method to read variant quality score recalibration (VQSR) configuration information.
 
-        :param variation_type: Variation type 'indel' or 'snp'
-        :type variation_type: str
-        :param gatk_bundle_version: GATK bundle version
-        :type gatk_bundle_version: str
-        :return: :rtype: Python dict of Python str (resource name) and Python dict values
-        :rtype: dict
+        @param variation_type: Variation type I{indel} or I{snp}
+        @type variation_type: str
+        @param gatk_bundle_version: GATK bundle version
+        @type gatk_bundle_version: str
+        @return: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
+        @rtype: dict
         """
 
         if variation_type not in ('indel', 'snp'):
@@ -237,10 +233,7 @@ class VariantCallingGATK(Analysis):
         return vqsr_dict
 
     def run(self):
-        """Run this BSF VariantCallingGATK analysis.
-
-        :return: Nothing
-        :rtype: None
+        """Run this C{VariantCallingGATK} analysis.
         """
 
         super(VariantCallingGATK, self).run()
@@ -253,7 +246,7 @@ class VariantCallingGATK(Analysis):
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
         # Check if an absolute path has been provided, if not,
-        # automatically prepend standard BSF directory paths.
+        # automatically prepend standard directory paths.
 
         self.cmp_file = os.path.expanduser(path=self.cmp_file)
         self.cmp_file = os.path.expandvars(path=self.cmp_file)
@@ -264,8 +257,8 @@ class VariantCallingGATK(Analysis):
         # Real comparisons would be required for somatic mutation calling.
         self._read_comparisons(cmp_file=self.cmp_file)
 
-        # Experimentally, sort the Python list of BSF Sample objects by the BSF Sample name.
-        # This cannot be done in the super-class, because BSF Samples are only put into the Analysis.samples list
+        # Experimentally, sort the Python list of Sample objects by the Sample name.
+        # This cannot be done in the super-class, because Samples are only put into the Analysis.samples list
         # by the _read_comparisons method.
 
         self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
@@ -524,9 +517,9 @@ class VariantCallingGATK(Analysis):
             vc_process_sample_dependencies = list()
             vc_process_sample_replicates = list()
 
-            # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
+            # Sample.get_all_PairedReads returns a Python dict of
             # Python str key and Python list of Python list objects
-            # of Bio.BSF.Data.PairedReads objects.
+            # of PairedReads objects.
 
             replicate_dict = sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
 
@@ -563,7 +556,7 @@ class VariantCallingGATK(Analysis):
 
                 # Propagate the SAM read group information around FASTQ files if required.
                 # Please note that only the first read group can be propagated per
-                # BSF PairedReads object.
+                # PairedReads object.
 
                 read_group = str()
 
@@ -898,7 +891,7 @@ class VariantCallingGATK(Analysis):
                 pickler.dump(obj=pickler_dict_process_lane)
                 pickler_file.close()
 
-                # Create a BSF Executable for processing the lane.
+                # Create an Executable for processing the lane.
 
                 vc_process_lane = Executable.from_Analysis(
                     name=prefix_lane,
@@ -1152,7 +1145,7 @@ class VariantCallingGATK(Analysis):
             pickler.dump(obj=pickler_dict_process_sample)
             pickler_file.close()
 
-            # Create a BSF Executable for processing the sample.
+            # Create an Executable for processing the sample.
 
             vc_process_sample = Executable.from_Analysis(
                 name=prefix_sample,
@@ -1653,7 +1646,7 @@ class VariantCallingGATK(Analysis):
         pickler.dump(obj=pickler_dict_process_cohort)
         pickler_file.close()
 
-        # Create a BSF Executable for processing the cohort.
+        # Create an Executable for processing the cohort.
 
         vc_process_cohort = Executable.from_Analysis(
             name=prefix_cohort,

@@ -43,15 +43,13 @@ output_directory = 'bsfpython_slurm_output'
 
 
 def submit(drms, debug=0):
-    """Submit BSF Executable objects into the Simple Linux Utility for Resource Management (SLURM)
+    """Submit C{Executable} objects into the Simple Linux Utility for Resource Management (SLURM)
      Distributed Resource Management System (DRMS).
 
-    :param drms: BSF DRMS
-    :type drms: DRMS
-    :param debug: Debug level
-    :type debug: int
-    :return: Nothing
-    :rtype: None
+    @param drms: Distributed Resource Management System (C{DRMS})
+    @type drms: DRMS
+    @param debug: Debug level
+    @type debug: int
     """
 
     # Open or create a database.

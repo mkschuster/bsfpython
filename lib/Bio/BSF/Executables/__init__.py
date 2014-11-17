@@ -31,20 +31,18 @@ from Bio.BSF import Command, Executable
 
 
 class Bowtie1(Executable):
-    """BSF Bowtie1 short read aligner class.
+    """Bowtie1 short read aligner class.
 
     Reference: http://bowtie-bio.sourceforge.net/manual.shtml
     """
 
     def __init__(self, name, analysis):
-        """Initialise a Bowtie1 object.
+        """Initialise a C{Bowtie1} object.
 
-        :param name: Name
-        :type name: str
-        :param analysis: Bio.BSF.Analysis object or a sub-class thereof
-        :type analysis: Analysis
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param analysis: C{Analysis}
+        @type analysis: Analysis
         """
 
         # assert isinstance(analysis, Analysis)
@@ -58,17 +56,15 @@ class Bowtie1(Executable):
 
 
 class Bowtie2(Executable):
-    """BSF Bowtie2 short read aligner class."""
+    """Bowtie2 short read aligner class."""
 
     def __init__(self, name, analysis):
-        """Initialise a Bowtie2 object.
+        """Initialise a C{Bowtie2} object.
 
-        :param name: Name
-        :type name: str
-        :param analysis: Bio.BSF.Analysis object or a sub-class thereof
-        :type analysis: Analysis
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param analysis: C{Analysis}
+        @type analysis: Analysis
         """
 
         # assert isinstance(analysis, Analysis)
@@ -82,21 +78,19 @@ class Bowtie2(Executable):
 
 
 class BWA(Executable):
-    """BSF Burrows-Wheeler Aligner version class.
+    """Burrows-Wheeler Aligner version class.
 
     Reference: http://bio-bwa.sourceforge.net/
     Usage: bwa mem db_prefix reads.fq [mates.fq]
     """
 
     def __init__(self, name, analysis):
-        """Initialise a BWA object.
+        """Initialise a C{BWA} object.
 
-        :param name: Name
-        :type name: str
-        :param analysis: Bio.BSF.Analysis object or a sub-class thereof
-        :type analysis: Analysis
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param analysis: C{Analysis}
+        @type analysis: Analysis
         """
 
         super(BWA, self).__init__(name=name, program='bwa', sub_command=Command(command='mem'))
@@ -111,7 +105,7 @@ class BWA(Executable):
 
 
 class Cuffdiff(Executable):
-    """BSF Cuffdiff differential expression class.
+    """Cuffdiff differential expression class.
 
     Reference: http://cufflinks.cbcb.umd.edu/manual.html#cuffdiff
     Usage: cuffdiff [options]* <transcripts.gtf>
@@ -121,14 +115,12 @@ class Cuffdiff(Executable):
     """
 
     def __init__(self, name, analysis):
-        """Initialise a Cuffdiff object.
+        """Initialise a C{Cuffdiff} object.
 
-        :param name: Name
-        :type name: str
-        :param analysis: Bio.BSF.Analysis object or a sub-class thereof
-        :type analysis: Analysis
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param analysis: C{Analysis}
+        @type analysis: Analysis
         """
 
         # assert isinstance(analysis, Analysis)
@@ -154,21 +146,19 @@ class Cuffdiff(Executable):
 
 
 class Cufflinks(Executable):
-    """BSF Cufflinks transcript assembler class.
+    """Cufflinks transcript assembler class.
 
     Reference: http://cufflinks.cbcb.umd.edu/manual.html
     Usage: cufflinks [options]* <aligned_reads.(sam/bam)>
     """
 
     def __init__(self, name, analysis):
-        """Initialise a Cufflinks object.
+        """Initialise a C{Cufflinks} object.
 
-        :param name: Name
-        :type name: str
-        :param analysis: Bio.BSF.Analysis object or a sub-class thereof
-        :type analysis: Analysis
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param analysis: C{Analysis}
+        @type analysis: Analysis
         """
 
         # assert isinstance(analysis, Analysis)
@@ -194,21 +184,19 @@ class Cufflinks(Executable):
 
 
 class Cuffmerge(Executable):
-    """BSF Cuffmerge transcript assembly merge class.
+    """Cuffmerge transcript assembly merge class.
 
     Reference: http://cufflinks.cbcb.umd.edu/manual.html#cuffmerge
     Usage: cuffmerge [options]* <assembly_GTF_list.txt>
     """
 
     def __init__(self, name, analysis):
-        """Initialise a Cuffmerge object.
+        """Initialise a C{Cuffmerge} object.
 
-        :param name: Name
-        :type name: str
-        :param analysis: Bio.BSF.Analysis object or a sub-class thereof
-        :type analysis: Analysis
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param analysis: C{Analysis}
+        @type analysis: Analysis
         """
 
         # super(Cuffmerge, self).__init__(name=name, program='cuffmerge')
@@ -234,7 +222,7 @@ class Cuffmerge(Executable):
 
 
 class TopHat(Executable):
-    """BSF TopHat RNA-Seq aligner class.
+    """TopHat RNA-Seq aligner class.
 
     Reference: http://tophat.cbcb.umd.edu/manual.html
     Usage: tophat [options]* <index_base> <reads1_1[,...,readsN_1]> [reads1_2,...readsN_2]
@@ -245,14 +233,12 @@ class TopHat(Executable):
     """
 
     def __init__(self, name, analysis):
-        """Initialise a TopHat object.
+        """Initialise a C{TopHat} object.
 
-        :param name: Name
-        :type name: str
-        :param analysis: Bio.BSF.Analysis object or a sub-class thereof
-        :type analysis: Analysis
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param analysis: C{Analysis}
+        @type analysis: Analysis
         """
 
         # assert isinstance(analysis, Analysis)
@@ -275,20 +261,18 @@ class TopHat(Executable):
 
 
 class Macs14(Executable):
-    """BSF Model-based Analysis for ChIP-Seq (MACS) version 1.4 peak-caller class.
+    """Model-based Analysis for ChIP-Seq (MACS) version 1.4 peak-caller class.
 
     Reference: http://liulab.dfci.harvard.edu/MACS/
     """
 
     def __init__(self, name, analysis):
-        """Initialise a Macs14 object.
+        """Initialise a C{Macs14} (MACS 1.4) object.
 
-        :param name: Name
-        :type name: str
-        :param analysis: Bio.BSF.Analysis object or a sub-class thereof
-        :type analysis: Analysis
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param analysis: C{Analysis}
+        @type analysis: Analysis
         """
 
         # assert isinstance(analysis, Analysis)
@@ -307,20 +291,18 @@ class Macs14(Executable):
 
 
 class Macs2Bdgcmp(Executable):
-    """BSF Model-based Analysis for ChIP-Seq (MACS) version 2 bedGraph comparison class.
+    """Model-based Analysis for ChIP-Seq (MACS) version 2 bedGraph comparison class.
 
     Reference: http://liulab.dfci.harvard.edu/MACS/
     """
 
     def __init__(self, name, analysis):
-        """Initialise a MACS2 BedGraph Comparison object.
+        """Initialise a C{Macs2Bdgcmp} (MACS2 BedGraph Comparison) object.
 
-        :param name: Name
-        :type name: str
-        :param analysis: Bio.BSF.Analysis object or a sub-class thereof
-        :type analysis: Analysis
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param analysis: C{Analysis}
+        @type analysis: Analysis
         """
 
         super(Macs2Bdgcmp, self).__init__(name=name, program='macs2', sub_command=Command(command='bdgcmp'))
@@ -335,20 +317,18 @@ class Macs2Bdgcmp(Executable):
 
 
 class Macs2Callpeak(Executable):
-    """BSF Model-based Analysis for ChIP-Seq (MACS) version 2 peak-caller class.
+    """Model-based Analysis for ChIP-Seq (MACS) version 2 peak-caller class.
 
     Reference: http://liulab.dfci.harvard.edu/MACS/
     """
 
     def __init__(self, name, analysis):
-        """Initialise a Macs2Callpeak object.
+        """Initialise a C{Macs2Callpeak} (MACS 2.0 peak caller) object.
 
-        :param name: Name
-        :type name: str
-        :param analysis: Bio.BSF.Analysis object or a sub-class thereof
-        :type analysis: Analysis
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param analysis: C{Analysis}
+        @type analysis: Analysis
         """
 
         # assert isinstance(analysis, Analysis)
@@ -368,20 +348,18 @@ class Macs2Callpeak(Executable):
 
 
 class FastQC(Executable):
-    """BSF FastQC quality checker class.
+    """FastQC quality checker class.
 
     Reference: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
     """
 
     def __init__(self, name, analysis):
-        """Initialise a FastQC object.
+        """Initialise a C{FastQC} object.
 
-        :param name: Name
-        :type name: str
-        :param analysis: Bio.BSF.Analysis object or a sub-class thereof
-        :type analysis: Analysis
-        :return: Nothing
-        :rtype: None
+        @param name: Name
+        @type name: str
+        @param analysis: C{Analysis}
+        @type analysis: Analysis
         """
 
         # assert isinstance(analysis, Analysis)

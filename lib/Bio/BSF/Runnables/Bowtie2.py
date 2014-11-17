@@ -42,7 +42,7 @@ from Bio.BSF.Executables import Bowtie2
 class ReadGroupContainer(object):
 
     def __init__(self, rg_string=None, fastq_1_path=None, fastq_2_path=None):
-        """Initialise a BSF ReadGroupContainer object.
+        """Initialise a ReadGroupContainer object.
 
         @param rg_string: SAM Read Group (@RG)
         @type rg_string: str
@@ -98,7 +98,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     """Run Picard SamToFastq on a BAM file and convert into a FASTQ file pair per read group (@RG).
 
     Expand a BAM file into a pair of FASTQ files per SAM read group.
-    @param runnable: BSF Runnable
+    @param runnable: Runnable
     @type runnable: Runnable
     @param bam_file_path: BAM file path
     @type bam_file_path: str | unicode
@@ -188,7 +188,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
 def run_bowtie2(runnable):
     """Run Bowtie2.
 
-    @param runnable: BSF Runnable
+    @param runnable: Runnable
     @type runnable: Runnable
     """
 
@@ -315,9 +315,9 @@ def run_bowtie2(runnable):
 
 
 def run(runnable):
-    """Run the BSF Runnable.
+    """Run the Runnable.
 
-    @param runnable: BSF Runnable
+    @param runnable: Runnable
     @type runnable: Runnable
     """
 

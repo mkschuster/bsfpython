@@ -37,15 +37,16 @@ from Bio.BSF.Executables import Cuffdiff, Cufflinks, Cuffmerge, TopHat
 
 
 class TuxedoSamplePairSheet(AnnotationSheet):
-    """Tuxedo Sample Pair Sheet modelling BSF Sample pairs defined by
-    the bsf_rnaseq_process_cuffdiff.R script.
+    """The C{TuxedoSamplePairSheet} class represents C{Sample} pairs defined by
+    the C{bsf_rnaseq_process_cuffdiff.R} script.
 
     Attributes:
-    @cvar _file_type: File type (i.e. 'excel' or 'excel-tab' defined in the csv module Dialect class)
+    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
     @type _file_type: str
-    @cvar _field_names: Python list of Python str (field name) objects
+    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
     @type _field_names: list
-    @cvar _test_methods: Python dict of Python string (field name) key data and Python list of Python method value data
+    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
+        Python C{list} of Python C{function} value data
     @type _test_methods: dict
     """
 
@@ -60,32 +61,30 @@ class Tuxedo(Analysis):
     """Tuxedo RNASeq Analysis sub-class.
 
     Attributes:
-    :ivar cmp_file: Comparison file
-    :type cmp_file: str, unicode
+    @ivar cmp_file: Comparison file
+    @type cmp_file: str | unicode
     """
 
     @classmethod
     def from_config_file(cls, config_file):
+        """Create a new C{Tuxedo} object from a UNIX-style configuration file via the C{Configuration} class.
 
-        """Create a new Tuxedo object from a UNIX-style configuration file via the Configuration class.
-
-        :param config_file: UNIX-style configuration file
-        :type config_file: str, unicode
-        :return: Tuxedo
-        :rtype: Tuxedo
+        @param config_file: UNIX-style configuration file
+        @type config_file: str | unicode
+        @return: C{Tuxedo}
+        @rtype: Tuxedo
         """
 
         return cls.from_Configuration(configuration=Configuration.from_config_file(config_file=config_file))
 
     @classmethod
     def from_Configuration(cls, configuration):
+        """Create a new C{Tuxedo} object from a C{Configuration} object.
 
-        """Create a new Tuxedo object from a Configuration object.
-
-        :param configuration: Configuration
-        :type configuration: Configuration
-        :return: Tuxedo
-        :rtype: Tuxedo
+        @param configuration: C{Configuration}
+        @type configuration: Configuration
+        @return: Tuxedo
+        @rtype: Tuxedo
         """
 
         assert isinstance(configuration, Configuration)
@@ -106,45 +105,42 @@ class Tuxedo(Analysis):
                  e_mail=None, debug=0, drms_list=None,
                  collection=None, comparisons=None, samples=None,
                  cmp_file=None, genome_fasta=None, transcriptome_gtf=None):
+        """Initialise a C{Tuxedo} object.
 
-        """Initialise a Bio.BSF.Analysis.RNASeq.Tuxedo object.
-
-        :param configuration: Configuration
-        :type configuration: Configuration
-        :param project_name: Project name
-        :type project_name: str
-        :param genome_version: Genome version
-        :type genome_version: str
-        :param input_directory: Analysis-wide input directory
-        :type input_directory: str
-        :param output_directory: Analysis-wide output directory
-        :type output_directory: str
-        :param project_directory: Analysis-wide project directory,
-        normally under the Analysis-wide output directory
-        :type project_directory: str
-        :param genome_directory: Analysis-wide genome directory,
-        normally under the Analysis-wide project directory
-        :type genome_directory: str
-        :param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        :type e_mail: str
-        :param debug: Integer debugging level
-        :type debug: int
-        :param drms_list: Python list of DRMS objects
-        :type drms_list: list
-        :param collection: Collection
-        :type collection: Collection
-        :param comparisons: Python dict of Python tuple objects of Sample objects
-        :type comparisons: dict
-        :param samples: Python list of Sample objects
-        :type samples: list
-        :param cmp_file: Comparison file
-        :type cmp_file: str, unicode
-        :param genome_fasta: Reference genome sequence FASTA file path
-        :type genome_fasta: str, unicode
-        :param transcriptome_gtf: Reference transcriptome GTF file path
-        :type transcriptome_gtf: str, unicode
-        :return: Nothing
-        :rtype: None
+        @param configuration: C{Configuration}
+        @type configuration: Configuration
+        @param project_name: Project name
+        @type project_name: str
+        @param genome_version: Genome version
+        @type genome_version: str
+        @param input_directory: C{Analysis}-wide input directory
+        @type input_directory: str
+        @param output_directory: C{Analysis}-wide output directory
+        @type output_directory: str
+        @param project_directory: C{Analysis}-wide project directory,
+            normally under the C{Analysis}-wide output directory
+        @type project_directory: str
+        @param genome_directory: C{Analysis}-wide genome directory,
+            normally under the C{Analysis}-wide project directory
+        @type genome_directory: str
+        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        @type e_mail: str
+        @param debug: Integer debugging level
+        @type debug: int
+        @param drms_list: Python C{list} of C{DRMS} objects
+        @type drms_list: list
+        @param collection: C{Collection}
+        @type collection: Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{Sample} objects
+        @type comparisons: dict
+        @param samples: Python C{list} of C{Sample} objects
+        @type samples: list
+        @param cmp_file: Comparison file
+        @type cmp_file: str | unicode
+        @param genome_fasta: Reference genome sequence FASTA file path
+        @type genome_fasta: str | unicode
+        @param transcriptome_gtf: Reference transcriptome GTF file path
+        @type transcriptome_gtf: str | unicode
         """
 
         super(Tuxedo, self).__init__(
@@ -173,14 +169,13 @@ class Tuxedo(Analysis):
             self.genome_fasta = str()
 
     def set_Configuration(self, configuration, section):
-
-        """Set instance variables of a Tuxedo object via a section of a Configuration object.
+        """Set instance variables of a C{Tuxedo} object via a section of a C{Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        :param configuration: Configuration
-        :type configuration: Configuration
-        :param section: Configuration file section
-        :type section: str
+        @param configuration: C{Configuration}
+        @type configuration: Configuration
+        @param section: Configuration file section
+        @type section: str
         """
 
         super(Tuxedo, self).set_Configuration(configuration=configuration, section=section)
@@ -197,27 +192,24 @@ class Tuxedo(Analysis):
             self.genome_fasta = configuration.config_parser.get(section=section, option='genome_fasta')
 
     def _read_comparisons(self, cmp_file):
+        """Read an C{AnnotationSheet} CSV file specifying comparisons from disk.
 
-        """Read an AnnotationSheet CSV file specifying comparisons from disk.
-
-        All Sample objects referenced in a comparison are added from the Collection to the Analysis object.
+        All C{Sample} objects referenced in a comparison are added from the C{Collection} to the C{Analysis} object.
 
         Column headers for CASAVA folders:
-          Treatment/Control/Point N ProcessedRunFolder:
-            CASAVA processed run folder name or
-            Analysis input_directory by default.
-          Treatment/Control/Point N Project:
-            CASAVA Project name or
-            Analysis project_name by default.
-          Treatment/Control/Point N Sample:
-            CASAVA Sample name, no default.
+            Treatment/Control/Point N ProcessedRunFolder:
+                CASAVA processed run folder name or
+                C{Analysis.input_directory} by default
+            Treatment/Control/Point N Project:
+                CASAVA Project name or
+                C{Analysis.project_name} by default
+            Treatment/Control/Point N Sample:
+                CASAVA Sample name, no default
         Column headers for independent samples:
-          Treatment/Control/Point N Sample:
-          Treatment/Control/Point N File:
-        :param cmp_file: Comparisons file path
-        :type cmp_file: str, unicode
-        :return: Nothing
-        :rtype: None
+            Treatment/Control/Point N Sample:
+            Treatment/Control/Point N File:
+        @param cmp_file: Comparisons file path
+        @type cmp_file: str | unicode
         """
 
         if self.debug > 1:
@@ -250,7 +242,7 @@ class Tuxedo(Analysis):
                 else:
                     prefix = 'Point {}'.format(i)
                 # Get Sample objects for 'Point N' keys for as long as they are defined.
-                # The Bio.BSF.Data.Collection.get_Sample_from_row_dict method can return one or more Sample objects,
+                # The Collection.get_Sample_from_row_dict method can return one or more Sample objects,
                 # depending on 'Group' or 'Sample' column entries.
                 # In RNA-Seq experiments, entire pools of Sample objects (replicates) are compared with each other.
                 group_name, group_samples = self.collection.get_Samples_from_row_dict(row_dict=row_dict, prefix=prefix)
@@ -292,11 +284,7 @@ class Tuxedo(Analysis):
             self.comparisons[key] = comparison_groups
 
     def run(self):
-
-        """Run this Tuxedo analysis.
-
-        :return: Nothing
-        :rtype: None
+        """Run this C{Tuxedo} analysis.
         """
 
         super(Tuxedo, self).run()
@@ -357,12 +345,8 @@ class Tuxedo(Analysis):
         self._create_cuffmerge_cuffdiff_jobs()
 
     def _create_tophat_cufflinks_jobs(self):
-
         """Create a TopHat aligner process and a Cufflinks transcript assembler process
         for each sample or replicate.
-
-        :return: Nothing
-        :rtype: None
         """
 
         if self.debug > 1:
@@ -634,11 +618,7 @@ class Tuxedo(Analysis):
                                                  value=self.genome_directory)
 
     def _create_cuffmerge_cuffdiff_jobs(self):
-
         """Create a Cuffmerge and a Cuffdiff process for each comparison.
-
-        :return: Nothing
-        :rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -836,11 +816,7 @@ class Tuxedo(Analysis):
             # None so far.
 
     def report(self):
-
-        """Create a Tuxedo report in HTML format and a UCSC Genome Browser Track Hub.
-
-        :return: Nothing
-        :rtype: None
+        """Create a C{Tuxedo} report in HTML format and a UCSC Genome Browser Track Hub.
         """
 
         config_parser = self.configuration.config_parser

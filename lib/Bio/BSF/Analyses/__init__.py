@@ -41,15 +41,15 @@ from Bio.BSF.Executables import Bowtie2, Macs14, Macs2Bdgcmp, Macs2Callpeak, Fas
 class ChIPSeqComparison(object):
     def __init__(self, c_name, t_name, c_samples, t_samples,
                  factor, tissue=None, condition=None, treatment=None, replicate=None):
-        """Initialise a BSF ChIPSeqComparison object.
+        """Initialise a C{ChIPSeqComparison} object.
 
         @param c_name: Control name
         @type c_name: str
         @param t_name: Treatment name
         @type t_name: str
-        @param c_samples: Python list of control BSF Sample objects
+        @param c_samples: Python C{list} of control C{Sample} objects
         @type c_samples: list
-        @param t_samples: Python list of treatment BSF Sample objects
+        @param t_samples: Python C{list} of treatment C{Sample} objects
         @type t_samples:list
         @param factor: ChIP factor
         @type factor: str
@@ -118,13 +118,14 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     """ChIP-Seq Bioconductor DiffBind annotation sheet class.
 
     Attributes:
-    @cvar _file_type: File type (i.e. 'excel' or 'excel-tab' defined in the csv module Dialect class)
+    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the csv module Dialect class)
     @type _file_type: str
     @cvar _header_line: Header line exists
     @type _header_line: bool
-    @cvar _field_names: Python list of Python str (field name) objects
+    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
     @type _field_names: list
-    @cvar _test_methods: Python dict of Python string (field name) key data and Python list of Python method value data
+    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
+        Python C{list} of Python C{function} value data
     @type _test_methods: dict
     """
 
@@ -168,10 +169,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     )
 
     def sort(self):
-        """Sort by columns Tissue, Factor, Condition, Treatment and Replicate.
-
-        @return: Nothing
-        @rtype: None
+        """Sort by columns I{Tissue}, I{Factor}, I{Condition}, I{Treatment} and I{Replicate}.
         """
         self.row_dicts.sort(
             cmp=lambda x, y:
@@ -182,10 +180,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
             cmp(int(x['Replicate']), int(y['Replicate'])))
 
     def write_to_file(self):
-        """Write a BSF ChIPSeq DiffBind Sheet to a file.
-
-        @return: Nothing
-        @rtype: None
+        """Write a C{ChIPSeqDiffBindSheet} to a file.
         """
 
         # Override the method from the super-class to automatically sort before writing to a file.
@@ -195,7 +190,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
 
 
 class ChIPSeq(Analysis):
-    """BSF ChIP-Seq-specific BSF Analysis sub-class.
+    """ChIP-Seq-specific C{Analysis} sub-class.
 
     Attributes:
     None
@@ -203,11 +198,11 @@ class ChIPSeq(Analysis):
 
     @classmethod
     def from_config_file(cls, config_file):
-        """Create a new BSF ChIPSeq object from a UNIX-style configuration file via the BSF Configuration class.
+        """Create a new C{ChIPSeq} object from a UNIX-style configuration file via the C{Configuration} class.
 
         @param config_file: UNIX-style configuration file
         @type config_file: str | unicode
-        @return: BSF ChIPSeq
+        @return: C{ChIPSeq}
         @rtype: ChIPSeq
         """
 
@@ -215,11 +210,11 @@ class ChIPSeq(Analysis):
 
     @classmethod
     def from_Configuration(cls, configuration):
-        """Create a new BSF ChIPSeq object from a BSF Configuration object.
+        """Create a new C{ChIPSeq} object from a C{Configuration} object.
 
-        @param configuration: BSF Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return: BSF ChIPSeq
+        @return: C{ChIPSeq}
         @rtype: ChIPSeq
         """
 
@@ -241,35 +236,35 @@ class ChIPSeq(Analysis):
                  e_mail=None, debug=0, drms_list=None,
                  collection=None, comparisons=None, samples=None,
                  cmp_file=None):
-        """Initialise a Bio.BSF.Analysis.ChIPSeq object.
+        """Initialise a C{ChIPSeq} object.
 
-        @param configuration: BSF Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: BSF Analysis-wide input directory
+        @param input_directory: C{Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: BSF Analysis-wide output directory
+        @param output_directory: C{Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: BSF Analysis-wide project directory,
-            normally under the BSF Analysis-wide output directory
+        @param project_directory: C{Analysis}-wide project directory,
+            normally under the C{Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: BSF Analysis-wide genome directory,
-            normally under the BSF Analysis-wide project directory
+        @param genome_directory: C{Analysis}-wide genome directory,
+            normally under the C{Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python list of BSF DRMS objects
+        @param drms_list: Python C{list} of C{DRMS} objects
         @type drms_list: list
-        @param collection: BSF Collection
+        @param collection: C{Collection}
         @type collection: Collection
-        @param comparisons: Python dict of Python list objects of BSF Sample objects
+        @param comparisons: Python C{dict} of Python C{list} objects of C{Sample} objects
         @type comparisons: dict
-        @param samples: Python list of BSF Sample objects
+        @param samples: Python C{list} of C{Sample} objects
         @type samples: list
         @param cmp_file: Comparison file
         @type cmp_file: str | unicode
@@ -292,12 +287,12 @@ class ChIPSeq(Analysis):
             self.cmp_file = str()
 
     def set_Configuration(self, configuration, section):
-        """Set instance variables of a BSF ChIPSeq object via a section of a
-        BSF Configuration object.
+        """Set instance variables of a C{ChIPSeq} object via a section of a
+        C{Configuration} object.
 
         Instance variables without a
         configuration option remain unchanged.
-        @param configuration: BSF Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
@@ -311,17 +306,17 @@ class ChIPSeq(Analysis):
             self.cmp_file = configuration.config_parser.get(section=section, option='cmp_file')
 
     def _read_comparisons(self, cmp_file):
-        """Read a BSF SampleAnnotationSheet CSV file from disk.
+        """Read a C{SampleAnnotationSheet} CSV file from disk.
 
         Column headers for CASAVA folders:
             Treatment/Control ProcessedRunFolder:
                 CASAVA processed run folder name or
-                Bio.BSF.Analysis.input_directory by default.
+                C{Analysis.input_directory} by default
             Treatment/Control Project:
                 CASAVA Project name or
-                Bio.BSF.Analysis.project_name by default.
+                C{Analysis.project_name} by default
             Treatment/Control Sample:
-                CASAVA Sample name, no default.
+                CASAVA Sample name, no default
         Column headers for independent samples:
             Treatment/Control Sample
             Treatment/Control File
@@ -456,10 +451,7 @@ class ChIPSeq(Analysis):
                 i += 1
 
     def run(self):
-        """Run this BSF ChIPSeq analysis.
-
-        @return: Nothing
-        @rtype: None
+        """Run this C{ChIPSeq} C{Analysis}.
         """
 
         super(ChIPSeq, self).run()
@@ -495,9 +487,6 @@ class ChIPSeq(Analysis):
 
     def _create_bowtie2_jobs(self):
         """Create Bowtie2 alignment jobs.
-
-        @return: Nothing
-        @rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -617,9 +606,6 @@ class ChIPSeq(Analysis):
 
     def _create_macs14_jobs(self):
         """Create MACS14 peak caller jobs.
-
-        @return: Nothing
-        @rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -774,9 +760,6 @@ class ChIPSeq(Analysis):
 
     def _create_macs2_jobs(self):
         """Create MACS2 peak caller jobs.
-
-        @return: Nothing
-        @rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -975,9 +958,6 @@ class ChIPSeq(Analysis):
 
     def _create_diffbind_jobs(self):
         """Create Bioconductor DiffBind jobs.
-
-        @return: Nothing
-        @rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -1117,9 +1097,6 @@ class ChIPSeq(Analysis):
 
     def _report_macs14(self):
         """Create a BSF ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
-
-        @return: Nothing
-        @rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -1380,9 +1357,6 @@ class ChIPSeq(Analysis):
 
     def report(self):
         """Create a BSF ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
-
-        @return: Nothing
-        @rtype: None
         """
 
         config_parser = self.configuration.config_parser
@@ -2016,11 +1990,11 @@ class RunFastQC(Analysis):
 
     @classmethod
     def from_config_file(cls, config_file):
-        """Create a new BSF RunFastQC object from a UNIX-style configuration file via the BSF Configuration class.
+        """Create a new C{RunFastQC} object from a UNIX-style configuration file via the C{Configuration} class.
 
         @param config_file: UNIX-style configuration file
         @type config_file: str | unicode
-        @return: BSF RunFastQC
+        @return: C{RunFastQC}
         @rtype: RunFastQC
         """
 
@@ -2028,11 +2002,11 @@ class RunFastQC(Analysis):
 
     @classmethod
     def from_Configuration(cls, configuration):
-        """Create a new BSF RunFastQC object from a BSF Configuration object.
+        """Create a new C{RunFastQC} object from a C{Configuration} object.
 
-        @param configuration: BSF Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return: BSF RunFastQC
+        @return: C{RunFastQC}
         @rtype: RunFastQC
         """
 
@@ -2053,38 +2027,36 @@ class RunFastQC(Analysis):
                  project_directory=None, genome_directory=None,
                  e_mail=None, debug=0, drms_list=None,
                  collection=None, comparisons=None, samples=None):
-        """Initialise a Bio.BSF.Analysis.RunFastQC object.
+        """Initialise a C{RunFastQC} object.
 
-        @param configuration: BSF Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: BSF Analysis-wide input directory
+        @param input_directory: C{Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: BSF Analysis-wide output directory
+        @param output_directory: C{Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: BSF Analysis-wide project directory,
-            normally under the BSF Analysis-wide output directory
+        @param project_directory: C{Analysis}-wide project directory,
+            normally under the C{Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: BSF Analysis-wide genome directory,
-            normally under the BSF Analysis-wide project directory
+        @param genome_directory: C{Analysis}-wide genome directory,
+            normally under the C{Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python list of BSF DRMS objects
+        @param drms_list: Python C{list} of BSF C{DRMS} objects
         @type drms_list: list
-        @param collection: BSF Collection
+        @param collection: C{Collection}
         @type collection: Collection
-        @param comparisons: Python dict of Python tuple objects of BSF Sample objects
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{Sample} objects
         @type comparisons: dict
-        @param samples: Python list of BSF Sample objects
+        @param samples: Python C{list} of C{Sample} objects
         @type samples: list
-        @return: Nothing
-        @rtype: None
         """
 
         super(RunFastQC, self).__init__(configuration=configuration,
@@ -2097,10 +2069,10 @@ class RunFastQC(Analysis):
         # Nothing else to do for this sub-class ...
 
     def set_Configuration(self, configuration, section):
-        """Set instance variables of a BSF RunFastQC object via a section of a BSF Configuration object.
+        """Set instance variables of a C{RunFastQC} object via a section of a C{Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: BSF Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
@@ -2117,17 +2089,17 @@ class RunFastQC(Analysis):
             self.cmp_file = configuration.config_parser.get(section=section, option='sas_file')
 
     def _read_comparisons(self, cmp_file):
-        """Read a BSF SampleAnnotationSheet CSV file from disk.
+        """Read a C{SampleAnnotationSheet} CSV file from disk.
 
         Column headers for CASAVA folders:
             Treatment/Control ProcessedRunFolder:
                 CASAVA processed run folder name or
-                Bio.BSF.Analysis input_directory by default.
+                C{Analysis.input_directory} by default
             Treatment/Control Project:
                 CASAVA Project name or
-                Bio.BSF.Analysis project_name by default.
+                C{Analysis.project_name} by default
             Treatment/Control Sample:
-                CASAVA Sample name, no default.
+                CASAVA Sample name, no default
         Column headers for independent samples:
             Treatment/Control Sample:
             Treatment/Control File:
@@ -2146,10 +2118,7 @@ class RunFastQC(Analysis):
         sas.csv_reader_close()
 
     def run(self):
-        """Run this BSF RunFastQC analysis.
-
-        @return: Nothing
-        @rtype: None
+        """Run this C{RunFastQC} C{Analysis}.
         """
 
         super(RunFastQC, self).run()
@@ -2171,10 +2140,7 @@ class RunFastQC(Analysis):
         self._create_FastQC_jobs()
 
     def _create_FastQC_jobs(self):
-        """Initialise a BSF RunFastQC object.
-
-        @return: Nothing
-        @rtype: None
+        """Initialise a C{RunFastQC} object.
         """
 
         # Read configuration options.
@@ -2298,10 +2264,7 @@ class RunFastQC(Analysis):
         self.drms_list.append(fastqc_drms)
 
     def report(self):
-        """Create a RunFastQC report in HTML format.
-
-        @return: Nothing
-        @rtype: None
+        """Create C{RunFastQC} report in HTML format.
         """
 
         config_parser = self.configuration.config_parser

@@ -1,6 +1,6 @@
 """Bio.BSF.Argument
 
-A package of classes and methods to model Bio.BSF.Command arguments,
+A package of classes and methods to model Command arguments,
 i.e. SwitchLong (--key), SwitchShort (-k),
 OptionLong (--key value), OptionShort (-k value), OptionPair (key=value),
 SubCommand (key) and Argument (key).
@@ -31,27 +31,26 @@ SubCommand (key) and Argument (key).
 
 
 class Argument(object):
-    """Bio.BSF.Argument.Argument class for an argument obeying a "key" schema.
+    """The C{Argument} class represents an argument obeying a C{key} schema.
 
     Attributes:
-    :ivar key: Key
-    :type key: str
+    @ivar key: Key
+    @type key: str
     """
 
     @classmethod
     def from_key_value(cls, key, value):
-
-        """Create a Bio.BSF.Argument.Argument or sub-class object from a key and value argument pair.
+        """Create an C{Argument} or sub-class object from a key and value argument pair.
 
         If the key starts with one or two hyphen and has no value associated, create a
-        SwitchShort or SwitchLong object, respectively. If the key is additionally associated
-        with a value, create an OptionShort or OptionLong object, respectively.
-        :param key: Key
-        :type key: str
-        :param value: Value
-        :type value: str, unicode
-        :return: Bio.BSF.Argument object or a sub-class thereof
-        :rtype: Option, Switch
+        C{SwitchShort} or C{SwitchLong} object, respectively. If the key is additionally associated
+        with a value, create an C{OptionShort} or C{OptionLong} object, respectively.
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @return: C{Argument} object or a sub-class thereof
+        @rtype: Argument
         """
 
         if key.startswith('--'):
@@ -81,13 +80,10 @@ class Argument(object):
         return argument
 
     def __init__(self, key):
+        """Initialise an C{Argument} object.
 
-        """Initialise a Bio.BSF.Argument.Argument object.
-
-        :param key: Key
-        :type key: str
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
         """
 
         assert isinstance(key, basestring)
@@ -98,13 +94,12 @@ class Argument(object):
         self.key = key
 
     def trace(self, level):
+        """Trace an C{Argument} object.
 
-        """Trace a Bio.BSF.Argument.Argument object.
-
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -116,22 +111,20 @@ class Argument(object):
 
 
 class Switch(Argument):
-    """Bio.BSF.Argument.Switch class, for an argument obeying a "--key" or "-k" schema.
+    """The C{Switch} class represents an argument obeying a C{--key} or C{-k} schema.
 
     Attributes:
-    :ivar is_long: GNU-style long switch (--key)
-    :type is_long: bool
+    @ivar is_long: GNU-style long switch (C{--key})
+    @type is_long: bool
     """
 
     def __init__(self, key, is_long=False):
-        """Initialise a Bio.BSF.Argument.Switch object.
+        """Initialise a C{Switch} object.
 
-        :param key: Key
-        :type key: str
-        :param is_long: GNU-style long switch (--key)
-        :type is_long: bool
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param is_long: GNU-style long switch (C{--key})
+        @type is_long: bool
         """
 
         super(Switch, self).__init__(key=key)
@@ -141,12 +134,12 @@ class Switch(Argument):
         self.is_long = is_long
 
     def trace(self, level):
-        """Trace a Bio.BSF.Argument.Switch object.
+        """Trace a C{Switch} object.
 
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -160,29 +153,27 @@ class Switch(Argument):
 
 
 class SwitchLong(Switch):
-    """Bio.BSF.Argument.SwitchLong class, for an argument obeying a "--key" schema.
+    """The C{SwitchLong} class represents an argument obeying a C{--key} schema.
 
     Attributes:
     """
 
     def __init__(self, key):
-        """Initialise a Bio.BSF.Argument.SwitchLong object.
+        """Initialise a C{SwitchLong} object.
 
-        :param key: Key
-        :type key: str
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
         """
 
         super(SwitchLong, self).__init__(key=key, is_long=True)
 
     def trace(self, level):
-        """Trace a Bio.BSF.Argument.SwitchLong object.
+        """Trace a C{SwitchLong} object.
 
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -195,29 +186,27 @@ class SwitchLong(Switch):
 
 
 class SwitchShort(Switch):
-    """Bio.BSF.Argument.SwitchShort class, for an argument obeying a "-k" schema.
+    """The C{SwitchShort} class represents an argument obeying a C{-k} schema.
 
     Attributes:
     """
 
     def __init__(self, key):
-        """Initialise a Bio.BSF.Argument.SwitchShort object.
+        """Initialise a C{SwitchShort} object.
 
-        :param key: Key
-        :type key: str
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
         """
 
         super(SwitchShort, self).__init__(key=key, is_long=False)
 
     def trace(self, level):
-        """Trace a Bio.BSF.Argument.SwitchShort object.
+        """Trace a C{SwitchShort} object.
 
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -230,28 +219,26 @@ class SwitchShort(Switch):
 
 
 class Option(Switch):
-    """Bio.BSF.Argument.Option class for arguments obeying a "--key value" or "-k value" schema.
+    """The C{Option} class represents arguments obeying a C{--key value} or C{-k value} schema.
 
     Attributes:
-    :ivar is_pair: A KEY=VALUE pair
-    :type is_pair: bool
-    :ivar value: Value
-    :type value: str, unicode
+    @ivar is_pair: A C{KEY=VALUE} pair
+    @type is_pair: bool
+    @ivar value: Value
+    @type value: str | unicode
     """
 
     def __init__(self, key, value, is_long=False, is_pair=False):
-        """Initialise a Bio.BSF.Argument.Option object.
+        """Initialise an C{Option} object.
 
-        :param key: Key
-        :type key: str
-        :param value: Value
-        :type value: str, unicode, None
-        :param is_long: GNU-style long option (--key value)
-        :type is_long: bool
-        :param is_pair: A KEY=VALUE pair
-        :type is_pair: bool
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode | None
+        @param is_long: GNU-style long option (C{--key value})
+        @type is_long: bool
+        @param is_pair: A C{KEY=VALUE} pair
+        @type is_pair: bool
         """
 
         assert isinstance(value, basestring)
@@ -266,12 +253,12 @@ class Option(Switch):
         self.is_pair = is_pair
 
     def trace(self, level):
-        """Trace a Bio.BSF.Argument.Option object.
+        """Trace an C{Option} object.
 
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -286,31 +273,29 @@ class Option(Switch):
 
 
 class OptionLong(Option):
-    """Bio.BSF.Argument.OptionLong class, representing an argument obeying a "--key value" schema.
+    """The C{OptionLong} class represents an argument obeying a C{--key value} schema.
 
     Attributes:
     """
 
     def __init__(self, key, value):
-        """Initialise a Bio.BSF.Argument.OptionLong object.
+        """Initialise an C{OptionLong} object.
 
-        :param key: Key
-        :type key: str
-        :param value: Value
-        :type value: str, unicode
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
         """
 
         super(OptionLong, self).__init__(key=key, value=value, is_long=True)
 
     def trace(self, level):
-        """Trace a Bio.BSF.Argument.OptionLong object.
+        """Trace an C{OptionLong} object.
 
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -323,31 +308,29 @@ class OptionLong(Option):
 
 
 class OptionShort(Option):
-    """Bio.BSF.Argument.OptionShort class, representing an argument obeying a "-k value" schema.
+    """The C{OptionShort} class represents an argument obeying a C{-k value} schema.
 
     Attributes:
     """
 
     def __init__(self, key, value):
-        """Initialise a Bio.BSF.Argument.OptionShort object.
+        """Initialise an C{OptionShort} object.
 
-        :param key: Key
-        :type key: str
-        :param value: Value
-        :type value: str, unicode
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
         """
 
         super(OptionShort, self).__init__(key=key, value=value, is_long=False)
 
     def trace(self, level):
-        """Trace a Bio.BSF.Argument.OptionShort object.
+        """Trace an C{OptionShort} object.
 
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -360,35 +343,33 @@ class OptionShort(Option):
 
 
 class OptionPair(Option):
-    """Bio.BSF.Argument.OptionPair class, for an argument obeying a KEY=VALUE schema.
+    """The C{OptionPair} class represents an argument obeying a C{KEY=VALUE} schema.
 
-    Although the KEY=VALUE expressions could be added as simple arguments, the benefit
-    of having a specific sub-class is the tracking of the key in the Bio.BSF:Command.options
+    Although the C{KEY=VALUE} expressions could be added as simple arguments, the benefit
+    of having a specific sub-class is the tracking of the key in the C{Command.options}
     dictionary.
 
     Attributes:
     """
 
     def __init__(self, key, value):
-        """Initialise a Bio.BSF.Argument.OptionPair object.
+        """Initialise an C{OptionPair} object.
 
-        :param key: Key
-        :type key: str
-        :param value: Value
-        :type value: str, unicode
-        :return: Nothing
-        :rtype: None
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
         """
 
         super(OptionPair, self).__init__(key=key, value=value, is_pair=True)
 
     def trace(self, level):
-        """Trace a Bio.BSF.Argument.OptionPair object.
+        """Trace an C{OptionPair} object.
 
-        :param level: Indentation level
-        :type level: int
-        :return: Trace information
-        :rtype: str
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level

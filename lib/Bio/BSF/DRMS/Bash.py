@@ -31,15 +31,12 @@ import os
 
 
 def submit(drms, debug=0):
+    """Submit C{Executable} objects by writing a GNU Bourne-Again Shell (BASH) script into the C{DRMS.work_directory}.
 
-    """Submit BSF Executable objects by writing a GNU Bourne-Again Shell (BASH) script into the DRMS.work_directory.
-
-    :param drms: BSF DRMS
-    :type drms: DRMS
-    :param debug: Debug level
-    :type debug: int
-    :return: Nothing
-    :rtype: None
+    @param drms: Distributed Resource Management System (C{DRMS})
+    @type drms: DRMS
+    @param debug: Debug level
+    @type debug: int
     """
 
     output = str()

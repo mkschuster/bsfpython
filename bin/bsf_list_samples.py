@@ -94,7 +94,7 @@ for project_name in project_names:
                 if paired_reads.reads1:
                     row_dict['File1'] = paired_reads.reads1.file_path
                     # row_dict['Reads1'] = paired_reads.reads1.name
-                    # Deduce the BSF Reads.name form the base name without file extensions.
+                    # Deduce the Reads.name from the base name without file extensions.
                     file_name = str(paired_reads.reads1.file_path)
                     file_name = os.path.basename(file_name.rstrip('/ '))
                     # Remove any file-extensions like .bam, .fastq.gz, ...
@@ -108,7 +108,7 @@ for project_name in project_names:
                 if paired_reads.reads2:
                     row_dict['File2'] = paired_reads.reads2.file_path
                     # row_dict['Reads2'] = paired_reads.reads2.name
-                    # Deduce the BSF Reads.name form the base name without file extensions.
+                    # Deduce the Reads.name from the base name without file extensions.
                     file_name = str(paired_reads.reads2.file_path)
                     file_name = os.path.basename(file_name.rstrip('/ '))
                     # Remove any file-extensions like .bam, .fastq.gz, ...
@@ -119,10 +119,10 @@ for project_name in project_names:
                 else:
                     row_dict['File2'] = str()
                     row_dict['Reads2'] = str()
-                # A line for each BSF PairedReads replicate.
+                # A line for each PairedReads replicate.
                 csv_writer.writerow(rowdict=row_dict)
         else:
-            # A line for each BSF Sample, containing BSF PairedReads replicates.
+            # A line for each Sample, containing PairedReads replicates.
             csv_writer.writerow(rowdict=row_dict)
 
 csv_file.close()

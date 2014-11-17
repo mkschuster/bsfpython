@@ -35,21 +35,20 @@ import urllib
 
 
 def html_header(title, creator=None, source=None, strict=False):
-
     """Return the header section of an XHTML 1.0 document.
 
-    :param title: Title element value
-    :type title: str
-    :param creator: Dublin Core DC.Creator meta field value,
-    defaults to the USER environment variable
-    :type creator: str
-    :param source: Dublin Core DC.Source meta field value,
-    defaults to the Python script file path
-    :type source: str
-    :param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional
-    :type strict: bool
-    :return: HTML header section as multi-line string
-    :rtype: str
+    @param title: Title element value
+    @type title: str
+    @param creator: Dublin Core DC.Creator meta field value,
+        defaults to the USER environment variable
+    @type creator: str
+    @param source: Dublin Core DC.Source meta field value,
+        defaults to the Python script file path
+    @type source: str
+    @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional
+    @type strict: bool
+    @return: HTML header section as multi-line string
+    @rtype: str
     """
 
     if not creator:
@@ -94,11 +93,10 @@ def html_header(title, creator=None, source=None, strict=False):
 
 
 def html_footer():
-
     """Return the footer section of a XHTML 1.0 document.
 
-    :return: XHTML 1.0 footer section as multi-line string
-    :rtype: str
+    @return: XHTML 1.0 footer section as multi-line string
+    @rtype: str
     """
 
     output = str()
@@ -174,14 +172,13 @@ chipseq_default_colour = '0,0,0'
 
 
 def get_chipseq_colour(factor=None):
-
     """Get the web colour for a ChIP-Seq factor.
 
     If the factor is not in the dictionary, the default colour for factor 'Other' will be returned.
-    :param factor: ChIP-Seq factor (e.g. H3K36me3, H3K4me1, ...)
-    :type factor: str
-    :return: Comma-separated RGB value triplet
-    :rtype: str
+    @param factor: ChIP-Seq factor (e.g. H3K36me3, H3K4me1, ...)
+    @type factor: str
+    @return: Comma-separated RGB value triplet
+    @rtype: str
     """
 
     if not factor:
@@ -196,19 +193,18 @@ def get_chipseq_colour(factor=None):
 
 
 def ucsc_track_url(options_dict, browser_dict=None, track_dict=None, host_name=None):
-
     """Return a UCSC Genome Browser track URL.
 
-    :param options_dict: Python dict of URL options key value pairs
-    :type options_dict: dict
-    :param browser_dict: Python dict of browser line key vale pairs
-    :type browser_dict: dict
-    :param track_dict: Python dict of track line (hgct_customText) key value pairs
-    :type track_dict: dict
-    :param host_name: UCSC Genome Browser host name
-    :type host_name: str
-    :return: A URL to attach a track to the UCSC Genome Browser
-    :rtype: str
+    @param options_dict: Python C{dict} of Python C{str} URL option key value pairs
+    @type options_dict: dict
+    @param browser_dict: Python C{dict} of Python C{str} browser line key value pairs
+    @type browser_dict: dict
+    @param track_dict: Python C{dict} of Python C{str} track line (hgct_customText) key value pairs
+    @type track_dict: dict
+    @param host_name: UCSC Genome Browser host name
+    @type host_name: str
+    @return: A URL to attach a track to the UCSC Genome Browser
+    @rtype: str
     """
 
     if browser_dict:

@@ -44,15 +44,15 @@ class ChIPSeqComparison(object):
 
     def __init__(self, c_name, t_name, c_samples, t_samples,
                  factor, tissue=None, condition=None, treatment=None, replicate=None):
-        """Initialise a BSF ChIPSeqComparison object.
+        """Initialise a C{ChIPSeqComparison} object.
 
         @param c_name: Control name
         @type c_name: str
         @param t_name: Treatment name
         @type t_name: str
-        @param c_samples: Python list of control BSF Sample objects
+        @param c_samples: Python C{list} of control C{Sample} objects
         @type c_samples: list
-        @param t_samples: Python list of treatment BSF Sample objects
+        @param t_samples: Python C{list} of treatment C{Sample} objects
         @type t_samples:list
         @param factor: ChIP factor
         @type factor: str
@@ -119,13 +119,14 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     """ChIP-Seq Bioconductor DiffBind annotation sheet class.
 
     Attributes:
-    @cvar _file_type: File type (i.e. 'excel' or 'excel-tab' defined in the csv module Dialect class)
+    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
     @type _file_type: str
     @cvar _header_line: Header line exists
     @type _header_line: bool
-    @cvar _field_names: Python list of Python str (field name) objects
+    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
     @type _field_names: list
-    @cvar _test_methods: Python dict of Python string (field name) key data and Python list of Python method value data
+    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
+        Python C{list} of Python C{function} value data
     @type _test_methods: dict
     """
 
@@ -169,7 +170,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     )
 
     def sort(self):
-        """Sort by 'Tissue', 'Factor, 'Condition', 'Treatment' and 'Replicate' columns.
+        """Sort by I{Tissue}, I{Factor}, I{Condition}, I{Treatment} and I{Replicate} columns.
         """
 
         self.row_dicts.sort(
@@ -181,7 +182,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
             cmp(int(x['Replicate']), int(y['Replicate'])))
 
     def write_to_file(self):
-        """Write a BSF ChIPSeq DiffBind Sheet to a file.
+        """Write a C{ChIPSeqDiffBindSheet} to a file.
         """
 
         # Override the method from the super-class to automatically sort before writing to a file.
@@ -191,7 +192,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
 
 
 class ChIPSeq(Analysis):
-    """BSF ChIP-Seq-specific BSF Analysis sub-class.
+    """The C{ChIPSeq} class represents the logic to run a ChIP-Seq-specific C{Analysis}.
 
     Attributes:
     None
@@ -199,11 +200,11 @@ class ChIPSeq(Analysis):
 
     @classmethod
     def from_config_file(cls, config_file):
-        """Create a new BSF ChIPSeq object from a UNIX-style configuration file via the BSF Configuration class.
+        """Create a new C{ChIPSeq} object from a UNIX-style configuration file via the C{Configuration} class.
 
         @param config_file: UNIX-style configuration file
         @type config_file: str | unicode
-        @return: BSF ChIPSeq
+        @return: C{ChIPSeq}
         @rtype: ChIPSeq
         """
 
@@ -211,11 +212,11 @@ class ChIPSeq(Analysis):
 
     @classmethod
     def from_Configuration(cls, configuration):
-        """Create a new BSF ChIPSeq object from a BSF Configuration object.
+        """Create a new C{ChIPSeq} object from a C{Configuration} object.
 
-        @param configuration: BSF Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return: BSF ChIPSeq
+        @return: C{ChIPSeq}
         @rtype: ChIPSeq
         """
 
@@ -223,7 +224,7 @@ class ChIPSeq(Analysis):
 
         chipseq = cls(configuration=configuration)
 
-        # A "Bio.BSF.Analysis.ChIPSeq" section specifies defaults for this BSF Analysis.
+        # A "Bio.BSF.Analysis.ChIPSeq" section specifies defaults for this Analysis.
 
         section = string.join(words=(__name__, cls.__name__), sep='.')
         chipseq.set_Configuration(chipseq.configuration, section=section)
@@ -237,35 +238,35 @@ class ChIPSeq(Analysis):
                  e_mail=None, debug=0, drms_list=None,
                  collection=None, comparisons=None, samples=None,
                  cmp_file=None):
-        """Initialise a Bio.BSF.Analysis.ChIPSeq object.
+        """Initialise a C{ChIPSeq} object.
 
-        @param configuration: BSF Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: BSF Analysis-wide input directory
+        @param input_directory: C{Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: BSF Analysis-wide output directory
+        @param output_directory: C{Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: BSF Analysis-wide project directory,
-            normally under the BSF Analysis-wide output directory
+        @param project_directory: C{Analysis}-wide project directory,
+            normally under the C{Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: BSF Analysis-wide genome directory,
-            normally under the BSF Analysis-wide project directory
+        @param genome_directory: C{Analysis}-wide genome directory,
+            normally under the C{Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python list of BSF DRMS objects
+        @param drms_list: Python C{list} of C{DRMS} objects
         @type drms_list: list
-        @param collection: BSF Collection
+        @param collection: C{Collection}
         @type collection: Collection
-        @param comparisons: Python dict of Python list objects of BSF Sample objects
+        @param comparisons: Python C{dict} of Python C{list} objects of C{Sample} objects
         @type comparisons: dict
-        @param samples: Python list of BSF Sample objects
+        @param samples: Python C{list} of C{Sample} objects
         @type samples: list
         @param cmp_file: Comparison file
         @type cmp_file: str | unicode
@@ -286,12 +287,12 @@ class ChIPSeq(Analysis):
             self.cmp_file = str()
 
     def set_Configuration(self, configuration, section):
-        """Set instance variables of a BSF ChIPSeq object via a section of a
-        BSF Configuration object.
+        """Set instance variables of a C{ChIPSeq} object via a section of a
+        C{Configuration} object.
 
         Instance variables without a
         configuration option remain unchanged.
-        @param configuration: BSF Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
@@ -305,17 +306,17 @@ class ChIPSeq(Analysis):
             self.cmp_file = configuration.config_parser.get(section=section, option='cmp_file')
 
     def _read_comparisons(self, cmp_file):
-        """Read a BSF SampleAnnotationSheet CSV file from disk.
+        """Read a C{SampleAnnotationSheet} CSV file from disk.
 
         Column headers for CASAVA folders:
             Treatment/Control ProcessedRunFolder:
                 CASAVA processed run folder name or
-                Bio.BSF.Analysis.input_directory by default.
+                C{Analysis.input_directory} by default
             Treatment/Control Project:
                 CASAVA Project name or
-                Bio.BSF.Analysis.project_name by default.
+                C{Analysis.project_name} by default
             Treatment/Control Sample:
-                CASAVA Sample name, no default.
+                CASAVA Sample name, no default
         Column headers for independent samples:
             Treatment/Control Sample:
             Treatment/Control File:
@@ -330,13 +331,13 @@ class ChIPSeq(Analysis):
         sas = SampleAnnotationSheet.read_from_file(file_path=cmp_file)
 
         # Unfortunately, two passes through the comparison sheet are required.
-        # In the first one merge all BSF Sample objects that share the name.
-        # Merging BSF Sample objects is currently the only way to pool BSF PairedReads objects,
+        # In the first one merge all Sample objects that share the name.
+        # Merging Sample objects is currently the only way to pool PairedReads objects,
         # which is required for ChIP-Seq experiments.
 
         sample_dict = dict()
 
-        # First pass, merge BSF Sample objects, if they have the same name.
+        # First pass, merge Sample objects, if they have the same name.
         for row_dict in sas.row_dicts:
             for prefix in ('Control', 'Treatment'):
                 name, samples = self.collection.get_Samples_from_row_dict(row_dict=row_dict, prefix=prefix)
@@ -347,7 +348,7 @@ class ChIPSeq(Analysis):
                         n_sample = Sample.from_Samples(sample1=sample_dict[o_sample.name], sample2=o_sample)
                         sample_dict[n_sample.name] = n_sample
 
-        # Second pass, add all BSF Sample objects mentioned in a comparison.
+        # Second pass, add all Sample objects mentioned in a comparison.
         level1_dict = dict()
 
         for row_dict in sas.row_dicts:
@@ -358,7 +359,7 @@ class ChIPSeq(Analysis):
             # ChIP-Seq experiments use the order treatment versus control in comparisons.
             comparison_key = '{}__{}'.format(t_name, c_name)
 
-            # For a successful comparison, both Python list objects of BSF Sample objects have to be defined.
+            # For a successful comparison, both Python list objects of Sample objects have to be defined.
 
             if not (len(t_samples) and len(c_samples)):
                 if self.debug > 1:
@@ -366,17 +367,17 @@ class ChIPSeq(Analysis):
                         format(t_name, len(t_samples), c_name, len(c_samples))
                 continue
 
-            # Add all control BSF Sample or BSF SampleGroup objects to the Sample list.
+            # Add all control Sample or SampleGroup objects to the Sample list.
 
             for c_sample in c_samples:
                 if self.debug > 1:
                     print '  Control Sample name: {!r} file_path:{!r}'.format(c_sample.name, c_sample.file_path)
                     print c_sample.trace(1)
-                    # Find the BSF Sample in the unified sample dictionary.
+                    # Find the Sample in the unified sample dictionary.
                 if c_sample.name in sample_dict:
                     self.add_Sample(sample=sample_dict[c_sample.name])
 
-            # Add all treatment BSF Sample or BSF SampleGroup objects to the Sample list.
+            # Add all treatment Sample or SampleGroup objects to the Sample list.
 
             for t_sample in t_samples:
                 if self.debug > 1:
@@ -422,15 +423,16 @@ class ChIPSeq(Analysis):
 
                 level2_dict[comparison_key] = 0
 
-            self.comparisons[comparison_key] = ChIPSeqComparison(c_name=c_name,
-                                                                 t_name=t_name,
-                                                                 c_samples=c_samples,
-                                                                 t_samples=t_samples,
-                                                                 factor=factor,
-                                                                 tissue=tissue,
-                                                                 condition=condition,
-                                                                 treatment=treatment,
-                                                                 replicate=0)
+            self.comparisons[comparison_key] = ChIPSeqComparison(
+                c_name=c_name,
+                t_name=t_name,
+                c_samples=c_samples,
+                t_samples=t_samples,
+                factor=factor,
+                tissue=tissue,
+                condition=condition,
+                treatment=treatment,
+                replicate=0)
 
         # Sort the comparison keys alphabetically and assign replicate numbers into ChiPSeqComparison objects.
 
@@ -448,7 +450,7 @@ class ChIPSeq(Analysis):
                 i += 1
 
     def run(self):
-        """Run this BSF ChIPSeq analysis.
+        """Run this C{ChIPSeq} analysis.
         """
 
         super(ChIPSeq, self).run()
@@ -461,7 +463,7 @@ class ChIPSeq(Analysis):
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
         # Check if an absolute path has been provided, if not,
-        # automatically prepend standard BSF directory paths.
+        # automatically prepend standard directory paths.
 
         self.cmp_file = os.path.expanduser(path=self.cmp_file)
         self.cmp_file = os.path.expandvars(path=self.cmp_file)
@@ -471,8 +473,8 @@ class ChIPSeq(Analysis):
 
         self._read_comparisons(cmp_file=self.cmp_file)
 
-        # Experimentally, sort the Python list of BSF Sample objects by the BSF Sample name.
-        # This cannot be done in the super-class, because BSF Samples are only put into the Analysis.samples list
+        # Experimentally, sort the Python list of Sample objects by the Sample name.
+        # This cannot be done in the super-class, because Samples are only put into the Analysis.samples list
         # by the _read_comparisons method.
 
         self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
@@ -505,9 +507,9 @@ class ChIPSeq(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
+            # Sample.get_all_PairedReads() returns a Python dict of
             # Python str key and Python list of Python list objects
-            # of Bio.BSF.Data.PairedReads objects.
+            # of PairedReads objects.
 
             replicate_dict = sample.get_all_PairedReads(replicate_grouping=True)
 
@@ -553,7 +555,7 @@ class ChIPSeq(Analysis):
 
                 # Propagate the SAM read group information around FASTQ files if required.
                 # Please note that only the first read group can be propagated per
-                # BSF PairedReads object.
+                # PairedReads object.
 
                 read_group = str()
 
@@ -673,9 +675,9 @@ class ChIPSeq(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
+            # Sample.get_all_PairedReads() returns a Python dict of
             # Python str key and Python list of Python list objects
-            # of Bio.BSF.Data.PairedReads objects.
+            # of PairedReads objects.
 
             replicate_dict = sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
 
@@ -793,7 +795,7 @@ class ChIPSeq(Analysis):
                 alignment_drms.add_Executable(executable=executable)
 
     def _create_macs14_jobs(self):
-        """Create MACS14 peak caller jobs.
+        """Create Macs14 peak caller jobs.
         """
 
         config_parser = self.configuration.config_parser
@@ -831,9 +833,9 @@ class ChIPSeq(Analysis):
 
                 t_replicate_dict = t_sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
 
-                # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
+                # Sample.get_all_PairedReads() returns a Python dict of
                 # Python str key and Python list of Python list objects
-                # of Bio.BSF.Data.PairedReads objects.
+                # of PairedReads objects.
 
                 t_replicate_keys = t_replicate_dict.keys()
                 t_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -950,7 +952,7 @@ class ChIPSeq(Analysis):
                             process_macs14.arguments.append(genome_sizes)
 
     def _create_macs2_jobs(self):
-        """Create MACS2 peak caller jobs.
+        """Create Macs2 peak caller jobs.
         """
 
         config_parser = self.configuration.config_parser
@@ -999,9 +1001,9 @@ class ChIPSeq(Analysis):
 
                 t_replicate_dict = t_sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
 
-                # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
+                # Sample.get_all_PairedReads() returns a Python dict of
                 # Python str key and Python list of Python list objects
-                # of Bio.BSF.Data.PairedReads objects.
+                # of PairedReads objects.
 
                 t_replicate_keys = t_replicate_dict.keys()
                 t_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -1233,7 +1235,7 @@ class ChIPSeq(Analysis):
 
             job_dependencies = list()
 
-            # Create a new BSF ChIPSeq DiffBind Sheet per factor.
+            # Create a new ChIPSeq DiffBind Sheet per factor.
 
             file_path = os.path.join(factor_directory, 'chipseq_diffbind_{}_samples.csv'.format(key))
 
@@ -1248,9 +1250,9 @@ class ChIPSeq(Analysis):
 
                     t_replicate_dict = t_sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
 
-                    # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
+                    # Sample.get_all_PairedReads() returns a Python dict of
                     # Python str key and Python list of Python list objects
-                    # of Bio.BSF.Data.PairedReads objects.
+                    # of PairedReads objects.
 
                     t_replicate_keys = t_replicate_dict.keys()
                     t_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -1319,7 +1321,7 @@ class ChIPSeq(Analysis):
             diffbind.add_OptionLong(key='sample_annotation', value=file_path)
 
     def _report_macs14(self):
-        """Create a BSF ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
+        """Create a C{ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
         """
 
         config_parser = self.configuration.config_parser
@@ -1392,9 +1394,9 @@ class ChIPSeq(Analysis):
 
                 t_replicate_dict = t_sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
 
-                # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
+                # Sample.get_all_PairedReads() returns a Python dict of
                 # Python str key and Python list of Python list objects
-                # of Bio.BSF.Data.PairedReads objects.
+                # of PairedReads objects.
 
                 t_replicate_keys = t_replicate_dict.keys()
                 t_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -1527,9 +1529,9 @@ class ChIPSeq(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
+            # Sample.get_all_PairedReads() returns a Python dict of
             # Python str key and Python list of Python list objects
-            # of Bio.BSF.Data.PairedReads objects.
+            # of PairedReads objects.
 
             replicate_dict = sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
 
@@ -1579,7 +1581,7 @@ class ChIPSeq(Analysis):
         self.ucsc_hub_write_tracks(output=track_output, prefix='chipseq')
 
     def report(self):
-        """Create a BSF ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
+        """Create a C{ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
         """
 
         config_parser = self.configuration.config_parser
@@ -1708,9 +1710,9 @@ class ChIPSeq(Analysis):
 
                 t_replicate_dict = t_sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
 
-                # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
+                # Sample.get_all_PairedReads() returns a Python dict of
                 # Python str key and Python list of Python list objects
-                # of Bio.BSF.Data.PairedReads objects.
+                # of PairedReads objects.
 
                 t_replicate_keys = t_replicate_dict.keys()
                 t_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -2001,9 +2003,9 @@ class ChIPSeq(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # Bio.BSF.Data.Sample.get_all_PairedReads returns a Python dict of
+            # Sample.get_all_PairedReads() returns a Python dict of
             # Python str key and Python list of Python list objects
-            # of Bio.BSF.Data.PairedReads objects.
+            # of PairedReads objects.
 
             replicate_dict = sample.get_all_PairedReads(replicate_grouping=replicate_grouping)
 
