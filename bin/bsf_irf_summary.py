@@ -28,7 +28,6 @@
 import argparse
 import datetime
 import os.path
-from stat import *
 import string
 
 from Bio.BSF import Default
@@ -56,24 +55,24 @@ irf = RunFolder.from_file_path(file_path=file_path)
 
 run_format = list()
 
-data_read1 = irf.run_parameters.get_read1()
+data_read1 = irf.run_parameters.get_read1
 if data_read1 and data_read1 != '0':
     run_format.append('{}B'.format(data_read1))
 
-index_read1 = irf.run_parameters.get_index_read1()
+index_read1 = irf.run_parameters.get_index_read1
 if index_read1 and index_read1 != '0':
     run_format.append('{}I'.format(index_read1))
 
-index_read2 = irf.run_parameters.get_index_read2()
+index_read2 = irf.run_parameters.get_index_read2
 if index_read2 and index_read2 != '0':
     run_format.append('{}I'.format(index_read2))
 
-data_read2 = irf.run_parameters.get_read2()
+data_read2 = irf.run_parameters.get_read2
 if data_read2 and data_read2 != '0':
     run_format.append('{}B'.format(data_read2))
 
-print 'Flow Cell Identifier: {}_{}'.format(irf.run_parameters.get_experiment_name(),
-                                           irf.run_parameters.get_flow_cell_barcode())
+print 'Flow Cell Identifier: {}_{}'.format(irf.run_parameters.get_experiment_name,
+                                           irf.run_parameters.get_flow_cell_barcode)
 print 'Read Structure: {}'.format(string.join(words=run_format, sep=' + '))
 
 file_path_start = os.path.join(file_path, 'First_Base_Report.htm')
@@ -84,11 +83,11 @@ file_path_end = os.path.join(file_path, 'RTAComplete.txt')
 if os.path.exists(file_path_end):
     print 'End date:       {}'.format(datetime.date.fromtimestamp(os.stat(file_path_end).st_mtime))
 
-print 'Experiment:     {}'.format(irf.run_parameters.get_experiment_name())
-print 'Flow Cell:      {}'.format(irf.run_parameters.get_flow_cell_barcode())
+print 'Experiment:     {}'.format(irf.run_parameters.get_experiment_name)
+print 'Flow Cell:      {}'.format(irf.run_parameters.get_flow_cell_barcode)
 
-position = irf.run_parameters.get_position()
+position = irf.run_parameters.get_position
 if position:
-    print 'Position:       {}'.format(irf.run_parameters.get_position())
+    print 'Position:       {}'.format(irf.run_parameters.get_position)
 
 print 'Run Identifier: {}'.format(irf.run_information.run_identifier)

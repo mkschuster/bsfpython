@@ -124,11 +124,11 @@ class IlluminaToBam(Analysis):
         @type samples: list
         @param illumina_run_folder: File path to an Illumina Run Folder
         @type illumina_run_folder: str | unicode
-        @param intensity_directory: File path to the 'Intensities' directory.
-            Defaults to illumina_run_folder/Data/Intensities.
+        @param intensity_directory: File path to the 'Intensities' directory,
+            defaults to illumina_run_folder/Data/Intensities
         @type intensity_directory: str | unicode
-        @param basecalls_directory: File path to the 'BaseCalls' directory.
-            Defaults to illumina_run_folder/Data/Intensities/BaseCalls.
+        @param basecalls_directory: File path to the 'BaseCalls' directory,
+            defaults to illumina_run_folder/Data/Intensities/BaseCalls
         @type basecalls_directory: str | unicode
         @param experiment_name: Experiment name (i.e. flow-cell identifier) normally automatically read from
             Illumina Run Folder parameters
@@ -378,7 +378,7 @@ class IlluminaToBam(Analysis):
         # Run Parameters of the Illumina Run Folder.
 
         if not self.experiment_name:
-            self.experiment_name = irf.run_parameters.get_experiment_name()
+            self.experiment_name = irf.run_parameters.get_experiment_name
 
         # The project name is a concatenation of the experiment name and the Illumina flow cell identifier.
         # In case it has not been specified in the configuration file, read it from the

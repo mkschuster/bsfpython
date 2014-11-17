@@ -126,7 +126,7 @@ def extract_illumina_barcodes(config_file):
 
     irf = RunFolder.from_file_path(file_path=illumina_run_folder)
 
-    base_calls_directory = irf.get_base_calls_directory()
+    base_calls_directory = irf.get_base_calls_directory
 
     # Read the barcodes file ...
 
