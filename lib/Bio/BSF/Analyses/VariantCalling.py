@@ -32,7 +32,7 @@ import string
 import warnings
 
 from Bio.BSF import Analysis, Command, Configuration, Default, DRMS, Executable
-from Bio.BSF.Data import SampleAnnotationSheet
+from Bio.BSF.annotation import SampleAnnotationSheet
 from Bio.BSF.Executables import BWA
 
 

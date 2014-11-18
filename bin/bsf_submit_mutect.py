@@ -32,7 +32,7 @@ from pickle import Pickler, HIGHEST_PROTOCOL
 import string
 
 from Bio.BSF import Analysis, Command, Default, DRMS, Executable
-from Bio.BSF.Data import SampleAnnotationSheet
+from Bio.BSF.annotation import SampleAnnotationSheet
 
 
 def _read_comparisons(analysis, cmp_file):

@@ -35,7 +35,7 @@ import string
 import warnings
 
 from Bio.BSF import Analysis, Default, DRMS, Executable
-from Bio.BSF.Data import LibraryAnnotationSheet, SampleAnnotationSheet
+from Bio.BSF.annotation import LibraryAnnotationSheet
 from Bio.BSF.Illumina import RunFolder
 
 

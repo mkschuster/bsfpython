@@ -34,7 +34,8 @@ import string
 import warnings
 
 from Bio.BSF import Analysis, Configuration, Default, Defaults, DRMS, Executable
-from Bio.BSF.Data import Collection, ProcessedRunFolder, Sample, AnnotationSheet, SampleAnnotationSheet
+from Bio.BSF.annotation import AnnotationSheet, SampleAnnotationSheet
+from Bio.BSF.Data import Collection, ProcessedRunFolder, Sample
 from Bio.BSF.Executables import Bowtie2, Macs14, Macs2Bdgcmp, Macs2Callpeak, FastQC
 
 

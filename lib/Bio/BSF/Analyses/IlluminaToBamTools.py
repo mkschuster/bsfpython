@@ -33,7 +33,7 @@ import string
 import warnings
 
 from Bio.BSF import Analysis, Command, Configuration, Default, DRMS, Executable, Runnable
-from Bio.BSF.Data import BamIndexDecoderSheet, LibraryAnnotationSheet, SampleAnnotationSheet
+from Bio.BSF.annotation import BamIndexDecoderSheet, LibraryAnnotationSheet, SampleAnnotationSheet
 from Bio.BSF.Illumina import RunFolder
 
 

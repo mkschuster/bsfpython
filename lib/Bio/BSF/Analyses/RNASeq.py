@@ -32,29 +32,8 @@ import re
 import string
 
 from Bio.BSF import Analysis, Configuration, Default, Defaults, DRMS, Executable
-from Bio.BSF.Data import AnnotationSheet
+from Bio.BSF.annotation import AnnotationSheet, TuxedoSamplePairSheet
 from Bio.BSF.Executables import Cuffdiff, Cufflinks, Cuffmerge, TopHat
-
-
-class TuxedoSamplePairSheet(AnnotationSheet):
-    """The C{TuxedoSamplePairSheet} class represents C{Sample} pairs defined by
-    the C{bsf_rnaseq_process_cuffdiff.R} script.
-
-    Attributes:
-    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
-    @type _file_type: str
-    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list
-    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{function} value data
-    @type _test_methods: dict
-    """
-
-    _file_type = "excel-tab"
-
-    _field_names = ["V1", "V2"]
-
-    _test_methods = dict()
 
 
 class Tuxedo(Analysis):

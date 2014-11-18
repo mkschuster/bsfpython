@@ -30,7 +30,7 @@ from argparse import ArgumentParser
 import os
 import string
 
-from Bio.BSF.Data import SampleAnnotationSheet
+from Bio.BSF.annotation import LibraryAnnotationSheet
 
 argument_parser = ArgumentParser(
     description='Count samples per lane based on BamIndexDecoder library annotation files.')
@@ -61,7 +61,7 @@ if not arguments.ascending:
 
 for file_name in file_name_list:
     if file_name[-14:] == '_libraries.csv':
-        sas = SampleAnnotationSheet.read_from_file(file_path=os.path.join(arguments.directory, file_name))
+        sas = LibraryAnnotationSheet.read_from_file(file_path=os.path.join(arguments.directory, file_name))
 
         lane_dict = dict()
         for row_dict in sas.row_dicts:

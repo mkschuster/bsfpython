@@ -29,7 +29,7 @@
 import argparse
 import warnings
 
-from Bio.BSF.Data import LibraryAnnotationSheet
+from Bio.BSF.annotation import LibraryAnnotationSheet
 
 
 argument_parser = argparse.ArgumentParser(description='BSF library annotation sheet checking script.')

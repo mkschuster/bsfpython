@@ -33,8 +33,9 @@ import string
 import warnings
 
 from Bio.BSF import Analysis, Command, Configuration, Default, Defaults, DRMS, Executable, Runnable
-from Bio.BSF.Data import Collection, Sample, AnnotationSheet, SampleAnnotationSheet
+from Bio.BSF.Data import Collection, Sample
 from Bio.BSF.Executables import Bowtie2, BWA, Macs14, Macs2Bdgcmp, Macs2Callpeak
+from Bio.BSF.annotation import AnnotationSheet, SampleAnnotationSheet, ChIPSeqDiffBindSheet
 
 
 class ChIPSeqComparison(object):
@@ -113,82 +114,6 @@ class ChIPSeqComparison(object):
             self.replicate = replicate
         else:
             self.replicate = int(x=0)
-
-
-class ChIPSeqDiffBindSheet(AnnotationSheet):
-    """ChIP-Seq Bioconductor DiffBind annotation sheet class.
-
-    Attributes:
-    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
-    @type _file_type: str
-    @cvar _header_line: Header line exists
-    @type _header_line: bool
-    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list
-    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{function} value data
-    @type _test_methods: dict
-    """
-
-    _file_type = 'excel'
-
-    _header_line = True
-
-    _field_names = [
-        'SampleID', 'Tissue', 'Factor', 'Condition', 'Treatment', 'Replicate',
-        'bamReads', 'bamControl', 'ControlID', 'Peaks', 'PeakCaller', 'PeakFormat'
-    ]
-
-    _test_methods = dict(
-        SampleID=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Tissue=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Factor=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Condition=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Treatment=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Replicate=[
-            AnnotationSheet.check_numeric
-        ],
-        ControlID=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        PeakCaller=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        PeakFormat=[
-            AnnotationSheet.check_alphanumeric
-        ]
-    )
-
-    def sort(self):
-        """Sort by I{Tissue}, I{Factor}, I{Condition}, I{Treatment} and I{Replicate} columns.
-        """
-
-        self.row_dicts.sort(
-            cmp=lambda x, y:
-            cmp(x['Tissue'], y['Tissue']) or
-            cmp(x['Factor'], y['Factor']) or
-            cmp(x['Condition'], y['Condition']) or
-            cmp(x['Treatment'], y['Treatment']) or
-            cmp(int(x['Replicate']), int(y['Replicate'])))
-
-    def write_to_file(self):
-        """Write a C{ChIPSeqDiffBindSheet} to a file.
-        """
-
-        # Override the method from the super-class to automatically sort before writing to a file.
-
-        self.sort()
-        super(ChIPSeqDiffBindSheet, self).write_to_file()
 
 
 class ChIPSeq(Analysis):
