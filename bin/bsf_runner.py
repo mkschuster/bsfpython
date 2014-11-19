@@ -1,9 +1,13 @@
 #! /usr/bin/env python
 #
-# BSF Python wrapper script that runs BSF Runnable modules.
+# BSF Python wrapper script that runs a Runnable modules.
+# The script un-pickles the Runnable object from a file path,
+# loads the specific processing logic from a Runnables code module
+# and finally, calls Runnable.run(). Exit codes are defined in the
+# accessory code module.
 #
 #
-# Copyright 2014 Michael K. Schuster
+# Copyright 2013 - 2014 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -34,21 +38,15 @@ from Bio.BSF import Runnable
 argument_parser = ArgumentParser(
     description='Generic BSF runner script.')
 
-# argument_parser.add_argument(
-#     '--debug', required=False, type=int,
-#     help='Debug level')
-#
-# argument_parser.add_argument(
-#     '--runnable_name', required=True,
-#     help='BSF Runnable name')
-
 argument_parser.add_argument(
-    '--pickler_path', required=True,
-    help='File path to a pickled Runnable object.')
+    '--pickler-path',
+    dest='pickler_path',
+    help='file path to a pickled Runnable object',
+    required=True)
 
 arguments = argument_parser.parse_args()
 
-runnable = Runnable.from_picker_file(file_path=arguments.pickler_path)
+runnable = Runnable.from_pickler_path(file_path=arguments.pickler_path)
 
 module = importlib.import_module(name=runnable.code_module)
 

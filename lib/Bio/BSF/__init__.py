@@ -659,7 +659,7 @@ class Analysis(object):
         # Pickle all Runnable objects.
 
         for key in self.runnable_dict.keys():
-            self.runnable_dict[key].to_pickler_file()
+            self.runnable_dict[key].to_pickler_path()
 
         # Submit all Executable objects of all Distributed Resource Management System objects.
 
@@ -2264,7 +2264,7 @@ class Executable(Command):
         runnable = analysis.runnable_dict[runnable_name]
         executable = cls(name=runnable.name, program=Runnable.runner_script)
         executable.set_Configuration(configuration=analysis.configuration, section=runnable.code_module)
-        executable.add_OptionLong(key='pickler_path', value=runnable.pickler_path)
+        executable.add_OptionLong(key='pickler-path', value=runnable.pickler_path)
         # executable.add_OptionLong(key='runnable_name', value=runnable.name)
         # executable.add_OptionLong(key='debug', value=str(analysis.debug))
 
@@ -2438,42 +2438,44 @@ class Executable(Command):
 
 
 class Runnable(object):
-    """The Runnable class holds all information to run one or more Executable objects through the
-    Runner script.
+    """The C{Runnable} class holds all information to run one or more C{Executable} objects through the
+    I{Runner} script.
 
     Attributes:
-    @cvar runner_script: Name of the Runner script
+    @cvar runner_script: Name of the I{Runner} script
     @type runner_script: str | unicode
     @ivar name: Name
     @type name: str
-    @ivar code_module: The name of a module, usually in Runnables that implements the logic required to run
-        Executable objects via the Runner script.
+    @ivar code_module: The name of a module, usually in C{Runnables} that implements the logic required to run
+        C{Executable} objects via the I{Runner} script.
     @type code_module: str
-    @ivar executable_dict: Python dict of Python str (Executable.name) key data and Executable value data
+    @ivar executable_dict: Python C{dict} of Python C{str} (C{Executable.name}) key data and C{Executable} value data
     @type executable_dict: dict
-    @ivar file_path_dict: Python dict of Python str (name) key data and Python str (file_path) value data
+    @ivar file_path_dict: Python C{dict} of Python C{str} (name) key data and Python C{str} (file_path) value data
     @type file_path_dict: dict
-    @ivar working_directory: Working directory to write Pickler files
+    @ivar working_directory: Working directory to write C{pickle.Pickler} files
     @type working_directory: str | unicode
+    @ivar debug: Debug level
+    @type debug: int
     """
 
     runner_script = 'bsf_runner.py'
 
     @staticmethod
     def process_stream(file_type, file_handle, thread_lock, file_path=None, debug=0):
-        """Runnable function to process STDOUT or STDERR from the child process as a thread.
+        """C{Runnable} function to process I{STDOUT} or I{STDERR} from the child process as a thread.
 
-        @param file_type: File handle type STDOUT or STDERR
+        @param file_type: File handle type I{STDOUT} or I{STDERR}
         @type file_type: str
-        @param file_handle: The STDOUT or STDERR file handle
+        @param file_handle: The I{STDOUT} or I{STDERR} file handle
         @type file_handle: file
-        @param thread_lock: A Python threading.Lock object
+        @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: thread.lock
-        @param file_path: STDOUT file path
+        @param file_path: I{STDOUT} file path
         @type file_path: str | unicode
         @param debug: Debug level
         @type debug: int
-        @raise Exception: The file_type has to be either STDOUT or STDERR
+        @raise Exception: The file_type has to be either I{STDOUT} or I{STDERR}
         """
 
         if file_type not in ('STDOUT', 'STDERR'):
@@ -2511,7 +2513,7 @@ class Runnable(object):
 
     @staticmethod
     def process_stdout(stdout_handle, thread_lock, stdout_path=None, debug=0):
-        """Runnable function to process STDOUT from the child process as a thread.
+        """C{Runnable} function to process I{STDOUT} from the child process as a thread.
 
         @param stdout_handle: The STDOUT file handle
         @type stdout_handle: file
@@ -2529,7 +2531,7 @@ class Runnable(object):
 
     @staticmethod
     def process_stderr(stderr_handle, thread_lock, stderr_path=None, debug=0):
-        """Runnable function to process STDERR from the child process as a thread.
+        """C{Runnable} function to process I{STDERR} from the child process as a thread.
 
         @param stderr_handle: The STDERR file handle
         @type stderr_handle: file
@@ -2547,7 +2549,7 @@ class Runnable(object):
 
     @staticmethod
     def run(executable, max_loop_counter=1, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Runnable function to run an Executable object as Python subprocess.
+        """C{Runnable} function to run an C{Executable} object as Python C{subprocess.Popen}.
 
         @param executable: Executable
         @type executable: Executable
@@ -2654,7 +2656,7 @@ class Runnable(object):
     def evaluate_return_code(executable, return_code):
         """Evaluate a return code from the run method.
 
-        @param executable: Executable
+        @param executable: C{Executable}
         @type executable: Executable
         @param return_code: Return code
         @type return_code: int
@@ -2670,19 +2672,23 @@ class Runnable(object):
             print '[{}] Child process {!r} completed with return code {}.'. \
                 format(datetime.datetime.now().isoformat(), executable.name, +return_code)
 
-    def __init__(self, name, code_module, working_directory, file_path_dict=None, executable_dict=None):
-        """Initialise a Runnable object.
+    def __init__(self, name, code_module, working_directory, file_path_dict=None, executable_dict=None, debug=0):
+        """Initialise a C{Runnable} object.
 
         @param name: Name
         @type name: str
-        @param code_module: The Runnables module that implements the logic for this Runnable
+        @param code_module: The Runnables module that implements the logic for this C{Runnable}
         @type code_module: str
-        @param working_directory: Working directory for writing a Python Pickler file
+        @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
         @type working_directory: str | unicode
-        @param file_path_dict: Python dict of Python str (name) key data and Python str (file_path) value data
+        @param file_path_dict: Python C{dict} of Python C{str} (name) key data and
+            Python C{str} (file_path) value data
         @type file_path_dict: dict
-        @param executable_dict: Python dict of Python str (Executable.name) key data and Executable value data
+        @param executable_dict: Python C{dict} of Python C{str} (C{Executable.name}) key data and
+            C{Executable} value data
         @type executable_dict: dict
+        @param debug: Integer debugging level
+        @type debug: int
         """
 
         self.name = name
@@ -2699,12 +2705,14 @@ class Runnable(object):
         else:
             self.executable_dict = dict()
 
-    def add_executable(self, executable):
-        """Add an Executable
+        self.debug = debug
 
-        @param executable: Executable
+    def add_executable(self, executable):
+        """Add an C{Executable}.
+
+        @param executable: C{Executable}
         @type executable: Executable
-        @raise Exception: An Executable.name already exists in the Runnable object
+        @raise Exception: An C{Executable.name} already exists in the C{Runnable} object
         """
 
         if not executable:
@@ -2717,9 +2725,9 @@ class Runnable(object):
             self.executable_dict[executable.name] = executable
 
     def run_executable(self, name):
-        """Run an Executable defined in a Runnable.
+        """Run an C{Executable} defined in the C{Runnable} object.
 
-        @param name: Executable name
+        @param name: C{Executable.name}
         @type name: str
         @raise Exception: Child process failed with return code or received a signal
         """
@@ -2736,16 +2744,16 @@ class Runnable(object):
 
     @property
     def pickler_path(self):
-        """Get the Python Pickler file path.
+        """Get the Python C{pickle.Pickler} file path.
 
-        @return: Python Pickler file path
+        @return: Python C{pickle.Pickler} file path
         @rtype: str
         """
 
         return os.path.join(self.working_directory, string.join(words=(self.name, 'pkl'), sep='.'))
 
-    def to_pickler_file(self):
-        """Write this object as a Python Pickler file into the working directory.
+    def to_pickler_path(self):
+        """Write this C{Runnable} object as a Python C{pickle.Pickler} file into the working directory.
         """
 
         pickler_file = open(self.pickler_path, 'wb')
@@ -2754,12 +2762,12 @@ class Runnable(object):
         pickler_file.close()
 
     @classmethod
-    def from_picker_file(cls, file_path):
-        """Create a Runnable object from a Python Pickler file via Python Unpickler.
+    def from_pickler_path(cls, file_path):
+        """Create a C{Runnable} object from a Python C{pickle.Pickler} file via Python C{pickle.Unpickler}.
 
-        @param file_path: File path to a Picker file
+        @param file_path: File path to a Python C{pickle.Pickler} file
         @type file_path: str | unicode
-        @return: Runnable
+        @return: C{Runnable}
         @rtype: Runnable
         """
 
