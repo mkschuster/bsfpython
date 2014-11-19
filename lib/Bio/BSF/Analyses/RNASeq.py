@@ -175,18 +175,19 @@ class Tuxedo(Analysis):
 
         All C{Sample} objects referenced in a comparison are added from the C{Collection} to the C{Analysis} object.
 
-        Column headers for CASAVA folders:
-            Treatment/Control/Point N ProcessedRunFolder:
-                CASAVA processed run folder name or
-                C{Analysis.input_directory} by default
-            Treatment/Control/Point N Project:
-                CASAVA Project name or
-                C{Analysis.project_name} by default
-            Treatment/Control/Point N Sample:
-                CASAVA Sample name, no default
-        Column headers for independent samples:
-            Treatment/Control/Point N Sample:
-            Treatment/Control/Point N File:
+            - Column headers for CASAVA folders:
+                - Treatment/Control/Point N ProcessedRunFolder:
+                    - CASAVA processed run folder name or
+                    - C{Analysis.input_directory} by default
+                - Treatment/Control/Point N Project:
+                    - CASAVA Project name or
+                    - C{Analysis.project_name} by default
+                - Treatment/Control/Point N Sample:
+                    - CASAVA Sample name, no default
+            - Column headers for independent samples:
+                - Treatment/Control/Point N Sample:
+                - Treatment/Control/Point N Reads:
+                - Treatment/Control/Point N File:
         @param cmp_file: Comparisons file path
         @type cmp_file: str | unicode
         """

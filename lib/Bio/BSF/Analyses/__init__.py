@@ -309,19 +309,20 @@ class ChIPSeq(Analysis):
     def _read_comparisons(self, cmp_file):
         """Read a C{SampleAnnotationSheet} CSV file from disk.
 
-        Column headers for CASAVA folders:
-            Treatment/Control ProcessedRunFolder:
-                CASAVA processed run folder name or
-                C{Analysis.input_directory} by default
-            Treatment/Control Project:
-                CASAVA Project name or
-                C{Analysis.project_name} by default
-            Treatment/Control Sample:
-                CASAVA Sample name, no default
-        Column headers for independent samples:
-            Treatment/Control Sample
-            Treatment/Control File
-            Treatment/Control Group
+            - Column headers for CASAVA folders:
+                - Treatment/Control ProcessedRunFolder:
+                    - CASAVA processed run folder name or
+                    - C{Analysis.input_directory} by default
+                - Treatment/Control Project:
+                    - CASAVA Project name or
+                    - C{Analysis.project_name} by default
+                - Treatment/Control Sample:
+                    - CASAVA Sample name, no default
+            - Column headers for independent samples:
+                - Treatment/Control Sample
+                - Treatment/Control Reads:
+                - Treatment/Control File
+                - Treatment/Control Group
         @param cmp_file: Comparison file path
         @type cmp_file: str | unicode
         @return: Nothing
@@ -2092,18 +2093,19 @@ class RunFastQC(Analysis):
     def _read_comparisons(self, cmp_file):
         """Read a C{SampleAnnotationSheet} CSV file from disk.
 
-        Column headers for CASAVA folders:
-            Treatment/Control ProcessedRunFolder:
-                CASAVA processed run folder name or
-                C{Analysis.input_directory} by default
-            Treatment/Control Project:
-                CASAVA Project name or
-                C{Analysis.project_name} by default
-            Treatment/Control Sample:
-                CASAVA Sample name, no default
-        Column headers for independent samples:
-            Treatment/Control Sample:
-            Treatment/Control File:
+            - Column headers for CASAVA folders:
+                - Treatment/Control ProcessedRunFolder:
+                    - CASAVA processed run folder name or
+                    - C{Analysis.input_directory} by default
+                - Treatment/Control Project:
+                    - CASAVA Project name or
+                    - C{Analysis.project_name} by default
+                - Treatment/Control Sample:
+                    - CASAVA Sample name, no default
+            - Column headers for independent samples:
+                - Treatment/Control Sample:
+                - Treatment/Control Reads:
+                - Treatment/Control File:
         @param cmp_file: Comparisons file path
         @type cmp_file: str | unicode
         @return: Nothing

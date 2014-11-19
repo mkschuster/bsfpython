@@ -92,7 +92,7 @@ class DatabaseAdaptor(object):
         @param table_name: SQL database table name
         @type table_name: str
         @param column_definition: Python C{list} of Python C{list} objects with
-            Python C{str) (SQL column name) and Pyton C{str} (SQL column constraint) objects.
+            Python C{str} (SQL column name) and Pyton C{str} (SQL column constraint) objects.
         @type column_definition: list
         @param table_constraint: SQL table constraint expression
         @type table_constraint: list
@@ -471,7 +471,7 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
 
 class ProcessSLURM(object):
     """The C{ProcessSLURM} class models one process in the Simple Linux Utility for Resource Management (SLURM)
-     Distributed Resource Management System (DRMS).
+    Distributed Resource Management System (DRMS).
 
     The instance variable names result from the SLURM command C{sacct --parsable --long}
     @ivar process_slurm_id: Primary key

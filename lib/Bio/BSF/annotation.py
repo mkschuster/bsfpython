@@ -297,8 +297,8 @@ class AnnotationSheet(object):
     def check_underscore_multiple(cls, row_number, row_dict, column_name):
         """Validate a particular column value for I{multiple underscore characters}.
 
-         Check that the particular column name key exists in the row dictionary and that
-         its associated value has not multiple underscore adjacent to each other.
+        Check that the particular column name key exists in the row dictionary and that
+        its associated value has not multiple underscore adjacent to each other.
 
         @param row_number: Row number for warning messages
         @type row_number: int

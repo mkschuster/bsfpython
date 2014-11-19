@@ -44,7 +44,7 @@ output_directory = 'bsfpython_slurm_output'
 
 def submit(drms, debug=0):
     """Submit C{Executable} objects into the Simple Linux Utility for Resource Management (SLURM)
-     Distributed Resource Management System (DRMS).
+    Distributed Resource Management System (DRMS).
 
     @param drms: Distributed Resource Management System (C{DRMS})
     @type drms: DRMS

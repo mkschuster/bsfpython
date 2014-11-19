@@ -2747,7 +2747,7 @@ class Runnable(object):
         """Get the Python C{pickle.Pickler} file path.
 
         @return: Python C{pickle.Pickler} file path
-        @rtype: str
+        @rtype: str | unicode
         """
 
         return os.path.join(self.working_directory, string.join(words=(self.name, 'pkl'), sep='.'))

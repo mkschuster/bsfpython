@@ -707,7 +707,7 @@ class Sample(object):
         return True
 
     def add_PairedReads(self, paired_reads):
-        """Add a C{PairedReads) object.
+        """Add a C{PairedReads} object.
 
         @param paired_reads: C{PairedReads}
         @type paired_reads: PairedReads
