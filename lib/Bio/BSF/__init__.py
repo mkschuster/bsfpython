@@ -265,9 +265,18 @@ class Analysis(object):
         output += '{}  comparisons: {!r}\n'.format(indent, self.comparisons)
         output += '{}  samples: {!r}\n'.format(indent, self.samples)
 
-        output += '{}  Python List of Sample objects:'.format(indent)
+        output += '{}  Python dict of Runnable objects:\n'.format(indent)
+        keys = self.runnable_dict.keys()
+        keys.sort(cmp=lambda x, y: cmp(x, y))
+        for key in keys:
+            output += '{}    Key: {!r} Runnable: {!r}\n'.format(indent, key, self.runnable_dict[key])
+            runnable = self.runnable_dict[key]
+            assert isinstance(runnable, Runnable)
+            output += runnable.trace(level=level + 2)
+
+        output += '{}  Python List of Sample objects:\n'.format(indent)
         for sample in self.samples:
-            output += '{}    Sample name: {!r} file_path: {!r}'.format(indent, sample.name, sample.file_path)
+            output += '{}    Sample name: {!r} file_path: {!r}\n'.format(indent, sample.name, sample.file_path)
 
         if self.collection:
             output += self.collection.trace(level + 1)
@@ -2706,6 +2715,42 @@ class Runnable(object):
             self.executable_dict = dict()
 
         self.debug = debug
+
+    def trace(self, level=1):
+        """Trace a C{Runnable} object.
+
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
+        """
+
+        indent = '  ' * level
+        output = str()
+        output += '{}{!r}\n'.format(indent, self)
+        output += '{}  name: {!r}\n'.format(indent, self.name)
+        output += '{}  code_module: {!r}\n'.format(indent, self.code_module)
+        output += '{}  working_directory: {!r}\n'.format(indent, self.working_directory)
+        output += '{}  file_path_dict: {!r}\n'.format(indent, self.file_path_dict)
+        output += '{}  executable_dict: {!r}\n'.format(indent, self.executable_dict)
+        output += '{}  debug: {!r}\n'.format(indent, self.debug)
+
+        output += '{}  Python dict of Python str (file path) objects:\n'.format(indent)
+        keys = self.file_path_dict.keys()
+        keys.sort(cmp=lambda x, y: cmp(x, y))
+        for key in keys:
+            output += '{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.file_path_dict[key])
+
+        output += '{}  Python dict of Executable objects:\n'.format(indent)
+        keys = self.executable_dict.keys()
+        keys.sort(cmp=lambda x, y: cmp(x, y))
+        for key in keys:
+            output += '{}    Key: {!r} Executable: {!r}\n'.format(indent, key, self.executable_dict[key])
+            executable = self.executable_dict[key]
+            assert isinstance(executable, Executable)
+            output += executable.trace(level=level + 2)
+
+        return output
 
     def add_executable(self, executable):
         """Add an C{Executable}.
