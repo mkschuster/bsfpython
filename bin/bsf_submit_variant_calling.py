@@ -30,25 +30,32 @@ import argparse
 from Bio.BSF.Analyses.VariantCalling import VariantCallingGATK
 
 
-parser = argparse.ArgumentParser(description='Variant Calling analysis driver script.')
+argument_parser = argparse.ArgumentParser(
+    description='Variant Calling analysis driver script.')
 
-parser.add_argument('--debug', required=False, type=int,
-                    help='Debug level')
+argument_parser.add_argument(
+    '--debug',
+    required=False,
+    type=int,
+    help='debug level')
 
-parser.add_argument('--stage', required=False,
-                    help='Limit job submission to a particular Analysis stage')
+argument_parser.add_argument(
+    '--stage',
+    required=False,
+    help='limit job submission to a particular Analysis stage')
 
-parser.add_argument('configuration',
-                    help='Configuration file (*.ini)')
+argument_parser.add_argument(
+    'configuration',
+    help='configuration (*.ini) file path')
 
-args = parser.parse_args()
+name_space = argument_parser.parse_args()
 
 # Create a BSF Variant Calling analysis and run it.
 
-variant_calling = VariantCallingGATK.from_config_file(config_file=args.configuration)
+variant_calling = VariantCallingGATK.from_config_file(config_file=name_space.configuration)
 
-if args.debug:
-    variant_calling.debug = args.debug
+if name_space.debug:
+    variant_calling.debug = name_space.debug
 
 variant_calling.run()
 
@@ -58,8 +65,8 @@ submit = 0
 
 for drms in variant_calling.drms_list:
 
-    if args.stage:
-        if args.stage == drms.name:
+    if name_space.stage:
+        if name_space.stage == drms.name:
             submit += 1
         else:
             continue
@@ -70,8 +77,8 @@ for drms in variant_calling.drms_list:
         print repr(drms)
         print drms.trace(1)
 
-if args.stage:
-    if args.stage == 'report':
+if name_space.stage:
+    if name_space.stage == 'report':
         variant_calling.report()
     elif not submit:
         name_list = [drms.name for drms in variant_calling.drms_list]
