@@ -64,6 +64,10 @@ class Reads(object):
     def from_file_path(cls, file_path, file_type):
         """Construct a C{Reads} object from a file path.
 
+        For a I{file_type} I{CASAVA}, C{Reads.file_path} obeys a I{Sample_name_Index_Lane_Read_Chunk} schema,
+        so that C{Reads.name}, C{Reads.barcode}, C{Reads.lane}, C{Reads.read} and C{Reads.chunk}
+        can be populated automatically.
+        For I{file_type} I{External}, the attributes need to be populated manually.
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type
@@ -100,9 +104,6 @@ class Reads(object):
                  weak_reference_paired_reads=None):
         """Initialise a C{Reads} object.
 
-        For the file_type I{CASAVA}, the name, barcode, lane, read and chunk
-        attributes can be automatically parsed from the file_path.
-        For file_type I{External} the attributes need to be populated manually.
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
@@ -187,6 +188,7 @@ class Reads(object):
     def match(self, reads):
         """Match C{Reads} objects.
 
+        Two C{Reads} objects are identical, if all their instance variables match.
         @param reads: Second C{Reads} object
         @type reads: Reads
         @return: True if both objects match, False otherwise
@@ -195,42 +197,33 @@ class Reads(object):
 
         assert isinstance(reads, Reads)
 
-        if self.file_type == 'CASAVA':
+        # Quick test first - if the objects are identical, the rest has to match.
 
-            # All CASAVA Reads attributes need to be equal,
-            # with the exception of the read (R1 or R2) and
-            # the file_path, which also contains the reads
-            # information.
-
-            if not self.file_path == reads.file_path:
-                return False
-
-            if not self.file_type == reads.file_type:
-                return False
-
-            if not self.name == reads.name:
-                return False
-
-            if not self.barcode == reads.barcode:
-                return False
-
-            if not self.lane == reads.lane:
-                return False
-
-            if not self.read == reads.read:
-                return False
-
-            if not self.chunk == reads.chunk:
-                return False
-
+        if self == reads:
             return True
-        else:
-            # It is difficult to match PairedReads outside of CASAVA conventions.
-            warnings.warn(
-                'Matching of paired Reads objects for file_type other than CASAVA not implemented yet.',
-                UserWarning)
 
-            return True
+        if not self.file_path == reads.file_path:
+            return False
+
+        if not self.file_type == reads.file_type:
+            return False
+
+        if not self.name == reads.name:
+            return False
+
+        if not self.barcode == reads.barcode:
+            return False
+
+        if not self.lane == reads.lane:
+            return False
+
+        if not self.read == reads.read:
+            return False
+
+        if not self.chunk == reads.chunk:
+            return False
+
+        return True
 
     def match_paired(self, reads):
         """Match paired C{Reads} objects, by relaxing matching criteria.
@@ -293,7 +286,7 @@ class PairedReads(object):
     def __init__(self, reads1=None, reads2=None, read_group=None, weak_reference_sample=None):
         """Initialise a C{PairedReads} object.
 
-        For the file_type I{CASAVA} the reads object will be
+        For the C{Reads.file_type} I{CASAVA} the reads object will be
         automatically assigned on the basis of the C{Reads.read}
         attribute (i.e. I{R1} or I{R2}).
         @param reads1: First C{Reads} object
@@ -304,7 +297,7 @@ class PairedReads(object):
         @type read_group: str
         @param weak_reference_sample: Weak Reference to a C{Sample}
         @type weak_reference_sample: Sample
-        @raise Exception: For file_type I{CASAVA}, I{R1} or I{R2} must be set in the
+        @raise Exception: For C{Reads.file_type} I{CASAVA}, I{R1} or I{R2} must be set in the
         C{Reads} object.
         """
 
@@ -383,7 +376,7 @@ class PairedReads(object):
     def add_Reads(self, reads):
         """Add a C{Reads} object.
 
-        For a file_type I{CASAVA} the C{Reads} object can be automatically
+        For a C{Reads.file_type} I{CASAVA} the C{Reads} object can be automatically
         assigned on the basis of the C{Reads.read} attribute (i.e. I{R1} or I{R2}).
         @param reads: C{Reads}
         @type reads: Reads
@@ -395,8 +388,7 @@ class PairedReads(object):
         # reads1 or reads2 according to the file name.
         # Returns True upon success, False otherwise.
 
-        if not isinstance(reads, Reads):
-            return False
+        assert isinstance(reads, Reads)
 
         if self.reads1:
 
@@ -471,10 +463,10 @@ class PairedReads(object):
     def get_name(self, full=False):
         """Get the name of a C{PairedReads} object.
 
-        For the file_type I{CASAVA} the name is a concatenation of the
-        I{name}, I{barcode} and I{lane} attributes, preferentially derived from
+        For the C{Reads.file_type} I{CASAVA} the name is a concatenation of the
+        C{Reads.name}, C{Reads.barcode} and C{Reads.lane} attributes, preferentially derived from
         the first C{Reads} object in the C{PairedReads} object.
-        If the full parameter is set, I{read} and I{chunk} are also added.
+        If the I{full} parameter is set, C{Reads.read} and C{Reads.chunk} are also added.
         @param full: Return the full name including read and chunk information
         @type full: bool
         @return: Name
@@ -510,8 +502,8 @@ class Sample(object):
     @ivar file_path: File path
     @type file_path: str | unicode
     @ivar file_type: File type
-        CASAVA: FASTQ file after post-processing with CASAVA
-        External: other data files
+        I{CASAVA}: FASTQ file after post-processing with CASAVA
+        I{External}: other data files
     @ivar name: Name
     @type name: str
     @ivar paired_reads_list: Python C{list} of C{PairedReads} objects
@@ -526,7 +518,7 @@ class Sample(object):
     def from_file_path(cls, file_path, file_type):
         """Construct a C{Sample} object from a file path.
 
-        For a file_type I{CASAVA} the name is automatically populated,
+        For a I{file_type} I{CASAVA} the name is automatically populated,
         while C{PairedReads} objects are automatically discovered.
         @param file_path: File path
         @type file_path: str | unicode
@@ -589,6 +581,8 @@ class Sample(object):
 
         # Merge the PairedReads objects from both Sample objects,
         # but check, if the PairedReads objects are not already there.
+        # TODO: This method assumes that the PairedReads object are at the same address.
+        # The test with 'in' will not work for distinct PairedReads objects that point to the same files.
 
         for paired_reads in sample1.paired_reads_list:
             if paired_reads not in sample.paired_reads_list:
@@ -709,12 +703,23 @@ class Sample(object):
     def add_PairedReads(self, paired_reads):
         """Add a C{PairedReads} object.
 
+        This method checks, whether a matching C{PairedReads} object is already present in this C{Sample) object.
         @param paired_reads: C{PairedReads}
         @type paired_reads: PairedReads
         """
 
-        if paired_reads:
-            assert isinstance(paired_reads, PairedReads)
+        assert isinstance(paired_reads, PairedReads)
+
+        # Iterate through the Python list of PairedReads objects.
+        # The PairedReads object must not match.
+
+        for old_paired_reads in self.paired_reads_list:
+            assert isinstance(old_paired_reads, PairedReads)
+            if old_paired_reads.match(paired_reads=paired_reads):
+                break
+        else:
+            # None of the existing PairedReads objects has matched,
+            # so add this one to the Sample object.
             self.paired_reads_list.append(paired_reads)
             paired_reads.weak_reference_sample = weakref.ref(self)
 
@@ -733,6 +738,7 @@ class Sample(object):
         # The read must fit
 
         for paired_reads in self.paired_reads_list:
+            assert isinstance(paired_reads, PairedReads)
             if paired_reads.add_Reads(reads=reads):
                 break
         else:
@@ -799,8 +805,8 @@ class Project(object):
     @ivar file_path: File path
     @type file_path: str | unicode
     @ivar file_type: File type
-        CASAVA: FASTQ file after post-processing with CASAVA
-        External: other data files
+        I{CASAVA}: FASTQ file after post-processing with CASAVA
+        I{External}: other data files
     @type file_type: str
     @ivar name: Name
     @type name: str
@@ -858,7 +864,7 @@ class Project(object):
                  samples=None, weak_reference_prf=None):
         """Initialise a C{Project} object.
 
-        For a file_type I{CASAVA} the name is automatically populated,
+        For a I{file_type} I{CASAVA} the name is automatically populated,
         while C{Sample} objects are automatically discovered.
         @param file_path: File path
         @type file_path: str | unicode
@@ -870,7 +876,7 @@ class Project(object):
         @type samples: dict
         @param weak_reference_prf: Weak Reference to a C{ProcessedRunFolder} object
         @type weak_reference_prf: ProcessedRunFolder
-        @raise Exception: If C{Sample.name} values are not unique for file_type I{CASAVA}
+        @raise Exception: If C{Sample.name} values are not unique for I{file_type} I{CASAVA}
         """
 
         if file_path:
@@ -910,7 +916,7 @@ class Project(object):
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
-        output += '{}  weak_reference_prf: {!r}'.format(indent, self.weak_reference_prf)
+        output += '{}  weak_reference_prf: {!r}\n'.format(indent, self.weak_reference_prf)
         output += '{}  file_path: {!r}\n'.format(indent, self.file_path)
         output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
         output += '{}  name:      {!r}\n'.format(indent, self.name)
@@ -961,8 +967,8 @@ class ProcessedRunFolder(object):
     @ivar file_path: File path
     @type file_path: str | unicode
     @ivar file_type: File type
-        CASAVA: FASTQ file after post-processing with CASAVA.
-        External: other data files.
+        I{CASAVA}: FASTQ file after post-processing with CASAVA.
+        I{External}: other data files.
     @type file_type: str
     @ivar name: Name
     @type name: str
@@ -1011,6 +1017,10 @@ class ProcessedRunFolder(object):
     def from_file_path(cls, file_path, file_type):
         """Construct a C{ProcessedRunFolder} object from a file path.
 
+        For the I{file_type} I{CASAVA}, the C{ProcessedRunFolder.name}, C{ProcessedRunFolder.prefix},
+        C{ProcessedRunFolder.flow_cell} and C{ProcessedRunFolder.version}
+        attributes can be automatically parsed from the I{file_path}, while
+        C{Project} objects can be automatically discovered.
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type
@@ -1076,9 +1086,6 @@ class ProcessedRunFolder(object):
                  projects=None, weak_reference_collection=None):
         """Initialise a C{ProcessedRunFolder} object.
 
-        For the I{file_type} I{CASAVA}, the I{name}, I{prefix}, I{flow_cell} and I{version}
-        attributes can be automatically parsed from the I{file_path}, while
-        C{Project} objects can be automatically discovered.
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type (e.g. I{CASAVA}, I{External} or I{Automatic})
@@ -1204,8 +1211,8 @@ class Collection(object):
     @ivar file_path: File path
     @type file_path: str | unicode
     @ivar file_type: File type
-        CASAVA: FASTQ file after post-processing with CASAVA
-        External: other data files
+        I{CASAVA}: FASTQ file after post-processing with CASAVA
+        I{External}: other data files
     @type file_type: str
     @ivar name: Name
     @type name: str
@@ -1317,12 +1324,12 @@ class Collection(object):
 
         for key in keys:
 
-            output += '{}    {!r}\n'.format(indent, key)
+            output += '{}    group: {!r}\n'.format(indent, key)
 
             # List all Sample objects of this Python list object.
 
             for sample in self.sample_groups[key]:
-                output += '{}      {!r}: {!r}\n'.format(indent, sample.name, sample.file_path)
+                output += '{}      Sample name: {!r} file_path: {!r}\n'.format(indent, sample.name, sample.file_path)
 
         return output
 
@@ -1479,7 +1486,7 @@ class Collection(object):
     def _process_file_type(self, row_dict, prefix):
         """Get file type information.
 
-        A '[Prefix] FileType' key is optional, its value defaults to I{Automatic}.
+        A 'I{[Prefix] FileType}' key is optional, its value defaults to I{Automatic}.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict
         @param prefix: Optional configuration prefix
@@ -1501,7 +1508,7 @@ class Collection(object):
     def _process_processed_run_folder(self, row_dict, prefix, file_type):
         """Get or create a C{ProcessedRunFolder}.
 
-        A '[Prefix] ProcessedRunFolder' key is optional, its value defaults to 'Default'.
+        A 'I{[Prefix] ProcessedRunFolder}' key is optional, its value defaults to I{Default}.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict
         @param prefix: Optional configuration prefix
@@ -1521,8 +1528,7 @@ class Collection(object):
             if value in self.processed_run_folders:
                 prf = self.processed_run_folders[value]
             else:
-            #    prf = ProcessedRunFolder(name=value,
-            #                             file_type=file_type)
+            #    prf = ProcessedRunFolder(name=value, file_type=file_type)
             #    self.add_ProcessedRunFolder(prf=prf)
                 # Try to automatically discover a ProcessedRunFolder.
                 prf = self.get_ProcessedRunFolder(file_path=row_dict[key], file_type=file_type)
@@ -1538,7 +1544,7 @@ class Collection(object):
     def _process_project(self, row_dict, prefix, file_type, prf):
         """Get or create a C{Project}.
 
-        A '[Prefix] Project' key is optional, its value defaults to 'Default'.
+        A 'I{[Prefix] Project}' key is optional, its value defaults to I{Default}.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict
         @param prefix: Optional configuration prefix
@@ -1572,7 +1578,7 @@ class Collection(object):
     def _process_sample(self, row_dict, prefix, file_type, project):
         """Get or create a C{Sample}.
 
-        A '[Prefix] Sample' key is optional, its value defaults to 'Default'.
+        A 'I{[Prefix] Sample}' key is optional, its value defaults to I{Default}.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict
         @param prefix: Optional configuration prefix
@@ -1606,7 +1612,7 @@ class Collection(object):
     def _process_reads(self, row_dict, prefix, file_type, suffix):
         """Get or create a C{Reads} object.
 
-        A '[Prefix] Reads{suffix}' key is optional, in which case the default is a C{None} object.
+        A 'I{[Prefix] Reads{suffix}}' key is optional, in which case the default is a C{None} object.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict
         @param prefix: Optional configuration prefix
@@ -1644,7 +1650,7 @@ class Collection(object):
     def _process_read_group(self, row_dict, prefix):
         """Get or create a read group.
 
-        A '[Prefix] ReadGroup' key is optional, in which case the default is an empty string.
+        A 'I{[Prefix] ReadGroup}' key is optional, in which case the default is an empty Python C{str) object.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict
         @param prefix: Optional configuration prefix
