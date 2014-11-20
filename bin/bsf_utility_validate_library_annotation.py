@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 #
-# BSF Python script to check a library annotation sheet used by
-# the BamIndexDecoder module.
+# BSF Python utility script to validate a Library Annotation Sheet file
+# used by the BamIndexDecoder Analysis.
 #
 #
-# Copyright 2013 Michael K. Schuster
+# Copyright 2013 - 2014 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -32,7 +32,8 @@ import warnings
 from Bio.BSF.annotation import LibraryAnnotationSheet
 
 
-argument_parser = argparse.ArgumentParser(description='BSF library annotation sheet checking script.')
+argument_parser = argparse.ArgumentParser(
+    description='BSF Python utility script to validate Library Annotation Sheet files.')
 
 argument_parser.add_argument(
     '--debug',
@@ -42,11 +43,11 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     'library_path',
-    help='Library annotation sheet file path (*.csv)')
+    help='library annotation sheet (*.csv) file path')
 
-args = argument_parser.parse_args()
+name_space = argument_parser.parse_args()
 
-library_annotation_sheet = LibraryAnnotationSheet.read_from_file(file_path=args.library_path)
+library_annotation_sheet = LibraryAnnotationSheet.read_from_file(file_path=name_space.library_path)
 
 messages = library_annotation_sheet.validate()
 
