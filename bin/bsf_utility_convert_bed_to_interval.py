@@ -69,19 +69,19 @@ argument_parser.add_argument(
     dest='no_prefix',
     help="remove a UCSC-style 'chr' prefix from the sequence name")
 
-args = argument_parser.parse_args()
+name_space = argument_parser.parse_args()
 
-output_file = open(args.output_path, 'wb')
+output_file = open(name_space.output_path, 'wb')
 
 # Read the SAM header dictionary and copy to the output file.
-input_file = open(args.dictionary, 'rb')
+input_file = open(name_space.dictionary, 'rb')
 
 for line in input_file:
     output_file.write(line)
 
 input_file.close()
 
-input_file = open(args.input_path, 'rb')
+input_file = open(name_space.input_path, 'rb')
 
 for line in input_file:
 
@@ -94,7 +94,7 @@ for line in input_file:
 
     interval_fields = list()
 
-    if args.no_prefix and bed_fields[0][:3] == 'chr':  # Sequence with or without 'chr'.
+    if name_space.no_prefix and bed_fields[0][:3] == 'chr':  # Sequence with or without 'chr'.
         interval_fields.append(bed_fields[0][3:])
     else:
         interval_fields.append(bed_fields[0])

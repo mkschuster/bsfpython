@@ -36,13 +36,13 @@ argument_parser = ArgumentParser(
 
 argument_parser.add_argument(
     '--debug',
-    help='Debug level',
+    help='debug level',
     required=False,
     type=int)
 
 argument_parser.add_argument(
     '--stage',
-    help='Limit job submission to a particular Analysis stage',
+    help='limit job submission to a particular Analysis stage',
     required=False,
     type=str)
 
@@ -55,36 +55,36 @@ argument_parser.add_argument(
 argument_parser.add_argument(
     '--configuration',
     default=Default.global_file_path,
-    help='Configuration (*.ini) file',
+    help='configuration (*.ini) file path',
     required=False,
     type=str)
 
 argument_parser.add_argument(
     '--force',
     action='store_true',
-    help='Force processing of an incomplete Illumina Run Folder')
+    help='force processing of an incomplete Illumina Run Folder')
 
-arguments = argument_parser.parse_args()
+name_space = argument_parser.parse_args()
 
 # Create a BSF IlluminaToBam analysis, run and submit it.
 
-itb = IlluminaToBam.from_config_file(config_file=arguments.configuration)
+itb = IlluminaToBam.from_config_file(config_file=name_space.configuration)
 
 # Set arguments that override the configuration file.
 
-if arguments.debug:
-    itb.debug = arguments.debug
+if name_space.debug:
+    itb.debug = name_space.debug
 
-if arguments.irf:
-    itb.illumina_run_folder = arguments.irf
+if name_space.irf:
+    itb.illumina_run_folder = name_space.irf
 
-if arguments.force:
-    itb.force = arguments.force
+if name_space.force:
+    itb.force = name_space.force
 
 # Do the work.
 
 itb.run()
-itb.submit(drms_name=arguments.stage)
+itb.submit(drms_name=name_space.stage)
 
 print 'IlluminaToBamTools IlluminaToBam Analysis'
 print 'Project name:         ', itb.project_name

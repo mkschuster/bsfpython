@@ -38,27 +38,27 @@ argument_parser = ArgumentParser(
 
 argument_parser.add_argument(
     '--debug',
-    help='Debug level',
+    help='debug level',
     required=False,
     type=int)
 
 argument_parser.add_argument(
     '--stage',
-    help='Limit job submission to a particular Analysis stage',
+    help='limit job submission to a particular Analysis stage',
     required=False,
     type=str)
 
 argument_parser.add_argument(
     '--configuration',
     default=Default.global_file_path,
-    help='Configuration (*.ini) file path',
+    help='configuration (*.ini) file path',
     required=False,
     type=str)
 
 argument_parser.add_argument(
     '--project-name',
     dest='project_name',
-    help='Project name i.e. flow-cell identifier',
+    help='project name i.e. flow-cell identifier',
     required=False,
     type=str)
 
@@ -69,22 +69,22 @@ argument_parser.add_argument(
     required=False,
     type=str)
 
-arguments = argument_parser.parse_args()
+name_space = argument_parser.parse_args()
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
-bid = BamIndexDecoder.from_config_file(config_file=arguments.configuration)
+bid = BamIndexDecoder.from_config_file(config_file=name_space.configuration)
 
 # Set arguments that override the configuration file.
 
-if arguments.debug:
-    bid.debug = arguments.debug
+if name_space.debug:
+    bid.debug = name_space.debug
 
-if arguments.project_name:
-    bid.project_name = arguments.project_name
+if name_space.project_name:
+    bid.project_name = name_space.project_name
 
-if arguments.library_path:
-    bid.library_path = arguments.library_path
+if name_space.library_path:
+    bid.library_path = name_space.library_path
 
 # If a library file has not been defined so far, check,
 # if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
@@ -97,7 +97,7 @@ if not bid.library_path:
 # Do the work.
 
 bid.run()
-bid.submit(drms_name=arguments.stage)
+bid.submit(drms_name=name_space.stage)
 
 print 'IlluminaToBamTools BamIndexDecoder Analysis'
 print 'Project name:         ', bid.project_name

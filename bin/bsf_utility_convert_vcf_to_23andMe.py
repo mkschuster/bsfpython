@@ -32,21 +32,29 @@ import argparse
 import string
 
 
-parser = argparse.ArgumentParser(description='BSF Converter from VCF to 23andMe format.')
+argument_parser = argparse.ArgumentParser(
+    description='BSF utility to convert from VCF to 23andMe format.')
 
-parser.add_argument('--debug', required=False, type=int,
-                    help='debug level')
+argument_parser.add_argument(
+    '--debug',
+    help='debug level',
+    required=False,
+    type=int)
 
-parser.add_argument('--input', required=True,
-                    help='file path to a VCF file.')
+argument_parser.add_argument(
+    '--input',
+    help='VCF file path',
+    required=True)
 
-parser.add_argument('--output', required=True,
-                    help='file path to a 23andMe file.')
+argument_parser.add_argument(
+    '--output',
+    help='23andMe file path',
+    required=True)
 
-args = parser.parse_args()
+name_space = argument_parser.parse_args()
 
-input_fh = open(args.input, 'r')
-output_fh = open(args.output, 'w')
+input_fh = open(name_space.input, 'r')
+output_fh = open(name_space.output, 'w')
 
 for line in input_fh:
 

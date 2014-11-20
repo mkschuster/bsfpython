@@ -72,26 +72,29 @@ argument_parser = ArgumentParser(
     description='BSF script to run MuTect.')
 
 argument_parser.add_argument(
-    '--debug', required=False, type=int,
-    help='debug level')
+    '--debug',
+    help='debug level',
+    required=False,
+    type=int)
 
 argument_parser.add_argument(
-    '--stage', dest='stage', required=False,
-    help='Limit job submission to a particular Analysis stage')
+    '--stage',
+    help='limit job submission to a particular Analysis stage',
+    dest='stage',
+    required=False)
 
 argument_parser.add_argument(
     'configuration',
-    help='Configuration file (*.ini)')
+    help='configuration (*.ini) file path')
 
-arguments = argument_parser.parse_args()
-
+name_space = argument_parser.parse_args()
 
 # TODO: Load the Sample Annotation sheet and comparison sheets.
 
-analysis = Analysis.from_config_file(config_file=arguments.configuration)
+analysis = Analysis.from_config_file(config_file=name_space.configuration)
 
-if arguments.debug:
-    analysis.debug = arguments.debug
+if name_space.debug:
+    analysis.debug = name_space.debug
 
 # Call the Analysis.run method here to properly initialise the Analysis object.
 analysis.run()
@@ -517,8 +520,8 @@ submit = 0
 
 for drms in analysis.drms_list:
 
-    if arguments.stage:
-        if arguments.stage == drms.name:
+    if name_space.stage:
+        if name_space.stage == drms.name:
             submit += 1
         else:
             continue
@@ -529,8 +532,8 @@ for drms in analysis.drms_list:
         print repr(drms)
         print drms.trace(1)
 
-if arguments.stage:
-    if arguments.stage == 'report':
+if name_space.stage:
+    if name_space.stage == 'report':
         analysis.report()
         pass
     elif not submit:

@@ -42,22 +42,30 @@ os.environ['LANG'] = 'C'
 
 # Parse the arguments.
 
-parser = argparse.ArgumentParser(description='BSF utility to convert a Picard sequence dictionary (SAM header) '
-                                             'into a UCSC chromosome sizes file.')
+argument_parser = argparse.ArgumentParser(
+    description='BSF utility to convert a Picard sequence dictionary (SAM header) '
+                'into a UCSC chromosome sizes file.')
 
-parser.add_argument('--debug', required=False, type=int,
-                    help='debug level')
+argument_parser.add_argument(
+    '--debug',
+    help='debug level',
+    required=False,
+    type=int)
 
-parser.add_argument('--input_path', required=True,
-                    help='file path to a Picard sequence dictionary file.')
+argument_parser.add_argument(
+    '--input_path',
+    help='file path to a Picard sequence dictionary file.',
+    required=True)
 
-parser.add_argument('--output_path', required=True,
-                    help='file path to a UCSC chromosome sizes file.')
+argument_parser.add_argument(
+    '--output_path',
+    help='file path to a UCSC chromosome sizes file.',
+    required=True)
 
-args = parser.parse_args()
+name_space = argument_parser.parse_args()
 
-input_file = open(args.input_path, 'r')
-output_file = open(args.output_path, 'w')
+input_file = open(name_space.input_path, 'r')
+output_file = open(name_space.output_path, 'w')
 
 for line in input_file:
     if not line.startswith('@SQ'):

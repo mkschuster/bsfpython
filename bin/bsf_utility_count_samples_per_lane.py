@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# BSF Python script to report the number of samples per lane.
+# BSF Python utility script to report the number of samples per lane.
 #
 #
 # Copyright 2014 Michael K. Schuster
@@ -36,32 +36,35 @@ argument_parser = ArgumentParser(
     description='Count samples per lane based on BamIndexDecoder library annotation files.')
 
 argument_parser.add_argument(
-    '--debug', required=False, type=int,
-    help='Debug level')
+    '--debug',
+    help='debug level',
+    required=False,
+    type=int)
 
 argument_parser.add_argument(
-    '--directory', required=False, type=str,
-    help='Directory of IlluminaToBam tools BamIndexDecoder library annotation files.')
+    '--directory',
+    help='directory of IlluminaToBam tools BamIndexDecoder library annotation files',
+    required=False,
+    type=str)
 
 argument_parser.add_argument(
     '--ascending',
     action='store_true',
-    help='Sort flow cells in ascending order rather than in descending by default'
-)
+    help='sort flow cells in ascending order rather than in descending by default')
 
-arguments = argument_parser.parse_args()
+name_space = argument_parser.parse_args()
 
 print 'Lane,Sample Number,Comment'
 
-file_name_list = os.listdir(arguments.directory)
+file_name_list = os.listdir(name_space.directory)
 file_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-if not arguments.ascending:
+if not name_space.ascending:
     file_name_list.reverse()
 
 for file_name in file_name_list:
     if file_name[-14:] == '_libraries.csv':
-        sas = LibraryAnnotationSheet.read_from_file(file_path=os.path.join(arguments.directory, file_name))
+        sas = LibraryAnnotationSheet.read_from_file(file_path=os.path.join(name_space.directory, file_name))
 
         lane_dict = dict()
         for row_dict in sas.row_dicts:

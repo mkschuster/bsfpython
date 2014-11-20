@@ -37,17 +37,17 @@ from Bio.BSF.Analyses.IlluminaToBamTools import BamIndexDecoder, IlluminaToBam, 
 
 
 argument_parser = ArgumentParser(
-    description='IlluminaToBamTools Illumina2bam and BamIndexDecoder analysis driver script.')
+    description='IlluminaToBamTools Illumina2bam and BamIndexDecoder Analysis driver script.')
 
 argument_parser.add_argument(
     '--debug',
-    help='Debug level',
+    help='debug level',
     required=False,
     type=int)
 
 argument_parser.add_argument(
     '--stage',
-    help='Limit job submission to a particular Analysis stage',
+    help='limit job submission to a particular Analysis stage',
     required=False,
     type=str)
 
@@ -60,45 +60,45 @@ argument_parser.add_argument(
 argument_parser.add_argument(
     '--library-path',
     dest='library_path',
-    help='Library annotation sheet file path',
+    help='library annotation sheet file path',
     required=False,
     type=str)
 
 argument_parser.add_argument(
     '--configuration',
     default=Default.global_file_path,
-    help='Configuration (*.ini) file path',
+    help='configuration (*.ini) file path',
     required=False,
     type=str)
 
 argument_parser.add_argument(
     '--loop',
     action='store_true',
-    help='Loop until an RTAComplete.txt file has been copied by the Illumina Real-Time Analysis (RTA) software')
+    help='loop until a RTAComplete.txt file has been copied by the Illumina Real-Time Analysis (RTA) software')
 
 argument_parser.add_argument(
     '--interval',
-    help='Loop interval [s]',
+    help='loop interval [s]',
     default=120,
     type=int)
 
-arguments = argument_parser.parse_args()
+name_space = argument_parser.parse_args()
 
 # Create a BSF IlluminaToBam analysis, run and submit it.
 
-itb = IlluminaToBam.from_config_file(config_file=arguments.configuration)
+itb = IlluminaToBam.from_config_file(config_file=name_space.configuration)
 
 # Set arguments that override the configuration file.
 
-if arguments.debug:
-    itb.debug = arguments.debug
+if name_space.debug:
+    itb.debug = name_space.debug
 
-if arguments.irf:
-    itb.illumina_run_folder = arguments.irf
+if name_space.irf:
+    itb.illumina_run_folder = name_space.irf
 
 # Do the work.
 
-if arguments.loop:
+if name_space.loop:
     # If the --loop option has been set, wait until RTAComplete.txt has been copied.
     loop_counter = 1
     while 1:
@@ -111,11 +111,11 @@ if arguments.loop:
         else:
             print 'Illumina Run Folder seems complete.'
             break
-        time.sleep(arguments.interval)
+        time.sleep(name_space.interval)
 else:
     itb.run()
 
-itb.submit(drms_name=arguments.stage)
+itb.submit(drms_name=name_space.stage)
 
 print 'IlluminaToBamTools IlluminaToBam Analysis'
 print 'Project name:         ', itb.project_name
@@ -125,7 +125,7 @@ print 'Experiment directory: ', itb.experiment_directory
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
-bid = BamIndexDecoder.from_config_file(config_file=arguments.configuration)
+bid = BamIndexDecoder.from_config_file(config_file=name_space.configuration)
 
 # Transfer the project name from the IlluminaToBam to the BamIndexDecoder analysis.
 
@@ -133,11 +133,11 @@ bid.project_name = itb.project_name
 
 # Set arguments that override the configuration file.
 
-if arguments.debug:
-    bid.debug = arguments.debug
+if name_space.debug:
+    bid.debug = name_space.debug
 
-if arguments.library_path:
-    bid.library_path = arguments.library_path
+if name_space.library_path:
+    bid.library_path = name_space.library_path
 
 # If a library file has not been defined so far, check,
 # if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
@@ -152,7 +152,7 @@ if bid.library_path:
     # Do the work if, at this stage, a library file has been set.
 
     bid.run()
-    bid.submit(drms_name=arguments.stage)
+    bid.submit(drms_name=name_space.stage)
 
     print ''
     print 'IlluminaToBamTools BamIndexDecoder Analysis'

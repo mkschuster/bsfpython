@@ -35,36 +35,36 @@ argument_parser = ArgumentParser(
 
 argument_parser.add_argument(
     '--debug',
-    help='Debug level',
+    help='debug level',
     required=False,
     type=int)
 
 argument_parser.add_argument(
     '--stage',
-    help='Limit job submission to a particular Analysis stage',
+    help='limit job submission to a particular Analysis stage',
     required=False,
     type=str)
 
 argument_parser.add_argument(
     'configuration',
-    help='Configuration file (*.ini)',
+    help='configuration (*.ini) file path',
     type=str)
 
-arguments = argument_parser.parse_args()
+name_space = argument_parser.parse_args()
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
-chipseq = ChIPSeq.from_config_file(config_file=arguments.configuration)
+chipseq = ChIPSeq.from_config_file(config_file=name_space.configuration)
 
 # Set arguments that override the configuration file.
 
-if arguments.debug:
-    chipseq.debug = arguments.debug
+if name_space.debug:
+    chipseq.debug = name_space.debug
 
 # Do the work.
 
 chipseq.run()
-chipseq.submit(drms_name=arguments.stage)
+chipseq.submit(drms_name=name_space.stage)
 
 print 'ChIPSeq Analysis'
 print 'Project name:      ', chipseq.project_name
