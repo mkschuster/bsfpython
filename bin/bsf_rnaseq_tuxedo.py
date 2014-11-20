@@ -30,25 +30,33 @@ import argparse
 from Bio.BSF.Analyses.RNASeq import Tuxedo
 
 
-parser = argparse.ArgumentParser(description='RNA-Seq analysis driver script.')
+argument_parser = argparse.ArgumentParser(
+    description='RNA-Seq analysis driver script.')
 
-parser.add_argument('--debug', required=False, type=int,
-                    help='Debug level')
+argument_parser.add_argument(
+    '--debug',
+    help='debug level',
+    required=False,
+    type=int)
 
-parser.add_argument('--stage', dest='stage', required=False,
-                    help='Limit job submission to a particular Analysis stage')
+argument_parser.add_argument(
+    '--stage',
+    dest='stage',
+    help='limit job submission to a particular Analysis stage',
+    required=False)
 
-parser.add_argument('configuration',
-                    help='Configuration file (*.ini)')
+argument_parser.add_argument(
+    'configuration',
+    help='configuration (*.ini) file path')
 
-args = parser.parse_args()
+name_space = argument_parser.parse_args()
 
 # Create a BSF ChIPSeq analysis and run it.
 
-tuxedo = Tuxedo.from_config_file(config_file=args.configuration)
+tuxedo = Tuxedo.from_config_file(config_file=name_space.configuration)
 
-if args.debug:
-    tuxedo.debug = args.debug
+if name_space.debug:
+    tuxedo.debug = name_space.debug
 
 tuxedo.run()
 
@@ -58,8 +66,8 @@ submit = 0
 
 for drms in tuxedo.drms_list:
 
-    if args.stage:
-        if args.stage == drms.name:
+    if name_space.stage:
+        if name_space.stage == drms.name:
             submit += 1
         else:
             continue
@@ -70,8 +78,8 @@ for drms in tuxedo.drms_list:
         print repr(drms)
         print drms.trace(1)
 
-if args.stage:
-    if args.stage == 'report':
+if name_space.stage:
+    if name_space.stage == 'report':
         tuxedo.report()
         pass
     elif not submit:
@@ -86,3 +94,7 @@ print 'Input directory:   ', tuxedo.input_directory
 print 'Output directory:  ', tuxedo.output_directory
 print 'Project directory: ', tuxedo.project_directory
 print 'Genome directory:  ', tuxedo.genome_directory
+
+if tuxedo.debug >=2:
+    print '{!r} final trace:'.format(tuxedo)
+    print tuxedo.trace(level=1)
