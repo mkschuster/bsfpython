@@ -713,6 +713,8 @@ class LibraryAnnotationSheet(AnnotationSheet):
             # Check that all lanes have annotation.
             if lane_string not in lane_index:
                 messages += 'No annotation for lane number {!r}.\n'.format(lane_number)
+                continue
+
             barcode_dict, sample_dict, library_name = lane_index[lane_string]
 
             # Check that all or none of the rows has barcode sequence 1 or 2 populated.
