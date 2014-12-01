@@ -1327,16 +1327,16 @@ class Tuxedo(Analysis):
             output += '<tr>\n'
             output += '<td>{}</td>\n'.format(key)
 
-            img_source = './{}/{}_genes_significance_matrix.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_genes_significance_matrix.pdf">'.format(prefix, prefix)
             output += '<img alt="Significance Matrix Plot - Genes - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_genes_significance_matrix.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
-            img_source = './{}/{}_isoforms_significance_matrix.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_isoforms_significance_matrix.pdf">'.format(prefix, prefix)
             output += '<img alt="Significance Matrix Plot - Isoforms - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_isoforms_significance_matrix.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
             output += '</tr>\n'
@@ -1388,142 +1388,146 @@ class Tuxedo(Analysis):
 
             # Dispersion Plots for Genes and Isoforms
 
-            img_source = './{}/{}_genes_dispersion.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_genes_dispersion.pdf">'.format(prefix, prefix)
             output += '<img alt="Dispersion Plot - Genes - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_genes_dispersion.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
             img_source = './{}/{}_isoforms_dispersion.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_isoforms_dispersion.pdf">'.format(prefix, prefix)
             output += '<img alt="Dispersion Plot - Isoforms - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_isoforms_dispersion.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
             # Squared Coefficient of Variation (SCV) Plots for Genes and Isoforms
 
-            img_source = './{}/{}_genes_scv.png'.format(prefix, prefix)
-            if os.path.exists(path=os.path.join(self.genome_directory, img_source)):
-                output += '<td><a href="{}">'.format(img_source)
+            if os.path.exists(
+                    path=os.path.join(self.genome_directory, './{}/{}_genes_scv.png'.format(prefix, prefix))):
+                output += '<td><a href="./{}/{}_genes_scv.pdf">'.format(prefix, prefix)
                 output += '<img alt="Squared Coefficient of Variation (SCV) - Genes - {}" ' \
-                          'src="{}" height="80" width="80" />'.format(key, img_source)
+                          'src="./{}/{}_genes_scv.png" height="80" width="80" />'. \
+                    format(key, prefix, prefix)
                 output += '</a></td>\n'
             else:
                 output += '<td></td>\n'
 
-            img_source = './{}/{}_isoforms_scv.png'.format(prefix, prefix)
-            if os.path.exists(path=os.path.join(self.genome_directory, img_source)):
-                output += '<td><a href="{}">'.format(img_source)
+            if os.path.exists(
+                    path=os.path.join(self.genome_directory, './{}/{}_isoforms_scv.png'.format(prefix, prefix))):
+                output += '<td><a href="./{}/{}_isoforms_scv.pdf">'.format(prefix, prefix)
                 output += '<img alt="Squared Coefficient of Variation (SCV) - Isoforms - {}" ' \
-                          'src="{}" height="80" width="80" />'.format(key, img_source)
+                          'src="./{}/{}_isoforms_scv.png" height="80" width="80" />'. \
+                    format(key, prefix, prefix)
                 output += '</a></td>\n'
             else:
                 output += '<td></td>\n'
 
             # Density Plots for Genes without and with Replicates
 
-            img_source = './{}/{}_genes_density_wo_replicates.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_genes_density_wo_replicates.pdf">'.format(prefix, prefix)
             output += '<img alt="Density Plot without Replicates - Genes- {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_genes_density_wo_replicates.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
-            img_source = './{}/{}_genes_density_w_replicates.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_genes_density_w_replicates.pdf">'.format(prefix, prefix)
             output += '<img alt="Density Plot with Replicates - Genes - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_genes_density_w_replicates.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
             # Density Plots for Isoforms without and with Replicates
 
-            img_source = './{}/{}_isoforms_density_wo_replicates.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_isoforms_density_wo_replicates.pdf">'.format(prefix, prefix)
             output += '<img alt="Density Plot without Replicates - Isoforms - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_isoforms_density_wo_replicates.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
-            img_source = './{}/{}_isoforms_density_w_replicates.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_isoforms_density_w_replicates.pdf">'.format(prefix, prefix)
             output += '<img alt="Density Plot with Replicates - Isoforms - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_isoforms_density_w_replicates.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
             # Box Plots for Genes without and with Replicates
 
-            img_source = './{}/{}_genes_box_wo_replicates.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_genes_box_wo_replicates.pdf">'.format(prefix, prefix)
             output += '<img alt="Box Plot without Replicates - Genes - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_genes_box_wo_replicates.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
-            img_source = './{}/{}_genes_box_w_replicates.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_genes_box_w_replicates.pdf">'.format(prefix, prefix)
             output += '<img alt="Box Plot with Replicates - Genes - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_genes_box_w_replicates.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
             # Box Plots for Isoforms with and without Replicates
 
             if 0:
-                img_source = './{}/{}_isoforms_box_wo_replicates.png'.format(prefix, prefix)
-                output += '<td><a href="{}">'.format(img_source)
+                output += '<td><a href="./{}/{}_isoforms_box_wo_replicates.pdf">'.format(prefix, prefix)
                 output += '<img alt="Box Plot without Replicates - Isoforms - {}" ' \
-                          'src="{}" height="80" width="80" />'.format(key, img_source)
+                          'src="./{}/{}_isoforms_box_wo_replicates.png" height="80" width="80" />'. \
+                    format(key, prefix, prefix)
                 output += '</a></td>\n'
 
-                img_source = './{}/{}_isoforms_box_w_replicates.png'.format(prefix, prefix)
-                output += '<td><a href="{}">'.format(img_source)
+                output += '<td><a href="./{}/{}_isoforms_box_w_replicates.pdf">'.format(prefix, prefix)
                 output += '<img alt="Box Plot with Replicates - Isoforms - {}" ' \
-                          'src="{}" height="80" width="80" />'.format(key, img_source)
+                          'src="./{}/{}_isoforms_box_w_replicates.png" height="80" width="80" />'. \
+                    format(key, prefix, prefix)
                 output += '</a></td>\n'
 
             # Scatter Matrix Plot for Genes and Isoforms
 
-            img_source = './{}/{}_genes_scatter_matrix.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_genes_scatter_matrix.pdf">'.format(prefix, prefix)
             output += '<img alt="Scatter Matrix Plot - Genes - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_genes_scatter_matrix.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
-            img_source = './{}/{}_isoforms_scatter_matrix.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_isoforms_scatter_matrix.pdf">'.format(prefix, prefix)
             output += '<img alt="Scatter Matrix Plot - Isoforms - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_isoforms_scatter_matrix.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
             # Dendrogram Plot for Genes
 
-            img_source = './{}/{}_genes_dendrogram.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_genes_dendrogram.pdf">'.format(prefix, prefix)
             output += '<img alt="Dendrogram Plot - Genes - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_genes_dendrogram.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
             # Volcano Matrix Plot for Genes
 
-            img_source = './{}/{}_genes_volcano_matrix.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_genes_volcano_matrix.pdf">'.format(prefix, prefix)
             output += '<img alt="Volcano Matrix Plot - Genes - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_genes_volcano_matrix.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
             # Multidimensional Scaling Plot for Genes
 
-            img_source = './{}/{}_genes_mds.png'.format(prefix, prefix)
-            if os.path.exists(path=os.path.join(self.genome_directory, img_source)):
-                output += '<td><a href="{}">'.format(img_source)
+            if os.path.exists(
+                    path=os.path.join(self.genome_directory, './{}/{}_genes_mds.png'.format(prefix, prefix))):
+                output += '<td><a href="./{}/{}_genes_mds.pdf">'.format(prefix, prefix)
                 output += '<img alt="Multidimensional Scaling Plot - Genes - {}" ' \
-                          'src="{}" height="80" width="80" />'.format(key, img_source)
+                          'src="./{}/{}_genes_mds.png" height="80" width="80" />'. \
+                    format(key, prefix, prefix)
                 output += '</a></td>\n'
             else:
                 output += '<td></td>\n'
 
             # Principal Component Analysis Plot for Genes
 
-            img_source = './{}/{}_genes_pca.png'.format(prefix, prefix)
-            output += '<td><a href="{}">'.format(img_source)
+            output += '<td><a href="./{}/{}_genes_pca.pdf">'.format(prefix, prefix)
             output += '<img alt="Principal Component Analysis Plot - Genes - {}" ' \
-                      'src="{}" height="80" width="80" />'.format(key, img_source)
+                      'src="./{}/{}_genes_pca.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
             output += '</a></td>\n'
 
             output += '</tr>\n'
@@ -1547,27 +1551,27 @@ class Tuxedo(Analysis):
                     output += '<td colspan="10"><strong>{}</strong> versus <strong>{}</strong></td>\n'. \
                         format(row_dict['V1'], row_dict['V2'])
 
-                    img_source = './{}/{}_{}_{}_genes_scatter.png'.\
+                    output += '<td><a href="./{}/{}_{}_{}_genes_scatter.pdf">'. \
                         format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output += '<td><a href="{}">'.format(img_source)
                     output += '<img alt="Scatter Plot on genes {} versus {}" ' \
-                              'src="{}" height="80" width="80" />'.format(row_dict['V1'], row_dict['V2'], img_source)
+                              'src="./{}/{}_{}_{}_genes_scatter.png" height="80" width="80" />'. \
+                        format(row_dict['V1'], row_dict['V2'], prefix, prefix, row_dict['V1'], row_dict['V2'])
                     output += '</a></td>\n'
 
                     output += '<td></td>\n'
 
-                    img_source = './{}/{}_{}_{}_maplot.png'.\
+                    output += '<td><a href="./{}/{}_{}_{}_maplot.pdf">'. \
                         format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output += '<td><a href="{}">'.format(img_source)
                     output += '<img alt="M vs A Plot on genes {} versus {}" ' \
-                              'src="{}" height="80" width="80" />'.format(row_dict['V1'], row_dict['V2'], img_source)
+                              'src="./{}/{}_{}_{}_maplot.png" height="80" width="80" />'. \
+                        format(row_dict['V1'], row_dict['V2'], prefix, prefix, row_dict['V1'], row_dict['V2'])
                     output += '</a></td>\n'
 
-                    img_source = './{}/{}_{}_{}_genes_volcano.png'.\
+                    output += '<td><a href="./{}/{}_{}_{}_genes_volcano.pdf">'. \
                         format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output += '<td><a href="{}">'.format(img_source)
                     output += '<img alt="Volcano Plot on genes {} versus {}" ' \
-                              'src="{}" height="80" width="80" />'.format(row_dict['V1'], row_dict['V2'], img_source)
+                              'src="./{}/{}_{}_{}_genes_volcano.png" height="80" width="80" />'. \
+                        format(row_dict['V1'], row_dict['V2'], prefix, prefix, row_dict['V1'], row_dict['V2'])
                     output += '</a></td>\n'
 
                     output += '<td colspan="2"></td>\n'
