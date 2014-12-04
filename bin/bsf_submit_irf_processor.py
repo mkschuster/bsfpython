@@ -32,8 +32,8 @@ import os
 import string
 import time
 
-from Bio.BSF import Default
-from Bio.BSF.Analyses.IlluminaToBamTools import BamIndexDecoder, IlluminaToBam, IlluminaRunFolderNotComplete
+from bsf import Default
+from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder, IlluminaToBam, IlluminaRunFolderNotComplete
 
 
 argument_parser = ArgumentParser(
@@ -86,7 +86,7 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF IlluminaToBam analysis, run and submit it.
 
-itb = IlluminaToBam.from_config_file(config_file=name_space.configuration)
+itb = IlluminaToBam.from_config_file_path(config_path=name_space.configuration)
 
 # Set arguments that override the configuration file.
 
@@ -125,7 +125,7 @@ print 'Experiment directory: ', itb.experiment_directory
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
-bid = BamIndexDecoder.from_config_file(config_file=name_space.configuration)
+bid = BamIndexDecoder.from_config_file_path(config_path=name_space.configuration)
 
 # Transfer the project name from the IlluminaToBam to the BamIndexDecoder analysis.
 

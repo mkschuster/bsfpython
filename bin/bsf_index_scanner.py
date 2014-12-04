@@ -35,7 +35,7 @@ from subprocess import PIPE, Popen
 import sys
 from threading import Lock, Thread
 
-from Bio.BSF import Command, Executable, Runnable
+from bsf import Command, Executable, Runnable
 
 
 # Set the environment consistently.
@@ -201,7 +201,7 @@ elif file_type == ".sam":
 elif file_type == ".bam":
     executable = Executable(name='samtools_view', program='samtools', sub_command=Command(command='view'))
     sub_command = executable.sub_command
-    sub_command.add_SwitchShort(key='h')
+    sub_command.add_switch_short(key='h')
     sub_command.arguments.append(args.input_file)
 
     on_posix = 'posix' in sys.builtin_module_names
@@ -253,15 +253,17 @@ for barcode in OrderedDict(sorted(barcode_dict.items(), reverse=True, key=lambda
 
 print "--------"
 
-illumina_adapters = ["ATCACG","CGATGT","TTAGGC","TGACCA","ACAGTG","GCCAAT",
-                     "CAGATC","ACTTGA","GATCAG","TAGCTT","GGCTAC","CTTGTA",
-                     "AGTCAA","AGTTCC","ATGTCA","CCGTCC","GTCCGC","GTGAAA",
-                     "GTGGCC","GTTTCG","CGTACG","GAGTGG","ACTGAT","ATTCCT"]
+illumina_adapters = [
+    "ATCACG", "CGATGT", "TTAGGC", "TGACCA", "ACAGTG", "GCCAAT",
+    "CAGATC", "ACTTGA", "GATCAG", "TAGCTT", "GGCTAC", "CTTGTA",
+    "AGTCAA", "AGTTCC", "ATGTCA", "CCGTCC", "GTCCGC", "GTGAAA",
+    "GTGGCC", "GTTTCG", "CGTACG", "GAGTGG", "ACTGAT", "ATTCCT"
+]
 
 # outfile = open("unmatched_barcode_report.illumina.csv", "w")
 
 for adapter in illumina_adapters:
-    count=0
+    count = 0
     if barcode_dict.has_key(adapter):
         count = barcode_dict[adapter]
 

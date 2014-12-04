@@ -27,8 +27,8 @@
 
 from argparse import ArgumentParser
 
-from Bio.BSF import Default
-from Bio.BSF.Analyses.IlluminaToBamTools import IlluminaToBam
+from bsf import Default
+from bsf.analyses.illumina_to_bam_tools import IlluminaToBam
 
 
 argument_parser = ArgumentParser(
@@ -68,7 +68,7 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF IlluminaToBam analysis, run and submit it.
 
-itb = IlluminaToBam.from_config_file(config_file=name_space.configuration)
+itb = IlluminaToBam.from_config_file_path(config_path=name_space.configuration)
 
 # Set arguments that override the configuration file.
 

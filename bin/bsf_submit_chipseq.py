@@ -27,7 +27,7 @@
 
 from argparse import ArgumentParser
 
-from Bio.BSF.Analyses.ChIPSeq import ChIPSeq
+from bsf.analyses.chip_seq import ChIPSeq
 
 
 argument_parser = ArgumentParser(
@@ -54,7 +54,7 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
-chipseq = ChIPSeq.from_config_file(config_file=name_space.configuration)
+chipseq = ChIPSeq.from_config_file_path(config_path=name_space.configuration)
 
 # Set arguments that override the configuration file.
 

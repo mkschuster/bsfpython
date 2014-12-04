@@ -27,7 +27,7 @@
 
 import argparse
 
-from Bio.BSF.Analyses import ChIPSeq
+from bsf.analyses import ChIPSeq
 
 
 parser = argparse.ArgumentParser(description='ChIP-Seq analysis driver script.')
@@ -45,7 +45,7 @@ args = parser.parse_args()
 
 # Create a BSF ChIPSeq analysis and run it.
 
-chipseq = ChIPSeq.from_config_file(config_file=args.configuration)
+chipseq = ChIPSeq.from_config_file_path(config_path=args.configuration)
 
 if args.debug:
     chipseq.debug = args.debug

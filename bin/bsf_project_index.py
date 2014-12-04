@@ -32,8 +32,8 @@ import re
 from stat import *
 import string
 
-from Bio.BSF import Default
-import Bio.BSF.Defaults.web as web
+from bsf import Default
+import bsf.defaults.web as web
 
 
 def scan_directory(report_dict, directory_root, directory_path=None):

@@ -27,7 +27,7 @@
 
 import argparse
 
-from Bio.BSF.Analyses.VariantCalling import VariantCallingGATK
+from bsf.analyses.variant_calling import VariantCallingGATK
 
 
 argument_parser = argparse.ArgumentParser(
@@ -52,7 +52,7 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF Variant Calling analysis and run it.
 
-variant_calling = VariantCallingGATK.from_config_file(config_file=name_space.configuration)
+variant_calling = VariantCallingGATK.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.debug:
     variant_calling.debug = name_space.debug

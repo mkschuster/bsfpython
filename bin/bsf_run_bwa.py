@@ -31,7 +31,7 @@ import os.path
 from pickle import Unpickler
 import shutil
 
-from Bio.BSF import Command, Default, Executable, Runnable
+from bsf import Command, Default, Executable, Runnable
 
 # Set the environment consistently.
 
@@ -135,7 +135,7 @@ if run_bwa.sub_command.command == 'mem' and run_bwa.sub_command.arguments[1][-4:
                           stdout_path=path_temporary_sam)
 
     samtools_view = samtools.sub_command
-    samtools_view.add_SwitchShort(key='H')
+    samtools_view.add_switch_short(key='H')
     samtools_view.arguments.append(run_bwa.sub_command.arguments[1])
 
     child_return_code = Runnable.run(executable=samtools)
@@ -158,19 +158,19 @@ if run_bwa.sub_command.command == 'mem' and run_bwa.sub_command.arguments[1][-4:
     # Now run Picard SamToFastq to convert.
 
     java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command(command=str()))
-    java_process.add_SwitchShort(key='d64')
-    java_process.add_OptionShort(key='jar', value=os.path.join(classpath_picard, 'SamToFastq.jar'))
-    java_process.add_SwitchShort(key='Xmx4G')
+    java_process.add_switch_short(key='d64')
+    java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'SamToFastq.jar'))
+    java_process.add_switch_short(key='Xmx4G')
 
     sam_to_fastq = java_process.sub_command
-    sam_to_fastq.add_OptionPair(key='INPUT', value=run_bwa.sub_command.arguments[1])
-    sam_to_fastq.add_OptionPair(key='FASTQ', value=path_fastq_1)
-    sam_to_fastq.add_OptionPair(key='SECOND_END_FASTQ', value=path_fastq_2)
-    sam_to_fastq.add_OptionPair(key='INCLUDE_NON_PF_READS', value='false')  # TODO: Make this configurable.
-    sam_to_fastq.add_OptionPair(key='TMP_DIR', value=path_temporary)
-    sam_to_fastq.add_OptionPair(key='VERBOSITY', value='WARNING')
-    sam_to_fastq.add_OptionPair(key='QUIET', value='false')
-    sam_to_fastq.add_OptionPair(key='VALIDATION_STRINGENCY', value='STRICT')
+    sam_to_fastq.add_option_pair(key='INPUT', value=run_bwa.sub_command.arguments[1])
+    sam_to_fastq.add_option_pair(key='FASTQ', value=path_fastq_1)
+    sam_to_fastq.add_option_pair(key='SECOND_END_FASTQ', value=path_fastq_2)
+    sam_to_fastq.add_option_pair(key='INCLUDE_NON_PF_READS', value='false')  # TODO: Make this configurable.
+    sam_to_fastq.add_option_pair(key='TMP_DIR', value=path_temporary)
+    sam_to_fastq.add_option_pair(key='VERBOSITY', value='WARNING')
+    sam_to_fastq.add_option_pair(key='QUIET', value='false')
+    sam_to_fastq.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
 
     child_return_code = Runnable.run(executable=java_process)
 
@@ -186,7 +186,7 @@ if run_bwa.sub_command.command == 'mem' and run_bwa.sub_command.arguments[1][-4:
             "BAM file {!r} contains more than one read group line, which is not supported, yet.\n"
             "RGs: {!r}".format(run_bwa.sub_command.arguments[1], sam_header_rg))
 
-    run_bwa.sub_command.add_OptionShort(key='R', value=str(sam_header_rg[0]).rstrip().replace("\t", "\\t"))
+    run_bwa.sub_command.add_option_short(key='R', value=str(sam_header_rg[0]).rstrip().replace("\t", "\\t"))
 
     # After the SamToFastq conversion, the second and third arguments in the BWA sub-command need replacing.
 
@@ -211,17 +211,17 @@ if os.path.exists(path=path_fastq_2):
 java_process = Executable(name='clean_sam',
                           program='java',
                           sub_command=Command(command=str()))
-java_process.add_SwitchShort(key='d64')
-java_process.add_OptionShort(key='jar', value=os.path.join(classpath_picard, 'CleanSam.jar'))
-java_process.add_SwitchShort(key='Xmx4G')
+java_process.add_switch_short(key='d64')
+java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'CleanSam.jar'))
+java_process.add_switch_short(key='Xmx4G')
 
 clean_sam = java_process.sub_command
-clean_sam.add_OptionPair(key='INPUT', value=path_aligned_sam)
-clean_sam.add_OptionPair(key='OUTPUT', value=path_cleaned_sam)
-clean_sam.add_OptionPair(key='TMP_DIR', value=path_temporary)
-clean_sam.add_OptionPair(key='VERBOSITY', value='WARNING')
-clean_sam.add_OptionPair(key='QUIET', value='false')
-clean_sam.add_OptionPair(key='VALIDATION_STRINGENCY', value='STRICT')
+clean_sam.add_option_pair(key='INPUT', value=path_aligned_sam)
+clean_sam.add_option_pair(key='OUTPUT', value=path_cleaned_sam)
+clean_sam.add_option_pair(key='TMP_DIR', value=path_temporary)
+clean_sam.add_option_pair(key='VERBOSITY', value='WARNING')
+clean_sam.add_option_pair(key='QUIET', value='false')
+clean_sam.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
 
 child_return_code = Runnable.run(executable=java_process)
 
@@ -238,8 +238,8 @@ if len(sam_header_pg) or len(sam_header_rg):
                           stdout_path=path_temporary_sam)
 
     samtools_view = samtools.sub_command
-    samtools_view.add_SwitchShort(key='H')
-    samtools_view.add_SwitchShort(key='S')
+    samtools_view.add_switch_short(key='H')
+    samtools_view.add_switch_short(key='S')
     samtools_view.arguments.append(path_cleaned_sam)
 
     child_return_code = Runnable.run(executable=samtools)
@@ -273,18 +273,18 @@ if len(sam_header_pg) or len(sam_header_rg):
     # Run Picard ReplaceSamHeader.
 
     java_process = Executable(name='replace_sam_header', program='java', sub_command=Command(command=str()))
-    java_process.add_SwitchShort(key='d64')
-    java_process.add_OptionShort(key='jar', value=os.path.join(classpath_picard, 'ReplaceSamHeader.jar'))
-    java_process.add_SwitchShort(key='Xmx4G')
+    java_process.add_switch_short(key='d64')
+    java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'ReplaceSamHeader.jar'))
+    java_process.add_switch_short(key='Xmx4G')
 
     replace_sam_header = java_process.sub_command
-    replace_sam_header.add_OptionPair(key='INPUT', value=path_cleaned_sam)
-    replace_sam_header.add_OptionPair(key='HEADER', value=path_header_sam)
-    replace_sam_header.add_OptionPair(key='OUTPUT', value=path_temporary_sam)
-    replace_sam_header.add_OptionPair(key='TMP_DIR', value=path_temporary)
-    replace_sam_header.add_OptionPair(key='VERBOSITY', value='WARNING')
-    replace_sam_header.add_OptionPair(key='QUIET', value='false')
-    replace_sam_header.add_OptionPair(key='VALIDATION_STRINGENCY', value='STRICT')
+    replace_sam_header.add_option_pair(key='INPUT', value=path_cleaned_sam)
+    replace_sam_header.add_option_pair(key='HEADER', value=path_header_sam)
+    replace_sam_header.add_option_pair(key='OUTPUT', value=path_temporary_sam)
+    replace_sam_header.add_option_pair(key='TMP_DIR', value=path_temporary)
+    replace_sam_header.add_option_pair(key='VERBOSITY', value='WARNING')
+    replace_sam_header.add_option_pair(key='QUIET', value='false')
+    replace_sam_header.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
 
     child_return_code = Runnable.run(executable=java_process)
 
@@ -306,22 +306,22 @@ if os.path.exists(path=path_aligned_sam):
 # Run Picard SortSam to convert the cleaned SAM file into a coordinate sorted BAM file.
 
 java_process = Executable(name='sort_sam', program='java', sub_command=Command(command=str()))
-java_process.add_OptionShort(key='jar', value=os.path.join(classpath_picard, 'SortSam.jar'))
-java_process.add_SwitchShort(key='d64')
-java_process.add_SwitchShort(key='Xmx6G')
+java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'SortSam.jar'))
+java_process.add_switch_short(key='d64')
+java_process.add_switch_short(key='Xmx6G')
 
 sort_sam = java_process.sub_command
-sort_sam.add_OptionPair(key='INPUT', value=path_cleaned_sam)
-sort_sam.add_OptionPair(key='OUTPUT', value=path_sorted_bam)
-sort_sam.add_OptionPair(key='SORT_ORDER', value='coordinate')
-sort_sam.add_OptionPair(key='TMP_DIR', value=path_temporary)
-sort_sam.add_OptionPair(key='VERBOSITY', value='WARNING')
-sort_sam.add_OptionPair(key='QUIET', value='false')
-sort_sam.add_OptionPair(key='VALIDATION_STRINGENCY', value='STRICT')
-sort_sam.add_OptionPair(key='COMPRESSION_LEVEL', value='5')
-sort_sam.add_OptionPair(key='MAX_RECORDS_IN_RAM', value='4000000')
-sort_sam.add_OptionPair(key='CREATE_INDEX', value='true')
-sort_sam.add_OptionPair(key='CREATE_MD5_FILE', value='true')
+sort_sam.add_option_pair(key='INPUT', value=path_cleaned_sam)
+sort_sam.add_option_pair(key='OUTPUT', value=path_sorted_bam)
+sort_sam.add_option_pair(key='SORT_ORDER', value='coordinate')
+sort_sam.add_option_pair(key='TMP_DIR', value=path_temporary)
+sort_sam.add_option_pair(key='VERBOSITY', value='WARNING')
+sort_sam.add_option_pair(key='QUIET', value='false')
+sort_sam.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
+sort_sam.add_option_pair(key='COMPRESSION_LEVEL', value='5')
+sort_sam.add_option_pair(key='MAX_RECORDS_IN_RAM', value='4000000')
+sort_sam.add_option_pair(key='CREATE_INDEX', value='true')
+sort_sam.add_option_pair(key='CREATE_MD5_FILE', value='true')
 
 child_return_code = Runnable.run(executable=java_process)
 

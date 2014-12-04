@@ -34,7 +34,7 @@ import re
 import shutil
 import string
 
-from Bio.BSF import Command, Default, Executable, Runnable
+from bsf import Command, Default, Executable, Runnable
 
 
 def run_picard_sam_to_fastq(input_path, temporary_path):
@@ -53,7 +53,7 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     # Propagate SAM header lines @PG and @RG into the final BAM file.
     # Create a temporary SAM file of the same name to store the SAM header.
 
-    path_temporary_sam = os.path.basename(p=input_path)
+    path_temporary_sam = os.path.basename(input_path)
     path_temporary_sam = string.replace(s=path_temporary_sam, old='.bam', new='.sam')
 
     samtools = Executable(name='samtools_view',
@@ -62,7 +62,7 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
                           stdout_path=path_temporary_sam)
 
     samtools_view = samtools.sub_command
-    samtools_view.add_SwitchShort(key='H')
+    samtools_view.add_switch_short(key='H')
     samtools_view.arguments.append(input_path)
 
     child_return_code = Runnable.run(executable=samtools)
@@ -87,19 +87,19 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     # Now run Picard SamToFastq to convert.
 
     java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command(command=str()))
-    java_process.add_SwitchShort(key='d64')
-    java_process.add_OptionShort(key='jar', value=os.path.join(classpath_picard, 'SamToFastq.jar'))
-    java_process.add_SwitchShort(key='Xmx4G')
+    java_process.add_switch_short(key='d64')
+    java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'SamToFastq.jar'))
+    java_process.add_switch_short(key='Xmx4G')
 
     sam_to_fastq = java_process.sub_command
-    sam_to_fastq.add_OptionPair(key='INPUT', value=input_path)
-    sam_to_fastq.add_OptionPair(key='OUTPUT_PER_RG', value='true')
-    sam_to_fastq.add_OptionPair(key='OUTPUT_DIR', value=temporary_path)
-    sam_to_fastq.add_OptionPair(key='INCLUDE_NON_PF_READS', value='false')  # TODO: Make this configurable.
-    sam_to_fastq.add_OptionPair(key='TMP_DIR', value=path_temporary)
-    sam_to_fastq.add_OptionPair(key='VERBOSITY', value='WARNING')
-    sam_to_fastq.add_OptionPair(key='QUIET', value='false')
-    sam_to_fastq.add_OptionPair(key='VALIDATION_STRINGENCY', value='STRICT')
+    sam_to_fastq.add_option_pair(key='INPUT', value=input_path)
+    sam_to_fastq.add_option_pair(key='OUTPUT_PER_RG', value='true')
+    sam_to_fastq.add_option_pair(key='OUTPUT_DIR', value=temporary_path)
+    sam_to_fastq.add_option_pair(key='INCLUDE_NON_PF_READS', value='false')  # TODO: Make this configurable.
+    sam_to_fastq.add_option_pair(key='TMP_DIR', value=path_temporary)
+    sam_to_fastq.add_option_pair(key='VERBOSITY', value='WARNING')
+    sam_to_fastq.add_option_pair(key='QUIET', value='false')
+    sam_to_fastq.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
 
     child_return_code = Runnable.run(executable=java_process)
 

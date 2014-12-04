@@ -29,7 +29,7 @@
 import argparse
 import warnings
 
-from Bio.BSF.annotation import LibraryAnnotationSheet
+from bsf.annotation import LibraryAnnotationSheet
 
 
 argument_parser = argparse.ArgumentParser(
@@ -47,7 +47,7 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-library_annotation_sheet = LibraryAnnotationSheet.read_from_file(file_path=name_space.library_path)
+library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=name_space.library_path)
 
 messages = library_annotation_sheet.validate()
 
