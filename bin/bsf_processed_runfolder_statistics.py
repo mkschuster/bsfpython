@@ -31,7 +31,7 @@ import re
 from stat import *
 import string
 
-from Bio.BSF import Default
+from bsf import Default
 
 
 parser = argparse.ArgumentParser(description='Collect statistics from a processed run folder after de-multiplexing.')

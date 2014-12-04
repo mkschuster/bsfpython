@@ -27,7 +27,7 @@
 
 import argparse
 
-from Bio.BSF.Analyses import RunBamToFastq
+from bsf.analyses import RunBamToFastq
 
 
 parser = argparse.ArgumentParser(description='BAM To FASTQ analysis driver script.')
@@ -45,7 +45,7 @@ args = parser.parse_args()
 
 # Create a RunBamToFastq BSF Analysis and run it.
 
-bam2fastq = RunBamToFastq.from_config_file(config_file=args.configuration)
+bam2fastq = RunBamToFastq.from_config_file_path(config_path=args.configuration)
 
 if args.debug:
     bam2fastq.debug = args.debug
@@ -74,7 +74,8 @@ if args.stage:
     if args.stage == 'report':
         pass
     elif not submit:
-        name_list = [drms.name for drms in bam2fastq.drms_list, 'report']
+        name_list = [drms.name for drms in bam2fastq.drms_list]
+        name_list.append('report')
         print 'Valid Analysis stages are: {!r}'.format(name_list)
 
 print 'RunBamToFastq Analysis'

@@ -31,12 +31,12 @@ import os
 from pickle import Pickler, HIGHEST_PROTOCOL
 import string
 
-from Bio.BSF import Analysis, Command, Default, DRMS, Executable
-from Bio.BSF.annotation import SampleAnnotationSheet
+from bsf import Analysis, Command, Default, DRMS, Executable
+from bsf.annotation import SampleAnnotationSheet
 
 
 def _read_comparisons(analysis, cmp_file):
-    sas = SampleAnnotationSheet.read_from_file(file_path=cmp_file, name='MuTect Comparisons')
+    sas = SampleAnnotationSheet.from_file_path(file_path=cmp_file, name='MuTect Comparisons')
 
     for row_dict in sas.row_dicts:
 
@@ -44,7 +44,7 @@ def _read_comparisons(analysis, cmp_file):
         comparison_groups = list()
 
         for prefix in 'Normal', 'Tumor':
-            group_name, group_samples = analysis.collection.get_Samples_from_row_dict(
+            group_name, group_samples = analysis.collection.get_samples_from_row_dict(
                 row_dict=row_dict, prefix=prefix)
             if group_name and len(group_samples):
                 key += group_name
@@ -57,7 +57,7 @@ def _read_comparisons(analysis, cmp_file):
                     if analysis.debug > 1:
                         print '  {} Sample name: {!r} file_path:{!r}'.format(prefix, sample.name, sample.file_path)
                         # print sample.trace(1)
-                    analysis.add_Sample(sample=sample)
+                    analysis.add_sample(sample=sample)
 
         analysis.comparisons[key[:-2]] = comparison_groups
 
@@ -91,7 +91,7 @@ name_space = argument_parser.parse_args()
 
 # TODO: Load the Sample Annotation sheet and comparison sheets.
 
-analysis = Analysis.from_config_file(config_file=name_space.configuration)
+analysis = Analysis.from_config_file_path(cls=name_space.configuration, config_path=name_space.configuration)
 
 if name_space.debug:
     analysis.debug = name_space.debug
@@ -204,7 +204,7 @@ if config_parser.has_option(section=config_section, option='annotation_resources
 # Initialise a Distributed Resource Management System (DRMS) object for the
 # bsf_run_variant_calling_somatic.py script.
 
-vc_run_somatic_drms = DRMS.from_Analysis(
+vc_run_somatic_drms = DRMS.from_analysis(
     name='variant_calling_somatic',
     work_directory=analysis.genome_directory,
     analysis=analysis)
@@ -257,33 +257,33 @@ for key in key_list:
     java_process = Executable(name='mutect',
                               program='java',
                               sub_command=Command(command=str()))
-    java_process.add_SwitchShort(key='d64')
-    java_process.add_OptionShort(key='jar', value=os.path.join(classpath_mutect, 'muTect.jar'))
-    java_process.add_SwitchShort(key='Xmx4G')
-    java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_somatic['temporary_directory'])
+    java_process.add_switch_short(key='d64')
+    java_process.add_option_short(key='jar', value=os.path.join(classpath_mutect, 'muTect.jar'))
+    java_process.add_switch_short(key='Xmx4G')
+    java_process.add_option_pair(key='-Djava.io.tmpdir', value=file_path_somatic['temporary_directory'])
 
     sub_command = java_process.sub_command
-    sub_command.add_OptionLong(key='analysis_type', value='MuTect')
-    sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+    sub_command.add_option_long(key='analysis_type', value='MuTect')
+    sub_command.add_option_long(key='reference_sequence', value=bwa_genome_db)
     for interval in exclude_intervals_list:
-        sub_command.add_OptionLong(key='excludeIntervals', value=interval)
+        sub_command.add_option_long(key='excludeIntervals', value=interval)
     for interval in include_intervals_list:
-        sub_command.add_OptionLong(key='intervals', value=interval)
+        sub_command.add_option_long(key='intervals', value=interval)
     if known_sites_discovery:
-        sub_command.add_OptionLong(key='dbsnp', value=known_sites_discovery)
+        sub_command.add_option_long(key='dbsnp', value=known_sites_discovery)
     if known_sites_somatic:
-        sub_command.add_OptionLong(key='cosmic', value=known_sites_somatic)
+        sub_command.add_option_long(key='cosmic', value=known_sites_somatic)
 
-    sub_command.add_OptionLong(
+    sub_command.add_option_long(
         key='input_file:normal',
         value='variant_calling_process_sample_{}_realigned.bam'.format(analysis.comparisons[key][0][1][0].name))
-    sub_command.add_OptionLong(
+    sub_command.add_option_long(
         key='input_file:tumor',
         value='variant_calling_process_sample_{}_realigned.bam'.format(analysis.comparisons[key][-1][1][0].name))
 
-    sub_command.add_OptionLong(key='out', value=file_path_somatic['mutect_out'])
-    sub_command.add_OptionLong(key='vcf', value=file_path_somatic['mutect_vcf'])
-    sub_command.add_OptionLong(key='coverage_file', value=file_path_somatic['mutect_wig'])
+    sub_command.add_option_long(key='out', value=file_path_somatic['mutect_out'])
+    sub_command.add_option_long(key='vcf', value=file_path_somatic['mutect_vcf'])
+    sub_command.add_option_long(key='coverage_file', value=file_path_somatic['mutect_wig'])
 
     pickler_dict_somatic[java_process.name] = java_process
 
@@ -293,36 +293,37 @@ for key in key_list:
     java_process = Executable(name='indel_genotyper',
                               program='java',
                               sub_command=Command(command=str()))
-    java_process.add_SwitchShort(key='d64')
-    java_process.add_OptionShort(key='jar', value=os.path.join(classpath_indel_genotyper,
-                                                               'IndelGenotyper.36.3336-GenomeAnalysisTK.jar'))
-    java_process.add_SwitchShort(key='Xmx4G')
-    java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_somatic['temporary_directory'])
+    java_process.add_switch_short(key='d64')
+    java_process.add_option_short(
+        key='jar',
+        value=os.path.join(classpath_indel_genotyper, 'IndelGenotyper.36.3336-GenomeAnalysisTK.jar'))
+    java_process.add_switch_short(key='Xmx4G')
+    java_process.add_option_pair(key='-Djava.io.tmpdir', value=file_path_somatic['temporary_directory'])
 
     sub_command = java_process.sub_command
-    sub_command.add_OptionLong(key='analysis_type', value='IndelGenotyperV2')
-    sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+    sub_command.add_option_long(key='analysis_type', value='IndelGenotyperV2')
+    sub_command.add_option_long(key='reference_sequence', value=bwa_genome_db)
     for interval in exclude_intervals_list:
-        sub_command.add_OptionLong(key='excludeIntervals', value=interval)
+        sub_command.add_option_long(key='excludeIntervals', value=interval)
     for interval in include_intervals_list:
-        sub_command.add_OptionLong(key='intervals', value=interval)
+        sub_command.add_option_long(key='intervals', value=interval)
     # Not supported by the old GATK version behind the Somatic Indel Genotyper
     # MESSAGE: --DBSNP (-D) argument currently does not support VCF.
     # To use dbSNP in VCF format, please use -B:dbsnp,vcf <filename>.
     # if known_sites_discovery:
-    # sub_command.add_OptionLong(key='DBSNP', value=known_sites_discovery)
+    # sub_command.add_option_long(key='DBSNP', value=known_sites_discovery)
 
-    sub_command.add_SwitchLong(key='somatic')
-    sub_command.add_OptionLong(
+    sub_command.add_switch_long(key='somatic')
+    sub_command.add_option_long(
         key='input_file:normal',
         value='variant_calling_process_sample_{}_realigned.bam'.format(analysis.comparisons[key][0][1][0].name))
-    sub_command.add_OptionLong(
+    sub_command.add_option_long(
         key='input_file:tumor',
         value='variant_calling_process_sample_{}_realigned.bam'.format(analysis.comparisons[key][-1][1][0].name))
 
-    sub_command.add_OptionLong(key='out', value=file_path_somatic['indel_vcf'])
-    sub_command.add_OptionLong(key='bedOutput', value=file_path_somatic['indel_bed'])
-    sub_command.add_OptionLong(key='verboseOutput', value=file_path_somatic['indel_vrb'])
+    sub_command.add_option_long(key='out', value=file_path_somatic['indel_vcf'])
+    sub_command.add_option_long(key='bedOutput', value=file_path_somatic['indel_bed'])
+    sub_command.add_option_long(key='verboseOutput', value=file_path_somatic['indel_vrb'])
     # Extend the window size to get around a bug in the IndelGenotyperV2? Sigh.
     # ##### ERROR MESSAGE: Invalid command line: Argument window_size has a bad value:
     #  Read HWI-ST181_0391:7:2214:8748:86539#737C: out of coverage window bounds.
@@ -330,7 +331,7 @@ for key in key_list:
     # ##### ERROR Read length=100; cigar=100M; start=3833506; end=3833605;
     #  window start (after trying to accomodate the read)=3833405; window end=3833604
 
-    sub_command.add_OptionLong(key='window_size', value='1000')
+    sub_command.add_option_long(key='window_size', value='1000')
 
     pickler_dict_somatic[java_process.name] = java_process
 
@@ -339,23 +340,23 @@ for key in key_list:
     java_process = Executable(name='gatk_combine_variants',
                               program='java',
                               sub_command=Command(command=str()))
-    java_process.add_SwitchShort(key='d64')
-    java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
-    java_process.add_SwitchShort(key='Xmx6G')
-    java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_somatic['temporary_directory'])
+    java_process.add_switch_short(key='d64')
+    java_process.add_option_short(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
+    java_process.add_switch_short(key='Xmx6G')
+    java_process.add_option_pair(key='-Djava.io.tmpdir', value=file_path_somatic['temporary_directory'])
 
     sub_command = java_process.sub_command
-    sub_command.add_OptionLong(key='analysis_type', value='CombineVariants')
-    sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+    sub_command.add_option_long(key='analysis_type', value='CombineVariants')
+    sub_command.add_option_long(key='reference_sequence', value=bwa_genome_db)
     for interval in exclude_intervals_list:
-        sub_command.add_OptionLong(key='excludeIntervals', value=interval)
+        sub_command.add_option_long(key='excludeIntervals', value=interval)
     for interval in include_intervals_list:
-        sub_command.add_OptionLong(key='intervals', value=interval)
+        sub_command.add_option_long(key='intervals', value=interval)
 
     # TODO: Should this use the option --assumeIdenticalSamples to just concatenate the VCFs?
-    sub_command.add_OptionLong(key='variant', value=file_path_somatic['mutect_vcf'])
-    sub_command.add_OptionLong(key='variant', value=file_path_somatic['indel_vcf'])
-    sub_command.add_OptionLong(key='out', value=file_path_somatic['combined_vcf'])
+    sub_command.add_option_long(key='variant', value=file_path_somatic['mutect_vcf'])
+    sub_command.add_option_long(key='variant', value=file_path_somatic['indel_vcf'])
+    sub_command.add_option_long(key='out', value=file_path_somatic['combined_vcf'])
 
     pickler_dict_somatic[java_process.name] = java_process
 
@@ -364,17 +365,17 @@ for key in key_list:
     java_process = Executable(name='snpeff',
                               program='java',
                               sub_command=Command(command='eff'))
-    java_process.add_SwitchShort(key='d64')
-    java_process.add_OptionShort(key='jar', value=os.path.join(classpath_snpeff, 'snpEff.jar'))
-    java_process.add_SwitchShort(key='Xmx6G')
-    java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_somatic['temporary_directory'])
+    java_process.add_switch_short(key='d64')
+    java_process.add_option_short(key='jar', value=os.path.join(classpath_snpeff, 'snpEff.jar'))
+    java_process.add_switch_short(key='Xmx6G')
+    java_process.add_option_pair(key='-Djava.io.tmpdir', value=file_path_somatic['temporary_directory'])
     java_process.stdout_path = file_path_somatic['snpeff_vcf']
 
     sub_command = java_process.sub_command
-    sub_command.add_SwitchShort(key='download')
-    sub_command.add_OptionShort(key='o', value='gatk')
-    sub_command.add_OptionShort(key='stats', value=file_path_somatic['snpeff_stats'])
-    sub_command.add_OptionShort(key='config', value=os.path.join(classpath_snpeff, 'snpEff.config'))
+    sub_command.add_switch_short(key='download')
+    sub_command.add_option_short(key='o', value='gatk')
+    sub_command.add_option_short(key='stats', value=file_path_somatic['snpeff_stats'])
+    sub_command.add_option_short(key='config', value=os.path.join(classpath_snpeff, 'snpEff.config'))
 
     sub_command.arguments.append(snpeff_genome_version)
     sub_command.arguments.append(file_path_somatic['combined_vcf'])
@@ -386,39 +387,39 @@ for key in key_list:
     java_process = Executable(name='gatk_variant_annotator',
                               program='java',
                               sub_command=Command(command=str()))
-    java_process.add_SwitchShort(key='d64')
-    java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
-    java_process.add_SwitchShort(key='Xmx6G')
-    java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_somatic['temporary_directory'])
+    java_process.add_switch_short(key='d64')
+    java_process.add_option_short(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
+    java_process.add_switch_short(key='Xmx6G')
+    java_process.add_option_pair(key='-Djava.io.tmpdir', value=file_path_somatic['temporary_directory'])
 
     sub_command = java_process.sub_command
-    sub_command.add_OptionLong(key='analysis_type', value='VariantAnnotator')
-    sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+    sub_command.add_option_long(key='analysis_type', value='VariantAnnotator')
+    sub_command.add_option_long(key='reference_sequence', value=bwa_genome_db)
     for interval in exclude_intervals_list:
-        sub_command.add_OptionLong(key='excludeIntervals', value=interval)
+        sub_command.add_option_long(key='excludeIntervals', value=interval)
     for interval in include_intervals_list:
-        sub_command.add_OptionLong(key='intervals', value=interval)
+        sub_command.add_option_long(key='intervals', value=interval)
     if known_sites_discovery:
-        sub_command.add_OptionLong(key='dbsnp', value=known_sites_discovery)
+        sub_command.add_option_long(key='dbsnp', value=known_sites_discovery)
 
     # Add annotation resources and their corresponding expression options.
     for annotation_resource in annotation_resources_dict.keys():
         if len(annotation_resources_dict[annotation_resource][0]) \
                 and len(annotation_resources_dict[annotation_resource][1]):
-            sub_command.add_OptionLong(
+            sub_command.add_option_long(
                 key=string.join(words=('resource', annotation_resource), sep=':'),
                 value=annotation_resources_dict[annotation_resource][0])
             for annotation in annotation_resources_dict[annotation_resource][1]:
-                sub_command.add_OptionLong(
+                sub_command.add_option_long(
                     key='expression',
                     value=string.join(words=(annotation_resource, annotation), sep='.'))
 
-    sub_command.add_OptionLong(key='variant', value=file_path_somatic['combined_vcf'])
+    sub_command.add_option_long(key='variant', value=file_path_somatic['combined_vcf'])
     # TODO: Test whether annotation AlleleBalanceBySample works in GATK 3.2.
-    sub_command.add_OptionLong(key='annotation', value='AlleleBalanceBySample')
-    sub_command.add_OptionLong(key='annotation', value='SnpEff')
-    sub_command.add_OptionLong(key='snpEffFile', value=file_path_somatic['snpeff_vcf'])
-    sub_command.add_OptionLong(key='out', value=file_path_somatic['annotated_vcf'])
+    sub_command.add_option_long(key='annotation', value='AlleleBalanceBySample')
+    sub_command.add_option_long(key='annotation', value='SnpEff')
+    sub_command.add_option_long(key='snpEffFile', value=file_path_somatic['snpeff_vcf'])
+    sub_command.add_option_long(key='out', value=file_path_somatic['annotated_vcf'])
 
     pickler_dict_somatic[java_process.name] = java_process
 
@@ -427,58 +428,58 @@ for key in key_list:
     java_process = Executable(name='gatk_variants_to_table',
                               program='java',
                               sub_command=Command(command=str()))
-    java_process.add_SwitchShort(key='d64')
-    java_process.add_OptionShort(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
-    java_process.add_SwitchShort(key='Xmx4G')
-    java_process.add_OptionPair(key='-Djava.io.tmpdir', value=file_path_somatic['temporary_directory'])
+    java_process.add_switch_short(key='d64')
+    java_process.add_option_short(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
+    java_process.add_switch_short(key='Xmx4G')
+    java_process.add_option_pair(key='-Djava.io.tmpdir', value=file_path_somatic['temporary_directory'])
 
     sub_command = java_process.sub_command
-    sub_command.add_OptionLong(key='analysis_type', value='VariantsToTable')
-    sub_command.add_OptionLong(key='reference_sequence', value=bwa_genome_db)
+    sub_command.add_option_long(key='analysis_type', value='VariantsToTable')
+    sub_command.add_option_long(key='reference_sequence', value=bwa_genome_db)
     for interval in exclude_intervals_list:
-        sub_command.add_OptionLong(key='excludeIntervals', value=interval)
+        sub_command.add_option_long(key='excludeIntervals', value=interval)
     for interval in include_intervals_list:
-        sub_command.add_OptionLong(key='intervals', value=interval)
+        sub_command.add_option_long(key='intervals', value=interval)
 
-    sub_command.add_OptionLong(key='variant', value=file_path_somatic['annotated_vcf'])
-    sub_command.add_OptionLong(key='out', value=file_path_somatic['annotated_csv'])
-    sub_command.add_SwitchLong(key='allowMissingData')
-    sub_command.add_SwitchLong(key='showFiltered')
+    sub_command.add_option_long(key='variant', value=file_path_somatic['annotated_vcf'])
+    sub_command.add_option_long(key='out', value=file_path_somatic['annotated_csv'])
+    sub_command.add_switch_long(key='allowMissingData')
+    sub_command.add_switch_long(key='showFiltered')
     # Set of standard VCF fields.
-    sub_command.add_OptionLong(key='fields', value='CHROM')
-    sub_command.add_OptionLong(key='fields', value='POS')
-    sub_command.add_OptionLong(key='fields', value='ID')
-    sub_command.add_OptionLong(key='fields', value='REF')
-    sub_command.add_OptionLong(key='fields', value='ALT')
-    sub_command.add_OptionLong(key='fields', value='QUAL')
-    sub_command.add_OptionLong(key='fields', value='FILTER')
+    sub_command.add_option_long(key='fields', value='CHROM')
+    sub_command.add_option_long(key='fields', value='POS')
+    sub_command.add_option_long(key='fields', value='ID')
+    sub_command.add_option_long(key='fields', value='REF')
+    sub_command.add_option_long(key='fields', value='ALT')
+    sub_command.add_option_long(key='fields', value='QUAL')
+    sub_command.add_option_long(key='fields', value='FILTER')
     #
-    sub_command.add_OptionLong(key='fields', value='AF')
+    sub_command.add_option_long(key='fields', value='AF')
     # MuTect genotype fields  GT:AD:BQ:DP:FA
-    sub_command.add_OptionLong(key='genotypeFields', value='GT')
-    sub_command.add_OptionLong(key='genotypeFields', value='AD')
-    sub_command.add_OptionLong(key='genotypeFields', value='BQ')
-    sub_command.add_OptionLong(key='genotypeFields', value='DP')
-    sub_command.add_OptionLong(key='genotypeFields', value='FA')
+    sub_command.add_option_long(key='genotypeFields', value='GT')
+    sub_command.add_option_long(key='genotypeFields', value='AD')
+    sub_command.add_option_long(key='genotypeFields', value='BQ')
+    sub_command.add_option_long(key='genotypeFields', value='DP')
+    sub_command.add_option_long(key='genotypeFields', value='FA')
     # Indel Genotyper genotype fields GT:GQ
-    sub_command.add_OptionLong(key='genotypeFields', value='GQ')
+    sub_command.add_option_long(key='genotypeFields', value='GQ')
     # Set of snpEff fields.
-    sub_command.add_OptionLong(key='fields', value='SNPEFF_EFFECT')
-    sub_command.add_OptionLong(key='fields', value='SNPEFF_IMPACT')
-    sub_command.add_OptionLong(key='fields', value='SNPEFF_FUNCTIONAL_CLASS')
-    sub_command.add_OptionLong(key='fields', value='SNPEFF_CODON_CHANGE')
-    sub_command.add_OptionLong(key='fields', value='SNPEFF_AMINO_ACID_CHANGE')
-    sub_command.add_OptionLong(key='fields', value='SNPEFF_GENE_NAME')
-    sub_command.add_OptionLong(key='fields', value='SNPEFF_GENE_BIOTYPE')
-    sub_command.add_OptionLong(key='fields', value='SNPEFF_TRANSCRIPT_ID')
-    sub_command.add_OptionLong(key='fields', value='SNPEFF_EXON_ID')
+    sub_command.add_option_long(key='fields', value='SNPEFF_EFFECT')
+    sub_command.add_option_long(key='fields', value='SNPEFF_IMPACT')
+    sub_command.add_option_long(key='fields', value='SNPEFF_FUNCTIONAL_CLASS')
+    sub_command.add_option_long(key='fields', value='SNPEFF_CODON_CHANGE')
+    sub_command.add_option_long(key='fields', value='SNPEFF_AMINO_ACID_CHANGE')
+    sub_command.add_option_long(key='fields', value='SNPEFF_GENE_NAME')
+    sub_command.add_option_long(key='fields', value='SNPEFF_GENE_BIOTYPE')
+    sub_command.add_option_long(key='fields', value='SNPEFF_TRANSCRIPT_ID')
+    sub_command.add_option_long(key='fields', value='SNPEFF_EXON_ID')
 
     # Automatically add all fields defined for the Variant Annotator resources, above.
     for annotation_resource in annotation_resources_dict.keys():
         if len(annotation_resources_dict[annotation_resource][0]) \
                 and len(annotation_resources_dict[annotation_resource][1]):
             for annotation in annotation_resources_dict[annotation_resource][1]:
-                sub_command.add_OptionLong(
+                sub_command.add_option_long(
                     key='fields',
                     value=string.join(words=(annotation_resource, annotation), sep='.'))
 
@@ -494,25 +495,25 @@ for key in key_list:
 
     # Create a BSF Executable for somatic variant calling.
 
-    vc_run_somatic = Executable.from_Analysis(
+    vc_run_somatic = Executable.from_analysis(
         name=prefix_somatic,
         program='bsf_run_variant_calling_somatic.py',
         analysis=analysis)
-    vc_run_somatic_drms.add_Executable(vc_run_somatic)
+    vc_run_somatic_drms.add_executable(vc_run_somatic)
 
     # Only submit this Executable if the final result file does not exist.
     if (os.path.exists(
             os.path.join(analysis.genome_directory, file_path_somatic['annotated_csv']))
         and os.path.getsize(
-                os.path.join(analysis.genome_directory, file_path_somatic['annotated_csv']))):
+            os.path.join(analysis.genome_directory, file_path_somatic['annotated_csv']))):
         vc_run_somatic.submit = False
 
     # TODO: Set dependencies on sample-level processing in case this gets moved into the VariantCalling module.
 
     # Set variant_calling_run_process_lane options.
 
-    vc_run_somatic.add_OptionLong(key='pickler_path', value=pickler_path)
-    vc_run_somatic.add_OptionLong(key='debug', value=str(analysis.debug))
+    vc_run_somatic.add_option_long(key='pickler_path', value=pickler_path)
+    vc_run_somatic.add_option_long(key='debug', value=str(analysis.debug))
 
 # Submit all Executable objects of all Distributed Resource Management System objects.
 

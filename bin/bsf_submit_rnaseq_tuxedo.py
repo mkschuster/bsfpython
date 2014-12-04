@@ -27,7 +27,7 @@
 
 import argparse
 
-from Bio.BSF.Analyses.RNASeq import Tuxedo
+from bsf.analyses.rna_seq import Tuxedo
 
 
 argument_parser = argparse.ArgumentParser(
@@ -53,7 +53,7 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF ChIPSeq analysis and run it.
 
-tuxedo = Tuxedo.from_config_file(config_file=name_space.configuration)
+tuxedo = Tuxedo.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.debug:
     tuxedo.debug = name_space.debug
@@ -95,6 +95,6 @@ print 'Output directory:  ', tuxedo.output_directory
 print 'Project directory: ', tuxedo.project_directory
 print 'Genome directory:  ', tuxedo.genome_directory
 
-if tuxedo.debug >=2:
+if tuxedo.debug >= 2:
     print '{!r} final trace:'.format(tuxedo)
     print tuxedo.trace(level=1)

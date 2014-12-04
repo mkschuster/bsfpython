@@ -29,7 +29,7 @@
 import argparse
 import os
 
-from Bio.BSF import Default, DRMS, Executable
+from bsf import Default, DRMS, Executable
 
 
 # Set the environment consistently.
@@ -62,11 +62,11 @@ if not os.path.exists(path=irf_path):
     raise Exception('Could not find Illumina Run Folder: {!r}'.format(irf_path))
 
 drms = DRMS(name='irf_archive', work_directory=os.path.dirname(irf_path))
-drms.set_Default(default=default)
+drms.set_default(default=default)
 
 executable = Executable(name='irf_archive_' + os.path.basename(irf_path),
                         program='bsf_run_irf_archive.bash')
-drms.add_Executable(executable=executable)
+drms.add_executable(executable=executable)
 
 executable.arguments.append(os.path.basename(irf_path))
 
@@ -77,4 +77,4 @@ print drms.trace(level=1)
 # TODO: This needs some basic configuration for all Illumina Run Folders that are archived.
 # Maybe we should have a concept of a configuration directory from which those could be read?
 # The .bsfpython.ini file may not be specific enough?
-# What about including default configurations for Bio.BSF.Analysis modules in the .bsfpython.ini file?
+# What about including default configurations for bsf.analyses modules in the .bsfpython.ini file? Implemented.

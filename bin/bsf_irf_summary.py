@@ -30,8 +30,8 @@ import datetime
 import os.path
 import string
 
-from Bio.BSF import Default
-from Bio.BSF.Illumina import RunFolder
+from bsf import Default
+from bsf.illumina import RunFolder
 
 
 parser = argparse.ArgumentParser(description='Summarise an Illumina Run Folder.')

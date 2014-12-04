@@ -1,7 +1,7 @@
 """lib
 
-This lib (pseudo-)package is required only formally.
-The PYTHONPATH environment variable should point to the enclosed Bio directory,
+This I{lib} (pseudo-)package is required only formally.
+The I{PYTHONPATH} environment variable should point to the enclosed I{bsf} directory,
 so that this package is not visible.
 """
 

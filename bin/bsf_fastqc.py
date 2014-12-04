@@ -27,7 +27,7 @@
 
 import argparse
 
-from Bio.BSF.Analyses import RunFastQC
+from bsf.analyses import RunFastQC
 
 
 parser = argparse.ArgumentParser(description='FastQC driver script.')
@@ -43,7 +43,7 @@ parser.add_argument('configuration',
 
 args = parser.parse_args()
 
-fastqc = RunFastQC.from_config_file(config_file=args.configuration)
+fastqc = RunFastQC.from_config_file_path(config_path=args.configuration)
 
 if args.debug:
     fastqc.debug = args.debug

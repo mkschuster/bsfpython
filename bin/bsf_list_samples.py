@@ -31,8 +31,8 @@ import csv
 import os
 import re
 
-from Bio.BSF import Default
-from Bio.BSF.Data import ProcessedRunFolder
+from bsf import Default
+from bsf.data import ProcessedRunFolder
 
 
 parser = argparse.ArgumentParser(description='List projects and samples.')

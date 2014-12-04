@@ -29,8 +29,8 @@ from argparse import ArgumentParser
 import os
 import string
 
-from Bio.BSF import Default
-from Bio.BSF.Analyses.IlluminaToBamTools import BamIndexDecoder
+from bsf import Default
+from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder
 
 
 argument_parser = ArgumentParser(
@@ -73,7 +73,7 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
-bid = BamIndexDecoder.from_config_file(config_file=name_space.configuration)
+bid = BamIndexDecoder.from_config_file_path(config_path=name_space.configuration)
 
 # Set arguments that override the configuration file.
 

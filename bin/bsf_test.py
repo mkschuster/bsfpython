@@ -27,14 +27,14 @@
 
 import csv
 
-from Bio.BSF import Executable, Runnable
-from Bio.BSF.Database import DatabaseConnection, ProcessSLURM, ProcessSLURMAdaptor
+from bsf import Executable, Runnable
+from bsf.database import DatabaseConnection, ProcessSLURM, ProcessSLURMAdaptor
 
 sacct = Executable(name='sacct', program='sacct', stdout_path='sacct_mschuster.csv', stderr_path='sacct_mschuster.err')
-sacct.add_OptionLong(key='user', value='mschuster')
-sacct.add_OptionLong(key='starttime', value='2014-04-19')
-sacct.add_SwitchLong(key='long')
-sacct.add_SwitchLong(key='parsable')
+sacct.add_option_long(key='user', value='mschuster')
+sacct.add_option_long(key='starttime', value='2014-04-19')
+sacct.add_switch_long(key='long')
+sacct.add_switch_long(key='parsable')
 
 return_code = Runnable.run(executable=sacct)
 

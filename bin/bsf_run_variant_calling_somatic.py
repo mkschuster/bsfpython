@@ -32,7 +32,7 @@ import os.path
 from pickle import Unpickler
 import shutil
 
-from Bio.BSF import Runnable
+from bsf import Runnable
 
 
 def run_executable(key):

@@ -32,7 +32,7 @@ import os
 from pickle import Unpickler
 import shutil
 
-from Bio.BSF import Default, Executable, Runnable
+from bsf import Default, Executable, Runnable
 
 
 # Set the environment consistently.
