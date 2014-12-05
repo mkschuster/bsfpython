@@ -483,7 +483,7 @@ class IlluminaToBam(Analysis):
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
             runnable = Runnable(
                 name=prefix,
-                code_module='bsf.runnables.IlluminaToBam',
+                code_module='bsf.runnables.illumina_to_bam',
                 working_directory=self.project_directory,
                 file_path_dict=file_path_dict)
             self.add_runnable(runnable=runnable)
@@ -1019,7 +1019,7 @@ class BamIndexDecoder(Analysis):
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
             runnable = Runnable(
                 name=prefix,
-                code_module='bsf.runnables.BamIndexDecoder',
+                code_module='bsf.runnables.bam_index_decoder',
                 working_directory=self.project_directory,
                 file_path_dict=file_path_dict)
             self.add_runnable(runnable=runnable)

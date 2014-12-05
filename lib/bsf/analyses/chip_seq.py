@@ -624,7 +624,7 @@ class ChIPSeq(Analysis):
                 # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
                 runnable = Runnable(
                     name=prefix,
-                    code_module='bsf.runnables.Bowtie2',
+                    code_module='bsf.runnables.bowtie2',
                     working_directory=self.genome_directory,
                     file_path_dict=file_path_dict)
                 self.add_runnable(runnable=runnable)
@@ -954,7 +954,7 @@ class ChIPSeq(Analysis):
 
                             runnable = Runnable(
                                 name=prefix,
-                                code_module='bsf.runnables.ChIPSeqPeakCalling',
+                                code_module='bsf.runnables.chip_seq_peak_calling',
                                 working_directory=self.genome_directory,
                                 file_path_dict=file_path_dict)
                             self.add_runnable(runnable=runnable)
