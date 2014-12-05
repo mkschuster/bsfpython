@@ -663,7 +663,7 @@ class VariantCallingGATK(Analysis):
         """Private method to read variant quality score recalibration (VQSR) configuration information.
 
         @param vqsr_resources_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
-        @type: dict
+        @type vqsr_resources_dict: dict
         @param variation_type: Variation type I{indel} or I{snp}
         @type variation_type: str
         @param gatk_bundle_version: GATK bundle version

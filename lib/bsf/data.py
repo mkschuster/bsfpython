@@ -703,7 +703,7 @@ class Sample(object):
     def add_paired_reads(self, paired_reads):
         """Add a C{PairedReads} object.
 
-        This method checks, whether a matching C{PairedReads} object is already present in this C{Sample) object.
+        This method checks, whether a matching C{PairedReads} object is already present in this C{Sample} object.
         @param paired_reads: C{PairedReads}
         @type paired_reads: PairedReads
         """
@@ -1647,7 +1647,7 @@ class Collection(object):
     def _process_read_group(self, row_dict, prefix):
         """Get or create a read group.
 
-        A 'I{[Prefix] ReadGroup}' key is optional, in which case the default is an empty Python C{str) object.
+        A 'I{[Prefix] ReadGroup}' key is optional, in which case the default is an empty Python C{str} object.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict
         @param prefix: Optional configuration prefix
