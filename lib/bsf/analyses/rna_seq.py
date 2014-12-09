@@ -589,11 +589,12 @@ class Tuxedo(Analysis):
                 # It is specific for the genome assembly.
                 # For the moment it is set in the rnaseq_config.ini file.
 
-                # TODO: For the moment, the species-specific BioMart_data_set option needs specifying
-                # in the configuration file.
-                # process_cufflinks.add_option_long(key='biomart_data_set', value='mmusculus_gene_ensembl)
+                # TODO: For the moment, the species-specific --biomart-data-set option needs specifying
+                # in the configuration file. Maybe it would be possible to automatically detect the data set
+                # via biomaRt functions in the R script.
+                # process_cufflinks.add_option_long(key='biomart-data-set', value='mmusculus_gene_ensembl)
                 process_cufflinks.add_option_long(key='sample', value=replicate_key)
-                process_cufflinks.add_option_long(key='genome_directory', value=self.genome_directory)
+                process_cufflinks.add_option_long(key='genome-directory', value=self.genome_directory)
 
     def _create_cuffmerge_cuffdiff_jobs(self):
         """Create a Cuffmerge and a Cuffdiff process for each comparison.
@@ -1193,9 +1194,9 @@ class Tuxedo(Analysis):
                 output += '<td><a href="./{}/isoforms.fpkm_tracking">Isoforms FPKM</a></td>\n'. \
                     format(prefix)
                 # Add files from bsf_process_cufflinks.R
-                output += '<td><a href="./{}/{}_genes_fpkm_tracking.txt">Genes (Symbols)</a></td>\n'. \
+                output += '<td><a href="./{}/{}_genes_fpkm_tracking.tsv">Genes (Symbols)</a></td>\n'. \
                     format(prefix, prefix)
-                output += '<td><a href="./{}/{}_isoforms_fpkm_tracking.txt">Isoforms (Symbols)</a></td>\n'. \
+                output += '<td><a href="./{}/{}_isoforms_fpkm_tracking.tsv">Isoforms (Symbols)</a></td>\n'. \
                     format(prefix, prefix)
                 output += '<td><a href="./{}/rnaseq_tophat_{}_accepted_hits.bam">Aligned BAM</a></td>\n'. \
                     format(prefix, replicate_key)
