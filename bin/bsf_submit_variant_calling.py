@@ -58,32 +58,7 @@ if name_space.debug:
     variant_calling.debug = name_space.debug
 
 variant_calling.run()
-
-# Submit all Executable objects of all Distributed Resource Management System objects.
-
-submit = 0
-
-for drms in variant_calling.drms_list:
-
-    if name_space.stage:
-        if name_space.stage == drms.name:
-            submit += 1
-        else:
-            continue
-
-    drms.submit(debug=variant_calling.debug)
-
-    if variant_calling.debug:
-        print repr(drms)
-        print drms.trace(1)
-
-if name_space.stage:
-    if name_space.stage == 'report':
-        variant_calling.report()
-    elif not submit:
-        name_list = [drms.name for drms in variant_calling.drms_list]
-        name_list.append('report')
-        print 'Valid Analysis stages are: {!r}'.format(name_list)
+variant_calling.submit(drms_name=name_space.stage)
 
 print 'Variant Calling Analysis'
 print 'Project name:      ', variant_calling.project_name
