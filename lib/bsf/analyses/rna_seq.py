@@ -1202,6 +1202,8 @@ class Tuxedo(Analysis):
                     format(prefix, replicate_key)
                 output += '<td><a href="./{}/rnaseq_tophat_{}_accepted_hits.bam.bai">Aligned BAI</a></td>\n'. \
                     format(prefix, replicate_key)
+                output += '<td><a href="./{}/rnaseq_tophat_{}_unaligned.bam">Unaligned BAM</a></td>\n'. \
+                    format(prefix, replicate_key)
                 output += '</tr>\n'
 
         output += '</tbody>\n'
@@ -1239,7 +1241,9 @@ class Tuxedo(Analysis):
         output += '<th>Splicing</th>\n'
         output += '<th>Transcription Start Sites</th>\n'
         output += '<th>Gene FPKM Replicates</th>\n'
+        output += '<th>Gene Count Replicates</th>\n'
         output += '<th>Isoform FPKM Replicates</th>\n'
+        output += '<th>Isoform Count Replicates</th>\n'
         output += '</tr>\n'
         output += '</thead>\n'
         output += '<tbody>\n'
@@ -1274,7 +1278,11 @@ class Tuxedo(Analysis):
                 format(prefix, prefix)
             output += '<td><a href="./{}/{}_genes_fpkm_replicates.tsv">Gene FPKM Replicates</a></td>\n'. \
                 format(prefix, prefix)
+            output += '<td><a href="./{}/{}_genes_counts_replicates.tsv">Gene Count Replicates</a></td>\n'. \
+                format(prefix, prefix)
             output += '<td><a href="./{}/{}_isoforms_fpkm_replicates.tsv">Isoform FPKM Replicates</a></td>\n'. \
+                format(prefix, prefix)
+            output += '<td><a href="./{}/{}_isoforms_counts_replicates.tsv">Isoform Count Replicates</a></td>\n'. \
                 format(prefix, prefix)
 
             output += '</tr>\n'
