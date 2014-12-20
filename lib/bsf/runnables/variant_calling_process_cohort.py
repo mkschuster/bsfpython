@@ -255,7 +255,7 @@ def run(runnable):
     # Get all sample names, from file_path_dict keys that start with 'sample_vcf_'.
 
     keys = runnable.file_path_dict.keys()
-    keys.sort(cmp=lambda x, y: cmp(x.name, y.name))
+    keys.sort(cmp=lambda x, y: cmp(x, y))
 
     for key in keys:
         if key[:11] == 'sample_vcf_':
