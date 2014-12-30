@@ -28,6 +28,7 @@ A package of methods supporting the Simple Linux Utility for Resource Management
 
 
 import errno
+import math
 import os.path
 import re
 import string
@@ -40,6 +41,64 @@ from bsf.database import DatabaseConnection, \
 
 
 output_directory = 'bsfpython_slurm_output'
+
+
+def _recalculate_memory(memory):
+    """Recalculate the memory string.
+
+    Multiplier suffixes K, M, G, T, P, E, Z and Y are based on 1024, while
+    multiplier suffixes k, m, g, t, p, e, z and y are based on 1000 in line
+    with Sun Grid Engine (SGE) conventions.
+    https://en.wikipedia.org/wiki/Binary_prefix
+    https://en.wikipedia.org/wiki/Metric_prefix
+    @param memory: Memory specification string
+    @type memory: str
+    @return: Memory specification string
+    @rtype: str
+    """
+
+    assert isinstance(memory, str)
+
+    if memory[-1:] == 'K':  # kibi
+        result = float(memory[:-1]) * 1024 ** 1
+    elif memory[-1:] == 'k':  # kilo
+        result = float(memory[:-1]) * 1000 ** 1
+    elif memory[-1:] == 'M':  # mebi
+        result = float(memory[:-1]) * 1024 ** 2
+    elif memory[-1:] == 'm':  # mega
+        result = float(memory[:-1]) * 1000 ** 2
+    elif memory[-1:] == 'G':  # gibi
+        result = float(memory[:-1]) * 1024 ** 3
+    elif memory[-1:] == 'g':  # giga
+        result = float(memory[:-1]) * 1000 ** 3
+    elif memory[-1:] == 'T':  # tebi
+        result = float(memory[:-1]) * 1024 ** 4
+    elif memory[-1:] == 't':  # terra
+        result = float(memory[:-1]) * 1000 ** 4
+    elif memory[-1:] == 'P':  # pebi
+        result = float(memory[:-1]) * 1024 ** 5
+    elif memory[-1:] == 'p':  # peta
+        result = float(memory[:-1]) * 1000 ** 5
+    elif memory[-1:] == 'E':  # exbi
+        result = float(memory[:-1]) * 1024 ** 6
+    elif memory[-1:] == 'e':  # exa
+        result = float(memory[:-1]) * 1000 ** 6
+    elif memory[-1:] == 'Z':  # zebi
+        result = float(memory[:-1]) * 1024 ** 7
+    elif memory[-1:] == 'z':  # zetta
+        result = float(memory[:-1]) * 1000 ** 7
+    elif memory[-1:] == 'Y':  # yobi
+        result = float(memory[:-1]) * 1024 ** 8
+    elif memory[-1:] == 'y':  # yotta
+        result = float(memory[:-1]) * 1000 ** 8
+    else:
+        result = float(memory)
+
+    # Slurm needs memory specification in MegaBytes.
+
+    result = int(math.ceil(result / 1024 ** 2))
+
+    return str(result)
 
 
 def submit(drms, debug=0):
@@ -85,25 +144,16 @@ def submit(drms, debug=0):
 
         # SLURM-specific sanity checks ...
 
-        # If a hard memory limit has been set, use it as the minimum free required.
-
         if drms.memory_limit_hard:
-            if not drms.memory_free_virtual:
-                drms.memory_free_virtual = drms.memory_limit_hard
-
-        # TODO: The memory must be specified in MB.
-        # Maybe it would be worth having a routine that converts suffixes into MB.
-        # This should use memory_limit_soft or memory_limit_hard.
-        # TODO: Not sure how to use this in a situation like BWA where a multi-threaded application does not use
-        # memory for each thread.
-
-        if drms.memory_limit_hard:
-            # command.append('--mem-per-cpu')
             command.append('--mem')
-            command.append(drms.memory_limit_hard)
+            command.append(_recalculate_memory(drms.memory_limit_hard))
+        elif drms.memory_limit_soft:
+            command.append('--mem')
+            command.append(_recalculate_memory(drms.memory_limit_soft))
 
-        command.append('--time')
-        command.append(drms.time_limit)
+        if drms.time_limit:
+            command.append('--time')
+            command.append(drms.time_limit)
 
         # Propagate none of the environment variables.
 
@@ -207,13 +257,14 @@ def submit(drms, debug=0):
 
         if executable.submit and debug == 0:
 
-            child_process = subprocess.Popen(args=command,
-                                             bufsize=4096,
-                                             stdin=subprocess.PIPE,
-                                             stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE,
-                                             shell=False,
-                                             close_fds=True)
+            child_process = subprocess.Popen(
+                args=command,
+                bufsize=4096,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=False,
+                close_fds=True)
 
             # Although subprocess.communicate() may block when memory buffers
             # have been filled up, not much STDOUT and STDERR is expected from
