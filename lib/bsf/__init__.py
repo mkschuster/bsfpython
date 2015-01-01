@@ -269,6 +269,7 @@ class Analysis(object):
         keys = self.runnable_dict.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
         for key in keys:
+            assert isinstance(key, str)
             output += '{}    Key: {!r} Runnable: {!r}\n'.format(indent, key, self.runnable_dict[key])
             runnable = self.runnable_dict[key]
             assert isinstance(runnable, Runnable)
@@ -276,6 +277,7 @@ class Analysis(object):
 
         output += '{}  Python List of Sample objects:\n'.format(indent)
         for sample in self.samples:
+            assert isinstance(sample, Sample)
             output += '{}    Sample name: {!r} file_path: {!r}\n'.format(indent, sample.name, sample.file_path)
 
         if self.collection:
@@ -673,6 +675,7 @@ class Analysis(object):
         # Pickle all Runnable objects.
 
         for key in self.runnable_dict.keys():
+            assert isinstance(key, str)
             self.runnable_dict[key].to_pickler_path()
 
         # Submit all Executable objects of all Distributed Resource Management System objects.
@@ -680,13 +683,12 @@ class Analysis(object):
         submit = 0
 
         for drms in self.drms_list:
-
+            assert isinstance(drms, DRMS)
             if drms_name:
                 if drms_name == drms.name:
                     submit += 1
                 else:
                     continue
-
             drms.submit(debug=self.debug)
 
             if self.debug:
@@ -887,6 +889,31 @@ class Default(object):
     global_file_path = '~/.bsfpython.ini'
     global_file_path = os.path.expanduser(path=global_file_path)
     global_file_path = os.path.expandvars(path=global_file_path)
+
+    @staticmethod
+    def get_absolute_path(file_path, default_path=None):
+        """Return an absolute file path.
+
+        Expand an eventual user part i.e. on UNIX ~ or ~user and
+        expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        Check if an absolute path has been provided, if not,
+        automatically prepend default directory paths.
+
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param default_path: Default absolute path
+        @type default_path: str | unicode
+        @return: Absolute path
+        @rtype: str | unicode
+        """
+
+        absolute_path = os.path.expanduser(path=file_path)
+        absolute_path = os.path.expandvars(path=absolute_path)
+
+        if default_path and not os.path.isabs(absolute_path):
+            absolute_path = os.path.join(default_path, absolute_path)
+
+        return absolute_path
 
     @staticmethod
     def get_global_default():
@@ -1695,6 +1722,7 @@ class DRMS(object):
         output += '{}  executables:\n'.format(indent)
 
         for executable in self.executables:
+            assert isinstance(executable, Executable)
             output += executable.trace(level=level + 2)
 
         return output
@@ -1875,8 +1903,10 @@ class Command(object):
         output += '{}  options:\n'.format(indent)
 
         for key in self.options.keys():
+            assert isinstance(key, str)
             output += '{}    key: {!r} Argument objects:\n'.format(indent, key)
             for argument in self.options[key]:
+                assert isinstance(argument, Argument)
                 output += argument.trace(level=level + 2)
 
         # List all arguments
@@ -1885,6 +1915,7 @@ class Command(object):
 
         i = 0
         for argument in self.arguments:
+            assert isinstance(argument, str)
             output += '{}    {:2d}: {!r}\n'.format(indent, i, argument)
             i += 1
 
@@ -1913,6 +1944,7 @@ class Command(object):
 
         if argument.key in self.options:
             arguments_list = self.options[argument.key]
+            assert isinstance(arguments_list, list)
         else:
             arguments_list = list()
             self.options[argument.key] = arguments_list
@@ -2105,8 +2137,11 @@ class Command(object):
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
+            assert isinstance(key, str)
             options_list = self.options[key]
+            assert isinstance(options_list, list)
             for argument in options_list:
+                assert isinstance(argument, Argument)
                 if isinstance(argument, SwitchLong):
                     command_line.append('--{}'.format(argument.key))
                 elif isinstance(argument, SwitchShort):
@@ -2130,6 +2165,7 @@ class Command(object):
         # Add all arguments.
 
         for argument in self.arguments:
+            assert isinstance(argument, str)
             command_line.append(str(argument))
 
         # Expand a subordinate command, if defined.
@@ -2157,8 +2193,11 @@ class Command(object):
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
+            assert isinstance(key, str)
             options_list = self.options[key]
+            assert isinstance(options_list, list)
             for argument in options_list:
+                assert isinstance(argument, Argument)
                 if isinstance(argument, SwitchLong):
                     command_line += ' --{}'.format(argument.key)
                 elif isinstance(argument, SwitchShort):
@@ -2178,6 +2217,7 @@ class Command(object):
         # Add all arguments.
 
         for argument in self.arguments:
+            assert isinstance(argument, str)
             command_line += ' '
             command_line += argument
 
@@ -2278,6 +2318,7 @@ class Executable(Command):
                             format(runnable_name, analysis.project_name))
 
         runnable = analysis.runnable_dict[runnable_name]
+        assert isinstance(runnable, Runnable)
         executable = cls(name=runnable.name, program=Runnable.runner_script)
         executable.set_configuration(configuration=analysis.configuration, section=runnable.code_module)
         executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
@@ -2413,6 +2454,7 @@ class Executable(Command):
 
         i = 0
         for dependency in self.dependencies:
+            assert isinstance(dependency, str)
             output += '{}    {:2d} {!r}\n'.format(indent, i, dependency)
             i += 1
 
@@ -2747,12 +2789,14 @@ class Runnable(object):
         keys = self.file_path_dict.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
         for key in keys:
+            assert isinstance(key, str)
             output += '{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.file_path_dict[key])
 
         output += '{}  Python dict of Executable objects:\n'.format(indent)
         keys = self.executable_dict.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
         for key in keys:
+            assert isinstance(key, str)
             output += '{}    Key: {!r} Executable: {!r}\n'.format(indent, key, self.executable_dict[key])
             executable = self.executable_dict[key]
             assert isinstance(executable, Executable)
@@ -2786,6 +2830,7 @@ class Runnable(object):
         """
 
         executable = self.executable_dict[name]
+        assert isinstance(executable, Executable)
         child_return_code = Runnable.run(executable=executable)
 
         if child_return_code > 0:
