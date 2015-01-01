@@ -45,6 +45,8 @@ class IlluminaToBam(Analysis):
     """The C{IlluminaToBam} class represents the logic to convert Illumina BCL to a BAM or SAM files.
 
     Attributes:
+    @cvar drms_name_illumina_to_bam: C{DRMS.name} for the C{IlluminaToBam} C{Analysis} stage
+    @type drms_name_illumina_to_bam: str
     @ivar illumina_run_folder: File path to an I{Illumina Run Folder}
     @type illumina_run_folder: str | unicode
     @ivar intensity_directory: File path to the I{Intensities} directory,
@@ -69,6 +71,8 @@ class IlluminaToBam(Analysis):
     @ivar force: Force processing of incomplete Illumina Run Folders
     @type force: bool
     """
+
+    drms_name_illumina_to_bam = 'illumina_to_bam'
 
     @classmethod
     def from_config_file_path(cls, config_path):
@@ -451,7 +455,7 @@ class IlluminaToBam(Analysis):
         super(IlluminaToBam, self).run()
 
         itb_drms = DRMS.from_analysis(
-            name='illumina_to_bam',
+            name=self.drms_name_illumina_to_bam,
             work_directory=self.project_directory,
             analysis=self)
         self.drms_list.append(itb_drms)
@@ -634,6 +638,8 @@ class BamIndexDecoder(Analysis):
     sample-specific BAM files.
 
     Attributes:
+    @cvar drms_name_bam_index_decoder: C{DRMS.name} for the C{BamIndexDecoder} C{Analysis} stage
+    @type drms_name_bam_index_decoder: str
     @ivar library_path: Library annotation file path
     @type library_path: str | unicode
     @ivar sequences_directory: BSF sequences directory
@@ -649,6 +655,8 @@ class BamIndexDecoder(Analysis):
     @ivar force: Force de-multiplexing with a Library Annotation sheet failing validation
     @type force: bool
     """
+
+    drms_name_bam_index_decoder = 'bam_index_decoder'
 
     @classmethod
     def from_config_file_path(cls, config_path):
@@ -929,7 +937,7 @@ class BamIndexDecoder(Analysis):
             self.classpath_picard = default.classpath_picard
 
         bid_drms = DRMS.from_analysis(
-            name='bam_index_decoder',
+            name=self.drms_name_bam_index_decoder,
             work_directory=self.project_directory,
             analysis=self)
         self.drms_list.append(bid_drms)
