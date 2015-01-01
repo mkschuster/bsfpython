@@ -27,7 +27,7 @@ A package of classes and methods supporting executable programs and scripts.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from bsf import Command, Executable
+from bsf import Analysis, Command, Executable
 
 
 class Bowtie1(Executable):
@@ -45,7 +45,7 @@ class Bowtie1(Executable):
         @type analysis: Analysis
         """
 
-        # assert isinstance(analysis, Analysis)
+        assert isinstance(analysis, Analysis)
 
         super(Bowtie1, self).__init__(name=name, program='bowtie')
 
@@ -67,7 +67,7 @@ class Bowtie2(Executable):
         @type analysis: Analysis
         """
 
-        # assert isinstance(analysis, Analysis)
+        assert isinstance(analysis, Analysis)
 
         super(Bowtie2, self).__init__(name=name, program='bowtie2')
 
@@ -92,6 +92,8 @@ class BWA(Executable):
         @param analysis: C{Analysis}
         @type analysis: Analysis
         """
+
+        assert isinstance(analysis, Analysis)
 
         super(BWA, self).__init__(name=name, program='bwa', sub_command=Command(command='mem'))
 
@@ -123,7 +125,7 @@ class Cuffdiff(Executable):
         @type analysis: Analysis
         """
 
-        # assert isinstance(analysis, Analysis)
+        assert isinstance(analysis, Analysis)
 
         super(Cuffdiff, self).__init__(name=name, program='cuffdiff')
 
@@ -161,7 +163,7 @@ class Cufflinks(Executable):
         @type analysis: Analysis
         """
 
-        # assert isinstance(analysis, Analysis)
+        assert isinstance(analysis, Analysis)
 
         super(Cufflinks, self).__init__(name=name, program='cufflinks')
 
@@ -204,7 +206,7 @@ class Cuffmerge(Executable):
         # Although this seems rather successful, so far, the runnable option is not ideal.
         # Maybe the DRMS object should supply a mechanism to execute via the BSF Runner script.
 
-        # assert isinstance(analysis, Analysis)
+        assert isinstance(analysis, Analysis)
 
         super(Cuffmerge, self).__init__(name=name, program='bsf_run_rnaseq_cuffmerge.py')
 
@@ -213,7 +215,7 @@ class Cuffmerge(Executable):
 
         # TODO: Should this be refactored so that the bsf_run_rnaseq_cuffmerge.py script can be used from a DRMS or
         # Executable object?
-        self.add_option_long(key='runnable', value='Cuffmerge')
+        self.add_option_long(key='runnable', value='cuffmerge')
 
         # Set default Cuffmerge options.
 
@@ -241,7 +243,7 @@ class TopHat(Executable):
         @type analysis: Analysis
         """
 
-        # assert isinstance(analysis, Analysis)
+        assert isinstance(analysis, Analysis)
 
         super(TopHat, self).__init__(name=name, program='tophat2')
 
@@ -275,7 +277,7 @@ class Macs14(Executable):
         @type analysis: Analysis
         """
 
-        # assert isinstance(analysis, Analysis)
+        assert isinstance(analysis, Analysis)
 
         super(Macs14, self).__init__(name=name, program='macs14')
 
@@ -305,6 +307,8 @@ class Macs2Bdgcmp(Executable):
         @type analysis: Analysis
         """
 
+        assert isinstance(analysis, Analysis)
+
         super(Macs2Bdgcmp, self).__init__(name=name, program='macs2', sub_command=Command(command='bdgcmp'))
 
         # The options have to be set for the 'bdgcmp' sub-command.
@@ -331,7 +335,7 @@ class Macs2Callpeak(Executable):
         @type analysis: Analysis
         """
 
-        # assert isinstance(analysis, Analysis)
+        assert isinstance(analysis, Analysis)
 
         super(Macs2Callpeak, self).__init__(name=name, program='macs2', sub_command=Command(command='callpeak'))
 
@@ -362,7 +366,7 @@ class FastQC(Executable):
         @type analysis: Analysis
         """
 
-        # assert isinstance(analysis, Analysis)
+        assert isinstance(analysis, Analysis)
 
         super(FastQC, self).__init__(name=name, program='fastqc')
 
