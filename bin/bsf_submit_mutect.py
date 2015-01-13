@@ -91,7 +91,7 @@ name_space = argument_parser.parse_args()
 
 # TODO: Load the Sample Annotation sheet and comparison sheets.
 
-analysis = Analysis.from_config_file_path(cls=name_space.configuration, config_path=name_space.configuration)
+analysis = Analysis.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.debug:
     analysis.debug = name_space.debug
@@ -243,7 +243,7 @@ for key in key_list:
         snpeff_stats=prefix_somatic + '_snpeff_summary.html',
         annotated_vcf=prefix_somatic + '_annotated.vcf',
         annotated_idx=prefix_somatic + '_annotated.vcf.idx',
-        annotated_csv=prefix_somatic + '_annotated.csv')
+        annotated_tsv=prefix_somatic + '_annotated.tsv')
 
     # Somatic variant calling-specific pickler_dict
 
@@ -353,7 +353,7 @@ for key in key_list:
     for interval in include_intervals_list:
         sub_command.add_option_long(key='intervals', value=interval)
 
-    # TODO: Should this use the option --assumeIdenticalSamples to just concatenate the VCFs?
+    sub_command.add_switch_long(key='assumeIdenticalSamples')  # TODO: Is this option really required?
     sub_command.add_option_long(key='variant', value=file_path_somatic['mutect_vcf'])
     sub_command.add_option_long(key='variant', value=file_path_somatic['indel_vcf'])
     sub_command.add_option_long(key='out', value=file_path_somatic['combined_vcf'])
@@ -442,7 +442,7 @@ for key in key_list:
         sub_command.add_option_long(key='intervals', value=interval)
 
     sub_command.add_option_long(key='variant', value=file_path_somatic['annotated_vcf'])
-    sub_command.add_option_long(key='out', value=file_path_somatic['annotated_csv'])
+    sub_command.add_option_long(key='out', value=file_path_somatic['annotated_tsv'])
     sub_command.add_switch_long(key='allowMissingData')
     sub_command.add_switch_long(key='showFiltered')
     # Set of standard VCF fields.
@@ -503,9 +503,9 @@ for key in key_list:
 
     # Only submit this Executable if the final result file does not exist.
     if (os.path.exists(
-            os.path.join(analysis.genome_directory, file_path_somatic['annotated_csv']))
+            os.path.join(analysis.genome_directory, file_path_somatic['annotated_tsv']))
         and os.path.getsize(
-            os.path.join(analysis.genome_directory, file_path_somatic['annotated_csv']))):
+            os.path.join(analysis.genome_directory, file_path_somatic['annotated_tsv']))):
         vc_run_somatic.submit = False
 
     # TODO: Set dependencies on sample-level processing in case this gets moved into the VariantCalling module.

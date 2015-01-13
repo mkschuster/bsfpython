@@ -143,8 +143,8 @@ def run_gatk_variant_to_table():
     :rtype: None
     """
 
-    if os.path.exists(pickler_dict['file_path_dict']['annotated_csv']) \
-            and os.path.getsize(pickler_dict['file_path_dict']['annotated_csv']):
+    if os.path.exists(pickler_dict['file_path_dict']['annotated_tsv']) \
+            and os.path.getsize(pickler_dict['file_path_dict']['annotated_tsv']):
         return
 
     run_gatk_variant_annotator()
