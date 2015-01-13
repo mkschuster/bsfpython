@@ -2839,6 +2839,8 @@ class Runnable(object):
         elif child_return_code < 0:
             raise Exception('[{}] Child process {!r} received signal {}.'.
                             format(datetime.datetime.now().isoformat(), executable.name, -child_return_code))
+        else:
+            return
 
     @property
     def pickler_path(self):
