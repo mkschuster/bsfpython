@@ -69,7 +69,7 @@ class Bowtie2(Executable):
 
         assert isinstance(analysis, Analysis)
 
-        super(Bowtie2, self).__init__(name=name, program='bowtie2')
+        super(Bowtie2, self).__init__(name=name, program='bsf_chipseq_run_bowtie2.bash')
 
         section = analysis.configuration.section_from_instance(self)
         self.set_configuration(configuration=analysis.configuration, section=section)
@@ -309,7 +309,10 @@ class Macs2Bdgcmp(Executable):
 
         assert isinstance(analysis, Analysis)
 
-        super(Macs2Bdgcmp, self).__init__(name=name, program='macs2', sub_command=Command(command='bdgcmp'))
+        super(Macs2Bdgcmp, self).__init__(
+            name=name,
+            program='bsf_chipseq_run_macs2.bash',
+            sub_command=Command(command='bdgcmp'))
 
         # The options have to be set for the 'bdgcmp' sub-command.
         section = analysis.configuration.section_from_instance(self)
@@ -337,7 +340,10 @@ class Macs2Callpeak(Executable):
 
         assert isinstance(analysis, Analysis)
 
-        super(Macs2Callpeak, self).__init__(name=name, program='macs2', sub_command=Command(command='callpeak'))
+        super(Macs2Callpeak, self).__init__(
+            name=name,
+            program='bsf_chipseq_run_macs2.bash',
+            sub_command=Command(command='callpeak'))
 
         # The options have to be set for the 'callpeak' sub-command.
         section = analysis.configuration.section_from_instance(self)
