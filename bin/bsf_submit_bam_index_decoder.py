@@ -69,6 +69,12 @@ argument_parser.add_argument(
     required=False,
     type=str)
 
+argument_parser.add_argument(
+    '--mode',
+    help='HiSeq run mode i.e. high (high-output) or rapid (rapid run)',
+    required=False,
+    type=str)
+
 name_space = argument_parser.parse_args()
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
@@ -82,6 +88,14 @@ if name_space.debug:
 
 if name_space.project_name:
     bid.project_name = name_space.project_name
+
+if name_space.mode:
+    if name_space.mode == 'high':
+        bid.lanes = int(8)
+    elif name_space.mode == 'rapid':
+        bid.lanes = int(2)
+    else:
+        raise Exception("Unknown output mode " + name_space.mode)
 
 if name_space.library_path:
     bid.library_path = name_space.library_path

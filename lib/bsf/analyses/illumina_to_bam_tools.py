@@ -652,6 +652,8 @@ class BamIndexDecoder(Analysis):
     @type classpath_illumina2bam: str | unicode
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
     @type classpath_picard: str | unicode
+    @ivar lanes: Number of lanes on the flow cell
+    @type lanes: int
     @ivar force: Force de-multiplexing with a Library Annotation sheet failing validation
     @type force: bool
     """
@@ -696,7 +698,7 @@ class BamIndexDecoder(Analysis):
                  output_directory=None, project_directory=None, genome_directory=None, e_mail=None, debug=0,
                  drms_list=None, collection=None, comparisons=None, samples=None, library_path=None,
                  sequences_directory=None, samples_directory=None, experiment_directory=None,
-                 classpath_illumina2bam=None, classpath_picard=None, force=False):
+                 classpath_illumina2bam=None, classpath_picard=None, lanes=8, force=False):
         """Initialise a C{BamIndexDecoder} object.
 
         @param configuration: C{Configuration}
@@ -739,6 +741,8 @@ class BamIndexDecoder(Analysis):
         @type classpath_illumina2bam: str | unicode
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: str | unicode
+        @param lanes: Number of lanes on the flow cell
+        @type lanes: int
         @param force: Force de-multiplexing with a Library Annotation sheet failing validation
         @type force: bool
         """
@@ -790,6 +794,8 @@ class BamIndexDecoder(Analysis):
         else:
             self.classpath_picard = str()
 
+        self.lanes = lanes
+
         self.force = force
 
     def set_configuration(self, configuration, section):
@@ -836,6 +842,11 @@ class BamIndexDecoder(Analysis):
             self.classpath_picard = configuration.config_parser.get(
                 section=section,
                 option='classpath_picard')
+
+        if configuration.config_parser.has_option(section=section, option='lanes'):
+            self.lanes = configuration.config_parser.getint(
+                section=section,
+                option='lanes')
 
         if configuration.config_parser.has_option(section=section, option='force'):
             self.force = configuration.config_parser.getboolean(
@@ -916,7 +927,7 @@ class BamIndexDecoder(Analysis):
 
         library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=self.library_path)
 
-        validation_messages = library_annotation_sheet.validate()
+        validation_messages = library_annotation_sheet.validate(lanes=self.lanes)
 
         if validation_messages:
             if self.force:

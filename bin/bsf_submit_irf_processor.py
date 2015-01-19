@@ -72,6 +72,12 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
+    '--mode',
+    help='HiSeq run mode i.e. high (high-output) or rapid (rapid run)',
+    required=False,
+    type=str)
+
+argument_parser.add_argument(
     '--loop',
     action='store_true',
     help='loop until a RTAComplete.txt file has been copied by the Illumina Real-Time Analysis (RTA) software')
@@ -100,10 +106,10 @@ if name_space.irf:
 
 if name_space.loop:
     # If the --loop option has been set, wait until RTAComplete.txt has been copied.
-    loop_counter = 1
+    loop_counter = int(1)
     while 1:
         print '[{}] Loop {}:'.format(datetime.datetime.now().isoformat(), loop_counter)
-        loop_counter += 1
+        loop_counter += int(1)
         try:
             itb.run()
         except IlluminaRunFolderNotComplete as exception:
@@ -135,6 +141,14 @@ bid.project_name = itb.project_name
 
 if name_space.debug:
     bid.debug = name_space.debug
+
+if name_space.mode:
+    if name_space.mode == 'high':
+        bid.lanes = int(8)
+    elif name_space.mode == 'rapid':
+        bid.lanes = int(2)
+    else:
+        raise Exception("Unknown output mode " + name_space.mode)
 
 if name_space.library_path:
     bid.library_path = name_space.library_path

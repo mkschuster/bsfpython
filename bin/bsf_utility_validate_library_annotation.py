@@ -42,6 +42,13 @@ argument_parser.add_argument(
     type=int)
 
 argument_parser.add_argument(
+    '--mode',
+    default='high',
+    help='HiSeq run mode i.e. high (high-output) or rapid (rapid run)',
+    required=False,
+    type=str)
+
+argument_parser.add_argument(
     'library_path',
     help='library annotation sheet (*.csv) file path')
 
@@ -49,7 +56,14 @@ name_space = argument_parser.parse_args()
 
 library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=name_space.library_path)
 
-messages = library_annotation_sheet.validate()
+if name_space.mode == 'high':
+    lanes = int(8)
+elif name_space.mode == 'rapid':
+    lanes = int(2)
+else:
+    raise Exception("Unknown output mode " + name_space.mode)
+
+messages = library_annotation_sheet.validate(lanes=lanes)
 
 if messages:
     warnings.warn('\n' + messages)
