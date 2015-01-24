@@ -40,6 +40,12 @@ fi
 declare prefix="chipseq_macs2_${1}"
 declare chromosome_sizes="${2}"
 
+# Create a temporary directory for sorting as the default one may not be big enough.
+
+declare temporary_directory="${prefix}/temporary"
+mkdir -p "${temporary_directory}" || exit 1;
+declare -x TMPDIR="${temporary_directory}";
+
 # Convert the following MACS2 bedGraph files into the BigWig format.
 # prefix_control_lambda.bdg
 # prefix_treat_pileup.bdg
@@ -200,6 +206,7 @@ fi
 
 
 # NAME_peaks.bed
+# This file seems obsolete in version 2.1.0.
 
 if [ -f "./${prefix}/${prefix}_peaks.bed" ]; then
 
@@ -214,6 +221,32 @@ if [ -f "./${prefix}/${prefix}_peaks.bed" ]; then
         || exit 1
 
     bedToBigBed \
+        "./${prefix}/${prefix}_peaks.txt" \
+        "${chromosome_sizes}" \
+        "./${prefix}/${prefix}_peaks.bb" \
+        || exit 1
+
+    rm "./${prefix}/${prefix}_peaks.txt" || exit 1
+#   rm "./${prefix}/${prefix}_peaks.bed" || exit 1
+
+fi
+
+
+# NAME_peaks.narrowPeak
+
+if [ -f "./${prefix}/${prefix}_peaks.narrowPeak" ]; then
+
+    echo "$(date) bedToBigBed: ${prefix}_peaks.narrowPeak" || exit 1
+    echo "$(date) bedToBigBed: ${prefix}_peaks.narrowPeak" 1>&2 || exit 1
+
+    grep --extended-regexp --invert-match '^track|^browser' \
+        "./${prefix}/${prefix}_peaks.narrowPeak" \
+        | sort -k1,1 -k2,2n \
+        | perl -e 'while (<>) { chomp; my @fields = split q{ }; $fields[4] = 0; print join(qq{\t}, @fields), qq{\n}; }' \
+        | bedClip 'stdin' "${chromosome_sizes}" "./${prefix}/${prefix}_peaks.txt" \
+        || exit 1
+
+    bedToBigBed -type=bed6+4 \
         "./${prefix}/${prefix}_peaks.txt" \
         "${chromosome_sizes}" \
         "./${prefix}/${prefix}_peaks.bb" \
@@ -249,5 +282,7 @@ if [ -f "./${prefix}/${prefix}_summits.bed" ]; then
 #   rm "./${prefix}/${prefix}_summits.bed" || exit 1
 
 fi
+
+rm -R "${temporary_directory}" || exit 1;
 
 exit 0
