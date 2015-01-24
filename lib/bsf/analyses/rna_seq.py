@@ -594,7 +594,6 @@ class Tuxedo(Analysis):
                 # via biomaRt functions in the R script.
                 # process_cufflinks.add_option_long(key='biomart-data-set', value='mmusculus_gene_ensembl)
                 process_cufflinks.add_option_long(key='sample', value=replicate_key)
-                process_cufflinks.add_option_long(key='genome-directory', value=self.genome_directory)
 
     def _create_cuffmerge_cuffdiff_jobs(self):
         """Create a Cuffmerge and a Cuffdiff process for each comparison.
@@ -780,9 +779,6 @@ class Tuxedo(Analysis):
             process_cuffdiff.add_option_long(
                 key='comparison-name',
                 value=key)
-            process_cuffdiff.add_option_long(
-                key='genome-directory',
-                value=self.genome_directory)
             process_cuffdiff.add_option_long(
                 key='gtf-file',
                 value=self.transcriptome_gtf)
@@ -1374,8 +1370,8 @@ class Tuxedo(Analysis):
         output += '<th>Density Plot with Replicates - Isoforms</th>\n'
         output += '<th>Box Plot without Replicates - Genes</th>\n'
         output += '<th>Box Plot with Replicates - Genes</th>\n'
-        # output += '<th>Box Plot without Replicates - Isoforms</th>\n'
-        # output += '<th>Box Plot with Replicates - Isoforms</th>\n'
+        output += '<th>Box Plot without Replicates - Isoforms</th>\n'
+        output += '<th>Box Plot with Replicates - Isoforms</th>\n'
         output += '<th>Scatter Matrix Plot - Genes</th>\n'
         output += '<th>Scatter Matrix Plot - Isoforms</th>\n'
         output += '<th>Dendrogram Plot</th>\n'
@@ -1473,18 +1469,17 @@ class Tuxedo(Analysis):
 
             # Box Plots for Isoforms with and without Replicates
 
-            if 0:
-                output += '<td><a href="./{}/{}_isoforms_box_wo_replicates.pdf">'.format(prefix, prefix)
-                output += '<img alt="Box Plot without Replicates - Isoforms - {}" ' \
-                          'src="./{}/{}_isoforms_box_wo_replicates.png" height="80" width="80" />'. \
-                    format(key, prefix, prefix)
-                output += '</a></td>\n'
+            output += '<td><a href="./{}/{}_isoforms_box_wo_replicates.pdf">'.format(prefix, prefix)
+            output += '<img alt="Box Plot without Replicates - Isoforms - {}" ' \
+                      'src="./{}/{}_isoforms_box_wo_replicates.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
+            output += '</a></td>\n'
 
-                output += '<td><a href="./{}/{}_isoforms_box_w_replicates.pdf">'.format(prefix, prefix)
-                output += '<img alt="Box Plot with Replicates - Isoforms - {}" ' \
-                          'src="./{}/{}_isoforms_box_w_replicates.png" height="80" width="80" />'. \
-                    format(key, prefix, prefix)
-                output += '</a></td>\n'
+            output += '<td><a href="./{}/{}_isoforms_box_w_replicates.pdf">'.format(prefix, prefix)
+            output += '<img alt="Box Plot with Replicates - Isoforms - {}" ' \
+                      'src="./{}/{}_isoforms_box_w_replicates.png" height="80" width="80" />'. \
+                format(key, prefix, prefix)
+            output += '</a></td>\n'
 
             # Scatter Matrix Plot for Genes and Isoforms
 
