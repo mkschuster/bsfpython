@@ -33,6 +33,7 @@ import string
 
 from bsf import Analysis, Configuration, Default, defaults, DRMS, Executable
 from bsf.annotation import AnnotationSheet, TuxedoSamplePairSheet
+from bsf.data import PairedReads, Sample
 from bsf.executables import Cuffdiff, Cufflinks, Cuffmerge, TopHat
 
 
@@ -170,6 +171,24 @@ class Tuxedo(Analysis):
         if configuration.config_parser.has_option(section=section, option='genome_fasta'):
             self.genome_fasta = configuration.config_parser.get(section=section, option='genome_fasta')
 
+    def _calculate_comparisons(self):
+        """Calculate the comparisons on the basis of the sample annotation sheet alone.
+        An all-against-all sample comparison gets configured.
+        """
+
+        # Without a comparison file path, simply add all Sample objects from the Collection.
+        self.samples.extend(self.collection.get_all_samples())
+
+        # Create a global comparison by adding all samples under their sample name as group name.
+
+        comparison_groups = list()
+        for sample in self.samples:
+            assert isinstance(sample, Sample)
+            # Add a tuple of group (i.e. sample) name and a Python list of the Sample object.
+            comparison_groups.append((sample.name, [sample]))
+
+        self.comparisons['global'] = comparison_groups
+
     def _read_comparisons(self, cmp_file):
         """Read an C{AnnotationSheet} CSV file specifying comparisons from disk.
 
@@ -201,7 +220,7 @@ class Tuxedo(Analysis):
 
         # TODO: Adjust by introducing a new class RNASeqComparisonSheet(AnnotationSheet) in this module?
         for row_dict in annotation_sheet.row_dicts:
-
+            assert isinstance(row_dict, dict)
             # In addition to defining samples, allow also the definition of groups in comparison files.
             # If the row dictionary has a 'Group' key, then the Sample in the same row gets added to the group.
             # So, 'ProcessedRunFolder','Project','Sample','Group' defines the groups, while ...
@@ -233,6 +252,7 @@ class Tuxedo(Analysis):
                     # Also expand each Python list of Sample objects to get all those Sample objects
                     # that this Analysis needs considering.
                     for sample in group_samples:
+                        assert isinstance(sample, Sample)
                         if self.debug > 1:
                             print '  {} Sample name: {!r} file_path:{!r}'.format(prefix, sample.name, sample.file_path)
                             # print sample.trace(1)
@@ -274,7 +294,11 @@ class Tuxedo(Analysis):
         if not self.genome_version:
             raise Exception('A Tuxedo analysis requires a genome_version configuration option.')
 
-        if self.cmp_file:
+        if self.cmp_file and self.cmp_file == '*samples*':
+            # The special file name *samples* creates the comparisons on the basis of an
+            # all-against-all sample comparison.
+            self._calculate_comparisons()
+        elif self.cmp_file:
             # A comparison file path has been provided.
             # Expand an eventual user part i.e. on UNIX ~ or ~user and
             # expand any environment variables i.e. on UNIX ${NAME} or $NAME
@@ -293,6 +317,7 @@ class Tuxedo(Analysis):
             self._read_comparisons(cmp_file=self.cmp_file)
         else:
             # Without a comparison file path, simply add all Sample objects from the Collection.
+            # This means that only the initial pipeline stages, but not the comparison stage gets run.
             self.samples.extend(self.collection.get_all_samples())
 
         # Experimentally, sort the Python list of Sample objects by the Sample name.
@@ -394,7 +419,7 @@ class Tuxedo(Analysis):
         self.drms_list.append(process_cufflinks_drms)
 
         for sample in self.samples:
-
+            assert isinstance(sample, Sample)
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
@@ -409,7 +434,7 @@ class Tuxedo(Analysis):
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
             for replicate_key in replicate_keys:
-
+                assert isinstance(replicate_key, str)
                 # Create a new rnaseq_tophat Executable, which is run via the rnaseq_run_tophat Executable below.
 
                 tophat = TopHat(
@@ -447,7 +472,7 @@ class Tuxedo(Analysis):
                 reads2 = list()
 
                 for paired_reads in replicate_dict[replicate_key]:
-
+                    assert isinstance(paired_reads, PairedReads)
                     if self.debug > 0:
                         print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
 
@@ -629,7 +654,7 @@ class Tuxedo(Analysis):
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
-
+            assert isinstance(key, str)
             # Create a new rnaseq_cuffmerge Executable.
 
             cuffmerge = Cuffmerge(
@@ -687,13 +712,14 @@ class Tuxedo(Analysis):
             cuffdiff_labels = list()
 
             for group_name, group_samples in self.comparisons[key]:
-
+                assert isinstance(group_name, str)
+                assert isinstance(group_samples, list)
                 cuffdiff_labels.append(group_name)
                 alignments_list = list()
                 cuffdiff_alignments.append(alignments_list)
 
                 for sample in group_samples:
-
+                    assert isinstance(sample, Sample)
                     # bsf.data.Sample.get_all_paired_reads returns a Python dict of
                     # Python str key and Python list of Python list objects
                     # of bsf.data.PairedReads objects.
@@ -704,6 +730,7 @@ class Tuxedo(Analysis):
                     replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
                     for replicate_key in replicate_keys:
+                        assert isinstance(key, str)
                         # Add the Cufflinks assembled transcripts to the Cuffmerge manifest.
                         transcripts_path = os.path.join(
                             self.genome_directory,
@@ -736,6 +763,7 @@ class Tuxedo(Analysis):
 
             # Add the TopHat aligned BAM files per point as Cuffdiff arguments.
             for alignments_list in cuffdiff_alignments:
+                assert isinstance(alignments_list, list)
                 cuffdiff.arguments.append(string.join(words=alignments_list, sep=','))
 
             # Create a new rnaseq_run_cuffdiff Executable.
@@ -976,7 +1004,7 @@ class Tuxedo(Analysis):
         track_output += '\n'
 
         for sample in self.samples:
-
+            assert isinstance(sample, Sample)
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
@@ -991,7 +1019,7 @@ class Tuxedo(Analysis):
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
             for replicate_key in replicate_keys:
-
+                assert isinstance(replicate_key, str)
                 # TopHat produces accepted_hits.bam, deletions.bb,
                 # insertions.bb and junctions.bb files.
 
@@ -1248,6 +1276,7 @@ class Tuxedo(Analysis):
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
+            assert isinstance(key, str)
             prefix = 'rnaseq_process_cuffdiff_{}'.format(key)
 
             output += '<tr>\n'
@@ -1295,7 +1324,7 @@ class Tuxedo(Analysis):
                 sample_pair_sheet = TuxedoSamplePairSheet.from_file_path(file_path=sample_pair_path)
 
                 for row_dict in sample_pair_sheet.row_dicts:
-
+                    assert isinstance(row_dict, dict)
                     output += '<tr>\n'
                     output += '<td></td>'  # Comparison
                     output += '<td colspan="3"><strong>{}</strong> versus <strong>{}</strong></td>\n'. \
@@ -1324,7 +1353,7 @@ class Tuxedo(Analysis):
         output += '<tbody>\n'
 
         for key in keys:
-
+            assert isinstance(key, str)
             prefix = 'rnaseq_process_cuffdiff_{}'.format(key)
 
             output += '<tr>\n'
@@ -1383,7 +1412,7 @@ class Tuxedo(Analysis):
         output += '<tbody>\n'
 
         for key in keys:
-
+            assert isinstance(key, str)
             prefix = 'rnaseq_process_cuffdiff_{}'.format(key)
 
             output += '<tr>\n'
@@ -1545,7 +1574,7 @@ class Tuxedo(Analysis):
                 sample_pair_sheet = TuxedoSamplePairSheet.from_file_path(file_path=sample_pair_path)
 
                 for row_dict in sample_pair_sheet.row_dicts:
-
+                    assert isinstance(row_dict, dict)
                     output += '<tr>\n'
 
                     output += '<td></td>\n'
