@@ -186,6 +186,10 @@ class RunInformation(object):
 
             # <ApplicationName>HiSeq Control Software</ApplicationName>
             # <ApplicationVersion>2.0.12.0</ApplicationVersion>
+            # <ApplicationVersion>2.2.58</ApplicationVersion>
+            #
+            # <ApplicationName>MiSeq Control Software</ApplicationName>
+            # <ApplicationVersion>2.5.0.5</ApplicationVersion>
             #
             # <Reads>
             #   <Read Number="1" NumCycles="100" IsIndexedRead="N" />
@@ -349,9 +353,9 @@ class RunInformation(object):
         """Get the read structure for the Picard ExtractIlluminaBarcodes module.
 
         Codes:
-        T ... Template
-        B ... Barcode
-        S ... Skip
+        I{T} ... Template
+        I{B} ... Barcode
+        I{S} ... Skip
         @return: Read structure for Picard ExtractIlluminaBarcodes
         @rtype: str
         """
@@ -362,6 +366,7 @@ class RunInformation(object):
         read_structure = str()
 
         for read in self.reads:
+            assert isinstance(read, RunInformationRead)
             read_structure += str(read.cycles)
             if read.index:
                 read_structure += 'B'
@@ -369,6 +374,27 @@ class RunInformation(object):
                 read_structure += 'T'
 
         return read_structure
+
+    def get_read_structure_list(self):
+        """Get the read structure list.
+
+        Codes:
+        B ... Base
+        I ... Index
+        @return: Python list of Python str (read structure) objects
+        @rtype: list[str]
+        """
+
+        read_structure_list = list()
+
+        for read in self.reads:
+            assert isinstance(read, RunInformationRead)
+            if read.index:
+                read_structure_list.append('{}I'.format(read.cycles))
+            else:
+                read_structure_list.append('{}B'.format(read.cycles))
+
+        return read_structure_list
 
 
 class RunParameters(object):
@@ -392,9 +418,7 @@ class RunParameters(object):
         @rtype: RunParameters
         """
 
-        # file_name = os.path.basename(file_path)
-
-        return RunParameters(file_path=file_path, element_tree=ElementTree(file=file_path))
+        return cls(file_path=file_path, element_tree=ElementTree(file=file_path))
 
     def __init__(self, file_path=None, element_tree=None):
         """Initialise a C{RunParameters} object.
@@ -415,123 +439,228 @@ class RunParameters(object):
         else:
             self.element_tree = ElementTree()
 
+        self._run_parameters_version = None
+
+    @property
+    def get_run_parameters_version(self):
+        """Get the run parameters version of a C{RunParameters} object.
+
+        Returns an empty string for I{HiSeq Control Software} or the text representation of the
+        I{<RunParameters>/<RunParametersVersion>} element for I{MiSeq Control Software}.
+        @return: Run parameters version or an empty string
+        @rtype: str
+        """
+
+        if self._run_parameters_version is None:
+            element = self.element_tree.getroot().find('RunParametersVersion')
+            if element is None:
+                self._run_parameters_version = str()
+            else:
+                self._run_parameters_version = element.text
+
+        return self._run_parameters_version
+
     @property
     def get_experiment_name(self):
         """Get the experiment name of a C{RunParameters} object.
 
-        Get the text representation of the C{<Setup>/<ExperimentName>} value.
+        Returns the text representation of the I{<RunParameters>/<Setup>/<ExperimentName>} element for
+        I{HiSeq Control Software} or the I{<RunParameters>/<ExperimentName>} element for
+        I{MiSeq Control Software}.
         @return: Experiment name e.g BSF_0001
         @rtype: str
         """
 
-        return self.element_tree.getroot().find('Setup/ExperimentName').text
+        if self.get_run_parameters_version == 'MiSeq_1_1':
+            # MiSeq 1_1 run
+            return self.element_tree.getroot().find('ExperimentName').text
+        else:
+            # HiSeq run or else
+            return self.element_tree.getroot().find('Setup/ExperimentName').text
 
     @property
     def get_flow_cell_barcode(self):
         """Get the flow-cell barcode of a C{RunParameters} object.
 
-        Get the text representation of the C{<Setup>/<Barcode>} value.
+        Returns the text representation of the I{<RunParameters>/<Setup>/<Barcode>} element for
+        I{HiSeq Control Software} or the I{<RunParameters>/<Barcode>} element for
+        I{MiSeq Control Software}.
         @return: Flow-cell barcode e.g BSF_0001
         @rtype: str
         """
 
-        return self.element_tree.getroot().find('Setup/Barcode').text
+        if self.get_run_parameters_version == 'MiSeq_1_1':
+            # MiSeq 1_1 run
+            return self.element_tree.getroot().find('Barcode').text
+        else:
+            # HiSeq run or else
+            return self.element_tree.getroot().find('Setup/Barcode').text
 
     @property
     def get_flow_cell_type(self):
         """Get the flow cell of a C{RunParameters} object.
 
-        Get the text representation of the C{<Setup>/<Flowcell>} value.
+        Returns the text representation of the I{<RunParameters>/<Setup>/<Flowcell>} element for
+        I{HiSeq Control Software} or the I{<RunParameters>/<Flowcell>} element for
+        I{MiSeq Control Software}.
         @return: Flow-cell type
         @rtype: str
         """
 
-        return self.element_tree.getroot().find('Setup/Flowcell').text
+        if self.get_run_parameters_version == 'MiSeq_1_1':
+            # MiSeq 1_1 run
+            # The MiSeq has no concept of Flowcell chemistry version, only a <ReagentKitVersion>.
+            return str()
+        else:
+            # HiSeq run or else
+            return self.element_tree.getroot().find('Setup/Flowcell').text
 
     @property
     def get_position(self):
         """Get the flow-cell position of a C{RunParameters} object.
 
-        Get the text representation of the C{<Setup>/<FCPosition>} value.
-        Since the element does not exist in older versions an empty string may be returned.
+        Returns the text representation of the I{<RunParameters>/<Setup>/<FCPosition>} element for
+        I{HiSeq Control Software} or an empty string for
+        I{MiSeq Control Software}.
+        Since the element does not exist in older I{HiSeq Control Software} versions an empty string may be returned.
         @return: Flow-cell position e.g. A or B
         @rtype: str
         """
 
-        element = self.element_tree.getroot().find('Setup/FCPosition')
-        if element is not None:
-            return element.text
-        else:
+        if self.get_run_parameters_version == 'MiSeq_1_1':
+            # MiSeq 1_1 run
+            # The MiSeq has no concept of Flowcell chemistry version, only a <ReagentKitVersion>.
             return str()
+        else:
+            # HiSeq run or else
+            element = self.element_tree.getroot().find('Setup/FCPosition')
+            if element is not None:
+                return element.text
+            else:
+                return str()
 
     @property
     def get_run_identifier(self):
         """Get the run identifier of a C{RunParameters} object.
 
-        Get the text representation of the C{<Setup>/<RunID>} value.
+        Returns the text representation of the I{<RunParameters>/<Setup>/<RunID>} element for
+        I{HiSeq Control Software} or the I{<RunParameters>/<RunID>} element for
+        I{MiSeq Control Software}.
         @return: Run identifier
         @rtype: str
         """
 
-        return self.element_tree.getroot().find('Setup/RunID').text
+        if self.get_run_parameters_version == 'MiSeq_1_1':
+            # MiSeq 1_1 run
+            return self.element_tree.getroot().find('RunID').text
+        else:
+            # HiSeq run or else
+            return self.element_tree.getroot().find('Setup/RunID').text
 
     @property
     def get_read1(self):
         """Get the read 1 cycle number of a C{RunParameters} object.
 
-        Get the text representation of the C{<Setup>/<Read1>} value.
+        Returns the text representation of the I{<RunParameters>/<Setup>/<Read1>} element for
+        I{HiSeq Control Software} or an empty string for
+        I{MiSeq Control Software}.
         @return: Number of cycles in read 1
         @rtype: str
+        @deprecated The more scalable option is getting read information via the
+            C{RunInformation.reads} instance variable.
         """
 
-        return self.element_tree.getroot().find('Setup/Read1').text
+        if self.get_run_parameters_version == 'MiSeq_1_1':
+            # MiSeq 1_1 run
+            return str()
+        else:
+            # HiSeq run or else
+            element = self.element_tree.getroot().find('Setup/Read1')
+            if element is not None:
+                return element.text
+            else:
+                return str()
 
     @property
     def get_read2(self):
         """Get the read 2 cycle number of a C{RunParameters} object.
 
-        Get the text representation of the C{<Setup>/<Read2>} value.
+        Returns the text representation of the I{<RunParameters>/<Setup>/<Read2>} element for
+        I{HiSeq Control Software} or an empty string for
+        I{MiSeq Control Software}.
+        Not every run has a read 2 defined so that an empty string may be returned.
         @return: Number of cycles in read 2
         @rtype: str
+        @deprecated The more scalable option is getting read information via the
+            C{RunInformation.reads} instance variable.
         """
 
-        return self.element_tree.getroot().find('Setup/Read2').text
+        if self.get_run_parameters_version == 'MiSeq_1_1':
+            # MiSeq 1_1 run
+            return str()
+        else:
+            # HiSeq run or else
+            element = self.element_tree.getroot().find('Setup/Read2')
+            if element is not None:
+                return element.text
+            else:
+                return str()
 
     @property
     def get_index_read1(self):
         """Get the index read 1 cycle number of a C{RunParameters} object.
 
-        Normally, this corresponds to the text representation of the C{<IndexRead1>} element,
-        while older implementations of Illumina runParameters.xml have only an C{<IndexRead>} element.
+        Returns the text representation of the I{<RunParameters>/<Setup>/<IndexRead1>} element for
+        I{HiSeq Control Software} or an empty string for
+        I{MiSeq Control Software}.
+        Older implementations of the I{HiSeq Control Software} have only a
+        I{<RunParameters>/<Setup>/<IndexRead>} element.
         @return: Number of cycles in index read 1
         @rtype: str
+        @deprecated The more scalable option is getting read information via the
+            C{RunInformation.reads} instance variable.
         """
 
-        element = self.element_tree.getroot().find('Setup/IndexRead1')
-        if element is not None:
-            return element.text
-
-        element = self.element_tree.getroot().find('Setup/IndexRead')
-        if element is not None:
-            return element.text
-        else:
+        if self.get_run_parameters_version == 'MiSeq_1_1':
+            # MiSeq 1_1 run
             return str()
+        else:
+            # HiSeq run or else
+            element = self.element_tree.getroot().find('Setup/IndexRead1')
+            if element is not None:
+                return element.text
+
+            element = self.element_tree.getroot().find('Setup/IndexRead')
+            if element is not None:
+                return element.text
+            else:
+                return str()
 
     @property
     def get_index_read2(self):
         """Get the index read 2 cycle number of a C{RunParameters} object.
 
-        Normally, this corresponds to the text representation of the C{<IndexRead2>} element,
-        while older implementations of Illumina runParameters.xml have only an C{<IndexRead>} element.
+        Returns the text representation of the I{<RunParameters>/<Setup>/<IndexRead2>} element for
+        I{HiSeq Control Software} or an empty string for
+        I{HiSeq Control Software}.
+        Older implementations of the I{HiSeq Control Software} have only a
+        I{<RunParameters>/<Setup>/<IndexRead>} element.
         @return: Number of cycles in index read 2
         @rtype: str
+        @deprecated The more scalable option is getting read information via the
+            C{RunInformation.reads} instance variable.
         """
 
-        element = self.element_tree.getroot().find('Setup/IndexRead2')
-        if element is not None:
-            return element.text
-        else:
+        if self.get_run_parameters_version == 'MiSeq_1_1':
+            # MiSeq 1_1 run
             return str()
+        else:
+            # HiSeq run or else
+            element = self.element_tree.getroot().find('Setup/IndexRead2')
+            if element is not None:
+                return element.text
+            else:
+                return str()
 
 
 class RunFolder(object):

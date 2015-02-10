@@ -76,7 +76,7 @@ if name_space.debug:
     itb.debug = name_space.debug
 
 if name_space.irf:
-    itb.illumina_run_folder = name_space.irf
+    itb.run_directory = name_space.irf
 
 if name_space.force:
     itb.force = name_space.force
@@ -87,7 +87,7 @@ itb.run()
 itb.submit(drms_name=name_space.stage)
 
 print 'IlluminaToBamTools IlluminaToBam Analysis'
-print 'Project name:         ', itb.project_name
-print 'Project directory:    ', itb.project_directory
-print 'Illumina Run Folder:  ', itb.illumina_run_folder
-print 'Experiment directory: ', itb.experiment_directory
+print 'Project name:           ', itb.project_name
+print 'Project directory:      ', itb.project_directory
+print 'Illumina run directory: ', itb.run_directory
+print 'Experiment directory:   ', itb.experiment_directory

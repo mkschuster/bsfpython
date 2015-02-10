@@ -44,7 +44,7 @@ argument_parser.add_argument(
 argument_parser.add_argument(
     '--mode',
     default='high',
-    help='HiSeq run mode i.e. high (high-output) or rapid (rapid run)',
+    help='HiSeq run mode i.e. "high" (high-output) or "rapid" (rapid run) or "miseq" for a MiSeq run',
     required=False,
     type=str)
 
@@ -60,6 +60,8 @@ if name_space.mode == 'high':
     lanes = int(8)
 elif name_space.mode == 'rapid':
     lanes = int(2)
+elif name_space.mode == 'miseq':
+    lanes = int(1)
 else:
     raise Exception("Unknown output mode " + name_space.mode)
 

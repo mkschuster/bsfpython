@@ -47,8 +47,8 @@ class IlluminaToBam(Analysis):
     Attributes:
     @cvar drms_name_illumina_to_bam: C{DRMS.name} for the C{IlluminaToBam} C{Analysis} stage
     @type drms_name_illumina_to_bam: str
-    @ivar illumina_run_folder: File path to an I{Illumina Run Folder}
-    @type illumina_run_folder: str | unicode
+    @ivar run_directory: File path to an I{Illumina Run Folder}
+    @type run_directory: str | unicode
     @ivar intensity_directory: File path to the I{Intensities} directory,
         defaults to I{illumina_run_folder/Data/Intensities}
     @type intensity_directory: str | unicode
@@ -114,7 +114,7 @@ class IlluminaToBam(Analysis):
                  project_directory=None, genome_directory=None,
                  e_mail=None, debug=0, drms_list=None,
                  collection=None, comparisons=None, samples=None,
-                 illumina_run_folder=None, intensity_directory=None, basecalls_directory=None,
+                 run_directory=None, intensity_directory=None, basecalls_directory=None,
                  experiment_name=None, sequencing_centre=None,
                  sequences_directory=None, experiment_directory=None,
                  classpath_illumina2bam=None, classpath_picard=None,
@@ -149,8 +149,8 @@ class IlluminaToBam(Analysis):
         @type comparisons: dict
         @param samples: Python C{list} of C{Sample} objects
         @type samples: list
-        @param illumina_run_folder: File path to an I{Illumina Run Folder}
-        @type illumina_run_folder: str | unicode
+        @param run_directory: File path to an I{Illumina Run Folder}
+        @type run_directory: str | unicode
         @param intensity_directory: File path to the I{Intensities} directory,
             defaults to I{illumina_run_folder/Data/Intensities}
         @type intensity_directory: str | unicode
@@ -191,10 +191,10 @@ class IlluminaToBam(Analysis):
 
         # Sub-class specific ...
 
-        if illumina_run_folder:
-            self.illumina_run_folder = illumina_run_folder
+        if run_directory:
+            self.run_directory = run_directory
         else:
-            self.illumina_run_folder = str()
+            self.run_directory = str()
 
         if intensity_directory:
             self.intensity_directory = intensity_directory
@@ -258,7 +258,7 @@ class IlluminaToBam(Analysis):
         # Get Illumina Run Folder information.
 
         if configuration.config_parser.has_option(section=section, option='illumina_run_folder'):
-            self.illumina_run_folder = configuration.config_parser.get(
+            self.run_directory = configuration.config_parser.get(
                 section=section,
                 option='illumina_run_folder')
 
@@ -330,26 +330,26 @@ class IlluminaToBam(Analysis):
         # Check if an absolute path has been provided, if not,
         # automatically prepend standard BSF directory paths.
 
-        if not self.illumina_run_folder:
-            raise Exception('An Illumina Run Folder name or file path has not been defined.')
+        if not self.run_directory:
+            raise Exception('An Illumina run directory or file path has not been defined.')
 
-        self.illumina_run_folder = os.path.expanduser(path=self.illumina_run_folder)
-        self.illumina_run_folder = os.path.expandvars(path=self.illumina_run_folder)
+        self.run_directory = os.path.expanduser(path=self.run_directory)
+        self.run_directory = os.path.expandvars(path=self.run_directory)
 
-        if not os.path.isabs(self.illumina_run_folder):
-            self.illumina_run_folder = os.path.join(Default.absolute_runs_illumina(), self.illumina_run_folder)
+        if not os.path.isabs(self.run_directory):
+            self.run_directory = os.path.join(Default.absolute_runs_illumina(), self.run_directory)
 
         # Check that the Illumina Run Folder exists.
 
-        if not os.path.isdir(self.illumina_run_folder):
+        if not os.path.isdir(self.run_directory):
             raise Exception(
-                'The Illumina Run Folder {!r} does not exist.'.format(self.illumina_run_folder))
+                'The Illumina run directory {!r} does not exist.'.format(self.run_directory))
 
         # Check that the Illumina Run Folder is complete.
 
-        if not os.path.exists(path=os.path.join(self.illumina_run_folder, 'RTAComplete.txt')) and not self.force:
+        if not os.path.exists(path=os.path.join(self.run_directory, 'RTAComplete.txt')) and not self.force:
             raise IlluminaRunFolderNotComplete(
-                'The Illumina Run Folder {!r} is not complete.'.format(self.illumina_run_folder))
+                'The Illumina run directory {!r} is not complete.'.format(self.run_directory))
 
         # Define an 'Intensities' directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
@@ -362,9 +362,9 @@ class IlluminaToBam(Analysis):
             intensity_directory = os.path.expandvars(intensity_directory)
             intensity_directory = os.path.expanduser(intensity_directory)
             if not os.path.isabs(intensity_directory):
-                intensity_directory = os.path.join(self.illumina_run_folder, intensity_directory)
+                intensity_directory = os.path.join(self.run_directory, intensity_directory)
         else:
-            intensity_directory = os.path.join(self.illumina_run_folder, 'Data', 'Intensities')
+            intensity_directory = os.path.join(self.run_directory, 'Data', 'Intensities')
 
         # Check that the Intensities directory exists.
 
@@ -393,7 +393,7 @@ class IlluminaToBam(Analysis):
             raise Exception(
                 'The BaseCalls directory {!r} does not exist.'.format(basecalls_directory))
 
-        irf = RunFolder.from_file_path(file_path=self.illumina_run_folder)
+        irf = RunFolder.from_file_path(file_path=self.run_directory)
 
         # The experiment name (e.g. BSF_0000) is used as the prefix for archive BAM files.
         # Read it from the configuration file or from the
@@ -467,7 +467,7 @@ class IlluminaToBam(Analysis):
 
             file_path_dict = dict(
                 temporary_directory=string.join((prefix, 'temporary'), sep='_'),
-                illumina_directory=self.illumina_run_folder,  # contains full path information
+                illumina_directory=self.run_directory,  # contains full path information
                 sequences_directory=self.sequences_directory,  # contains full path information
                 experiment_directory=self.experiment_directory,  # contains full path information
                 sorted_bam=os.path.join(
@@ -511,7 +511,7 @@ class IlluminaToBam(Analysis):
                 # The default is to use the directory two up from the INTENSITY_DIR.
                 sub_command.add_option_pair(
                     key='RUN_FOLDER',
-                    value=self.illumina_run_folder)
+                    value=self.run_directory)
             sub_command.add_option_pair(
                 key='INTENSITY_DIR',
                 value=intensity_directory)

@@ -94,6 +94,8 @@ if name_space.mode:
         bid.lanes = int(8)
     elif name_space.mode == 'rapid':
         bid.lanes = int(2)
+    elif name_space.mode == 'miseq':
+        bid.lanes = int(1)
     else:
         raise Exception("Unknown output mode " + name_space.mode)
 

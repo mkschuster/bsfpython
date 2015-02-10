@@ -53,27 +53,9 @@ if not os.path.isabs(file_path):
 
 irf = RunFolder.from_file_path(file_path=file_path)
 
-run_format = list()
-
-data_read1 = irf.run_parameters.get_read1
-if data_read1 and data_read1 != '0':
-    run_format.append('{}B'.format(data_read1))
-
-index_read1 = irf.run_parameters.get_index_read1
-if index_read1 and index_read1 != '0':
-    run_format.append('{}I'.format(index_read1))
-
-index_read2 = irf.run_parameters.get_index_read2
-if index_read2 and index_read2 != '0':
-    run_format.append('{}I'.format(index_read2))
-
-data_read2 = irf.run_parameters.get_read2
-if data_read2 and data_read2 != '0':
-    run_format.append('{}B'.format(data_read2))
-
 print 'Flow Cell Identifier: {}_{}'.format(irf.run_parameters.get_experiment_name,
                                            irf.run_parameters.get_flow_cell_barcode)
-print 'Read Structure: {}'.format(string.join(words=run_format, sep=' + '))
+print 'Read Structure: {}'.format(string.join(words=irf.run_information.get_read_structure_list(), sep=' + '))
 
 file_path_start = os.path.join(file_path, 'First_Base_Report.htm')
 if os.path.exists(file_path_start):

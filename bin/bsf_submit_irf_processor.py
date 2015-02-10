@@ -34,6 +34,7 @@ import time
 
 from bsf import Default
 from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder, IlluminaToBam, IlluminaRunFolderNotComplete
+from bsf.illumina import RunFolder
 
 
 argument_parser = ArgumentParser(
@@ -73,7 +74,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--mode',
-    help='HiSeq run mode i.e. high (high-output) or rapid (rapid run)',
+    help='HiSeq run mode i.e. "high" (high-output) or "rapid" (rapid run) or "miseq" for a MiSeq run',
     required=False,
     type=str)
 
@@ -100,14 +101,14 @@ if name_space.debug:
     itb.debug = name_space.debug
 
 if name_space.irf:
-    itb.illumina_run_folder = name_space.irf
+    itb.run_directory = name_space.irf
 
 # Do the work.
 
 if name_space.loop:
     # If the --loop option has been set, wait until RTAComplete.txt has been copied.
     loop_counter = int(1)
-    while 1:
+    while True:
         print '[{}] Loop {}:'.format(datetime.datetime.now().isoformat(), loop_counter)
         loop_counter += int(1)
         try:
@@ -124,10 +125,10 @@ else:
 itb.submit(drms_name=name_space.stage)
 
 print 'IlluminaToBamTools IlluminaToBam Analysis'
-print 'Project name:         ', itb.project_name
-print 'Project directory:    ', itb.project_directory
-print 'Illumina Run Folder:  ', itb.illumina_run_folder
-print 'Experiment directory: ', itb.experiment_directory
+print 'Project name:           ', itb.project_name
+print 'Project directory:      ', itb.project_directory
+print 'Illumina run directory: ', itb.run_directory
+print 'Experiment directory:   ', itb.experiment_directory
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
@@ -147,8 +148,12 @@ if name_space.mode:
         bid.lanes = int(8)
     elif name_space.mode == 'rapid':
         bid.lanes = int(2)
+    elif name_space.mode == 'miseq':
+        bid.lanes = int(1)
     else:
         raise Exception("Unknown output mode " + name_space.mode)
+else:
+    bid.lanes = RunFolder.from_file_path(file_path=itb.run_directory).run_information.flow_cell_layout.lane_count
 
 if name_space.library_path:
     bid.library_path = name_space.library_path
