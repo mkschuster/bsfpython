@@ -34,9 +34,6 @@ import shutil
 from bsf import Runnable
 
 
-sample_names = list()
-
-
 def run_gatk_combine_gvcfs(runnable):
     """Run the I{GATK CombineGVCFs} step.
 
@@ -180,60 +177,6 @@ def run_gatk_variant_annotator(runnable):
     runnable.run_executable(name='gatk_variant_annotator')
 
 
-def run_gatk_select_variants(runnable):
-    """Run the I{GATK SelectVariants} step.
-
-    @param runnable: C{Runnable}
-    @type runnable: Runnable
-    """
-
-    # Check that all files of this function have already been created.
-
-    complete = True
-    for sample_name in sample_names:
-        if not os.path.exists(runnable.file_path_dict['sample_vcf_' + sample_name]):
-            complete = False
-            break
-    if complete:
-        return
-
-    run_gatk_variant_annotator(runnable=runnable)
-
-    # The GATK SelectVariants step has to be run for each sample name separately.
-
-    for sample_name in sample_names:
-        if os.path.exists(runnable.file_path_dict['sample_vcf_' + sample_name]):
-            continue
-        runnable.run_executable(name='gatk_select_variants_sample_' + sample_name)
-
-
-def run_gatk_variants_to_table(runnable):
-    """Run the I{GATK VariantsToTable} step.
-
-    @param runnable: C{Runnable}
-    @type runnable: Runnable
-    """
-
-    # Check that all files of this function have already been created.
-
-    complete = True
-    for sample_name in sample_names:
-        if not os.path.exists(runnable.file_path_dict['sample_csv_' + sample_name]):
-            complete = False
-            break
-    if complete:
-        return
-
-    run_gatk_select_variants(runnable=runnable)
-
-    # The GATK SelectVariants step has to be run for each sample name separately.
-
-    for sample_name in sample_names:
-        if os.path.exists(runnable.file_path_dict['sample_csv_' + sample_name]):
-            continue
-        runnable.run_executable(name='gatk_variants_to_table_sample_' + sample_name)
-
-
 def run(runnable):
     """Run the the C{Runnable}.
 
@@ -252,19 +195,10 @@ def run(runnable):
             if exception.errno != errno.EEXIST:
                 raise
 
-    # Get all sample names, from file_path_dict keys that start with 'sample_vcf_'.
-
-    keys = runnable.file_path_dict.keys()
-    keys.sort(cmp=lambda x, y: cmp(x, y))
-
-    for key in keys:
-        if key[:11] == 'sample_vcf_':
-            sample_names.append(key[11:])
-
     # Run the chain of executables back up the function hierarchy so that
     # dependencies on temporarily created files become simple to manage.
 
-    run_gatk_variants_to_table(runnable=runnable)
+    run_gatk_variant_annotator(runnable=runnable)
 
     # Remove the temporary directory and everything within it.
 
