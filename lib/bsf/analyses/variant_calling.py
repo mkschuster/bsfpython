@@ -31,7 +31,7 @@ from pickle import Pickler, HIGHEST_PROTOCOL
 import string
 import warnings
 
-from bsf import Analysis, Command, Configuration, Default, DRMS, Executable, Runnable
+from bsf import Analysis, Command, Configuration, Default, defaults, DRMS, Executable, Runnable
 from bsf.annotation import SampleAnnotationSheet
 from bsf.data import PairedReads
 from bsf.executables import BWA
@@ -41,6 +41,16 @@ class VariantCallingGATK(Analysis):
     """The C{VariantCallingGATK} class represents the logic to run the Genome Analysis Toolkit (GATK).
 
     Attributes:
+    @cvar drms_name_align_lane: C{DRMS.name} for the lane alignment C{Analysis} stage
+    @type drms_name_align_lane: str
+    @cvar drms_name_process_lane: C{DRMS.name} for the lane processing C{Analysis} stage
+    @type drms_name_process_lane: str
+    @cvar drms_name_process_sample: C{DRMS.name} for the sample processing C{Analysis} stage
+    @type drms_name_process_sample: str
+    @cvar drms_name_process_cohort: C{DRMS.name} for the cohort processing C{Analysis} stage
+    @type drms_name_process_cohort: str
+    @cvar drms_name_split_cohort: C{DRMS.name} for the cohort splitting C{Analysis} stage
+    @type drms_name_split_cohort: str
     @ivar replicate_grouping: Group individual C{PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool
     @ivar comparison_path: Comparison file
@@ -88,6 +98,12 @@ class VariantCallingGATK(Analysis):
     @ivar classpath_snpeff: snpEff tool Java Archive (JAR) class path directory
     @type classpath_snpeff: str | unicode
     """
+
+    drms_name_align_lane = 'variant_calling_align_lane'
+    drms_name_process_lane = 'variant_calling_process_lane'
+    drms_name_process_sample = 'variant_calling_process_sample'
+    drms_name_process_cohort = 'variant_calling_process_cohort'
+    drms_name_split_cohort = 'variant_calling_split_cohort'
 
     @classmethod
     def from_config_file_path(cls, config_path):
@@ -350,6 +366,18 @@ class VariantCallingGATK(Analysis):
         else:
             self.classpath_snpeff = str()
 
+    @property
+    def get_gatk_bundle_path(self):
+        """Get the absolute GATK bundle directory C{Default.absolute_gatk_bundle} for the set
+        C{VariantCallingGATK.gatk_bundle_version} and C{VariantCallingGATK.genome_version}.
+
+        @return: Absolute GATK bundle directory
+        @rtype: str | unicode
+        """
+        return Default.absolute_gatk_bundle(
+            gatk_bundle_version=self.gatk_bundle_version,
+            genome_version=self.genome_version)
+
     def set_configuration(self, configuration, section):
         """Set instance variables of a C{VariantCallingGATK} object via a section of a C{Configuration} object.
 
@@ -370,15 +398,9 @@ class VariantCallingGATK(Analysis):
         # Get the genome database.
 
         if configuration.config_parser.has_option(section=section, option='bwa_genome_db'):
-            self.bwa_genome_db = str(configuration.config_parser.get(
+            self.bwa_genome_db = configuration.config_parser.get(
                 section=section,
-                option='bwa_genome_db'))
-            if not os.path.isabs(self.bwa_genome_db):
-                self.bwa_genome_db = os.path.join(
-                    Default.absolute_gatk_bundle(
-                        gatk_bundle_version=self.gatk_bundle_version,
-                        genome_version=self.genome_version),
-                    self.bwa_genome_db)
+                option='bwa_genome_db')
 
         # Read a comparison file.
 
@@ -404,18 +426,7 @@ class VariantCallingGATK(Analysis):
             for file_path in configuration.config_parser.get(
                     section=section,
                     option='accessory_cohort_gvcfs').split(','):
-                file_path = file_path.strip()  # Strip white space around commas.
-                # TODO: Should all files in the configuration section be expanded by user and variables before
-                # testing for an absolute path?
-                if not os.path.isabs(file_path):
-                    file_path = os.path.join(Default.absolute_projects(), file_path)
-                if os.path.exists(file_path):
-                    self.accessory_cohort_gvcfs.append(file_path)
-                else:
-                    raise Exception('The accessory_cohort_gvcf {!r} does not exist.'.format(file_path))
-                # TODO: Should all other files in this configuration section also be checked for their existence?
-                # It would make sense to catch errors early.
-                # TODO: Check the cohorts so that their sample names do not clash.
+                self.accessory_cohort_gvcfs.append(file_path.strip())  # Strip white space around commas.
 
         # Get the skip mark duplicates option.
 
@@ -444,7 +455,7 @@ class VariantCallingGATK(Analysis):
             for annotation in configuration.config_parser.get(
                     section=section,
                     option='vqsr_annotations_indel').split(','):
-                self.vqsr_annotations_indel_list.append(annotation.strip())
+                self.vqsr_annotations_indel_list.append(annotation.strip())  # Strip white space around commas.
 
         # Get the list of annotations for the Variant Quality Score Recalibration (VQSR) for SNPs.
 
@@ -452,17 +463,10 @@ class VariantCallingGATK(Analysis):
             for annotation in configuration.config_parser.get(
                     section=section,
                     option='vqsr_annotations_snp').split(','):
-                self.vqsr_annotations_snp_list.append(annotation.strip())
+                self.vqsr_annotations_snp_list.append(annotation.strip())  # Strip white space around commas.
 
-        self._read_vqsr_configuration(
-            vqsr_resources_dict=self.vqsr_resources_indel_dict,
-            variation_type='indel',
-            gatk_bundle_version=self.gatk_bundle_version)
-
-        self._read_vqsr_configuration(
-            vqsr_resources_dict=self.vqsr_resources_snp_dict,
-            variation_type='snp',
-            gatk_bundle_version=self.gatk_bundle_version)
+        self._read_vqsr_configuration(vqsr_resources_dict=self.vqsr_resources_indel_dict, variation_type='indel')
+        self._read_vqsr_configuration(vqsr_resources_dict=self.vqsr_resources_snp_dict, variation_type='snp')
 
         # Read additionally requested annotation resources for the GATK AnnotateVariants step.
 
@@ -479,13 +483,7 @@ class VariantCallingGATK(Analysis):
                 if configuration.config_parser.has_section(section=resource_section):
                     annotation_list = list()
                     if configuration.config_parser.has_option(section=resource_section, option='file_path'):
-                        file_path = str(configuration.config_parser.get(section=resource_section, option='file_path'))
-                        if not os.path.isabs(file_path):
-                            file_path = os.path.join(
-                                Default.absolute_gatk_bundle(
-                                    gatk_bundle_version=self.gatk_bundle_version,
-                                    genome_version=self.genome_version),
-                                file_path)
+                        file_path = configuration.config_parser.get(section=resource_section, option='file_path')
                     else:
                         raise Exception(
                             "Missing configuration option 'file_path' in configuration section {!r}.".
@@ -496,7 +494,7 @@ class VariantCallingGATK(Analysis):
                         for annotation in configuration.config_parser.get(
                                 section=resource_section,
                                 option='annotations').split(','):
-                            annotation_list.append(annotation.strip())
+                            annotation_list.append(annotation.strip())  # Strip white space around commas.
                     else:
                         raise Exception(
                             "Missing configuration option 'annotations' in configuration section {!r}.".
@@ -514,15 +512,9 @@ class VariantCallingGATK(Analysis):
         # GATK HaplotypeCaller and GenotypeGVCFs steps.
 
         if configuration.config_parser.has_option(section=section, option='known_sites_discovery'):
-            self.known_sites_discovery = str(configuration.config_parser.get(
+            self.known_sites_discovery = configuration.config_parser.get(
                 section=section,
-                option='known_sites_discovery'))
-            if not os.path.isabs(self.known_sites_discovery):
-                self.known_sites_discovery = os.path.join(
-                    Default.absolute_gatk_bundle(
-                        gatk_bundle_version=self.gatk_bundle_version,
-                        genome_version=self.genome_version),
-                    self.known_sites_discovery)
+                option='known_sites_discovery')
 
         # Comma-separated list of VCF files with known variant sites for the
         # GATK RealignerTargetCreator and IndelRealigner steps.
@@ -531,14 +523,7 @@ class VariantCallingGATK(Analysis):
             for file_path in configuration.config_parser.get(
                     section=section,
                     option='known_sites_realignment').split(','):
-                file_path = file_path.strip()  # Strip white space around commas.
-                if not os.path.isabs(file_path):
-                    file_path = os.path.join(
-                        Default.absolute_gatk_bundle(
-                            gatk_bundle_version=self.gatk_bundle_version,
-                            genome_version=self.genome_version),
-                        file_path)
-                self.known_sites_realignment.append(file_path)
+                self.known_sites_realignment.append(file_path.strip())  # Strip white space around commas.
 
         # Comma-separated list of VCF files with known variant sites for the
         # GATK BaseRecalibrator and PrintReads steps.
@@ -547,14 +532,7 @@ class VariantCallingGATK(Analysis):
             for file_path in configuration.config_parser.get(
                     section=section,
                     option='known_sites_recalibration').split(','):
-                file_path = file_path.strip()  # Strip white space around commas.
-                if not os.path.isabs(file_path):
-                    file_path = os.path.join(
-                        Default.absolute_gatk_bundle(
-                            gatk_bundle_version=self.gatk_bundle_version,
-                            genome_version=self.genome_version),
-                        file_path)
-                self.known_sites_recalibration.append(file_path)
+                self.known_sites_recalibration.append(file_path.strip())  # Strip white space around commas.
 
         # Get the list of intervals to exclude.
 
@@ -562,17 +540,9 @@ class VariantCallingGATK(Analysis):
             exclude_intervals = configuration.config_parser.get(
                 section=section,
                 option='exclude_intervals')
-            if exclude_intervals[-10:] == '.intervals' or exclude_intervals[-14:] == '.interval_list':
-                # For Picard-style interval lists prepend the current directory if necessary.
-                if not os.path.isabs(exclude_intervals):
-                    exclude_intervals = os.path.join(os.path.realpath(os.path.curdir), exclude_intervals)
-                if not os.path.exists(exclude_intervals):
-                    raise Exception('Exclude intervals file {!r} does not exist.'.format(exclude_intervals))
-                self.exclude_intervals_list.append(exclude_intervals)
-            else:
-                # For comma-separated interval lists split into components on commas, strip white space
-                # and push them onto the list individually.
-                self.exclude_intervals_list.extend(map(lambda x: x.strip(), exclude_intervals.split(',')))
+            # For comma-separated interval lists split into components on commas, strip white space
+            # and push them onto the list individually.
+            self.exclude_intervals_list.extend(map(lambda x: x.strip(), exclude_intervals.split(',')))
 
         # Get the list of intervals to include.
 
@@ -580,17 +550,9 @@ class VariantCallingGATK(Analysis):
             include_intervals = configuration.config_parser.get(
                 section=section,
                 option='include_intervals')
-            if include_intervals[-10:] == '.intervals' or include_intervals[-14:] == '.interval_list':
-                # For Picard-style interval lists prepend the current directory if necessary.
-                if not os.path.isabs(include_intervals):
-                    include_intervals = os.path.join(os.path.realpath(os.path.curdir), include_intervals)
-                if not os.path.exists(include_intervals):
-                    raise Exception('Include intervals file {!r} does not exist.'.format(include_intervals))
-                self.include_intervals_list.append(include_intervals)
-            else:
-                # For comma-separated interval lists split into components on commas, strip white space and
-                # push them onto the list individually.
-                self.include_intervals_list.extend(map(lambda x: x.strip(), include_intervals.split(',')))
+            # For comma-separated interval lists split into components on commas, strip white space and
+            # push them onto the list individually.
+            self.include_intervals_list.extend(map(lambda x: x.strip(), include_intervals.split(',')))
 
         # Get the down-sample to fraction information.
 
@@ -659,15 +621,13 @@ class VariantCallingGATK(Analysis):
         for row_dict in sas.row_dicts:
             self.add_sample(sample=self.collection.get_sample_from_row_dict(row_dict=row_dict))
 
-    def _read_vqsr_configuration(self, vqsr_resources_dict, variation_type=None, gatk_bundle_version=None):
+    def _read_vqsr_configuration(self, vqsr_resources_dict, variation_type=None):
         """Private method to read variant quality score recalibration (VQSR) configuration information.
 
         @param vqsr_resources_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
         @type vqsr_resources_dict: dict
         @param variation_type: Variation type I{indel} or I{snp}
         @type variation_type: str
-        @param gatk_bundle_version: GATK bundle version
-        @type gatk_bundle_version: str
         """
 
         if variation_type not in ('indel', 'snp'):
@@ -684,6 +644,7 @@ class VariantCallingGATK(Analysis):
                 if config_parser.has_section(section=resource_section):
                     if resource in vqsr_resources_dict:
                         resource_dict = vqsr_resources_dict[resource]
+                        assert isinstance(resource_dict, dict)
                     else:
                         resource_dict = dict()
                         vqsr_resources_dict[resource] = resource_dict
@@ -696,14 +657,7 @@ class VariantCallingGATK(Analysis):
                     if config_parser.has_option(section=resource_section, option='prior'):
                         resource_dict['prior'] = config_parser.get(section=resource_section, option='prior')
                     if config_parser.has_option(section=resource_section, option='file_path'):
-                        file_path = str(config_parser.get(section=resource_section, option='file_path'))
-                        if not os.path.isabs(file_path):
-                            file_path = os.path.join(
-                                Default.absolute_gatk_bundle(
-                                    gatk_bundle_version=gatk_bundle_version,
-                                    genome_version=self.genome_version),
-                                file_path)
-                        resource_dict['file_path'] = file_path
+                        resource_dict['file_path'] = config_parser.get(section=resource_section, option='file_path')
                 else:
                     raise Exception(
                         'Missing configuration section {!r} declared in option {!r} {!r}.'.
@@ -746,16 +700,121 @@ class VariantCallingGATK(Analysis):
         if not self.classpath_snpeff:
             self.classpath_snpeff = default.classpath_snpeff
 
-        # Expand an eventual user part i.e. on UNIX ~ or ~user and
-        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
-        # Check if an absolute path has been provided, if not,
-        # automatically prepend standard directory paths.
+        # Check for absolute paths and adjust if required before checking for existence.
 
-        self.comparison_path = os.path.expanduser(path=self.comparison_path)
-        self.comparison_path = os.path.expandvars(path=self.comparison_path)
+        self.bwa_genome_db = Default.get_absolute_path(
+            file_path=self.bwa_genome_db,
+            default_path=self.get_gatk_bundle_path)
+        if not os.path.exists(path=self.bwa_genome_db):
+            raise Exception("The bwa_genome_db file {!r} does not exist.".format(self.bwa_genome_db))
 
+        temporary_list = list()
+        for file_path in self.accessory_cohort_gvcfs:
+            file_path = Default.get_absolute_path(file_path=file_path, default_path=Default.absolute_projects())
+            if os.path.exists(file_path):
+                temporary_list.append(file_path)
+            else:
+                raise Exception('The accessory_cohort_gvcf file {!r} does not exist.'.format(file_path))
+            # TODO: Check the cohorts so that their sample names do not clash.
+        self.accessory_cohort_gvcfs = temporary_list
+
+        for key in self.annotation_resources_dict.keys():
+            assert isinstance(key, str)
+            file_path, annotation_list = self.annotation_resources_dict[key]
+            assert isinstance(file_path, (str, unicode))
+            assert isinstance(annotation_list, list)
+            file_path = Default.get_absolute_path(file_path=file_path, default_path=self.get_gatk_bundle_path)
+            if os.path.exists(file_path):
+                self.annotation_resources_dict[key] = file_path, annotation_list
+            else:
+                raise Exception('The file path {!r} for annotation resource {!r} does not exist.'.
+                                format(file_path, key))
+
+        if self.known_sites_discovery:
+            self.known_sites_discovery = Default.get_absolute_path(
+                file_path=self.known_sites_discovery,
+                default_path=self.get_gatk_bundle_path)
+            if not os.path.exists(self.known_sites_discovery):
+                raise Exception('The known_sites_discovery file {!r} does not exist.'.
+                                format(self.known_sites_discovery))
+
+        temporary_list = list()
+        for file_path in self.known_sites_realignment:
+            assert isinstance(file_path, (str, unicode))
+            file_path = Default.get_absolute_path(file_path=file_path, default_path=self.get_gatk_bundle_path)
+            if os.path.exists(file_path):
+                temporary_list.append(file_path)
+            else:
+                raise Exception('The file path {!r} for known_sites_realignment does not exist.'.
+                                format(file_path))
+        self.known_sites_realignment = temporary_list
+
+        temporary_list = list()
+        for file_path in self.known_sites_recalibration:
+            assert isinstance(file_path, (str, unicode))
+            file_path = Default.get_absolute_path(file_path=file_path, default_path=self.get_gatk_bundle_path)
+            if os.path.exists(file_path):
+                temporary_list.append(file_path)
+            else:
+                raise Exception('The file path {!r} for known_sites_recalibration does not exist.'.
+                                format(file_path))
+        self.known_sites_recalibration = temporary_list
+
+        for key in self.vqsr_resources_indel_dict:
+            assert isinstance(key, str)
+            resource_dict = self.vqsr_resources_indel_dict[key]
+            assert isinstance(resource_dict, dict)
+            resource_dict['file_path'] = Default.get_absolute_path(
+                file_path=resource_dict['file_path'],
+                default_path=self.get_gatk_bundle_path)
+            if not os.path.exists(resource_dict['file_path']):
+                raise Exception('The file path {!r} for vqsr_resources_indel {!r} does not exist.'.
+                                format(resource_dict['file_path'], key))
+
+        for key in self.vqsr_resources_snp_dict:
+            assert isinstance(key, str)
+            resource_dict = self.vqsr_resources_snp_dict[key]
+            assert isinstance(resource_dict, dict)
+            resource_dict['file_path'] = Default.get_absolute_path(
+                file_path=resource_dict['file_path'],
+                default_path=self.get_gatk_bundle_path)
+            if not os.path.exists(resource_dict['file_path']):
+                raise Exception('The file path {!r} for vqsr_resources_snp {!r} does not exist.'.
+                                format(resource_dict['file_path'], key))
+
+        # Exclude intervals
+
+        temporary_list = list()
+        for interval in self.exclude_intervals_list:
+            if interval[-10:] == '.intervals' or interval[-14:] == '.interval_list':
+                # For Picard-style interval lists prepend the current directory if necessary.
+                if not os.path.isabs(interval):
+                    interval = os.path.join(os.path.realpath(os.path.curdir), interval)
+                if os.path.exists(interval):
+                    temporary_list.append(interval)
+                else:
+                    raise Exception('Exclude intervals file {!r} does not exist.'.format(interval))
+        self.exclude_intervals_list = temporary_list
+
+        # Include intervals
+
+        temporary_list = list()
+        for interval in self.include_intervals_list:
+            if interval[-10:] == '.intervals' or interval[-14:] == '.interval_list':
+                # For Picard-style interval lists prepend the current directory if necessary.
+                if not os.path.isabs(interval):
+                    interval = os.path.join(os.path.realpath(os.path.curdir), interval)
+                if os.path.exists(interval):
+                    temporary_list.append(interval)
+                else:
+                    raise Exception('Include intervals file {!r} does not exist.'.format(interval))
+        self.include_intervals_list = temporary_list
+
+        # The comparison file can be absolute, in the same directory or in the project directory.
         if not os.path.isabs(self.comparison_path) and not os.path.exists(self.comparison_path):
-            self.comparison_path = os.path.join(self.project_directory, self.comparison_path)
+            self.comparison_path = Default.get_absolute_path(
+                file_path=self.comparison_path,
+                default_path=self.project_directory)
 
         # Real comparisons would be required for somatic mutation calling.
         self._read_comparisons(comparison_path=self.comparison_path)
@@ -769,38 +828,44 @@ class VariantCallingGATK(Analysis):
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # bsf_run_bwa.py script.
 
-        vc_align_lane_drms = DRMS.from_analysis(
-            name='variant_calling_align_lane',
+        drms_vc_align_lane = DRMS.from_analysis(
+            name=self.drms_name_align_lane,
             work_directory=self.genome_directory,
             analysis=self)
-        self.drms_list.append(vc_align_lane_drms)
+        self.drms_list.append(drms_vc_align_lane)
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_process_lane Runnable.
 
-        vc_process_lane_drms = DRMS.from_analysis(
-            name='variant_calling_process_lane',
+        drms_vc_process_lane = DRMS.from_analysis(
+            name=self.drms_name_process_lane,
             work_directory=self.genome_directory,
             analysis=self)
-        self.drms_list.append(vc_process_lane_drms)
+        self.drms_list.append(drms_vc_process_lane)
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_process_sample Runnable.
 
-        vc_process_sample_drms = DRMS.from_analysis(
-            name='variant_calling_process_sample',
+        drms_vc_process_sample = DRMS.from_analysis(
+            name=self.drms_name_process_sample,
             work_directory=self.genome_directory,
             analysis=self)
-        self.drms_list.append(vc_process_sample_drms)
+        self.drms_list.append(drms_vc_process_sample)
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_process_cohort Runnable.
 
-        vc_process_cohort_drms = DRMS.from_analysis(
-            name='variant_calling_process_cohort',
+        drms_vc_process_cohort = DRMS.from_analysis(
+            name=self.drms_name_process_cohort,
             work_directory=self.genome_directory,
             analysis=self)
-        self.drms_list.append(vc_process_cohort_drms)
+        self.drms_list.append(drms_vc_process_cohort)
+
+        drms_vc_split_cohort = DRMS.from_analysis(
+            name=self.drms_name_split_cohort,
+            work_directory=self.genome_directory,
+            analysis=self)
+        self.drms_list.append(drms_vc_split_cohort)
 
         vc_process_cohort_dependencies = list()
         vc_process_cohort_replicates = list()
@@ -829,14 +894,14 @@ class VariantCallingGATK(Analysis):
 
                 bwa = BWA(name='variant_calling_bwa_{}'.format(replicate_key), analysis=self)
                 # Instead of adding the BWA Executable to the DRMS, it gets serialised into the pickler_file.
-                # bwa_drms.add_executable(bwa)
+                # bwa_drms.add_executable(executable=bwa)
 
                 bwa_mem = bwa.sub_command
 
                 # Set BWA mem options.
 
                 # Allow as many threads as defined in the corresponding DRMS object.
-                bwa_mem.add_option_short(key='t', value=str(vc_align_lane_drms.threads))
+                bwa_mem.add_option_short(key='t', value=str(drms_vc_align_lane.threads))
                 # Append FASTA/Q comment to SAM output.
                 bwa_mem.add_switch_short(key='C')
                 # Mark shorter split hits as secondary (for Picard compatibility).
@@ -874,22 +939,24 @@ class VariantCallingGATK(Analysis):
                 elif len(reads1) and len(reads2):
                     bwa_mem.arguments.append(string.join(words=reads1, sep=','))
                     bwa_mem.arguments.append(string.join(words=reads2, sep=','))
-                if len(reads2):
+                elif not len(reads1) and len(reads2):
                     warnings.warn('Only second reads, but no first reads have been defined.')
+                else:
+                    warnings.warn('No reads have been defined.')
 
                 file_path_align_lane = dict(
                     # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
-                    # It is currently based on the vc_align_lane_drms.name and replicate_key.
+                    # It is currently based on the drms_vc_align_lane.name and replicate_key.
                     # The script should also be changed to pre-set all file names beforehand.
-                    aligned_bam='{}_{}.bam'.format(vc_align_lane_drms.name, replicate_key),
-                    aligned_bai='{}_{}.bai'.format(vc_align_lane_drms.name, replicate_key),
-                    aligned_md5='{}_{}.bam.md5'.format(vc_align_lane_drms.name, replicate_key))
+                    aligned_bam='{}_{}.bam'.format(drms_vc_align_lane.name, replicate_key),
+                    aligned_bai='{}_{}.bai'.format(drms_vc_align_lane.name, replicate_key),
+                    aligned_md5='{}_{}.bam.md5'.format(drms_vc_align_lane.name, replicate_key))
 
                 # Normally, the bwa object would be pushed onto the drms list.
                 # Experimentally, use Pickler to serialize the Executable object into a file.
 
                 pickler_dict_align_lane = dict()
-                pickler_dict_align_lane['prefix'] = vc_align_lane_drms.name
+                pickler_dict_align_lane['prefix'] = drms_vc_align_lane.name
                 pickler_dict_align_lane['replicate_key'] = replicate_key
                 pickler_dict_align_lane['classpath_gatk'] = self.classpath_gatk
                 pickler_dict_align_lane['classpath_picard'] = self.classpath_picard
@@ -897,7 +964,7 @@ class VariantCallingGATK(Analysis):
 
                 pickler_path = os.path.join(
                     self.genome_directory,
-                    '{}_{}.pkl'.format(vc_align_lane_drms.name, replicate_key))
+                    '{}_{}.pkl'.format(drms_vc_align_lane.name, replicate_key))
                 pickler_file = open(pickler_path, 'wb')
                 pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
                 pickler.dump(obj=pickler_dict_align_lane)
@@ -906,10 +973,10 @@ class VariantCallingGATK(Analysis):
                 # Create a bsf_run_bwa.py job to run the pickled object.
 
                 run_bwa = Executable.from_analysis(
-                    name=string.join(words=(vc_align_lane_drms.name, replicate_key), sep='_'),
+                    name=string.join(words=(drms_vc_align_lane.name, replicate_key), sep='_'),
                     program='bsf_run_bwa.py',
                     analysis=self)
-                vc_align_lane_drms.add_executable(executable=run_bwa)
+                drms_vc_align_lane.add_executable(executable=run_bwa)
 
                 # Only submit this Executable if the final result file does not exist.
                 if (os.path.exists(
@@ -923,22 +990,22 @@ class VariantCallingGATK(Analysis):
                 run_bwa.add_option_long(key='pickler_path', value=pickler_path)
                 run_bwa.add_option_long(key='debug', value=str(self.debug))
 
-                prefix_lane = string.join(words=(vc_process_lane_drms.name, replicate_key), sep='_')
+                prefix_lane = string.join(words=(drms_vc_process_lane.name, replicate_key), sep='_')
 
                 # Lane-specific file paths
 
                 file_path_dict_lane = dict(
                     temporary_directory=prefix_lane + '_temporary',
                     # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
-                    # It is currently based on the vc_align_lane_drms.name and replicate_key.
+                    # It is currently based on the drms_vc_align_lane.name and replicate_key.
                     # The script should also be changed to pre-set all file names beforehand.
-                    aligned_bam='{}_{}.bam'.format(vc_align_lane_drms.name, replicate_key),
-                    aligned_bai='{}_{}.bai'.format(vc_align_lane_drms.name, replicate_key),
-                    aligned_md5='{}_{}.bam.md5'.format(vc_align_lane_drms.name, replicate_key),
+                    aligned_bam='{}_{}.bam'.format(drms_vc_align_lane.name, replicate_key),
+                    aligned_bai='{}_{}.bai'.format(drms_vc_align_lane.name, replicate_key),
+                    aligned_md5='{}_{}.bam.md5'.format(drms_vc_align_lane.name, replicate_key),
                     duplicates_marked_bam=prefix_lane + '_duplicates_marked.bam',
                     duplicates_marked_bai=prefix_lane + '_duplicates_marked.bai',
                     duplicates_marked_md5=prefix_lane + '_duplicates_marked.bam.md5',
-                    duplicate_metrics=prefix_lane + '_duplicate_metrics.csv',
+                    duplicate_metrics=prefix_lane + '_duplicate_metrics.tsv',
                     realigner_targets=prefix_lane + '_realigner.intervals',
                     realigned_bam=prefix_lane + '_realigned.bam',
                     realigned_bai=prefix_lane + '_realigned.bai',
@@ -947,7 +1014,7 @@ class VariantCallingGATK(Analysis):
                     recalibration_plot=prefix_lane + '_recalibration_report.pdf',
                     recalibrated_bam=prefix_lane + '_recalibrated.bam',
                     recalibrated_bai=prefix_lane + '_recalibrated.bai',
-                    alignment_summary_metrics=prefix_lane + '_alignment_summary_metrics.csv')
+                    alignment_summary_metrics=prefix_lane + '_alignment_summary_metrics.tsv')
 
                 # Lane-specific Runnable
 
@@ -1232,6 +1299,9 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_pair(key='INPUT', value=file_path_dict_lane['recalibrated_bam'])
                 sub_command.add_option_pair(key='OUTPUT', value=file_path_dict_lane['alignment_summary_metrics'])
                 sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='ALL_READS')
+                sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='SAMPLE')
+                sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='LIBRARY')
+                sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP')
                 sub_command.add_option_pair(key='REFERENCE_SEQUENCE', value=self.bwa_genome_db)
                 sub_command.add_option_pair(key='TMP_DIR', value=file_path_dict_lane['temporary_directory'])
                 sub_command.add_option_pair(key='VERBOSITY', value='WARNING')
@@ -1247,7 +1317,7 @@ class VariantCallingGATK(Analysis):
                 vc_process_lane = Executable.from_analysis_runnable(
                     analysis=self,
                     runnable_name=runnable_process_lane.name)
-                vc_process_lane_drms.add_executable(vc_process_lane)
+                drms_vc_process_lane.add_executable(executable=vc_process_lane)
 
                 # Only submit this Executable if the final result file does not exist.
                 if (os.path.exists(
@@ -1272,7 +1342,7 @@ class VariantCallingGATK(Analysis):
             #   Picard CollectAlignmentSummaryMetrics
             #   GATK HaplotypeCaller
 
-            prefix_sample = string.join(words=(vc_process_sample_drms.name, sample.name), sep='_')
+            prefix_sample = string.join(words=(drms_vc_process_sample.name, sample.name), sep='_')
 
             file_path_dict_sample = dict(
                 temporary_directory=prefix_sample + '_temporary',
@@ -1282,11 +1352,11 @@ class VariantCallingGATK(Analysis):
                 duplicates_marked_bam=prefix_sample + '_duplicates_marked.bam',
                 duplicates_marked_bai=prefix_sample + '_duplicates_marked.bai',
                 duplicates_marked_md5=prefix_sample + '_duplicates_marked.bam.md5',
-                duplicate_metrics=prefix_sample + '_duplicate_metrics.csv',
+                duplicate_metrics=prefix_sample + '_duplicate_metrics.tsv',
                 realigner_targets=prefix_sample + '_realigner.intervals',
                 realigned_bam=prefix_sample + '_realigned.bam',
                 realigned_bai=prefix_sample + '_realigned.bai',
-                alignment_summary_metrics=prefix_sample + '_alignment_summary_metrics.csv',
+                alignment_summary_metrics=prefix_sample + '_alignment_summary_metrics.tsv',
                 raw_variants_gvcf_vcf=prefix_sample + '_raw_variants_gvcf.vcf',
                 raw_variants_gvcf_idx=prefix_sample + '_raw_variants_gvcf.vcf.idx')
 
@@ -1323,6 +1393,7 @@ class VariantCallingGATK(Analysis):
             for file_path in vc_process_sample_replicates:
                 sub_command.add_option_pair(key='INPUT', value=file_path)
             sub_command.add_option_pair(key='OUTPUT', value=file_path_dict_sample['merged_bam'])
+            sub_command.add_option_pair(key='USE_THREADING', value='true')
             sub_command.add_option_pair(key='COMMENT', value='Merged from the following files:')
             for file_path in vc_process_sample_replicates:
                 sub_command.add_option_pair(key='COMMENT', value=file_path)
@@ -1475,6 +1546,9 @@ class VariantCallingGATK(Analysis):
             sub_command.add_option_pair(key='INPUT', value=file_path_dict_sample['realigned_bam'])
             sub_command.add_option_pair(key='OUTPUT', value=file_path_dict_sample['alignment_summary_metrics'])
             sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='ALL_READS')
+            sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='SAMPLE')
+            sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='LIBRARY')
+            sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP')
             sub_command.add_option_pair(key='REFERENCE_SEQUENCE', value=self.bwa_genome_db)
             sub_command.add_option_pair(key='TMP_DIR', value=file_path_dict_sample['temporary_directory'])
             sub_command.add_option_pair(key='VERBOSITY', value='WARNING')
@@ -1533,7 +1607,7 @@ class VariantCallingGATK(Analysis):
             vc_process_sample = Executable.from_analysis_runnable(
                 analysis=self,
                 runnable_name=runnable_process_sample.name)
-            vc_process_sample_drms.add_executable(vc_process_sample)
+            drms_vc_process_sample.add_executable(executable=vc_process_sample)
 
             # Only submit this Executable if the final result file does not exist.
             if (os.path.exists(
@@ -1558,7 +1632,7 @@ class VariantCallingGATK(Analysis):
         #   GATK ApplyRecalibration for SNPs
         #   GATK ApplyRecalibration for INDELs
 
-        prefix_cohort = string.join(words=(vc_process_cohort_drms.name, self.cohort_name), sep='_')
+        prefix_cohort = string.join(words=(drms_vc_process_cohort.name, self.cohort_name), sep='_')
 
         file_path_dict_cohort = dict(
             temporary_directory=prefix_cohort + '_temporary',
@@ -1598,9 +1672,7 @@ class VariantCallingGATK(Analysis):
             debug=self.debug)
         self.add_runnable(runnable=runnable_process_cohort)
 
-        # It is only required for hierarchically merging samples before GenotypeGVCFs,
-        # if too many samples need processing.
-        # TODO: It would be good to do the merging in three steps.
+        # Hierarchical merging of samples before GenotypeGVCFs processing.
         #
         # First, merge all samples from this analysis project into a project-specific cohort.
         # Ideally, an VariantCallingGATK-specific sub-class of the SampleAnnotationSheet extends it with
@@ -1971,12 +2043,14 @@ class VariantCallingGATK(Analysis):
 
         # Add annotation resources and their corresponding expression options.
         for annotation_resource in self.annotation_resources_dict.keys():
+            assert isinstance(annotation_resource, str)
             if len(self.annotation_resources_dict[annotation_resource][0]) \
                     and len(self.annotation_resources_dict[annotation_resource][1]):
                 sub_command.add_option_long(
                     key=string.join(words=('resource', annotation_resource), sep=':'),
                     value=self.annotation_resources_dict[annotation_resource][0])
                 for annotation in self.annotation_resources_dict[annotation_resource][1]:
+                    assert isinstance(annotation, str)
                     sub_command.add_option_long(
                         key='expression',
                         value=string.join(words=(annotation_resource, annotation), sep='.'))
@@ -1995,27 +2069,42 @@ class VariantCallingGATK(Analysis):
         sub_command.add_option_long(key='snpEffFile', value=file_path_dict_cohort['snpeff_vcf'])
         sub_command.add_option_long(key='out', value=file_path_dict_cohort['annotated_vcf'])
 
-        # Re-process the cohort by sample.
+        # Create an Executable for processing the cohort.
 
-        # TODO: It is no longer possible to pickle this dictionary.
-        # The Runnable has to work off the basis of Executable keys.
-        # pickler_dict_process_cohort['sample_names'] = list()
+        vc_process_cohort = Executable.from_analysis_runnable(
+            analysis=self,
+            runnable_name=runnable_process_cohort.name)
+        drms_vc_process_cohort.add_executable(executable=vc_process_cohort)
+
+        vc_process_cohort.dependencies.extend(vc_process_cohort_dependencies)
+
+        # Re-process and split the cohort by sample.
 
         for sample in self.samples:
 
-            # TODO: It is no longer possible to pickle this dictionary.
-            # The Runnable has to work off the basis of Executable keys.
-            # pickler_dict_process_cohort['sample_names'].append(sample.name)
+            prefix_split = string.join(words=(drms_vc_split_cohort.name, sample.name), sep='_')
+
+            file_path_dict_split = dict(
+                temporary_directory=prefix_split + '_temporary',
+                sample_vcf=prefix_split + '.vcf',
+                sample_idx=prefix_split + '.vcf.idx',
+                sample_tsv=prefix_split + '.tsv')
+
+            runnable_split_cohort = Runnable(
+                name=prefix_split,
+                code_module='bsf.runnables.variant_calling_split_cohort',
+                working_directory=self.genome_directory,
+                file_path_dict=file_path_dict_split,
+                debug=self.debug)
+            self.add_runnable(runnable=runnable_split_cohort)
 
             # Run the GATK SelectVariants step to split multi-sample VCF files into one per sample.
 
-            file_path_dict_cohort['sample_vcf_' + sample.name] = prefix_cohort + '_sample_{}.vcf'.format(sample.name)
-
             java_process = Executable(
-                name='gatk_select_variants_sample_' + sample.name,
+                name='gatk_select_variants',
                 program='java',
                 sub_command=Command(command=str()))
-            runnable_process_cohort.add_executable(executable=java_process)
+            runnable_split_cohort.add_executable(executable=java_process)
 
             java_process.add_switch_short(
                 key='d64')
@@ -2023,10 +2112,10 @@ class VariantCallingGATK(Analysis):
                 key='jar',
                 value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
             java_process.add_switch_short(
-                key='Xmx4G')
+                key='Xmx2G')
             java_process.add_option_pair(
                 key='-Djava.io.tmpdir',
-                value=file_path_dict_cohort['temporary_directory'])
+                value=file_path_dict_split['temporary_directory'])
 
             sub_command = java_process.sub_command
             sub_command.add_option_long(key='analysis_type', value='SelectVariants')
@@ -2037,19 +2126,17 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='intervals', value=interval)
 
             sub_command.add_option_long(key='variant', value=file_path_dict_cohort['annotated_vcf'])
-            sub_command.add_option_long(key='out', value=file_path_dict_cohort['sample_vcf_' + sample.name])
+            sub_command.add_option_long(key='out', value=file_path_dict_split['sample_vcf'])
             sub_command.add_option_long(key='sample_name', value=sample.name)
             sub_command.add_switch_long(key='excludeNonVariants')
 
             # Run the GATK VariantsToTable step.
 
-            file_path_dict_cohort['sample_csv_' + sample.name] = prefix_cohort + '_sample_{}.csv'.format(sample.name)
-
             java_process = Executable(
-                name='gatk_variants_to_table_sample_' + sample.name,
+                name='gatk_variants_to_table',
                 program='java',
                 sub_command=Command(command=str()))
-            runnable_process_cohort.add_executable(executable=java_process)
+            runnable_split_cohort.add_executable(executable=java_process)
 
             java_process.add_switch_short(
                 key='d64')
@@ -2057,10 +2144,10 @@ class VariantCallingGATK(Analysis):
                 key='jar',
                 value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
             java_process.add_switch_short(
-                key='Xmx4G')
+                key='Xmx2G')
             java_process.add_option_pair(
                 key='-Djava.io.tmpdir',
-                value=file_path_dict_cohort['temporary_directory'])
+                value=file_path_dict_split['temporary_directory'])
 
             sub_command = java_process.sub_command
             sub_command.add_option_long(key='analysis_type', value='VariantsToTable')
@@ -2070,8 +2157,8 @@ class VariantCallingGATK(Analysis):
             for interval in self.include_intervals_list:
                 sub_command.add_option_long(key='intervals', value=interval)
 
-            sub_command.add_option_long(key='variant', value=file_path_dict_cohort['sample_vcf_' + sample.name])
-            sub_command.add_option_long(key='out', value=file_path_dict_cohort['sample_csv_' + sample.name])
+            sub_command.add_option_long(key='variant', value=file_path_dict_split['sample_vcf'])
+            sub_command.add_option_long(key='out', value=file_path_dict_split['sample_tsv'])
             sub_command.add_switch_long(key='allowMissingData')
             sub_command.add_switch_long(key='showFiltered')
             # Set of standard VCF fields.
@@ -2104,18 +2191,167 @@ class VariantCallingGATK(Analysis):
 
             # Automatically add all fields defined for the Variant Annotator resources, above.
             for annotation_resource in self.annotation_resources_dict.keys():
+                assert isinstance(annotation_resource, str)
                 if len(self.annotation_resources_dict[annotation_resource][0]) \
                         and len(self.annotation_resources_dict[annotation_resource][1]):
                     for annotation in self.annotation_resources_dict[annotation_resource][1]:
+                        assert isinstance(annotation, str)
                         sub_command.add_option_long(
                             key='fields',
                             value=string.join(words=(annotation_resource, annotation), sep='.'))
 
-        # Create an Executable for processing the cohort.
+            # Create an Executable for splitting the cohort.
 
-        vc_process_cohort = Executable.from_analysis_runnable(
-            analysis=self,
-            runnable_name=runnable_process_cohort.name)
-        vc_process_cohort_drms.add_executable(vc_process_cohort)
+            vc_split_cohort = Executable.from_analysis_runnable(
+                analysis=self,
+                runnable_name=runnable_split_cohort.name)
+            drms_vc_split_cohort.add_executable(executable=vc_split_cohort)
 
-        vc_process_cohort.dependencies.extend(vc_process_cohort_dependencies)
+            vc_split_cohort.dependencies.append(vc_process_cohort.name)
+
+    def report(self):
+        """Create a C{VariantCallingGATK} report in HTML format and a UCSC Genome Browser Track Hub.
+
+        @return:
+        @rtype:
+        """
+
+        # Create a symbolic link containing the project name and a UUID.
+        default = Default.get_global_default()
+        link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
+        link_name = os.path.basename(link_path.rstrip('/'))
+
+        # This code only needs the public URL.
+
+        track_output = str()
+
+        # Write a HTML document.
+
+        output = str()
+
+        output += defaults.web.html_header(title='{} Variant Calling Analysis'.format(self.project_name))
+        output += '<body>\n'
+        output += '\n'
+
+        output += '<h1>{} Variant Calling Analysis</h1>\n'.format(self.project_name)
+        output += '\n'
+
+        output += '<table>\n'
+        output += '<thead>\n'
+        output += '<tr>\n'
+        output += '<th>Sample</th>\n'
+        output += '<th>Variants VCF file</th>\n'
+        output += '<th>Variants TSV file</th>\n'
+        output += '<th>Aligned BAM file</th>\n'
+        output += '<th>Aligned BAI file</th>\n'
+        output += '<th>Replicate</th>\n'
+        output += '<th>Duplicate Metrics</th>\n'
+        output += '<th>Alignment Summary Metrics</th>\n'
+        output += '</tr>\n'
+        output += '</thead>\n'
+        output += '<tbody>\n'
+
+        # Group via UCSC super tracks.
+
+        track_output += 'track Alignments\n'
+        track_output += 'shortLabel Alignments\n'
+        track_output += 'longLabel BWA NGS read alignments\n'
+        track_output += 'visibility show\n'
+        track_output += 'superTrack on\n'
+        track_output += 'group alignments\n'
+        track_output += '\n'
+
+        for sample in self.samples:
+
+            if self.debug > 0:
+                print '{!r} Sample name: {}'.format(self, sample.name)
+                print sample.trace(1)
+
+            vc_process_sample = self.runnable_dict[
+                string.join(words=(self.drms_name_process_sample, sample.name), sep='_')]
+            assert isinstance(vc_process_sample, Runnable)
+            vc_split_cohort = self.runnable_dict[
+                string.join(words=(self.drms_name_split_cohort, sample.name), sep='_')]
+            assert isinstance(vc_split_cohort, Runnable)
+
+            track_output += 'track {}_alignments\n'. \
+                format(sample.name)
+            track_output += 'type bam\n'
+            track_output += 'shortLabel {}_alignments\n'. \
+                format(sample.name)
+            track_output += 'longLabel {} BWA NGS read alignments\n'. \
+                format(sample.name)
+            track_output += 'bigDataUrl ./{}\n'. \
+                format(vc_process_sample.file_path_dict['realigned_bam'])
+            track_output += 'visibility squish\n'
+            # track_output += 'html {}\n'.format()
+
+            # Common optional settings.
+
+            track_output += 'color {}\n'. \
+                format('0,0,0')
+
+            # Compressed Sequence Alignment track settings.
+
+            # None so far.
+
+            # Composite track settings.
+
+            track_output += 'parent Alignments\n'
+            track_output += '\n'
+
+            output += '<tr>\n'
+            output += '<td>{}</td>\n'.format(sample.name)
+            output += '<td><a href="{}">VCF</a></td>\n'.format(vc_split_cohort.file_path_dict['sample_vcf'])
+            output += '<td><a href="{}">TSV</a></td>\n'.format(vc_split_cohort.file_path_dict['sample_tsv'])
+            output += '<td><a href="{}">BAM</a></td>\n'.format(vc_process_sample.file_path_dict['realigned_bam'])
+            output += '<td><a href="{}">BAI</a></td>\n'.format(vc_process_sample.file_path_dict['realigned_bai'])
+            output += '<td></td>\n'  # Replicate
+            output += '<td></td>\n'  # Duplicate Metrics
+            output += '<td></td>\n'  # Alignment Summary Metrics
+            output += '</tr>\n'
+
+            # bsf.data.Sample.get_all_paired_reads returns a Python dict of
+            # Python str key and Python list of Python list objects
+            # of bsf.data.PairedReads objects.
+
+            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+
+            replicate_keys = replicate_dict.keys()
+            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+
+            for replicate_key in replicate_keys:
+
+                vc_process_lane = self.runnable_dict[
+                    string.join(words=(self.drms_name_process_lane, replicate_key), sep='_')]
+                assert isinstance(vc_process_lane, Runnable)
+                output += '<tr>\n'
+                output += '<td></td>\n'  # Sample
+                output += '<td></td>\n'  # Variants VCF
+                output += '<td></td>\n'  # Variants TSV
+                output += '<td></td>\n'  # Aligned BAM
+                output += '<td></td>\n'  # Aligned BAI
+                output += '<td>{}</td>\n'.format(replicate_key)
+                output += '<td><a href="{}">TSV</a></td>\n'.format(vc_process_lane.file_path_dict['duplicate_metrics'])
+                output += '<td><a href="{}">TSV</a></td>\n'. \
+                    format(vc_process_lane.file_path_dict['alignment_summary_metrics'])
+                output += '</tr>\n'
+
+        output += '</tbody>\n'
+        output += '</table>\n'
+        output += '\n'
+
+        output += '</body>\n'
+        output += defaults.web.html_footer()
+
+        file_path = os.path.join(self.genome_directory, 'variant_calling_report.html')
+
+        file_handle = open(name=file_path, mode='w')
+        file_handle.write(output)
+        file_handle.close()
+
+        # Create the UCSC Genome Browser Track Hub.
+
+        self.ucsc_hub_write_hub(prefix='variant_calling')
+        self.ucsc_hub_write_genomes(prefix='variant_calling')
+        self.ucsc_hub_write_tracks(output=track_output, prefix='variant_calling')
