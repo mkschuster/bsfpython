@@ -922,6 +922,7 @@ class Tuxedo(Analysis):
                 name='cuffdiff',
                 program='cuffdiff',
                 analysis=self)
+            runnable_run_cuffdiff.add_executable(executable=cuffdiff)
 
             # Set Cuffdiff options.
 
