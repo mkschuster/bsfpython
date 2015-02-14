@@ -453,11 +453,17 @@ class ChIPSeq(Analysis):
                     cleaned_sam=os.path.join(prefix, string.join(words=(prefix, 'cleaned.sam'), sep='_')),
                     sorted_bam=os.path.join(prefix, string.join(words=(prefix, 'sorted.bam'), sep='_')))
 
+                runnable_alignment = Runnable(
+                    name=prefix,
+                    code_module='bsf.runnables.chipseq_alignment',
+                    working_directory=self.genome_directory,
+                    file_path_dict=file_path_dict,
+                    debug=self.debug)
+                self.add_runnable(runnable=runnable_alignment)
+
                 # Step 1: Process per lane.
 
-                bwa = BWA(name='variant_calling_bwa_{}'.format(replicate_key), analysis=self)
-                # Instead of adding the BWA Executable to the DRMS, it gets serialised into the pickler_file.
-                # bwa_drms.add_executable(bwa)
+                bwa = BWA(name='bwa_mem', analysis=self)
 
                 bwa_mem = bwa.sub_command
 
@@ -1046,7 +1052,8 @@ class ChIPSeq(Analysis):
                                 # Parameter setting for H3K36me3 according to Nature Protocols (2012)
                                 # Vol.7 No.9 1728-1740 doi:10.1038/nprot.2012.101 Protocol (D)
                                 mc2.add_switch_long(key='nomodel')
-                                mc2.add_option_long(key='shiftsize', value='73')
+                                # The shiftsize option is no longer supported in MACS 2.1.0
+                                # mc2.add_option_long(key='shiftsize', value='73')
                                 mc2.add_option_long(key='pvalue', value='1e-3')
                             elif factor == 'H3K56AC':
                                 pass
@@ -1084,7 +1091,7 @@ class ChIPSeq(Analysis):
                             # --pseudocount
 
                             mb2.add_option_long(
-                                key='output',
+                                key='ofile',
                                 value=os.path.join(prefix, '{}_bdgcmp.bdg'.format(prefix)))
 
                             # --method defaults to ppois i.e. Poisson Pvalue (-log10(pvalue), which yields data
