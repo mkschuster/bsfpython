@@ -1,6 +1,6 @@
-"""lib
+"""bsfpython
 
-This I{lib} (pseudo-)package is required only formally.
+This I{bsfpython} (pseudo-)package is required only formally.
 The I{PYTHONPATH} environment variable should point to the enclosed I{bsf} directory,
 so that this package is not visible.
 """
