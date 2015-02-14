@@ -59,33 +59,7 @@ if name_space.debug:
     tuxedo.debug = name_space.debug
 
 tuxedo.run()
-
-# Submit all Executable objects of all Distributed Resource Management System objects.
-
-submit = 0
-
-for drms in tuxedo.drms_list:
-
-    if name_space.stage:
-        if name_space.stage == drms.name:
-            submit += 1
-        else:
-            continue
-
-    drms.submit(debug=tuxedo.debug)
-
-    if tuxedo.debug:
-        print repr(drms)
-        print drms.trace(1)
-
-if name_space.stage:
-    if name_space.stage == 'report':
-        tuxedo.report()
-        pass
-    elif not submit:
-        name_list = [drms.name for drms in tuxedo.drms_list]
-        name_list.append('report')
-        print 'Valid Analysis stages are: {!r}'.format(name_list)
+tuxedo.submit(drms_name=name_space.stage)
 
 print 'RNA-Seq Analysis'
 print 'Project name:      ', tuxedo.project_name
