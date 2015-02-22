@@ -45,6 +45,8 @@ class Tuxedo(Analysis):
     @type drms_name_run_cuffdiff: str
     @cvar drms_name_run_cuffmerge: C{DRMS.name} for the Cuffmerge C{Analysis} stage
     @type drms_name_run_cuffmerge: str
+    @cvar drms_name_run_cuffnorm: C{DRMS.name} for the Cuffnorm C{Analysis} stage
+    @type drms_name_run_cuffnorm: str
     @cvar drms_name_run_cuffquant: C{DRMS.name} for the Cuffquant C{Analysis} stage
     @type drms_name_run_cuffquant: str
     @ivar cmp_file: Comparison file
@@ -64,6 +66,7 @@ class Tuxedo(Analysis):
 
     drms_name_run_cuffdiff = 'rnaseq_cuffdiff'
     drms_name_run_cuffmerge = 'rnaseq_cuffmerge'
+    drms_name_run_cuffnorm = 'rnaseq_cuffnorm'
     drms_name_run_cuffquant = 'rnaseq_cuffquant'
 
     @classmethod
@@ -703,6 +706,12 @@ class Tuxedo(Analysis):
             analysis=self)
         self.drms_list.append(drms_run_cuffquant)
 
+        drms_run_cuffnorm = DRMS.from_analysis(
+            name=self.drms_name_run_cuffnorm,
+            work_directory=self.genome_directory,
+            analysis=self)
+        self.drms_list.append(drms_run_cuffnorm)
+
         drms_run_cuffdiff = DRMS.from_analysis(
             name=self.drms_name_run_cuffdiff,
             work_directory=self.genome_directory,
@@ -898,6 +907,74 @@ class Tuxedo(Analysis):
 
             # Add the assembly manifest file as Cuffmerge argument.
             cuffmerge.arguments.append(assembly_path)
+
+            # Run a Cuffnorm process per comparison.
+
+            prefix_cuffnorm = string.join(words=(drms_run_cuffnorm.name, comparison_key), sep='_')
+
+            file_path_dict_cuffnorm = dict(
+                temporary_directory=prefix_cuffnorm + '_temporary',
+                output_directory=prefix_cuffnorm)
+
+            runnable_run_cuffnorm = Runnable(
+                name=prefix_cuffnorm,
+                code_module='bsf.runnables.rnaseq_cuffnorm',
+                working_directory=self.genome_directory,
+                file_path_dict=file_path_dict_cuffnorm,
+                debug=self.debug)
+            self.add_runnable(runnable=runnable_run_cuffnorm)
+
+            # Create a new Cuffnorm Executable.
+
+            cuffnorm = Executable.from_analysis(
+                name='cuffnorm',
+                program='cuffnorm',
+                analysis=self)
+            runnable_run_cuffnorm.add_executable(executable=cuffnorm)
+
+            # Set Cuffnorm options.
+
+            cuffnorm.add_option_long(
+                key='output-dir',
+                value=file_path_dict_cuffnorm['output_directory'])
+            cuffnorm.add_option_long(
+                key='labels',
+                value=string.join(words=cuffdiff_labels, sep=','))
+            cuffnorm.add_option_long(
+                key='num-threads',
+                value=str(drms_run_cuffnorm.threads))
+            if self.library_type:
+                cuffnorm.add_option_long(
+                    key='library-type',
+                    value=self.library_type)
+            cuffnorm.add_switch_long(
+                key='quiet')
+            cuffnorm.add_switch_long(
+                key='no-update-check')
+
+            # Add the Cuffmerge GTF file as first Cuffdiff argument.
+            cuffnorm.arguments.append(os.path.join(cuffmerge.name, 'merged.gtf'))
+
+            # Add the Cuffquant abundances files per point as Cuffdiff arguments.
+            for abundances_list in cuffdiff_abundances:
+                assert isinstance(abundances_list, list)
+                cuffnorm.arguments.append(string.join(words=abundances_list, sep=','))
+
+            # Create an Executable for running the Cuffdiff Runnable.
+
+            run_cuffnorm = Executable.from_analysis_runnable(
+                analysis=self,
+                runnable_name=runnable_run_cuffnorm.name)
+            drms_run_cuffnorm.add_executable(executable=run_cuffnorm)
+
+            # Only submit this Executable if the final result file does not exist.
+
+            # if (os.path.exists(file_path_dict_cuffnorm['bias_parameters'])
+            #         and os.path.getsize(file_path_dict_cuffnorm['bias_parameters'])):
+            #     run_cuffnorm.submit = False
+
+            run_cuffnorm.dependencies.append(cuffmerge.name)
+            run_cuffnorm.dependencies.extend(cuffdiff_dependencies)
 
             # Run a Cuffdiff process per comparison.
 
