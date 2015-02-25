@@ -2236,6 +2236,8 @@ class VariantCallingGATK(Analysis):
         output += '<h1>{} Variant Calling Analysis</h1>\n'.format(self.project_name)
         output += '\n'
 
+        output += '<h2>Sample and Replicate Level</h2>\n'
+
         output += '<table>\n'
         output += '<thead>\n'
         output += '<tr>\n'
@@ -2301,14 +2303,21 @@ class VariantCallingGATK(Analysis):
             track_output += '\n'
 
             output += '<tr>\n'
-            output += '<td>{}</td>\n'.format(sample.name)
-            output += '<td><a href="{}">VCF</a></td>\n'.format(vc_split_cohort.file_path_dict['sample_vcf'])
-            output += '<td><a href="{}">TSV</a></td>\n'.format(vc_split_cohort.file_path_dict['sample_tsv'])
-            output += '<td><a href="{}">BAM</a></td>\n'.format(vc_process_sample.file_path_dict['realigned_bam'])
-            output += '<td><a href="{}">BAI</a></td>\n'.format(vc_process_sample.file_path_dict['realigned_bai'])
+            output += '<td>{}</td>\n'. \
+                format(sample.name)
+            output += '<td><a href="{}">VCF</a></td>\n'. \
+                format(vc_split_cohort.file_path_dict['sample_vcf'])
+            output += '<td><a href="{}">TSV</a></td>\n'. \
+                format(vc_split_cohort.file_path_dict['sample_tsv'])
+            output += '<td><a href="{}">BAM</a></td>\n'. \
+                format(vc_process_sample.file_path_dict['realigned_bam'])
+            output += '<td><a href="{}">BAI</a></td>\n'. \
+                format(vc_process_sample.file_path_dict['realigned_bai'])
             output += '<td></td>\n'  # Replicate
-            output += '<td></td>\n'  # Duplicate Metrics
-            output += '<td></td>\n'  # Alignment Summary Metrics
+            output += '<td><a href="{}">TSV</a></td>\n'. \
+                format(vc_process_sample.file_path_dict['duplicate_metrics'])
+            output += '<td><a href="{}">TSV</a></td>\n'. \
+                format(vc_process_sample.file_path_dict['alignment_summary_metrics'])
             output += '</tr>\n'
 
             # bsf.data.Sample.get_all_paired_reads returns a Python dict of
@@ -2332,10 +2341,55 @@ class VariantCallingGATK(Analysis):
                 output += '<td></td>\n'  # Aligned BAM
                 output += '<td></td>\n'  # Aligned BAI
                 output += '<td>{}</td>\n'.format(replicate_key)
-                output += '<td><a href="{}">TSV</a></td>\n'.format(vc_process_lane.file_path_dict['duplicate_metrics'])
+                output += '<td><a href="{}">TSV</a></td>\n'. \
+                    format(vc_process_lane.file_path_dict['duplicate_metrics'])
                 output += '<td><a href="{}">TSV</a></td>\n'. \
                     format(vc_process_lane.file_path_dict['alignment_summary_metrics'])
                 output += '</tr>\n'
+
+        output += '</tbody>\n'
+        output += '</table>\n'
+        output += '\n'
+
+        output += '<h2>Cohort Level</h2>\n'
+
+        output += '<table>\n'
+        output += '<thead>\n'
+        output += '<tr>\n'
+        output += '<th>Cohort</th>\n'
+        output += '<th>Information</th>\n'
+        output += '<th>Comment</th>\n'
+        output += '</tr>\n'
+        output += '</thead>\n'
+        output += '<tbody>\n'
+
+        vc_process_cohort = self.runnable_dict[
+            string.join(words=(self.drms_name_process_cohort, self.cohort_name), sep='_')]
+        assert isinstance(vc_process_cohort, Runnable)
+
+        output += '<tr>\n'
+        output += '<td>{}</td>\n'. \
+            format(self.cohort_name)
+        output += '<td><a href="{}">snpEff Summary Statistics</a></td>\n'. \
+            format(vc_process_cohort.file_path_dict['snpeff_stats'])
+        output += '<td></td>\n'
+        output += '</tr>\n'
+
+        output += '<tr>\n'
+        output += '<td>{}</td>\n'. \
+            format(self.cohort_name)
+        output += '<td>snpEff-annotated multi-sample <a href="{}">VCF</a></td>\n'. \
+            format(vc_process_cohort.file_path_dict['snpeff_vcf'])
+        output += '<td>Functional annotation of all splice variants</td>\n'
+        output += '</tr>\n'
+
+        output += '<tr>\n'
+        output += '<td>{}</td>\n'. \
+            format(self.cohort_name)
+        output += '<td>GATK-annotated multi-sample <a href="{}">VCF</a></td>\n'. \
+            format(vc_process_cohort.file_path_dict['annotated_vcf'])
+        output += '<td>Functional annotation of only the most severely affected splice variant</td>\n'
+        output += '</tr>\n'
 
         output += '</tbody>\n'
         output += '</table>\n'
