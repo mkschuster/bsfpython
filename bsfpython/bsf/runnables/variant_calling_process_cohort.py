@@ -89,21 +89,8 @@ def run_gatk_variant_recalibrator_snp(runnable):
         return
 
     run_gatk_genotype_gvcfs(runnable=runnable)
-    runnable.run_executable(name='gatk_variant_recalibrator_snp')
-
-
-def run_gatk_variant_recalibrator_indel(runnable):
-    """Run the I{GATK VariantRecalibrator} for I{INDELs}.
-
-    @param runnable: C{Runnable}
-    @type runnable: Runnable
-    """
-
-    if os.path.exists(runnable.file_path_dict['recalibration_indel']):
-        return
-
-    run_gatk_variant_recalibrator_snp(runnable=runnable)
-    runnable.run_executable(name='gatk_variant_recalibrator_indel')
+    if 'gatk_variant_recalibrator_snp' in runnable.executable_dict:
+        runnable.run_executable(name='gatk_variant_recalibrator_snp')
 
 
 def run_gatk_apply_recalibration_snp(runnable):
@@ -116,8 +103,24 @@ def run_gatk_apply_recalibration_snp(runnable):
     if os.path.exists(runnable.file_path_dict['recalibrated_snp_raw_indel_idx']):
         return
 
-    run_gatk_variant_recalibrator_indel(runnable=runnable)
-    runnable.run_executable(name='gatk_apply_recalibration_snp')
+    run_gatk_variant_recalibrator_snp(runnable=runnable)
+    if 'gatk_apply_recalibration_snp' in runnable.executable_dict:
+        runnable.run_executable(name='gatk_apply_recalibration_snp')
+
+
+def run_gatk_variant_recalibrator_indel(runnable):
+    """Run the I{GATK VariantRecalibrator} for I{INDELs}.
+
+    @param runnable: C{Runnable}
+    @type runnable: Runnable
+    """
+
+    if os.path.exists(runnable.file_path_dict['recalibration_indel']):
+        return
+
+    run_gatk_apply_recalibration_snp(runnable=runnable)
+    if 'gatk_variant_recalibrator_indel' in runnable.executable_dict:
+        runnable.run_executable(name='gatk_variant_recalibrator_indel')
 
 
 def run_gatk_apply_recalibration_indel(runnable):
@@ -130,8 +133,9 @@ def run_gatk_apply_recalibration_indel(runnable):
     if os.path.exists(runnable.file_path_dict['recalibrated_snp_recalibrated_indel_idx']):
         return
 
-    run_gatk_apply_recalibration_snp(runnable=runnable)
-    runnable.run_executable(name='gatk_apply_recalibration_indel')
+    run_gatk_variant_recalibrator_indel(runnable=runnable)
+    if 'gatk_apply_recalibration_indel' in runnable.executable_dict:
+        runnable.run_executable(name='gatk_apply_recalibration_indel')
 
 
 def run_gatk_select_variants_cohort(runnable):

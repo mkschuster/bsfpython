@@ -77,6 +77,10 @@ class VariantCallingGATK(Analysis):
     @type truth_sensitivity_filter_level_indel: str
     @ivar truth_sensitivity_filter_level_snp: Truth sensitivity filter level for SNPs
     @type truth_sensitivity_filter_level_snp: str
+    @ivar vqsr_skip_indel: Skip the Variant Quality Score Recalibration on INDELs
+    @type vqsr_skip_indel: bool, None
+    @ivar vqsr_skip_snp: Skip the Variant Quality Score Recalibration on SNPs
+    @type vqsr_skip_snp: bool, None
     @ivar vqsr_annotations_indel_list: Python C{list} of Python C{str} (variant annotation) objects
     @type vqsr_annotations_indel_list: list
     @ivar vqsr_annotations_snp_list: Python C{list} of Python C{str} (variant annotation) objects
@@ -151,6 +155,7 @@ class VariantCallingGATK(Analysis):
                  annotation_resources_dict=None,
                  truth_sensitivity_filter_level_indel=None,
                  truth_sensitivity_filter_level_snp=None,
+                 vqsr_skip_indel=None, vqsr_skip_snp=None,
                  vqsr_resources_indel_dict=None, vqsr_resources_snp_dict=None,
                  vqsr_annotations_indel_list=None, vqsr_annotations_snp_list=None,
                  exclude_intervals_list=None,
@@ -216,6 +221,10 @@ class VariantCallingGATK(Analysis):
         @type truth_sensitivity_filter_level_indel: str
         @param truth_sensitivity_filter_level_snp: Truth sensitivity filter level for SNPs
         @type truth_sensitivity_filter_level_snp: str
+        @param vqsr_skip_indel: Skip the Variant Quality Score Recalibration on INDELs
+        @type vqsr_skip_indel: bool, None
+        @param vqsr_skip_snp: Skip the Variant Quality Score Recalibration on SNPs
+        @type vqsr_skip_snp: bool, None
         @param vqsr_resources_indel_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
         @type vqsr_resources_indel_dict: dict
         @param vqsr_resources_snp_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
@@ -305,6 +314,18 @@ class VariantCallingGATK(Analysis):
             self.truth_sensitivity_filter_level_snp = truth_sensitivity_filter_level_snp
         else:
             self.truth_sensitivity_filter_level_snp = str()
+
+        if vqsr_skip_indel is None:
+            self.vqsr_skip_indel = False
+        else:
+            assert isinstance(vqsr_skip_indel, bool)
+            self.vqsr_skip_indel = vqsr_skip_indel
+
+        if vqsr_skip_snp is None:
+            self.vqsr_skip_snp = False
+        else:
+            assert isinstance(vqsr_skip_snp, bool)
+            self.vqsr_skip_snp = vqsr_skip_snp
 
         if vqsr_resources_indel_dict:
             self.vqsr_resources_indel_dict = vqsr_resources_indel_dict
@@ -448,6 +469,20 @@ class VariantCallingGATK(Analysis):
             self.truth_sensitivity_filter_level_snp = configuration.config_parser.get(
                 section=section,
                 option='truth_sensitivity_filter_level_snp')
+
+        # Get the flag for skipping the Variant Quality Score Recalibration (VQSR) for INDELs.
+
+        if configuration.config_parser.has_option(section=section, option='vqsr_skip_indel'):
+            self.vqsr_skip_indel = configuration.config_parser.getboolean(
+                section=section,
+                option='vqsr_skip_indel')
+
+        # Get the flag for skipping the Variant Quality Score Recalibration (VQSR) for SNPs.
+
+        if configuration.config_parser.has_option(section=section, option='vqsr_skip_snp'):
+            self.vqsr_skip_snp = configuration.config_parser.getboolean(
+                section=section,
+                option='vqsr_skip_snp')
 
         # Get the list of annotations for the Variant Quality Score Recalibration (VQSR) for INDELs.
 
@@ -1785,164 +1820,178 @@ class VariantCallingGATK(Analysis):
             sub_command.add_option_long(key='variant', value=file_path_dict_cohort['combined_gvcf_vcf'])
         sub_command.add_option_long(key='out', value=file_path_dict_cohort['genotyped_raw_vcf'])
 
-        # Run the GATK VariantRecalibrator for SNPs.
+        if self.vqsr_skip_snp:
+            file_path_dict_cohort['recalibrated_snp_raw_indel_vcf'] = file_path_dict_cohort['genotyped_raw_vcf']
+            file_path_dict_cohort['recalibrated_snp_raw_indel_idx'] = file_path_dict_cohort['genotyped_raw_idx']
+        else:
 
-        java_process = Executable(
-            name='gatk_variant_recalibrator_snp',
-            program='java',
-            sub_command=Command(command=str()))
-        runnable_process_cohort.add_executable(executable=java_process)
+            # Run the GATK VariantRecalibrator for SNPs.
 
-        java_process.add_switch_short(
-            key='d64')
-        java_process.add_option_short(
-            key='jar',
-            value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
-        java_process.add_switch_short(
-            key='Xmx8G')
-        java_process.add_option_pair(
-            key='-Djava.io.tmpdir',
-            value=file_path_dict_cohort['temporary_directory'])
+            java_process = Executable(
+                name='gatk_variant_recalibrator_snp',
+                program='java',
+                sub_command=Command(command=str()))
+            runnable_process_cohort.add_executable(executable=java_process)
 
-        sub_command = java_process.sub_command
-        sub_command.add_option_long(key='analysis_type', value='VariantRecalibrator')
-        sub_command.add_option_long(key='reference_sequence', value=self.bwa_genome_db)
-        for interval in self.exclude_intervals_list:
-            sub_command.add_option_long(key='excludeIntervals', value=interval)
-        for interval in self.include_intervals_list:
-            sub_command.add_option_long(key='intervals', value=interval)
-        sub_command.add_option_long(key='mode', value='SNP')
-        for resource in self.vqsr_resources_snp_dict.keys():
-            resource_option = 'resource:{},known={},training={},truth={},prior={}'. \
-                format(resource,
-                       self.vqsr_resources_snp_dict[resource]['known'],
-                       self.vqsr_resources_snp_dict[resource]['training'],
-                       self.vqsr_resources_snp_dict[resource]['truth'],
-                       self.vqsr_resources_snp_dict[resource]['prior'])
+            java_process.add_switch_short(
+                key='d64')
+            java_process.add_option_short(
+                key='jar',
+                value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+            java_process.add_switch_short(
+                key='Xmx8G')
+            java_process.add_option_pair(
+                key='-Djava.io.tmpdir',
+                value=file_path_dict_cohort['temporary_directory'])
+
+            sub_command = java_process.sub_command
+            sub_command.add_option_long(key='analysis_type', value='VariantRecalibrator')
+            sub_command.add_option_long(key='reference_sequence', value=self.bwa_genome_db)
+            for interval in self.exclude_intervals_list:
+                sub_command.add_option_long(key='excludeIntervals', value=interval)
+            for interval in self.include_intervals_list:
+                sub_command.add_option_long(key='intervals', value=interval)
+            sub_command.add_option_long(key='mode', value='SNP')
+            for resource in self.vqsr_resources_snp_dict.keys():
+                resource_option = 'resource:{},known={},training={},truth={},prior={}'. \
+                    format(resource,
+                           self.vqsr_resources_snp_dict[resource]['known'],
+                           self.vqsr_resources_snp_dict[resource]['training'],
+                           self.vqsr_resources_snp_dict[resource]['truth'],
+                           self.vqsr_resources_snp_dict[resource]['prior'])
+                sub_command.add_option_long(
+                    key=resource_option,
+                    value=self.vqsr_resources_snp_dict[resource]['file_path'])
+            for annotation in self.vqsr_annotations_snp_list:
+                sub_command.add_option_long(key='use_annotation', value=annotation)
+            sub_command.add_option_long(key='input', value=file_path_dict_cohort['genotyped_raw_vcf'])
+            sub_command.add_option_long(key='recal_file', value=file_path_dict_cohort['recalibration_snp'])
+            sub_command.add_option_long(key='tranches_file', value=file_path_dict_cohort['tranches_snp'])
+            sub_command.add_option_long(key='rscript_file', value=file_path_dict_cohort['plots_snp'])
+
+            # Run the GATK ApplyRecalibration step for SNPs.
+
+            java_process = Executable(
+                name='gatk_apply_recalibration_snp',
+                program='java',
+                sub_command=Command(command=str()))
+            runnable_process_cohort.add_executable(executable=java_process)
+
+            java_process.add_switch_short(
+                key='d64')
+            java_process.add_option_short(
+                key='jar',
+                value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+            java_process.add_switch_short(
+                key='Xmx4G')
+            java_process.add_option_pair(
+                key='-Djava.io.tmpdir',
+                value=file_path_dict_cohort['temporary_directory'])
+
+            sub_command = java_process.sub_command
+            sub_command.add_option_long(key='analysis_type', value='ApplyRecalibration')
+            sub_command.add_option_long(key='reference_sequence', value=self.bwa_genome_db)
+            for interval in self.exclude_intervals_list:
+                sub_command.add_option_long(key='excludeIntervals', value=interval)
+            for interval in self.include_intervals_list:
+                sub_command.add_option_long(key='intervals', value=interval)
+            sub_command.add_option_long(key='mode', value='SNP')
+            sub_command.add_option_long(key='input', value=file_path_dict_cohort['genotyped_raw_vcf'])
+            sub_command.add_option_long(key='recal_file', value=file_path_dict_cohort['recalibration_snp'])
+            sub_command.add_option_long(key='tranches_file', value=file_path_dict_cohort['tranches_snp'])
+            sub_command.add_option_long(key='out', value=file_path_dict_cohort['recalibrated_snp_raw_indel_vcf'])
+            # The lodCutoff (VQSLOD score) filter is not applied for the moment.
+            if self.truth_sensitivity_filter_level_snp:
+                sub_command.add_option_long(key='ts_filter_level', value=self.truth_sensitivity_filter_level_snp)
+
+        if self.vqsr_skip_indel:
+            file_path_dict_cohort['recalibrated_snp_recalibrated_indel_vcf'] = \
+                file_path_dict_cohort['recalibrated_snp_raw_indel_vcf']
+            file_path_dict_cohort['recalibrated_snp_recalibrated_indel_idx'] = \
+                file_path_dict_cohort['recalibrated_snp_raw_indel_idx']
+        else:
+
+            # Run the GATK VariantRecalibrator for INDELs.
+
+            java_process = Executable(
+                name='gatk_variant_recalibrator_indel',
+                program='java',
+                sub_command=Command(command=str()))
+            runnable_process_cohort.add_executable(executable=java_process)
+
+            java_process.add_switch_short(
+                key='d64')
+            java_process.add_option_short(
+                key='jar',
+                value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+            java_process.add_switch_short(
+                key='Xmx8G')
+            java_process.add_option_pair(
+                key='-Djava.io.tmpdir',
+                value=file_path_dict_cohort['temporary_directory'])
+
+            sub_command = java_process.sub_command
+            sub_command.add_option_long(key='analysis_type', value='VariantRecalibrator')
+            sub_command.add_option_long(key='reference_sequence', value=self.bwa_genome_db)
+            for interval in self.exclude_intervals_list:
+                sub_command.add_option_long(key='excludeIntervals', value=interval)
+            for interval in self.include_intervals_list:
+                sub_command.add_option_long(key='intervals', value=interval)
+            sub_command.add_option_long(key='mode', value='INDEL')
+            for resource in self.vqsr_resources_indel_dict.keys():
+                resource_option = 'resource:{},known={},training={},truth={},prior={}'. \
+                    format(resource,
+                           self.vqsr_resources_indel_dict[resource]['known'],
+                           self.vqsr_resources_indel_dict[resource]['training'],
+                           self.vqsr_resources_indel_dict[resource]['truth'],
+                           self.vqsr_resources_indel_dict[resource]['prior'])
+                sub_command.add_option_long(
+                    key=resource_option,
+                    value=self.vqsr_resources_indel_dict[resource]['file_path'])
+            for annotation in self.vqsr_annotations_indel_list:
+                sub_command.add_option_long(key='use_annotation', value=annotation)
+            sub_command.add_option_long(key='maxGaussians', value='4')  # TODO: Would be good to have this configurable.
+            sub_command.add_option_long(key='input', value=file_path_dict_cohort['recalibrated_snp_raw_indel_vcf'])
+            sub_command.add_option_long(key='recal_file', value=file_path_dict_cohort['recalibration_indel'])
+            sub_command.add_option_long(key='tranches_file', value=file_path_dict_cohort['tranches_indel'])
+            sub_command.add_option_long(key='rscript_file', value=file_path_dict_cohort['plots_indel'])
+
+            # Run the GATK ApplyRecalibration step for INDELs.
+
+            java_process = Executable(
+                name='gatk_apply_recalibration_indel',
+                program='java',
+                sub_command=Command(command=str()))
+            runnable_process_cohort.add_executable(executable=java_process)
+
+            java_process.add_switch_short(
+                key='d64')
+            java_process.add_option_short(
+                key='jar',
+                value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+            java_process.add_switch_short(
+                key='Xmx4G')
+            java_process.add_option_pair(
+                key='-Djava.io.tmpdir',
+                value=file_path_dict_cohort['temporary_directory'])
+
+            sub_command = java_process.sub_command
+            sub_command.add_option_long(key='analysis_type', value='ApplyRecalibration')
+            sub_command.add_option_long(key='reference_sequence', value=self.bwa_genome_db)
+            for interval in self.exclude_intervals_list:
+                sub_command.add_option_long(key='excludeIntervals', value=interval)
+            for interval in self.include_intervals_list:
+                sub_command.add_option_long(key='intervals', value=interval)
+            sub_command.add_option_long(key='mode', value='INDEL')
+            sub_command.add_option_long(key='input', value=file_path_dict_cohort['recalibrated_snp_raw_indel_vcf'])
+            sub_command.add_option_long(key='recal_file', value=file_path_dict_cohort['recalibration_indel'])
+            sub_command.add_option_long(key='tranches_file', value=file_path_dict_cohort['tranches_indel'])
             sub_command.add_option_long(
-                key=resource_option,
-                value=self.vqsr_resources_snp_dict[resource]['file_path'])
-        for annotation in self.vqsr_annotations_snp_list:
-            sub_command.add_option_long(key='use_annotation', value=annotation)
-        sub_command.add_option_long(key='input', value=file_path_dict_cohort['genotyped_raw_vcf'])
-        sub_command.add_option_long(key='recal_file', value=file_path_dict_cohort['recalibration_snp'])
-        sub_command.add_option_long(key='tranches_file', value=file_path_dict_cohort['tranches_snp'])
-        sub_command.add_option_long(key='rscript_file', value=file_path_dict_cohort['plots_snp'])
-
-        # Run the GATK VariantRecalibrator for INDELs.
-
-        java_process = Executable(
-            name='gatk_variant_recalibrator_indel',
-            program='java',
-            sub_command=Command(command=str()))
-        runnable_process_cohort.add_executable(executable=java_process)
-
-        java_process.add_switch_short(
-            key='d64')
-        java_process.add_option_short(
-            key='jar',
-            value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
-        java_process.add_switch_short(
-            key='Xmx8G')
-        java_process.add_option_pair(
-            key='-Djava.io.tmpdir',
-            value=file_path_dict_cohort['temporary_directory'])
-
-        sub_command = java_process.sub_command
-        sub_command.add_option_long(key='analysis_type', value='VariantRecalibrator')
-        sub_command.add_option_long(key='reference_sequence', value=self.bwa_genome_db)
-        for interval in self.exclude_intervals_list:
-            sub_command.add_option_long(key='excludeIntervals', value=interval)
-        for interval in self.include_intervals_list:
-            sub_command.add_option_long(key='intervals', value=interval)
-        sub_command.add_option_long(key='mode', value='INDEL')
-        for resource in self.vqsr_resources_indel_dict.keys():
-            resource_option = 'resource:{},known={},training={},truth={},prior={}'. \
-                format(resource,
-                       self.vqsr_resources_indel_dict[resource]['known'],
-                       self.vqsr_resources_indel_dict[resource]['training'],
-                       self.vqsr_resources_indel_dict[resource]['truth'],
-                       self.vqsr_resources_indel_dict[resource]['prior'])
-            sub_command.add_option_long(
-                key=resource_option,
-                value=self.vqsr_resources_indel_dict[resource]['file_path'])
-        for annotation in self.vqsr_annotations_indel_list:
-            sub_command.add_option_long(key='use_annotation', value=annotation)
-        sub_command.add_option_long(key='maxGaussians', value='4')  # TODO: Would be good to have this configurable.
-        sub_command.add_option_long(key='input', value=file_path_dict_cohort['genotyped_raw_vcf'])
-        sub_command.add_option_long(key='recal_file', value=file_path_dict_cohort['recalibration_indel'])
-        sub_command.add_option_long(key='tranches_file', value=file_path_dict_cohort['tranches_indel'])
-        sub_command.add_option_long(key='rscript_file', value=file_path_dict_cohort['plots_indel'])
-
-        # Run the GATK ApplyRecalibration step for SNPs.
-
-        java_process = Executable(
-            name='gatk_apply_recalibration_snp',
-            program='java',
-            sub_command=Command(command=str()))
-        runnable_process_cohort.add_executable(executable=java_process)
-
-        java_process.add_switch_short(
-            key='d64')
-        java_process.add_option_short(
-            key='jar',
-            value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
-        java_process.add_switch_short(
-            key='Xmx4G')
-        java_process.add_option_pair(
-            key='-Djava.io.tmpdir',
-            value=file_path_dict_cohort['temporary_directory'])
-
-        sub_command = java_process.sub_command
-        sub_command.add_option_long(key='analysis_type', value='ApplyRecalibration')
-        sub_command.add_option_long(key='reference_sequence', value=self.bwa_genome_db)
-        for interval in self.exclude_intervals_list:
-            sub_command.add_option_long(key='excludeIntervals', value=interval)
-        for interval in self.include_intervals_list:
-            sub_command.add_option_long(key='intervals', value=interval)
-        sub_command.add_option_long(key='mode', value='SNP')
-        sub_command.add_option_long(key='input', value=file_path_dict_cohort['genotyped_raw_vcf'])
-        sub_command.add_option_long(key='recal_file', value=file_path_dict_cohort['recalibration_snp'])
-        sub_command.add_option_long(key='tranches_file', value=file_path_dict_cohort['tranches_snp'])
-        sub_command.add_option_long(key='out', value=file_path_dict_cohort['recalibrated_snp_raw_indel_vcf'])
-        # The lodCutoff (VQSLOD score) filter is not applied for the moment.
-        if self.truth_sensitivity_filter_level_snp:
-            sub_command.add_option_long(key='ts_filter_level', value=self.truth_sensitivity_filter_level_snp)
-
-        # Run the GATK ApplyRecalibration step for INDELs.
-
-        java_process = Executable(
-            name='gatk_apply_recalibration_indel',
-            program='java',
-            sub_command=Command(command=str()))
-        runnable_process_cohort.add_executable(executable=java_process)
-
-        java_process.add_switch_short(
-            key='d64')
-        java_process.add_option_short(
-            key='jar',
-            value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
-        java_process.add_switch_short(
-            key='Xmx4G')
-        java_process.add_option_pair(
-            key='-Djava.io.tmpdir',
-            value=file_path_dict_cohort['temporary_directory'])
-
-        sub_command = java_process.sub_command
-        sub_command.add_option_long(key='analysis_type', value='ApplyRecalibration')
-        sub_command.add_option_long(key='reference_sequence', value=self.bwa_genome_db)
-        for interval in self.exclude_intervals_list:
-            sub_command.add_option_long(key='excludeIntervals', value=interval)
-        for interval in self.include_intervals_list:
-            sub_command.add_option_long(key='intervals', value=interval)
-        sub_command.add_option_long(key='mode', value='INDEL')
-        sub_command.add_option_long(key='input', value=file_path_dict_cohort['recalibrated_snp_raw_indel_vcf'])
-        sub_command.add_option_long(key='recal_file', value=file_path_dict_cohort['recalibration_indel'])
-        sub_command.add_option_long(key='tranches_file', value=file_path_dict_cohort['tranches_indel'])
-        sub_command.add_option_long(key='out', value=file_path_dict_cohort['recalibrated_snp_recalibrated_indel_vcf'])
-        # The lodCutoff (VQSLOD score) filter is not applied for the moment.
-        if self.truth_sensitivity_filter_level_indel:
-            sub_command.add_option_long(key='ts_filter_level', value=self.truth_sensitivity_filter_level_indel)
+                key='out',
+                value=file_path_dict_cohort['recalibrated_snp_recalibrated_indel_vcf'])
+            # The lodCutoff (VQSLOD score) filter is not applied for the moment.
+            if self.truth_sensitivity_filter_level_indel:
+                sub_command.add_option_long(key='ts_filter_level', value=self.truth_sensitivity_filter_level_indel)
 
         # In case accessory GVCF files have been used, re-create a multi-sample VCF file with just the samples
         # in this cohort.
@@ -1980,6 +2029,11 @@ class VariantCallingGATK(Analysis):
             for sample in self.samples:
                 sub_command.add_option_long(key='sample_name', value=sample.name)
             sub_command.add_switch_long(key='excludeNonVariants')
+        else:
+            file_path_dict_cohort['multi_sample_vcf'] = \
+                file_path_dict_cohort['recalibrated_snp_recalibrated_indel_vcf']
+            file_path_dict_cohort['multi_sample_idx'] = \
+                file_path_dict_cohort['recalibrated_snp_recalibrated_indel_idx']
 
         # Run the snpEff tool for functional variant annotation.
 
@@ -2008,10 +2062,7 @@ class VariantCallingGATK(Analysis):
         sub_command.add_option_short(key='config', value=os.path.join(self.classpath_snpeff, 'snpEff.config'))
 
         sub_command.arguments.append(self.snpeff_genome_version)
-        if len(self.accessory_cohort_gvcfs):
-            sub_command.arguments.append(file_path_dict_cohort['multi_sample_vcf'])
-        else:
-            sub_command.arguments.append(file_path_dict_cohort['recalibrated_snp_recalibrated_indel_vcf'])
+        sub_command.arguments.append(file_path_dict_cohort['multi_sample_vcf'])
 
         # Run the GATK VariantAnnotator
 
@@ -2055,14 +2106,7 @@ class VariantCallingGATK(Analysis):
                         key='expression',
                         value=string.join(words=(annotation_resource, annotation), sep='.'))
 
-        if len(self.accessory_cohort_gvcfs):
-            sub_command.add_option_long(
-                key='variant',
-                value=file_path_dict_cohort['multi_sample_vcf'])
-        else:
-            sub_command.add_option_long(
-                key='variant',
-                value=file_path_dict_cohort['recalibrated_snp_recalibrated_indel_vcf'])
+        sub_command.add_option_long(key='variant', value=file_path_dict_cohort['multi_sample_vcf'])
         # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
         # sub_command.add_option_long(key='annotation', value='AlleleBalanceBySample')
         sub_command.add_option_long(key='annotation', value='SnpEff')
