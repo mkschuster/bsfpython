@@ -1175,7 +1175,7 @@ class BamIndexDecoder(Analysis):
                 # Add a symbolic link to the BSF Sequence Archive file within the samples directory.
                 file_path_dict['link'] = os.path.join(
                     file_path_dict['samples_directory'],
-                    string.join(words=(self.project_name, key, '.bam'), sep='_'))
+                    '{}_{}#{}.bam'.format(self.project_name, key, index_by_lane[key][0]['sample_name']))
 
             # Submit the corresponding BSF Executable for the BSF Runner job into the DRMS.
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
