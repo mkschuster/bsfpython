@@ -70,6 +70,11 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
+    '--force',
+    action='store_true',
+    help='force processing even if library annotation sheet validation fails')
+
+argument_parser.add_argument(
     '--mode',
     help='HiSeq run mode i.e. high (high-output) or rapid (rapid run)',
     required=False,
@@ -98,6 +103,9 @@ if name_space.mode:
         bid.lanes = int(1)
     else:
         raise Exception("Unknown output mode " + name_space.mode)
+
+if name_space.force:
+    bid.force = name_space.force
 
 if name_space.library_path:
     bid.library_path = name_space.library_path
