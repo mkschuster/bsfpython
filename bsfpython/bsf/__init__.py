@@ -2256,6 +2256,8 @@ class Executable(Command):
     @type hold: str
     @ivar submit: Submit the Executable into the DRMS
     @type submit: bool
+    @ivar maximum_run_attempts: Maximum number of attempts to run this C{Executable}
+    @type maximum_run_attempts: int
     @ivar process_identifier: Process identifier
     @type process_identifier: str
     @ivar process_name: Process name
@@ -2302,6 +2304,7 @@ class Executable(Command):
     def from_analysis_runnable(cls, analysis, runnable_name):
         """Create an Executable to submit a Runnable into a DRMS.
 
+        In case C{Runnable.get_status_path} exists already, C{Executable.submit} will be set to C{False}.
         @param analysis: Analysis
         @type analysis: Analysis
         @param runnable_name: Runnable name
@@ -2322,8 +2325,10 @@ class Executable(Command):
         executable = cls(name=runnable.name, program=Runnable.runner_script)
         executable.set_configuration(configuration=analysis.configuration, section=runnable.code_module)
         executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
-        # executable.add_option_long(key='runnable_name', value=runnable.name)
-        # executable.add_option_long(key='debug', value=str(analysis.debug))
+
+        # Only submit the Executable if the status file does not exist already.
+        if os.path.exists(runnable.get_status_path):
+            executable.submit = False
 
         return executable
 
@@ -2354,7 +2359,7 @@ class Executable(Command):
     def __init__(self, name,
                  program=None, options=None, arguments=None, sub_command=None,
                  stdout_path=None, stderr_path=None, dependencies=None, hold=None,
-                 submit=True, process_identifier=None, process_name=None):
+                 submit=True, maximum_run_attempts=1, process_identifier=None, process_name=None):
         """Initialise an Executable object.
 
         @param name: Name
@@ -2378,6 +2383,8 @@ class Executable(Command):
         @type hold: str
         @param submit: Submit the Executable into the DRMS
         @type submit: bool
+        @param maximum_run_attempts: Maximum number of attempts to run this C{RunnableStep}
+        @type maximum_run_attempts: int
         @param process_identifier: Process identifier
         @type process_identifier: str
         @param process_name: Process name
@@ -2411,6 +2418,8 @@ class Executable(Command):
 
         self.submit = submit
 
+        self.maximum_run_attempts = maximum_run_attempts
+
         if process_identifier:
             self.process_identifier = process_identifier
         else:
@@ -2443,6 +2452,8 @@ class Executable(Command):
             format(indent, self.hold)
         output += '{}  submit:             {!r}\n'. \
             format(indent, self.submit)
+        output += '{}  maximum_run_attempts: {!r}\n'. \
+            format(indent, self.maximum_run_attempts)
         output += '{}  process_identifier: {!r}\n'. \
             format(indent, self.process_identifier)
         output += '{}  process_name:       {!r}\n'. \
@@ -2495,9 +2506,85 @@ class Executable(Command):
         return command
 
 
+class RunnableStep(Executable):
+    """The C{RunnableStep} represents a step in a C{Runnable} class.
+
+    Attributes:
+    @ivar obsolete_file_path_list: Python list of file paths that can be removed
+        after successfully completing this C{RunnableStep}
+    @type obsolete_file_path_list: list
+    """
+
+    def __init__(self, name,
+                 program=None, options=None, arguments=None, sub_command=None,
+                 stdout_path=None, stderr_path=None, dependencies=None, hold=None,
+                 submit=True, process_identifier=None, process_name=None,
+                 obsolete_file_path_list=None):
+        """Initialise a C{RunnableStep} object.
+
+        @param name: Name
+        @type name: str
+        @param program: Program
+        @type program: str
+        @param options: Python dict of program option and value pairs
+        @type options: dict
+        @param arguments: Python list of program arguments
+        @type arguments: list
+        @param sub_command: Subordinate Command
+        @type sub_command: Command
+        @param stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
+        @type stdout_path: str | unicode
+        @param stderr_path: Standard error (STDERR) redirection in Bash (2>word)
+        @type stderr_path: str | unicode
+        @param dependencies: Python list of Executable
+            name strings in the context of DRMS dependencies
+        @type dependencies: list
+        @param hold: Hold on job scheduling
+        @type hold: str
+        @param submit: Submit the Executable into the DRMS
+        @type submit: bool
+        @param process_identifier: Process identifier
+        @type process_identifier: str
+        @param process_name: Process name
+        @type process_name: str
+        @param obsolete_file_path_list: Python list of file paths that can be removed
+            after successfully completing this C{RunnableStep}
+        @type obsolete_file_path_list: list
+        @return:
+        @rtype:
+        """
+
+        super(RunnableStep, self).__init__(
+            name=name, program=program, options=options, arguments=arguments,  sub_command=sub_command,
+            stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold, submit=submit,
+            process_identifier=process_identifier, process_name=process_name)
+
+        if obsolete_file_path_list:
+            self.obsolete_file_path_list = obsolete_file_path_list
+        else:
+            self.obsolete_file_path_list = list()
+
+    def trace(self, level=1):
+        """Trace a C{RunnableStep} object.
+
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
+        """
+
+        indent = '  ' * level
+        output = str()
+        output += '{}{!r}\n'.format(indent, self)
+        output += '{}  obsolete_file_path_list: {!r}\n'.format(indent, self.obsolete_file_path_list)
+        output += super(RunnableStep, self).trace(level=level + 1)
+
+        return output
+
+
 class Runnable(object):
     """The C{Runnable} class holds all information to run one or more C{Executable} objects through the
-    I{Runner} script.
+    I{Runner} script. It can be thought of a script that executes runnable steps.
 
     Attributes:
     @cvar runner_script: Name of the I{Runner} script
@@ -2511,6 +2598,8 @@ class Runnable(object):
     @type executable_dict: dict
     @ivar file_path_dict: Python C{dict} of Python C{str} (name) key data and Python C{str} (file_path) value data
     @type file_path_dict: dict
+    @ivar runnable_step_list: Python C{list} of C{RunnableStep} objects
+    @type runnable_step_list: list
     @ivar working_directory: Working directory to write C{pickle.Pickler} files
     @type working_directory: str | unicode
     @ivar debug: Debug level
@@ -2623,6 +2712,7 @@ class Runnable(object):
             negative values indicate that the child received a signal
         @rtype: int
         """
+        # TODO: This should become a direct method of the Executable class.
 
         on_posix = 'posix' in sys.builtin_module_names
 
@@ -2730,7 +2820,8 @@ class Runnable(object):
             print '[{}] Child process {!r} completed with return code {}.'. \
                 format(datetime.datetime.now().isoformat(), executable.name, +return_code)
 
-    def __init__(self, name, code_module, working_directory, file_path_dict=None, executable_dict=None, debug=0):
+    def __init__(self, name, code_module, working_directory, file_path_dict=None, executable_dict=None,
+                 runnable_step_list=None, debug=0):
         """Initialise a C{Runnable} object.
 
         @param name: Name
@@ -2746,6 +2837,8 @@ class Runnable(object):
         @param executable_dict: Python C{dict} of Python C{str} (C{Executable.name}) key data and
             C{Executable} value data
         @type executable_dict: dict
+        @param runnable_step_list: Python C{list} of C{RunnableStep} objects
+        @type runnable_step_list: list[RunnableStep]
         @param debug: Integer debugging level
         @type debug: int
         """
@@ -2763,6 +2856,11 @@ class Runnable(object):
             self.executable_dict = executable_dict
         else:
             self.executable_dict = dict()
+
+        if runnable_step_list:
+            self.runnable_step_list = runnable_step_list
+        else:
+            self.runnable_step_list = list()
 
         self.debug = debug
 
@@ -2783,6 +2881,7 @@ class Runnable(object):
         output += '{}  working_directory: {!r}\n'.format(indent, self.working_directory)
         output += '{}  file_path_dict: {!r}\n'.format(indent, self.file_path_dict)
         output += '{}  executable_dict: {!r}\n'.format(indent, self.executable_dict)
+        output += '{}  runnable_step_list: {!r}\n'.format(indent, self.runnable_step_list)
         output += '{}  debug: {!r}\n'.format(indent, self.debug)
 
         output += '{}  Python dict of Python str (file path) objects:\n'.format(indent)
@@ -2802,9 +2901,14 @@ class Runnable(object):
             assert isinstance(executable, Executable)
             output += executable.trace(level=level + 2)
 
+        output += '{}  Python list of RunnableStep objects:\n'.format(indent)
+        for runnable_step in self.runnable_step_list:
+            assert isinstance(runnable_step, RunnableStep)
+            output += runnable_step.trace(level=level + 1)
+
         return output
 
-    def add_executable(self, executable):
+    def add_executable(self, executable=None):
         """Add an C{Executable}.
 
         @param executable: C{Executable}
@@ -2812,7 +2916,7 @@ class Runnable(object):
         @raise Exception: An C{Executable.name} already exists in the C{Runnable} object
         """
 
-        if not executable:
+        if executable is None:
             return
 
         if executable.name in self.executable_dict:
@@ -2820,6 +2924,20 @@ class Runnable(object):
                             format(executable.name, self.name))
         else:
             self.executable_dict[executable.name] = executable
+
+    def add_runnable_step(self, runnable_step=None):
+        """Add a C{RunnableStep}.
+
+        @param runnable_step: C{RunnableStep}
+        @type runnable_step: RunnableStep
+        """
+
+        if runnable_step is None:
+            return
+
+        assert isinstance(runnable_step, RunnableStep)
+
+        self.runnable_step_list.append(runnable_step)
 
     def run_executable(self, name):
         """Run an C{Executable} defined in the C{Runnable} object.
@@ -2879,3 +2997,23 @@ class Runnable(object):
         assert isinstance(runnable, Runnable)
 
         return runnable
+
+    @property
+    def get_status_path(self):
+        """Get the status file path indicating successful completion of this Runnable.
+
+        @return: Status file path
+        @rtype: str
+        """
+
+        return string.join(words=(self.name, 'completed.txt'), sep='_')
+
+    @property
+    def get_temporary_directory_path(self):
+        """Get the temporary directory path for this C{Runnable}.
+
+        @return: Temporary directory path
+        @rtype: str
+        """
+
+        return string.join(words=(self.name, 'temporary'), sep='_')
