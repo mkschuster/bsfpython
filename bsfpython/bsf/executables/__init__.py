@@ -106,123 +106,6 @@ class BWA(Executable):
         # None for the moment.
 
 
-class Cuffdiff(Executable):
-    """Cuffdiff differential expression class.
-
-    Reference: http://cufflinks.cbcb.umd.edu/manual.html#cuffdiff
-    Usage: cuffdiff [options]* <transcripts.gtf>
-    <sample1_replicate1.sam[,...,sample1_replicateM]>
-    <sample2_replicate1.sam[,...,sample2_replicateM.sam]>...
-    [sampleN.sam_replicate1.sam[,...,sample2_replicateM.sam]]
-    """
-
-    def __init__(self, name, analysis):
-        """Initialise a C{Cuffdiff} object.
-
-        @param name: Name
-        @type name: str
-        @param analysis: C{Analysis}
-        @type analysis: Analysis
-        """
-
-        assert isinstance(analysis, Analysis)
-
-        super(Cuffdiff, self).__init__(name=name, program='cuffdiff')
-
-        section = analysis.configuration.section_from_instance(self)
-        self.set_configuration(configuration=analysis.configuration, section=section)
-
-        # Set default Cuffdiff options.
-
-        if not ('library-type' in self.options and self.options['library-type']):
-            self.add_option_long(key='library-type', value='fr-unstranded')
-
-        # if not ('num-threads' in self.options and self.options['num-threads']):
-        #     self.add_option_long(key='num-threads', value='1')
-
-        if not 'quiet' in self.options:
-            self.add_switch_long(key='quiet')
-
-        if not 'no-update-check' in self.options:
-            self.add_switch_long(key='no-update-check')
-
-
-class Cufflinks(Executable):
-    """Cufflinks transcript assembler class.
-
-    Reference: http://cufflinks.cbcb.umd.edu/manual.html
-    Usage: cufflinks [options]* <aligned_reads.(sam/bam)>
-    """
-
-    def __init__(self, name, analysis):
-        """Initialise a C{Cufflinks} object.
-
-        @param name: Name
-        @type name: str
-        @param analysis: C{Analysis}
-        @type analysis: Analysis
-        """
-
-        assert isinstance(analysis, Analysis)
-
-        super(Cufflinks, self).__init__(name=name, program='cufflinks')
-
-        section = analysis.configuration.section_from_instance(self)
-        self.set_configuration(configuration=analysis.configuration, section=section)
-
-        # Set default Cufflinks options.
-
-        if not 'library-type' in self.options:
-            self.add_option_long(key='library-type', value='fr-unstranded')
-
-        if not ('num-threads' in self.options and self.options['num-threads']):
-            self.add_option_long(key='num-threads', value='1')
-
-        if not 'quiet' in self.options:
-            self.add_switch_long(key='quiet')
-
-        if not 'no-update-check' in self.options:
-            self.add_switch_long(key='no-update-check')
-
-
-class Cuffmerge(Executable):
-    """Cuffmerge transcript assembly merge class.
-
-    Reference: http://cufflinks.cbcb.umd.edu/manual.html#cuffmerge
-    Usage: cuffmerge [options]* <assembly_GTF_list.txt>
-    """
-
-    def __init__(self, name, analysis):
-        """Initialise a C{Cuffmerge} object.
-
-        @param name: Name
-        @type name: str
-        @param analysis: C{Analysis}
-        @type analysis: Analysis
-        """
-
-        # super(Cuffmerge, self).__init__(name=name, program='cuffmerge')
-        # TODO: Experimentally change this so that the new bsf_run_rnaseq_cuffmerge.py script gets used.
-        # Although this seems rather successful, so far, the runnable option is not ideal.
-        # Maybe the DRMS object should supply a mechanism to execute via the BSF Runner script.
-
-        assert isinstance(analysis, Analysis)
-
-        super(Cuffmerge, self).__init__(name=name, program='bsf_run_rnaseq_cuffmerge.py')
-
-        section = analysis.configuration.section_from_instance(self)
-        self.set_configuration(configuration=analysis.configuration, section=section)
-
-        # TODO: Should this be refactored so that the bsf_run_rnaseq_cuffmerge.py script can be used from a DRMS or
-        # Executable object?
-        self.add_option_long(key='runnable', value='cuffmerge')
-
-        # Set default Cuffmerge options.
-
-        # if not ('num-threads' in self.options and self.options['num-threads']):
-        #     self.add_option_long(key='num-threads', value='1')
-
-
 class TopHat(Executable):
     """TopHat RNA-Seq aligner class.
 
@@ -258,6 +141,7 @@ class TopHat(Executable):
         if not ('num-threads' in self.options and self.options['num-threads']):
             self.add_option_long(key='num-threads', value='1')
 
+        # TODO: Is this required?
         if not ('coverage-search' in self.options and self.options['coverage-search']):
             self.add_switch_long(key='no-coverage-search')
 

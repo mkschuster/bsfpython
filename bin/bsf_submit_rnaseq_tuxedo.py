@@ -51,7 +51,7 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-# Create a BSF ChIPSeq analysis and run it.
+# Create a Tuxedo analysis and run it.
 
 tuxedo = Tuxedo.from_config_file_path(config_path=name_space.configuration)
 
