@@ -529,28 +529,35 @@ class Tuxedo(Analysis):
 
                 # Create a Tophat Runnable per replicate (replicate_key).
 
-                prefix_tophat = string.join(words=(drms_run_tophat.name, replicate_key), sep='_')
+                # TODO: Activate the new code once the bsf_run_rnaseq_tophat.py script has been retired.
+
+                # prefix_run_tophat = string.join(words=(drms_run_tophat.name, replicate_key), sep='_')
 
                 file_path_dict_tophat = dict(
-                    output_directory=prefix_tophat)
+                    # The output directory deviates from the prefix_run_tophat that itself is based on
+                    # drms_run_tophat.name. Both rnaseq_run_tophat and rnaseq_process_tophat processes should
+                    # use the same rnaseq_tophat directory.
+                    # output_directory=prefix_run_tophat,
+                    output_directory=string.join(words=('rnaseq_tophat', replicate_key), sep='_')
+                )
 
-                runnable_run_tophat = Runnable(
-                    name=prefix_tophat,
-                    code_module='bsf.runnables.generic',
-                    working_directory=self.genome_directory,
-                    file_path_dict=file_path_dict_tophat,
-                    debug=self.debug)
-                self.add_runnable(runnable=runnable_run_tophat)
+                # runnable_run_tophat = Runnable(
+                #     name=prefix_tophat,
+                #     code_module='bsf.runnables.generic',
+                #     working_directory=self.genome_directory,
+                #     file_path_dict=file_path_dict_tophat,
+                #     debug=self.debug)
+                # self.add_runnable(runnable=runnable_run_tophat)
 
                 # Create an Executable for running the Tophat Runnable.
 
-                run_tophat = Executable.from_analysis_runnable(
-                    analysis=self,
-                    runnable_name=runnable_run_tophat.name)
-                drms_run_tophat.add_executable(executable=run_tophat)
+                # run_tophat = Executable.from_analysis_runnable(
+                #     analysis=self,
+                #     runnable_name=runnable_run_tophat.name)
+                # drms_run_tophat.add_executable(executable=run_tophat)
 
                 # Create a new Tophat RunnableStep.
-                # TODO: Activate the new code once the bsf_run_rnaseq_tophat.py script has been retired.
+
                 # tophat = RunnableStep.from_analysis(
                 #     name='tophat2',
                 #     program='tophat2',
@@ -568,7 +575,7 @@ class Tuxedo(Analysis):
                     value=self.transcriptome_gtf_path)
                 tophat.add_option_long(
                     key='output-dir',
-                    value=os.path.join(self.genome_directory, tophat.name))
+                    value=file_path_dict_tophat['output_directory'])
                 tophat.add_option_long(
                     key='num-threads',
                     value=str(drms_run_tophat.threads))
@@ -654,7 +661,7 @@ class Tuxedo(Analysis):
 
                 # Set rnaseq_process_tophat arguments.
 
-                process_tophat.arguments.append(os.path.join(self.genome_directory, tophat.name))
+                process_tophat.arguments.append(file_path_dict_tophat['output_directory'])
                 process_tophat.arguments.append(genome_sizes)
 
                 # Create a Cufflinks Runnable per replicate (replicate_key).
@@ -662,7 +669,13 @@ class Tuxedo(Analysis):
                 prefix_run_cufflinks = string.join(words=(drms_run_cufflinks.name, replicate_key), sep='_')
 
                 file_path_dict_cufflinks = dict(
-                    output_directory=prefix_run_cufflinks)
+                    # The output directory deviates from the prefix_run_cufflinks that itself is based on
+                    # drms_run_cufflinks.name. Both rnaseq_run_cufflinks and rnaseq_process_cufflinks processes should
+                    # use the same rnaseq_cufflinks directory.
+                    # output_directory=prefix_run_cufflinks,
+                    output_directory=string.join(words=('rnaseq_cufflinks', replicate_key), sep='_'),
+                    tophat_accepted_hits=os.path.join(file_path_dict_tophat['output_directory'], 'accepted_hits.bam')
+                )
 
                 runnable_run_cufflinks = Runnable(
                     name=prefix_run_cufflinks,
@@ -678,6 +691,7 @@ class Tuxedo(Analysis):
                     analysis=self,
                     runnable_name=runnable_run_cufflinks.name)
                 drms_run_cufflinks.add_executable(executable=run_cufflinks)
+                run_cufflinks.dependencies.append(run_tophat.name)
 
                 # Create a new Cufflinks RunnableStep.
 
@@ -726,7 +740,7 @@ class Tuxedo(Analysis):
 
                 cufflinks.add_option_long(
                     key='output-dir',
-                    value=prefix_run_cufflinks)
+                    value=file_path_dict_cufflinks['output_directory'])
 
                 cufflinks.add_option_long(
                     key='num-threads',
@@ -740,7 +754,7 @@ class Tuxedo(Analysis):
 
                 # Set Cufflinks arguments.
 
-                cufflinks.arguments.append(os.path.join(self.genome_directory, tophat.name, 'accepted_hits.bam'))
+                cufflinks.arguments.append(file_path_dict_cufflinks['tophat_accepted_hits'])
 
                 # Create a new Process Cufflinks Executable.
 
@@ -828,7 +842,7 @@ class Tuxedo(Analysis):
                 name='cuffmerge',
                 program='cuffmerge',
                 analysis=self)
-            drms_run_cuffmerge.add_executable(cuffmerge)
+            runnable_run_cuffmerge.add_runnable_step(runnable_step=cuffmerge)
 
             # Set rnaseq_cuffmerge options.
 
@@ -859,20 +873,16 @@ class Tuxedo(Analysis):
             # Process rnaseq_cuffmerge and rnaseq_cuffdiff arguments in parallel.
 
             # Create a Python list of Python list objects of Cuffquant abundances per comparison group.
-            cuffdiff_abundances = list()
-            # Create a Python list of Python list objects of TopHat aligned BAM files per comparison group.
-            cuffdiff_alignments = list()
-            cuffdiff_dependencies = list()
-            cuffdiff_labels = list()
+            cuffdiff_cuffnorm_abundances = list()
+            cuffdiff_cuffnorm_dependencies = list()
+            cuffdiff_cuffnorm_labels = list()
 
             for group_name, group_samples in self.comparisons[comparison_key]:
                 assert isinstance(group_name, str)
                 assert isinstance(group_samples, list)
-                cuffdiff_labels.append(group_name)
-                abundances_list = list()
-                alignments_list = list()
-                cuffdiff_abundances.append(abundances_list)
-                cuffdiff_alignments.append(alignments_list)
+                cuffdiff_cuffnorm_labels.append(group_name)
+                per_group_abundances_list = list()
+                cuffdiff_cuffnorm_abundances.append(per_group_abundances_list)
 
                 for sample in group_samples:
                     assert isinstance(sample, Sample)
@@ -896,18 +906,10 @@ class Tuxedo(Analysis):
                             'transcripts.gtf')
                         assembly_file.write(transcripts_path + '\n')
 
-                        # Wait for each TopHat and Cufflinks replicate to finish,
-                        # before Cuffmerge can run.
+                        # Wait for each Cufflinks replicate to finish, before Cuffmerge can run.
 
-                        cuffmerge.dependencies.append(
-                            string.join(words=('rnaseq_run_cufflinks', replicate_key), sep='_'))
-
-                        # Add the TopHat accepted hits BAM file to Cuffdiff ...
-
-                        alignments_list.append(os.path.join(
-                            self.genome_directory,
-                            string.join(words=('rnaseq_tophat', replicate_key), sep='_'),
-                            'accepted_hits.bam'))
+                        run_cuffmerge.dependencies.append(
+                            string.join(words=(self.drms_name_run_cufflinks, replicate_key), sep='_'))
 
                         # Create a Cuffquant Runnable per comparison (comparison_key) and replicate (replicate_key)
                         # on the basis of the Cuffmerge GTF file.
@@ -938,6 +940,10 @@ class Tuxedo(Analysis):
                             analysis=self,
                             runnable_name=runnable_run_cuffquant.name)
                         drms_run_cuffquant.add_executable(executable=run_cuffquant)
+
+                        # Each Cuffquant process depends on Cuffmerge.
+
+                        run_cuffquant.dependencies.append(run_cuffmerge.name)
 
                         # Create a new cuffquant RunnableStep.
 
@@ -980,17 +986,13 @@ class Tuxedo(Analysis):
                         cuffquant.arguments.append(file_path_dict_cuffquant['merged_gtf'])
                         cuffquant.arguments.append(file_path_dict_cuffquant['tophat_accepted_hits'])
 
-                        # Each Cuffquant process depends on Cuffmerge.
-
-                        run_cuffquant.dependencies.append(run_cuffmerge.name)
-
                         # Add the Cuffquant abundances file to the Cuffdiff list.
 
-                        abundances_list.append(file_path_dict_cuffquant['abundances'])
+                        per_group_abundances_list.append(file_path_dict_cuffquant['abundances'])
 
-                        # Add the Cuffquant Runnable process name to the Cuffdiff dependencies list.
+                        # Add the Cuffquant Runnable process name to the Cuffdiff and Cuffnorm dependencies list.
 
-                        cuffdiff_dependencies.append(run_cuffquant.name)
+                        cuffdiff_cuffnorm_dependencies.append(run_cuffquant.name)
 
             assembly_file.close()
 
@@ -1020,8 +1022,7 @@ class Tuxedo(Analysis):
                 runnable_name=runnable_run_cuffnorm.name)
             drms_run_cuffnorm.add_executable(executable=run_cuffnorm)
 
-            run_cuffnorm.dependencies.append(cuffmerge.name)
-            run_cuffnorm.dependencies.extend(cuffdiff_dependencies)
+            run_cuffnorm.dependencies.extend(cuffdiff_cuffnorm_dependencies)
 
             # Create a new Cuffnorm RunnableStep.
 
@@ -1038,7 +1039,7 @@ class Tuxedo(Analysis):
                 value=file_path_dict_cuffnorm['output_directory'])
             cuffnorm.add_option_long(
                 key='labels',
-                value=string.join(words=cuffdiff_labels, sep=','))
+                value=string.join(words=cuffdiff_cuffnorm_labels, sep=','))
             cuffnorm.add_option_long(
                 key='num-threads',
                 value=str(drms_run_cuffnorm.threads))
@@ -1055,9 +1056,9 @@ class Tuxedo(Analysis):
             cuffnorm.arguments.append(file_path_dict_cuffnorm['merged_gtf'])
 
             # Add the Cuffquant abundances files per point as Cuffnorm arguments.
-            for abundances_list in cuffdiff_abundances:
-                assert isinstance(abundances_list, list)
-                cuffnorm.arguments.append(string.join(words=abundances_list, sep=','))
+            for per_group_abundances_list in cuffdiff_cuffnorm_abundances:
+                assert isinstance(per_group_abundances_list, list)
+                cuffnorm.arguments.append(string.join(words=per_group_abundances_list, sep=','))
 
             # Create a Cuffdiff Runnable per comparison.
 
@@ -1082,8 +1083,7 @@ class Tuxedo(Analysis):
                 runnable_name=runnable_run_cuffdiff.name)
             drms_run_cuffdiff.add_executable(executable=run_cuffdiff)
 
-            run_cuffdiff.dependencies.append(cuffmerge.name)
-            run_cuffdiff.dependencies.extend(cuffdiff_dependencies)
+            run_cuffdiff.dependencies.extend(cuffdiff_cuffnorm_dependencies)
 
             # Create a new Cuffdiff RunnableStep.
 
@@ -1100,7 +1100,7 @@ class Tuxedo(Analysis):
                 value=file_path_dict_cuffdiff['output_directory'])
             cuffdiff.add_option_long(
                 key='labels',
-                value=string.join(words=cuffdiff_labels, sep=','))
+                value=string.join(words=cuffdiff_cuffnorm_labels, sep=','))
             cuffdiff.add_option_long(
                 key='num-threads',
                 value=str(drms_run_cuffdiff.threads))
@@ -1126,15 +1126,10 @@ class Tuxedo(Analysis):
             # Add the Cuffmerge GTF file as first Cuffdiff argument.
             cuffdiff.arguments.append(file_path_dict_cuffdiff['merged_gtf'])
 
-            # Add the Cuffquant abundances files per point as Cuffdiff arguments.
-            for abundances_list in cuffdiff_abundances:
-                assert isinstance(abundances_list, list)
-                cuffdiff.arguments.append(string.join(words=abundances_list, sep=','))
-
-            # Add the TopHat aligned BAM files per point as Cuffdiff arguments.
-            # for alignments_list in cuffdiff_alignments:
-            #     assert isinstance(alignments_list, list)
-            #     cuffdiff.arguments.append(string.join(words=alignments_list, sep=','))
+            # Add the Cuffquant abundances files per comparison group as Cuffdiff arguments.
+            for per_group_abundances_list in cuffdiff_cuffnorm_abundances:
+                assert isinstance(per_group_abundances_list, list)
+                cuffdiff.arguments.append(string.join(words=per_group_abundances_list, sep=','))
 
             # Create a new rnaseq_process_cuffdiff Executable.
 
