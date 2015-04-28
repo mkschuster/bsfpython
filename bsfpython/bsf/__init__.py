@@ -2304,7 +2304,7 @@ class Executable(Command):
     def from_analysis_runnable(cls, analysis, runnable_name):
         """Create an Executable to submit a Runnable into a DRMS.
 
-        In case C{Runnable.get_status_path} exists already, C{Executable.submit} will be set to C{False}.
+        In case C{Runnable.get_relative_status_path} exists already, C{Executable.submit} will be set to C{False}.
         @param analysis: Analysis
         @type analysis: Analysis
         @param runnable_name: Runnable name
@@ -2327,7 +2327,7 @@ class Executable(Command):
         executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
 
         # Only submit the Executable if the status file does not exist already.
-        if os.path.exists(runnable.get_status_path):
+        if os.path.exists(runnable.get_absolute_status_path):
             executable.submit = False
 
         return executable
@@ -2999,21 +2999,41 @@ class Runnable(object):
         return runnable
 
     @property
-    def get_status_path(self):
-        """Get the status file path indicating successful completion of this Runnable.
+    def get_relative_status_path(self):
+        """Get the relative status file path indicating successful completion of this C{Runnable}.
 
-        @return: Status file path
+        @return: Relative status file path
         @rtype: str
         """
 
         return string.join(words=(self.name, 'completed.txt'), sep='_')
 
     @property
-    def get_temporary_directory_path(self):
-        """Get the temporary directory path for this C{Runnable}.
+    def get_relative_temporary_directory_path(self):
+        """Get the relative temporary directory path for this C{Runnable}.
 
-        @return: Temporary directory path
+        @return: Relative temporary directory path
         @rtype: str
         """
 
         return string.join(words=(self.name, 'temporary'), sep='_')
+
+    @property
+    def get_absolute_status_path(self):
+        """Get the absolute status file path including the C{Runnable.working_directory}.
+
+        @return: Absolute status file path
+        @rtype: str
+        """
+
+        return os.path.join(self.working_directory, self.get_relative_status_path)
+
+    @property
+    def get_absolute_temporary_directory_path(self):
+        """Get the absolute temporary directory path including the  C{Runnable.working_directory}.
+
+        @return: Absolute temporary directory path
+        @rtype: str
+        """
+
+        return os.path.join(self.working_directory, self.get_relative_temporary_directory_path)

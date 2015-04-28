@@ -117,12 +117,12 @@ def run(runnable):
     # If the Runnable status file exists, there is nothing to do and
     # this Runnable should not have been submitted in the first place.
 
-    if os.path.exists(runnable.get_status_path):
+    if os.path.exists(runnable.get_relative_status_path):
         return
 
     # Create a Runnable-specific temporary directory if it does not already exist.
 
-    temporary_directory_path = runnable.get_temporary_directory_path
+    temporary_directory_path = runnable.get_relative_temporary_directory_path
     if not os.path.isdir(temporary_directory_path):
         try:
             os.makedirs(temporary_directory_path)
@@ -195,7 +195,7 @@ def run(runnable):
 
     # Create a status file that indicates completion for the whole Runnable.
 
-    open(runnable.get_status_path, 'w').close()
+    open(runnable.get_relative_status_path, 'w').close()
 
     # Remove the status file of the previous RunnableStep.
 
