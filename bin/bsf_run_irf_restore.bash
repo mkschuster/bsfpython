@@ -178,17 +178,24 @@ echo "$(date): Finished extracting the Intensities directory" 1>&3 \
 for i in 1 2 3 4 5 6 7 8; do
 
     declare lane_name=$(printf 'L%03u' "${i}")
+    declare lane_path="${archive_directory}/${illumina_run_name}_${lane_name}.tar"
 
-    echo "$(date): Started extracting the Lanes directory ${lane_name}" 1>&3 \
-        || bsf_error
-    tar \
-        --extract \
-        --file "${archive_directory}/${illumina_run_name}_${lane_name}.tar" \
-        || bsf_error
-    echo "$(date): Finished extracting the Lanes directory ${lane_name}" 1>&3 \
-        || bsf_error
+    if [ -f "${lane_path}" ]; then
+        echo "$(date): Started extracting the Lanes directory ${lane_name}" 1>&3 \
+            || bsf_error
+        tar \
+            --extract \
+            --file "${lane_path}" \
+            || bsf_error
+        echo "$(date): Finished extracting the Lanes directory ${lane_name}" 1>&3 \
+            || bsf_error
+    else
+        echo "$(date): No archive file for Lanes directory ${lane_name}" 1>&3 \
+            || bsf_error
+    fi
 
     unset lane_name
+    unset lane_path
 
 done
 
