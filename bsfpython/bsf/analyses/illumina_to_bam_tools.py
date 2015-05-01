@@ -4,7 +4,7 @@ A package of classes and methods supporting analyses of the Illumina2Bam-Tools p
 """
 
 #
-# Copyright 2014 Michael K. Schuster
+# Copyright 2013 - 2015 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -32,13 +32,10 @@ import os
 import string
 import warnings
 
-from bsf import Analysis, Command, Configuration, Default, DRMS, Executable, Runnable
+from bsf import Analysis, Command, Configuration, Default, DRMS, Executable, Runnable, RunnableStep
+from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
 from bsf.annotation import BamIndexDecoderSheet, LibraryAnnotationSheet, SampleAnnotationSheet
-from bsf.illumina import RunFolder
-
-
-class IlluminaRunFolderNotComplete(Exception):
-    pass
+from bsf.illumina import RunFolder, RunFolderNotComplete
 
 
 class IlluminaToBam(Analysis):
@@ -73,6 +70,19 @@ class IlluminaToBam(Analysis):
     """
 
     drms_name_illumina_to_bam = 'illumina_to_bam'
+
+    @classmethod
+    def get_prefix_illumina_to_bam(cls, project_name, lane):
+        """Get a Python C{str} for setting C{Executable.dependencies} in other C{Analysis} objects
+
+        @param project_name: A project name
+        @type project_name: str
+        @param lane: A lane number
+        @type lane: str
+        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @rtype: str
+        """
+        return string.join(words=(cls.drms_name_illumina_to_bam, project_name, lane), sep='_')
 
     @classmethod
     def from_config_file_path(cls, config_path):
@@ -347,8 +357,8 @@ class IlluminaToBam(Analysis):
 
         # Check that the Illumina Run Folder is complete.
 
-        if not os.path.exists(path=os.path.join(self.run_directory, 'RTAComplete.txt')) and not self.force:
-            raise IlluminaRunFolderNotComplete(
+        if not (os.path.exists(path=os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
+            raise RunFolderNotComplete(
                 'The Illumina run directory {!r} is not complete.'.format(self.run_directory))
 
         # Define an 'Intensities' directory.
@@ -454,19 +464,17 @@ class IlluminaToBam(Analysis):
 
         super(IlluminaToBam, self).run()
 
-        itb_drms = DRMS.from_analysis(
+        drms_illumina_to_bam = DRMS.from_analysis(
             name=self.drms_name_illumina_to_bam,
             work_directory=self.project_directory,
             analysis=self)
-        self.drms_list.append(itb_drms)
+        self.drms_list.append(drms_illumina_to_bam)
 
         for lane in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
 
             lane_str = str(lane)
-            prefix = string.join(words=(itb_drms.name, self.project_name, lane_str), sep='_')
 
             file_path_dict = dict(
-                temporary_directory=string.join((prefix, 'temporary'), sep='_'),
                 illumina_directory=self.run_directory,  # contains full path information
                 sequences_directory=self.sequences_directory,  # contains full path information
                 experiment_directory=self.experiment_directory,  # contains full path information
@@ -485,24 +493,44 @@ class IlluminaToBam(Analysis):
             )
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
-            runnable = Runnable(
-                name=prefix,
-                code_module='bsf.runnables.illumina_to_bam',
+            runnable_illumina_to_bam = Runnable(
+                name=self.get_prefix_illumina_to_bam(project_name=self.project_name, lane=lane_str),
+                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
                 file_path_dict=file_path_dict)
-            self.add_runnable(runnable=runnable)
+            self.add_runnable(runnable=runnable_illumina_to_bam)
+
+            # TODO: The Runnable class could have dependencies just like the Executable class so that they could be
+            # passed on upon creation of the Executable from the Runnable via Executable.from_analysis_runnable().
+            executable_illumina_to_bam = Executable.from_analysis_runnable(
+                analysis=self,
+                runnable_name=runnable_illumina_to_bam.name)
+            drms_illumina_to_bam.add_executable(executable=executable_illumina_to_bam)
+
+            executable_illumina_to_bam.dependencies.append(
+                IlluminaRunFolderRestore.get_prefix_compress_base_calls(project_name=self.project_name, lane=lane_str))
+
+            # Only submit this Executable if the final result file does not exist.
+            if (os.path.exists(file_path_dict['sorted_md5'])
+                    and os.path.getsize(file_path_dict['sorted_md5'])):
+                executable_illumina_to_bam.submit = False
 
             # Run Illumina2Bam tools Illumina2bam.
 
-            java_process = Executable(name='illumina_to_bam', program='java', sub_command=Command(command=str()))
-            runnable.add_executable(executable=java_process)
+            java_process = RunnableStep(
+                name='illumina_to_bam',
+                program='java',
+                sub_command=Command(command=str()))
+            runnable_illumina_to_bam.add_runnable_step(runnable_step=java_process)
 
             java_process.add_switch_short(key='d64')
             java_process.add_option_short(
                 key='jar',
                 value=os.path.join(self.classpath_illumina2bam, 'Illumina2bam.jar'))
             java_process.add_switch_short(key='Xmx4G')
-            java_process.add_option_pair(key='-Djava.io.tmpdir', value=file_path_dict['temporary_directory'])
+            java_process.add_option_pair(
+                key='-Djava.io.tmpdir',
+                value=runnable_illumina_to_bam.get_relative_temporary_directory_path)
 
             sub_command = java_process.sub_command
 
@@ -559,7 +587,7 @@ class IlluminaToBam(Analysis):
             # FINAL_INDEX_CYCLE
             sub_command.add_option_pair(
                 key='TMP_DIR',
-                value=file_path_dict['temporary_directory'])
+                value=runnable_illumina_to_bam.get_relative_temporary_directory_path)
             sub_command.add_option_pair(
                 key='VERBOSITY',
                 value='WARNING')
@@ -579,16 +607,18 @@ class IlluminaToBam(Analysis):
 
             # Run Picard SortSam
 
-            java_process = Executable(
+            java_process = RunnableStep(
                 name='picard_sort_sam',
                 program='java',
                 sub_command=Command(command=str()))
-            runnable.add_executable(executable=java_process)
+            runnable_illumina_to_bam.add_runnable_step(runnable_step=java_process)
 
             java_process.add_switch_short(key='d64')
             java_process.add_option_short(key='jar', value=os.path.join(self.classpath_picard, 'SortSam.jar'))
             java_process.add_switch_short(key='Xmx4G')
-            java_process.add_option_pair(key='-Djava.io.tmpdir', value=file_path_dict['temporary_directory'])
+            java_process.add_option_pair(
+                key='-Djava.io.tmpdir',
+                value=runnable_illumina_to_bam.get_relative_temporary_directory_path)
 
             sub_command = java_process.sub_command
 
@@ -603,7 +633,7 @@ class IlluminaToBam(Analysis):
                 value='queryname')
             sub_command.add_option_pair(
                 key='TMP_DIR',
-                value=file_path_dict['temporary_directory'])
+                value=runnable_illumina_to_bam.get_relative_temporary_directory_path)
             sub_command.add_option_pair(
                 key='VERBOSITY',
                 value='WARNING')
@@ -620,17 +650,6 @@ class IlluminaToBam(Analysis):
                 key='CREATE_MD5_FILE',
                 value='true')
             # OPTIONS_FILE
-
-            # Submit the corresponding BSF Executable for the BSF Runner job into the DRMS.
-            # Should the Runnable object have dependencies just like the Executable class already has?
-            # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
-            itb = Executable.from_analysis_runnable(analysis=self, runnable_name=runnable.name)
-            itb_drms.add_executable(executable=itb)
-
-            # Only submit this Executable if the final result file does not exist.
-            if (os.path.exists(file_path_dict['sorted_md5'])
-                    and os.path.getsize(file_path_dict['sorted_md5'])):
-                itb.submit = False
 
 
 class BamIndexDecoder(Analysis):
@@ -659,6 +678,19 @@ class BamIndexDecoder(Analysis):
     """
 
     drms_name_bam_index_decoder = 'bam_index_decoder'
+
+    @classmethod
+    def get_prefix_bam_index_decoder(cls, project_name, lane):
+        """Get a Python C{str} for setting C{Executable.dependencies} in other C{Analysis} objects
+
+        @param project_name: A project name
+        @type project_name: str
+        @param lane: A lane number
+        @type lane: str
+        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @rtype: str
+        """
+        return string.join(words=(cls.drms_name_bam_index_decoder, project_name, lane), sep='_')
 
     @classmethod
     def from_config_file_path(cls, config_path):
@@ -947,11 +979,11 @@ class BamIndexDecoder(Analysis):
         if not self.classpath_picard:
             self.classpath_picard = default.classpath_picard
 
-        bid_drms = DRMS.from_analysis(
+        drms_bam_index_decoder = DRMS.from_analysis(
             name=self.drms_name_bam_index_decoder,
             work_directory=self.project_directory,
             analysis=self)
-        self.drms_list.append(bid_drms)
+        self.drms_list.append(drms_bam_index_decoder)
 
         index_by_lane = dict()
 
@@ -975,10 +1007,7 @@ class BamIndexDecoder(Analysis):
 
             # The key represents the lane number as a Python str.
 
-            prefix = string.join(words=(bid_drms.name, self.project_name, key), sep='_')
-
             file_path_dict = dict(
-                temporary_directory=string.join(words=(prefix, 'temporary'), sep='_'),
                 samples_directory=os.path.join(
                     self.experiment_directory,
                     string.join(words=(self.project_name, key, 'samples'), sep='_')),
@@ -1036,22 +1065,39 @@ class BamIndexDecoder(Analysis):
             bam_index_decoder_sheet.write_to_file()
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
-            runnable = Runnable(
-                name=prefix,
-                code_module='bsf.runnables.bam_index_decoder',
+            runnable_bam_index_decoder = Runnable(
+                name=self.get_prefix_bam_index_decoder(project_name=self.project_name, lane=key),
+                code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
                 file_path_dict=file_path_dict)
-            self.add_runnable(runnable=runnable)
+            self.add_runnable(runnable=runnable_bam_index_decoder)
+
+            # TODO: It would be good to extend the Runnable so that it holds dependencies on other Runnable objects
+            # and that it could be submitted to a DRMS so that the Executable gets automatically created and submitted.
+            executable_bam_index_decoder = Executable.from_analysis_runnable(
+                analysis=self,
+                runnable_name=runnable_bam_index_decoder.name)
+            drms_bam_index_decoder.add_executable(executable=executable_bam_index_decoder)
+
+            executable_bam_index_decoder.dependencies.append(
+                IlluminaToBam.get_prefix_illumina_to_bam(project_name=self.project_name, lane=key))
+
+            # Only submit this Executable if the final result file does not exist.
+            if (os.path.exists(
+                    os.path.join(self.project_directory, file_path_dict['metrics']))
+                and os.path.getsize(
+                    os.path.join(self.project_directory, file_path_dict['metrics']))):
+                executable_bam_index_decoder.submit = False
 
             if require_decoding:
 
                 # Run the BamIndexDecoder if there is at least one line containing a barcode sequence.
 
-                java_process = Executable(
+                java_process = RunnableStep(
                     name='bam_index_decoder',
                     program='java',
                     sub_command=Command(command=str()))
-                runnable.add_executable(executable=java_process)
+                runnable_bam_index_decoder.add_runnable_step(runnable_step=java_process)
 
                 java_process.add_switch_short(key='d64')
                 java_process.add_option_short(
@@ -1060,7 +1106,7 @@ class BamIndexDecoder(Analysis):
                 java_process.add_switch_short(key='Xmx4G')
                 java_process.add_option_pair(
                     key='-Djava.io.tmpdir',
-                    value=file_path_dict['temporary_directory'])
+                    value=runnable_bam_index_decoder.get_relative_temporary_directory_path)
 
                 sub_command = java_process.sub_command
 
@@ -1093,7 +1139,7 @@ class BamIndexDecoder(Analysis):
                 # MAX_LOW_QUALITY_TO_CONVERT
                 sub_command.add_option_pair(
                     key='TMP_DIR',
-                    value=file_path_dict['temporary_directory'])
+                    value=runnable_bam_index_decoder.get_relative_temporary_directory_path)
                 sub_command.add_option_pair(
                     key='VERBOSITY',
                     value='WARNING')
@@ -1113,11 +1159,11 @@ class BamIndexDecoder(Analysis):
 
                 # Run Picard CollectAlignmentSummaryMetrics if there is no line containing a barcode sequence.
 
-                java_process = Executable(
+                java_process = RunnableStep(
                     name='picard_collect_alignment_summary_metrics',
                     program='java',
                     sub_command=Command(command=str()))
-                runnable.add_executable(executable=java_process)
+                runnable_bam_index_decoder.add_runnable_step(runnable_step=java_process)
 
                 java_process.add_switch_short(key='d64')
                 java_process.add_option_short(
@@ -1126,7 +1172,7 @@ class BamIndexDecoder(Analysis):
                 java_process.add_switch_short(key='Xmx4G')
                 java_process.add_option_pair(
                     key='-Djava.io.tmpdir',
-                    value=file_path_dict['temporary_directory'])
+                    value=runnable_bam_index_decoder.get_relative_temporary_directory_path)
 
                 sub_command = java_process.sub_command
 
@@ -1147,7 +1193,7 @@ class BamIndexDecoder(Analysis):
                 # STOP_AFTER
                 sub_command.add_option_pair(
                     key='TMP_DIR',
-                    value=file_path_dict['temporary_directory'])
+                    value=runnable_bam_index_decoder.get_relative_temporary_directory_path)
                 sub_command.add_option_pair(
                     key='VERBOSITY',
                     value='WARNING')
@@ -1176,22 +1222,6 @@ class BamIndexDecoder(Analysis):
                 file_path_dict['link'] = os.path.join(
                     file_path_dict['samples_directory'],
                     '{}_{}#{}.bam'.format(self.project_name, key, index_by_lane[key][0]['sample_name']))
-
-            # Submit the corresponding BSF Executable for the BSF Runner job into the DRMS.
-            # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
-            bid = Executable.from_analysis_runnable(analysis=self, runnable_name=runnable.name)
-            bid_drms.add_executable(executable=bid)
-
-            # Since the dependency is managed in the project database of the IlluminaToBam analysis,
-            # which is stored in the BSF sequence archive directory, the process identifier cannot be resolved.
-            bid.dependencies.append(string.join(words=('illumina_to_bam', self.project_name, key), sep='_'))
-
-            # Only submit this Executable if the final result file does not exist.
-            if (os.path.exists(
-                    os.path.join(self.project_directory, file_path_dict['metrics']))
-                and os.path.getsize(
-                    os.path.join(self.project_directory, file_path_dict['metrics']))):
-                bid.submit = False
 
         # Finally, write the flow-cell-specific SampleAnnotationSheet to the internal file path.
 

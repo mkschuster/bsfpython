@@ -124,7 +124,7 @@ class RunInformation(object):
         components = string.split(run_identifier, sep='_')
 
         if len(components) != 4:
-            warnings.warn('Cannot split Illumina Run Identifier {!r} into ist components.'.format(run_identifier))
+            warnings.warn('Cannot split Illumina Run Identifier {!r} into its components.'.format(run_identifier))
             return
 
         # Strip leading zeros from the <Number>, split <FCPosition> and >Flowcell> elements.
@@ -642,7 +642,7 @@ class RunParameters(object):
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<IndexRead2>} element for
         I{HiSeq Control Software} or an empty string for
-        I{HiSeq Control Software}.
+        I{MiSeq Control Software}.
         Older implementations of the I{HiSeq Control Software} have only a
         I{<RunParameters>/<Setup>/<IndexRead>} element.
         @return: Number of cycles in index read 2
@@ -661,6 +661,28 @@ class RunParameters(object):
                 return element.text
             else:
                 return str()
+
+    @property
+    def get_real_time_analysis_version(self):
+        """Get the Real-Time Analysis (RTA) Version of a C{RunParameters} object.
+
+        Returns the text representation of the I{<RunParameters>/<Setup>/<RTAVersion>} element for
+        I{HiSeq Control Software} or the I{<RunParameters>/<RTAVersion>} element for
+        I{MiSeq Control Software}.
+        @return: RTA version
+        @rtype: str
+        """
+
+        if self.get_run_parameters_version == 'MiSeq_1_1':
+            # MiSeq 1_1 run
+            return self.element_tree.getroot().find('RTAVersion').text
+        else:
+            # HiSeq run or else
+            return self.element_tree.getroot().find('Setup/RTAVersion').text
+
+
+class RunFolderNotComplete(Exception):
+    pass
 
 
 class RunFolder(object):
