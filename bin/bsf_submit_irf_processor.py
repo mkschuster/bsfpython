@@ -33,8 +33,9 @@ import string
 import time
 
 from bsf import Default
-from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder, IlluminaToBam, IlluminaRunFolderNotComplete
-from bsf.illumina import RunFolder
+# from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
+from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder, IlluminaToBam
+from bsf.illumina import RunFolder, RunFolderNotComplete
 
 
 argument_parser = ArgumentParser(
@@ -51,6 +52,32 @@ argument_parser.add_argument(
     help='limit job submission to a particular Analysis stage',
     required=False,
     type=str)
+
+# argument_parser.add_argument(
+#     '--archive-directory',
+#     dest='archive_directory',
+#     help='archive directory',
+#     required=False,
+#     type=str)
+#
+# argument_parser.add_argument(
+#     '--project-name',
+#     dest='project_name',
+#     help='project name i.e. flow-cell identifier',
+#     required=False,
+#     type=str)
+#
+# argument_parser.add_argument(
+#     '--extract-intensities',
+#     action='store_true',
+#     dest='extract_intensities',
+#     help='extract cluster intensity (*.cif) files',
+#     required=False)
+#
+# argument_parser.add_argument(
+#     '--force',
+#     action='store_true',
+#     help='force expanding a run folder even if it exists already')
 
 argument_parser.add_argument(
     '--irf',
@@ -81,7 +108,8 @@ argument_parser.add_argument(
 argument_parser.add_argument(
     '--loop',
     action='store_true',
-    help='loop until a RTAComplete.txt file has been copied by the Illumina Real-Time Analysis (RTA) software')
+    help='loop until a RTAComplete.txt file has been copied by the Illumina Real-Time Analysis (RTA) software',
+    required=False)
 
 argument_parser.add_argument(
     '--interval',
@@ -90,6 +118,38 @@ argument_parser.add_argument(
     type=int)
 
 name_space = argument_parser.parse_args()
+
+# if name_space.archive_directory:
+#
+#     # Extract the Illumina Run Folder first.
+#
+#     irf_restore = IlluminaRunFolderRestore.from_config_file_path(config_path=name_space.configuration)
+#
+#     if name_space.debug:
+#         irf_restore.debug = name_space.debug
+#
+#     if name_space.project_name:
+#         irf_restore.project_name = name_space.project_name
+#
+#     if name_space.archive_directory:
+#         irf_restore.archive_directory = name_space.archive_directory
+#
+#     if name_space.extract_intensities:
+#         irf_restore.extract_intensities = name_space.extract_intensities
+#
+#     if name_space.force:
+#         irf_restore.force = name_space.force
+#
+#     irf_restore.run()
+#     irf_restore.submit(drms_name=name_space.stage)
+#
+#     print 'IlluminaRunFolderRestore Analysis'
+#     print 'Project name:           ', irf_restore.project_name
+#     print 'Project directory:      ', irf_restore.project_directory
+#     print 'Illumina run directory: ', irf_restore.illumina_directory
+#     print 'Archive directory:      ', irf_restore.archive_directory
+# else:
+#     irf_restore = None
 
 # Create a BSF IlluminaToBam analysis, run and submit it.
 
@@ -103,6 +163,11 @@ if name_space.debug:
 if name_space.irf:
     itb.run_directory = name_space.irf
 
+# if irf_restore is not None:
+#     # If the IlluminaRunFolderRestore has not run, the run folder is not complete.
+#     itb.run_directory = irf_restore.get_run_directory_path
+#     itb.force = True
+
 # Do the work.
 
 if name_space.loop:
@@ -113,7 +178,7 @@ if name_space.loop:
         loop_counter += int(1)
         try:
             itb.run()
-        except IlluminaRunFolderNotComplete as exception:
+        except RunFolderNotComplete as exception:
             print exception
         else:
             print 'Illumina Run Folder seems complete.'
