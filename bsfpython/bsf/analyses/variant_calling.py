@@ -1019,6 +1019,11 @@ class VariantCallingGATK(Analysis):
                     and os.path.getsize(
                         os.path.join(self.genome_directory, file_path_align_lane['aligned_md5']))):
                     run_bwa.submit = False
+                # Check also for existence of a new-style Runnable status file.
+                if os.path.exists(os.path.join(
+                        drms_align_lane.work_directory,
+                        string.join(words=(drms_align_lane.name, replicate_key, 'completed.txt'), sep='_'))):
+                    run_bwa.submit = False
 
                     # Set run_bwa options.
 
@@ -1076,9 +1081,9 @@ class VariantCallingGATK(Analysis):
                             # It may not be the best idea to remove the aligned BAM file from the previous
                             # lane-specific alignment step here. For the moment, keep pipeline steps independent
                             # from each other.
-                            # 'aligned_bam',
-                            # 'aligned_bai',
-                            # 'aligned_md5'
+                            file_path_dict_lane['aligned_bam'],
+                            file_path_dict_lane['aligned_bai'],
+                            file_path_dict_lane['aligned_md5']
                         ])
                     runnable_process_lane.add_runnable_step(runnable_step=java_process)
 
