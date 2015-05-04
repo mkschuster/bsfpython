@@ -31,7 +31,7 @@ import os.path
 from pickle import Unpickler
 import shutil
 
-from bsf import Command, Default, Executable, Runnable
+from bsf import Command, Default, Executable
 
 # Set the environment consistently.
 
@@ -138,7 +138,7 @@ if run_bwa.sub_command.command == 'mem' and run_bwa.sub_command.arguments[1][-4:
     samtools_view.add_switch_short(key='H')
     samtools_view.arguments.append(run_bwa.sub_command.arguments[1])
 
-    child_return_code = Runnable.run(executable=samtools)
+    child_return_code = samtools.run()
 
     if child_return_code:
         raise Exception(
@@ -172,7 +172,7 @@ if run_bwa.sub_command.command == 'mem' and run_bwa.sub_command.arguments[1][-4:
     sam_to_fastq.add_option_pair(key='QUIET', value='false')
     sam_to_fastq.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
 
-    child_return_code = Runnable.run(executable=java_process)
+    child_return_code = java_process.run()
 
     if child_return_code:
         raise Exception('Could not complete the {!r} step.'.format(java_process.name))
@@ -195,7 +195,7 @@ if run_bwa.sub_command.command == 'mem' and run_bwa.sub_command.arguments[1][-4:
     if os.path.getsize(filename=path_fastq_2):
         run_bwa.sub_command.arguments.append(path_fastq_2)
 
-child_return_code = Runnable.run(executable=run_bwa)
+child_return_code = run_bwa.run()
 
 if child_return_code:
     raise Exception('Could not complete the {!r} step.'.format(run_bwa.name))
@@ -223,7 +223,7 @@ clean_sam.add_option_pair(key='VERBOSITY', value='WARNING')
 clean_sam.add_option_pair(key='QUIET', value='false')
 clean_sam.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
 
-child_return_code = Runnable.run(executable=java_process)
+child_return_code = java_process.run()
 
 if child_return_code:
     raise Exception('Could not complete the {!r} step.'.format(java_process.name))
@@ -242,7 +242,7 @@ if len(sam_header_pg) or len(sam_header_rg):
     samtools_view.add_switch_short(key='S')
     samtools_view.arguments.append(path_cleaned_sam)
 
-    child_return_code = Runnable.run(executable=samtools)
+    child_return_code = samtools.run()
 
     if child_return_code:
         raise Exception(
@@ -286,7 +286,7 @@ if len(sam_header_pg) or len(sam_header_rg):
     replace_sam_header.add_option_pair(key='QUIET', value='false')
     replace_sam_header.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
 
-    child_return_code = Runnable.run(executable=java_process)
+    child_return_code = java_process.run()
 
     if child_return_code:
         raise Exception('Could not complete the {!r} step.'.format(java_process.name))
@@ -323,7 +323,7 @@ sort_sam.add_option_pair(key='MAX_RECORDS_IN_RAM', value='4000000')
 sort_sam.add_option_pair(key='CREATE_INDEX', value='true')
 sort_sam.add_option_pair(key='CREATE_MD5_FILE', value='true')
 
-child_return_code = Runnable.run(executable=java_process)
+child_return_code = java_process.run()
 
 if child_return_code:
     raise Exception('Could not complete the {!r} step.'.format(java_process.name))

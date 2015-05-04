@@ -27,7 +27,7 @@
 
 import csv
 
-from bsf import Executable, Runnable
+from bsf import Executable
 from bsf.database import DatabaseConnection, ProcessSLURM, ProcessSLURMAdaptor
 
 sacct = Executable(name='sacct', program='sacct', stdout_path='sacct_mschuster.csv', stderr_path='sacct_mschuster.err')
@@ -36,9 +36,9 @@ sacct.add_option_long(key='starttime', value='2014-04-19')
 sacct.add_switch_long(key='long')
 sacct.add_switch_long(key='parsable')
 
-return_code = Runnable.run(executable=sacct)
+return_code = sacct.run()
 
-Runnable.evaluate_return_code(executable=sacct, return_code=return_code)
+sacct.evaluate_return_code(return_code=return_code)
 
 process_slurm_list = list()
 

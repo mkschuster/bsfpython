@@ -35,7 +35,7 @@ from subprocess import PIPE, Popen
 import sys
 from threading import Lock, Thread
 
-from bsf import Command, Executable, Runnable
+from bsf import Command, Executable
 
 
 # Set the environment consistently.
@@ -120,7 +120,7 @@ def parse_sam_file(input_filename):
             bc = line.split("\t")[11].split(":")[2]
 
             # store barcode in a dict
-            if not barcodes.has_key(bc):
+            if bc not in barcodes:
                 barcodes[bc] = 0
 
             barcodes[bc] += 1
@@ -179,7 +179,7 @@ def parse_fastq_file(input_filename):
     for line in input_file:
         if i % 4 == 0:
             bc = line.rstrip().split(":").pop()
-            if not barcodes.has_key(bc):
+            if bc not in barcodes:
                 barcodes[bc] = 0
 
             barcodes[bc] += 1
@@ -219,16 +219,20 @@ elif file_type == ".bam":
 
     thread_lock = Lock()
 
-    thread_out = Thread(target=parse_sam_format,
-                        kwargs={'file_handle': child_process.stdout})
+    thread_out = Thread(
+        target=parse_sam_format,
+        kwargs=dict(
+            file_handle=child_process.stdout))
     thread_out.daemon = True  # Thread dies with the program.
     thread_out.start()
 
-    thread_err = Thread(target=Runnable.process_stderr,
-                        kwargs={'stderr_handle': child_process.stderr,
-                                'thread_lock': thread_lock,
-                                'stderr_path': executable.stderr_path,
-                                'debug': 0})
+    thread_err = Thread(
+        target=Executable.process_stderr,
+        kwargs=dict(
+            stderr_handle=child_process.stderr,
+            thread_lock=thread_lock,
+            stderr_path=executable.stderr_path,
+            debug=0))
     thread_err.daemon = True  # Thread dies with the program.
     thread_err.start()
 
@@ -264,7 +268,7 @@ illumina_adapters = [
 
 for adapter in illumina_adapters:
     count = 0
-    if barcode_dict.has_key(adapter):
+    if adapter in barcode_dict:
         count = barcode_dict[adapter]
 
     message = adapter + ";" + str(count)

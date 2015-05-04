@@ -2256,13 +2256,105 @@ class Executable(Command):
     @type hold: str
     @ivar submit: Submit the Executable into the DRMS
     @type submit: bool
-    @ivar maximum_run_attempts: Maximum number of attempts to run this C{Executable}
-    @type maximum_run_attempts: int
+    @ivar maximum_attempts: Maximum number of attempts to run this C{Executable}
+    @type maximum_attempts: int
     @ivar process_identifier: Process identifier
     @type process_identifier: str
     @ivar process_name: Process name
     @type process_name: str
     """
+
+    @staticmethod
+    def process_stream(file_type, file_handle, thread_lock, file_path=None, debug=0):
+        """C{Executable} function to process I{STDOUT} or I{STDERR} from the child process as a thread.
+
+        @param file_type: File handle type I{STDOUT} or I{STDERR}
+        @type file_type: str
+        @param file_handle: The I{STDOUT} or I{STDERR} file handle
+        @type file_handle: file
+        @param thread_lock: A Python C{threading.Lock} object
+        @type thread_lock: thread.lock
+        @param file_path: I{STDOUT} file path
+        @type file_path: str | unicode
+        @param debug: Debug level
+        @type debug: int
+        @raise Exception: The file_type has to be either I{STDOUT} or I{STDERR}
+        """
+
+        if file_type not in ('STDOUT', 'STDERR'):
+            raise Exception('The file_type has to be either STDOUT or STDERR.')
+
+        thread_lock.acquire(True)
+        if debug > 0:
+            print '[{}] Started Runner {} processor in module {}.'. \
+                format(datetime.datetime.now().isoformat(), file_type, __name__)
+        output_file = None
+        if file_path:
+            output_file = open(file_path, 'w')
+            if debug > 0:
+                print '[{}] Opened {} file {!r}.'. \
+                    format(datetime.datetime.now().isoformat(), file_type, file_path)
+        thread_lock.release()
+
+        for line in file_handle:
+            thread_lock.acquire(True)
+            if output_file:
+                output_file.write(line)
+            else:
+                print '[{}] {}: {}'.format(datetime.datetime.now().isoformat(), file_type, line.rstrip())
+            thread_lock.release()
+
+        thread_lock.acquire(True)
+        if debug > 0:
+            print '[{}] Received EOF on {} pipe.'.format(datetime.datetime.now().isoformat(), file_type)
+        if output_file:
+            output_file.close()
+            if debug > 0:
+                print '[{}] Closed {} file {!r}.'. \
+                    format(datetime.datetime.now().isoformat(), file_type, file_path)
+        thread_lock.release()
+
+    @staticmethod
+    def process_stdout(stdout_handle, thread_lock, stdout_path=None, debug=0):
+        """C{Executable} function to process I{STDOUT} from the child process as a thread.
+
+        @param stdout_handle: The STDOUT file handle
+        @type stdout_handle: file
+        @param thread_lock: A Python threading.Lock object
+        @type thread_lock: thread.lock
+        @param stdout_path: STDOUT file path
+        @type stdout_path: str | unicode
+        @param debug: Debug level
+        @type debug: int
+        """
+
+        return Executable.process_stream(
+            file_type='STDOUT',
+            file_handle=stdout_handle,
+            thread_lock=thread_lock,
+            file_path=stdout_path,
+            debug=debug)
+
+    @staticmethod
+    def process_stderr(stderr_handle, thread_lock, stderr_path=None, debug=0):
+        """C{Executable} function to process I{STDERR} from the child process as a thread.
+
+        @param stderr_handle: The STDERR file handle
+        @type stderr_handle: file
+        @param thread_lock: A Python threading.Lock object
+        @type thread_lock: thread.lock
+        @param stderr_path: STDOUT file path
+        @type stderr_path: str | unicode
+        @param debug: Debug level
+        @type debug: int
+        """
+
+        return Executable.process_stream(
+            file_type='STDERR',
+            file_handle=stderr_handle,
+            thread_lock=thread_lock,
+            file_path=stderr_path,
+            debug=debug)
 
     @classmethod
     def from_analysis(cls, name, program, analysis):
@@ -2359,7 +2451,7 @@ class Executable(Command):
     def __init__(self, name,
                  program=None, options=None, arguments=None, sub_command=None,
                  stdout_path=None, stderr_path=None, dependencies=None, hold=None,
-                 submit=True, maximum_run_attempts=1, process_identifier=None, process_name=None):
+                 submit=True, maximum_attempts=1, process_identifier=None, process_name=None):
         """Initialise an Executable object.
 
         @param name: Name
@@ -2383,8 +2475,8 @@ class Executable(Command):
         @type hold: str
         @param submit: Submit the Executable into the DRMS
         @type submit: bool
-        @param maximum_run_attempts: Maximum number of attempts to run this C{RunnableStep}
-        @type maximum_run_attempts: int
+        @param maximum_attempts: Maximum number of attempts to run this C{Executable}
+        @type maximum_attempts: int
         @param process_identifier: Process identifier
         @type process_identifier: str
         @param process_name: Process name
@@ -2418,7 +2510,7 @@ class Executable(Command):
 
         self.submit = submit
 
-        self.maximum_run_attempts = maximum_run_attempts
+        self.maximum_attempts = maximum_attempts
 
         if process_identifier:
             self.process_identifier = process_identifier
@@ -2452,8 +2544,8 @@ class Executable(Command):
             format(indent, self.hold)
         output += '{}  submit:             {!r}\n'. \
             format(indent, self.submit)
-        output += '{}  maximum_run_attempts: {!r}\n'. \
-            format(indent, self.maximum_run_attempts)
+        output += '{}  maximum_attempts: {!r}\n'. \
+            format(indent, self.maximum_attempts)
         output += '{}  process_identifier: {!r}\n'. \
             format(indent, self.process_identifier)
         output += '{}  process_name:       {!r}\n'. \
@@ -2504,6 +2596,127 @@ class Executable(Command):
         # The stdout_path and stderr_path gets appended in specific modules.
 
         return command
+
+    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+        """Run an C{Executable} object via the Python C{subprocess.Popen} module.
+
+        @param max_thread_joins: Maximum number of attempts to join the output threads
+        @type max_thread_joins: int
+        @param thread_join_timeout: Timeout for each attempt to join the output threads
+        @type thread_join_timeout: int
+        @param debug: Debug level
+        @type debug: int
+        @return: Return value of the child in the Python subprocess,
+            negative values indicate that the child received a signal
+        @rtype: int
+        """
+        on_posix = 'posix' in sys.builtin_module_names
+
+        child_return_code = 0
+        attempt_counter = 0
+
+        while attempt_counter < self.maximum_attempts:
+
+            child_process = Popen(
+                args=self.command_list(),
+                bufsize=0,
+                stdin=PIPE,
+                stdout=PIPE,
+                stderr=PIPE,
+                shell=False,
+                close_fds=on_posix)
+
+            # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
+            # should make sure that buffers are not filling up.
+
+            thread_lock = Lock()
+
+            thread_out = Thread(
+                target=Executable.process_stdout,
+                kwargs=dict(
+                    stdout_handle=child_process.stdout,
+                    thread_lock=thread_lock,
+                    stdout_path=self.stdout_path,
+                    debug=debug))
+            thread_out.daemon = True  # Thread dies with the program.
+            thread_out.start()
+
+            thread_err = Thread(
+                target=Executable.process_stderr,
+                kwargs=dict(
+                    stderr_handle=child_process.stderr,
+                    thread_lock=thread_lock,
+                    stderr_path=self.stderr_path,
+                    debug=debug))
+            thread_err.daemon = True  # Thread dies with the program.
+            thread_err.start()
+
+            # Wait for the child process to finish.
+
+            child_return_code = child_process.wait()
+
+            thread_join_counter = 0
+
+            while thread_out.is_alive() and thread_join_counter < max_thread_joins:
+                thread_lock.acquire(True)
+                if debug > 0:
+                    print '[{}] Waiting for STDOUT processor to finish.'. \
+                        format(datetime.datetime.now().isoformat())
+                thread_lock.release()
+
+                thread_out.join(timeout=thread_join_timeout)
+                thread_join_counter += 1
+
+            thread_join_counter = 0
+
+            while thread_err.is_alive() and thread_join_counter < max_thread_joins:
+                thread_lock.acquire(True)
+                if debug > 0:
+                    print '[{}] Waiting for STDERR processor to finish.'. \
+                        format(datetime.datetime.now().isoformat())
+                thread_lock.release()
+
+                thread_err.join(timeout=thread_join_timeout)
+                thread_join_counter += 1
+
+            if child_return_code > 0:
+                if debug > 0:
+                    print '[{}] Child process {!r} failed with exit code {}'. \
+                        format(datetime.datetime.now().isoformat(), self.name, +child_return_code)
+                attempt_counter += 1
+            elif child_return_code < 0:
+                if debug > 0:
+                    print '[{}] Child process {!r} received signal {}.'. \
+                        format(datetime.datetime.now().isoformat(), self.name, -child_return_code)
+            else:
+                if debug > 0:
+                    print '[{}] Child process {!r} completed successfully {}.'. \
+                        format(datetime.datetime.now().isoformat(), self.name, +child_return_code)
+                break
+
+        else:
+            if debug > 0:
+                print '[{}] Runnable {!r} exceeded the maximum retry counter {}.' \
+                    .format(datetime.datetime.now().isoformat(), self.name, self.maximum_attempts)
+
+        return child_return_code
+
+    def evaluate_return_code(self, return_code):
+        """Evaluate a return code from the run method.
+
+        @param return_code: Return code
+        @type return_code: int
+        """
+
+        if return_code > 0:
+            print '[{}] Child process {!r} failed with return code {}'. \
+                format(datetime.datetime.now().isoformat(), self.name, +return_code)
+        elif return_code < 0:
+            print '[{}] Child process {!r} received signal {}.'. \
+                format(datetime.datetime.now().isoformat(), self.name, -return_code)
+        else:
+            print '[{}] Child process {!r} completed with return code {}.'. \
+                format(datetime.datetime.now().isoformat(), self.name, +return_code)
 
 
 class RunnableStep(Executable):
@@ -2607,218 +2820,6 @@ class Runnable(object):
     """
 
     runner_script = 'bsf_runner.py'
-
-    @staticmethod
-    def process_stream(file_type, file_handle, thread_lock, file_path=None, debug=0):
-        """C{Runnable} function to process I{STDOUT} or I{STDERR} from the child process as a thread.
-
-        @param file_type: File handle type I{STDOUT} or I{STDERR}
-        @type file_type: str
-        @param file_handle: The I{STDOUT} or I{STDERR} file handle
-        @type file_handle: file
-        @param thread_lock: A Python C{threading.Lock} object
-        @type thread_lock: thread.lock
-        @param file_path: I{STDOUT} file path
-        @type file_path: str | unicode
-        @param debug: Debug level
-        @type debug: int
-        @raise Exception: The file_type has to be either I{STDOUT} or I{STDERR}
-        """
-
-        if file_type not in ('STDOUT', 'STDERR'):
-            raise Exception('The file_type has to be either STDOUT or STDERR.')
-
-        thread_lock.acquire(True)
-        if debug > 0:
-            print '[{}] Started Runner {} processor in module {}.'. \
-                format(datetime.datetime.now().isoformat(), file_type, __name__)
-        output_file = None
-        if file_path:
-            output_file = open(file_path, 'w')
-            if debug > 0:
-                print '[{}] Opened {} file {!r}.'. \
-                    format(datetime.datetime.now().isoformat(), file_type, file_path)
-        thread_lock.release()
-
-        for line in file_handle:
-            thread_lock.acquire(True)
-            if output_file:
-                output_file.write(line)
-            else:
-                print '[{}] {}: {}'.format(datetime.datetime.now().isoformat(), file_type, line.rstrip())
-            thread_lock.release()
-
-        thread_lock.acquire(True)
-        if debug > 0:
-            print '[{}] Received EOF on {} pipe.'.format(datetime.datetime.now().isoformat(), file_type)
-        if output_file:
-            output_file.close()
-            if debug > 0:
-                print '[{}] Closed {} file {!r}.'. \
-                    format(datetime.datetime.now().isoformat(), file_type, file_path)
-        thread_lock.release()
-
-    @staticmethod
-    def process_stdout(stdout_handle, thread_lock, stdout_path=None, debug=0):
-        """C{Runnable} function to process I{STDOUT} from the child process as a thread.
-
-        @param stdout_handle: The STDOUT file handle
-        @type stdout_handle: file
-        @param thread_lock: A Python threading.Lock object
-        @type thread_lock: thread.lock
-        @param stdout_path: STDOUT file path
-        @type stdout_path: str | unicode
-        @param debug: Debug level
-        @type debug: int
-        """
-
-        return Runnable.process_stream(file_type='STDOUT', file_handle=stdout_handle,
-                                       thread_lock=thread_lock, file_path=stdout_path,
-                                       debug=debug)
-
-    @staticmethod
-    def process_stderr(stderr_handle, thread_lock, stderr_path=None, debug=0):
-        """C{Runnable} function to process I{STDERR} from the child process as a thread.
-
-        @param stderr_handle: The STDERR file handle
-        @type stderr_handle: file
-        @param thread_lock: A Python threading.Lock object
-        @type thread_lock: thread.lock
-        @param stderr_path: STDOUT file path
-        @type stderr_path: str | unicode
-        @param debug: Debug level
-        @type debug: int
-        """
-
-        return Runnable.process_stream(file_type='STDERR', file_handle=stderr_handle,
-                                       thread_lock=thread_lock, file_path=stderr_path,
-                                       debug=debug)
-
-    @staticmethod
-    def run(executable, max_loop_counter=1, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """C{Runnable} function to run an C{Executable} object as Python C{subprocess.Popen}.
-
-        @param executable: Executable
-        @type executable: Executable
-        @param max_loop_counter: Maximum number of retries
-        @type max_loop_counter: int
-        @param max_thread_joins: Maximum number of attempts to join the output threads
-        @type max_thread_joins: int
-        @param thread_join_timeout: Timeout for each attempt to join the output threads
-        @type thread_join_timeout: int
-        @param debug: Debug level
-        @type debug: int
-        @return: Return value of the child in the Python subprocess,
-            negative values indicate that the child received a signal
-        @rtype: int
-        """
-        # TODO: This should become a direct method of the Executable class.
-
-        on_posix = 'posix' in sys.builtin_module_names
-
-        loop_counter = 0
-        child_return_code = 0
-
-        while loop_counter < max_loop_counter:
-
-            child_process = Popen(args=executable.command_list(),
-                                  bufsize=0,
-                                  stdin=PIPE,
-                                  stdout=PIPE,
-                                  stderr=PIPE,
-                                  shell=False,
-                                  close_fds=on_posix)
-
-            # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
-            # should make sure that buffers are not filling up.
-
-            thread_lock = Lock()
-
-            thread_out = Thread(target=Runnable.process_stdout,
-                                kwargs={'stdout_handle': child_process.stdout,
-                                        'thread_lock': thread_lock,
-                                        'stdout_path': executable.stdout_path,
-                                        'debug': debug})
-            thread_out.daemon = True  # Thread dies with the program.
-            thread_out.start()
-
-            thread_err = Thread(target=Runnable.process_stderr,
-                                kwargs={'stderr_handle': child_process.stderr,
-                                        'thread_lock': thread_lock,
-                                        'stderr_path': executable.stderr_path,
-                                        'debug': debug})
-            thread_err.daemon = True  # Thread dies with the program.
-            thread_err.start()
-
-            # Wait for the child process to finish.
-
-            child_return_code = child_process.wait()
-
-            thread_join_counter = 0
-
-            while thread_out.is_alive() and thread_join_counter < max_thread_joins:
-                thread_lock.acquire(True)
-                if debug > 0:
-                    print '[{}] Waiting for STDOUT processor to finish.'. \
-                        format(datetime.datetime.now().isoformat())
-                thread_lock.release()
-
-                thread_out.join(timeout=thread_join_timeout)
-                thread_join_counter += 1
-
-            thread_join_counter = 0
-
-            while thread_err.is_alive() and thread_join_counter < max_thread_joins:
-                thread_lock.acquire(True)
-                if debug > 0:
-                    print '[{}] Waiting for STDERR processor to finish.'. \
-                        format(datetime.datetime.now().isoformat())
-                thread_lock.release()
-
-                thread_err.join(timeout=thread_join_timeout)
-                thread_join_counter += 1
-
-            if child_return_code > 0:
-                if debug > 0:
-                    print '[{}] Child process {!r} failed with exit code {}'. \
-                        format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
-                loop_counter += 1
-            elif child_return_code < 0:
-                if debug > 0:
-                    print '[{}] Child process {!r} received signal {}.'. \
-                        format(datetime.datetime.now().isoformat(), executable.name, -child_return_code)
-            else:
-                if debug > 0:
-                    print '[{}] Child process {!r} completed successfully {}.'. \
-                        format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
-                break
-
-        else:
-            if debug > 0:
-                print '[{}] Runnable {!r} exceeded the maximum re-run counter {}.' \
-                    .format(datetime.datetime.now().isoformat(), executable.name, max_loop_counter)
-
-        return child_return_code
-
-    @staticmethod
-    def evaluate_return_code(executable, return_code):
-        """Evaluate a return code from the run method.
-
-        @param executable: C{Executable}
-        @type executable: Executable
-        @param return_code: Return code
-        @type return_code: int
-        """
-
-        if return_code > 0:
-            print '[{}] Child process {!r} failed with return code {}'. \
-                format(datetime.datetime.now().isoformat(), executable.name, +return_code)
-        elif return_code < 0:
-            print '[{}] Child process {!r} received signal {}.'. \
-                format(datetime.datetime.now().isoformat(), executable.name, -return_code)
-        else:
-            print '[{}] Child process {!r} completed with return code {}.'. \
-                format(datetime.datetime.now().isoformat(), executable.name, +return_code)
 
     def __init__(self, name, code_module, working_directory, file_path_dict=None, executable_dict=None,
                  runnable_step_list=None, debug=0):
@@ -2949,7 +2950,7 @@ class Runnable(object):
 
         executable = self.executable_dict[name]
         assert isinstance(executable, Executable)
-        child_return_code = Runnable.run(executable=executable)
+        child_return_code = executable.run()
 
         if child_return_code > 0:
             raise Exception('[{}] Child process {!r} failed with return code {}'.

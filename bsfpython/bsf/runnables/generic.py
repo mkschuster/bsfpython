@@ -157,7 +157,7 @@ def run(runnable):
 
         # Do the work.
 
-        child_return_code = Runnable.run(executable=runnable_step_current)
+        child_return_code = runnable_step_current.run()
 
         if child_return_code > 0:
             raise Exception('[{}] Child process {}_{} failed with return code {}'.

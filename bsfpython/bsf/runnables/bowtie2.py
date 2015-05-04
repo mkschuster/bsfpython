@@ -120,7 +120,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     samtools_view.add_switch_short(key='H')
     samtools_view.arguments.append(bam_file_path)
 
-    child_return_code = Runnable.run(executable=samtools)
+    child_return_code = samtools.run()
     if child_return_code:
         raise Exception(
             'Could not complete the {!r} step on the BAM file for the replicate.'.
@@ -157,7 +157,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     sam_to_fastq.add_option_pair(key='QUIET', value='false')
     sam_to_fastq.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
 
-    child_return_code = Runnable.run(executable=java_process)
+    child_return_code = java_process.run()
     if child_return_code:
         raise Exception('Could not complete the {!r} step.'.format(java_process.name))
 
@@ -213,7 +213,7 @@ def run_bowtie2(runnable):
     # TODO: For the moment, convert only files set in the bowtie2 -U option.
     # Pop the original list of -U options off the Bowtie2 Executable object.
     option_list = list(bowtie2.options['U'])
-    aligned_sam = str(bowtie2.stdout_path)
+    # aligned_sam = str(bowtie2.stdout_path)
 
     rgc_list = list()
     fastq_list = list()
@@ -257,7 +257,7 @@ def run_bowtie2(runnable):
 
         print bowtie2.trace(1)
 
-        child_return_code = Runnable.run(executable=bowtie2)
+        child_return_code = bowtie2.run()
         if child_return_code:
             raise Exception('Could not complete the {!r} step.'.format(bowtie2.name))
 
@@ -286,7 +286,7 @@ def run_bowtie2(runnable):
 
         print bowtie2.trace(1)
 
-        child_return_code = Runnable.run(executable=bowtie2)
+        child_return_code = bowtie2.run()
         if child_return_code:
             raise Exception('Could not complete the {!r} step.'.format(bowtie2.name))
 
@@ -297,6 +297,8 @@ def run_bowtie2(runnable):
 
         # SAM files need merging.
 
+        default = Default.get_global_default()
+
         java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command(command=str()))
         java_process.add_switch_short(key='d64')
         java_process.add_option_short(key='jar', value=os.path.join(default.classpath_picard, 'SamToFastq.jar'))
@@ -304,7 +306,7 @@ def run_bowtie2(runnable):
         java_process.add_option_pair(key='-Djava.io.tmpdir', value=runnable.file_path_dict['temporary_directory'])
 
         sam_to_fastq = java_process.sub_command
-        sam_to_fastq.add_option_pair(key='INPUT', value=bam_file_path)
+        # sam_to_fastq.add_option_pair(key='INPUT', value=bam_file_path)  # TODO:
         sam_to_fastq.add_option_pair(key='OUTPUT_PER_RG', value='true')
         sam_to_fastq.add_option_pair(key='OUTPUT_DIR', value=runnable.file_path_dict['temporary_directory'])
         sam_to_fastq.add_option_pair(key='INCLUDE_NON_PF_READS', value='false')  # TODO: Make this configurable.

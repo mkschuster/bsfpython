@@ -34,7 +34,7 @@ import re
 import shutil
 import string
 
-from bsf import Command, Default, Executable, Runnable
+from bsf import Command, Default, Executable
 
 
 def run_picard_sam_to_fastq(input_path, temporary_path):
@@ -65,7 +65,7 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     samtools_view.add_switch_short(key='H')
     samtools_view.arguments.append(input_path)
 
-    child_return_code = Runnable.run(executable=samtools)
+    child_return_code = samtools.run()
 
     if child_return_code:
         raise Exception('Could not complete the samtools view step on the BAM file for the replicate.')
@@ -101,7 +101,7 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     sam_to_fastq.add_option_pair(key='QUIET', value='false')
     sam_to_fastq.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
 
-    child_return_code = Runnable.run(executable=java_process)
+    child_return_code = java_process.run()
 
     if child_return_code:
         raise Exception('Could not complete the Picard SamToFastq step.')
@@ -223,7 +223,7 @@ else:
     # If the list of arguments is now empty truncate it to just two.
     run_tophat.arguments = run_tophat.arguments[:2]
 
-child_return_code = Runnable.run(executable=run_tophat)
+child_return_code = run_tophat.run()
 
 if child_return_code:
     raise Exception('Could not complete the Tophat step.')

@@ -32,8 +32,6 @@ import os.path
 from pickle import Unpickler
 import shutil
 
-from bsf import Runnable
-
 
 def run_executable(key):
     """Run an Executable defined in the Pickler dict.
@@ -45,7 +43,7 @@ def run_executable(key):
     """
 
     executable = pickler_dict[key]
-    child_return_code = Runnable.run(executable=executable)
+    child_return_code = executable.run()
 
     if child_return_code:
         raise Exception('Could not complete the {!r} step.'.format(executable.name))
