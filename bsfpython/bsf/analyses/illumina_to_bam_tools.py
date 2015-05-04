@@ -610,7 +610,11 @@ class IlluminaToBam(Analysis):
             java_process = RunnableStep(
                 name='picard_sort_sam',
                 program='java',
-                sub_command=Command(command=str()))
+                sub_command=Command(command=str()),
+                obsolete_file_path_list=[
+                    file_path_dict['unsorted_bam'],
+                    file_path_dict['unsorted_md5']
+                ])
             runnable_illumina_to_bam.add_runnable_step(runnable_step=java_process)
 
             java_process.add_switch_short(key='d64')
@@ -1022,6 +1026,15 @@ class BamIndexDecoder(Analysis):
                     string.join(words=(self.project_name, key, 'sorted.bam'), sep='_'))
             )
 
+            # Create the samples directory if it does not exist.
+
+            if not os.path.isdir(file_path_dict['samples_directory']):
+                try:
+                    os.makedirs(file_path_dict['samples_directory'])
+                except OSError as exception:
+                    if exception.errno != errno.EEXIST:
+                        raise
+
             # Do not check whether the sorted BAM file exists, because at the time of
             # BamIndexDecoder submission the IlluminaToBam analysis may not have finished.
             #
@@ -1096,7 +1109,10 @@ class BamIndexDecoder(Analysis):
                 java_process = RunnableStep(
                     name='bam_index_decoder',
                     program='java',
-                    sub_command=Command(command=str()))
+                    sub_command=Command(command=str()),
+                    obsolete_file_path_list=[
+                        file_path_dict['barcode']
+                    ])
                 runnable_bam_index_decoder.add_runnable_step(runnable_step=java_process)
 
                 java_process.add_switch_short(key='d64')
