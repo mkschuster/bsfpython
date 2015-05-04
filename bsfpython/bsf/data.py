@@ -1480,7 +1480,8 @@ class Collection(object):
             if sample not in sample_group:
                 sample_group.append(sample)
 
-    def _process_file_type(self, row_dict, prefix):
+    @staticmethod
+    def _process_file_type(row_dict, prefix):
         """Get file type information.
 
         A 'I{[Prefix] FileType}' key is optional, its value defaults to I{Automatic}.
@@ -1538,7 +1539,8 @@ class Collection(object):
 
         return prf
 
-    def _process_project(self, row_dict, prefix, file_type, prf):
+    @staticmethod
+    def _process_project(row_dict, prefix, file_type, prf):
         """Get or create a C{Project}.
 
         A 'I{[Prefix] Project}' key is optional, its value defaults to I{Default}.
@@ -1572,7 +1574,8 @@ class Collection(object):
 
         return project
 
-    def _process_sample(self, row_dict, prefix, file_type, project):
+    @staticmethod
+    def _process_sample(row_dict, prefix, file_type, project):
         """Get or create a C{Sample}.
 
         A 'I{[Prefix] Sample}' key is optional, its value defaults to I{Default}.
@@ -1644,7 +1647,8 @@ class Collection(object):
 
         return reads
 
-    def _process_read_group(self, row_dict, prefix):
+    @staticmethod
+    def _process_read_group(row_dict, prefix):
         """Get or create a read group.
 
         A 'I{[Prefix] ReadGroup}' key is optional, in which case the default is an empty Python C{str} object.
