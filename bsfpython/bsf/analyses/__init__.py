@@ -2286,26 +2286,17 @@ class RunFastQC(Analysis):
         """Create C{RunFastQC} report in HTML format.
         """
 
-        config_parser = self.configuration.config_parser
-        config_section = self.configuration.section_from_instance(self)
+        # config_parser = self.configuration.config_parser
+        # config_section = self.configuration.section_from_instance(self)
 
         # Get further information.
 
         # Always check each BSF PairedReads object separately.
         replicate_grouping = False
 
-        # Let the user specify the report sub-directory or default to the projects directory.
-        if config_parser.has_option(section=config_section, option='sub_directory'):
-            sub_directory = config_parser.get(section=config_section, option='sub_directory')
-        else:
-            sub_directory = str()
-
-        if not sub_directory:
-            sub_directory = Default.get_global_default().url_relative_projects
-
         # Create a symbolic link containing the project name and a UUID.
-        link_path = self.create_public_project_link(sub_directory=sub_directory)
-        link_name = os.path.basename(link_path.rstrip('/'))
+        # link_path = self.create_public_project_link(sub_directory=sub_directory)
+        # link_name = os.path.basename(link_path.rstrip('/'))
 
         # Write a HTML document.
 

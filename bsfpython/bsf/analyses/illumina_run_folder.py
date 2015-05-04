@@ -371,8 +371,8 @@ class IlluminaRunFolderArchive(Analysis):
 
         for lane in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
 
-            lane_str = str(lane)
-            prefix_lane = string.join(words=(drms_pre_process_folder.name, self.project_name, lane_str), sep='_')
+            # lane_str = str(lane)
+            # prefix_lane = string.join(words=(drms_pre_process_folder.name, self.project_name, lane_str), sep='_')
 
             base_call_lane_path = os.path.join(
                 self.run_directory,
@@ -407,10 +407,6 @@ class IlluminaRunFolderArchive(Analysis):
         # Post-process on folder level.
 
         post_process_folder_prefix = string.join(words=(drms_post_process_folder.name, self.project_name), sep='_')
-
-        file_path_dict_post_process_folder = dict(
-            temporary_directory=string.join((post_process_folder_prefix, 'temporary'), sep='_'),
-        )
 
         # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
         runnable_post_process_folder = Runnable(

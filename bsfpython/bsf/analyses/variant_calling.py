@@ -2279,9 +2279,9 @@ class VariantCallingGATK(Analysis):
         """
 
         # Create a symbolic link containing the project name and a UUID.
-        default = Default.get_global_default()
-        link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
-        link_name = os.path.basename(link_path.rstrip('/'))
+        # default = Default.get_global_default()
+        # link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
+        # link_name = os.path.basename(link_path.rstrip('/'))
 
         # This code only needs the public URL.
 
