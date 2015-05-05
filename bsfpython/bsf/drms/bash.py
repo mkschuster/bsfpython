@@ -58,7 +58,7 @@ def submit(drms, debug=0):
         output += "\n"
         output += "\n"
 
-    script_path = os.path.join(drms.work_directory, 'bsfpython_bash_{}.bash'.format(drms.name))
+    script_path = os.path.join(drms.working_directory, 'bsfpython_bash_{}.bash'.format(drms.name))
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()

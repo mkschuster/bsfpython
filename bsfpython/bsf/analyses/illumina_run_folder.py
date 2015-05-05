@@ -277,17 +277,15 @@ class IlluminaRunFolderArchive(Analysis):
 
         super(IlluminaRunFolderArchive, self).run()
 
-        drms_pre_process_folder = DRMS.from_analysis(
+        drms_pre_process_folder = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_pre_process_folder,
-            work_directory=self.project_directory,
-            analysis=self)
-        self.drms_list.append(drms_pre_process_folder)
+            working_directory=self.project_directory,
+            analysis=self))
 
-        drms_post_process_folder = DRMS.from_analysis(
+        drms_post_process_folder = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_post_process_folder,
-            work_directory=self.project_directory,
-            analysis=self)
-        self.drms_list.append(drms_post_process_folder)
+            working_directory=self.project_directory,
+            analysis=self))
 
         # Pre-process on folder level.
 
@@ -298,19 +296,18 @@ class IlluminaRunFolderArchive(Analysis):
         )
 
         # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
-        runnable_pre_process_folder = Runnable(
+        runnable_pre_process_folder = self.add_runnable(runnable=Runnable(
             name=pre_process_folder_prefix,
             code_module='bsf.runnables.generic',
             working_directory=self.project_directory,
-            file_path_dict=file_path_dict)
-        self.add_runnable(runnable=runnable_pre_process_folder)
+            file_path_dict=file_path_dict))
 
         # Create an Executable for pre-processing the folder.
 
-        executable_pre_process_folder = Executable.from_analysis_runnable(
-            analysis=self,
-            runnable_name=runnable_pre_process_folder.name)
-        drms_pre_process_folder.add_executable(executable=executable_pre_process_folder)
+        executable_pre_process_folder = drms_pre_process_folder.add_executable(
+            executable=Executable.from_analysis_runnable(
+                analysis=self,
+                runnable_name=runnable_pre_process_folder.name))
 
         # TODO: The pre-processing does not depend on any other process, does it?
         # executable_pre_process_folder.dependencies.extend(vc_process_cohort_dependencies)
@@ -323,22 +320,20 @@ class IlluminaRunFolderArchive(Analysis):
 
         # 5. Reset all file permissions for directories.
 
-        reset_directory_permissions = RunnableStep(
+        reset_directory_permissions = runnable_pre_process_folder.add_runnable_step(runnable_step=RunnableStep(
             name='reset_directory_permissions',
             program='find',
-            sub_command=Command(command=self.run_directory))
-        runnable_pre_process_folder.add_runnable_step(runnable_step=reset_directory_permissions)
+            sub_command=Command(command=self.run_directory)))
 
         reset_directory_permissions.add_option_short(key='type', value='d')
         reset_directory_permissions.add_option_short(key='execdir', value='chmod u=rwx,go=rx {} +')
 
         # 6. Reset all file permissions for regular files.
 
-        reset_file_permissions = RunnableStep(
+        reset_file_permissions = runnable_pre_process_folder.add_runnable_step(runnable_step=RunnableStep(
             name='reset_file_permissions',
             program='find',
-            sub_command=Command(command=self.run_directory))
-        runnable_pre_process_folder.add_runnable_step(runnable_step=reset_file_permissions)
+            sub_command=Command(command=self.run_directory)))
 
         reset_file_permissions.add_option_short(key='type', value='f')
         reset_file_permissions.add_option_short(key='execdir', value='chmod u=rw,go=r {} +')
@@ -346,10 +341,9 @@ class IlluminaRunFolderArchive(Analysis):
         # 7. Compress all files in the Logs and Logs/IALogs directories.
         # TODO: Check, whether the Illumina SAV needs them.
 
-        compress_logs = RunnableStep(
+        compress_logs = runnable_pre_process_folder.add_runnable_step(runnable_step=RunnableStep(
             name='compress_logs',
-            program='gzip')
-        runnable_pre_process_folder.add_runnable_step(runnable_step=compress_logs)
+            program='gzip'))
 
         compress_logs.add_switch_long(key='best')
         compress_logs.add_switch_long(key='recursive')
@@ -358,10 +352,9 @@ class IlluminaRunFolderArchive(Analysis):
         # 8. Compress all files in the Data/RTALogs directory.
         # TODO: Check, whether the Illumina SAV needs them.
 
-        compress_rta_logs = RunnableStep(
+        compress_rta_logs = runnable_pre_process_folder.add_runnable_step(runnable_step=RunnableStep(
             name='compress_rta_logs',
-            program='gzip')
-        runnable_pre_process_folder.add_runnable_step(runnable_step=compress_rta_logs)
+            program='gzip'))
 
         compress_rta_logs.add_switch_long(key='best')
         compress_rta_logs.add_switch_long(key='recursive')
@@ -409,29 +402,27 @@ class IlluminaRunFolderArchive(Analysis):
         post_process_folder_prefix = string.join(words=(drms_post_process_folder.name, self.project_name), sep='_')
 
         # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
-        runnable_post_process_folder = Runnable(
+        runnable_post_process_folder = self.add_runnable(runnable=Runnable(
             name=post_process_folder_prefix,
             code_module='bsf.runnables.generic',
             working_directory=self.project_directory,
-            file_path_dict=file_path_dict)
-        self.add_runnable(runnable=runnable_post_process_folder)
+            file_path_dict=file_path_dict))
 
         # Create an Executable for pre-processing the folder.
 
-        executable_post_process_folder = Executable.from_analysis_runnable(
-            analysis=self,
-            runnable_name=runnable_post_process_folder.name)
-        drms_post_process_folder.add_executable(executable=executable_post_process_folder)
+        executable_post_process_folder = drms_post_process_folder.add_executable(
+            executable=Executable.from_analysis_runnable(
+                analysis=self,
+                runnable_name=runnable_post_process_folder.name))
 
         # TODO: The post-processing depend on other processes.
         # executable_pre_process_folder.dependencies.extend(vc_process_cohort_dependencies)
 
         # Archive the Illumina Run Folder
 
-        archive_run_folder = RunnableStep(
+        archive_run_folder = runnable_post_process_folder.add_runnable_step(runnable_step=RunnableStep(
             name='archive_run_folder',
-            program='tar')
-        runnable_post_process_folder.add_runnable_step(runnable_step=archive_run_folder)
+            program='tar'))
 
         archive_run_folder.add_switch_long(key='create')
         # TODO: Need the archive folder.
@@ -440,10 +431,9 @@ class IlluminaRunFolderArchive(Analysis):
         # X. Set file permissions.
         # chmod -R a-w,o-rx
 
-        set_permissions = RunnableStep(
+        set_permissions = runnable_post_process_folder.add_runnable_step(runnable_step=RunnableStep(
             name='set_permissions',
-            program='chmod')
-        runnable_post_process_folder.add_runnable_step(runnable_step=set_permissions)
+            program='chmod'))
 
         set_permissions.add_switch_long(key='recursive')
         set_permissions.arguments.append('a-w,o-rx')
@@ -755,40 +745,35 @@ class IlluminaRunFolderRestore(Analysis):
 
         super(IlluminaRunFolderRestore, self).run()
 
-        drms_extract_archive = DRMS.from_analysis(
+        drms_extract_archive = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_extract_archive,
-            work_directory=self.project_directory,
-            analysis=self)
-        self.drms_list.append(drms_extract_archive)
+            working_directory=self.project_directory, analysis=self))
 
-        drms_compress_base_calls = DRMS.from_analysis(
+        drms_compress_base_calls = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_compress_base_calls,
-            work_directory=self.project_directory,
-            analysis=self)
-        self.drms_list.append(drms_compress_base_calls)
+            working_directory=self.project_directory,
+            analysis=self))
 
-        drms_compress_logs = DRMS.from_analysis(
+        drms_compress_logs = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_compress_logs,
-            work_directory=self.project_directory,
-            analysis=self)
-        self.drms_list.append(drms_compress_logs)
+            working_directory=self.project_directory,
+            analysis=self))
 
         # Extract the *_Folder.tar file.
 
-        runnable_extract_folder = Runnable(
+        runnable_extract_folder = self.add_runnable(runnable=Runnable(
             name=self.get_prefix_extract_archive(project_name=self.project_name, lane='folder'),
             code_module='bsf.runnables.generic',
             working_directory=self.project_directory,
-            file_path_dict=file_path_dict)
-        self.add_runnable(runnable=runnable_extract_folder)
+            file_path_dict=file_path_dict))
 
-        executable_extract_folder = Executable.from_analysis_runnable(
+        executable_extract_folder = drms_extract_archive.add_executable(executable=Executable.from_analysis_runnable(
             analysis=self,
-            runnable_name=runnable_extract_folder.name)
-        drms_extract_archive.add_executable(executable=executable_extract_folder)
+            runnable_name=runnable_extract_folder.name))
 
-        extract_folder = RunnableStep(name='extract_folder', program='tar')
-        runnable_extract_folder.add_runnable_step(runnable_step=extract_folder)
+        extract_folder = runnable_extract_folder.add_runnable_step(runnable_step=RunnableStep(
+            name='extract_folder',
+            program='tar'))
 
         extract_folder.add_switch_long(key='extract')
         extract_folder.add_option_long(key='directory', value=self.illumina_directory)
@@ -796,33 +781,30 @@ class IlluminaRunFolderRestore(Analysis):
 
         # Compress all files in the Log and Data/RTALogs directories.
 
-        runnable_compress_logs = Runnable(
+        runnable_compress_logs = self.add_runnable(runnable=Runnable(
             name=self.get_prefix_compress_logs(project_name=self.project_name),
             code_module='bsf.runnables.generic',
             working_directory=self.project_directory,
-            file_path_dict=file_path_dict)
-        self.add_runnable(runnable=runnable_compress_logs)
+            file_path_dict=file_path_dict))
 
-        executable_compress_logs = Executable.from_analysis_runnable(
+        executable_compress_logs = drms_compress_logs.add_executable(executable=Executable.from_analysis_runnable(
             analysis=self,
-            runnable_name=runnable_compress_logs.name)
-        drms_compress_logs.add_executable(executable=executable_compress_logs)
+            runnable_name=runnable_compress_logs.name))
+
         # Wait for the restore of the *_Folder.tar file.
         executable_compress_logs.dependencies.append(executable_extract_folder.name)
 
-        compress_logs = RunnableStep(
+        compress_logs = runnable_compress_logs.add_runnable_step(runnable_step=RunnableStep(
             name='compress_logs',
-            program='gzip')
-        runnable_compress_logs.add_runnable_step(runnable_step=compress_logs)
+            program='gzip'))
 
         compress_logs.add_switch_long(key='best')
         compress_logs.add_switch_long(key='recursive')
         compress_logs.arguments.append(os.path.join(self.get_run_directory_path, 'Logs'))
 
-        compress_rta_logs = RunnableStep(
+        compress_rta_logs = runnable_compress_logs.add_runnable_step(runnable_step=RunnableStep(
             name='compress_rta_logs',
-            program='gzip')
-        runnable_compress_logs.add_runnable_step(runnable_step=compress_rta_logs)
+            program='gzip'))
 
         compress_rta_logs.add_switch_long(key='best')
         compress_rta_logs.add_switch_long(key='recursive')
@@ -830,20 +812,20 @@ class IlluminaRunFolderRestore(Analysis):
 
         # Extract the *_intensities.tar file.
 
-        runnable_extract_intensities = Runnable(
+        runnable_extract_intensities = self.add_runnable(runnable=Runnable(
             name=self.get_prefix_extract_archive(project_name=self.project_name, lane='intensities'),
             code_module='bsf.runnables.generic',
             working_directory=self.project_directory,
-            file_path_dict=file_path_dict)
-        self.add_runnable(runnable=runnable_extract_intensities)
+            file_path_dict=file_path_dict))
 
-        executable_extract_intensities = Executable.from_analysis_runnable(
-            analysis=self,
-            runnable_name=runnable_extract_intensities.name)
-        drms_extract_archive.add_executable(executable=executable_extract_intensities)
+        executable_extract_intensities = drms_extract_archive.add_executable(
+            executable=Executable.from_analysis_runnable(
+                analysis=self,
+                runnable_name=runnable_extract_intensities.name))
 
-        extract_intensities = RunnableStep(name='extract_intensities', program='tar')
-        runnable_extract_intensities.add_runnable_step(runnable_step=extract_intensities)
+        extract_intensities = runnable_extract_intensities.add_runnable_step(runnable_step=RunnableStep(
+            name='extract_intensities',
+            program='tar'))
 
         extract_intensities.add_switch_long(key='extract')
         extract_intensities.add_option_long(key='directory', value=self.illumina_directory)
@@ -857,20 +839,20 @@ class IlluminaRunFolderRestore(Analysis):
             if not os.path.exists(file_path_dict['L{:03d}'.format(lane)]):
                 continue
 
-            runnable_extract_lane = Runnable(
+            runnable_extract_lane = self.add_runnable(runnable=Runnable(
                 name=self.get_prefix_extract_archive(project_name=self.project_name, lane=str(lane)),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
-                file_path_dict=file_path_dict)
-            self.add_runnable(runnable=runnable_extract_lane)
+                file_path_dict=file_path_dict))
 
-            executable_extract_lane = Executable.from_analysis_runnable(
-                analysis=self,
-                runnable_name=runnable_extract_lane.name)
-            drms_extract_archive.add_executable(executable=executable_extract_lane)
+            executable_extract_lane = drms_extract_archive.add_executable(
+                executable=Executable.from_analysis_runnable(
+                    analysis=self,
+                    runnable_name=runnable_extract_lane.name))
 
-            extract_lane = RunnableStep(name='extract_lane', program='tar')
-            runnable_extract_lane.add_runnable_step(runnable_step=extract_lane)
+            extract_lane = runnable_extract_lane.add_runnable_step(runnable_step=RunnableStep(
+                name='extract_lane',
+                program='tar'))
 
             extract_lane.add_switch_long(key='extract')
             extract_lane.add_option_long(key='directory', value=self.illumina_directory)
@@ -881,24 +863,24 @@ class IlluminaRunFolderRestore(Analysis):
 
             # Create one process per lane to compress the base call (*.bcl) files.
 
-            runnable_compress_base_calls = Runnable(
+            runnable_compress_base_calls = self.add_runnable(runnable=Runnable(
                 name=self.get_prefix_compress_base_calls(project_name=self.project_name, lane=str(lane)),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
-                file_path_dict=file_path_dict)
-            self.add_runnable(runnable=runnable_compress_base_calls)
+                file_path_dict=file_path_dict))
 
-            executable_compress_base_calls = Executable.from_analysis_runnable(
-                analysis=self,
-                runnable_name=runnable_compress_base_calls.name)
-            drms_compress_base_calls.add_executable(executable=executable_compress_base_calls)
+            executable_compress_base_calls = drms_compress_base_calls.add_executable(
+                executable=Executable.from_analysis_runnable(
+                    analysis=self,
+                    runnable_name=runnable_compress_base_calls.name))
+
             # Wait for the restore of the *_Intensities.tar file.
             executable_compress_base_calls.dependencies.append(executable_extract_intensities.name)
 
             # Since find has a somewhat broken syntax, definition of the RunnableStep gets a bit complex.
             # The following command line needs to be run
             # find Data/Intensities/BaseCalls/L000 -name '*.bcl' -execdir gzip --best {} +
-            compress_base_calls = RunnableStep(
+            compress_base_calls = runnable_compress_base_calls.add_runnable_step(runnable_step=RunnableStep(
                 name='compress_base_calls',
                 program='find',
                 sub_command=Command(
@@ -907,8 +889,7 @@ class IlluminaRunFolderRestore(Analysis):
                     sub_command=Command(
                         command='-execdir',
                         sub_command=Command(
-                            command='gzip'))))
-            runnable_compress_base_calls.add_runnable_step(runnable_step=compress_base_calls)
+                            command='gzip')))))
 
             find_command = compress_base_calls.sub_command  # directory option
             find_command.add_option_short(key='name', value='*.bcl')

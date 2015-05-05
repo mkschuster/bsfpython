@@ -285,11 +285,26 @@ class Analysis(object):
 
         return output
 
+    def add_drms(self, drms):
+        """Convenience method to facilitate initialising, adding and returning a C{DMRS} object.
+
+        @param drms: C{DRMS}
+        @type drms: DRMS
+        @return: C{DRMS}
+        @rtype: DRMS
+        """
+        assert isinstance(drms, DRMS)
+
+        self.drms_list.append(drms)
+
+        return drms
+
     def add_runnable(self, runnable):
-        """Add a C{Runnable}.
+        """Convenience method to facilitate initialising, adding and returning a C{Runnable}.
 
         @param runnable: C{Runnable}
         @type runnable: Runnable
+
         @raise Exception: The C{Runnable.name} already exists in the C{Analysis}
         """
 
@@ -300,6 +315,8 @@ class Analysis(object):
                             format(runnable.name, self.project_name))
         else:
             self.runnable_dict[runnable.name] = runnable
+
+        return runnable
 
     def add_sample(self, sample):
         """Add a C{Sample} object to the Python C{list} of C{Sample} objects if it does not already exist.
@@ -1458,8 +1475,8 @@ class DRMS(object):
     Attributes:
     @ivar name: Name
     @type name: str
-    @ivar work_directory: Work directory path
-    @type work_directory: str
+    @ivar working_directory: Working directory path
+    @type working_directory: str
     @ivar implementation: Implementation (e.g. SGE, ...)
     @type implementation: str
     @ivar memory_free_mem: Memory limit (free)
@@ -1484,13 +1501,13 @@ class DRMS(object):
     """
 
     @classmethod
-    def from_analysis(cls, name, work_directory, analysis):
+    def from_analysis(cls, name, working_directory, analysis):
         """Create a DRMS object from an Analysis object.
 
         @param name: Name
         @type name: str
-        @param work_directory: Work directory
-        @type work_directory: str
+        @param working_directory: Working directory
+        @type working_directory: str
         @param analysis: Analysis
         @type analysis: Analysis
         @return: DRMS object
@@ -1499,7 +1516,7 @@ class DRMS(object):
 
         assert isinstance(analysis, Analysis)
 
-        drms = cls(name=name, work_directory=work_directory)
+        drms = cls(name=name, working_directory=working_directory)
 
         # Set a minimal set of global defaults.
 
@@ -1560,26 +1577,15 @@ class DRMS(object):
 
         return drms
 
-    def __init__(self, name, work_directory,
-                 implementation=None,
-                 memory_free_mem=None,
-                 memory_free_swap=None,
-                 memory_free_virtual=None,
-                 memory_limit_hard=None,
-                 memory_limit_soft=None,
-                 time_limit=None,
-                 parallel_environment=None,
-                 queue=None,
-                 threads=1,
-                 hold=None,
-                 is_script=False,
-                 executables=None):
+    def __init__(self, name, working_directory, implementation=None, memory_free_mem=None, memory_free_swap=None,
+                 memory_free_virtual=None, memory_limit_hard=None, memory_limit_soft=None, time_limit=None,
+                 parallel_environment=None, queue=None, threads=1, hold=None, is_script=False, executables=None):
         """Initialise a DRMS object.
 
         @param name: Name
         @type name: str
-        @param work_directory: Work directory
-        @type work_directory: str
+        @param working_directory: Working directory
+        @type working_directory: str
         @param implementation: Implementation (e.g. SGE, ...)
         @type implementation: str
         @param memory_free_mem: Memory limit (free physical)
@@ -1614,10 +1620,10 @@ class DRMS(object):
         else:
             self.name = str()
 
-        if work_directory:
-            self.work_directory = work_directory
+        if working_directory:
+            self.working_directory = working_directory
         else:
-            self.work_directory = str()
+            self.working_directory = str()
 
         if implementation:
             self.implementation = implementation
@@ -1692,8 +1698,8 @@ class DRMS(object):
         output += '{}{!r}\n'.format(indent, self)
         output += '{}  name:                 {!r}\n'. \
             format(indent, self.name)
-        output += '{}  work_directory:       {!r}\n'. \
-            format(indent, self.work_directory)
+        output += '{}  working_directory:       {!r}\n'. \
+            format(indent, self.working_directory)
         output += '{}  implementation:       {!r}\n'. \
             format(indent, self.implementation)
         output += '{}  memory_free_mem:      {!r}\n'. \
@@ -1817,15 +1823,19 @@ class DRMS(object):
         # threads
 
     def add_executable(self, executable):
-        """Add a Executable object.
+        """Convenience method to facilitate initialising, adding and returning an C{Executable}.
 
-        @param executable: Executable
+        @param executable: C{Executable}
         @type executable: Executable
+        @return: C{Executable}
+        @rtype: Executable
         """
 
         assert isinstance(executable, Executable)
 
         self.executables.append(executable)
+
+        return executable
 
     def submit(self, debug=0):
         """Submit a command line for each Executable object.
@@ -2909,16 +2919,17 @@ class Runnable(object):
 
         return output
 
-    def add_executable(self, executable=None):
+    def add_executable(self, executable):
         """Add an C{Executable}.
 
         @param executable: C{Executable}
         @type executable: Executable
-        @raise Exception: An C{Executable.name} already exists in the C{Runnable} object
+        @return: C{Executable}
+        @rtype: Executable
+        @raise Exception: An C{Executable.name} already exists in the C{Runnable}
         """
 
-        if executable is None:
-            return
+        assert isinstance(executable, Executable)
 
         if executable.name in self.executable_dict:
             raise Exception("An Executable object with name {!r} already exists in Runnable object {!r}.".
@@ -2926,11 +2937,15 @@ class Runnable(object):
         else:
             self.executable_dict[executable.name] = executable
 
+        return executable
+
     def add_runnable_step(self, runnable_step=None):
-        """Add a C{RunnableStep}.
+        """Convenience method to facilitate initialising, adding and retuning a C{RunnableStep}.
 
         @param runnable_step: C{RunnableStep}
         @type runnable_step: RunnableStep
+        @return C{RunnableStep}
+        @rtype: RunnableStep
         """
 
         if runnable_step is None:
@@ -2939,6 +2954,8 @@ class Runnable(object):
         assert isinstance(runnable_step, RunnableStep)
 
         self.runnable_step_list.append(runnable_step)
+
+        return runnable_step
 
     def run_executable(self, name):
         """Run an C{Executable} defined in the C{Runnable} object.

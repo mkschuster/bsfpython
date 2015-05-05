@@ -204,11 +204,10 @@ if config_parser.has_option(section=config_section, option='annotation_resources
 # Initialise a Distributed Resource Management System (DRMS) object for the
 # bsf_run_variant_calling_somatic.py script.
 
-vc_run_somatic_drms = DRMS.from_analysis(
+vc_run_somatic_drms = analysis.add_drms(drms=DRMS.from_analysis(
     name='variant_calling_somatic',
-    work_directory=analysis.genome_directory,
-    analysis=analysis)
-analysis.drms_list.append(vc_run_somatic_drms)
+    working_directory=analysis.genome_directory,
+    analysis=analysis))
 
 _read_comparisons(analysis=analysis, cmp_file=config_parser.get(section=config_section, option='cmp_file'))
 
@@ -495,11 +494,10 @@ for key in key_list:
 
     # Create a BSF Executable for somatic variant calling.
 
-    vc_run_somatic = Executable.from_analysis(
+    vc_run_somatic = vc_run_somatic_drms.add_executable(executable=Executable.from_analysis(
         name=prefix_somatic,
         program='bsf_run_variant_calling_somatic.py',
-        analysis=analysis)
-    vc_run_somatic_drms.add_executable(vc_run_somatic)
+        analysis=analysis))
 
     # Only submit this Executable if the final result file does not exist.
     if (os.path.exists(

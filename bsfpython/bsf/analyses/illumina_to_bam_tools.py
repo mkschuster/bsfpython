@@ -464,11 +464,10 @@ class IlluminaToBam(Analysis):
 
         super(IlluminaToBam, self).run()
 
-        drms_illumina_to_bam = DRMS.from_analysis(
+        drms_illumina_to_bam = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_illumina_to_bam,
-            work_directory=self.project_directory,
-            analysis=self)
-        self.drms_list.append(drms_illumina_to_bam)
+            working_directory=self.project_directory,
+            analysis=self))
 
         for lane in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
 
@@ -493,19 +492,18 @@ class IlluminaToBam(Analysis):
             )
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
-            runnable_illumina_to_bam = Runnable(
+            runnable_illumina_to_bam = self.add_runnable(runnable=Runnable(
                 name=self.get_prefix_illumina_to_bam(project_name=self.project_name, lane=lane_str),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
-                file_path_dict=file_path_dict)
-            self.add_runnable(runnable=runnable_illumina_to_bam)
+                file_path_dict=file_path_dict))
 
             # TODO: The Runnable class could have dependencies just like the Executable class so that they could be
             # passed on upon creation of the Executable from the Runnable via Executable.from_analysis_runnable().
-            executable_illumina_to_bam = Executable.from_analysis_runnable(
-                analysis=self,
-                runnable_name=runnable_illumina_to_bam.name)
-            drms_illumina_to_bam.add_executable(executable=executable_illumina_to_bam)
+            executable_illumina_to_bam = drms_illumina_to_bam.add_executable(
+                executable=Executable.from_analysis_runnable(
+                    analysis=self,
+                    runnable_name=runnable_illumina_to_bam.name))
 
             executable_illumina_to_bam.dependencies.append(
                 IlluminaRunFolderRestore.get_prefix_compress_base_calls(project_name=self.project_name, lane=lane_str))
@@ -517,11 +515,10 @@ class IlluminaToBam(Analysis):
 
             # Run Illumina2Bam tools Illumina2bam.
 
-            java_process = RunnableStep(
+            java_process = runnable_illumina_to_bam.add_runnable_step(runnable_step=RunnableStep(
                 name='illumina_to_bam',
                 program='java',
-                sub_command=Command(command=str()))
-            runnable_illumina_to_bam.add_runnable_step(runnable_step=java_process)
+                sub_command=Command(command=str())))
 
             java_process.add_switch_short(key='d64')
             java_process.add_option_short(
@@ -607,15 +604,14 @@ class IlluminaToBam(Analysis):
 
             # Run Picard SortSam
 
-            java_process = RunnableStep(
+            java_process = runnable_illumina_to_bam.add_runnable_step(runnable_step=RunnableStep(
                 name='picard_sort_sam',
                 program='java',
                 sub_command=Command(command=str()),
                 obsolete_file_path_list=[
                     file_path_dict['unsorted_bam'],
                     file_path_dict['unsorted_md5']
-                ])
-            runnable_illumina_to_bam.add_runnable_step(runnable_step=java_process)
+                ]))
 
             java_process.add_switch_short(key='d64')
             java_process.add_option_short(key='jar', value=os.path.join(self.classpath_picard, 'SortSam.jar'))
@@ -983,11 +979,10 @@ class BamIndexDecoder(Analysis):
         if not self.classpath_picard:
             self.classpath_picard = default.classpath_picard
 
-        drms_bam_index_decoder = DRMS.from_analysis(
+        drms_bam_index_decoder = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_bam_index_decoder,
-            work_directory=self.project_directory,
-            analysis=self)
-        self.drms_list.append(drms_bam_index_decoder)
+            working_directory=self.project_directory,
+            analysis=self))
 
         index_by_lane = dict()
 
@@ -1078,19 +1073,18 @@ class BamIndexDecoder(Analysis):
             bam_index_decoder_sheet.write_to_file()
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
-            runnable_bam_index_decoder = Runnable(
+            runnable_bam_index_decoder = self.add_runnable(runnable=Runnable(
                 name=self.get_prefix_bam_index_decoder(project_name=self.project_name, lane=key),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
-                file_path_dict=file_path_dict)
-            self.add_runnable(runnable=runnable_bam_index_decoder)
+                file_path_dict=file_path_dict))
 
             # TODO: It would be good to extend the Runnable so that it holds dependencies on other Runnable objects
             # and that it could be submitted to a DRMS so that the Executable gets automatically created and submitted.
-            executable_bam_index_decoder = Executable.from_analysis_runnable(
-                analysis=self,
-                runnable_name=runnable_bam_index_decoder.name)
-            drms_bam_index_decoder.add_executable(executable=executable_bam_index_decoder)
+            executable_bam_index_decoder = drms_bam_index_decoder.add_executable(
+                executable=Executable.from_analysis_runnable(
+                    analysis=self,
+                    runnable_name=runnable_bam_index_decoder.name))
 
             executable_bam_index_decoder.dependencies.append(
                 IlluminaToBam.get_prefix_illumina_to_bam(project_name=self.project_name, lane=key))
@@ -1106,14 +1100,13 @@ class BamIndexDecoder(Analysis):
 
                 # Run the BamIndexDecoder if there is at least one line containing a barcode sequence.
 
-                java_process = RunnableStep(
+                java_process = runnable_bam_index_decoder.add_runnable_step(runnable_step=RunnableStep(
                     name='bam_index_decoder',
                     program='java',
                     sub_command=Command(command=str()),
                     obsolete_file_path_list=[
                         file_path_dict['barcode']
-                    ])
-                runnable_bam_index_decoder.add_runnable_step(runnable_step=java_process)
+                    ]))
 
                 java_process.add_switch_short(key='d64')
                 java_process.add_option_short(
@@ -1175,11 +1168,10 @@ class BamIndexDecoder(Analysis):
 
                 # Run Picard CollectAlignmentSummaryMetrics if there is no line containing a barcode sequence.
 
-                java_process = RunnableStep(
+                java_process = runnable_bam_index_decoder.add_runnable_step(runnable_step=RunnableStep(
                     name='picard_collect_alignment_summary_metrics',
                     program='java',
-                    sub_command=Command(command=str()))
-                runnable_bam_index_decoder.add_runnable_step(runnable_step=java_process)
+                    sub_command=Command(command=str())))
 
                 java_process.add_switch_short(key='d64')
                 java_process.add_option_short(

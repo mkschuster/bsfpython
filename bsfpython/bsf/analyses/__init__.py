@@ -503,18 +503,18 @@ class ChIPSeq(Analysis):
 
         # Initialise the Distributed Resource Management System objects for Bowtie2.
 
-        bowtie2_drms = DRMS.from_analysis(name='bowtie2',
-                                          work_directory=self.genome_directory,
-                                          analysis=self)
-        self.drms_list.append(bowtie2_drms)
+        bowtie2_drms = self.add_drms(drms=DRMS.from_analysis(
+            name='bowtie2',
+            working_directory=self.genome_directory,
+            analysis=self))
 
         # Use the bsf_sam2bam.sh script to convert aligned SAM into
         # aligned, sorted, indexed BAM files.
 
-        sam2bam_drms = DRMS.from_analysis(name='sam2bam',
-                                          work_directory=self.genome_directory,
-                                          analysis=self)
-        self.drms_list.append(sam2bam_drms)
+        sam2bam_drms = self.add_drms(drms=DRMS.from_analysis(
+            name='sam2bam',
+            working_directory=self.genome_directory,
+            analysis=self))
 
         for sample in self.samples:
 
@@ -533,14 +533,14 @@ class ChIPSeq(Analysis):
 
             for replicate_key in replicate_keys:
 
-                bowtie2 = Bowtie2(name='chipseq_bowtie2_{}'.format(replicate_key),
-                                  analysis=self)
-                bowtie2_drms.add_executable(bowtie2)
+                bowtie2 = bowtie2_drms.add_executable(executable=Bowtie2(
+                    name='chipseq_bowtie2_{}'.format(replicate_key),
+                    analysis=self))
 
-                sam2bam = Executable.from_analysis(name='chipseq_sam2bam_{}'.format(replicate_key),
-                                                   program='bsf_sam2bam.sh',
-                                                   analysis=self)
-                sam2bam_drms.add_executable(sam2bam)
+                sam2bam = sam2bam_drms.add_executable(executable=Executable.from_analysis(
+                    name='chipseq_sam2bam_{}'.format(replicate_key),
+                    program='bsf_sam2bam.sh',
+                    analysis=self))
 
                 sam2bam.dependencies.append(bowtie2.name)
 
@@ -608,7 +608,7 @@ class ChIPSeq(Analysis):
 
                 if (os.path.exists('{}.aligned.sorted.bam.bai'.format(replicate_key))
                     and
-                    os.path.getsize('{}.aligned.sorted.bam.bai'.format(replicate_key))):
+                        os.path.getsize('{}.aligned.sorted.bam.bai'.format(replicate_key))):
                     bowtie2.submit = False
                     sam2bam.submit = False
 
@@ -625,17 +625,15 @@ class ChIPSeq(Analysis):
         genome_sizes = os.path.expanduser(genome_sizes)
         genome_sizes = os.path.expandvars(genome_sizes)
 
-        macs14_drms = DRMS.from_analysis(name='macs14',
-                                         work_directory=self.genome_directory,
-                                         analysis=self)
+        macs14_drms = self.add_drms(drms=DRMS.from_analysis(
+            name='macs14',
+            working_directory=self.genome_directory,
+            analysis=self))
 
-        self.drms_list.append(macs14_drms)
-
-        process_macs14_drms = DRMS.from_analysis(name='process_macs14',
-                                                 work_directory=self.genome_directory,
-                                                 analysis=self)
-
-        self.drms_list.append(process_macs14_drms)
+        process_macs14_drms = self.add_drms(drms=DRMS.from_analysis(
+            name='process_macs14',
+            working_directory=self.genome_directory,
+            analysis=self))
 
         keys = self.comparisons.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -669,22 +667,19 @@ class ChIPSeq(Analysis):
 
                         for c_replicate_key in c_replicate_keys:
 
-                            macs14 = Macs14(name='chipseq_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
-                                            analysis=self)
+                            macs14 = macs14_drms.add_executable(executable=Macs14(
+                                name='chipseq_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
+                                analysis=self))
 
                             macs14.dependencies.append('chipseq_sam2bam_' + t_replicate_key)
                             macs14.dependencies.append('chipseq_sam2bam_' + c_replicate_key)
 
-                            macs14_drms.add_executable(macs14)
-
-                            process_macs14 = Executable.from_analysis(
+                            process_macs14 = process_macs14_drms.add_executable(executable=Executable.from_analysis(
                                 name='chipseq_process_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
                                 program='bsf_chipseq_process_macs14.sh',
-                                analysis=self)
+                                analysis=self))
 
                             process_macs14.dependencies.append(macs14.name)
-
-                            process_macs14_drms.add_executable(process_macs14)
 
                             # Set macs14 options.
 
@@ -781,23 +776,20 @@ class ChIPSeq(Analysis):
         genome_sizes = os.path.expanduser(genome_sizes)
         genome_sizes = os.path.expandvars(genome_sizes)
 
-        macs2_callpeak_drms = DRMS.from_analysis(
+        macs2_callpeak_drms = self.add_drms(drms=DRMS.from_analysis(
             name='macs2_callpeak',
-            work_directory=self.genome_directory,
-            analysis=self)
-        self.drms_list.append(macs2_callpeak_drms)
+            working_directory=self.genome_directory,
+            analysis=self))
 
-        macs2_bdgcmp_drms = DRMS.from_analysis(
+        macs2_bdgcmp_drms = self.add_drms(drms=DRMS.from_analysis(
             name='macs2_bdgcmp',
-            work_directory=self.genome_directory,
-            analysis=self)
-        self.drms_list.append(macs2_bdgcmp_drms)
+            working_directory=self.genome_directory,
+            analysis=self))
 
-        process_macs2_drms = DRMS.from_analysis(
+        process_macs2_drms = self.add_drms(drms=DRMS.from_analysis(
             name='process_macs2',
-            work_directory=self.genome_directory,
-            analysis=self)
-        self.drms_list.append(process_macs2_drms)
+            working_directory=self.genome_directory,
+            analysis=self))
 
         keys = self.comparisons.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -831,24 +823,24 @@ class ChIPSeq(Analysis):
 
                         for c_replicate_key in c_replicate_keys:
 
-                            macs2_callpeak = Macs2Callpeak(
+                            macs2_callpeak = macs2_callpeak_drms.add_executable(executable=Macs2Callpeak(
                                 name='chipseq_macs2_callpeak_{}__{}'.format(t_replicate_key, c_replicate_key),
-                                analysis=self)
-                            macs2_callpeak_drms.add_executable(macs2_callpeak)
+                                analysis=self))
+
                             macs2_callpeak.dependencies.append('chipseq_sam2bam_' + t_replicate_key)
                             macs2_callpeak.dependencies.append('chipseq_sam2bam_' + c_replicate_key)
 
-                            macs2_bdgcmp = Macs2Bdgcmp(
+                            macs2_bdgcmp = macs2_bdgcmp_drms.add_executable(executable=Macs2Bdgcmp(
                                 name='chipseq_macs2_bdgcmp_{}__{}'.format(t_replicate_key, c_replicate_key),
-                                analysis=self)
-                            macs2_bdgcmp_drms.add_executable(macs2_bdgcmp)
+                                analysis=self))
+
                             macs2_bdgcmp.dependencies.append(macs2_callpeak.name)
 
-                            process_macs2 = Executable.from_analysis(
+                            process_macs2 = process_macs2_drms.add_executable(executable=Executable.from_analysis(
                                 name='chipseq_process_macs2_{}__{}'.format(t_replicate_key, c_replicate_key),
                                 program='bsf_chipseq_process_macs2.sh',
-                                analysis=self)
-                            process_macs2_drms.add_executable(process_macs2)
+                                analysis=self))
+
                             process_macs2.dependencies.append(macs2_bdgcmp.name)
 
                             # Set MACS2 callpeak sub-command options.
@@ -981,11 +973,10 @@ class ChIPSeq(Analysis):
 
         replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
 
-        diffbind_drms = DRMS.from_analysis(
+        diffbind_drms = self.add_drms(drms=DRMS.from_analysis(
             name='diffbind',
-            work_directory=self.genome_directory,
-            analysis=self)
-        self.drms_list.append(diffbind_drms)
+            working_directory=self.genome_directory,
+            analysis=self))
 
         # Reorganise the comparisons by factor.
 
@@ -1099,11 +1090,11 @@ class ChIPSeq(Analysis):
 
             # Create the DiffBind job.
 
-            diffbind = Executable.from_analysis(
+            diffbind = diffbind_drms.add_executable(executable=Executable.from_analysis(
                 name='chipseq_diffbind_{}'.format(key),
                 program='bsf_chipseq_diffbind.R',
-                analysis=self)
-            diffbind_drms.add_executable(diffbind)
+                analysis=self))
+
             diffbind.dependencies.extend(job_dependencies)
 
             # Add diffbind options.
@@ -2228,9 +2219,10 @@ class RunFastQC(Analysis):
 
             pass
 
-        fastqc_drms = DRMS.from_analysis(name='fastqc',
-                                         work_directory=self.project_directory,
-                                         analysis=self)
+        fastqc_drms = self.add_drms(drms=DRMS.from_analysis(
+            name='fastqc',
+            working_directory=self.project_directory,
+            analysis=self))
 
         for sample in self.samples:
 
@@ -2249,10 +2241,9 @@ class RunFastQC(Analysis):
 
             for replicate_key in replicate_keys:
 
-                fastqc = FastQC(name='fastqc_{}'.format(replicate_key),
-                                analysis=self)
-
-                fastqc_drms.add_executable(fastqc)
+                fastqc = fastqc_drms.add_executable(executable=FastQC(
+                    name='fastqc_{}'.format(replicate_key),
+                    analysis=self))
 
                 # Set FastQC options.
 
@@ -2279,8 +2270,6 @@ class RunFastQC(Analysis):
                         reads2.append(paired_reads.reads2.file_path)
 
                 fastqc.arguments.append(string.join(words=reads1 + reads2, sep=' '))
-
-        self.drms_list.append(fastqc_drms)
 
     def report(self):
         """Create C{RunFastQC} report in HTML format.
@@ -2495,11 +2484,10 @@ class RunBamToFastq(Analysis):
         # replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
         replicate_grouping = False
 
-        sam_to_fastq_drms = DRMS.from_analysis(name='sam_to_fastq',
-                                               work_directory=self.genome_directory,
-                                               analysis=self)
-
-        self.drms_list.append(sam_to_fastq_drms)
+        sam_to_fastq_drms = self.add_drms(drms=DRMS.from_analysis(
+            name='sam_to_fastq',
+            working_directory=self.genome_directory,
+            analysis=self))
 
         for sample in self.collection.get_all_samples():
 
@@ -2534,12 +2522,10 @@ class RunBamToFastq(Analysis):
                         # TODO: The matching part to remove the .bam could be achieved with Bash parameter expansion.
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
-                            sam_to_fastq = Executable.from_analysis(
+                            sam_to_fastq = sam_to_fastq_drms.add_executable(executable=Executable.from_analysis(
                                 name='picard_sam_to_fastq_{}_1'.format(replicate_key),
                                 program='bsf_bam2fastq.sh',
-                                analysis=self)
-
-                            sam_to_fastq_drms.add_executable(sam_to_fastq)
+                                analysis=self))
 
                             sam_to_fastq.arguments.append(paired_reads.reads1.file_path)
                             sam_to_fastq.arguments.append(os.path.join(default.classpath_picard,
@@ -2554,12 +2540,10 @@ class RunBamToFastq(Analysis):
 
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
-                            sam_to_fastq = Executable.from_analysis(
+                            sam_to_fastq = sam_to_fastq_drms.add_executable(executable=Executable.from_analysis(
                                 name='picard_sam_to_fastq_{}_2'.format(replicate_key),
                                 program='bsf_bam2fastq.sh',
-                                analysis=self)
-
-                            sam_to_fastq_drms.add_executable(sam_to_fastq)
+                                analysis=self))
 
                             sam_to_fastq.arguments.append(paired_reads.reads2.file_path)
                             sam_to_fastq.arguments.append(os.path.join(default.classpath_picard,

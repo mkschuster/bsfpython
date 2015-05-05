@@ -138,14 +138,14 @@ def submit(drms, debug=0):
 
         # Working directory, standard output and standard error streams.
 
-        if drms.work_directory:
+        if drms.working_directory:
             command.append('-wd')
-            command.append(drms.work_directory)
+            command.append(drms.working_directory)
 
             # Write standard output and standard error streams into a
             # 'bsfpython_sge_output' directory under the 'working_directory'.
 
-            output_directory_path = os.path.join(drms.work_directory, output_directory)
+            output_directory_path = os.path.join(drms.working_directory, output_directory)
 
             if not os.path.isdir(output_directory_path):
                 # In principle, a race condition could occur as the directory
@@ -235,7 +235,7 @@ def submit(drms, debug=0):
         output += string.join(words=command, sep=' ') + "\n"
         output += "\n"
 
-    script_path = os.path.join(drms.work_directory, 'bsfpython_sge_{}.bash'.format(drms.name))
+    script_path = os.path.join(drms.working_directory, 'bsfpython_sge_{}.bash'.format(drms.name))
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()

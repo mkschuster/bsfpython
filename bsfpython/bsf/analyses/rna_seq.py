@@ -485,29 +485,25 @@ class Tuxedo(Analysis):
         # Initialise the Distributed Resource Management System (DRMS) objects for
         # TopHat and Cufflinks Executable objects.
 
-        drms_run_tophat = DRMS.from_analysis(
+        drms_run_tophat = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_run_tophat,
-            work_directory=self.genome_directory,
-            analysis=self)
-        self.drms_list.append(drms_run_tophat)
+            working_directory=self.genome_directory,
+            analysis=self))
 
-        drms_process_tophat = DRMS.from_analysis(
+        drms_process_tophat = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_process_tophat,
-            work_directory=self.genome_directory,
-            analysis=self)
-        self.drms_list.append(drms_process_tophat)
+            working_directory=self.genome_directory,
+            analysis=self))
 
-        drms_run_cufflinks = DRMS.from_analysis(
+        drms_run_cufflinks = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_run_cufflinks,
-            work_directory=self.genome_directory,
-            analysis=self)
-        self.drms_list.append(drms_run_cufflinks)
+            working_directory=self.genome_directory,
+            analysis=self))
 
-        drms_process_cufflinks = DRMS.from_analysis(
+        drms_process_cufflinks = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_process_cufflinks,
-            work_directory=self.genome_directory,
-            analysis=self)
-        self.drms_list.append(drms_process_cufflinks)
+            working_directory=self.genome_directory,
+            analysis=self))
 
         for sample in self.samples:
             assert isinstance(sample, Sample)
@@ -634,11 +630,11 @@ class Tuxedo(Analysis):
                 pickler.dump(obj=pickler_dict_run_tophat)
                 pickler_file.close()
 
-                run_tophat = Executable.from_analysis(
+                run_tophat = drms_run_tophat.add_executable(executable=Executable.from_analysis(
                     name=string.join(words=(drms_run_tophat.name, replicate_key), sep='_'),
                     program='bsf_run_rnaseq_tophat.py',
-                    analysis=self)
-                drms_run_tophat.add_executable(run_tophat)
+                    analysis=self))
+
                 # The rnaseq_run_tophat Executable requires no DRMS.dependencies.
 
                 # Set rnaseq_run_tophat options.
@@ -650,11 +646,11 @@ class Tuxedo(Analysis):
 
                 # Create a new rnaseq_process_tophat Executable
 
-                process_tophat = Executable.from_analysis(
+                process_tophat = drms_process_tophat.add_executable(executable=Executable.from_analysis(
                     name=string.join(words=(drms_process_tophat.name, replicate_key), sep='_'),
                     program='bsf_rnaseq_process_tophat2.sh',
-                    analysis=self)
-                drms_process_tophat.add_executable(process_tophat)
+                    analysis=self))
+
                 process_tophat.dependencies.append(run_tophat.name)
 
                 # Set rnaseq_process_tophat options.
@@ -677,29 +673,27 @@ class Tuxedo(Analysis):
                     tophat_accepted_hits=os.path.join(file_path_dict_tophat['output_directory'], 'accepted_hits.bam')
                 )
 
-                runnable_run_cufflinks = Runnable(
+                runnable_run_cufflinks = self.add_runnable(runnable=Runnable(
                     name=prefix_run_cufflinks,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     file_path_dict=file_path_dict_cufflinks,
-                    debug=self.debug)
-                self.add_runnable(runnable=runnable_run_cufflinks)
+                    debug=self.debug))
 
                 # Create an Executable for running the Cufflinks Runnable.
 
-                run_cufflinks = Executable.from_analysis_runnable(
+                run_cufflinks = drms_run_cufflinks.add_executable(executable=Executable.from_analysis_runnable(
                     analysis=self,
-                    runnable_name=runnable_run_cufflinks.name)
-                drms_run_cufflinks.add_executable(executable=run_cufflinks)
+                    runnable_name=runnable_run_cufflinks.name))
+
                 run_cufflinks.dependencies.append(run_tophat.name)
 
                 # Create a new Cufflinks RunnableStep.
 
-                cufflinks = RunnableStep.from_analysis(
+                cufflinks = runnable_run_cufflinks.add_runnable_step(runnable_step=RunnableStep.from_analysis(
                     name='cufflinks',
                     program='cufflinks',
-                    analysis=self)
-                runnable_run_cufflinks.add_runnable_step(runnable_step=cufflinks)
+                    analysis=self))
 
                 # Create a new rnaseq_cufflinks Executable, which is run via the rnaseq_run_cufflinks Executable below.
 
@@ -760,11 +754,11 @@ class Tuxedo(Analysis):
 
                 prefix_process_cufflinks = string.join(words=(drms_process_cufflinks.name, replicate_key), sep='_')
 
-                process_cufflinks = Executable.from_analysis(
+                process_cufflinks = drms_process_cufflinks.add_executable(executable=Executable.from_analysis(
                     name=prefix_process_cufflinks,
                     program='bsf_rnaseq_process_cufflinks.R',
-                    analysis=self)
-                drms_process_cufflinks.add_executable(process_cufflinks)
+                    analysis=self))
+
                 process_cufflinks.dependencies.append(run_cufflinks.name)
 
                 # Set process Cufflinks options.
@@ -778,35 +772,30 @@ class Tuxedo(Analysis):
         # Initialise the Distributed Resource Management System (DRMS) objects for
         # Cuffmerge and Cuffdiff Executable objects.
 
-        drms_run_cuffmerge = DRMS.from_analysis(
+        drms_run_cuffmerge = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_run_cuffmerge,
-            work_directory=self.genome_directory,
-            analysis=self)
-        self.drms_list.append(drms_run_cuffmerge)
+            working_directory=self.genome_directory,
+            analysis=self))
 
-        drms_run_cuffquant = DRMS.from_analysis(
+        drms_run_cuffquant = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_run_cuffquant,
-            work_directory=self.genome_directory,
-            analysis=self)
-        self.drms_list.append(drms_run_cuffquant)
+            working_directory=self.genome_directory,
+            analysis=self))
 
-        drms_run_cuffnorm = DRMS.from_analysis(
+        drms_run_cuffnorm = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_run_cuffnorm,
-            work_directory=self.genome_directory,
-            analysis=self)
-        self.drms_list.append(drms_run_cuffnorm)
+            working_directory=self.genome_directory,
+            analysis=self))
 
-        drms_run_cuffdiff = DRMS.from_analysis(
+        drms_run_cuffdiff = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_run_cuffdiff,
-            work_directory=self.genome_directory,
-            analysis=self)
-        self.drms_list.append(drms_run_cuffdiff)
+            working_directory=self.genome_directory,
+            analysis=self))
 
-        drms_process_cuffdiff = DRMS.from_analysis(
+        drms_process_cuffdiff = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_process_cuffdiff,
-            work_directory=self.genome_directory,
-            analysis=self)
-        self.drms_list.append(drms_process_cuffdiff)
+            working_directory=self.genome_directory,
+            analysis=self))
 
         comparison_keys = self.comparisons.keys()
         comparison_keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -821,28 +810,25 @@ class Tuxedo(Analysis):
                 merged_gtf=os.path.join(prefix_cuffmerge, 'merged.gtf'),
                 assembly_txt=string.join(words=(prefix_cuffmerge, 'assembly.txt'), sep='_'))
 
-            runnable_run_cuffmerge = Runnable(
+            runnable_run_cuffmerge = self.add_runnable(runnable=Runnable(
                 name=prefix_cuffmerge,
                 code_module='bsf.runnables.generic',
                 working_directory=self.genome_directory,
                 file_path_dict=file_path_dict_cuffmerge,
-                debug=self.debug)
-            self.add_runnable(runnable=runnable_run_cuffmerge)
+                debug=self.debug))
 
             # Create an Executable for running the Cuffmerge Runnable.
 
-            run_cuffmerge = Executable.from_analysis_runnable(
+            run_cuffmerge = drms_run_cuffmerge.add_executable(executable=Executable.from_analysis_runnable(
                 analysis=self,
-                runnable_name=runnable_run_cuffmerge.name)
-            drms_run_cuffmerge.add_executable(executable=run_cuffmerge)
+                runnable_name=runnable_run_cuffmerge.name))
 
             # Create a new Cuffmerge RunnableStep.
 
-            cuffmerge = RunnableStep.from_analysis(
+            cuffmerge = runnable_run_cuffmerge.add_runnable_step(runnable_step=RunnableStep.from_analysis(
                 name='cuffmerge',
                 program='cuffmerge',
-                analysis=self)
-            runnable_run_cuffmerge.add_runnable_step(runnable_step=cuffmerge)
+                analysis=self))
 
             # Set rnaseq_cuffmerge options.
 
@@ -926,20 +912,18 @@ class Tuxedo(Analysis):
                                 string.join(words=('rnaseq_tophat', replicate_key), sep='_'),
                                 'accepted_hits.bam'))
 
-                        runnable_run_cuffquant = Runnable(
+                        runnable_run_cuffquant = self.add_runnable(runnable=Runnable(
                             name=prefix_cuffquant,
                             code_module='bsf.runnables.generic',
                             working_directory=self.genome_directory,
                             file_path_dict=file_path_dict_cuffquant,
-                            debug=self.debug)
-                        self.add_runnable(runnable=runnable_run_cuffquant)
+                            debug=self.debug))
 
                         # Create an Executable for running the Cuffquant Runnable.
 
-                        run_cuffquant = Executable.from_analysis_runnable(
+                        run_cuffquant = drms_run_cuffquant.add_executable(executable=Executable.from_analysis_runnable(
                             analysis=self,
-                            runnable_name=runnable_run_cuffquant.name)
-                        drms_run_cuffquant.add_executable(executable=run_cuffquant)
+                            runnable_name=runnable_run_cuffquant.name))
 
                         # Each Cuffquant process depends on Cuffmerge.
 
@@ -947,11 +931,10 @@ class Tuxedo(Analysis):
 
                         # Create a new cuffquant RunnableStep.
 
-                        cuffquant = RunnableStep.from_analysis(
+                        cuffquant = runnable_run_cuffquant.add_runnable_step(runnable_step=RunnableStep.from_analysis(
                             name='cuffquant',
                             program='cuffquant',
-                            analysis=self)
-                        runnable_run_cuffquant.add_runnable_step(runnable_step=cuffquant)
+                            analysis=self))
 
                         # Set Cuffquant options.
 
@@ -1007,30 +990,27 @@ class Tuxedo(Analysis):
                 output_directory=prefix_cuffnorm,
                 merged_gtf=file_path_dict_cuffmerge['merged_gtf'])
 
-            runnable_run_cuffnorm = Runnable(
+            runnable_run_cuffnorm = self.add_runnable(runnable=Runnable(
                 name=prefix_cuffnorm,
                 code_module='bsf.runnables.generic',
                 working_directory=self.genome_directory,
                 file_path_dict=file_path_dict_cuffnorm,
-                debug=self.debug)
-            self.add_runnable(runnable=runnable_run_cuffnorm)
+                debug=self.debug))
 
             # Create an Executable for running the Cuffnorm Runnable.
 
-            run_cuffnorm = Executable.from_analysis_runnable(
+            run_cuffnorm = drms_run_cuffnorm.add_executable(executable=Executable.from_analysis_runnable(
                 analysis=self,
-                runnable_name=runnable_run_cuffnorm.name)
-            drms_run_cuffnorm.add_executable(executable=run_cuffnorm)
+                runnable_name=runnable_run_cuffnorm.name))
 
             run_cuffnorm.dependencies.extend(cuffdiff_cuffnorm_dependencies)
 
             # Create a new Cuffnorm RunnableStep.
 
-            cuffnorm = RunnableStep.from_analysis(
+            cuffnorm = runnable_run_cuffnorm.add_runnable_step(runnable_step=RunnableStep.from_analysis(
                 name='cuffnorm',
                 program='cuffnorm',
-                analysis=self)
-            runnable_run_cuffnorm.add_runnable_step(runnable_step=cuffnorm)
+                analysis=self))
 
             # Set Cuffnorm options.
 
@@ -1068,30 +1048,27 @@ class Tuxedo(Analysis):
                 output_directory=prefix_cuffdiff,
                 merged_gtf=file_path_dict_cuffmerge['merged_gtf'])
 
-            runnable_run_cuffdiff = Runnable(
+            runnable_run_cuffdiff = self.add_runnable(runnable=Runnable(
                 name=prefix_cuffdiff,
                 code_module='bsf.runnables.generic',
                 working_directory=self.genome_directory,
                 file_path_dict=file_path_dict_cuffdiff,
-                debug=self.debug)
-            self.add_runnable(runnable=runnable_run_cuffdiff)
+                debug=self.debug))
 
             # Create an Executable for running the Cuffdiff Runnable.
 
-            run_cuffdiff = Executable.from_analysis_runnable(
+            run_cuffdiff = drms_run_cuffdiff.add_executable(executable=Executable.from_analysis_runnable(
                 analysis=self,
-                runnable_name=runnable_run_cuffdiff.name)
-            drms_run_cuffdiff.add_executable(executable=run_cuffdiff)
+                runnable_name=runnable_run_cuffdiff.name))
 
             run_cuffdiff.dependencies.extend(cuffdiff_cuffnorm_dependencies)
 
             # Create a new Cuffdiff RunnableStep.
 
-            cuffdiff = RunnableStep.from_analysis(
+            cuffdiff = runnable_run_cuffdiff.add_runnable_step(runnable_step=RunnableStep.from_analysis(
                 name='cuffdiff',
                 program='cuffdiff',
-                analysis=self)
-            runnable_run_cuffdiff.add_runnable_step(runnable_step=cuffdiff)
+                analysis=self))
 
             # Set Cuffdiff options.
 
@@ -1133,11 +1110,10 @@ class Tuxedo(Analysis):
 
             # Create a new rnaseq_process_cuffdiff Executable.
 
-            process_cuffdiff = Executable.from_analysis(
+            process_cuffdiff = drms_process_cuffdiff.add_executable(executable=Executable.from_analysis(
                 name=string.join(words=(drms_process_cuffdiff.name, comparison_key), sep='_'),
                 program='bsf_rnaseq_process_cuffdiff.R',
-                analysis=self)
-            drms_process_cuffdiff.add_executable(process_cuffdiff)
+                analysis=self))
 
             process_cuffdiff.dependencies.append(run_cuffdiff.name)
 
