@@ -286,7 +286,7 @@ class Analysis(object):
         return output
 
     def add_drms(self, drms):
-        """Convenience method to facilitate initialising, adding and returning a C{DMRS} object.
+        """Convenience method to facilitate initialising, adding and returning a C{DRMS} object.
 
         @param drms: C{DRMS}
         @type drms: DRMS
@@ -915,6 +915,7 @@ class Default(object):
         expand any environment variables i.e. on UNIX ${NAME} or $NAME
         Check if an absolute path has been provided, if not,
         automatically prepend default directory paths.
+        Finally, normalise the path.
 
         @param file_path: File path
         @type file_path: str | unicode
@@ -930,7 +931,7 @@ class Default(object):
         if default_path and not os.path.isabs(absolute_path):
             absolute_path = os.path.join(default_path, absolute_path)
 
-        return absolute_path
+        return os.path.normpath(absolute_path)
 
     @staticmethod
     def get_global_default():
@@ -1435,7 +1436,7 @@ class Default(object):
 
         default = Default.get_global_default()
 
-        if not genome_index in default.indices:
+        if genome_index not in default.indices:
             raise Exception(
                 'Unknown genome index name {!r}.'.format(genome_index))
 
@@ -2418,7 +2419,7 @@ class Executable(Command):
 
         assert isinstance(analysis, Analysis)
 
-        if not runnable_name in analysis.runnable_dict:
+        if runnable_name not in analysis.runnable_dict:
             raise Exception("A Runnable object with name {!r} does not exist in the Analysis object with name {!r}.".
                             format(runnable_name, analysis.project_name))
 
@@ -2608,7 +2609,7 @@ class Executable(Command):
         return command
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run an C{Executable} object via the Python C{subprocess.Popen} module.
+        """Run an C{Executable} object via the Python C{subprocess.Popen} class.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
