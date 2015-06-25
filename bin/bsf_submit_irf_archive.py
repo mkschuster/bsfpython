@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 #
-# BSF Python script to restore an Illumina Run Folder (IRF) from a magnetic tape library.
+# BSF Python script to archive an Illumina Run Folder (IRF) from a magnetic tape library.
 #
 #
 # Copyright 2013 - 2015 Michael K. Schuster
@@ -28,11 +28,11 @@
 from argparse import ArgumentParser
 
 from bsf import Default
-from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
+from bsf.analyses.illumina_run_folder import IlluminaRunFolderArchive
 
 
 argument_parser = ArgumentParser(
-    description='IlluminaRunFolderRestore Analysis driver script.')
+    description='IlluminaRunFolderArchive Analysis driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -57,22 +57,21 @@ argument_parser.add_argument(
     '--project-name',
     dest='project_name',
     help='project name i.e. instrument run identifier',
-    required=True,
+    required=False,
     type=str)
 
 argument_parser.add_argument(
     '--archive-directory',
     dest='archive_directory',
     help='archive directory',
-    required=True,
+    required=False,
     type=str)
 
 argument_parser.add_argument(
-    '--extract-intensities',
-    action='store_true',
-    dest='extract_intensities',
-    help='extract cluster intensity (*.cif) files',
-    required=False)
+    '--irf',
+    help='Illumina Run Folder name or file path',
+    required=False,
+    type=str)
 
 argument_parser.add_argument(
     '--force',
@@ -84,30 +83,30 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF IlluminaRunFolderRestore analysis, run and submit it.
 
-irf_restore = IlluminaRunFolderRestore.from_config_file_path(config_path=name_space.configuration)
+irf_archive = IlluminaRunFolderArchive.from_config_file_path(config_path=name_space.configuration)
 
 # Set arguments that override the configuration file.
 
 if name_space.debug:
-    irf_restore.debug = name_space.debug
+    irf_archive.debug = name_space.debug
 
 if name_space.project_name:
-    irf_restore.project_name = name_space.project_name
+    irf_archive.project_name = name_space.project_name
 
 if name_space.archive_directory:
-    irf_restore.archive_directory = name_space.archive_directory
+    irf_archive.archive_directory = name_space.archive_directory
 
-if name_space.extract_intensities:
-    irf_restore.extract_intensities = name_space.extract_intensities
+if name_space.irf:
+    irf_archive.run_directory = name_space.irf
 
 if name_space.force:
-    irf_restore.force = name_space.force
+    irf_archive.force = name_space.force
 
-irf_restore.run()
-irf_restore.submit(drms_name=name_space.stage)
+irf_archive.run()
+irf_archive.submit(drms_name=name_space.stage)
 
-print 'IlluminaRunFolderRestore Analysis'
-print 'Project name:           ', irf_restore.project_name
-print 'Project directory:      ', irf_restore.project_directory
-print 'Illumina run directory: ', irf_restore.illumina_directory
-print 'Archive directory:      ', irf_restore.archive_directory
+print 'IlluminaRunFolderArchive Analysis'
+print 'Project name:           ', irf_archive.project_name
+print 'Project directory:      ', irf_archive.project_directory
+print 'Illumina run directory: ', irf_archive.run_directory
+print 'Archive directory:      ', irf_archive.archive_directory
