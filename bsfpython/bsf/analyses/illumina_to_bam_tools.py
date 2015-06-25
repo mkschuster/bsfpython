@@ -32,7 +32,8 @@ import os
 import string
 import warnings
 
-from bsf import Analysis, Command, Configuration, Default, DRMS, Executable, Runnable, RunnableStep
+from bsf import Analysis, Command, Configuration, Default, DRMS, Executable, Runnable, RunnableStep,\
+    RunnableStepLink, RunnableStepMakeDirectory, RunnableStepMove
 from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
 from bsf.annotation import BamIndexDecoderSheet, LibraryAnnotationSheet, SampleAnnotationSheet
 from bsf.illumina import RunFolder, RunFolderNotComplete
@@ -79,8 +80,8 @@ class IlluminaToBam(Analysis):
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The dependency string for an C{Executable} of this C{Analysis}
-        @rtype: str
+        @return : The dependency string for an C{Executable} of this C{Analysis}
+        @rtype : str
         """
         return string.join(words=(cls.drms_name_illumina_to_bam, project_name, lane), sep='_')
 
@@ -90,8 +91,8 @@ class IlluminaToBam(Analysis):
 
         @param config_path: UNIX-style configuration file
         @type config_path: str | unicode
-        @return: IlluminaToBam
-        @rtype: IlluminaToBam
+        @return : IlluminaToBam
+        @rtype : IlluminaToBam
         """
 
         return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
@@ -102,8 +103,8 @@ class IlluminaToBam(Analysis):
 
         @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return: C{IlluminaToBam}
-        @rtype: IlluminaToBam
+        @return : C{IlluminaToBam}
+        @rtype : IlluminaToBam
         """
 
         assert isinstance(configuration, Configuration)
@@ -182,6 +183,8 @@ class IlluminaToBam(Analysis):
         @type classpath_picard: str | unicode
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool
+        @return :
+        @rtype :
         """
 
         super(IlluminaToBam, self).__init__(
@@ -256,6 +259,8 @@ class IlluminaToBam(Analysis):
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
+        @return :
+        @rtype :
         """
 
         assert isinstance(configuration, Configuration)
@@ -330,6 +335,8 @@ class IlluminaToBam(Analysis):
         To convert an Illumina flow cell, Illumina2bam is run first, setting the SAM Read Group (@RG)
         library name (LB) and sample name (SM) to 'flow-cell identifier.lane'.
         The resulting archive BAM file is then sorted by query name with Picard SortSam.
+        @return :
+        @rtype :
         """
 
         default = Default.get_global_default()
@@ -343,11 +350,9 @@ class IlluminaToBam(Analysis):
         if not self.run_directory:
             raise Exception('An Illumina run directory or file path has not been defined.')
 
-        self.run_directory = os.path.expanduser(path=self.run_directory)
-        self.run_directory = os.path.expandvars(path=self.run_directory)
-
-        if not os.path.isabs(self.run_directory):
-            self.run_directory = os.path.join(Default.absolute_runs_illumina(), self.run_directory)
+        self.run_directory = Default.get_absolute_path(
+            file_path=self.run_directory,
+            default_path=Default.absolute_runs_illumina())
 
         # Check that the Illumina Run Folder exists.
 
@@ -368,11 +373,9 @@ class IlluminaToBam(Analysis):
         # automatically prepend the Illumina Run Folder path.
 
         if self.intensity_directory:
-            intensity_directory = str(self.intensity_directory)
-            intensity_directory = os.path.expandvars(intensity_directory)
-            intensity_directory = os.path.expanduser(intensity_directory)
-            if not os.path.isabs(intensity_directory):
-                intensity_directory = os.path.join(self.run_directory, intensity_directory)
+            intensity_directory = Default.get_absolute_path(
+                file_path=self.intensity_directory,
+                default_path=self.run_directory)
         else:
             intensity_directory = os.path.join(self.run_directory, 'Data', 'Intensities')
 
@@ -389,11 +392,9 @@ class IlluminaToBam(Analysis):
         # automatically prepend the Intensities directory path.
 
         if self.basecalls_directory:
-            basecalls_directory = str(self.basecalls_directory)
-            basecalls_directory = os.path.expanduser(basecalls_directory)
-            basecalls_directory = os.path.expandvars(basecalls_directory)
-            if not os.path.isabs(basecalls_directory):
-                basecalls_directory = os.path.join(intensity_directory, basecalls_directory)
+            basecalls_directory = Default.get_absolute_path(
+                file_path=self.basecalls_directory,
+                default_path=intensity_directory)
         else:
             basecalls_directory = os.path.join(intensity_directory, 'BaseCalls')
 
@@ -429,11 +430,9 @@ class IlluminaToBam(Analysis):
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
         # Check if an absolute path has been provided, if not,
 
-        self.sequences_directory = os.path.expanduser(path=self.sequences_directory)
-        self.sequences_directory = os.path.expandvars(path=self.sequences_directory)
-
-        if not os.path.isabs(self.sequences_directory):
-            self.sequences_directory = os.path.join(Default.absolute_sequences(), self.sequences_directory)
+        self.sequences_directory = Default.get_absolute_path(
+            file_path=self.sequences_directory,
+            default_path=Default.absolute_sequences())
 
         # As a safety measure, to prevent creation of rogue directory paths, the sequences_directory has to exist.
 
@@ -442,13 +441,6 @@ class IlluminaToBam(Analysis):
                 'The IlluminaToBam sequences_directory {!r} does not exist.'.format(self.sequences_directory))
 
         self.experiment_directory = os.path.join(self.sequences_directory, self.project_name)
-
-        if not os.path.isdir(self.experiment_directory):
-            try:
-                os.makedirs(self.experiment_directory)
-            except OSError as exception:
-                if exception.errno != errno.EEXIST:
-                    raise
 
         # Get the Illumina2Bam tools Java Archive (JAR) class path directory.
 
@@ -477,18 +469,12 @@ class IlluminaToBam(Analysis):
                 illumina_directory=self.run_directory,  # contains full path information
                 sequences_directory=self.sequences_directory,  # contains full path information
                 experiment_directory=self.experiment_directory,  # contains full path information
-                sorted_bam=os.path.join(
-                    self.experiment_directory,
-                    string.join((self.project_name, lane_str, 'sorted.bam'), sep='_')),
-                sorted_md5=os.path.join(
-                    self.experiment_directory,
-                    string.join((self.project_name, lane_str, 'sorted.bam.md5'), sep='_')),
-                unsorted_bam=os.path.join(
-                    self.experiment_directory,
-                    string.join((self.project_name, lane_str, 'unsorted.bam'), sep='_')),
-                unsorted_md5=os.path.join(
-                    self.experiment_directory,
-                    string.join((self.project_name, lane_str, 'unsorted.bam.md5'), sep='_'))
+                unsorted_bam=string.join(words=(self.project_name, lane_str, 'unsorted.bam'), sep='_'),
+                unsorted_md5=string.join(words=(self.project_name, lane_str, 'unsorted.bam.md5'), sep='_'),
+                sorted_bam=string.join(words=(self.project_name, lane_str, 'sorted.bam'), sep='_'),
+                sorted_md5=string.join(words=(self.project_name, lane_str, 'sorted.bam.md5'), sep='_'),
+                lane_bam='{}_{:d}.bam'.format(self.project_name, lane),
+                lane_md5='{}_{:d}.bam.md5'.format(self.project_name, lane),
             )
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
@@ -532,74 +518,83 @@ class IlluminaToBam(Analysis):
             sub_command = java_process.sub_command
 
             if self.intensity_directory:
+                # RUN_FOLDER defaults to 'null'.
                 # Only set the RUN_FOLDER option, if a separate 'Intensities' directory has been configured.
                 # The default is to use the directory two up from the INTENSITY_DIR.
                 sub_command.add_option_pair(
                     key='RUN_FOLDER',
                     value=self.run_directory)
+            # INTENSITY_DIR is required.
             sub_command.add_option_pair(
                 key='INTENSITY_DIR',
                 value=intensity_directory)
             if self.basecalls_directory:
+                # BASECALLS_DIR defaults to 'null'.
                 # Only set the BASECALLS_DIR option, if a separate 'BaseCalls' directory has been configured.
                 # The default is to use the 'BaseCalls' directory under the INTENSITY_DIR.
                 sub_command.add_option_pair(
                     key='BASECALLS_DIR',
                     value=basecalls_directory)
+            # LANE is required.
             sub_command.add_option_pair(
                 key='LANE',
                 value=lane_str)
+            # OUTPUT is required.
             sub_command.add_option_pair(
                 key='OUTPUT',
                 value=file_path_dict['unsorted_bam'])
-            sub_command.add_option_pair(
-                key='GENERATE_SECONDARY_BASE_CALLS',
-                value='false')
+            # GENERATE_SECONDARY_BASE_CALLS defaults to 'false'.
+            # PF_FILTER defaults to 'true'.
             sub_command.add_option_pair(
                 key='PF_FILTER',
                 value='false')
+            # READ_GROUP_ID defaults to '1'.
             sub_command.add_option_pair(
                 key='READ_GROUP_ID',
                 value=string.join((irf.run_information.flow_cell, lane_str), sep='_'))
-            # SAMPLE_ALIAS
+            # SAMPLE_ALIAS defaults to 'null', using LIBRARY_NAME.
+            # LIBRARY_NAME defaults to 'unknown'.
             sub_command.add_option_pair(
                 key='LIBRARY_NAME',
                 value=string.join((irf.run_information.flow_cell, lane_str), sep='_'))
-            # STUDY_NAME
-            # PLATFORM_UNIT
-            # RUN_START_DATE
+            # STUDY_NAME defaults to 'null'.
+            # PLATFORM_UNIT defaults to 'null', using run folder name plus lane number.
+            # RUN_START_DATE defaults to 'null', using the configuration file value.
+            # SEQUENCING_CENTER defaults to 'SC' for Sanger Center.
             sub_command.add_option_pair(
                 key='SEQUENCING_CENTER',
                 value=self.sequencing_centre)
-            # PLATFORM
-            # FIRST_TILE
-            # TILE_LIMIT
-            # BARCODE_SEQUENCE_TAG_NAME
-            # BARCODE_QUALITY_TAG_NAME
-            # SECOND_BARCODE_SEQUENCE_TAG_NAME
-            # SECOND_BARCODE_QUALITY_TAG_NAME
+            # PLATFORM defaults to 'ILLUMINA'.
+            # FIRST_TILE defaults to 'null'.
+            # TILE_LIMIT defaults to 'null'.
+            # BARCODE_SEQUENCE_TAG_NAME defaults to 'BC'.
+            # BARCODE_QUALITY_TAG_NAME defaults to 'QT'.
+            # BC_READ defaults to null.
+            # SECOND_BARCODE_SEQUENCE_TAG_NAME defaults to 'null'.
+            # SECOND_BARCODE_QUALITY_TAG_NAME defaults to 'null'.
+            # SEC_BC_READ defaults to 'null'.
             # FIRST_CYCLE
             # FINAL_CYCLE
             # FIRST_INDEX_CYCLE
             # FINAL_INDEX_CYCLE
+            # ADD_CLUSTER_INDEX_TAG defaults to 'false'.
+            # TMP_DIR
             sub_command.add_option_pair(
                 key='TMP_DIR',
                 value=runnable_illumina_to_bam.get_relative_temporary_directory_path)
+            # VERBOSITY defaults to 'INFO'.
             sub_command.add_option_pair(
                 key='VERBOSITY',
                 value='WARNING')
-            # QUIET
-            # VALIDATION_STRINGENCY
-            # COMPRESSION_LEVEL
+            # QUIET defaults to 'false'.
+            # VALIDATION_STRINGENCY defaults to 'STRICT'.
+            # COMPRESSION_LEVEL defaults to '5'.
             sub_command.add_option_pair(
-                key='MAX_RECORDS_IN_RAM',
-                value='2000000')
-            sub_command.add_option_pair(
-                key='CREATE_INDEX',
-                value='false')
-            sub_command.add_option_pair(
-                key='CREATE_MD5_FILE',
-                value='true')
+                key='COMPRESSION_LEVEL',
+                value='9')
+            # MAX_RECORDS_IN_RAM defaults to '500000'.
+            # CREATE_INDEX defaults to 'false'.
+            # CREATE_MD5_FILE defaults to 'false'.
             # OPTIONS_FILE
 
             # Run Picard SortSam
@@ -622,34 +617,65 @@ class IlluminaToBam(Analysis):
 
             sub_command = java_process.sub_command
 
+            # INPUT is required.
             sub_command.add_option_pair(
                 key='INPUT',
                 value=file_path_dict['unsorted_bam'])
+            # OUTPUT is required.
             sub_command.add_option_pair(
                 key='OUTPUT',
                 value=file_path_dict['sorted_bam'])
+            # SORT_ORDER is required.
             sub_command.add_option_pair(
                 key='SORT_ORDER',
                 value='queryname')
+            # TMP_DIR
             sub_command.add_option_pair(
                 key='TMP_DIR',
                 value=runnable_illumina_to_bam.get_relative_temporary_directory_path)
+            # VERBOSITY defaults to 'INFO'
             sub_command.add_option_pair(
                 key='VERBOSITY',
                 value='WARNING')
-            # QUIET
-            # VALIDATION_STRINGENCY
-            # COMPRESSION_LEVEL
+            # QUIET defaults to 'false'.
+            # VALIDATION_STRINGENCY defaults to 'STRICT'.
+            # COMPRESSION_LEVEL defaults to '5'.
+            sub_command.add_option_pair(
+                key='COMPRESSION_LEVEL',
+                value='9')
+            # MAX_RECORDS_IN_RAM defaults to '500000'.
             sub_command.add_option_pair(
                 key='MAX_RECORDS_IN_RAM',
                 value='2000000')
-            sub_command.add_option_pair(
-                key='CREATE_INDEX',
-                value='false')
+            # CREATE_INDEX defaults to 'false'.
+            # CREATE_MD5_FILE defaults to 'false'.
             sub_command.add_option_pair(
                 key='CREATE_MD5_FILE',
                 value='true')
             # OPTIONS_FILE
+
+            # Create the experiment directory if it does not exist already.
+
+            runnable_illumina_to_bam.add_runnable_step(
+                runnable_step=RunnableStepMakeDirectory(
+                    name='make_directory',
+                    directory_path=self.experiment_directory))
+
+            # Move and rename the final, sorted BAM file.
+
+            runnable_illumina_to_bam.add_runnable_step(
+                runnable_step=RunnableStepMove(
+                    name='move_sorted_bam',
+                    source_path=file_path_dict['sorted_bam'],
+                    target_path=os.path.join(self.experiment_directory, file_path_dict['lane_bam'])))
+
+            # Move and rename the checksum file.
+
+            runnable_illumina_to_bam.add_runnable_step(
+                runnable_step=RunnableStepMove(
+                    name='move_sorted_md5',
+                    source_path=file_path_dict['sorted_md5'],
+                    target_path=os.path.join(self.experiment_directory, file_path_dict['lane_md5'])))
 
 
 class BamIndexDecoder(Analysis):
@@ -687,8 +713,8 @@ class BamIndexDecoder(Analysis):
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The dependency string for an C{Executable} of this C{Analysis}
-        @rtype: str
+        @return : The dependency string for an C{Executable} of this C{Analysis}
+        @rtype : str
         """
         return string.join(words=(cls.drms_name_bam_index_decoder, project_name, lane), sep='_')
 
@@ -698,8 +724,8 @@ class BamIndexDecoder(Analysis):
 
         @param config_path: UNIX-style configuration file
         @type config_path: str | unicode
-        @return: C{BamIndexDecoder}
-        @rtype: BamIndexDecoder
+        @return : C{BamIndexDecoder}
+        @rtype : BamIndexDecoder
         """
 
         return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
@@ -710,8 +736,8 @@ class BamIndexDecoder(Analysis):
 
         @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return: C{BamIndexDecoder}
-        @rtype: BamIndexDecoder
+        @return : C{BamIndexDecoder}
+        @rtype : BamIndexDecoder
         """
 
         assert isinstance(configuration, Configuration)
@@ -777,6 +803,8 @@ class BamIndexDecoder(Analysis):
         @type lanes: int
         @param force: Force de-multiplexing with a Library Annotation sheet failing validation
         @type force: bool
+        @return :
+        @rtype :
         """
 
         super(BamIndexDecoder, self).__init__(
@@ -838,6 +866,8 @@ class BamIndexDecoder(Analysis):
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
+        @return :
+        @rtype :
         """
 
         super(BamIndexDecoder, self).set_configuration(configuration=configuration, section=section)
@@ -888,6 +918,8 @@ class BamIndexDecoder(Analysis):
     def run(self):
         """Run the C{BamIndexDecoder} analysis to decode an archive BAM file produced with Illumina2Bam tools into
         sample-specific BAM files.
+        @return :
+        @rtype :
         """
 
         # The standard BSF Python *comma-separated* value sample sheet needs to be transformed into
@@ -915,17 +947,13 @@ class BamIndexDecoder(Analysis):
         if not self.sequences_directory:
             self.sequences_directory = self.project_name
 
-        self.sequences_directory = os.path.expanduser(path=self.sequences_directory)
-        self.sequences_directory = os.path.expandvars(path=self.sequences_directory)
+        self.sequences_directory = Default.get_absolute_path(
+            file_path=self.sequences_directory,
+            default_path=Default.absolute_sequences())
 
-        if not os.path.isabs(self.sequences_directory):
-            self.sequences_directory = os.path.join(Default.absolute_sequences(), self.sequences_directory)
-
-        self.samples_directory = os.path.expanduser(path=self.samples_directory)
-        self.samples_directory = os.path.expandvars(path=self.samples_directory)
-
-        if not os.path.isabs(self.samples_directory):
-            self.samples_directory = os.path.join(Default.absolute_samples(), self.samples_directory)
+        self.samples_directory = Default.get_absolute_path(
+            file_path=self.samples_directory,
+            default_path=Default.absolute_samples())
 
         # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
 
@@ -934,13 +962,6 @@ class BamIndexDecoder(Analysis):
                 'The BamIndexDecoder samples_directory {!r} does not exist.'.format(self.samples_directory))
 
         self.experiment_directory = os.path.join(self.samples_directory, self.project_name)
-
-        if not os.path.isdir(self.experiment_directory):
-            try:
-                os.makedirs(self.experiment_directory)
-            except OSError as exception:
-                if exception.errno != errno.EEXIST:
-                    raise
 
         # Get the library annotation sheet.
         # The library annotation sheet is deliberately not passed in via sas_file,
@@ -951,6 +972,8 @@ class BamIndexDecoder(Analysis):
 
         if not self.library_path:
             self.library_path = string.join(words=(self.project_name, 'libraries.csv'), sep='_')
+
+        self.library_path = os.path.normpath(path=self.library_path)
 
         if not os.path.exists(path=self.library_path):
             raise Exception('Library annotation file {!r} does not exist.'.format(self.library_path))
@@ -994,10 +1017,12 @@ class BamIndexDecoder(Analysis):
                 index_by_lane[row_dict['lane']] = lane_list
             lane_list.append(row_dict)
 
+        # Create a Sample Annotation Sheet in the project directory and
+        # eventually transfer it into the experiment_directory.
+        sample_annotation_name = string.join(words=(self.project_name, 'samples.csv'), sep='_')
         sample_annotation_sheet = SampleAnnotationSheet(
-            file_path=os.path.join(
-                self.experiment_directory,
-                string.join(words=(self.project_name, 'samples.csv'), sep='_')))
+            file_path=os.path.join(self.project_directory, sample_annotation_name))
+        sample_annotation_transferred = 0
 
         keys = index_by_lane.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -1007,42 +1032,35 @@ class BamIndexDecoder(Analysis):
             # The key represents the lane number as a Python str.
 
             file_path_dict = dict(
-                samples_directory=os.path.join(
-                    self.experiment_directory,
-                    string.join(words=(self.project_name, key, 'samples'), sep='_')),
-                barcode=os.path.join(
-                    self.experiment_directory,
-                    string.join(words=(self.project_name, key, 'barcode.tsv'), sep='_')),
-                metrics=os.path.join(
-                    self.experiment_directory,
-                    string.join(words=(self.project_name, key, 'metrics.tsv'), sep='_')),
-                input=os.path.join(
+                project_barcode=string.join(words=(self.project_name, key, 'barcode.tsv'), sep='_'),
+                samples_directory=string.join(words=(self.project_name, key, 'samples'), sep='_'),
+                barcode_tsv=string.join(words=(self.project_name, key, 'barcode.tsv'), sep='_'),
+                metrics_tsv=string.join(words=(self.project_name, key, 'metrics.tsv'), sep='_'),
+                input_bam=os.path.join(
                     self.sequences_directory,
-                    string.join(words=(self.project_name, key, 'sorted.bam'), sep='_'))
+                    '{}_{}.bam'.format(self.project_name, key)),
             )
 
-            # Create the samples directory if it does not exist.
-
-            if not os.path.isdir(file_path_dict['samples_directory']):
-                try:
-                    os.makedirs(file_path_dict['samples_directory'])
-                except OSError as exception:
-                    if exception.errno != errno.EEXIST:
-                        raise
-
-            # Do not check whether the sorted BAM file exists, because at the time of
+            # Do not check whether the sorted input BAM file exists, because at the time of
             # BamIndexDecoder submission the IlluminaToBam analysis may not have finished.
             #
-            # if not os.path.exists(file_path_dict['input']):
-            # raise Exception('Sequence archive BAM file {!r} does not exist.'.format(file_path_dict['input']))
+            # if not os.path.exists(file_path_dict['input_bam']):
+            # raise Exception('Sequence archive BAM file {!r} does not exist.'.format(file_path_dict['input_bam']))
 
-            require_decoding = 0
-            bam_index_decoder_sheet = BamIndexDecoderSheet(file_path=file_path_dict['barcode'])
+            barcode_number = 0
+            bam_index_decoder_sheet = BamIndexDecoderSheet(
+                file_path=os.path.join(self.project_directory, file_path_dict['barcode_tsv']))
 
             for row_dict in index_by_lane[key]:
 
-                if len(row_dict['barcode_sequence_1']) or len(row_dict['barcode_sequence_2']):
-                    require_decoding = 1
+                # Determine the number of barcodes on the basis of the first line.
+                # All other lines of a lane have to use the same number and lengths of barcodes.
+
+                if not barcode_number:
+                    if len(row_dict['barcode_sequence_1']):
+                        barcode_number += 1
+                    if len(row_dict['barcode_sequence_2']):
+                        barcode_number += 1
 
                 # Add a row to the lane-specific tab-delimited IlluminaToBamTools BamIndexDecoder barcode file.
 
@@ -1054,7 +1072,8 @@ class BamIndexDecoder(Analysis):
                     description=str()
                 ))
 
-                # Write the flow-cell-specific sample annotation sheet.
+                # Add a row to the flow-cell-specific sample annotation sheet.
+
                 sample_dict = dict(
                     ProcessedRunFolder=self.project_name,
                     Project=row_dict['library_name'],
@@ -1068,9 +1087,6 @@ class BamIndexDecoder(Analysis):
                     Barcode2=row_dict['barcode_sequence_2'])
 
                 sample_annotation_sheet.row_dicts.append(sample_dict)
-
-            # Write the lane-specific BamIndexDecoderSheet to the internal file path.
-            bam_index_decoder_sheet.write_to_file()
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
             runnable_bam_index_decoder = self.add_runnable(runnable=Runnable(
@@ -1089,14 +1105,23 @@ class BamIndexDecoder(Analysis):
             executable_bam_index_decoder.dependencies.append(
                 IlluminaToBam.get_prefix_illumina_to_bam(project_name=self.project_name, lane=key))
 
-            # Only submit this Executable if the final result file does not exist.
-            if (os.path.exists(
-                    os.path.join(self.project_directory, file_path_dict['metrics']))
-                and os.path.getsize(
-                    os.path.join(self.project_directory, file_path_dict['metrics']))):
-                executable_bam_index_decoder.submit = False
+            if executable_bam_index_decoder.submit:
+                # Only if this Executable actually gets submitted ...
+                # Create the samples directory in the project_directory if it does not exist.
 
-            if require_decoding:
+                project_samples_path = os.path.join(self.project_directory, file_path_dict['samples_directory'])
+                if not os.path.isdir(project_samples_path):
+                    try:
+                        os.makedirs(project_samples_path)
+                    except OSError as exception:
+                        if exception.errno != errno.EEXIST:
+                            raise
+
+                # Write the lane-specific BamIndexDecoderSheet to the internal file path.
+
+                bam_index_decoder_sheet.write_to_file()
+
+            if barcode_number:
 
                 # Run the BamIndexDecoder if there is at least one line containing a barcode sequence.
 
@@ -1105,7 +1130,7 @@ class BamIndexDecoder(Analysis):
                     program='java',
                     sub_command=Command(command=str()),
                     obsolete_file_path_list=[
-                        file_path_dict['barcode']
+                        file_path_dict['barcode_tsv']
                     ]))
 
                 java_process.add_switch_short(key='d64')
@@ -1119,50 +1144,87 @@ class BamIndexDecoder(Analysis):
 
                 sub_command = java_process.sub_command
 
+                # INPUT is required
                 sub_command.add_option_pair(
                     key='INPUT',
-                    value=file_path_dict['input'])
-                # OUTPUT
+                    value=file_path_dict['input_bam'])
+                # OUTPUT is required, but cannot be used together with OUTPUT_FORMAT, OUTPUT_PREFIX and OUTPUT_DIR.
+                # OUTPUT_DIR is required, but cannot be used with OUTPUT.
                 sub_command.add_option_pair(
                     key='OUTPUT_DIR',
                     value=file_path_dict['samples_directory'])
+                # OUTPUT_PREFIX is required, but cannot be used with OUTPUT.
                 sub_command.add_option_pair(
                     key='OUTPUT_PREFIX',
                     value=string.join(words=(self.project_name, key), sep='_'))
+                # OUTPUT_FORMAT is required, but cannot be used with OUTPUT.
                 sub_command.add_option_pair(
                     key='OUTPUT_FORMAT',
                     value='bam')
-                # BARCODE_TAG_NAME
-                # BARCODE_QUALITY_TAG_NAME
-                # BARCODE
+                # BARCODE_TAG_NAME defaults to 'BC'.
+                # BARCODE_QUALITY_TAG_NAME defaults to 'QT'.
+                # BARCODE cannot be used with BARCODE_FILE.
+                # BARCODE_FILE is required, but cannot be used with BARCODE.
                 sub_command.add_option_pair(
                     key='BARCODE_FILE',
-                    value=file_path_dict['barcode'])
+                    value=file_path_dict['barcode_tsv'])
+                # METRICS_FILE is required.
                 sub_command.add_option_pair(
                     key='METRICS_FILE',
-                    value=file_path_dict['metrics'])
-                # MAX_MISMATCHES
-                # MIN_MISMATCH_DELTA
-                # MAX_NO_CALLS
-                # CONVERT_LOW_QUALITY_TO_NO_CALL
-                # MAX_LOW_QUALITY_TO_CONVERT
+                    value=file_path_dict['metrics_tsv'])
+                # MAX_MISMATCHES defaults to '1'.
+                if barcode_number == 2:
+                    sub_command.add_option_pair(
+                        key='MAX_MISMATCHES',
+                        value='2')
+                # MIN_MISMATCH_DELTA defaults to '1'.
+                # MAX_NO_CALLS defaults to '2'.
+                # CONVERT_LOW_QUALITY_TO_NO_CALL defaults to 'false'.
+                # MAX_LOW_QUALITY_TO_CONVERT defaults to '15'.
+                # TMP_DIR
                 sub_command.add_option_pair(
                     key='TMP_DIR',
                     value=runnable_bam_index_decoder.get_relative_temporary_directory_path)
+                # VERBOSITY defaults to 'INFO'.
                 sub_command.add_option_pair(
                     key='VERBOSITY',
                     value='WARNING')
-                # QUIET
-                # VALIDATION_STRINGENCY
-                # COMPRESSION_LEVEL
-                # MAX_RECORDS_IN_RAM
+                # QUIET defaults to 'false'.
+                # VALIDATION_STRINGENCY defaults to 'STRICT'.
+                # COMPRESSION_LEVEL defaults to '5'.
                 sub_command.add_option_pair(
-                    key='CREATE_INDEX',
-                    value='false')
+                    key='COMPRESSION_LEVEL',
+                    value='9')
+                # MAX_RECORDS_IN_RAM defaults to '500000'.
+                # CREATE_INDEX defaults to 'false'.
+                # CREATE_MD5_FILE defaults to 'false'.
                 sub_command.add_option_pair(
                     key='CREATE_MD5_FILE',
                     value='true')
                 # OPTIONS_FILE
+
+                # Create the experiment directory if it does not exist already.
+
+                runnable_bam_index_decoder.add_runnable_step(
+                    runnable_step=RunnableStepMakeDirectory(
+                        name='make_directory',
+                        directory_path=self.experiment_directory))
+
+                # Move the samples directory into the experiment directory.
+
+                runnable_bam_index_decoder.add_runnable_step(
+                    runnable_step=RunnableStepMove(
+                        name='move_samples_directory',
+                        source_path=file_path_dict['samples_directory'],
+                        target_path=self.experiment_directory))
+
+                # Move the metrics file into the experiment directory.
+
+                runnable_bam_index_decoder.add_runnable_step(
+                    runnable_step=RunnableStepMove(
+                        name='move_metrics_tsv',
+                        source_path=file_path_dict['metrics_tsv'],
+                        target_path=self.experiment_directory))
 
             else:
 
@@ -1171,7 +1233,10 @@ class BamIndexDecoder(Analysis):
                 java_process = runnable_bam_index_decoder.add_runnable_step(runnable_step=RunnableStep(
                     name='picard_collect_alignment_summary_metrics',
                     program='java',
-                    sub_command=Command(command=str())))
+                    sub_command=Command(command=str()),
+                    obsolete_file_path_list=[
+                        file_path_dict['barcode_tsv']
+                    ]))
 
                 java_process.add_switch_short(key='d64')
                 java_process.add_option_short(
@@ -1184,52 +1249,92 @@ class BamIndexDecoder(Analysis):
 
                 sub_command = java_process.sub_command
 
-                # MAX_INSERT_SIZE
+                # MAX_INSERT_SIZE defaults to '100000'.
                 # ADAPTER_SEQUENCE
+                # METRIC_ACCUMULATION_LEVEL.
                 sub_command.add_option_pair(
                     key='METRIC_ACCUMULATION_LEVEL',
                     value='READ_GROUP')
-                # IS_BISULFITE_SEQUENCED
+                # IS_BISULFITE_SEQUENCED defaults to 'false'.
+                # INPUT is required.
                 sub_command.add_option_pair(
                     key='INPUT',
-                    value=file_path_dict['input'])
+                    value=file_path_dict['input_bam'])
+                # OUTPUT is required.
                 sub_command.add_option_pair(
                     key='OUTPUT',
-                    value=file_path_dict['metrics'])
-                # REFERENCE_SEQUENCE
-                # ASSUME_SORTED
-                # STOP_AFTER
+                    value=file_path_dict['metrics_tsv'])
+                # REFERENCE_SEQUENCE defaults to 'null'.
+                # ASSUME_SORTED defaults to 'true'.
+                # STOP_AFTER defaults to '0'.
+                # TMP_DIR
                 sub_command.add_option_pair(
                     key='TMP_DIR',
                     value=runnable_bam_index_decoder.get_relative_temporary_directory_path)
+                # VERBOSITY defaults to 'INFO'.
                 sub_command.add_option_pair(
                     key='VERBOSITY',
                     value='WARNING')
-                sub_command.add_option_pair(
-                    key='QUIET',
-                    value='false')
-                sub_command.add_option_pair(
-                    key='VALIDATION_STRINGENCY',
-                    value='STRICT')
-                sub_command.add_option_pair(
-                    key='COMPRESSION_LEVEL',
-                    value='5')
-                sub_command.add_option_pair(
-                    key='MAX_RECORDS_IN_RAM',
-                    value='4000000')
-                sub_command.add_option_pair(
-                    key='CREATE_INDEX',
-                    value='true')
-                sub_command.add_option_pair(
-                    key='CREATE_MD5_FILE',
-                    value='true')
+                # QUIET defaults to 'false'.
+                # VALIDATION_STRINGENCY defaults to 'STRICT'.
+                # COMPRESSION_LEVEL defaults to '5'.
+                # MAX_RECORDS_IN_RAM defaults to '500000'.
+                # CREATE_INDEX defaults to 'false'.
+                # CREATE_MD5_FILE defaults to 'false'.
                 # OPTIONS_FILE
 
                 # TODO: It would be even better to run Picard AddOrReplaceReadGroups to get a correct SAM header.
+                # Unfortunately, the RGLB and RGSM fields cannot easily be overridden since all options need
+                # to be set. However, the RGPU and other information is only available after the Illumina2bam stage
+                # has completed, which may be well after submission of this analysis. The solution could be another
+                # script to rad the BAM file and propagate RG information.
+
+                # Create the experiment directory if it does not exist already.
+
+                runnable_bam_index_decoder.add_runnable_step(
+                    runnable_step=RunnableStepMakeDirectory(
+                        name='make_directory',
+                        directory_path=self.experiment_directory))
+
+                # Move the samples directory into the experiment directory.
+
+                runnable_bam_index_decoder.add_runnable_step(
+                    runnable_step=RunnableStepMove(
+                        name='move_samples_directory',
+                        source_path=file_path_dict['samples_directory'],
+                        target_path=self.experiment_directory))
+
                 # Add a symbolic link to the BSF Sequence Archive file within the samples directory.
-                file_path_dict['link'] = os.path.join(
-                    file_path_dict['samples_directory'],
-                    '{}_{}#{}.bam'.format(self.project_name, key, index_by_lane[key][0]['sample_name']))
+
+                experiment_samples_directory = os.path.join(
+                    self.experiment_directory,
+                    file_path_dict['samples_directory'])
+
+                runnable_bam_index_decoder.add_runnable_step(
+                    runnable_step=RunnableStepLink(
+                        name='link',
+                        source_path=os.path.relpath(file_path_dict['input_bam'], experiment_samples_directory),
+                        target_path=os.path.join(
+                            experiment_samples_directory,
+                            '{}_{}#{}.bam'.format(self.project_name, key, index_by_lane[key][0]['sample_name']))))
+
+                # Move the metrics file into the experiment directory.
+
+                runnable_bam_index_decoder.add_runnable_step(
+                    runnable_step=RunnableStepMove(
+                        name='move_metrics_tsv',
+                        source_path=file_path_dict['metrics_tsv'],
+                        target_path=self.experiment_directory))
+
+            # Move the Sample Annotation Sheet once.
+
+            if not sample_annotation_transferred:
+                sample_annotation_transferred += 1
+                runnable_bam_index_decoder.add_runnable_step(
+                    runnable_step=RunnableStepMove(
+                        name='move_sample_annotation',
+                        source_path=os.path.join(self.project_directory, sample_annotation_name),
+                        target_path=self.experiment_directory))
 
         # Finally, write the flow-cell-specific SampleAnnotationSheet to the internal file path.
 
