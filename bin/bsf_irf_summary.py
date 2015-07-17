@@ -36,26 +36,33 @@ from bsf.illumina import RunFolder
 
 parser = argparse.ArgumentParser(description='Summarise an Illumina Run Folder.')
 
-parser.add_argument('--debug', required=False, type=int,
-                    help='Debug level')
+parser.add_argument(
+    '--debug',
+    help='Debug level',
+    required=False,
+    type=int)
 
-parser.add_argument('file_path',
-                    help='File path to an Illumina Run Folder')
+parser.add_argument(
+    '--check',
+    action='store_true',
+    help='check for completeness',
+    required=False)
 
-args = parser.parse_args()
+parser.add_argument(
+    'file_path',
+    help='File path to an Illumina Run Folder')
 
-file_path = str(args.file_path)
-file_path = os.path.expanduser(path=file_path)
-file_path = os.path.expandvars(path=file_path)
+name_space = parser.parse_args()
 
-if not os.path.isabs(file_path):
-    file_path = os.path.join(Default.absolute_runs_illumina(), file_path)
+file_path = Default.get_absolute_path(
+    file_path=name_space.file_path,
+    default_path=Default.absolute_runs_illumina())
 
 irf = RunFolder.from_file_path(file_path=file_path)
 
 print 'Flow Cell Identifier: {}_{}'.format(irf.run_parameters.get_experiment_name,
                                            irf.run_parameters.get_flow_cell_barcode)
-print 'Read Structure: {}'.format(string.join(words=irf.run_information.get_read_structure_list(), sep=' + '))
+print 'Read Structure: {}'.format(string.join(words=irf.run_information.get_read_structure_list, sep=' + '))
 
 file_path_start = os.path.join(file_path, 'First_Base_Report.htm')
 if os.path.exists(file_path_start):
@@ -73,3 +80,9 @@ if position:
     print 'Position:       {}'.format(irf.run_parameters.get_position)
 
 print 'Run Identifier: {}'.format(irf.run_information.run_identifier)
+print 'Application Name: {}'.format(irf.run_parameters.get_application_name)
+print 'Application Version: {}'.format(irf.run_parameters.get_application_version)
+print 'RTA Version:    {}'.format(irf.run_parameters.get_real_time_analysis_version)
+
+if name_space.check:
+    irf.check(debug=name_space.debug)
