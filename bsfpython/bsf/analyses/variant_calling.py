@@ -116,8 +116,8 @@ class VariantCallingGATK(Analysis):
 
         @param config_path: UNIX-style configuration file
         @type config_path: str | unicode
-        @return: C{VariantCallingGATK}
-        @rtype: VariantCallingGATK
+        @return : C{VariantCallingGATK}
+        @rtype : VariantCallingGATK
         """
 
         return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
@@ -128,8 +128,8 @@ class VariantCallingGATK(Analysis):
 
         @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return: C{VariantCallingGATK}
-        @rtype: VariantCallingGATK
+        @return : C{VariantCallingGATK}
+        @rtype : VariantCallingGATK
         """
 
         assert isinstance(configuration, Configuration)
@@ -249,6 +249,8 @@ class VariantCallingGATK(Analysis):
         @type classpath_picard: str | unicode
         @param classpath_snpeff: snpEff tool Java Archive (JAR) class path directory
         @type classpath_snpeff: str | unicode
+        @return :
+        @rtype :
         """
 
         super(VariantCallingGATK, self).__init__(
@@ -392,8 +394,8 @@ class VariantCallingGATK(Analysis):
         """Get the absolute GATK bundle directory C{Default.absolute_gatk_bundle} for the set
         C{VariantCallingGATK.gatk_bundle_version} and C{VariantCallingGATK.genome_version}.
 
-        @return: Absolute GATK bundle directory
-        @rtype: str | unicode
+        @return : Absolute GATK bundle directory
+        @rtype : str | unicode
         """
         return Default.absolute_gatk_bundle(
             gatk_bundle_version=self.gatk_bundle_version,
@@ -407,6 +409,8 @@ class VariantCallingGATK(Analysis):
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
+        @return :
+        @rtype :
         """
 
         super(VariantCallingGATK, self).set_configuration(configuration=configuration, section=section)
@@ -649,6 +653,8 @@ class VariantCallingGATK(Analysis):
                 - Treatment/Control File:
         @param comparison_path: Comparison file path
         @type comparison_path: str | unicode
+        @return :
+        @rtype :
         """
 
         sas = SampleAnnotationSheet.from_file_path(file_path=comparison_path)
@@ -663,6 +669,8 @@ class VariantCallingGATK(Analysis):
         @type vqsr_resources_dict: dict
         @param variation_type: Variation type I{indel} or I{snp}
         @type variation_type: str
+        @return :
+        @rtype :
         """
 
         if variation_type not in ('indel', 'snp'):
@@ -701,6 +709,8 @@ class VariantCallingGATK(Analysis):
 
     def run(self):
         """Run this C{VariantCallingGATK} analysis.
+        @return :
+        @rtype :
         """
 
         # Get global defaults.
@@ -1390,8 +1400,8 @@ class VariantCallingGATK(Analysis):
                 realigned_bam=prefix_sample + '_realigned.bam',
                 realigned_bai=prefix_sample + '_realigned.bai',
                 alignment_summary_metrics=prefix_sample + '_alignment_summary_metrics.tsv',
-                raw_variants_gvcf_vcf=prefix_sample + '_raw_variants_gvcf.vcf',
-                raw_variants_gvcf_idx=prefix_sample + '_raw_variants_gvcf.vcf.idx')
+                raw_variants_gvcf_vcf=prefix_sample + '_raw_variants.g.vcf.gz',
+                raw_variants_gvcf_idx=prefix_sample + '_raw_variants.g.vcf.tbi')
 
             # Sample-specific Runnable
 
@@ -1664,11 +1674,11 @@ class VariantCallingGATK(Analysis):
         file_path_dict_cohort = dict(
             temporary_directory=prefix_cohort + '_temporary',
             # Combined GVCF file for the cohort defined in this project.
-            combined_gvcf_vcf=prefix_cohort + '_combined_gvcf.vcf',
-            combined_gvcf_idx=prefix_cohort + '_combined_gvcf.vcf.idx',
+            combined_gvcf_vcf=prefix_cohort + '_combined.g.vcf.gz',
+            combined_gvcf_idx=prefix_cohort + '_combined.g.vcf.tbi',
             # Temporary GVCF file with other cohorts merged in to facilitate recalibration.
-            temporary_gvcf_vcf=prefix_cohort + '_temporary_gvcf.vcf',
-            temporary_gvcf_idx=prefix_cohort + '_temporary_gvcf.vcf.idx',
+            temporary_gvcf_vcf=prefix_cohort + '_temporary.g.vcf.gz',
+            temporary_gvcf_idx=prefix_cohort + '_temporary.g.vcf.tbi',
             genotyped_raw_vcf=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf',
             genotyped_raw_idx=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.idx',
             recalibrated_snp_raw_indel_vcf=prefix_cohort + '_recalibrated_snp_raw_indel.vcf',
@@ -1680,8 +1690,8 @@ class VariantCallingGATK(Analysis):
             snpeff_vcf=prefix_cohort + '_snpeff.vcf',
             snpeff_idx=prefix_cohort + '_snpeff.vcf.idx',
             snpeff_stats=prefix_cohort + '_snpeff_summary.html',
-            annotated_vcf=prefix_cohort + '_annotated.vcf',
-            annotated_idx=prefix_cohort + '_annotated.vcf.idx',
+            annotated_vcf=prefix_cohort + '_annotated.vcf.gz',
+            annotated_idx=prefix_cohort + '_annotated.vcf.tbi',
             recalibration_indel=prefix_cohort + '_recalibration_indel.recal',
             recalibration_snp=prefix_cohort + '_recalibration_snp.recal',
             tranches_indel=prefix_cohort + '_recalibration_indel.tranches',
@@ -2238,8 +2248,8 @@ class VariantCallingGATK(Analysis):
     def report(self):
         """Create a C{VariantCallingGATK} report in HTML format and a UCSC Genome Browser Track Hub.
 
-        @return:
-        @rtype:
+        @return :
+        @rtype :
         """
 
         # Create a symbolic link containing the project name and a UUID.
