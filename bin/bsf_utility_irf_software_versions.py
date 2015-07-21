@@ -28,6 +28,7 @@
 
 from argparse import ArgumentParser
 import os
+import re
 import string
 import xml
 
@@ -47,7 +48,14 @@ argument_parser.add_argument(
 argument_parser.add_argument(
     '--directory',
     help='directory of illumina run folders',
-    required=False,
+    required=True,
+    type=str)
+
+argument_parser.add_argument(
+    '--output-file',
+    dest='output_file',
+    help='output (*.csv) file path',
+    required=True,
     type=str)
 
 argument_parser.add_argument(
@@ -64,25 +72,36 @@ if not name_space.ascending:
     file_name_list.reverse()
 
 field_names = ['run_identifier', 'application_name', 'application_version', 'rta_version']
-annotation_sheet = AnnotationSheet(header=True, field_names=field_names)
+annotation_sheet = AnnotationSheet(file_path=name_space.output_file, header=True, field_names=field_names)
+
+# Illumina Run Folders obey a pattern and additionally directories with just Sequence Analysis Viewer (SAV)
+# information should also be allowed.
+
+irf_pattern = re.compile(pattern=r'^[0-9]{6,6}_.*(?:_sav)?$')
 
 for file_name in file_name_list:
     if name_space.debug:
         print 'File name: {!r}'.format(file_name)
+    # Process just entries that obey the Illumina Run Folder pattern.
+    match = re.search(pattern=irf_pattern, string=file_name)
+    if not match:
+        print 'No match: {!r}'.format(file_name)
+        continue
     file_path = os.path.join(name_space.directory, file_name)
     if not os.path.exists(os.path.join(file_path, 'runParameters.xml')):
         print 'Directory {!r} not an Illumina Run Folder'.format(file_name)
         continue
-    # TODO: Temporarily catch IOError and xml.etree.ElementTree.ParseError exceptions
-    # that result form a broken FhGFS file system.
+    # Temporarily catch IOError and xml.etree.ElementTree.ParseError exceptions
+    # that result from a broken FhGFS file system.
     try:
         irf = RunFolder.from_file_path(file_path=file_path)
     except IOError as exception:
-        # print 'Exception: {!r}'.format(exception)
-        print string.join(words=(file_name, '?', '?', '?'), sep='\t')
+        if name_space.debug:
+            print string.join(words=(file_name, '?', '?', '?'), sep='\t')
         continue
     except xml.etree.ElementTree.ParseError:
-        print string.join(words=(file_name, '?', '?', '?'), sep='\t')
+        if name_space.debug:
+            print string.join(words=(file_name, '?', '?', '?'), sep='\t')
         continue
     except:
         print 'Exception in run folder {!r}'.format(file_name)
@@ -91,9 +110,11 @@ for file_name in file_name_list:
     root_node = irf.run_parameters.element_tree.getroot()
     row_dict = dict(
         run_identifier=irf.run_parameters.get_run_identifier,
-        application_name=root_node.find('Setup/ApplicationName').text,
-        application_version=root_node.find('Setup/ApplicationVersion').text,
-        rta_version=irf.run_parameters.get_real_time_analysis_version
+        application_name=irf.run_parameters.get_application_name,
+        application_version=irf.run_parameters.get_application_version,
+        rta_version=irf.run_parameters.get_real_time_analysis_version,
     )
 
     annotation_sheet.row_dicts.append(row_dict)
+
+annotation_sheet.write_to_file()
