@@ -54,10 +54,10 @@ class AnnotationSheet(object):
     @cvar _header_line: Header line exists
     @type _header_line: bool
     @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list
+    @type _field_names: list[str]
     @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type _test_methods: dict
+    @type _test_methods: dict[str, func]
     @ivar file_path: File path
     @type file_path: str | unicode
     @ivar file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
@@ -65,12 +65,12 @@ class AnnotationSheet(object):
     @ivar name: Name
     @type name: str
     @ivar field_names: Python C{list} of Python C{str} (field name) objects
-    @type field_names: list
+    @type field_names: list[str]
     @ivar test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type test_methods: dict
+    @type test_methods: dict[str, func]
     @ivar row_dicts: Python C{list} of Python C{dict} objects
-    @type row_dicts: list
+    @type row_dicts: list[dict[str, str | unicode]]
     """
 
     _regular_expression_non_alpha = re.compile(pattern='\W')
@@ -90,15 +90,15 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param column_name: Column name
         @type column_name: str
         @param require_column: Require the column_name to be defined in the row_dict
         @type require_column: bool
         @param require_value: Require a value
         @type require_value: bool
-        @return: Python C{tuple} of warning message and column value
-        @rtype: tuple
+        @return: Python C{tuple} of Python C{str} (warning message) and Python C{str} (column value)
+        @rtype: (str, str)
         """
 
         message = str()
@@ -125,7 +125,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -152,7 +152,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -176,7 +176,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param column_name: Column name
         @type column_name: str
         @param require_column: Require the column_name to be defined in the row_dict
@@ -208,7 +208,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -228,7 +228,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -251,7 +251,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -277,7 +277,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -303,7 +303,7 @@ class AnnotationSheet(object):
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param column_name: Column name
         @type column_name: str
         @return: Warning messages
@@ -331,6 +331,8 @@ class AnnotationSheet(object):
         @type file_path: str | unicode
         @param file_type: File type (i.e. I{excel} or I{excel_tab} defined in the C{csv.Dialect} class)
         @type file_type: str
+        @param name: Name
+        @type name: str
         @return: C{AnnotationSheet}
         @rtype: AnnotationSheet
         """
@@ -359,12 +361,14 @@ class AnnotationSheet(object):
         @param header: Header line
         @type header: bool
         @param field_names: Python C{list} of Python C{str} (field name) objects
-        @type field_names: list
+        @type field_names: list[str]
         @param test_methods: Python C{dict} of Python C{str} (field name) key data and
             Python C{list} of Python C{function} value data
-        @type test_methods: dict
+        @type test_methods: dict[str, func]
         @param row_dicts: Python C{list} of Python C{dict} objects
-        @type row_dicts: list
+        @type row_dicts: list[dict[str | unicode]]
+        @return:
+        @rtype:
         """
 
         if file_path:
@@ -408,9 +412,13 @@ class AnnotationSheet(object):
         self._csv_writer_file = None
         self._csv_writer_object = None
 
+        return
+
     def csv_reader_open(self):
         """Open a Comma-Separated Value (CSV) file linked to an C{AnnotationSheet} object for reading
         and initialise a Python C{csv.DictReader} object.
+        @return:
+        @rtype:
         """
 
         # Although the AnnotationSheet is initialised with an empty Python list object,
@@ -440,11 +448,13 @@ class AnnotationSheet(object):
         if len(self._csv_reader_object.fieldnames) and not len(self.field_names):
             self.field_names.extend(self._csv_reader_object.fieldnames)
 
+        return
+
     def csv_reader_next(self):
         """Read the next line of a CSV file linked to an C{AnnotationSheet} object.
 
         @return: Python C{dict} of column key and row value data
-        @rtype: dict
+        @rtype: dict[str, str | unicode]
         """
 
         return self._csv_reader_object.next()
@@ -483,7 +493,7 @@ class AnnotationSheet(object):
         """Write the next line of a CSV file linked to an C{AnnotationSheet} object.
 
         @param row_dict: Row Python C{dict}
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         """
 
         self._csv_writer_object.writerow(rowdict=row_dict)
@@ -553,10 +563,10 @@ class BamIndexDecoderSheet(AnnotationSheet):
     @cvar _header_line: Header line exists
     @type _header_line: bool
     @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list
+    @type _field_names: list[str]
     @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type _test_methods: dict
+    @type _test_methods: dict[str, func]
     """
 
     _file_type = 'excel-tab'
@@ -587,10 +597,10 @@ class LibraryAnnotationSheet(AnnotationSheet):
     @cvar _header_line: Header line exists
     @type _header_line: bool
     @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list
+    @type _field_names: list[str]
     @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type _test_methods: dict
+    @type _test_methods: dict[str, func]
     """
 
     _file_type = 'excel'
@@ -752,10 +762,10 @@ class SampleAnnotationSheet(AnnotationSheet):
     @cvar _header_line: Header line exists
     @type _header_line: bool
     @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list
+    @type _field_names: list[str]
     @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type _test_methods: dict
+    @type _test_methods: dict[str, func]
     """
 
     _file_type = 'excel'
@@ -802,10 +812,10 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     @cvar _header_line: Header line exists
     @type _header_line: bool
     @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list
+    @type _field_names: list[str]
     @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type _test_methods: dict
+    @type _test_methods: dict[str, func]
     """
 
     _file_type = 'excel'
@@ -877,10 +887,10 @@ class TuxedoSamplePairSheet(AnnotationSheet):
     @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
     @type _file_type: str
     @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list
+    @type _field_names: list[str]
     @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type _test_methods: dict
+    @type _test_methods: dict[str, func]
     """
 
     _file_type = "excel-tab"
