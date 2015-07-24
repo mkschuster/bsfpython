@@ -46,7 +46,7 @@ import uuid
 import warnings
 
 from bsf import defaults
-from bsf.data import Collection, Sample, SampleGroup
+from bsf.data import Collection, Sample
 from bsf.argument import *
 
 
@@ -72,15 +72,15 @@ class Analysis(object):
     @ivar genome_directory: Genome-specific directory
     @type genome_directory: str | unicode
     @ivar drms_list: Python C{list} of C{DRMS} objects
-    @type drms_list: list
+    @type drms_list: list[DRMS]
     @ivar runnable_dict: Python C{dict} of Python C{str} (C{Runnable.name}) key data and C{Runnable} value data
-    @type runnable_dict: dict
+    @type runnable_dict: dict[Runnable.name, Runnable]
     @ivar collection: C{Collection}
     @type collection: Collection
     @ivar comparisons: Python C{dict} of comparisons
-    @type comparisons: dict
+    @type comparisons: dict[str, any]
     @ivar samples: Python C{list} of C{Sample} objects
-    @type samples: list
+    @type samples: list[Sample]
     """
 
     @classmethod
@@ -89,8 +89,8 @@ class Analysis(object):
 
         @param config_path: UNIX-style configuration file path
         @type config_path: str | unicode
-        @return : C{Analysis}
-        @rtype : Analysis
+        @return: C{Analysis}
+        @rtype: Analysis
         """
 
         return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
@@ -101,8 +101,8 @@ class Analysis(object):
 
         @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return : C{Analysis}
-        @rtype : Analysis
+        @return: C{Analysis}
+        @rtype: Analysis
         """
 
         assert isinstance(configuration, Configuration)
@@ -154,18 +154,18 @@ class Analysis(object):
         @param debug: Integer debugging level
         @type debug: int
         @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list
+        @type drms_list: list[DRMS]
         @param runnable_dict: Python C{dict} of Python C{str} (C{Runnable.name}) and C{Runnable} value data
-        @type runnable_dict: dict
+        @type runnable_dict: dict[Runnable.name, Runnable]
         @param collection: C{Collection}
         @type collection: Collection
         @param comparisons: Python C{dict} of Analysis-specific objects
             (i.e. Python tuple for RNA-Seq and ChIPSeqComparison for ChIPSeq)
-        @type comparisons: dict
+        @type comparisons: dict[str, Any]
         @param samples: Python C{list} of C{Sample} objects
-        @type samples: list
-        @return :
-        @rtype :
+        @type samples: list[Sample]
+        @return:
+        @rtype:
         """
 
         if configuration:
@@ -242,13 +242,15 @@ class Analysis(object):
         else:
             self.samples = list()
 
+        return
+
     def trace(self, level):
         """Trace an C{Analysis} object.
 
         @param level: Indentation level
         @type level: int
-        @return : Trace information
-        @rtype : str
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -294,8 +296,8 @@ class Analysis(object):
 
         @param drms: C{DRMS}
         @type drms: DRMS
-        @return : C{DRMS}
-        @rtype : DRMS
+        @return: C{DRMS}
+        @rtype: DRMS
         """
         assert isinstance(drms, DRMS)
 
@@ -308,8 +310,8 @@ class Analysis(object):
 
         @param runnable: C{Runnable}
         @type runnable: Runnable
-        @return : C{Runnable}
-        @rtype : Runnable
+        @return: C{Runnable}
+        @rtype: Runnable
         @raise Exception: The C{Runnable.name} already exists in the C{Analysis}
         """
 
@@ -330,17 +332,16 @@ class Analysis(object):
         __cmp__ method, relies on object identity (i.e. address).
         @param sample: C{Sample}
         @type sample: Sample
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
-        if not sample:
-            return
-
-        assert isinstance(sample, Sample) or isinstance(sample, SampleGroup)
+        assert isinstance(sample, Sample)
 
         if sample not in self.samples:
             self.samples.append(sample)
+
+        return
 
     def set_configuration(self, configuration, section):
         """Set instance variables of an C{Analysis} object via a section of a C{Configuration} object.
@@ -351,8 +352,8 @@ class Analysis(object):
         @param section: Configuration file section
         @type section: str
         @raise Exception: The specified section does not exist
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         assert isinstance(configuration, Configuration)
@@ -389,12 +390,14 @@ class Analysis(object):
         if configuration.config_parser.has_option(section=section, option='e_mail'):
             self.e_mail = configuration.config_parser.get(section=section, option='e_mail')
 
+        return
+
     def run(self):
         """Run the C{Analysis}.
 
         @raise Exception: An C{Analysis.project_name} has not been defined
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         if not self.project_name:
@@ -473,23 +476,27 @@ class Analysis(object):
 
             self.collection = Collection()
 
+        return
+
     def report(self):
         """Create an C{Analysis} report.
 
         The method must be implemented in a sub-class.
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         warnings.warn(
             "The 'report' method must be implemented in the sub-class.",
             UserWarning)
 
+        return
+
     def create_project_genome_directory(self):
         """Check and create an C{Analysis.project_directory} or C{Analysis.genome_directory} if necessary.
 
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         @raise Exception: Output (genome) directory does not exist
         """
 
@@ -510,6 +517,8 @@ class Analysis(object):
                 raise Exception(
                     'Output (genome) directory {!r} does not exist.'.format(self.genome_directory))
 
+        return
+
     def create_public_project_link(self, sub_directory=None):
         """Create a symbolic link from the web directory to the project directory if not already there.
 
@@ -517,8 +526,8 @@ class Analysis(object):
         the project name followed by a 128 bit hexadecimal UUID string.
         @param sub_directory: C{Analysis}-specific directory
         @type sub_directory: str
-        @return : Symbolic link to the project directory
-        @rtype : str
+        @return: Symbolic link to the project directory
+        @rtype: str
         @raise Exception: Public HTML path does not exist
         """
 
@@ -621,8 +630,8 @@ class Analysis(object):
 
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         if prefix:
@@ -652,14 +661,16 @@ class Analysis(object):
         file_handle.write(output)
         file_handle.close()
 
+        return
+
     def ucsc_hub_write_genomes(self, prefix=None):
         """Write a UCSC Track Hub I{genomes.txt} file into the C{Analysis.project_directory},
         above the C{Analysis.genome_directory}.
 
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         if prefix:
@@ -682,13 +693,15 @@ class Analysis(object):
         file_handle.write(output)
         file_handle.close()
 
+        return
+
     def ucsc_hub_write_tracks(self, output, prefix=None):
         """Write a UCSC Track Hub I{trackDB.txt} file into the C{Analysis.genome_directory}.
 
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         if prefix:
@@ -703,13 +716,15 @@ class Analysis(object):
         file_handle.write(output)
         file_handle.close()
 
+        return
+
     def submit(self, drms_name=None):
         """Submit each C{DRMS} object and pickle each C{Runnable} object.
 
         @param drms_name: Only submit C{Executable} objects linked to C{DRMS.name}
         @type drms_name: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         # Pickle all Runnable objects.
@@ -743,6 +758,8 @@ class Analysis(object):
                 name_list.append('report')
                 print 'Valid Analysis DRMS names are: {!r}'.format(name_list)
 
+        return
+
 
 class Configuration(object):
     """The C{Configuration} class represents a UNIX-style initialisation (*.ini) file and
@@ -761,8 +778,8 @@ class Configuration(object):
 
         @param instance: A Python instance (or object)
         @type instance: object
-        @return : Configuration section string
-        @rtype : str
+        @return: Configuration section string
+        @rtype: str
         """
 
         match = re.search(pattern=r'^<([^ ]+)\s+', string=repr(instance))
@@ -779,8 +796,8 @@ class Configuration(object):
         Both, user and variable expansion gets applied to the file path.
         @param config_path: Configuration file path
         @type config_path: str | unicode
-        @return : C{Configuration}
-        @rtype : Configuration
+        @return: C{Configuration}
+        @rtype: Configuration
         @raise Exception: Configuration file path does not exist
         """
 
@@ -813,8 +830,8 @@ class Configuration(object):
         @type config_path: str | unicode
         @param config_parser: Python C{SafeConfigParser}
         @type config_parser: SafeConfigParser
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         if config_path:
@@ -827,13 +844,15 @@ class Configuration(object):
         else:
             self.config_parser = SafeConfigParser()
 
+        return
+
     def trace(self, level):
         """Trace a C{Configuration} object.
 
         @param level: Indentation level
         @type level: int
-        @return : Trace information
-        @rtype : str
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -853,8 +872,8 @@ class Configuration(object):
         @type config_section: str
         @param config_option: Configuration option string
         @type config_option: str
-        @return : Expanded directory
-        @rtype : str
+        @return: Expanded directory
+        @rtype: str
         """
 
         directory = self.config_parser.get(config_section, config_option)
@@ -898,8 +917,8 @@ class Default(object):
     @type directory_gatk_bundle: str | unicode
     @ivar directory_snpeff_data: snpEff database directory
     @type directory_snpeff_data: str | unicode
-    @ivar indices: Python dict of program name key and index directory name value data
-    @type indices: dict
+    @ivar indices: Python C{dict} of program name key and index directory name value data
+    @type indices: dict[str, str]
     @ivar drms_implementation: DRMS implementation (e.g. Bash, SGE)
     @type drms_implementation: str
     @ivar drms_maximum_threads: DRMS maximum threads
@@ -946,8 +965,8 @@ class Default(object):
         @type file_path: str | unicode
         @param default_path: Default absolute path
         @type default_path: str | unicode
-        @return : Absolute path
-        @rtype : str | unicode
+        @return: Absolute path
+        @rtype: str | unicode
         """
 
         absolute_path = os.path.expanduser(path=file_path)
@@ -962,8 +981,8 @@ class Default(object):
     def get_global_default():
         """Get the global Default configuration and initialise it, if not already done so.
 
-        @return : Default
-        @rtype : Default
+        @return: Default
+        @rtype: Default
         """
 
         if not Default.global_default:
@@ -976,8 +995,8 @@ class Default(object):
         """Create a new Default object from the global default configuration file.
 
         The default configuration is based on the file $HOME/.bsfpython.ini in the user's home directory.
-        @return : Default
-        @rtype : Default
+        @return: Default
+        @rtype: Default
         """
 
         return cls.from_config_path(config_path=Default.global_file_path)
@@ -988,8 +1007,8 @@ class Default(object):
 
         @param config_path: UNIX-style configuration file path
         @type config_path: str | unicode
-        @return : Default
-        @rtype : Default
+        @return: Default
+        @rtype: Default
         """
 
         return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
@@ -1000,8 +1019,8 @@ class Default(object):
 
         @param configuration: Configuration
         @type configuration: Configuration
-        @return : Default
-        @rtype : Default
+        @return: Default
+        @rtype: Default
         """
 
         assert isinstance(configuration, Configuration)
@@ -1051,8 +1070,8 @@ class Default(object):
         @type directory_gatk_bundle: str | unicode
         @param directory_snpeff_data: snpEff database directory
         @type directory_snpeff_data: str | unicode
-        @param indices: Python dict of program name key and index directory name value data
-        @type indices: dict
+        @param indices: Python C{dict} of program name key and index directory name value data
+        @type indices: dict[str, str]
         @param drms_implementation: DRMS implementation (e.g. Bash, SGE)
         @type drms_implementation: str
         @param drms_maximum_threads: DRMS maximum threads
@@ -1079,8 +1098,8 @@ class Default(object):
         @type url_host_name:str
         @param url_relative_projects: Sub-directory for analysis projects
         @type url_relative_projects: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         # Set Java class path information.
@@ -1237,14 +1256,16 @@ class Default(object):
         else:
             self.url_relative_projects = str()
 
+        return
+
     def set_configuration(self, configuration):
         """Set instance variables of a Default object via a section of a Configuration object.
 
         For each instance variable a configuration option has to be present.
         @param configuration: Configuration
         @type configuration: Configuration
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         assert isinstance(configuration, Configuration)
@@ -1307,13 +1328,15 @@ class Default(object):
         self.url_host_name = cp.get(section=section, option='host_name')
         self.url_relative_projects = cp.get(section=section, option='relative_projects')
 
+        return
+
     @staticmethod
     def absolute_home():
         """
         Get the absolute directory path for the home directory.
 
-        @return : Absolute path to the home directory
-        @rtype : str | unicode
+        @return: Absolute path to the home directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1324,8 +1347,8 @@ class Default(object):
     def absolute_runs_illumina():
         """Get the absolute directory path for Illumina runs.
 
-        @return : Absolute path to the Illumina runs directory
-        @rtype : str | unicode
+        @return: Absolute path to the Illumina runs directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1339,8 +1362,8 @@ class Default(object):
     def absolute_sequences():
         """Get the absolute directory path for processed lanes.
 
-        @return : Absolute path to the processed lanes directory
-        @rtype : str | unicode
+        @return: Absolute path to the processed lanes directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1354,8 +1377,8 @@ class Default(object):
     def absolute_projects():
         """Get the absolute directory path for projects.
 
-        @return : Absolute path to the projects directory
-        @rtype : str | unicode
+        @return: Absolute path to the projects directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1369,8 +1392,8 @@ class Default(object):
     def absolute_samples():
         """Get the absolute directory path for processed samples.
 
-        @return : Absolute path to the processed samples directory
-        @rtype : str | unicode
+        @return: Absolute path to the processed samples directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1384,8 +1407,8 @@ class Default(object):
     def absolute_public_html():
         """Get the absolute directory path for public HTML documents.
 
-        @return : Absolute path to the public HTML directory
-        @rtype : str | unicode
+        @return: Absolute path to the public HTML directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1403,8 +1426,8 @@ class Default(object):
         @type gatk_bundle_version: str
         @param genome_version: The genome version (e.g. b37, ...)
         @type genome_version: str
-        @return : Absolute path to the GATK bundle directory
-        @rtype : str | unicode
+        @return: Absolute path to the GATK bundle directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1425,8 +1448,8 @@ class Default(object):
 
         @param genome_version: The genome version (e.g. mm10, ...)
         @type genome_version: str
-        @return : Absolute path to the genomes directory
-        @rtype : str | unicode
+        @return: Absolute path to the genomes directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1442,8 +1465,8 @@ class Default(object):
 
         @param genome_version: The genome version (e.g. mm10, ...)
         @type genome_version: str
-        @return : Absolute path to the genome annotation directory
-        @rtype : str | unicode
+        @return: Absolute path to the genome annotation directory
+        @rtype: str | unicode
         """
 
         default = Default.get_global_default()
@@ -1458,8 +1481,8 @@ class Default(object):
         @type genome_version: str
         @param genome_index: Genome index (e.g. bowtie2, ...)
         @type genome_index: str
-        @return : Absolute path to the genome FASTA file
-        @rtype : str | unicode
+        @return: Absolute path to the genome FASTA file
+        @rtype: str | unicode
         @raise Exception: Unknown genome index name
         """
 
@@ -1477,8 +1500,8 @@ class Default(object):
     def url_absolute_base():
         """Return the absolute URL to the web site.
 
-        @return : URL string
-        @rtype : str
+        @return: URL string
+        @rtype: str
         """
 
         default = Default.get_global_default()
@@ -1489,8 +1512,8 @@ class Default(object):
     def url_absolute_projects():
         """Return the absolute URL to the analysis projects directory.
 
-        @return : URL string
-        @rtype : str
+        @return: URL string
+        @rtype: str
         """
 
         default = Default.get_global_default()
@@ -1499,15 +1522,15 @@ class Default(object):
 
 
 class DRMS(object):
-    """The Distributed Resource Management System (DRMS) class represents a Distributed Resource Management System or
-    batch job scheduler.
+    """The I{Distributed Resource Management System} (C{DRMS}) class represents a
+    I{Distributed Resource Management System} or batch job scheduler.
 
     Attributes:
     @ivar name: Name
     @type name: str
     @ivar working_directory: Working directory path
     @type working_directory: str
-    @ivar implementation: Implementation (e.g. SGE, ...)
+    @ivar implementation: Implementation (e.g. I{sge}, I{slurm}, ...)
     @type implementation: str
     @ivar memory_free_mem: Memory limit (free)
     @type memory_free_mem: str
@@ -1523,25 +1546,25 @@ class DRMS(object):
     @type threads: int
     @ivar hold: Hold on job scheduling
     @type hold: str
-    @ivar is_script: Executable objects represent shell scripts,
+    @ivar is_script: C{Executable} objects represent shell scripts,
         or alternatively binary programs
     @type is_script: bool
-    @ivar executables: Python list of Executable objects
-    @type executables: list
+    @ivar executables: Python C{list} of C{Executable} objects
+    @type executables: list[Executable]
     """
 
     @classmethod
     def from_analysis(cls, name, working_directory, analysis):
-        """Create a DRMS object from an Analysis object.
+        """Create a C{DRMS} object from an C{Analysis} object.
 
         @param name: Name
         @type name: str
         @param working_directory: Working directory
         @type working_directory: str
-        @param analysis: Analysis
+        @param analysis: C{Analysis}
         @type analysis: Analysis
-        @return : DRMS object
-        @rtype : DRMS
+        @return: C{DRMS} object
+        @rtype: DRMS
         """
 
         assert isinstance(analysis, Analysis)
@@ -1582,18 +1605,18 @@ class DRMS(object):
 
     @classmethod
     def from_configuration(cls, name, work_directory, configuration, section):
-        """Create a DRMS object from a Configuration object.
+        """Create a C{DRMS} object from a C{Configuration} object.
 
         @param name: Name
         @type name: str
         @param work_directory: Work directory
         @type work_directory: str
-        @param configuration: Configuration object
+        @param configuration: C{Configuration} object
         @type configuration: Configuration
         @param section: Configuration section string
         @type section: str
-        @return : DRMS object
-        @rtype : DRMS
+        @return: C{DRMS} object
+        @rtype: DRMS
         """
 
         assert isinstance(configuration, Configuration)
@@ -1610,13 +1633,13 @@ class DRMS(object):
     def __init__(self, name, working_directory, implementation=None, memory_free_mem=None, memory_free_swap=None,
                  memory_free_virtual=None, memory_limit_hard=None, memory_limit_soft=None, time_limit=None,
                  parallel_environment=None, queue=None, threads=1, hold=None, is_script=False, executables=None):
-        """Initialise a DRMS object.
+        """Initialise a C{DRMS} object.
 
         @param name: Name
         @type name: str
         @param working_directory: Working directory
         @type working_directory: str
-        @param implementation: Implementation (e.g. SGE, ...)
+        @param implementation: Implementation (e.g. I{sge}, I{slurm}, ...)
         @type implementation: str
         @param memory_free_mem: Memory limit (free physical)
         @type memory_free_mem: str
@@ -1638,13 +1661,13 @@ class DRMS(object):
         @type threads: int
         @param hold: Hold on job scheduling
         @type hold: str
-        @param is_script: Executable objects represent shell scripts,
+        @param is_script: C{Executable} objects represent shell scripts,
             or alternatively binary programs
         @type is_script: bool
-        @param executables: Python list of Executable objects
-        @type executables: list
-        @return :
-        @rtype :
+        @param executables: Python C{list} of C{Executable} objects
+        @type executables: list[Executable]
+        @return:
+        @rtype:
         """
 
         if name:
@@ -1716,13 +1739,15 @@ class DRMS(object):
         else:
             self.executables = list()
 
+        return
+
     def trace(self, level):
-        """Trace a DRMS object.
+        """Trace a C{DRMS} object.
 
         @param level: Indentation level
         @type level: int
-        @return : Trace information
-        @rtype : str
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -1766,15 +1791,15 @@ class DRMS(object):
         return output
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a DRMS object via a section of a Configuration object.
+        """Set instance variables of a C{DRMS} object via a section of a C{Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         assert isinstance(configuration, Configuration)
@@ -1835,13 +1860,15 @@ class DRMS(object):
             self.threads = configuration.config_parser.get(section=section,
                                                            option='threads')
 
-    def set_default(self, default):
-        """Set instance variables of a DRMS object via a Default object.
+        return
 
-        @param default: Default
+    def set_default(self, default):
+        """Set instance variables of a C{DRMS} object via a C{Default} object.
+
+        @param default: C{Default} object
         @type default: Default
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         assert isinstance(default, Default)
@@ -1858,13 +1885,15 @@ class DRMS(object):
         self.queue = default.drms_queue
         # threads
 
+        return
+
     def add_executable(self, executable):
         """Convenience method to facilitate initialising, adding and returning an C{Executable}.
 
         @param executable: C{Executable}
         @type executable: Executable
-        @return : C{Executable}
-        @rtype : Executable
+        @return: C{Executable}
+        @rtype: Executable
         """
 
         assert isinstance(executable, Executable)
@@ -1874,12 +1903,12 @@ class DRMS(object):
         return executable
 
     def submit(self, debug=0):
-        """Submit a command line for each Executable object.
+        """Submit a command line for each C{Executable} object.
 
         @param debug: Debug level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         # Dynamically import the module specific for the configured DRMS implementation.
@@ -1888,35 +1917,39 @@ class DRMS(object):
 
         module.submit(drms=self, debug=debug)
 
+        return
+
 
 class Command(object):
-    """Command class representing one (subordinate) command,
+    """C{Command} class representing one (subordinate) command,
     its options and arguments and possibly another subordinate command.
 
     Attributes:
     @ivar command: Command or program
     @type command: str
-    @ivar options: Python dict of option keys and values
-    @type options: dict
-    @ivar arguments: Python list of arguments
-    @type arguments: list
-    @ivar sub_command: Subordinate Command
+    @ivar options: Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+        C{Argument} objects
+    @type options: dict[Argument.key, list[Argument]]
+    @ivar arguments: Python C{list} of Python C{str} (program argument) objects
+    @type arguments: list[str]
+    @ivar sub_command: Subordinate C{Command}
     @type sub_command: Command
     """
 
     def __init__(self, command, options=None, arguments=None, sub_command=None):
-        """Initialise a Command object.
+        """Initialise a C{Command} object.
 
         @param command: Command
         @type command: str
-        @param options: Python dict of program option and value pairs
-        @type options: dict
-        @param arguments: Python list of program arguments
-        @type arguments: list
-        @param sub_command: Subordinate Command object
+        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+            C{Argument} objects
+        @type options: dict[Argument.key, list[Argument]]
+        @param arguments: Python C{list} of Python C{str} (program argument) objects
+        @type arguments: list[str]
+        @param sub_command: Subordinate C{Command} object
         @type sub_command: Command
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         self.command = command
@@ -1933,13 +1966,15 @@ class Command(object):
 
         self.sub_command = sub_command
 
+        return
+
     def trace(self, level):
-        """Trace a Command object.
+        """Trace a C{Command} object.
 
         @param level: Indentation level
         @type level: int
-        @return : Trace information
-        @rtype : str
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -1975,14 +2010,14 @@ class Command(object):
         return output
 
     def add_argument(self, argument, override):
-        """Add an Argument or one of its sub-classes.
+        """Add an C{Argument} or one of its sub-classes.
 
-        @param argument: Argument
+        @param argument: C{Argument}
         @type argument: Argument
-        @param override: Override existing Argument without warning
+        @param override: Override existing C{Argument} without warning
         @type override: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         assert isinstance(argument, Argument)
@@ -2003,86 +2038,88 @@ class Command(object):
 
         arguments_list.append(argument)
 
+        return
+
     def add_switch_long(self, key, override=False):
-        """Initialise and add a SwitchLong object.
+        """Initialise and add a C{SwitchLong} object.
 
         @param key: Key
         @type key: str
-        @param override: Override existing Argument without warning
+        @param override: Override existing C{Argument} without warning
         @type override: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
-        self.add_argument(argument=SwitchLong(key=key), override=override)
+        return self.add_argument(argument=SwitchLong(key=key), override=override)
 
     def add_switch_short(self, key, override=False):
-        """Initialise and add a SwitchShort object.
+        """Initialise and add a C{SwitchShort} object.
 
         @param key: Key
         @type key: str
-        @param override: Override existing Argument without warning
+        @param override: Override existing C{Argument} without warning
         @type override: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
-        self.add_argument(argument=SwitchShort(key=key), override=override)
+        return self.add_argument(argument=SwitchShort(key=key), override=override)
 
     def add_option_long(self, key, value, override=False):
-        """Initialise and add an OptionLong object.
+        """Initialise and add an C{OptionLong} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str | unicode
-        @param override: Override existing Argument without warning
+        @param override: Override existing C{Argument} without warning
         @type override: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
-        self.add_argument(argument=OptionLong(key=key, value=value), override=override)
+        return self.add_argument(argument=OptionLong(key=key, value=value), override=override)
 
     def add_option_short(self, key, value, override=False):
-        """Initialise and add an OptionShort object.
+        """Initialise and add an C{OptionShort} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str | unicode
-        @param override: Override existing Argument without warning
+        @param override: Override existing C{Argument} without warning
         @type override: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
-        self.add_argument(argument=OptionShort(key=key, value=value), override=override)
+        return self.add_argument(argument=OptionShort(key=key, value=value), override=override)
 
     def add_option_pair(self, key, value, override=False):
-        """Initialise and add an OptionPair object.
+        """Initialise and add an C{OptionPair} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str | unicode
-        @param override: Override existing Argument without warning
+        @param override: Override existing C{Argument} without warning
         @type override: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
-        self.add_argument(argument=OptionPair(key=key, value=value), override=override)
+        return self.add_argument(argument=OptionPair(key=key, value=value), override=override)
 
     def set_argument(self, argument, override):
-        """Set an Argument or one of its sub-classes.
+        """Set an C{Argument} or one of its sub-classes.
 
-        @param argument: Argument
+        @param argument: C{Argument}
         @type argument: Argument
-        @param override: Override existing Argument without warning
+        @param override: Override existing C{Argument} without warning
         @type override: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
         assert isinstance(argument, Argument)
         assert isinstance(override, bool)
@@ -2095,82 +2132,84 @@ class Command(object):
 
         self.options[argument.key] = [argument]
 
+        return
+
     def set_switch_long(self, key, override=False):
-        """Initialise and set a SwitchLong object.
+        """Initialise and set a C{SwitchLong} object.
 
         @param key: Key
         @type key: str
-        @param override: Override existing Argument without warning
+        @param override: Override existing C{Argument} without warning
         @type override: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
-        self.set_argument(argument=SwitchLong(key=key), override=override)
+        return self.set_argument(argument=SwitchLong(key=key), override=override)
 
     def set_switch_short(self, key, override=False):
-        """Initialise and set a SwitchShort object.
+        """Initialise and set a C{SwitchShort} object.
 
         @param key: Key
         @type key: str
-        @param override: Override existing Argument without warning
+        @param override: Override existing C{Argument} without warning
         @type override: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
-        self.set_argument(argument=SwitchShort(key=key), override=override)
+        return self.set_argument(argument=SwitchShort(key=key), override=override)
 
     def set_option_long(self, key, value, override=False):
-        """Initialise and set an OptionLong object.
+        """Initialise and set an C{OptionLong} object.
 
         @param key: Key
         @type key: str
         @param value: Value
-        @param override: Override existing Argument without warning
+        @param override: Override existing C{Argument} without warning
         @type override: bool
         @type value: str | unicode
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
-        self.set_argument(argument=OptionLong(key=key, value=value), override=override)
+        return self.set_argument(argument=OptionLong(key=key, value=value), override=override)
 
     def set_option_short(self, key, value, override=False):
-        """Initialise and set an OptionShort object.
+        """Initialise and set an C{OptionShort} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str | unicode
-        @param override: Override existing Argument without warning
+        @param override: Override existing C{Argument} without warning
         @type override: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
-        self.set_argument(argument=OptionShort(key=key, value=value), override=override)
+        return self.set_argument(argument=OptionShort(key=key, value=value), override=override)
 
     def set_option_pair(self, key, value, override=False):
-        """Initialise and set an OptionPair object.
+        """Initialise and set an C{OptionPair} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str | unicode
-        @param override: Override existing Argument without warning
+        @param override: Override existing C{Argument} without warning
         @type override: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
-        self.set_argument(argument=OptionPair(key=key, value=value), override=override)
+        return self.set_argument(argument=OptionPair(key=key, value=value), override=override)
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a Command object via a section of a Configuration object.
+        """Set instance variables of a C{Command} object via a section of a C{Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
         @param section: Configuration file section, defaults to instance class
         @type section: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         assert isinstance(configuration, Configuration)
@@ -2195,11 +2234,13 @@ class Command(object):
 
             self.add_argument(argument=argument, override=False)
 
+        return
+
     def command_list(self):
         """Assemble the command line from program, options and arguments.
 
-        @return : Python list of program, options, switches and arguments
-        @rtype : list
+        @return: Python C{list} of program, options, switches and arguments
+        @rtype: list[str | unicode]
         """
 
         command_line = list()
@@ -2254,8 +2295,8 @@ class Command(object):
     def command_str(self):
         """Assemble the command line from program, options, switches and arguments.
 
-        @return : A Python str of program, options, switches and arguments
-        @rtype : str
+        @return: A Python C{str} of program, options, switches and arguments
+        @rtype: str
         """
 
         command_line = str()
@@ -2315,19 +2356,20 @@ class Executable(Command):
     @type name: str
     @ivar program: Program (executable or full file path)
     @type program: str
-    @ivar options: Python dict of option keys and values
-    @type options: dict
-    @ivar arguments: Python list of arguments
-    @type arguments: list
+    @ivar options: Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+        C{Argument} objects
+    @type options: dict[Argument.key, list[Argument]]
+    @ivar arguments: Python C{list} of Python C{str} or C{unicode} (argument) objects
+    @type arguments: list[str | unicode]
     @ivar sub_command: Subordinate Command
     @type sub_command: Command
     @ivar stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
     @type stdout_path: str | unicode
     @ivar stderr_path: Standard error (STDERR) redirection in Bash (2>word)
     @type stderr_path: str | unicode
-    @ivar dependencies: Python list of Executable name strings in the
-        context of DRMS dependencies
-    @type dependencies: list
+    @ivar dependencies: Python C{list} of C{Executable.name} properties in the
+        context of C{DRMS} dependencies
+    @type dependencies: list[Executable.name]
     @ivar hold: Hold on job scheduling
     @type hold: str
     @ivar submit: Submit the Executable into the DRMS
@@ -2354,8 +2396,8 @@ class Executable(Command):
         @type file_path: str | unicode
         @param debug: Debug level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         @raise Exception: The file_type has to be either I{STDOUT} or I{STDERR}
         """
 
@@ -2392,20 +2434,22 @@ class Executable(Command):
                     format(datetime.datetime.now().isoformat(), file_type, file_path)
         thread_lock.release()
 
+        return
+
     @staticmethod
     def process_stdout(stdout_handle, thread_lock, stdout_path=None, debug=0):
         """C{Executable} function to process I{STDOUT} from the child process as a thread.
 
-        @param stdout_handle: The STDOUT file handle
+        @param stdout_handle: The I{STDOUT} file handle
         @type stdout_handle: file
-        @param thread_lock: A Python threading.Lock object
+        @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: thread.lock
-        @param stdout_path: STDOUT file path
+        @param stdout_path: I{STDOUT} file path
         @type stdout_path: str | unicode
         @param debug: Debug level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         return Executable.process_stream(
@@ -2419,16 +2463,16 @@ class Executable(Command):
     def process_stderr(stderr_handle, thread_lock, stderr_path=None, debug=0):
         """C{Executable} function to process I{STDERR} from the child process as a thread.
 
-        @param stderr_handle: The STDERR file handle
+        @param stderr_handle: The I{STDERR} file handle
         @type stderr_handle: file
-        @param thread_lock: A Python threading.Lock object
+        @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: thread.lock
-        @param stderr_path: STDOUT file path
+        @param stderr_path: I{STDERR} file path
         @type stderr_path: str | unicode
         @param debug: Debug level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         return Executable.process_stream(
@@ -2440,16 +2484,16 @@ class Executable(Command):
 
     @classmethod
     def from_analysis(cls, name, program, analysis):
-        """Create an Executable object from an Analysis object.
+        """Create an C{Executable} object from an C{Analysis} object.
 
         @param name: Name
         @type name: str
         @param program: Program
         @type program: str
-        @param analysis: Analysis
+        @param analysis: C{Analysis}
         @type analysis: Analysis
-        @return : Executable object
-        @rtype : Executable
+        @return: C{Executable}
+        @rtype: Executable
         """
 
         assert isinstance(analysis, Analysis)
@@ -2476,16 +2520,16 @@ class Executable(Command):
 
     @classmethod
     def from_analysis_runnable(cls, analysis, runnable_name):
-        """Create an Executable to submit a Runnable into a DRMS.
+        """Create an C{Executable} to submit a C{Runnable} into a C{DRMS}.
 
         In case C{Runnable.get_relative_status_path} exists already, C{Executable.submit} will be set to C{False}.
-        @param analysis: Analysis
+        @param analysis: C{Analysis}
         @type analysis: Analysis
-        @param runnable_name: Runnable name
+        @param runnable_name: C{Runnable.name}
         @type runnable_name: str
-        @return : Executable
-        @rtype : Executable
-        @raise Exception: A Runnable.name does not exist in Analysis.name
+        @return: Executable
+        @rtype: Executable
+        @raise Exception: A C{Runnable.name} does not exist in C{Analysis}
         """
 
         assert isinstance(analysis, Analysis)
@@ -2508,18 +2552,18 @@ class Executable(Command):
 
     @classmethod
     def from_configuration(cls, name, program, configuration, section):
-        """Create an Executable object from a Configuration object.
+        """Create an C{Executable} object from a C{Configuration} object.
 
         @param name: Name
         @type name: str
         @param program: Program
         @type program: str
-        @param configuration: Configuration
+        @param configuration: C{Configuration}
         @type configuration: Configuration
         @param section: Configuration section string
         @type section: str
-        @return : Executable
-        @rtype : Executable
+        @return: C{Executable}
+        @rtype: Executable
         """
 
         assert isinstance(configuration, Configuration)
@@ -2534,28 +2578,29 @@ class Executable(Command):
                  program=None, options=None, arguments=None, sub_command=None,
                  stdout_path=None, stderr_path=None, dependencies=None, hold=None,
                  submit=True, maximum_attempts=1, process_identifier=None, process_name=None):
-        """Initialise an Executable object.
+        """Initialise an C{Executable} object.
 
         @param name: Name
         @type name: str
         @param program: Program
         @type program: str
-        @param options: Python dict of program option and value pairs
-        @type options: dict
-        @param arguments: Python list of program arguments
-        @type arguments: list
-        @param sub_command: Subordinate Command
+        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+            C{Argument} objects
+        @type options: dict[Argument.key, list[Argument]]
+        @param arguments: Python C{list} of program arguments
+        @type arguments: list[str | unicode]
+        @param sub_command: Subordinate C{Command}
         @type sub_command: Command
-        @param stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
+        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
         @type stdout_path: str | unicode
-        @param stderr_path: Standard error (STDERR) redirection in Bash (2>word)
+        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
-        @param dependencies: Python list of Executable
-            name strings in the context of DRMS dependencies
-        @type dependencies: list
+        @param dependencies: Python C{list} of C{Executable.name}
+            properties in the context of C{DRMS} dependencies
+        @type dependencies: list[Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the Executable into the DRMS
+        @param submit: Submit the C{Executable} into the C{DRMS}
         @type submit: bool
         @param maximum_attempts: Maximum number of attempts to run this C{Executable}
         @type maximum_attempts: int
@@ -2563,8 +2608,8 @@ class Executable(Command):
         @type process_identifier: str
         @param process_name: Process name
         @type process_name: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         self.name = name
@@ -2606,13 +2651,15 @@ class Executable(Command):
         else:
             self.process_name = str()
 
+        return
+
     def trace(self, level):
-        """Trace an Executable object.
+        """Trace an C{Executable} object.
 
         @param level: Indentation level
         @type level: int
-        @return : Trace information
-        @rtype : str
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -2654,8 +2701,8 @@ class Executable(Command):
     def command_list(self):
         """Assemble the command line from program, options and arguments.
 
-        @return : Python list of program, options and arguments
-        @rtype : list
+        @return: Python C{list} of program, options and arguments
+        @rtype: list[str | unicode]
         """
 
         command = list()
@@ -2669,8 +2716,8 @@ class Executable(Command):
     def command_str(self):
         """Assemble the command line from program, options, switches and arguments.
 
-        @return : A Python str of program, options, switches and arguments
-        @rtype : str
+        @return: A Python C{str} of program, options, switches and arguments
+        @rtype: str
         """
 
         command = str()
@@ -2690,9 +2737,9 @@ class Executable(Command):
         @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return : Return value of the child in the Python subprocess,
+        @return: Return value of the child in the Python subprocess,
             negative values indicate that the child received a signal
-        @rtype : int
+        @rtype: int
         """
         on_posix = 'posix' in sys.builtin_module_names
 
@@ -2790,8 +2837,8 @@ class Executable(Command):
 
         @param return_code: Return code
         @type return_code: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         if return_code > 0:
@@ -2804,14 +2851,16 @@ class Executable(Command):
             print '[{}] Child process {!r} completed with return code {}.'. \
                 format(datetime.datetime.now().isoformat(), self.name, +return_code)
 
+        return
+
 
 class RunnableStep(Executable):
     """The C{RunnableStep} represents a step in a C{Runnable} class.
 
     Attributes:
-    @ivar obsolete_file_path_list: Python list of file paths that can be removed
+    @ivar obsolete_file_path_list: Python C{list} of file paths that can be removed
         after successfully completing this C{RunnableStep}
-    @type obsolete_file_path_list: list
+    @type obsolete_file_path_list: list[str | unicode]
     """
 
     def __init__(self, name,
@@ -2825,32 +2874,33 @@ class RunnableStep(Executable):
         @type name: str
         @param program: Program
         @type program: str
-        @param options: Python dict of program option and value pairs
-        @type options: dict
-        @param arguments: Python list of program arguments
-        @type arguments: list
+        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+            C{Argument} objects
+        @type options: dict[Argument.key, list[Argument]]
+        @param arguments: Python C{list} of program arguments
+        @type arguments: list[str | unicode]
         @param sub_command: Subordinate Command
         @type sub_command: Command
-        @param stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
+        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
         @type stdout_path: str | unicode
-        @param stderr_path: Standard error (STDERR) redirection in Bash (2>word)
+        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
-        @param dependencies: Python list of Executable
-            name strings in the context of DRMS dependencies
-        @type dependencies: list
+        @param dependencies: Python C{list} of C{Executable.name}
+            properties in the context of C{DRMS} dependencies
+        @type dependencies: list[Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the Executable into the DRMS
+        @param submit: Submit the C{Executable} into the C{DRMS}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
         @param process_name: Process name
         @type process_name: str
-        @param obsolete_file_path_list: Python list of file paths that can be removed
+        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{RunnableStep}
-        @type obsolete_file_path_list: list
-        @return :
-        @rtype :
+        @type obsolete_file_path_list: list[str | unicode]
+        @return:
+        @rtype:
         """
 
         super(RunnableStep, self).__init__(
@@ -2863,13 +2913,15 @@ class RunnableStep(Executable):
         else:
             self.obsolete_file_path_list = list()
 
+        return
+
     def trace(self, level=1):
         """Trace a C{RunnableStep} object.
 
         @param level: Indentation level
         @type level: int
-        @return : Trace information
-        @rtype : str
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -2885,9 +2937,9 @@ class RunnableStepLink(RunnableStep):
     """The C{RunnableStepLink} represents a step in a C{Runnable} class.
 
     Attributes:
-    @ivar obsolete_file_path_list: Python list of file paths that can be removed
+    @ivar obsolete_file_path_list: Python C{list} of file paths that can be removed
         after successfully completing this C{RunnableStep}
-    @type obsolete_file_path_list: list
+    @type obsolete_file_path_list: list[str | unicode]
     @ivar source_path: Source path
     @type source_path: str | unicode
     @ivar target_path: Target path
@@ -2905,36 +2957,37 @@ class RunnableStepLink(RunnableStep):
         @type name: str
         @param program: Program
         @type program: str
-        @param options: Python dict of program option and value pairs
-        @type options: dict
-        @param arguments: Python list of program arguments
-        @type arguments: list
-        @param sub_command: Subordinate Command
+        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+            C{Argument} objects
+        @type options: dict[Argument.key, list[Argument]]
+        @param arguments: Python C{list} of program arguments
+        @type arguments: list[str | unicode]
+        @param sub_command: Subordinate C{Command}
         @type sub_command: Command
-        @param stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
+        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
         @type stdout_path: str | unicode
-        @param stderr_path: Standard error (STDERR) redirection in Bash (2>word)
+        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
-        @param dependencies: Python list of Executable
-            name strings in the context of DRMS dependencies
-        @type dependencies: list
+        @param dependencies: Python C{list} of C{Executable.name}
+            properties in the context of C{DRMS} dependencies
+        @type dependencies: list[Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the Executable into the DRMS
+        @param submit: Submit the C{Executable} into the C{DRMS}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
         @param process_name: Process name
         @type process_name: str
-        @param obsolete_file_path_list: Python list of file paths that can be removed
+        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{RunnableStep}
-        @type obsolete_file_path_list: list
+        @type obsolete_file_path_list: list[str | unicode]
         @param source_path: Source path
         @type source_path: str | unicode
         @param target_path: Target path
         @type target_path: str | unicode
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         super(RunnableStepLink, self).__init__(
@@ -2953,6 +3006,8 @@ class RunnableStepLink(RunnableStep):
         else:
             self.target_path = str()
 
+        return
+
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
         """Run a C{RunnableStepMakeDirectory} object.
 
@@ -2962,9 +3017,9 @@ class RunnableStepLink(RunnableStep):
         @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return : Return value of the child in the Python subprocess,
+        @return: Return value of the child in the Python subprocess,
             negative values indicate that the child received a signal
-        @rtype : int
+        @rtype: int
         """
 
         if self.source_path and self.target_path and not os.path.exists(self.target_path):
@@ -2981,9 +3036,9 @@ class RunnableStepMakeDirectory(RunnableStep):
     """The C{RunnableStepMakeDirectory} represents a step in a C{Runnable} class.
 
     Attributes:
-    @ivar obsolete_file_path_list: Python list of file paths that can be removed
+    @ivar obsolete_file_path_list: Python C{list} of file paths that can be removed
         after successfully completing this C{RunnableStep}
-    @type obsolete_file_path_list: list
+    @type obsolete_file_path_list: list[str | unicode]
     @ivar directory_path: Directory path
     @type directory_path: str | unicode
     """
@@ -2999,34 +3054,35 @@ class RunnableStepMakeDirectory(RunnableStep):
         @type name: str
         @param program: Program
         @type program: str
-        @param options: Python dict of program option and value pairs
-        @type options: dict
-        @param arguments: Python list of program arguments
-        @type arguments: list
-        @param sub_command: Subordinate Command
+        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+            C{Argument} objects
+        @type options: dict[Argument.key, list[Argument]]
+        @param arguments: Python C{list} of program arguments
+        @type arguments: list[str | unicode]
+        @param sub_command: Subordinate C{Command}
         @type sub_command: Command
-        @param stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
+        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
         @type stdout_path: str | unicode
-        @param stderr_path: Standard error (STDERR) redirection in Bash (2>word)
+        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
-        @param dependencies: Python list of Executable
-            name strings in the context of DRMS dependencies
-        @type dependencies: list
+        @param dependencies: Python C{list} of C{Executable.name}
+            properties in the context of C{DRMS} dependencies
+        @type dependencies: list[Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the Executable into the DRMS
+        @param submit: Submit the C{Executable} into the C{DRMS}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
         @param process_name: Process name
         @type process_name: str
-        @param obsolete_file_path_list: Python list of file paths that can be removed
+        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{RunnableStep}
-        @type obsolete_file_path_list: list
+        @type obsolete_file_path_list: list[str | unicode]
         @param directory_path: Directory path
         @type directory_path: str | unicode
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         super(RunnableStepMakeDirectory, self).__init__(
@@ -3038,6 +3094,8 @@ class RunnableStepMakeDirectory(RunnableStep):
         if directory_path:
             self.directory_path = directory_path
 
+        return
+
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
         """Run a C{RunnableStepMakeDirectory} object.
 
@@ -3047,9 +3105,9 @@ class RunnableStepMakeDirectory(RunnableStep):
         @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return : Return value of the child in the Python subprocess,
+        @return: Return value of the child in the Python subprocess,
             negative values indicate that the child received a signal
-        @rtype : int
+        @rtype: int
         """
 
         if self.directory_path and not os.path.isdir(self.directory_path):
@@ -3066,9 +3124,9 @@ class RunnableStepMove(RunnableStep):
     """The C{RunnableStepMove} represents a step in a C{Runnable} class.
 
     Attributes:
-    @ivar obsolete_file_path_list: Python list of file paths that can be removed
+    @ivar obsolete_file_path_list: Python C{list} of file paths that can be removed
         after successfully completing this C{RunnableStep}
-    @type obsolete_file_path_list: list
+    @type obsolete_file_path_list: list[str | unicode]
     @ivar source_path: Source path
     @type source_path: str | unicode
     @ivar target_path: Target path
@@ -3086,36 +3144,37 @@ class RunnableStepMove(RunnableStep):
         @type name: str
         @param program: Program
         @type program: str
-        @param options: Python dict of program option and value pairs
-        @type options: dict
-        @param arguments: Python list of program arguments
-        @type arguments: list
-        @param sub_command: Subordinate Command
+        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+            C{Argument} objects
+        @type options: dict[Argument.key, list[Argument]]
+        @param arguments: Python C{list} of program arguments
+        @type arguments: list[str | unicode]
+        @param sub_command: Subordinate C{Command}
         @type sub_command: Command
-        @param stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
+        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
         @type stdout_path: str | unicode
-        @param stderr_path: Standard error (STDERR) redirection in Bash (2>word)
+        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
-        @param dependencies: Python list of Executable
-            name strings in the context of DRMS dependencies
-        @type dependencies: list
+        @param dependencies: Python C{list} of C{Executable.name}
+            properties in the context of C{DRMS} dependencies
+        @type dependencies: list[Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the Executable into the DRMS
+        @param submit: Submit the C{Executable} into the C{DRMS}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
         @param process_name: Process name
         @type process_name: str
-        @param obsolete_file_path_list: Python list of file paths that can be removed
+        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{RunnableStep}
-        @type obsolete_file_path_list: list
+        @type obsolete_file_path_list: list[str | unicode]
         @param source_path: Source path
         @type source_path: str | unicode
         @param target_path: Target path
         @type target_path: str | unicode
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         super(RunnableStepMove, self).__init__(
@@ -3134,6 +3193,8 @@ class RunnableStepMove(RunnableStep):
         else:
             self.target_path = str()
 
+        return
+
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
         """Run a C{RunnableStepMakeDirectory} object.
 
@@ -3143,9 +3204,9 @@ class RunnableStepMove(RunnableStep):
         @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return : Return value of the child in the Python subprocess,
+        @return: Return value of the child in the Python subprocess,
             negative values indicate that the child received a signal
-        @rtype : int
+        @rtype: int
         """
 
         if self.source_path and self.target_path:
@@ -3159,9 +3220,9 @@ class RunnableStepSleep(RunnableStep):
     """The C{RunnableStepSleep} represents a step in a C{Runnable} class.
 
     Attributes:
-    @ivar obsolete_file_path_list: Python list of file paths that can be removed
+    @ivar obsolete_file_path_list: Python C{list} of file paths that can be removed
         after successfully completing this C{RunnableStep}
-    @type obsolete_file_path_list: list
+    @type obsolete_file_path_list: list[str | unicode]
     @ivar sleep_time: Sleep time in seconds
     @type sleep_time: float
     """
@@ -3177,34 +3238,35 @@ class RunnableStepSleep(RunnableStep):
         @type name: str
         @param program: Program
         @type program: str
-        @param options: Python dict of program option and value pairs
-        @type options: dict
-        @param arguments: Python list of program arguments
-        @type arguments: list
-        @param sub_command: Subordinate Command
+        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+            C{Argument} objects
+        @type options: dict[Argument.key, list[Argument]]
+        @param arguments: Python C{list} of program arguments
+        @type arguments: list[str | unicode]
+        @param sub_command: Subordinate C{Command}
         @type sub_command: Command
-        @param stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
+        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
         @type stdout_path: str | unicode
-        @param stderr_path: Standard error (STDERR) redirection in Bash (2>word)
+        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
-        @param dependencies: Python list of Executable
-            name strings in the context of DRMS dependencies
-        @type dependencies: list
+        @param dependencies: Python C{list} of C{Executable.name}
+            properties in the context of C{DRMS} dependencies
+        @type dependencies: list[Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the Executable into the DRMS
+        @param submit: Submit the C{Executable} into the C{DRMS}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
         @param process_name: Process name
         @type process_name: str
-        @param obsolete_file_path_list: Python list of file paths that can be removed
+        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{RunnableStep}
-        @type obsolete_file_path_list: list
+        @type obsolete_file_path_list: list[str | unicode]
         @param sleep_time: Sleep time in seconds
         @type sleep_time: float
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         super(RunnableStepSleep, self).__init__(
@@ -3218,6 +3280,8 @@ class RunnableStepSleep(RunnableStep):
         else:
             self.sleep_time = float()
 
+        return
+
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
         """Run a C{RunnableStepMakeDirectory} object.
 
@@ -3227,9 +3291,9 @@ class RunnableStepSleep(RunnableStep):
         @type thread_join_timeout: int
         @param debug: Debug level
         @type debug: int
-        @return : Return value of the child in the Python subprocess,
+        @return: Return value of the child in the Python subprocess,
             negative values indicate that the child received a signal
-        @rtype : int
+        @rtype: int
         """
 
         time.sleep(self.sleep_time)
@@ -3250,11 +3314,11 @@ class Runnable(object):
         C{Executable} objects via the I{Runner} script.
     @type code_module: str
     @ivar executable_dict: Python C{dict} of Python C{str} (C{Executable.name}) key data and C{Executable} value data
-    @type executable_dict: dict
+    @type executable_dict: dict[Executable.name, Executable]
     @ivar file_path_dict: Python C{dict} of Python C{str} (name) key data and Python C{str} (file_path) value data
-    @type file_path_dict: dict
+    @type file_path_dict: dict[str, str | unicode]
     @ivar runnable_step_list: Python C{list} of C{RunnableStep} objects
-    @type runnable_step_list: list
+    @type runnable_step_list: list[RunnableStep]
     @ivar working_directory: Working directory to write C{pickle.Pickler} files
     @type working_directory: str | unicode
     @ivar debug: Debug level
@@ -3276,16 +3340,16 @@ class Runnable(object):
         @type working_directory: str | unicode
         @param file_path_dict: Python C{dict} of Python C{str} (name) key data and
             Python C{str} (file_path) value data
-        @type file_path_dict: dict
+        @type file_path_dict: dict[Executable.name, Executable]
         @param executable_dict: Python C{dict} of Python C{str} (C{Executable.name}) key data and
             C{Executable} value data
-        @type executable_dict: dict
+        @type executable_dict: dict[str, str | unicode]
         @param runnable_step_list: Python C{list} of C{RunnableStep} objects
         @type runnable_step_list: list[RunnableStep]
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         self.name = name
@@ -3309,13 +3373,15 @@ class Runnable(object):
 
         self.debug = debug
 
+        return
+
     def trace(self, level=1):
         """Trace a C{Runnable} object.
 
         @param level: Indentation level
         @type level: int
-        @return : Trace information
-        @rtype : str
+        @return: Trace information
+        @rtype: str
         """
 
         indent = '  ' * level
@@ -3358,8 +3424,8 @@ class Runnable(object):
 
         @param executable: C{Executable}
         @type executable: Executable
-        @return : C{Executable}
-        @rtype : Executable
+        @return: C{Executable}
+        @rtype: Executable
         @raise Exception: An C{Executable.name} already exists in the C{Runnable}
         """
 
@@ -3378,8 +3444,8 @@ class Runnable(object):
 
         @param runnable_step: C{RunnableStep}
         @type runnable_step: RunnableStep
-        @return : C{RunnableStep}
-        @rtype : RunnableStep
+        @return: C{RunnableStep}
+        @rtype: RunnableStep
         """
 
         if runnable_step is None:
@@ -3396,8 +3462,8 @@ class Runnable(object):
 
         @param name: C{Executable.name}
         @type name: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         @raise Exception: Child process failed with return code or received a signal
         """
 
@@ -3418,16 +3484,16 @@ class Runnable(object):
     def pickler_path(self):
         """Get the Python C{pickle.Pickler} file path.
 
-        @return : Python C{pickle.Pickler} file path
-        @rtype : str | unicode
+        @return: Python C{pickle.Pickler} file path
+        @rtype: str | unicode
         """
 
         return os.path.join(self.working_directory, string.join(words=(self.name, 'pkl'), sep='.'))
 
     def to_pickler_path(self):
         """Write this C{Runnable} object as a Python C{pickle.Pickler} file into the working directory.
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         pickler_file = open(self.pickler_path, 'wb')
@@ -3435,14 +3501,16 @@ class Runnable(object):
         pickler.dump(obj=self)
         pickler_file.close()
 
+        return
+
     @classmethod
     def from_pickler_path(cls, file_path):
         """Create a C{Runnable} object from a Python C{pickle.Pickler} file via Python C{pickle.Unpickler}.
 
         @param file_path: File path to a Python C{pickle.Pickler} file
         @type file_path: str | unicode
-        @return : C{Runnable}
-        @rtype : Runnable
+        @return: C{Runnable}
+        @rtype: Runnable
         """
 
         pickler_file = open(file_path, 'rb')
@@ -3458,8 +3526,8 @@ class Runnable(object):
     def get_relative_status_path(self):
         """Get the relative status file path indicating successful completion of this C{Runnable}.
 
-        @return : Relative status file path
-        @rtype : str
+        @return: Relative status file path
+        @rtype: str
         """
 
         return string.join(words=(self.name, 'completed.txt'), sep='_')
@@ -3468,8 +3536,8 @@ class Runnable(object):
     def get_relative_temporary_directory_path(self):
         """Get the relative temporary directory path for this C{Runnable}.
 
-        @return : Relative temporary directory path
-        @rtype : str
+        @return: Relative temporary directory path
+        @rtype: str
         """
 
         return string.join(words=(self.name, 'temporary'), sep='_')
@@ -3478,8 +3546,8 @@ class Runnable(object):
     def get_absolute_status_path(self):
         """Get the absolute status file path including the C{Runnable.working_directory}.
 
-        @return : Absolute status file path
-        @rtype : str
+        @return: Absolute status file path
+        @rtype: str
         """
 
         return os.path.join(self.working_directory, self.get_relative_status_path)
@@ -3488,8 +3556,8 @@ class Runnable(object):
     def get_absolute_temporary_directory_path(self):
         """Get the absolute temporary directory path including the  C{Runnable.working_directory}.
 
-        @return : Absolute temporary directory path
-        @rtype : str
+        @return: Absolute temporary directory path
+        @rtype: str
         """
 
         return os.path.join(self.working_directory, self.get_relative_temporary_directory_path)
