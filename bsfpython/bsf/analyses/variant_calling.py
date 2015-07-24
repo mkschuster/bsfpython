@@ -57,22 +57,22 @@ class VariantCallingGATK(Analysis):
     @type comparison_path: str | unicode
     @ivar cohort_name: Cohort name
     @type cohort_name: str
-    @ivar accessory_cohort_gvcfs: Python C{list} of Python C{str} | C{unicode} (GVCF file path) objects
-    @type accessory_cohort_gvcfs: list
+    @ivar accessory_cohort_gvcfs: Python C{list} of Python C{str} or C{unicode} (GVCF file path) objects
+    @type accessory_cohort_gvcfs: list[str | unicode]
     @ivar skip_mark_duplicates: Skip the Picard MarkDuplicates step
     @type skip_mark_duplicates: bool
     @ivar known_sites_discovery: VCF file path for variant discovery via The Haplotype Caller or Unified Genotyper
     @type known_sites_discovery: str | unicode
-    @ivar known_sites_realignment: Python C{list} of Python C{str} | C{unicode} (VCF file paths)
+    @ivar known_sites_realignment: Python C{list} of Python C{str} or C{unicode} (VCF file paths)
         for realignment
-    @type known_sites_realignment:list
-    @ivar known_sites_recalibration: Python C{list} of Python C{str} | C{unicode} (VCF file paths)
+    @type known_sites_realignment: list[str | unicode]
+    @ivar known_sites_recalibration: Python C{list} of Python C{str} or C{unicode} (VCF file paths)
         for recalibration
-    @type known_sites_recalibration: list
+    @type known_sites_recalibration: list[str | unicode]
     @ivar annotation_resources_dict: Python C{dict} of Python C{str} (annotation resource name) key and
         Python C{tuple} of
-        Python C{str} (file path) and Python C{list} of Python C{str} (annotation) value data
-    @type annotation_resources_dict: dict
+        Python C{str} or C{unicode} (file path) and Python C{list} of Python C{str} (annotation) value data
+    @type annotation_resources_dict: dict[str, (str | unicode, list[str])]
     @ivar truth_sensitivity_filter_level_indel: Truth sensitivity filter level for INDELs
     @type truth_sensitivity_filter_level_indel: str
     @ivar truth_sensitivity_filter_level_snp: Truth sensitivity filter level for SNPs
@@ -82,13 +82,13 @@ class VariantCallingGATK(Analysis):
     @ivar vqsr_skip_snp: Skip the Variant Quality Score Recalibration on SNPs
     @type vqsr_skip_snp: bool, None
     @ivar vqsr_annotations_indel_list: Python C{list} of Python C{str} (variant annotation) objects
-    @type vqsr_annotations_indel_list: list
+    @type vqsr_annotations_indel_list: list[str]
     @ivar vqsr_annotations_snp_list: Python C{list} of Python C{str} (variant annotation) objects
-    @type vqsr_annotations_snp_list: list
+    @type vqsr_annotations_snp_list: list[str]
     @ivar exclude_intervals_list: Python C{list} of Python C{str} (intervals) to exclude from the analysis
-    @type exclude_intervals_list: list
+    @type exclude_intervals_list: list[str]
     @ivar include_intervals_list: Python C{list} of Python C{str} (intervals) to include in the analysis
-    @type include_intervals_list: list
+    @type include_intervals_list: list[str]
     @ivar downsample_to_fraction: Down-sample to fraction
     @type downsample_to_fraction: str
     @ivar gatk_bundle_version: GATK resource bundle version
@@ -116,8 +116,8 @@ class VariantCallingGATK(Analysis):
 
         @param config_path: UNIX-style configuration file
         @type config_path: str | unicode
-        @return : C{VariantCallingGATK}
-        @rtype : VariantCallingGATK
+        @return: C{VariantCallingGATK}
+        @rtype: VariantCallingGATK
         """
 
         return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
@@ -128,8 +128,8 @@ class VariantCallingGATK(Analysis):
 
         @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return : C{VariantCallingGATK}
-        @rtype : VariantCallingGATK
+        @return: C{VariantCallingGATK}
+        @rtype: VariantCallingGATK
         """
 
         assert isinstance(configuration, Configuration)
@@ -186,13 +186,13 @@ class VariantCallingGATK(Analysis):
         @param debug: Integer debugging level
         @type debug: int
         @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list
+        @type drms_list: list[DRMS]
         @param collection: C{Collection}
         @type collection: Collection
-        @param comparisons: Python C{dict} of Python C{list} objects of C{Sample} objects
-        @type comparisons: dict
+        @param comparisons: Python C{dict} of Python C{str} key and Python C{list} objects of C{Sample} objects
+        @type comparisons: dict[str, list[Sample]]
         @param samples: Python C{list} of C{Sample} objects
-        @type samples: list
+        @type samples: list[Sample]
         @param replicate_grouping: Group individual C{PairedReads} objects for processing or run them separately
         @type replicate_grouping: bool
         @param bwa_genome_db: Genome sequence file path with BWA index
@@ -201,22 +201,22 @@ class VariantCallingGATK(Analysis):
         @type comparison_path: str | unicode
         @param cohort_name: Cohort name
         @type cohort_name: str
-        @param accessory_cohort_gvcfs: Python C{list} of Python C{str} | C{unicode} (GVCF file path) objects
-        @type accessory_cohort_gvcfs: list
+        @param accessory_cohort_gvcfs: Python C{list} of Python C{str} or C{unicode} (GVCF file path) objects
+        @type accessory_cohort_gvcfs: list[str | unicode]
         @param skip_mark_duplicates: Skip the Picard MarkDuplicates step
         @type skip_mark_duplicates: bool
         @param known_sites_discovery: VCF file path for variant discovery via The Haplotype Caller or Unified Genotyper
         @type known_sites_discovery: str | unicode
-        @param known_sites_realignment: Python C{list} of Python C{str} | C{unicode} (VCF file paths)
+        @param known_sites_realignment: Python C{list} of Python C{str} or C{unicode} (VCF file paths)
             for realignment
-        @type known_sites_realignment:list
-        @param known_sites_recalibration: Python C{list} of Python C{str} | C{unicode} (VCF file paths)
+        @type known_sites_realignment: list[str | unicode]
+        @param known_sites_recalibration: Python C{list} of Python C{str} or C{unicode} (VCF file paths)
             for recalibration
-        @type known_sites_recalibration: list
+        @type known_sites_recalibration: list[str | unicode]
         @param annotation_resources_dict: Python C{dict} of Python C{str} (annotation resource name) key and
             Python C{tuple} of
             Python C{str} (file path) and Python C{list} of Python C{str} (annotation) value data
-        @type annotation_resources_dict: dict
+        @type annotation_resources_dict: dict[str, (str | unicode, list[str])]
         @param truth_sensitivity_filter_level_indel: Truth sensitivity filter level for INDELs
         @type truth_sensitivity_filter_level_indel: str
         @param truth_sensitivity_filter_level_snp: Truth sensitivity filter level for SNPs
@@ -226,17 +226,17 @@ class VariantCallingGATK(Analysis):
         @param vqsr_skip_snp: Skip the Variant Quality Score Recalibration on SNPs
         @type vqsr_skip_snp: bool, None
         @param vqsr_resources_indel_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
-        @type vqsr_resources_indel_dict: dict
+        @type vqsr_resources_indel_dict: dict[str, dict[str, str | unicode]]
         @param vqsr_resources_snp_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
-        @type vqsr_resources_snp_dict: dict
+        @type vqsr_resources_snp_dict: dict[str, dict[str, str | unicode]]
         @param vqsr_annotations_indel_list: Python C{list} of Python C{str} (variant annotation) objects
-        @type vqsr_annotations_indel_list: list
+        @type vqsr_annotations_indel_list: list[str]
         @param vqsr_annotations_snp_list: Python C{list} of Python C{str} (variant annotation) objects
-        @type vqsr_annotations_snp_list: list
+        @type vqsr_annotations_snp_list: list[str]
         @param exclude_intervals_list: Python C{list} of Python C{str} (intervals) to exclude from the analysis
-        @type exclude_intervals_list: list
+        @type exclude_intervals_list: list[str]
         @param include_intervals_list: Python C{list} of Python C{str} (intervals) to include in the analysis
-        @type include_intervals_list: list
+        @type include_intervals_list: list[str]
         @param downsample_to_fraction: Down-sample to fraction
         @type downsample_to_fraction: str
         @param gatk_bundle_version: GATK resource bundle version
@@ -249,8 +249,8 @@ class VariantCallingGATK(Analysis):
         @type classpath_picard: str | unicode
         @param classpath_snpeff: snpEff tool Java Archive (JAR) class path directory
         @type classpath_snpeff: str | unicode
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         super(VariantCallingGATK, self).__init__(
@@ -394,8 +394,8 @@ class VariantCallingGATK(Analysis):
         """Get the absolute GATK bundle directory C{Default.absolute_gatk_bundle} for the set
         C{VariantCallingGATK.gatk_bundle_version} and C{VariantCallingGATK.genome_version}.
 
-        @return : Absolute GATK bundle directory
-        @rtype : str | unicode
+        @return: Absolute GATK bundle directory
+        @rtype: str | unicode
         """
         return Default.absolute_gatk_bundle(
             gatk_bundle_version=self.gatk_bundle_version,
@@ -409,8 +409,8 @@ class VariantCallingGATK(Analysis):
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         super(VariantCallingGATK, self).set_configuration(configuration=configuration, section=section)
@@ -653,8 +653,8 @@ class VariantCallingGATK(Analysis):
                 - Treatment/Control File:
         @param comparison_path: Comparison file path
         @type comparison_path: str | unicode
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         sas = SampleAnnotationSheet.from_file_path(file_path=comparison_path)
@@ -666,11 +666,11 @@ class VariantCallingGATK(Analysis):
         """Private method to read variant quality score recalibration (VQSR) configuration information.
 
         @param vqsr_resources_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
-        @type vqsr_resources_dict: dict
+        @type vqsr_resources_dict: dict[str, dict[str, str | unicode]]
         @param variation_type: Variation type I{indel} or I{snp}
         @type variation_type: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         if variation_type not in ('indel', 'snp'):
@@ -709,8 +709,8 @@ class VariantCallingGATK(Analysis):
 
     def run(self):
         """Run this C{VariantCallingGATK} analysis.
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         # Get global defaults.
@@ -2248,8 +2248,8 @@ class VariantCallingGATK(Analysis):
     def report(self):
         """Create a C{VariantCallingGATK} report in HTML format and a UCSC Genome Browser Track Hub.
 
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         # Create a symbolic link containing the project name and a UUID.
