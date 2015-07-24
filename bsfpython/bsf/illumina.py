@@ -60,8 +60,8 @@ class RunInformationFlowcellLayout(object):
         @type swath_count: int
         @param tile_count: Number of tiles
         @type tile_count: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         self.lane_count = lane_count
@@ -92,8 +92,8 @@ class RunInformationRead(object):
         @type cycles: int
         @param index: Index read
         @type index: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         self.number = number
@@ -137,8 +137,8 @@ class RunInformation(object):
         <Run>/<Date> and <Run>/<Flowcell> elements.
         @param run_identifier: Illumina Run Identifier (e.g. 130724_SN815_0089_BC26JBACXX)
         @type run_identifier: str
-        @return : Python C{list} of Python C{str} objects
-        @rtype : list
+        @return: Python C{list} of Python C{str} objects
+        @rtype: list
         """
 
         # Split into <Date>_<Instrument>_<Number>_<FCPosition><Flowcell>
@@ -161,8 +161,8 @@ class RunInformation(object):
 
         @param file_path: File path
         @type file_path: str | unicode
-        @return : C{RunInformation}
-        @rtype : RunInformation
+        @return: C{RunInformation}
+        @rtype: RunInformation
         """
 
         file_path = os.path.normpath(file_path)
@@ -314,8 +314,8 @@ class RunInformation(object):
         @type reads: list
         @param flow_cell_layout: C{RunInformationFlowcellLayout}
         @type flow_cell_layout: RunInformationFlowcellLayout
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         if file_path:
@@ -372,8 +372,8 @@ class RunInformation(object):
     def get_cycle_number(self):
         """Get the total number of cycles.
 
-        @return : Number of cycles
-        @rtype : int
+        @return: Number of cycles
+        @rtype: int
         """
 
         cycle_number = 0
@@ -388,8 +388,8 @@ class RunInformation(object):
     def get_read_number(self):
         """Get the total number of reads.
 
-        @return : Number of reads
-        @rtype : int
+        @return: Number of reads
+        @rtype: int
         """
 
         return len(self.reads)
@@ -398,8 +398,8 @@ class RunInformation(object):
     def get_read_start_list(self):
         """Get a Python C{list} of cycle numbers at the start of each read.
 
-        @return : Python C{list} of starting cycle for each read
-        @rtype : list
+        @return: Python C{list} of starting cycle for each read
+        @rtype: list
         """
 
         cycle_number = 0
@@ -420,8 +420,8 @@ class RunInformation(object):
         I{T} ... Template
         I{B} ... Barcode
         I{S} ... Skip
-        @return : Read structure for Picard C{ExtractIlluminaBarcodes}
-        @rtype : str
+        @return: Read structure for Picard C{ExtractIlluminaBarcodes}
+        @rtype: str
         """
 
         # TODO: This needs to become smarter to deal with skipped bases, caused by
@@ -446,8 +446,8 @@ class RunInformation(object):
         Codes:
         B ... Base
         I ... Index
-        @return : Python C{list} of Python C{str} (read structure) objects
-        @rtype : list[str]
+        @return: Python C{list} of Python C{str} (read structure) objects
+        @rtype: list[str]
         """
 
         read_structure_list = list()
@@ -479,8 +479,8 @@ class RunParameters(object):
 
         @param file_path: File path
         @type file_path: str | unicode
-        @return : C{RunParameters} object
-        @rtype : RunParameters
+        @return: C{RunParameters} object
+        @rtype: RunParameters
         """
 
         file_path = os.path.normpath(file_path)
@@ -493,8 +493,8 @@ class RunParameters(object):
         @type file_path: str | unicode
         @param element_tree: XML Element Tree
         @type element_tree: ElementTree
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         if file_path:
@@ -515,8 +515,8 @@ class RunParameters(object):
 
         Returns an empty string for I{HiSeq Control Software} or the text representation of the
         I{<RunParameters>/<RunParametersVersion>} element for I{MiSeq Control Software}.
-        @return : Run parameters version or an empty string
-        @rtype : str
+        @return: Run parameters version or an empty string
+        @rtype: str
         """
 
         if self._run_parameters_version is None:
@@ -535,8 +535,8 @@ class RunParameters(object):
         Returns the text representation of the I{<RunParameters>/<Setup>/<ExperimentName>} element for
         I{HiSeq Control Software} or the I{<RunParameters>/<ExperimentName>} element for
         I{MiSeq Control Software}.
-        @return : Experiment name e.g I{BSF_0001}
-        @rtype : str
+        @return: Experiment name e.g I{BSF_0001}
+        @rtype: str
         """
 
         if self.get_run_parameters_version == 'MiSeq_1_1':
@@ -553,8 +553,8 @@ class RunParameters(object):
         Returns the text representation of the I{<RunParameters>/<Setup>/<Barcode>} element for
         I{HiSeq Control Software} or the I{<RunParameters>/<Barcode>} element for
         I{MiSeq Control Software}.
-        @return : Flow-cell barcode e.g BSF_0001
-        @rtype : str
+        @return: Flow-cell barcode e.g BSF_0001
+        @rtype: str
         """
 
         if self.get_run_parameters_version == 'MiSeq_1_1':
@@ -571,8 +571,8 @@ class RunParameters(object):
         Returns the text representation of the I{<RunParameters>/<Setup>/<Flowcell>} element for
         I{HiSeq Control Software} or the I{<RunParameters>/<Flowcell>} element for
         I{MiSeq Control Software}.
-        @return : Flow-cell type
-        @rtype : str
+        @return: Flow-cell type
+        @rtype: str
         """
 
         if self.get_run_parameters_version == 'MiSeq_1_1':
@@ -591,8 +591,8 @@ class RunParameters(object):
         I{HiSeq Control Software} or an empty string for
         I{MiSeq Control Software}.
         Since the element does not exist in older I{HiSeq Control Software} versions an empty string may be returned.
-        @return : Flow-cell position e.g. A or B
-        @rtype : str
+        @return: Flow-cell position e.g. A or B
+        @rtype: str
         """
 
         if self.get_run_parameters_version == 'MiSeq_1_1':
@@ -614,8 +614,8 @@ class RunParameters(object):
         Returns the text representation of the I{<RunParameters>/<Setup>/<RunID>} element for
         I{HiSeq Control Software} or the I{<RunParameters>/<RunID>} element for
         I{MiSeq Control Software}.
-        @return : Run identifier
-        @rtype : str
+        @return: Run identifier
+        @rtype: str
         """
 
         if self.get_run_parameters_version == 'MiSeq_1_1':
@@ -632,9 +632,9 @@ class RunParameters(object):
         Returns the text representation of the I{<RunParameters>/<Setup>/<Read1>} element for
         I{HiSeq Control Software} or an empty string for
         I{MiSeq Control Software}.
-        @return : Number of cycles in read 1
-        @rtype : str
-        @deprecated : The more scalable option is getting read information via the
+        @return: Number of cycles in read 1
+        @rtype: str
+        @deprecated: The more scalable option is getting read information via the
             C{RunInformation.reads} instance variable.
         """
 
@@ -657,9 +657,9 @@ class RunParameters(object):
         I{HiSeq Control Software} or an empty string for
         I{MiSeq Control Software}.
         Not every run has a read 2 defined so that an empty string may be returned.
-        @return : Number of cycles in read 2
-        @rtype : str
-        @deprecated : The more scalable option is getting read information via the
+        @return: Number of cycles in read 2
+        @rtype: str
+        @deprecated: The more scalable option is getting read information via the
             C{RunInformation.reads} instance variable.
         """
 
@@ -683,9 +683,9 @@ class RunParameters(object):
         I{MiSeq Control Software}.
         Older implementations of the I{HiSeq Control Software} have only a
         I{<RunParameters>/<Setup>/<IndexRead>} element.
-        @return : Number of cycles in index read 1
-        @rtype : str
-        @deprecated : The more scalable option is getting read information via the
+        @return: Number of cycles in index read 1
+        @rtype: str
+        @deprecated: The more scalable option is getting read information via the
             C{RunInformation.reads} instance variable.
         """
 
@@ -713,9 +713,9 @@ class RunParameters(object):
         I{MiSeq Control Software}.
         Older implementations of the I{HiSeq Control Software} have only a
         I{<RunParameters>/<Setup>/<IndexRead>} element.
-        @return : Number of cycles in index read 2
-        @rtype : str
-        @deprecated : The more scalable option is getting read information via the
+        @return: Number of cycles in index read 2
+        @rtype: str
+        @deprecated: The more scalable option is getting read information via the
             C{RunInformation.reads} instance variable.
         """
 
@@ -737,8 +737,8 @@ class RunParameters(object):
         Returns the text representation of the I{<RunParameters>/<Setup>/<RTAVersion>} element for
         I{HiSeq Control Software} or the I{<RunParameters>/<RTAVersion>} element for
         I{MiSeq Control Software}.
-        @return : RTA version
-        @rtype : str
+        @return: RTA version
+        @rtype: str
         """
 
         if self.get_run_parameters_version == 'MiSeq_1_1':
@@ -753,8 +753,8 @@ class RunParameters(object):
         """Get the application (i.e. I{HiSeq} or I{MiSeq Control Software}) name.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<ApplicationName>} element.
-        @return : Application name
-        @rtype : str
+        @return: Application name
+        @rtype: str
         """
 
         return self.element_tree.find(path='Setup/ApplicationName').text
@@ -764,8 +764,8 @@ class RunParameters(object):
         """Get the application (i.e. I{HiSeq} or I{MiSeq Control Software}) version.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<ApplicationVersion>} element.
-        @return : Application version
-        @rtype : str
+        @return: Application version
+        @rtype: str
         """
 
         return self.element_tree.find(path='Setup/ApplicationVersion').text
@@ -790,8 +790,8 @@ class XMLConfiguration(object):
 
         @param file_path: File path
         @type file_path: str | unicode
-        @return : C{XMLConfiguration} object
-        @rtype : XMLConfiguration
+        @return: C{XMLConfiguration} object
+        @rtype: XMLConfiguration
         """
         file_path = os.path.normpath(file_path)
         if not os.path.isfile(file_path):
@@ -805,8 +805,8 @@ class XMLConfiguration(object):
         @type file_path: str | unicode
         @param element_tree: XML Element Tree
         @type element_tree: ElementTree
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         if file_path:
@@ -840,8 +840,8 @@ class AnalysisConfiguration(XMLConfiguration):
         @type file_path: str | unicode
         @param element_tree: XML Element Tree
         @type element_tree: ElementTree
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         super(AnalysisConfiguration, self).__init__(file_path=file_path, element_tree=element_tree)
@@ -867,8 +867,8 @@ class AnalysisConfiguration(XMLConfiguration):
 
         @param lane: Lane index
         @type lane: str
-        @return : Boolean value
-        @rtype : bool
+        @return: Boolean value
+        @rtype: bool
         """
         if lane in self._lane_tile_dict:
             return True
@@ -882,8 +882,8 @@ class AnalysisConfiguration(XMLConfiguration):
         @type lane: str
         @param tile: Tile index
         @type tile: str
-        @return : Boolean value
-        @rtype : bool | None
+        @return: Boolean value
+        @rtype: bool | None
         """
         if lane in self._lane_tile_dict:
             lane_dict = self._lane_tile_dict[lane]
@@ -950,8 +950,8 @@ class RunFolder(object):
 
         @param file_path: File path
         @type file_path: str | unicode
-        @return : C{RunFolder} object
-        @rtype : RunFolder
+        @return: C{RunFolder} object
+        @rtype: RunFolder
         """
 
         file_path = os.path.normpath(file_path)
@@ -1005,8 +1005,8 @@ class RunFolder(object):
         @type image_analysis: ImageAnalysis
         @param base_call_analysis: C{BaseCallAnalysis}
         @type base_call_analysis: BaseCallAnalysis
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         if file_path:
@@ -1071,8 +1071,8 @@ class RunFolder(object):
     def get_base_calls_directory(self):
         """Get the base-calls directory in the I{IRF/Data/Intensities/BaseCalls} hierarchy.
 
-        @return : Illumina base-calls directory
-        @rtype : str | unicode
+        @return: Illumina base-calls directory
+        @rtype: str | unicode
         """
 
         return os.path.join(self.file_path, 'Data', 'Intensities', 'BaseCalls')
@@ -1082,8 +1082,8 @@ class RunFolder(object):
         configuration file. This method also builds up a Python C{dict} required for method
         C{_is_missing_base_call_tile}.
 
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
         fcl = self.run_information.flow_cell_layout
 
@@ -1107,8 +1107,8 @@ class RunFolder(object):
         configuration file. This method also builds up a Python C{dict} required for method
         C{_is_missing_image_analysis_tile}.
 
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
         fcl = self.run_information.flow_cell_layout
 
@@ -1135,8 +1135,8 @@ class RunFolder(object):
         @type lane: int
         @param tile: Tile name
         @type tile: str
-        @return : Boolean value
-        @rtype : bool
+        @return: Boolean value
+        @rtype: bool
         """
         if lane in self._missing_base_call_tiles:
             lane_dict = self._missing_base_call_tiles[lane]
@@ -1155,8 +1155,8 @@ class RunFolder(object):
         @type lane: int
         @param tile: Tile name
         @type tile: str
-        @return : Boolean value
-        @rtype : bool
+        @return: Boolean value
+        @rtype: bool
         """
         if lane in self._missing_image_analysis_tiles:
             lane_dict = self._missing_image_analysis_tiles[lane]
@@ -1172,14 +1172,14 @@ class RunFolder(object):
         """Check a Python C{list} of file names against a Python C{dict} of directory entries.
 
         @param directory_dict: Python C{dict} of directory entries
-        @type directory_dict: dict
+        @type directory_dict: dict[str | unicode, int]
         @param directory_path: Directory path
         @type directory_path: str | unicode
         @param file_list: Python C{list} of file names
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
         if debug:
             print "Processing directory '{}'".format(directory_path)
@@ -1194,13 +1194,13 @@ class RunFolder(object):
         """Check the I{IRF/Data/Intensities/BaseCalls/Matrix/} directory.
 
         @param base_calls_dict: Python C{dict} of I{IRF/Data/Intensities/BaseCalls/} entries
-        @type base_calls_dict: dict
+        @type base_calls_dict: dict[str | unicode, int]
         @param base_calls_path: I{IRF/Data/Intensities/BaseCalls/} path
         @type base_calls_path: str | unicode
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         fcl = self.run_information.flow_cell_layout
@@ -1312,13 +1312,13 @@ class RunFolder(object):
         """Check the I{IRF/Data/Intensities/BaseCalls/Phasing/} directory.
 
         @param base_calls_dict: Python C{dict} of I{IRF/Data/intensities/BaseCalls/} entries
-        @type base_calls_dict: dict
+        @type base_calls_dict: dict[str | unicode, int]
         @param base_calls_path: I{IRF/Data/intensities/BaseCalls/} path
         @type base_calls_path: str | unicode
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         fcl = self.run_information.flow_cell_layout
@@ -1424,13 +1424,13 @@ class RunFolder(object):
         """Check the I{IRF/Data/Intensities/BaseCalls/} directory.
 
         @param intensities_dict: Python C{dict} of I{IRF/Data/Intensities/} entries
-        @type intensities_dict: dict
+        @type intensities_dict: dict[str | unicode, int]
         @param intensities_path: I{IRF/Data/Intensities/} file path
         @type intensities_path: str | unicode
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         fcl = self.run_information.flow_cell_layout
@@ -1625,13 +1625,13 @@ class RunFolder(object):
         """Check the I{IRF/Data/Intensities/Offsets/} directory.
 
         @param intensities_dict: Python C{dict} of I{IRF/Data/Intensities/} entries
-        @type intensities_dict: dict
+        @type intensities_dict: dict[str | unicode, int]
         @param intensities_path: I{IRF/Data/Intensities/} file path
         @type intensities_path: str | unicode
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         directory_name = 'Offsets'
@@ -1676,13 +1676,13 @@ class RunFolder(object):
         """Check the I{IRF/Data/Intensities/} directory.
 
         @param data_dict: Python C{dict} of I{IRF/Data/} entries
-        @type data_dict: dict
+        @type data_dict: dict[str | unicode, int]
         @param data_path: I{IRF/Data/} path
         @type data_path: str | unicode
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         fcl = self.run_information.flow_cell_layout
@@ -1902,13 +1902,13 @@ class RunFolder(object):
         """Check the I{IRF/Data/TileStatus/} directory.
 
         @param data_dict: Python C{dict} of I{IRF/Data/} entries
-        @type data_dict: dict
+        @type data_dict: dict[str | unicode, int]
         @param data_path: I{IRF/Data/} path
         @type data_path: str | unicode
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         fcl = self.run_information.flow_cell_layout
@@ -1955,13 +1955,13 @@ class RunFolder(object):
         """Check the IRF/Data/ directory.
 
         @param folder_dict: Ptyhon C{dict} of Illumina Run Folder I{IRF/} entries
-        @type folder_dict: dict
+        @type folder_dict: dict[str | unicode, int]
         @param folder_path: Illumina Run Folder I{IRF/} path
         @type folder_path: str | unicode
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         rta = self.run_parameters.get_real_time_analysis_version
@@ -2047,13 +2047,13 @@ class RunFolder(object):
         """Check the I{IRF/InterOp/} directory.
 
         @param folder_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type folder_dict: dict
+        @type folder_dict: dict[str | unicode, int]
         @param folder_path: Illumina Run Folder I{IRF/} path
         @type folder_path: str | unicode
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         rta = self.run_parameters.get_real_time_analysis_version
@@ -2111,13 +2111,13 @@ class RunFolder(object):
         """Check the I{IRF/PeriodicSaveRates/} directory.
 
         @param folder_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type folder_dict: dict
+        @type folder_dict: dict[str | unicode, int]
         @param folder_path: Illumina Run Folder I{IRF/} path
         @type folder_path: str | unicode
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         directory_name = 'PeriodicSaveRates'
@@ -2152,13 +2152,13 @@ class RunFolder(object):
         """Check the I{IRF/Recipe/} directory.
 
         @param folder_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type folder_dict: dict
+        @type folder_dict: dict[str | unicode, int]
         @param folder_path: Illumina Run Folder I{IRF/} path
         @type folder_path: str | unicode
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         rta = self.run_parameters.get_real_time_analysis_version
@@ -2206,13 +2206,13 @@ class RunFolder(object):
         """Check the I{IRF/Thumbnail_Images/} directory.
 
         @param folder_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
-        @type folder_dict: dict
+        @type folder_dict: dict[str | unicode, int]
         @param folder_path: Illumina Run Folder I{IRF/} path
         @type folder_path: str | unicode
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         fcl = self.run_information.flow_cell_layout
@@ -2349,8 +2349,8 @@ class RunFolder(object):
 
         @param debug: Integer debugging level
         @type debug: int
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         rta = self.run_parameters.get_real_time_analysis_version
