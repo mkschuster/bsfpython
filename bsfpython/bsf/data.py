@@ -507,7 +507,7 @@ class Sample(object):
     @ivar name: Name
     @type name: str
     @ivar paired_reads_list: Python C{list} of C{PairedReads} objects
-    @type paired_reads_list: list
+    @type paired_reads_list: list[PairedReads]
     @ivar weak_reference_project: Weak reference to a C{Project} object
     @type weak_reference_project: Project
     """
@@ -604,7 +604,7 @@ class Sample(object):
         @param name: Name
         @type name: str
         @param paired_reads_list: Python C{list} of C{PairedReads} objects
-        @type paired_reads_list: list
+        @type paired_reads_list: list[PairedReads]
         @param weak_reference_project: Weak Reference to a C{Project} object
         @type weak_reference_project: Project
         """
@@ -763,7 +763,7 @@ class Sample(object):
         @type full: bool
         @return: Python C{dict} of Python C{str} (sensible replicate name) key and
             Python C{list} object of C{PairedReads} objects value data
-        @rtype: dict
+        @rtype: dict[str, list[PairedReads]]
         """
 
         groups = dict()
@@ -810,8 +810,8 @@ class Project(object):
     @type file_type: str
     @ivar name: Name
     @type name: str
-    @ivar samples: Python C{dict} of C{Sample} objects
-    @type samples: dict
+    @ivar samples: Python C{dict} of C{Sample.name} key objects and C{Sample} value objects
+    @type samples: dict[Sample.name, Sample]
     @ivar weak_reference_prf: Weak Reference to a C{ProcessedRunFolder} object
     @type weak_reference_prf: ProcessedRunFolder
     """
@@ -872,8 +872,8 @@ class Project(object):
         @type file_type: str
         @param name: Name
         @type name: str
-        @param samples: A Python C{dict} of C{Sample} objects
-        @type samples: dict
+        @param samples: Python C{dict} of C{Sample.name} key objects and C{Sample} value objects
+        @type samples: dict[Sample.name, Sample]
         @param weak_reference_prf: Weak Reference to a C{ProcessedRunFolder} object
         @type weak_reference_prf: ProcessedRunFolder
         @raise Exception: If C{Sample.name} values are not unique for I{file_type} I{CASAVA}
@@ -943,7 +943,7 @@ class Project(object):
         """Get an ordered Python C{list} of C{Sample} objects.
 
         @return: Python C{list} of C{Sample} objects
-        @rtype: list
+        @rtype: list[Sample]
         """
 
         samples = list()
@@ -978,8 +978,8 @@ class ProcessedRunFolder(object):
     @type flow_cell: str
     @ivar version: Version number
     @type version: str
-    @ivar projects: Python C{dict} of C{Project} objects
-    @type projects: dict
+    @ivar projects: Python C{dict} of C{Project.name} key objects and C{Project} value objects
+    @type projects: dict[Project.name, Project]
     @ivar weak_reference_collection: Weak Reference to a C{Collection} object
     @type weak_reference_collection: Collection
     """
@@ -1098,8 +1098,8 @@ class ProcessedRunFolder(object):
         @type flow_cell: str
         @param version: Version
         @type version: str
-        @param projects: Python C{dict} of C{Project} objects
-        @type projects: dict
+        @param projects: Python C{dict} of C{Project.name} key objects and C{Project} value objects
+        @type projects: dict[Project.name, Project]
         @param weak_reference_collection: Weak Reference to a C{Collection} object
         @type weak_reference_collection: Collection
         @raise Exception: If C{Project.name} values are not unique for file_type I{CASAVA}
@@ -1187,7 +1187,7 @@ class ProcessedRunFolder(object):
         """Get an ordered Python C{list} of C{Project} objects.
 
         @return: A Python C{list} of C{Project} objects
-        @rtype: list
+        @rtype: list[Project]
         """
 
         projects = list()
@@ -1216,10 +1216,11 @@ class Collection(object):
     @type file_type: str
     @ivar name: Name
     @type name: str
-    @ivar processed_run_folders: Python C{dict} of C{ProcessedRunFolder} objects
-    @type processed_run_folders: dict
+    @ivar processed_run_folders: Python C{dict} of C{ProcessedRunFolder.name} key objects and
+        C{ProcessedRunFolder} value objects
+    @type processed_run_folders: dict[ProcessedRunFolder.name, ProcessedRunFolder]
     @ivar sample_groups: Python C{dict} of C{Sample} objects
-    @type sample_groups: dict
+    @type sample_groups: dict[str, list[Sample]]
     """
 
     default_key = 'Default'
@@ -1262,11 +1263,12 @@ class Collection(object):
         @type file_type: str
         @param name: Name
         @type name: str
-        @param processed_run_folders: Python C{dict} of C{ProcessedRunFolder} objects
-        @type processed_run_folders: dict
-        @param sample_groups: Python C{dict} of group name key data and second-level Python C{dict} value data
-            Second-level Python C{dict} of C{Sample.name} key data and C{Sample} object value data
-        @type sample_groups: dict
+        @param processed_run_folders: Python C{dict} of C{ProcessedRunFolder.name} key objects and
+            C{ProcessedRunFolder} value objects
+        @type processed_run_folders: dict[ProcessedRunFolder.name, ProcessedRunFolder]
+        @param sample_groups: Python C{dict} of Python C{str} (group name) key objects and
+            second-level Python C{dict} value objects of C{Sample.name} key objects and C{Sample} object value objects
+        @type sample_groups: dict[str, dict[Sample.name, Sample]]
         """
 
         if file_path:
@@ -1376,7 +1378,7 @@ class Collection(object):
         """Get an ordered Python C{list} of C{ProcessedRunFolder} objects.
 
         @return: Python C{list} of C{ProcessedRunFolder} objects
-        @rtype: list
+        @rtype: list[ProcessedRunFolder]
         """
 
         processed_run_folders = list()
@@ -1393,7 +1395,7 @@ class Collection(object):
         """Get an ordered Python C{list} of C{Project} objects.
 
         @return: Python C{list} of C{Project} objects
-        @rtype: list
+        @rtype: list[Project]
         """
 
         projects = list()
@@ -1407,7 +1409,7 @@ class Collection(object):
         """Get an ordered Python C{list} of C{Sample} objects.
 
         @return: Python C{list} of C{Sample} objects
-        @rtype: list
+        @rtype: list[Sample]
         """
 
         samples = list()
@@ -1440,7 +1442,7 @@ class Collection(object):
             - Group: C{Sample} objects can be grouped for further analysis in
                 e.g. RNA-Seq or ChIP-Seq experiments.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
         @type prefix: str
@@ -1486,7 +1488,7 @@ class Collection(object):
 
         A 'I{[Prefix] FileType}' key is optional, its value defaults to I{Automatic}.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] FileType', '[Treatment] FileType', '[Point N]  FileType', ...)
         @type prefix: str
@@ -1508,7 +1510,7 @@ class Collection(object):
 
         A 'I{[Prefix] ProcessedRunFolder}' key is optional, its value defaults to I{Default}.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] ProcessedRunFolder', '[Treatment] ProcessedRunFolder',
             '[Point N] ProcessedRunFolder', ...)
@@ -1526,8 +1528,8 @@ class Collection(object):
             if value in self.processed_run_folders:
                 prf = self.processed_run_folders[value]
             else:
-            #    prf = ProcessedRunFolder(name=value, file_type=file_type)
-            #    self.add_processed_run_folder(prf=prf)
+                # prf = ProcessedRunFolder(name=value, file_type=file_type)
+                # self.add_processed_run_folder(prf=prf)
                 # Try to automatically discover a ProcessedRunFolder.
                 prf = self.get_processed_run_folder(file_path=row_dict[key], file_type=file_type)
         elif ProcessedRunFolder.default_key in self.processed_run_folders:
@@ -1545,7 +1547,7 @@ class Collection(object):
 
         A 'I{[Prefix] Project}' key is optional, its value defaults to I{Default}.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] Project', '[Treatment] Project', '[Point N] Project', ...)
         @type prefix: str
@@ -1580,7 +1582,7 @@ class Collection(object):
 
         A 'I{[Prefix] Sample}' key is optional, its value defaults to I{Default}.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
         @type prefix: str
@@ -1614,7 +1616,7 @@ class Collection(object):
 
         A 'I{[Prefix] Reads{suffix}}' key is optional, in which case the default is a C{None} object.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] ReadsN', '[Treatment] ReadsN', '[Point N] ReadsN', ...)
         @type prefix: str
@@ -1653,7 +1655,7 @@ class Collection(object):
 
         A 'I{[Prefix] ReadGroup}' key is optional, in which case the default is an empty Python C{str} object.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] ReadGroup', '[Treatment] ReadGroup', '[Point N] ReadGroup', ...)
         @type prefix: str
@@ -1679,7 +1681,7 @@ class Collection(object):
         automatically discovered and registered.
         Return the corresponding C{Sample}.
         @param row_dict: C{SampleAnnotationSheet} row Python C{dict}
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample')
         @type prefix: str
@@ -1734,13 +1736,13 @@ class Collection(object):
         from a C{SampleAnnotationSheet} row Python C{dict}.
 
         @param row_dict: Comparison CSV file row Python C{dict}
-        @type row_dict: dict
+        @type row_dict: dict[str, str | unicode]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
         @type prefix: str
         @return: Python C{tuple} of Python C{str} of '[Prefix] Group' column value and
             Python C{list} of C{Sample} objects
-        @rtype: tuple
+        @rtype: (str, list[Sample])
         """
 
         samples = list()
@@ -1782,7 +1784,7 @@ class SampleGroup(object):
     @ivar name: Name
     @type name: str
     @ivar samples: Python C{list} of C{Sample} objects
-    @type samples: list
+    @type samples: list[Sample]
     """
 
     # TODO: The SampleGroup class is currently not in use.
@@ -1796,7 +1798,7 @@ class SampleGroup(object):
         @param name: Name
         @type name: str
         @param samples: Python C{list} of C{Sample} objects
-        @type samples: list
+        @type samples: list[Sample]
         """
 
         if name:
@@ -1826,9 +1828,9 @@ class SampleGroup(object):
         anything but the chunk number.
         @param replicate_grouping: Group all C{PairedReads} objects of a C{Sample} or list them individually
         @type replicate_grouping: bool
-        @return: Python C{dict} of Python C{str} (replicate name) key and
-            Python C{list} object of C{PairedReads} objects value data
-        @rtype: dict
+        @return: Python C{dict} of Python C{str} (replicate name) key objects and
+            Python C{list} value objects of C{PairedReads} objects value data
+        @rtype: dict[str, list[PairedReads]]
         """
 
         groups = dict()
