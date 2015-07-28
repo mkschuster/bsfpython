@@ -391,20 +391,20 @@ class AnnotationSheet(object):
         else:
             self.header = header
 
-        if field_names:
-            self.field_names = field_names
-        else:
+        if field_names is None:
             self.field_names = self._field_names
-
-        if test_methods:
-            self.test_methods = test_methods
         else:
+            self.field_names = field_names
+
+        if test_methods is None:
             self.test_methods = self._test_methods
-
-        if row_dicts:
-            self.row_dicts = row_dicts
         else:
+            self.test_methods = test_methods
+
+        if row_dicts is None:
             self.row_dicts = list()
+        else:
+            self.row_dicts = row_dicts
 
         self._csv_reader_file = None
         self._csv_reader_object = None
@@ -581,7 +581,7 @@ class BamIndexDecoderSheet(AnnotationSheet):
         'barcode_name',
         'library_name',
         'sample_name',
-        'description'
+        'description',
     ]
 
     _test_methods = dict()
@@ -613,7 +613,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
         'barcode_sequence_2',  # Index read sequence 2
         'sample_name',  # Sample name (alphanumeric including '_' characters)
         'library_name',  # Library name (alphanumeric including '_' characters)
-        'library_size'  # Library size (numeric)
+        'library_size',  # Library size (numeric)
     ]
 
     _test_methods = dict(
@@ -773,9 +773,16 @@ class SampleAnnotationSheet(AnnotationSheet):
     _header_line = True
 
     _field_names = [
-        'ProcessedRunFolder', 'Project', 'Sample',
-        'Reads1', 'File1', 'Reads2', 'File2',
-        'LibrarySize', 'Barcode1', 'Barcode2'
+        'ProcessedRunFolder',
+        'Project',
+        'Sample',
+        'Reads1',
+        'File1',
+        'Reads2',
+        'File2',
+        'LibrarySize',
+        'Barcode1',
+        'Barcode2',
     ]
 
     _test_methods = dict(
@@ -823,8 +830,18 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     _header_line = True
 
     _field_names = [
-        'SampleID', 'Tissue', 'Factor', 'Condition', 'Treatment', 'Replicate',
-        'bamReads', 'bamControl', 'ControlID', 'Peaks', 'PeakCaller', 'PeakFormat'
+        'SampleID',
+        'Tissue',
+        'Factor',
+        'Condition',
+        'Treatment',
+        'Replicate',
+        'bamReads',
+        'bamControl',
+        'ControlID',
+        'Peaks',
+        'PeakCaller',
+        'PeakFormat',
     ]
 
     _test_methods = dict(
@@ -895,6 +912,9 @@ class TuxedoSamplePairSheet(AnnotationSheet):
 
     _file_type = "excel-tab"
 
-    _field_names = ["V1", "V2"]
+    _field_names = [
+        "V1",
+        "V2",
+    ]
 
     _test_methods = dict()
