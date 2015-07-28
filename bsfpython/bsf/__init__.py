@@ -412,17 +412,13 @@ class Analysis(object):
         # Check if an absolute path has been provided, if not,
         # automatically prepend standard directory paths.
 
-        self.input_directory = os.path.expanduser(path=self.input_directory)
-        self.input_directory = os.path.expandvars(path=self.input_directory)
+        self.input_directory = Default.get_absolute_path(
+            file_path=self.input_directory,
+            default_path=Default.absolute_samples())
 
-        if not os.path.isabs(self.input_directory):
-            self.input_directory = os.path.join(Default.absolute_samples(), self.input_directory)
-
-        self.output_directory = os.path.expanduser(path=self.output_directory)
-        self.output_directory = os.path.expandvars(path=self.output_directory)
-
-        if not os.path.isabs(self.output_directory):
-            self.output_directory = os.path.join(Default.absolute_projects(), self.output_directory)
+        self.output_directory = Default.get_absolute_path(
+            file_path=self.output_directory,
+            default_path=Default.absolute_projects())
 
         # As a safety measure, to prevent creation of rogue directory paths, the output_directory has to exist.
 
