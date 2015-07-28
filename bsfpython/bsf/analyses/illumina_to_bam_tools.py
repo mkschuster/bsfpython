@@ -80,8 +80,8 @@ class IlluminaToBam(Analysis):
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return : The dependency string for an C{Executable} of this C{Analysis}
-        @rtype : str
+        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @rtype: str
         """
         return string.join(words=(cls.drms_name_illumina_to_bam, project_name, lane), sep='_')
 
@@ -91,8 +91,8 @@ class IlluminaToBam(Analysis):
 
         @param config_path: UNIX-style configuration file
         @type config_path: str | unicode
-        @return : IlluminaToBam
-        @rtype : IlluminaToBam
+        @return: IlluminaToBam
+        @rtype: IlluminaToBam
         """
 
         return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
@@ -103,8 +103,8 @@ class IlluminaToBam(Analysis):
 
         @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return : C{IlluminaToBam}
-        @rtype : IlluminaToBam
+        @return: C{IlluminaToBam}
+        @rtype: IlluminaToBam
         """
 
         assert isinstance(configuration, Configuration)
@@ -183,8 +183,8 @@ class IlluminaToBam(Analysis):
         @type classpath_picard: str | unicode
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         super(IlluminaToBam, self).__init__(
@@ -251,6 +251,8 @@ class IlluminaToBam(Analysis):
 
         self.force = force
 
+        return
+
     def set_configuration(self, configuration, section):
         """Set instance variables of an C{IlluminaToBam} object via a section of a C{Configuration} object.
 
@@ -259,8 +261,8 @@ class IlluminaToBam(Analysis):
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         assert isinstance(configuration, Configuration)
@@ -327,6 +329,8 @@ class IlluminaToBam(Analysis):
                 section=section,
                 option='force')
 
+        return
+
     def run(self):
         """Run this C{IlluminaToBam} C{Analysis}.
 
@@ -335,8 +339,8 @@ class IlluminaToBam(Analysis):
         To convert an Illumina flow cell, Illumina2bam is run first, setting the SAM Read Group (@RG)
         library name (LB) and sample name (SM) to 'flow-cell identifier.lane'.
         The resulting archive BAM file is then sorted by query name with Picard SortSam.
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         default = Default.get_global_default()
@@ -677,6 +681,8 @@ class IlluminaToBam(Analysis):
                     source_path=file_path_dict['sorted_md5'],
                     target_path=os.path.join(self.experiment_directory, file_path_dict['lane_md5'])))
 
+        return
+
 
 class BamIndexDecoder(Analysis):
     """The C{BamIndexDecoder} class represents the logic to decode sequence archive BAM files into
@@ -713,8 +719,8 @@ class BamIndexDecoder(Analysis):
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return : The dependency string for an C{Executable} of this C{Analysis}
-        @rtype : str
+        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @rtype: str
         """
         return string.join(words=(cls.drms_name_bam_index_decoder, project_name, lane), sep='_')
 
@@ -724,8 +730,8 @@ class BamIndexDecoder(Analysis):
 
         @param config_path: UNIX-style configuration file
         @type config_path: str | unicode
-        @return : C{BamIndexDecoder}
-        @rtype : BamIndexDecoder
+        @return: C{BamIndexDecoder}
+        @rtype: BamIndexDecoder
         """
 
         return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
@@ -736,8 +742,8 @@ class BamIndexDecoder(Analysis):
 
         @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return : C{BamIndexDecoder}
-        @rtype : BamIndexDecoder
+        @return: C{BamIndexDecoder}
+        @rtype: BamIndexDecoder
         """
 
         assert isinstance(configuration, Configuration)
@@ -803,8 +809,8 @@ class BamIndexDecoder(Analysis):
         @type lanes: int
         @param force: Force de-multiplexing with a Library Annotation sheet failing validation
         @type force: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         super(BamIndexDecoder, self).__init__(
@@ -858,6 +864,8 @@ class BamIndexDecoder(Analysis):
 
         self.force = force
 
+        return
+
     def set_configuration(self, configuration, section):
         """Set instance variables of a C{BamIndexDecoder} object via a section of a C{Configuration} object.
 
@@ -866,8 +874,8 @@ class BamIndexDecoder(Analysis):
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         super(BamIndexDecoder, self).set_configuration(configuration=configuration, section=section)
@@ -915,11 +923,13 @@ class BamIndexDecoder(Analysis):
                 section=section,
                 option='force')
 
+        return
+
     def run(self):
         """Run the C{BamIndexDecoder} analysis to decode an archive BAM file produced with Illumina2Bam tools into
         sample-specific BAM files.
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         # The standard BSF Python *comma-separated* value sample sheet needs to be transformed into
@@ -1080,6 +1090,7 @@ class BamIndexDecoder(Analysis):
                     Sample=row_dict['sample_name'],
                     Reads1=string.join(words=(self.project_name, key, row_dict['sample_name']), sep='_'),
                     File1=os.path.join(
+                        os.path.basename(self.experiment_directory),
                         file_path_dict['samples_directory'],
                         '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])),
                     LibrarySize=row_dict['library_size'],
@@ -1339,3 +1350,5 @@ class BamIndexDecoder(Analysis):
         # Finally, write the flow-cell-specific SampleAnnotationSheet to the internal file path.
 
         sample_annotation_sheet.write_to_file()
+
+        return
