@@ -32,7 +32,7 @@ import os
 import re
 
 from bsf import Default
-from bsf.data import ProcessedRunFolder
+from bsf.data import ProcessedRunFolder, Project, Sample, PairedReads
 
 
 parser = argparse.ArgumentParser(description='List projects and samples.')
@@ -65,12 +65,7 @@ csv_writer.writeheader()
 
 # Assemble the input directory.
 
-input_directory = str(args.input_directory)
-input_directory = os.path.expanduser(input_directory)
-input_directory = os.path.expandvars(input_directory)
-
-if not os.path.isabs(input_directory):
-    input_directory = os.path.join(Default.absolute_sequences(), input_directory)
+input_directory = Default.get_absolute_path(file_path=args.input_directory, default_path=Default.absolute_sequences())
 
 prf = ProcessedRunFolder.from_file_path(file_path=input_directory, file_type='Automatic')
 
@@ -80,17 +75,20 @@ project_names.sort(cmp=lambda x, y: cmp(x, y))
 for project_name in project_names:
 
     project = prf.projects[project_name]
+    assert isinstance(project, Project)
 
     sample_names = project.samples.keys()
     sample_names.sort(cmp=lambda x, y: cmp(x, y))
 
     for sample_name in sample_names:
         sample = project.samples[sample_name]
+        assert isinstance(sample, Sample)
 
         row_dict = dict(ProcessedRunFolder=prf.name, Project=project.name, Sample=sample.name)
 
         if args.full:
-            for paired_reads in sample.paired_reads:
+            for paired_reads in sample.paired_reads_list:
+                assert isinstance(paired_reads, PairedReads)
                 if paired_reads.reads1:
                     row_dict['File1'] = paired_reads.reads1.file_path
                     # row_dict['Reads1'] = paired_reads.reads1.name
