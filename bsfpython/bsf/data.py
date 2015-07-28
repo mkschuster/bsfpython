@@ -56,8 +56,8 @@ class Reads(object):
     @type read: str
     @ivar chunk: Chunk number (e.g. I{001}, I{002}, ...)
     @type chunk: str
-    @ivar weak_reference_paired_reads: Weak Reference to a C{PairedReads} object
-    @type weak_reference_paired_reads: PairedReads
+    @ivar weak_reference_paired_reads: C{weakref.ReferenceType} pointing at a C{PairedReads} object
+    @type weak_reference_paired_reads: weakref.ReferenceType
     """
 
     @classmethod
@@ -118,8 +118,8 @@ class Reads(object):
         @type read: str
         @param chunk: Chunk number (e.g. I{001}, I{002}, ...)
         @type chunk:str
-        @param weak_reference_paired_reads: Weak Reference to a C{PairedReads} object
-        @type weak_reference_paired_reads: PairedReads
+        @param weak_reference_paired_reads: C{weakref.ReferenceType} pointing at a C{PairedReads} object
+        @type weak_reference_paired_reads: weakref.ReferenceType
         """
 
         if file_path:
@@ -279,8 +279,8 @@ class PairedReads(object):
     @type reads2: Reads
     @ivar read_group: SAM read group (@RG) information
     @type read_group: str
-    @ivar weak_reference_sample: Weak Reference to a C{Sample}
-    @type weak_reference_sample: Sample
+    @ivar weak_reference_sample: C{weakref.ReferenceType} to a C{Sample}
+    @type weak_reference_sample: weakref.ReferenceType
     """
 
     def __init__(self, reads1=None, reads2=None, read_group=None, weak_reference_sample=None):
@@ -295,8 +295,8 @@ class PairedReads(object):
         @type reads2: Reads
         @param read_group: SAM read group (@RG) information
         @type read_group: str
-        @param weak_reference_sample: Weak Reference to a C{Sample}
-        @type weak_reference_sample: Sample
+        @param weak_reference_sample: C{weakref.ReferenceType} pointing at a C{Sample}
+        @type weak_reference_sample: weakref.ReferenceType
         @raise Exception: For C{Reads.file_type} I{CASAVA}, I{R1} or I{R2} must be set in the
         C{Reads} object.
         """
@@ -508,8 +508,8 @@ class Sample(object):
     @type name: str
     @ivar paired_reads_list: Python C{list} of C{PairedReads} objects
     @type paired_reads_list: list[PairedReads]
-    @ivar weak_reference_project: Weak reference to a C{Project} object
-    @type weak_reference_project: Project
+    @ivar weak_reference_project: C{weakref.ReferenceType} pointing at a C{Project} object
+    @type weak_reference_project: weakref.ReferenceType
     """
 
     default_key = 'Default'
@@ -605,8 +605,8 @@ class Sample(object):
         @type name: str
         @param paired_reads_list: Python C{list} of C{PairedReads} objects
         @type paired_reads_list: list[PairedReads]
-        @param weak_reference_project: Weak Reference to a C{Project} object
-        @type weak_reference_project: Project
+        @param weak_reference_project: C{weakref.ReferenceType} pointing at a C{Project} object
+        @type weak_reference_project: weakref.ReferenceType
         """
 
         if file_path:
@@ -812,8 +812,8 @@ class Project(object):
     @type name: str
     @ivar samples: Python C{dict} of C{Sample.name} key objects and C{Sample} value objects
     @type samples: dict[Sample.name, Sample]
-    @ivar weak_reference_prf: Weak Reference to a C{ProcessedRunFolder} object
-    @type weak_reference_prf: ProcessedRunFolder
+    @ivar weak_reference_prf: C{weakref.ReferenceType} pointing at a C{ProcessedRunFolder} object
+    @type weak_reference_prf: weakref.ReferenceType
     """
 
     default_key = 'Default'
@@ -874,8 +874,8 @@ class Project(object):
         @type name: str
         @param samples: Python C{dict} of C{Sample.name} key objects and C{Sample} value objects
         @type samples: dict[Sample.name, Sample]
-        @param weak_reference_prf: Weak Reference to a C{ProcessedRunFolder} object
-        @type weak_reference_prf: ProcessedRunFolder
+        @param weak_reference_prf: C{weakref.ReferenceType} pointing at a C{ProcessedRunFolder} object
+        @type weak_reference_prf: weakref.ReferenceType
         @raise Exception: If C{Sample.name} values are not unique for I{file_type} I{CASAVA}
         """
 
@@ -980,8 +980,8 @@ class ProcessedRunFolder(object):
     @type version: str
     @ivar projects: Python C{dict} of C{Project.name} key objects and C{Project} value objects
     @type projects: dict[Project.name, Project]
-    @ivar weak_reference_collection: Weak Reference to a C{Collection} object
-    @type weak_reference_collection: Collection
+    @ivar weak_reference_collection: C{weakref.ReferenceType} pointing at a C{Collection} object
+    @type weak_reference_collection: weakref.ReferenceType
     """
 
     default_key = 'Default'
@@ -1100,8 +1100,8 @@ class ProcessedRunFolder(object):
         @type version: str
         @param projects: Python C{dict} of C{Project.name} key objects and C{Project} value objects
         @type projects: dict[Project.name, Project]
-        @param weak_reference_collection: Weak Reference to a C{Collection} object
-        @type weak_reference_collection: Collection
+        @param weak_reference_collection: C{weakref.ReferenceType} pointing at a C{Collection} object
+        @type weak_reference_collection: weakref.ReferenceType
         @raise Exception: If C{Project.name} values are not unique for file_type I{CASAVA}
         """
 
