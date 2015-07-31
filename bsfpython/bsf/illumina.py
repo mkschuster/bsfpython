@@ -846,10 +846,10 @@ class AnalysisConfiguration(XMLConfiguration):
 
         super(AnalysisConfiguration, self).__init__(file_path=file_path, element_tree=element_tree)
 
+        self._lane_tile_dict = dict()
+
         if self.element_tree.getroot() is None:
             return
-
-        self._lane_tile_dict = dict()
 
         for lane_element in self.element_tree.find(path='Run/TileSelection'):
             assert isinstance(lane_element, Element)
@@ -870,10 +870,7 @@ class AnalysisConfiguration(XMLConfiguration):
         @return: Boolean value
         @rtype: bool
         """
-        if lane in self._lane_tile_dict:
-            return True
-        else:
-            return False
+        return lane in self._lane_tile_dict
 
     def has_lane_tile(self, lane, tile):
         """Check if a particular tile is defined in a lane of an C{AnalysisConfiguration} object.
@@ -887,10 +884,7 @@ class AnalysisConfiguration(XMLConfiguration):
         """
         if lane in self._lane_tile_dict:
             lane_dict = self._lane_tile_dict[lane]
-            if tile in lane_dict:
-                return True
-            else:
-                return False
+            return tile in lane_dict
         else:
             return None
 
