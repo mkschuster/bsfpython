@@ -118,7 +118,7 @@ class RunInformation(object):
     @type run_identifier: str
     @ivar run_number: Run number, which may not have to correspond to the run number in the run identifier e.g. 91
     @type run_number: str
-    @ivar flow_cell: Illumina flow-cell identifier e.g. C26JBACXX
+    @ivar flow_cell: Illumina flow cell identifier e.g. C26JBACXX
     @type flow_cell: str
     @ivar instrument: Illumina instrument serial number e.g. SN815
     @type instrument: str
@@ -269,7 +269,7 @@ class RunInformation(object):
 
         # Set a paired_end attribute if more than one read without index is defined?
 
-        # Get the Flow-Cell Layout if it exits.
+        # Get the flow cell layout if it exits.
 
         xml_flow_cell_layout = run_info_tree.find(path='Run/FlowcellLayout')
         assert isinstance(xml_flow_cell_layout, Element)
@@ -304,7 +304,7 @@ class RunInformation(object):
         @type run_identifier: str
         @param run_number: Run number, which may not have to correspond to the run number in the run identifier e.g. 91
         @type run_number: str
-        @param flow_cell: Illumina flow-cell identifier
+        @param flow_cell: Illumina flow cell identifier
         @type flow_cell: str
         @param instrument: Illumina instrument serial number
         @type instrument: str
@@ -535,7 +535,7 @@ class RunParameters(object):
         Returns the text representation of the I{<RunParameters>/<Setup>/<ExperimentName>} element for
         I{HiSeq Control Software} or the I{<RunParameters>/<ExperimentName>} element for
         I{MiSeq Control Software}.
-        @return: Experiment name e.g I{BSF_0001}
+        @return: Experiment name
         @rtype: str
         """
 
@@ -548,12 +548,12 @@ class RunParameters(object):
 
     @property
     def get_flow_cell_barcode(self):
-        """Get the flow-cell barcode of a C{RunParameters} object.
+        """Get the flow cell barcode of a C{RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<Barcode>} element for
         I{HiSeq Control Software} or the I{<RunParameters>/<Barcode>} element for
         I{MiSeq Control Software}.
-        @return: Flow-cell barcode e.g BSF_0001
+        @return: Flow cell barcode
         @rtype: str
         """
 
@@ -566,38 +566,95 @@ class RunParameters(object):
 
     @property
     def get_flow_cell_type(self):
-        """Get the flow cell of a C{RunParameters} object.
+        """Get the flow cell chemistry type of a C{RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<Flowcell>} element for
-        I{HiSeq Control Software} or the I{<RunParameters>/<Flowcell>} element for
+        I{HiSeq Control Software} or the I{<RunParameters>/<ReagentKitVersion>} element for
         I{MiSeq Control Software}.
-        @return: Flow-cell type
+        @return: Flow cell chemistry type
         @rtype: str
         """
 
         if self.get_run_parameters_version == 'MiSeq_1_1':
             # MiSeq 1_1 run
-            # The MiSeq has no concept of Flowcell chemistry version, only a <ReagentKitVersion>.
-            return str()
+            # The MiSeq has no concept of a <Flowcell> chemistry type, only a <ReagentKitVersion>.
+            return self.element_tree.find(path='ReagentKitVersion').text
         else:
             # HiSeq run or else
             return self.element_tree.find(path='Setup/Flowcell').text
 
     @property
-    def get_position(self):
-        """Get the flow-cell position of a C{RunParameters} object.
+    def get_index_type(self):
+        """Get the index chemistry type of a C{RunParameters} object.
 
-        Returns the text representation of the I{<RunParameters>/<Setup>/<FCPosition>} element for
+        Returns the text representation of the I{<RunParameters>/<Setup>/<Index>} element for
         I{HiSeq Control Software} or an empty string for
         I{MiSeq Control Software}.
-        Since the element does not exist in older I{HiSeq Control Software} versions an empty string may be returned.
-        @return: Flow-cell position e.g. A or B
+        @return: Index chemistry type
         @rtype: str
         """
 
         if self.get_run_parameters_version == 'MiSeq_1_1':
             # MiSeq 1_1 run
-            # The MiSeq has no concept of Flowcell chemistry version, only a <ReagentKitVersion>.
+            # The MiSeq has no concept of a <Index> version, only a <ReagentKitVersion>.
+            return str()
+        else:
+            # HiSeq run or else
+            return self.element_tree.find(path='Setup/Index').text
+
+    @property
+    def get_pe_type(self):
+        """Get the paired-end chemistry type of a C{RunParameters} object.
+
+        Returns the text representation of the I{<RunParameters>/<Setup>/<Pe>} element for
+        I{HiSeq Control Software} or an empty string for
+        I{MiSeq Control Software}.
+        @return: Paired-end chemistry type
+        @rtype: str
+        """
+
+        if self.get_run_parameters_version == 'MiSeq_1_1':
+            # MiSeq 1_1 run
+            # The MiSeq has no concept of a <Pe> version, only a <ReagentKitVersion>.
+            return str()
+        else:
+            # HiSeq run or else
+            return self.element_tree.find(path='Setup/Pe').text
+
+    @property
+    def get_sbs_type(self):
+        """Get the sequencing-by-synthesis chemistry type of a C{RunParameters} object.
+
+        Returns the text representation of the I{<RunParameters>/<Setup>/<Sbs>} element for
+        I{HiSeq Control Software} or an empty string for
+        I{MiSeq Control Software}.
+        @return: Sequencing-by-synthesis chemistry type
+        @rtype: str
+        """
+
+        if self.get_run_parameters_version == 'MiSeq_1_1':
+            # MiSeq 1_1 run
+            # The MiSeq has no concept of a <Sbs> chemistry version, only a <ReagentKitVersion>.
+            return str()
+        else:
+            # HiSeq run or else
+            return self.element_tree.find(path='Setup/Sbs').text
+
+    @property
+    def get_position(self):
+        """Get the flow cell position of a C{RunParameters} object.
+
+        Returns the text representation of the I{<RunParameters>/<Setup>/<FCPosition>} element for
+        I{HiSeq Control Software} or an empty string for
+        I{MiSeq Control Software}.
+        Since the element does not exist in older I{HiSeq Control Software} versions an empty string may be returned.
+        @return: Flow cell position e.g. A or B
+        @rtype: str
+        """
+
+        if self.get_run_parameters_version == 'MiSeq_1_1':
+            # MiSeq 1_1 run
+            # The MiSeq has no concept of a <FCPosition>.
             return str()
         else:
             # HiSeq run or else
@@ -932,7 +989,7 @@ class RunFolder(object):
     @type instrument: str
     @ivar run: Run serial number
     @type run: str
-    @ivar flow_cell: Flow-cell identifier
+    @ivar flow_cell: Flow cell identifier
     @type flow_cell: str
     @ivar run_information: C{RunInformation} object
     @type run_information: RunInformation
@@ -951,8 +1008,7 @@ class RunFolder(object):
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
-        # Illumina Run Folders obey a "YYMMDD_SN000_Run_PositionFCID"
-        # schema.
+        # Illumina Run Folders obey a "YYMMDD_SN000_Run_PositionFCID" schema.
 
         components = file_name.split('_')
 
