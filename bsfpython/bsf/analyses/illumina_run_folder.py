@@ -50,7 +50,7 @@ class IlluminaRunFolderArchive(Analysis):
     @type drms_name_archive_folder: str
     @ivar run_directory: File path to an I{Illumina Run Folder}
     @type run_directory: str | unicode
-    @ivar experiment_name: Experiment name (i.e. flow-cell identifier) normally automatically read from
+    @ivar experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
         Illumina Run Folder parameters
     @type experiment_name: str
     @ivar force: Force processing of incomplete Illumina Run Folders
@@ -70,8 +70,8 @@ class IlluminaRunFolderArchive(Analysis):
 
         @param project_name: A project name
         @type project_name: str
-        @return : The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
-        @rtype : str
+        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @rtype: str
         """
         return string.join(words=(cls.drms_name_pre_process, project_name), sep='_')
 
@@ -83,8 +83,8 @@ class IlluminaRunFolderArchive(Analysis):
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return : The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
-        @rtype : str
+        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @rtype: str
         """
         return string.join(words=(cls.drms_name_base_calls, project_name, lane), sep='_')
 
@@ -96,8 +96,8 @@ class IlluminaRunFolderArchive(Analysis):
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return : The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
-        @rtype : str
+        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @rtype: str
         """
         return string.join(words=(cls.drms_name_intensities, project_name, lane), sep='_')
 
@@ -107,8 +107,8 @@ class IlluminaRunFolderArchive(Analysis):
 
         @param project_name: A project name
         @type project_name: str
-        @return : The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
-        @rtype : str
+        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @rtype: str
         """
         return string.join(words=(cls.drms_name_archive_folder, project_name), sep='_')
 
@@ -119,8 +119,8 @@ class IlluminaRunFolderArchive(Analysis):
 
         @param config_path: UNIX-style configuration file
         @type config_path: str | unicode
-        @return : C{IlluminaRunFolderArchive}
-        @rtype : IlluminaRunFolderArchive
+        @return: C{IlluminaRunFolderArchive}
+        @rtype: IlluminaRunFolderArchive
         """
 
         return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
@@ -131,8 +131,8 @@ class IlluminaRunFolderArchive(Analysis):
 
         @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return : C{IlluminaRunFolderArchive}
-        @rtype : IlluminaRunFolderArchive
+        @return: C{IlluminaRunFolderArchive}
+        @rtype: IlluminaRunFolderArchive
         """
 
         assert isinstance(configuration, Configuration)
@@ -189,13 +189,13 @@ class IlluminaRunFolderArchive(Analysis):
         @type archive_directory: str | unicode
         @param run_directory: File path to an I{Illumina Run Folder}
         @type run_directory: str | unicode
-        @param experiment_name: Experiment name (i.e. flow-cell identifier) normally automatically read from
+        @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
             Illumina Run Folder parameters
         @type experiment_name: str
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         super(IlluminaRunFolderArchive, self).__init__(
@@ -234,12 +234,14 @@ class IlluminaRunFolderArchive(Analysis):
 
         self._run_name = str()
 
+        return
+
     @property
     def get_run_name(self):
         """Get the Illumina Run Folder name.
 
-        @return : Illumina Run Folder name
-        @rtype : str | unicode
+        @return: Illumina Run Folder name
+        @rtype: str | unicode
         """
 
         if not self._run_name:
@@ -256,8 +258,8 @@ class IlluminaRunFolderArchive(Analysis):
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         assert isinstance(configuration, Configuration)
@@ -293,33 +295,35 @@ class IlluminaRunFolderArchive(Analysis):
                 section=section,
                 option='force')
 
+        return
+
     def run(self):
         """Run this C{IlluminaRunFolderArchive} C{Analysis}.
 
         Archive an I{Illumina Run Folder} in a format suitable for magnetic tape libraries.
 
-        1. Check if the Illumina Run has finished by testing for an
-            RTAComplete.txt file.
-        2. Check if an archive process is already running by testing for an
-            archive directory.
-        3. Create an archive directory.
-        4. Reset the file permissions for all directories via the find utility.
-            find . -type d -execdir chmod u=rwx,g=rx,o= {} \+
-        5. Reset the file permissions for all regular files via the find utility.
-            find . -type f -execdir chmod u=rw,g=r,o= {} \+
-        6. Compress all files in the IRF/Logs/ directory.
-            gzip --best --recursive Logs/
-        7. Compress all files in the IRF/Data/RTALogs/ directory if it exists.
-            gzip --best --recursive IRF/Data/RTALogs/
-        8. Compress all IRF/Data/Intensities/BaseCalls/L00[1-8]/C1.1/*.bcl files.
-            find IRF/Data/Intensities/BaseCalls/L00[1-8] -name '*.bcl' -execdir gzip --best --verbose {} \+
-        9. Run the GNU Tar utility over each IRF/Data/Intensities/L00[1-8]/ directory,
-           but exclude compressed cluster locations (*.clocs) files.
-        10. Run the GNU Tar utility over the remaining Illumina Run folder,
-            but exclude directories with cluster intensity (*.cif) files.
-        11. Calculate an MD5 checksum.
-        @return :
-        @rtype :
+            1. Check if the Illumina Run has finished by testing for an
+                RTAComplete.txt file.
+            2. Check if an archive process is already running by testing for an
+                archive directory.
+            3. Create an archive directory.
+            4. Reset the file permissions for all directories via the find utility.
+                find . -type d -execdir chmod u=rwx,g=rx,o= {} \+
+            5. Reset the file permissions for all regular files via the find utility.
+                find . -type f -execdir chmod u=rw,g=r,o= {} \+
+            6. Compress all files in the IRF/Logs/ directory.
+                gzip --best --recursive Logs/
+            7. Compress all files in the IRF/Data/RTALogs/ directory if it exists.
+                gzip --best --recursive IRF/Data/RTALogs/
+            8. Compress all IRF/Data/Intensities/BaseCalls/L00[1-8]/C1.1/*.bcl files.
+                find IRF/Data/Intensities/BaseCalls/L00[1-8] -name '*.bcl' -execdir gzip --best --verbose {} \+
+            9. Run the GNU Tar utility over each IRF/Data/Intensities/L00[1-8]/ directory,
+               but exclude compressed cluster locations (*.clocs) files.
+            10. Run the GNU Tar utility over the remaining Illumina Run folder,
+                but exclude directories with cluster intensity (*.cif) files.
+            11. Calculate an MD5 checksum.
+        @return:
+        @rtype:
         """
 
         # Define an Illumina Run Folder directory.
@@ -704,6 +708,8 @@ class IlluminaRunFolderArchive(Analysis):
 
         md5_sum.arguments.append(archive_file_path)
 
+        return
+
 
 class IlluminaRunFolderRestore(Analysis):
     """The C{IlluminaRunFolderRestore} class represents the logic to restore an Illumina Run Folder from a format
@@ -718,7 +724,7 @@ class IlluminaRunFolderRestore(Analysis):
     @type archive_directory: str | unicode
     @ivar illumina_directory: File path to the directory of I{Illumina Run Folder} directories
     @type illumina_directory: str | unicode
-    @ivar experiment_name: Experiment name (i.e. flow-cell identifier) normally automatically read from
+    @ivar experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
         Illumina Run Folder parameters
     @type experiment_name: str
     @ivar extract_intensities: Extract cluster intensity file (*.cif) directories
@@ -745,8 +751,8 @@ class IlluminaRunFolderRestore(Analysis):
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return : The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
-        @rtype : str
+        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @rtype: str
         """
         return string.join(words=(cls.drms_name_extract_archive, project_name, lane), sep='_')
 
@@ -758,8 +764,8 @@ class IlluminaRunFolderRestore(Analysis):
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return : The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
-        @rtype : str
+        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @rtype: str
         """
         return string.join(words=(cls.drms_name_compress_base_calls, project_name, lane), sep='_')
 
@@ -769,8 +775,8 @@ class IlluminaRunFolderRestore(Analysis):
 
         @param project_name: A project name
         @type project_name: str
-        @return : The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
-        @rtype : str
+        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @rtype: str
         """
         return string.join(words=(cls.drms_name_compress_logs, project_name), sep='_')
 
@@ -781,8 +787,8 @@ class IlluminaRunFolderRestore(Analysis):
 
         @param config_path: UNIX-style configuration file
         @type config_path: str | unicode
-        @return : C{IlluminaRunFolderRestore}
-        @rtype : IlluminaRunFolderRestore
+        @return: C{IlluminaRunFolderRestore}
+        @rtype: IlluminaRunFolderRestore
         """
 
         return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
@@ -793,8 +799,8 @@ class IlluminaRunFolderRestore(Analysis):
 
         @param configuration: C{Configuration}
         @type configuration: Configuration
-        @return : C{IlluminaRunFolderRestore}
-        @rtype : IlluminaRunFolderRestore
+        @return: C{IlluminaRunFolderRestore}
+        @rtype: IlluminaRunFolderRestore
         """
 
         assert isinstance(configuration, Configuration)
@@ -851,15 +857,15 @@ class IlluminaRunFolderRestore(Analysis):
         @type archive_directory: str | unicode
         @param illumina_directory: File path to the directory of I{Illumina Run Folder} directories
         @type illumina_directory: str | unicode
-        @param experiment_name: Experiment name (i.e. flow-cell identifier) normally automatically read from
+        @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
             Illumina Run Folder parameters
         @type experiment_name: str
         @param extract_intensities: Extract cluster intensity file (*.cif) directories
         @type extract_intensities: bool
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         super(IlluminaRunFolderRestore, self).__init__(
@@ -904,12 +910,14 @@ class IlluminaRunFolderRestore(Analysis):
         self._run_directory_name = None
         self._run_directory_path = None
 
+        return
+
     @property
     def get_run_directory_name(self):
         """Get the Illumina Run Folder name.
 
-        @return : Illumina Run Folder name
-        @rtype : str | unicode
+        @return: Illumina Run Folder name
+        @rtype: str | unicode
         """
 
         if not self._run_directory_name:
@@ -923,8 +931,8 @@ class IlluminaRunFolderRestore(Analysis):
     def get_run_directory_path(self):
         """Get the Illumina Run Folder path.
 
-        @return : Illumina Run Folder path
-        @rtype : str | unicode
+        @return: Illumina Run Folder path
+        @rtype: str | unicode
         """
 
         if not self._run_directory_path:
@@ -941,8 +949,8 @@ class IlluminaRunFolderRestore(Analysis):
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
-        @return :
-        @rtype :
+        @return:
+        @rtype:
         """
 
         assert isinstance(configuration, Configuration)
@@ -983,15 +991,17 @@ class IlluminaRunFolderRestore(Analysis):
                 section=section,
                 option='force')
 
+        return
+
     def run(self):
         """Run this C{IlluminaRunFolderRunnable} C{Analysis}.
 
         Restore an Illumina Run Folder from a format suitable for magnetic tape libraries.
-        1. Extract the IRF_Folder.tar file.
-        2. Extract the IRF_Intensities.tar file with a 60 seconds delay.
-        3. Extract each IRF_L00[1-8].tar file with a 90 seconds delay.
-        @return :
-        @rtype :
+            1. Extract the IRF_Folder.tar file.
+            2. Extract the IRF_Intensities.tar file with a 60 seconds delay.
+            3. Extract each IRF_L00[1-8].tar file with a 90 seconds delay.
+        @return:
+        @rtype:
         """
 
         if not os.path.isdir(self.archive_directory):
@@ -1196,3 +1206,5 @@ class IlluminaRunFolderRestore(Analysis):
             gzip_command.add_switch_long(key='best')
             gzip_command.arguments.append('{}')
             gzip_command.arguments.append('+')
+
+        return
