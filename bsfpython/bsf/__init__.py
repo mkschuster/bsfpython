@@ -34,7 +34,6 @@ import errno
 import importlib
 import os
 from pickle import Pickler, Unpickler, HIGHEST_PROTOCOL
-import re
 import shutil
 from stat import *
 import string
@@ -113,10 +112,12 @@ class Analysis(object):
 
         analysis = cls(configuration=configuration, e_mail=default.operator_e_mail)
 
-        # A "bsf.Analysis" or "bsf.analyses.*" section specifies defaults for this Analysis.
+        # A "module.class" configuration section specifies defaults for this Analysis or sub-class
+        # i.e. "bsf.Analysis" or "bsf.analyses.*", respectively.
 
-        section = string.join(words=(__name__, cls.__name__), sep='.')
-        analysis.set_configuration(analysis.configuration, section=section)
+        analysis.set_configuration(
+            configuration=analysis.configuration,
+            section=Configuration.section_from_instance(instance=analysis))
 
         return analysis
 
@@ -770,20 +771,22 @@ class Configuration(object):
 
     @staticmethod
     def section_from_instance(instance):
-        """Get a configuration section from a Python instance.
+        """Get a configuration section string composed of the Python module and Python class name from a
+        Python instance.
 
-        @param instance: A Python instance (or object)
+        @param instance: A Python instance (i.e. object)
         @type instance: object
         @return: Configuration section string
         @rtype: str
         """
 
-        match = re.search(pattern=r'^<([^ ]+)\s+', string=repr(instance))
+        # For Python "type" instances the "__name__" instance variable provides the name of the type, while for
+        # Python "object" instances the "__class__" variable provides the Python "type" object.
 
-        if match:
-            return match.group(1)
+        if isinstance(instance, type):
+            return string.join(words=(instance.__module__, instance.__name__), sep='.')
         else:
-            return str()
+            return string.join(words=(instance.__module__, instance.__class__.__name__), sep='.')
 
     @classmethod
     def from_config_path(cls, config_path):
@@ -1573,25 +1576,29 @@ class DRMS(object):
 
         # A "bsf.DRMS" section specifies defaults for all DRMS objects of an Analysis.
 
-        section = string.join(words=(__name__, cls.__name__), sep='.')
+        section = Configuration.section_from_instance(instance=drms)
         drms.set_configuration(configuration=analysis.configuration, section=section)
 
         if analysis.debug > 1:
             print 'DRMS configuration section: {!r}.'.format(section)
 
         # A "bsf.Analysis.DRMS" or "bsf.analyses.*.DRMS" pseudo-class section specifies
-        # Analysis-specific options for the DRMS.
+        # Analysis-specific or sub-class-specific options for the DRMS, respectively.
 
-        section = string.join(words=(analysis.configuration.section_from_instance(analysis), 'DRMS'), sep='.')
+        section = string.join(
+            words=(Configuration.section_from_instance(instance=analysis), 'DRMS'),
+            sep='.')
         drms.set_configuration(configuration=analysis.configuration, section=section)
 
         if analysis.debug > 1:
             print 'DRMS configuration section: {!r}.'.format(section)
 
         # A "bsf.Analysis.DRMS.name" or "bsf.analyses.*.DRMS.name" section specifies defaults
-        # for a particular DRMS objects of an Analysis.
+        # for a particular DRMS object of an Analysis or sub-class, respectively.
 
-        section = string.join(words=(Configuration.section_from_instance(analysis), 'DRMS', drms.name), sep='.')
+        section = string.join(
+            words=(Configuration.section_from_instance(instance=analysis), 'DRMS', drms.name),
+            sep='.')
         drms.set_configuration(configuration=analysis.configuration, section=section)
 
         if analysis.debug > 1:
