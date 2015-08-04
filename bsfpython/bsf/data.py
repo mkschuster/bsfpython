@@ -25,6 +25,8 @@ A package of classes and methods modelling data directories and files.
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+
+
 import os
 import re
 from stat import *
@@ -751,7 +753,7 @@ class Sample(object):
         """Get all C{PairedReads} objects of a C{Sample} grouped or un-grouped.
 
         A C{Sample} object can hold several C{PairedReads} objects (i.e. biological or technical
-        replicates) that have been sequenced on different lanes of the same flow-cell.
+        replicates) that have been sequenced on different lanes of the same flow cell.
         The C{PairedReads} objects will therefore differ in I{name}, I{barcode} or I{lane} information.
         Depending on the I{replicate_grouping} parameter they can be returned as a group or separately.
         C{PairedReads} objects that share the I{name}, I{barcode} and I{lane}, but differ in I{chunk} number
@@ -974,7 +976,7 @@ class ProcessedRunFolder(object):
     @type name: str
     @ivar prefix: Prefix
     @type prefix: str
-    @ivar flow_cell: Flow-cell identifier
+    @ivar flow_cell: Flow cell identifier
     @type flow_cell: str
     @ivar version: Version number
     @type version: str
@@ -1094,7 +1096,7 @@ class ProcessedRunFolder(object):
         @type name: str
         @param prefix: Prefix
         @type prefix: str
-        @param flow_cell: Flow-cell identifier
+        @param flow_cell: Flow cell identifier
         @type flow_cell: str
         @param version: Version
         @type version: str
@@ -1227,7 +1229,7 @@ class Collection(object):
 
     @classmethod
     def from_sas_path(cls, file_path, file_type, name, sas_path, sas_prefix=None):
-        """Construct a C{Collection} from a sample annotation sheet.
+        """Construct a C{Collection} from a C{SampleAnnotationSheet} file path.
 
         @param file_path: File path
         @type file_path: str | unicode
@@ -1244,9 +1246,34 @@ class Collection(object):
         @rtype: Collection
         """
 
-        collection = cls(file_path=file_path, file_type=file_type, name=name)
+        return cls.from_sas(
+            file_path=file_path,
+            file_type=file_type,
+            name=name,
+            sas=SampleAnnotationSheet.from_file_path(file_path=sas_path),
+            sas_prefix=sas_prefix)
 
-        sas = SampleAnnotationSheet.from_file_path(file_path=sas_path)
+    @classmethod
+    def from_sas(cls, file_path, file_type, name, sas, sas_prefix=None):
+        """Construct a C{Collection} from a C{SampleAnnotationSheet}.
+
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
+        @type file_type: str
+        @param name: Name
+        @type name: str
+        @param sas: C{SampleAnnotationSheet}
+        @type sas: SampleAnnotationSheet
+        @param sas_prefix: Optional column header prefix
+            (e.g. '[Control ]Sample', '[Treatment ]Sample', ...)
+        @type sas_prefix: str
+        @return: C{Collection}
+        @rtype: Collection
+        """
+        assert isinstance(sas, SampleAnnotationSheet)
+
+        collection = cls(file_path=file_path, file_type=file_type, name=name)
 
         for row_dict in sas.row_dicts:
             collection._process_row_dict(row_dict=row_dict, prefix=sas_prefix)
@@ -1789,7 +1816,7 @@ class SampleGroup(object):
 
     # TODO: The SampleGroup class is currently not in use.
     # Sample and PairedReads objects from different ProcessRunFolder objects
-    # (i.e. flow-cells) could bear the same name, leading to problems with SGE job names.
+    # (i.e. flow cells) could bear the same name, leading to problems with SGE job names.
     # This would need further re-thinking.
 
     def __init__(self, name=None, samples=None):
