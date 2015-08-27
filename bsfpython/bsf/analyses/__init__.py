@@ -197,39 +197,6 @@ class ChIPSeq(Analysis):
     None
     """
 
-    @classmethod
-    def from_config_file_path(cls, config_path):
-        """Create a new C{ChIPSeq} object from a UNIX-style configuration file via the C{Configuration} class.
-
-        @param config_path: UNIX-style configuration file
-        @type config_path: str | unicode
-        @return: C{ChIPSeq}
-        @rtype: ChIPSeq
-        """
-
-        return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
-
-    @classmethod
-    def from_configuration(cls, configuration):
-        """Create a new C{ChIPSeq} object from a C{Configuration} object.
-
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
-        @return: C{ChIPSeq}
-        @rtype: ChIPSeq
-        """
-
-        assert isinstance(configuration, Configuration)
-
-        chipseq = cls(configuration=configuration)
-
-        # A "bsf.analyses.ChIPSeq" section specifies defaults for this BSF Analysis.
-
-        section = string.join(words=(__name__, cls.__name__), sep='.')
-        chipseq.set_configuration(chipseq.configuration, section=section)
-
-        return chipseq
-
     def __init__(self, configuration=None,
                  project_name=None, genome_version=None,
                  input_directory=None, output_directory=None,
@@ -1997,39 +1964,6 @@ class RunFastQC(Analysis):
     None
     """
 
-    @classmethod
-    def from_config_file_path(cls, config_path):
-        """Create a new C{RunFastQC} object from a UNIX-style configuration file via the C{Configuration} class.
-
-        @param config_path: UNIX-style configuration file
-        @type config_path: str | unicode
-        @return: C{RunFastQC}
-        @rtype: RunFastQC
-        """
-
-        return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
-
-    @classmethod
-    def from_configuration(cls, configuration):
-        """Create a new C{RunFastQC} object from a C{Configuration} object.
-
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
-        @return: C{RunFastQC}
-        @rtype: RunFastQC
-        """
-
-        assert isinstance(configuration, Configuration)
-
-        run_fastqc = cls(configuration=configuration)
-
-        # A "bsf.analyses.RunFastQC" section specifies defaults for this BSF Analysis.
-
-        section = string.join(words=(__name__, cls.__name__), sep='.')
-        run_fastqc.set_configuration(run_fastqc.configuration, section=section)
-
-        return run_fastqc
-
     def __init__(self, configuration=None,
                  project_name=None, genome_version=None,
                  input_directory=None, output_directory=None,
@@ -2249,7 +2183,7 @@ class RunFastQC(Analysis):
 
                 fastqc.add_option_long(key='outdir', value=self.project_directory)
 
-                if not 'casava' in fastqc.options and sample.file_type == 'CASAVA':
+                if 'casava' not in fastqc.options and sample.file_type == 'CASAVA':
                     fastqc.add_switch_long(key='casava')
 
                 fastqc.add_option_long(key='threads', value=str(fastqc_drms.threads))
@@ -2360,39 +2294,6 @@ class RunBamToFastq(Analysis):
     Attributes:
     None
     """
-
-    @classmethod
-    def from_config_file_path(cls, config_path):
-        """Create a new BSF RunBamToFastq object from a UNIX-style configuration file via the BSF Configuration class.
-
-        @param config_path: UNIX-style configuration file
-        @type config_path: str | unicode
-        @return: BSF RunBamToFastq
-        @rtype: RunBamToFastq
-        """
-
-        return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
-
-    @classmethod
-    def from_configuration(cls, configuration):
-        """Create a new BSF RunBamToFastq object from a BSF Configuration object.
-
-        @param configuration: BSF Configuration
-        @type configuration: Configuration
-        @return: BSF RunBamToFastq
-        @rtype: RunBamToFastq
-        """
-
-        assert isinstance(configuration, Configuration)
-
-        run_bam_to_fastq = cls(configuration=configuration)
-
-        # A "bsf.analyses.RunBamToFastq" section specifies defaults for this BSF Analysis.
-
-        section = string.join(words=(__name__, cls.__name__), sep='.')
-        run_bam_to_fastq.set_configuration(run_bam_to_fastq.configuration, section=section)
-
-        return run_bam_to_fastq
 
     def __init__(self, configuration=None,
                  project_name=None, genome_version=None,
