@@ -58,7 +58,7 @@ argument_parser.add_argument(
 argument_parser.add_argument(
     '--project-name',
     dest='project_name',
-    help='project name i.e. flow-cell identifier',
+    help='project name i.e. flow cell identifier',
     required=False,
     type=str)
 
