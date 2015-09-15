@@ -65,9 +65,9 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     samtools_view.add_switch_short(key='H')
     samtools_view.arguments.append(input_path)
 
-    child_return_code = samtools.run()
+    child_return_code_local = samtools.run()
 
-    if child_return_code:
+    if child_return_code_local:
         raise Exception('Could not complete the samtools view step on the BAM file for the replicate.')
 
     # SAM header lines that need propagating around FASTQ files. Sigh!
@@ -101,9 +101,9 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     sam_to_fastq.add_option_pair(key='QUIET', value='false')
     sam_to_fastq.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
 
-    child_return_code = java_process.run()
+    child_return_code_local = java_process.run()
 
-    if child_return_code:
+    if child_return_code_local:
         raise Exception('Could not complete the Picard SamToFastq step.')
 
     platform_unit = str()
@@ -112,7 +112,7 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
             if field.startswith('PU:'):
                 platform_unit = str(field[3:])
 
-        file_name_prefix = re.sub(pattern='[^0-9A-Za-z_]', repl='_', string=platform_unit)
+        file_name_prefix = re.sub(pattern='[^0-9A-Za-z_-]', repl='_', string=platform_unit)
         file_name_1 = os.path.join(path_temporary, file_name_prefix + '_1.fastq')
         file_name_2 = os.path.join(path_temporary, file_name_prefix + '_2.fastq')
 
