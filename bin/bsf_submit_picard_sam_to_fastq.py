@@ -27,6 +27,7 @@
 
 import argparse
 
+from bsf import Default
 from bsf.analyses.picard import SamToFastq
 
 
@@ -46,8 +47,25 @@ argument_parser.add_argument(
     required=False)
 
 argument_parser.add_argument(
-    'configuration',
-    help='configuration (*.ini) file path')
+    '--configuration',
+    default=Default.global_file_path,
+    help='configuration (*.ini) file path',
+    required=False,
+    type=str)
+
+argument_parser.add_argument(
+    '--project-name',
+    dest='project_name',
+    help='project name',
+    required=True,
+    type=str)
+
+argument_parser.add_argument(
+    '--sas-file',
+    dest='sas_file',
+    help='sample annotation sheet (*.csv) file path',
+    required=True,
+    type=unicode)
 
 name_space = argument_parser.parse_args()
 
@@ -56,9 +74,18 @@ name_space = argument_parser.parse_args()
 stf = SamToFastq.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.debug:
+    assert isinstance(name_space.debug, int)
     stf.debug = name_space.debug
 
-stf.run()
+if name_space.project_name:
+    assert isinstance(name_space.project_name, str)
+    stf.project_name = name_space.project_name
+
+if name_space.sas_file:
+    assert isinstance(name_space.sas_file, (str, unicode))
+    stf.sas_file = name_space.sas_file
+
+annotation_sheet = stf.run()
 stf.submit(drms_name=name_space.stage)
 
 print 'Picard SamToFastq Analysis'
