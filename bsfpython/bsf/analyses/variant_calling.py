@@ -32,7 +32,6 @@ import string
 import warnings
 
 from bsf import Analysis, Command, Configuration, Default, defaults, DRMS, Executable, Runnable, RunnableStep
-from bsf.annotation import SampleAnnotationSheet
 from bsf.data import PairedReads
 from bsf.executables import BWA
 
@@ -47,6 +46,8 @@ class VariantCallingGATK(Analysis):
     @type drms_name_process_lane: str
     @cvar drms_name_process_sample: C{DRMS.name} for the sample processing C{Analysis} stage
     @type drms_name_process_sample: str
+    @cvar drms_name_diagnose_sample: C{DRMS.name} for the sample diagnosis C{Analysis} stage
+    @type drms_name_diagnose_sample: str
     @cvar drms_name_process_cohort: C{DRMS.name} for the cohort processing C{Analysis} stage
     @type drms_name_process_cohort: str
     @cvar drms_name_split_cohort: C{DRMS.name} for the cohort splitting C{Analysis} stage
@@ -106,42 +107,9 @@ class VariantCallingGATK(Analysis):
     drms_name_align_lane = 'variant_calling_align_lane'
     drms_name_process_lane = 'variant_calling_process_lane'
     drms_name_process_sample = 'variant_calling_process_sample'
+    drms_name_diagnose_sample = 'variant_calling_diagnose_sample'
     drms_name_process_cohort = 'variant_calling_process_cohort'
     drms_name_split_cohort = 'variant_calling_split_cohort'
-
-    @classmethod
-    def from_config_file_path(cls, config_path):
-        """Create a new C{VariantCallingGATK} object from a UNIX-style configuration file via the
-        C{Configuration} class.
-
-        @param config_path: UNIX-style configuration file
-        @type config_path: str | unicode
-        @return: C{VariantCallingGATK}
-        @rtype: VariantCallingGATK
-        """
-
-        return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
-
-    @classmethod
-    def from_configuration(cls, configuration):
-        """Create a new C{VariantCallingGATK} object from a C{Configuration} object.
-
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
-        @return: C{VariantCallingGATK}
-        @rtype: VariantCallingGATK
-        """
-
-        assert isinstance(configuration, Configuration)
-
-        variant_calling = cls(configuration=configuration)
-
-        # A "bsf.analyses.variant_calling.VariantCallingGATK" section specifies defaults for this Analysis.
-
-        section = string.join(words=(__name__, cls.__name__), sep='.')
-        variant_calling.set_configuration(variant_calling.configuration, section=section)
-
-        return variant_calling
 
     def __init__(self, configuration=None,
                  project_name=None, genome_version=None,
@@ -155,7 +123,7 @@ class VariantCallingGATK(Analysis):
                  annotation_resources_dict=None,
                  truth_sensitivity_filter_level_indel=None,
                  truth_sensitivity_filter_level_snp=None,
-                 vqsr_skip_indel=None, vqsr_skip_snp=None,
+                 vqsr_skip_indel=False, vqsr_skip_snp=False,
                  vqsr_resources_indel_dict=None, vqsr_resources_snp_dict=None,
                  vqsr_annotations_indel_list=None, vqsr_annotations_snp_list=None,
                  exclude_intervals_list=None,
@@ -263,59 +231,67 @@ class VariantCallingGATK(Analysis):
 
         # Sub-class specific ...
 
-        self.replicate_grouping = replicate_grouping
-
-        if bwa_genome_db:
-            self.bwa_genome_db = bwa_genome_db
+        if replicate_grouping is None:
+            self.replicate_grouping = False
         else:
+            assert isinstance(replicate_grouping, bool)
+            self.replicate_grouping = replicate_grouping
+
+        if bwa_genome_db is None:
             self.bwa_genome_db = str()
-
-        if comparison_path:
-            self.comparison_path = comparison_path
         else:
+            self.bwa_genome_db = bwa_genome_db
+
+        if comparison_path is None:
             self.comparison_path = str()
-
-        if cohort_name:
-            self.cohort_name = cohort_name
         else:
+            self.comparison_path = comparison_path
+
+        if cohort_name is None:
             self.cohort_name = str()
-
-        if accessory_cohort_gvcfs:
-            self.accessory_cohort_gvcfs = accessory_cohort_gvcfs
         else:
+            self.cohort_name = cohort_name
+
+        if accessory_cohort_gvcfs is None:
             self.accessory_cohort_gvcfs = list()
-
-        self.skip_mark_duplicates = skip_mark_duplicates
-
-        if known_sites_discovery:
-            self.known_sites_discovery = known_sites_discovery
         else:
+            self.accessory_cohort_gvcfs = accessory_cohort_gvcfs
+
+        if skip_mark_duplicates is None:
+            self.skip_mark_duplicates = False
+        else:
+            assert isinstance(skip_mark_duplicates, bool)
+            self.skip_mark_duplicates = skip_mark_duplicates
+
+        if known_sites_discovery is None:
             self.known_sites_discovery = str()
-
-        if known_sites_realignment:
-            self.known_sites_realignment = known_sites_realignment
         else:
+            self.known_sites_discovery = known_sites_discovery
+
+        if known_sites_realignment is None:
             self.known_sites_realignment = list()
-
-        if known_sites_recalibration:
-            self.known_sites_recalibration = known_sites_recalibration
         else:
+            self.known_sites_realignment = known_sites_realignment
+
+        if known_sites_recalibration is None:
             self.known_sites_recalibration = list()
-
-        if annotation_resources_dict:
-            self.annotation_resources_dict = annotation_resources_dict
         else:
+            self.known_sites_recalibration = known_sites_recalibration
+
+        if annotation_resources_dict is None:
             self.annotation_resources_dict = dict()
-
-        if truth_sensitivity_filter_level_indel:
-            self.truth_sensitivity_filter_level_indel = truth_sensitivity_filter_level_indel
         else:
+            self.annotation_resources_dict = annotation_resources_dict
+
+        if truth_sensitivity_filter_level_indel is None:
             self.truth_sensitivity_filter_level_indel = str()
-
-        if truth_sensitivity_filter_level_snp:
-            self.truth_sensitivity_filter_level_snp = truth_sensitivity_filter_level_snp
         else:
+            self.truth_sensitivity_filter_level_indel = truth_sensitivity_filter_level_indel
+
+        if truth_sensitivity_filter_level_snp is None:
             self.truth_sensitivity_filter_level_snp = str()
+        else:
+            self.truth_sensitivity_filter_level_snp = truth_sensitivity_filter_level_snp
 
         if vqsr_skip_indel is None:
             self.vqsr_skip_indel = False
@@ -329,65 +305,67 @@ class VariantCallingGATK(Analysis):
             assert isinstance(vqsr_skip_snp, bool)
             self.vqsr_skip_snp = vqsr_skip_snp
 
-        if vqsr_resources_indel_dict:
-            self.vqsr_resources_indel_dict = vqsr_resources_indel_dict
-        else:
+        if vqsr_resources_indel_dict is None:
             self.vqsr_resources_indel_dict = dict()
-
-        if vqsr_resources_snp_dict:
-            self.vqsr_resources_snp_dict = vqsr_resources_snp_dict
         else:
+            self.vqsr_resources_indel_dict = vqsr_resources_indel_dict
+
+        if vqsr_resources_snp_dict is None:
             self.vqsr_resources_snp_dict = dict()
-
-        if vqsr_annotations_indel_list:
-            self.vqsr_annotations_indel_list = vqsr_annotations_indel_list
         else:
+            self.vqsr_resources_snp_dict = vqsr_resources_snp_dict
+
+        if vqsr_annotations_indel_list is None:
             self.vqsr_annotations_indel_list = list()
-
-        if vqsr_annotations_snp_list:
-            self.vqsr_annotations_snp_list = vqsr_annotations_snp_list
         else:
+            self.vqsr_annotations_indel_list = vqsr_annotations_indel_list
+
+        if vqsr_annotations_snp_list is None:
             self.vqsr_annotations_snp_list = list()
-
-        if exclude_intervals_list:
-            self.exclude_intervals_list = exclude_intervals_list
         else:
+            self.vqsr_annotations_snp_list = vqsr_annotations_snp_list
+
+        if exclude_intervals_list is None:
             self.exclude_intervals_list = list()
-
-        if include_intervals_list:
-            self.include_intervals_list = include_intervals_list
         else:
+            self.exclude_intervals_list = exclude_intervals_list
+
+        if include_intervals_list is None:
             self.include_intervals_list = list()
-
-        if downsample_to_fraction:
-            self.downsample_to_fraction = downsample_to_fraction
         else:
+            self.include_intervals_list = include_intervals_list
+
+        if downsample_to_fraction is None:
             self.downsample_to_fraction = str()
-
-        if gatk_bundle_version:
-            self.gatk_bundle_version = gatk_bundle_version
         else:
+            self.downsample_to_fraction = downsample_to_fraction
+
+        if gatk_bundle_version is None:
             self.gatk_bundle_version = str()
-
-        if snpeff_genome_version:
-            self.snpeff_genome_version = snpeff_genome_version
         else:
+            self.gatk_bundle_version = gatk_bundle_version
+
+        if snpeff_genome_version is None:
             self.snpeff_genome_version = str()
-
-        if classpath_gatk:
-            self.classpath_gatk = classpath_gatk
         else:
+            self.snpeff_genome_version = snpeff_genome_version
+
+        if classpath_gatk is None:
             self.classpath_gatk = str()
-
-        if classpath_picard:
-            self.classpath_picard = classpath_picard
         else:
+            self.classpath_gatk = classpath_gatk
+
+        if classpath_picard is None:
             self.classpath_picard = str()
-
-        if classpath_snpeff:
-            self.classpath_snpeff = classpath_snpeff
         else:
+            self.classpath_picard = classpath_picard
+
+        if classpath_snpeff is None:
             self.classpath_snpeff = str()
+        else:
+            self.classpath_snpeff = classpath_snpeff
+
+        return
 
     @property
     def get_gatk_bundle_path(self):
@@ -635,6 +613,8 @@ class VariantCallingGATK(Analysis):
                 section=section,
                 option='classpath_snpeff')
 
+        return
+
     def _read_comparisons(self, comparison_path):
         """Read a C{SampleAnnotationSheet} CSV file from disk.
 
@@ -657,10 +637,18 @@ class VariantCallingGATK(Analysis):
         @rtype:
         """
 
-        sas = SampleAnnotationSheet.from_file_path(file_path=comparison_path)
+        # Method Collection.get_sample_from_row_dict dies not work with normalised SampleAnnotationSheet objects.
+        # sas = SampleAnnotationSheet.from_file_path(file_path=comparison_path)
+        #
+        # for row_dict in sas.row_dicts:
+        #     self.add_sample(sample=self.collection.get_sample_from_row_dict(row_dict=row_dict))
 
-        for row_dict in sas.row_dicts:
-            self.add_sample(sample=self.collection.get_sample_from_row_dict(row_dict=row_dict))
+        assert isinstance(comparison_path, (str, unicode))  # Not really used.
+
+        for sample in self.collection.get_all_samples():
+            self.add_sample(sample=sample)
+
+        return
 
     def _read_vqsr_configuration(self, vqsr_resources_dict, variation_type=None):
         """Private method to read variant quality score recalibration (VQSR) configuration information.
@@ -706,6 +694,8 @@ class VariantCallingGATK(Analysis):
                         'Missing configuration section {!r} declared in option {!r} {!r}.'.
                         format(resource_section, resource_option,
                                config_parser.get(section=config_section, option=resource_option)))
+
+        return
 
     def run(self):
         """Run this C{VariantCallingGATK} analysis.
@@ -895,12 +885,23 @@ class VariantCallingGATK(Analysis):
             analysis=self))
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
+        # variant_calling_diagnose_sample Runnable.
+
+        drms_diagnose_sample = self.add_drms(drms=DRMS.from_analysis(
+            name=self.drms_name_diagnose_sample,
+            working_directory=self.genome_directory,
+            analysis=self))
+
+        # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_process_cohort Runnable.
 
         drms_process_cohort = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_process_cohort,
             working_directory=self.genome_directory,
             analysis=self))
+
+        # Initialise a Distributed Resource Management System (DRMS) object for the
+        # variant_calling_split_cohort Runnable.
 
         drms_split_cohort = self.add_drms(drms=DRMS.from_analysis(
             name=self.drms_name_split_cohort,
@@ -1018,10 +1019,8 @@ class VariantCallingGATK(Analysis):
                     analysis=self))
 
                 # Only submit this Executable if the final result file does not exist.
-                if (os.path.exists(
-                        os.path.join(self.genome_directory, file_path_align_lane['aligned_md5']))
-                    and os.path.getsize(
-                        os.path.join(self.genome_directory, file_path_align_lane['aligned_md5']))):
+                if (os.path.exists(os.path.join(self.genome_directory, file_path_align_lane['aligned_md5'])) and
+                        os.path.getsize(os.path.join(self.genome_directory, file_path_align_lane['aligned_md5']))):
                     run_bwa.submit = False
                 # Check also for existence of a new-style Runnable status file.
                 if os.path.exists(os.path.join(
@@ -1060,7 +1059,7 @@ class VariantCallingGATK(Analysis):
                     recalibrated_bai=prefix_lane + '_recalibrated.bai',
                     alignment_summary_metrics=prefix_lane + '_alignment_summary_metrics.tsv')
 
-                # Lane-specific Runnable
+                # Create a lane-specific Runnable
 
                 runnable_process_lane = self.add_runnable(runnable=Runnable(
                     name=prefix_lane,
@@ -1069,7 +1068,7 @@ class VariantCallingGATK(Analysis):
                     file_path_dict=file_path_dict_lane,
                     debug=self.debug))
 
-                # Run the Picard MarkDuplicates step, unless configured to skip it.
+                # Run the Picard MarkDuplicates analysis, unless configured to skip it.
 
                 if self.skip_mark_duplicates:
                     file_path_dict_lane['duplicates_marked_bam'] = file_path_dict_lane['aligned_bam']
@@ -1114,15 +1113,22 @@ class VariantCallingGATK(Analysis):
                     sub_command.add_option_pair(key='READ_NAME_REGEX',
                                                 value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
                     sub_command.add_option_pair(key='TMP_DIR', value=file_path_dict_lane['temporary_directory'])
+                    # VERBOSITY defaults to 'INFO'.
                     sub_command.add_option_pair(key='VERBOSITY', value='WARNING')
-                    sub_command.add_option_pair(key='QUIET', value='false')
-                    sub_command.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
-                    sub_command.add_option_pair(key='COMPRESSION_LEVEL', value='5')
+                    # QUIET defaults to 'false'.
+                    # VALIDATION_STRINGENCY defaults to 'STRICT'.
+                    # COMPRESSION_LEVEL defaults to '5'.
+                    sub_command.add_option_pair(key='COMPRESSION_LEVEL', value='9')
+                    # MAX_RECORDS_IN_RAM defaults to '500000'.
                     sub_command.add_option_pair(key='MAX_RECORDS_IN_RAM', value='4000000')
+                    # CREATE_INDEX defaults to 'false'.
                     sub_command.add_option_pair(key='CREATE_INDEX', value='true')
+                    # CREATE_MD5_FILE defaults to 'false'.
                     sub_command.add_option_pair(key='CREATE_MD5_FILE', value='true')
+                    # OPTIONS_FILE
 
-                # Run the GATK RealignerTargetCreator step as the first-pass walker for the IndelRealigner step.
+                # Run the GATK RealignerTargetCreator analysis as the first-pass walker
+                # for the GATK IndelRealigner analysis.
 
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_realigner_target_creator',
@@ -1154,7 +1160,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='input_file', value=file_path_dict_lane['duplicates_marked_bam'])
                 sub_command.add_option_long(key='out', value=file_path_dict_lane['realigner_targets'])
 
-                # Run the GATK IndelRealigner step as a second-pass walker after the GATK RealignerTargetCreator step.
+                # Run the GATK IndelRealigner analysis as a second-pass walker after the
+                # GATK RealignerTargetCreator analysis.
 
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_indel_realigner',
@@ -1192,7 +1199,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='targetIntervals', value=file_path_dict_lane['realigner_targets'])
                 sub_command.add_option_long(key='out', value=file_path_dict_lane['realigned_bam'])
 
-                # Run the GATK BaseRecalibrator step as a first-pass walker for the GATK PrintReads step.
+                # Run the GATK BaseRecalibrator analysis as a first-pass walker
+                # for the GATK PrintReads analysis.
 
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_base_recalibrator_pre',
@@ -1224,7 +1232,7 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='input_file', value=file_path_dict_lane['realigned_bam'])
                 sub_command.add_option_long(key='out', value=file_path_dict_lane['recalibration_table_pre'])
 
-                # Run the GATK BaseRecalibrator on-the-fly recalibration step to generate plots.
+                # Run the GATK BaseRecalibrator on-the-fly recalibration analysis to generate plots.
 
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_base_recalibrator_post',
@@ -1257,7 +1265,7 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='input_file', value=file_path_dict_lane['realigned_bam'])
                 sub_command.add_option_long(key='out', value=file_path_dict_lane['recalibration_table_post'])
 
-                # Run the GATK AnalyzeCovariates step to create a recalibration plot.
+                # Run the GATK AnalyzeCovariates analysis to create a recalibration plot.
 
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_analyze_covariates',
@@ -1292,7 +1300,7 @@ class VariantCallingGATK(Analysis):
                                             value=file_path_dict_lane['recalibration_plot'])
                 # sub_command.add_option_long(key='logging_level', value='DEBUG')
 
-                # Run the GATK PrintReads step as second-pass walker after the BaseRecalibrator step.
+                # Run the GATK PrintReads analysis as second-pass walker after the GATK BaseRecalibrator analysis.
 
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_print_reads',
@@ -1327,7 +1335,7 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='BQSR', value=file_path_dict_lane['recalibration_table_pre'])
                 sub_command.add_option_long(key='out', value=file_path_dict_lane['recalibrated_bam'])
 
-                # Run the Picard CollectAlignmentSummaryMetrics step.
+                # Run the Picard CollectAlignmentSummaryMetrics analysis.
 
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='picard_collect_alignment_summary_metrics',
@@ -1354,13 +1362,15 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP')
                 sub_command.add_option_pair(key='REFERENCE_SEQUENCE', value=self.bwa_genome_db)
                 sub_command.add_option_pair(key='TMP_DIR', value=file_path_dict_lane['temporary_directory'])
+                # VERBOSITY defaults to 'INFO'.
                 sub_command.add_option_pair(key='VERBOSITY', value='WARNING')
-                sub_command.add_option_pair(key='QUIET', value='false')
-                sub_command.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
-                sub_command.add_option_pair(key='COMPRESSION_LEVEL', value='5')
-                sub_command.add_option_pair(key='MAX_RECORDS_IN_RAM', value='4000000')
-                sub_command.add_option_pair(key='CREATE_INDEX', value='true')
-                sub_command.add_option_pair(key='CREATE_MD5_FILE', value='true')
+                # QUIET defaults to 'false'.
+                # VALIDATION_STRINGENCY defaults to 'STRICT'.
+                # COMPRESSION_LEVEL defaults to '5'.
+                # MAX_RECORDS_IN_RAM defaults to '500000'.
+                # CREATE_INDEX defaults to 'false'.
+                # CREATE_MD5_FILE defaults to 'false'.
+                # OPTIONS_FILE
 
                 # Create an Executable for the Runnable processing the lane.
 
@@ -1403,7 +1413,7 @@ class VariantCallingGATK(Analysis):
                 raw_variants_gvcf_vcf=prefix_sample + '_raw_variants.g.vcf.gz',
                 raw_variants_gvcf_idx=prefix_sample + '_raw_variants.g.vcf.tbi')
 
-            # Sample-specific Runnable
+            # Create a sample-specific Runnable
 
             runnable_process_sample = self.add_runnable(runnable=Runnable(
                 name=prefix_sample,
@@ -1412,7 +1422,7 @@ class VariantCallingGATK(Analysis):
                 file_path_dict=file_path_dict_sample,
                 debug=self.debug))
 
-            # Run the Picard MergeSamFiles step.
+            # Run the Picard MergeSamFiles analysis.
 
             java_process = runnable_process_sample.add_runnable_step(runnable_step=RunnableStep(
                 name='picard_merge_sam_files',
@@ -1439,15 +1449,21 @@ class VariantCallingGATK(Analysis):
             for file_path in vc_process_sample_replicates:
                 sub_command.add_option_pair(key='COMMENT', value=file_path)
             sub_command.add_option_pair(key='TMP_DIR', value=file_path_dict_sample['temporary_directory'])
+            # VERBOSITY defaults to 'INFO'.
             sub_command.add_option_pair(key='VERBOSITY', value='WARNING')
-            sub_command.add_option_pair(key='QUIET', value='false')
-            sub_command.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
-            sub_command.add_option_pair(key='COMPRESSION_LEVEL', value='5')
+            # QUIET defaults to 'false'.
+            # VALIDATION_STRINGENCY defaults to 'STRICT'.
+            # COMPRESSION_LEVEL defaults to '5'.
+            sub_command.add_option_pair(key='COMPRESSION_LEVEL', value='9')
+            # MAX_RECORDS_IN_RAM defaults to '500000'.
             sub_command.add_option_pair(key='MAX_RECORDS_IN_RAM', value='4000000')
+            # CREATE_INDEX defaults to 'false'.
             sub_command.add_option_pair(key='CREATE_INDEX', value='true')
+            # CREATE_MD5_FILE defaults to 'false'.
             sub_command.add_option_pair(key='CREATE_MD5_FILE', value='true')
+            # OPTIONS_FILE
 
-            # Run the Picard MarkDuplicates step, unless configured to skip it.
+            # Run the Picard MarkDuplicates analysis, unless configured to skip it.
             # Optical duplicates should already have been flagged in the lane-specific processing step.
 
             if self.skip_mark_duplicates:
@@ -1489,15 +1505,22 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_pair(key='READ_NAME_REGEX',
                                             value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
                 sub_command.add_option_pair(key='TMP_DIR', value=file_path_dict_sample['temporary_directory'])
+                # VERBOSITY defaults to 'INFO'.
                 sub_command.add_option_pair(key='VERBOSITY', value='WARNING')
-                sub_command.add_option_pair(key='QUIET', value='false')
-                sub_command.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
-                sub_command.add_option_pair(key='COMPRESSION_LEVEL', value='5')
+                # QUIET defaults to 'false'.
+                # VALIDATION_STRINGENCY defaults to 'STRICT'.
+                # COMPRESSION_LEVEL defaults to '5'.
+                sub_command.add_option_pair(key='COMPRESSION_LEVEL', value='9')
+                # MAX_RECORDS_IN_RAM defaults to '500000'.
                 sub_command.add_option_pair(key='MAX_RECORDS_IN_RAM', value='4000000')
+                # CREATE_INDEX defaults to 'false'.
                 sub_command.add_option_pair(key='CREATE_INDEX', value='true')
+                # CREATE_MD5_FILE defaults to 'false'.
                 sub_command.add_option_pair(key='CREATE_MD5_FILE', value='true')
+                # OPTIONS_FILE
 
-            # Run the GATK RealignerTargetCreator step as the first-pass walker for the IndelRealigner step.
+            # Run the GATK RealignerTargetCreator analysis as the first-pass walker
+            # for the GATK IndelRealigner analysis.
 
             java_process = runnable_process_sample.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_realigner_target_creator',
@@ -1529,7 +1552,8 @@ class VariantCallingGATK(Analysis):
             sub_command.add_option_long(key='input_file', value=file_path_dict_sample['duplicates_marked_bam'])
             sub_command.add_option_long(key='out', value=file_path_dict_sample['realigner_targets'])
 
-            # Run the GATK IndelRealigner step as a second-pass walker after the GATK RealignerTargetCreator step.
+            # Run the GATK IndelRealigner analysis as a second-pass walker
+            # after the GATK RealignerTargetCreator analysis.
 
             java_process = runnable_process_sample.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_indel_realigner',
@@ -1569,7 +1593,7 @@ class VariantCallingGATK(Analysis):
             # For debugging only.
             # sub_command.add_option_long(key='logging_level', value='DEBUG')
 
-            # Run the Picard CollectAlignmentSummaryMetrics step.
+            # Run the Picard CollectAlignmentSummaryMetrics analysis.
 
             java_process = runnable_process_sample.add_runnable_step(runnable_step=RunnableStep(
                 name='picard_collect_alignment_summary_metrics',
@@ -1596,15 +1620,17 @@ class VariantCallingGATK(Analysis):
             sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP')
             sub_command.add_option_pair(key='REFERENCE_SEQUENCE', value=self.bwa_genome_db)
             sub_command.add_option_pair(key='TMP_DIR', value=file_path_dict_sample['temporary_directory'])
+            # VERBOSITY defaults to 'INFO'.
             sub_command.add_option_pair(key='VERBOSITY', value='WARNING')
-            sub_command.add_option_pair(key='QUIET', value='false')
-            sub_command.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
-            sub_command.add_option_pair(key='COMPRESSION_LEVEL', value='5')
-            sub_command.add_option_pair(key='MAX_RECORDS_IN_RAM', value='4000000')
-            sub_command.add_option_pair(key='CREATE_INDEX', value='true')
-            sub_command.add_option_pair(key='CREATE_MD5_FILE', value='true')
+            # QUIET defaults to 'false'.
+            # VALIDATION_STRINGENCY defaults to 'STRICT'.
+            # COMPRESSION_LEVEL defaults to '5'.
+            # MAX_RECORDS_IN_RAM defaults to '500000'.
+            # CREATE_INDEX defaults to 'false'.
+            # CREATE_MD5_FILE defaults to 'false'.
+            # OPTIONS_FILE
 
-            # Run the GATK HaplotypeCaller per sample.
+            # Run the GATK HaplotypeCaller analysis per sample.
 
             java_process = runnable_process_sample.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_haplotype_caller',
@@ -1659,6 +1685,225 @@ class VariantCallingGATK(Analysis):
             vc_process_cohort_dependencies.append(executable_process_sample.name)
             # Add the result of the variant_calling_process_sample Runnable.
             vc_process_cohort_replicates.append(file_path_dict_sample['raw_variants_gvcf_vcf'])
+
+            # Diagnose the sample
+
+            prefix_diagnosis = string.join(words=(drms_diagnose_sample.name, sample.name), sep='_')
+
+            file_path_dict_diagnosis = dict(
+                temporary_directory=prefix_diagnosis + '_temporary',
+                realigned_bam=file_path_dict_sample['realigned_bam'],
+                realigned_bai=file_path_dict_sample['realigned_bai'],
+                diagnose_targets_vcf=prefix_diagnosis + '_diagnose_targets.vcf',
+                diagnose_targets_idx=prefix_diagnosis + '_diagnose_targets.vcf.idx',
+                missing_intervals=prefix_diagnosis + '_missing.intervals',
+                missing_report=prefix_diagnosis + '_missing.gatkreport',
+                callable_bed=prefix_diagnosis + '_callable_loci.bed',
+                callable_txt=prefix_diagnosis + '_callable_loci.txt',
+                hybrid_selection_metrics=prefix_diagnosis + '_hybrid_selection_metrics.tsv',
+            )
+
+            target_interval_name = str()
+            target_interval_path = str()
+            probe_interval_path = str()
+
+            if 'Target Name' in sample.annotation:
+                target_name_list = sample.annotation['Target Name']
+                if len(target_name_list) > 1:
+                    warnings.warn('More than one set of Target Name annotations is currently not supported.\n{!r}'.
+                                  format(target_name_list))
+                target_interval_name = target_name_list[0]
+
+            if 'Target Intervals' in sample.annotation:
+                target_interval_list = sample.annotation['Target Intervals']
+                if len(target_interval_list) > 1:
+                    warnings.warn('More than one set of Target Interval annotations is currently not supported.\n{!r}'.
+                                  format(target_interval_list))
+                target_interval_path = target_interval_list[0]
+                if target_interval_path and not os.path.isabs(target_interval_path):
+                    target_interval_path = Default.get_absolute_path(
+                        file_path=target_interval_path,
+                        default_path=Default.absolute_intervals())
+
+            if 'Probe Intervals' in sample.annotation:
+                probe_interval_list = sample.annotation['Probe Intervals']
+                if len(probe_interval_list) > 1:
+                    warnings.warn('More than one set of Probe Interval annotations is currently not supported.\n{!r}'.
+                                  format(probe_interval_list))
+                probe_interval_path = probe_interval_list[0]
+                if probe_interval_path and not os.path.isabs(probe_interval_path):
+                    probe_interval_path = Default.get_absolute_path(
+                        file_path=probe_interval_path,
+                        default_path=Default.absolute_intervals())
+
+            if target_interval_path:
+                # Create a sample diagnosis-specific Runnable
+
+                runnable_diagnose_sample = self.add_runnable(runnable=Runnable(
+                    name=prefix_diagnosis,
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.genome_directory,
+                    file_path_dict=file_path_dict_diagnosis,
+                    debug=self.debug))
+
+                # Create an Executable for diagnosing the sample.
+
+                executable_diagnose_sample = drms_diagnose_sample.add_executable(
+                    executable=Executable.from_analysis_runnable(
+                        analysis=self,
+                        runnable_name=runnable_diagnose_sample.name))
+
+                executable_diagnose_sample.dependencies.extend(vc_process_sample_dependencies)
+
+                # Run the GATK DiagnoseTarget analysis per sample.
+
+                java_process = runnable_diagnose_sample.add_runnable_step(runnable_step=RunnableStep(
+                    name='gatk_diagnose_target',
+                    program='java',
+                    sub_command=Command(command=str())))
+
+                java_process.add_switch_short(
+                    key='d64')
+                java_process.add_option_short(
+                    key='jar',
+                    value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+                java_process.add_switch_short(
+                    key='Xmx8G')
+                java_process.add_option_pair(
+                    key='-Djava.io.tmpdir',
+                    value=file_path_dict_diagnosis['temporary_directory'])
+
+                sub_command = java_process.sub_command
+                sub_command.add_option_long(key='analysis_type', value='DiagnoseTargets')
+                sub_command.add_option_long(key='reference_sequence', value=self.bwa_genome_db)
+                if self.downsample_to_fraction:
+                    sub_command.add_option_long(key='downsample_to_fraction', value=self.downsample_to_fraction)
+                for interval in self.exclude_intervals_list:
+                    sub_command.add_option_long(key='excludeIntervals', value=interval)
+                for interval in self.include_intervals_list:
+                    sub_command.add_option_long(key='intervals', value=interval)
+
+                sub_command.add_option_long(key='intervals', value=target_interval_path)
+                sub_command.add_option_long(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
+                sub_command.add_option_long(
+                    key='out',
+                    value=file_path_dict_diagnosis['diagnose_targets_vcf'])
+                sub_command.add_option_long(
+                    key='missing_intervals',
+                    value=file_path_dict_diagnosis['missing_intervals'])
+
+                # Run the GATK QualifyMissingIntervals analysis per sample.
+
+                java_process = runnable_diagnose_sample.add_runnable_step(runnable_step=RunnableStep(
+                    name='gatk_qualify_missing_intervals',
+                    program='java',
+                    sub_command=Command(command=str())))
+
+                java_process.add_switch_short(
+                    key='d64')
+                java_process.add_option_short(
+                    key='jar',
+                    value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+                java_process.add_switch_short(
+                    key='Xmx8G')
+                java_process.add_option_pair(
+                    key='-Djava.io.tmpdir',
+                    value=file_path_dict_diagnosis['temporary_directory'])
+
+                sub_command = java_process.sub_command
+                sub_command.add_option_long(key='analysis_type', value='QualifyMissingIntervals')
+                sub_command.add_option_long(key='reference_sequence', value=self.bwa_genome_db)
+                if self.downsample_to_fraction:
+                    sub_command.add_option_long(key='downsample_to_fraction', value=self.downsample_to_fraction)
+                for interval in self.exclude_intervals_list:
+                    sub_command.add_option_long(key='excludeIntervals', value=interval)
+                for interval in self.include_intervals_list:
+                    sub_command.add_option_long(key='intervals', value=interval)
+
+                sub_command.add_option_long(key='intervals', value=file_path_dict_diagnosis['missing_intervals'])
+                sub_command.add_option_long(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
+                sub_command.add_option_long(key='targetsfile', value=target_interval_path)
+                sub_command.add_option_long(key='out', value=file_path_dict_diagnosis['missing_report'])
+
+                # Run the GATK CallableLoci analysis per sample.
+
+                java_process = runnable_diagnose_sample.add_runnable_step(runnable_step=RunnableStep(
+                    name='gatk_callable_loci',
+                    program='java',
+                    sub_command=Command(command=str())))
+
+                java_process.add_switch_short(
+                    key='d64')
+                java_process.add_option_short(
+                    key='jar',
+                    value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+                java_process.add_switch_short(
+                    key='Xmx8G')
+                java_process.add_option_pair(
+                    key='-Djava.io.tmpdir',
+                    value=file_path_dict_diagnosis['temporary_directory'])
+
+                sub_command = java_process.sub_command
+                sub_command.add_option_long(key='analysis_type', value='CallableLoci')
+                sub_command.add_option_long(key='reference_sequence', value=self.bwa_genome_db)
+                if self.downsample_to_fraction:
+                    sub_command.add_option_long(key='downsample_to_fraction', value=self.downsample_to_fraction)
+                for interval in self.exclude_intervals_list:
+                    sub_command.add_option_long(key='excludeIntervals', value=interval)
+                for interval in self.include_intervals_list:
+                    sub_command.add_option_long(key='intervals', value=interval)
+
+                sub_command.add_option_long(key='intervals', value=target_interval_path)
+                sub_command.add_option_long(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
+                sub_command.add_option_long(key='out', value=file_path_dict_diagnosis['callable_bed'])
+                sub_command.add_option_long(key='summary', value=file_path_dict_diagnosis['callable_txt'])
+
+                # Run the Picard CalculateHsMetrics analysis per sample.
+
+                java_process = runnable_diagnose_sample.add_runnable_step(runnable_step=RunnableStep(
+                    name='picard_calculate_hybrid_selection_metrics',
+                    program='java',
+                    sub_command=Command(command=str())))
+
+                java_process.add_switch_short(
+                    key='d64')
+                java_process.add_option_short(
+                    key='jar',
+                    value=os.path.join(self.classpath_picard, 'CalculateHsMetrics.jar'))
+                java_process.add_switch_short(
+                    key='Xmx6G')
+                java_process.add_option_pair(
+                    key='-Djava.io.tmpdir',
+                    value=file_path_dict_diagnosis['temporary_directory'])
+
+                sub_command = java_process.sub_command
+                if probe_interval_path:
+                    sub_command.add_option_pair(key='BAIT_INTERVALS', value=probe_interval_path)
+                else:
+                    sub_command.add_option_pair(key='BAIT_INTERVALS', value=target_interval_path)
+                if target_interval_name:
+                    sub_command.add_option_pair(key='BAIT_SET_NAME', value=target_interval_name)
+                sub_command.add_option_pair(key='TARGET_INTERVALS', value=target_interval_path)
+                sub_command.add_option_pair(key='INPUT', value=file_path_dict_diagnosis['realigned_bam'])
+                sub_command.add_option_pair(key='OUTPUT', value=file_path_dict_diagnosis['hybrid_selection_metrics'])
+
+                sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='ALL_READS')
+                sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='SAMPLE')
+                sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='LIBRARY')
+                sub_command.add_option_pair(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP')
+                sub_command.add_option_pair(key='REFERENCE_SEQUENCE', value=self.bwa_genome_db)
+                # PER_TARGET_COVERAGE
+                # TMP_DIR
+                sub_command.add_option_pair(key='TMP_DIR', value=file_path_dict_diagnosis['temporary_directory'])
+                # VERBOSITY defaults to 'INFO'.
+                sub_command.add_option_pair(key='VERBOSITY', value='WARNING')
+                # QUIET defaults to 'false'.
+                # VALIDATION_STRINGENCY defaults to 'STRICT'.
+                # COMPRESSION_LEVEL defaults to '5'.
+                # MAX_RECORDS_IN_RAM defaults to '500000'.
+                # CREATE_INDEX defaults to 'false'.
+                # CREATE_MD5_FILE defaults to 'false'.
+                # OPTIONS_FILE
 
         # Step 3: Process per cohort.
         #
@@ -1725,7 +1970,7 @@ class VariantCallingGATK(Analysis):
         # Should sample annotation sheets be read or can the combined GVCF file be read in
         # to extract the actual sample names?
 
-        # Run the GATK CombineGVCFs step for the cohort defined in this project.
+        # Run the GATK CombineGVCFs analysis for the cohort defined in this project.
 
         java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
             name='gatk_combine_gvcfs',
@@ -1754,7 +1999,7 @@ class VariantCallingGATK(Analysis):
             sub_command.add_option_long(key='variant', value=file_path)
         sub_command.add_option_long(key='out', value=file_path_dict_cohort['combined_gvcf_vcf'])
 
-        # Run an additional GATK CombineGVCFs step to merge into a super-cohort.
+        # Run an additional GATK CombineGVCFs analysis to merge into a super-cohort.
 
         if len(self.accessory_cohort_gvcfs):
             java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
@@ -1785,7 +2030,7 @@ class VariantCallingGATK(Analysis):
             sub_command.add_option_long(key='variant', value=file_path_dict_cohort['combined_gvcf_vcf'])
             sub_command.add_option_long(key='out', value=file_path_dict_cohort['temporary_gvcf_vcf'])
 
-        # Run the GATK GenotypeGVCFs step.
+        # Run the GATK GenotypeGVCFs analysis.
 
         java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
             name='gatk_genotype_gvcfs',
@@ -1825,7 +2070,7 @@ class VariantCallingGATK(Analysis):
             file_path_dict_cohort['recalibrated_snp_raw_indel_idx'] = file_path_dict_cohort['genotyped_raw_idx']
         else:
 
-            # Run the GATK VariantRecalibrator for SNPs.
+            # Run the GATK VariantRecalibrator analysis on SNPs.
 
             java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_variant_recalibrator_snp',
@@ -1868,7 +2113,7 @@ class VariantCallingGATK(Analysis):
             sub_command.add_option_long(key='tranches_file', value=file_path_dict_cohort['tranches_snp'])
             sub_command.add_option_long(key='rscript_file', value=file_path_dict_cohort['plots_snp'])
 
-            # Run the GATK ApplyRecalibration step for SNPs.
+            # Run the GATK ApplyRecalibration analysis on SNPs.
 
             java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_apply_recalibration_snp',
@@ -1911,7 +2156,7 @@ class VariantCallingGATK(Analysis):
                 file_path_dict_cohort['recalibrated_snp_raw_indel_idx']
         else:
 
-            # Run the GATK VariantRecalibrator for INDELs.
+            # Run the GATK VariantRecalibrator analysis on INDELs.
 
             java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_variant_recalibrator_indel',
@@ -1955,7 +2200,7 @@ class VariantCallingGATK(Analysis):
             sub_command.add_option_long(key='tranches_file', value=file_path_dict_cohort['tranches_indel'])
             sub_command.add_option_long(key='rscript_file', value=file_path_dict_cohort['plots_indel'])
 
-            # Run the GATK ApplyRecalibration step for INDELs.
+            # Run the GATK ApplyRecalibration analysis on INDELs.
 
             java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_apply_recalibration_indel',
@@ -2060,7 +2305,7 @@ class VariantCallingGATK(Analysis):
         sub_command.arguments.append(self.snpeff_genome_version)
         sub_command.arguments.append(file_path_dict_cohort['multi_sample_vcf'])
 
-        # Run the GATK VariantAnnotator
+        # Run the GATK VariantAnnotator analysis.
 
         java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
             name='gatk_variant_annotator',
@@ -2136,7 +2381,7 @@ class VariantCallingGATK(Analysis):
                 file_path_dict=file_path_dict_split,
                 debug=self.debug))
 
-            # Run the GATK SelectVariants step to split multi-sample VCF files into one per sample.
+            # Run the GATK SelectVariants analysis to split multi-sample VCF files into one per sample.
 
             java_process = runnable_split_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_select_variants',
@@ -2167,7 +2412,7 @@ class VariantCallingGATK(Analysis):
             sub_command.add_option_long(key='sample_name', value=sample.name)
             sub_command.add_switch_long(key='excludeNonVariants')
 
-            # Run the GATK VariantsToTable step.
+            # Run the GATK VariantsToTable analysis.
 
             java_process = runnable_split_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_variants_to_table',
@@ -2244,6 +2489,8 @@ class VariantCallingGATK(Analysis):
                     runnable_name=runnable_split_cohort.name))
 
             executable_split_cohort.dependencies.append(executable_process_cohort.name)
+
+        return
 
     def report(self):
         """Create a C{VariantCallingGATK} report in HTML format and a UCSC Genome Browser Track Hub.
@@ -2460,3 +2707,5 @@ class VariantCallingGATK(Analysis):
         self.ucsc_hub_write_hub(prefix='variant_calling')
         self.ucsc_hub_write_genomes(prefix='variant_calling')
         self.ucsc_hub_write_tracks(output=track_output, prefix='variant_calling')
+
+        return
