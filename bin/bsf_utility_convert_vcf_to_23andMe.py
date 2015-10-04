@@ -29,7 +29,6 @@
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import string
 
 
 argument_parser = argparse.ArgumentParser(
@@ -63,21 +62,21 @@ for line in input_fh:
         continue
 
     # Split VCF lines on tabs into VCF fields.
-    vcf_fields = string.split(s=line.rstrip(), sep='\t')
+    vcf_fields = line.rstrip().split('\t')
     alleles = '..'
 
     # The genotype (GT) is in field 10, the REF in field 4 and ALT in field 5.
 
     genotype_index = 0
 
-    info_fields = string.split(s=vcf_fields[8], sep=':')
+    info_fields = vcf_fields[8].split(':')
 
     for i in range(0, len(info_fields)):
         if info_fields[i] == 'GT':
             genotype_index = i
             break
 
-    sample_fields = string.split(vcf_fields[9], sep=':')
+    sample_fields = vcf_fields[9].split(':')
 
     if sample_fields[genotype_index] == '0/0':
         alleles = vcf_fields[3] + vcf_fields[3]
@@ -91,7 +90,7 @@ for line in input_fh:
         print 'Unexpected genotype {!r} in line: {}'.format(vcf_fields[9], line)
 
     # The identifier (ID) is in field 2,  the chromosome (CHROM) in field 0 and the position (POS) in field 1.
-    output_fh.write(string.join(words=(vcf_fields[2], vcf_fields[0], vcf_fields[1], alleles), sep='\t') + '\n')
+    output_fh.write("\t".join((vcf_fields[2], vcf_fields[0], vcf_fields[1], alleles)) + "\n")
 
 input_fh.close()
 output_fh.close()

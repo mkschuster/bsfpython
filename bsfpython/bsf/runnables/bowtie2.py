@@ -31,7 +31,6 @@ import errno
 import os
 import re
 import shutil
-import string
 
 import bsf
 from bsf import Command, Default, Executable, Runnable
@@ -276,7 +275,7 @@ def run_bowtie2(runnable):
         bowtie2.options.pop('1', None)
         bowtie2.options.pop('2', None)
 
-        bowtie2.add_option_short(key='U', value=string.join(words=fastq_list, sep=','))
+        bowtie2.add_option_short(key='U', value=','.join(fastq_list))
 
         sam_file_path = os.path.join(
             runnable.file_path_dict['temporary_directory'],

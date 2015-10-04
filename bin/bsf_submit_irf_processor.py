@@ -29,7 +29,6 @@
 from argparse import ArgumentParser
 import datetime
 import os
-import string
 import time
 
 from bsf import Default
@@ -227,7 +226,7 @@ if name_space.library_path:
 # if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
 
 if not bid.library_path:
-    library_path = string.join(words=(bid.project_name, 'libraries.csv'), sep='_')
+    library_path = '_'.join((bid.project_name, 'libraries.csv'))
     if os.path.exists(path=library_path):
         bid.library_path = library_path
 

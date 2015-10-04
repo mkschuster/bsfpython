@@ -28,7 +28,6 @@
 
 import argparse
 import os
-import string
 
 
 # Set the environment consistently.
@@ -139,6 +138,6 @@ for sequence_name in sequence_name_list:
     interval_list.sort(cmp=lambda x, y: cmp(int(x[1]), int(y[1])))
 
     for interval_fields in interval_list:
-        output_file.write(string.join(words=interval_fields, sep="\t") + "\n")
+        output_file.write("\t".join(interval_fields) + "\n")
 
 output_file.close()

@@ -27,7 +27,6 @@
 
 import numpy
 import re
-import string
 
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
@@ -110,7 +109,7 @@ for vulgar in vulgar_list:
 
     print "Query: ", vulgar.q_name
     for exonerate_tuple in vulgar.triplet_list:
-        print "Operation: ", string.join(words=exonerate_tuple, sep=' ')
+        print "Operation: ", ' '.join(exonerate_tuple)
 
 # Clean up stage: close all SeqIO file handles.
 

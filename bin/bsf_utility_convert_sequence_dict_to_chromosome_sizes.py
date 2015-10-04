@@ -33,7 +33,6 @@
 
 import argparse
 import os
-import string
 
 
 # Set the environment consistently.
@@ -68,9 +67,10 @@ input_file = open(name_space.input_path, 'r')
 output_file = open(name_space.output_path, 'w')
 
 for line in input_file:
+    assert isinstance(line, str)
     if not line.startswith('@SQ'):
         continue
-    columns = string.split(s=line.rstrip(), sep='\t')
+    columns = line.rstrip().split("\t")
     sequence_name = str()
     sequence_length = str()
 
@@ -86,7 +86,7 @@ for line in input_file:
             sequence_length = column[3:]
             break
 
-    output_file.write(string.join(words=(sequence_name, sequence_length), sep="\t") + "\n")
+    output_file.write("\t".join((sequence_name, sequence_length)) + "\n")
 
 input_file.close()
 output_file.close()

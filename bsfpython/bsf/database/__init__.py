@@ -159,7 +159,7 @@ class DatabaseAdaptor(object):
         @rtype: str
         """
 
-        return string.join(words=self._get_column_name_list_with_primary(), sep=', ')
+        return ', '.join(self._get_column_name_list_with_primary())
 
     def _build_column_definition_expression(self):
         """Build an SQL expression of column definitions typically used in C{CREATE TABLE} statements.
@@ -168,9 +168,7 @@ class DatabaseAdaptor(object):
         @rtype: str
         """
 
-        return string.join(
-            words=map(lambda x: string.join(words=(x[0], x[1]), sep=' '), self.column_definition),
-            sep=', ')
+        return ', '.join(map(lambda x: ' '.join((x[0], x[1])), self.column_definition))
 
     def _build_column_insert_expression(self):
         """Build an SQL expression of column names typically used in C{INSERT} statements.
@@ -181,7 +179,7 @@ class DatabaseAdaptor(object):
         @rtype: str
         """
 
-        return string.join(words=self._get_column_name_list_without_primary(), sep=', ')
+        return ', '.join(self._get_column_name_list_without_primary())
 
     def _build_value_insert_expression(self):
         """Build an SQL expression of value placeholders (?) typically used in C{INSERT} statements.
@@ -190,9 +188,7 @@ class DatabaseAdaptor(object):
         @rtype: str
         """
 
-        return string.join(
-            words=map(lambda x: '?', self._get_column_name_list_without_primary()),
-            sep=', ')
+        return ', '.join(map(lambda x: '?', self._get_column_name_list_without_primary()))
 
     def _build_column_update_expression(self):
         """Build an SQL expression of column name and value placeholder pairs
@@ -203,9 +199,7 @@ class DatabaseAdaptor(object):
         @rtype: str
         """
 
-        return string.join(
-            words=map(lambda x: '{} = ?'.format(x), self._get_column_name_list_without_primary()),
-            sep=', ')
+        return ', '.join(map(lambda x: '{} = ?'.format(x), self._get_column_name_list_without_primary()))
 
     def statement_create_table(self):
         """Build an SQL C{CREATE TABLE} statement.

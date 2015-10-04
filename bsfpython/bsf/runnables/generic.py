@@ -33,7 +33,6 @@ import datetime
 import errno
 import os
 import shutil
-import string
 
 from bsf import Runnable, RunnableStep
 
@@ -66,7 +65,7 @@ def _runnable_step_status_file_path(runnable, runnable_step):
     @rtype: str
     """
 
-    return string.join(words=(runnable.name, runnable_step.name, 'completed.txt'), sep='_')
+    return '_'.join((runnable.name, runnable_step.name, 'completed.txt'))
 
 
 def _runnable_step_status_file_create(runnable, runnable_step):

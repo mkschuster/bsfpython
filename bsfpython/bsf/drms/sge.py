@@ -121,7 +121,7 @@ def submit(drms, debug=0):
         if len(resource_list):
 
             command.append('-l')
-            command.append(string.join(words=resource_list, sep=','))
+            command.append(','.join(resource_list))
 
         # Parallel environment
 
@@ -179,7 +179,7 @@ def submit(drms, debug=0):
 
         if len(executable.dependencies):
             command.append('-hold_jid')
-            command.append(string.join(words=executable.dependencies, sep=','))
+            command.append(','.join(executable.dependencies))
 
         command.extend(executable.command_list())
 
@@ -232,7 +232,7 @@ def submit(drms, debug=0):
 
         # Copy the SGE command line to the Bash script.
 
-        output += string.join(words=command, sep=' ') + "\n"
+        output += ' '.join(command) + "\n"
         output += "\n"
 
     script_path = os.path.join(drms.working_directory, 'bsfpython_sge_{}.bash'.format(drms.name))

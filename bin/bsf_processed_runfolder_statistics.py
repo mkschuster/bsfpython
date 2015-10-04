@@ -29,7 +29,6 @@ import argparse
 import os.path
 import re
 from stat import *
-import string
 
 from bsf import Default
 
@@ -73,4 +72,4 @@ for file_name in os.listdir(prf_path):
 
                     values = line.split()
 
-                    print 'Line: {}'.format(string.join(words=values, sep=' '))
+                    print 'Line: {}'.format(' '.join(values))

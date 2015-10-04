@@ -30,7 +30,6 @@ A package of classes and methods supporting NGS-specific analyses such as ChIP-S
 import errno
 import os
 import re
-import string
 import warnings
 
 from bsf import Analysis, Configuration, Default, defaults, DRMS, Executable
@@ -525,11 +524,11 @@ class ChIPSeq(Analysis):
                         reads2.append(paired_reads.reads2.file_path)
 
                 if len(reads1) and not len(reads2):
-                    bowtie2.add_option_short(key='U', value=string.join(words=reads1, sep=','))
+                    bowtie2.add_option_short(key='U', value=','.join(reads1))
                 elif len(reads1) and len(reads2):
-                    bowtie2.add_option_short(key='1', value=string.join(words=reads1, sep=','))
+                    bowtie2.add_option_short(key='1', value=','.join(reads1))
                 if len(reads2):
-                    bowtie2.add_option_short(key='2', value=string.join(words=reads2, sep=','))
+                    bowtie2.add_option_short(key='2', value=','.join(reads2))
 
                 # TODO: The following options are properties of the Sample,
                 # PairedReads and Reads objects.
@@ -2203,7 +2202,7 @@ class RunFastQC(Analysis):
                     if paired_reads.reads2:
                         reads2.append(paired_reads.reads2.file_path)
 
-                fastqc.arguments.append(string.join(words=reads1 + reads2, sep=' '))
+                fastqc.arguments.append(' '.join(reads1 + reads2))
 
     def report(self):
         """Create C{RunFastQC} report in HTML format.

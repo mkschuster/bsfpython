@@ -29,7 +29,6 @@ specific for Illumina HiSeq systems.
 
 
 import os.path
-import string
 import warnings
 from xml.etree.ElementTree import ElementTree, Element
 
@@ -142,7 +141,7 @@ class RunInformation(object):
         """
 
         # Split into <Date>_<Instrument>_<Number>_<FCPosition><Flowcell>
-        components = string.split(run_identifier, sep='_')
+        components = run_identifier.split('_')
 
         if len(components) != 4:
             warnings.warn('Cannot split Illumina Run Identifier {!r} into its components.'.format(run_identifier))
@@ -1015,7 +1014,7 @@ class RunFolder(object):
         irf = cls(
             file_path=file_path,
             file_type='Illumina',
-            name=string.join(words=components[:], sep='_'),
+            name='_'.join(components),
             date=components[0],
             instrument=components[1],
             run=components[2],

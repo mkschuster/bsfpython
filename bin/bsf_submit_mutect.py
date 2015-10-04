@@ -29,7 +29,6 @@
 from argparse import ArgumentParser
 import os
 from pickle import Pickler, HIGHEST_PROTOCOL
-import string
 
 from bsf import Analysis, Command, Default, DRMS, Executable
 from bsf.annotation import SampleAnnotationSheet
@@ -49,7 +48,7 @@ def _read_comparisons(analysis, cmp_file):
             if group_name and len(group_samples):
                 key += group_name
                 key += '__'
-                # key = string.join(words=(key, group_name), sep='__')
+                # key = '__'.join((key, group_name))
                 comparison_groups.append((group_name, group_samples))
                 # Also expand each Python list of Sample objects to get all those Sample objects
                 # that this Analysis needs considering.
@@ -170,7 +169,7 @@ annotation_resources_dict = dict()
 if config_parser.has_option(section=config_section, option='annotation_resources'):
     for annotation_resource in \
             config_parser.get(section=config_section, option='annotation_resources').split(','):
-        resource_section = string.join(words=(annotation_resource, 'resource'), sep='_')
+        resource_section = '_'.join((annotation_resource, 'resource'))
         if config_parser.has_section(section=resource_section):
             annotation_list = list()
             if config_parser.has_option(section=resource_section, option='file_path'):
@@ -220,7 +219,7 @@ for key in key_list:
     if len(analysis.comparisons[key]) != 2:
         continue
 
-    prefix_somatic = string.join((vc_run_somatic_drms.name, key), sep='_')
+    prefix_somatic = '_'.join((vc_run_somatic_drms.name, key))
 
     # Somatic variant calling-specific file paths
 
@@ -406,12 +405,12 @@ for key in key_list:
         if len(annotation_resources_dict[annotation_resource][0]) \
                 and len(annotation_resources_dict[annotation_resource][1]):
             sub_command.add_option_long(
-                key=string.join(words=('resource', annotation_resource), sep=':'),
+                key=':'.join(('resource', annotation_resource)),
                 value=annotation_resources_dict[annotation_resource][0])
             for annotation in annotation_resources_dict[annotation_resource][1]:
                 sub_command.add_option_long(
                     key='expression',
-                    value=string.join(words=(annotation_resource, annotation), sep='.'))
+                    value='.'.join((annotation_resource, annotation)))
 
     sub_command.add_option_long(key='variant', value=file_path_somatic['combined_vcf'])
     # TODO: Test whether annotation AlleleBalanceBySample works in GATK 3.2.
@@ -480,7 +479,7 @@ for key in key_list:
             for annotation in annotation_resources_dict[annotation_resource][1]:
                 sub_command.add_option_long(
                     key='fields',
-                    value=string.join(words=(annotation_resource, annotation), sep='.'))
+                    value='.'.join((annotation_resource, annotation)))
 
     pickler_dict_somatic[java_process.name] = java_process
 

@@ -28,7 +28,6 @@ A package of classes and methods supporting variant calling analyses.
 
 import os.path
 from pickle import Pickler, HIGHEST_PROTOCOL
-import string
 import warnings
 
 from bsf import Analysis, Command, Configuration, Default, defaults, DRMS, Executable, Runnable, RunnableStep
@@ -496,7 +495,7 @@ class VariantCallingGATK(Analysis):
                     section=section,
                     option='annotation_resources').split(','):
                 annotation_resource = annotation_resource.strip()  # Strip white space around commas.
-                resource_section = string.join(words=(annotation_resource, 'resource'), sep='_')
+                resource_section = '_'.join((annotation_resource, 'resource'))
                 if configuration.config_parser.has_section(section=resource_section):
                     annotation_list = list()
                     if configuration.config_parser.has_option(section=resource_section, option='file_path'):
@@ -667,11 +666,11 @@ class VariantCallingGATK(Analysis):
         config_parser = self.configuration.config_parser
         config_section = self.configuration.section_from_instance(self)
 
-        resource_option = string.join(words=('vqsr_resources', variation_type), sep='_')
+        resource_option = '_'.join(('vqsr_resources', variation_type))
         if config_parser.has_option(section=config_section, option=resource_option):
             for resource in config_parser.get(section=config_section, option=resource_option).split(','):
                 resource = resource.strip()
-                resource_section = string.join(words=('vqsr', variation_type, resource), sep='_')
+                resource_section = '_'.join(('vqsr', variation_type, resource))
                 if config_parser.has_section(section=resource_section):
                     if resource in vqsr_resources_dict:
                         resource_dict = vqsr_resources_dict[resource]
@@ -976,10 +975,10 @@ class VariantCallingGATK(Analysis):
                     bwa_mem.add_option_short(key='R', value=read_group)
 
                 if len(reads1) and not len(reads2):
-                    bwa_mem.arguments.append(string.join(words=reads1, sep=','))
+                    bwa_mem.arguments.append(','.join(reads1))
                 elif len(reads1) and len(reads2):
-                    bwa_mem.arguments.append(string.join(words=reads1, sep=','))
-                    bwa_mem.arguments.append(string.join(words=reads2, sep=','))
+                    bwa_mem.arguments.append(','.join(reads1))
+                    bwa_mem.arguments.append(','.join(reads2))
                 elif not len(reads1) and len(reads2):
                     warnings.warn('Only second reads, but no first reads have been defined.')
                 else:
@@ -1014,7 +1013,7 @@ class VariantCallingGATK(Analysis):
                 # Create a bsf_run_bwa.py job to run the pickled object.
 
                 run_bwa = drms_align_lane.add_executable(executable=Executable.from_analysis(
-                    name=string.join(words=(drms_align_lane.name, replicate_key), sep='_'),
+                    name='_'.join((drms_align_lane.name, replicate_key)),
                     program='bsf_run_bwa.py',
                     analysis=self))
 
@@ -1025,7 +1024,7 @@ class VariantCallingGATK(Analysis):
                 # Check also for existence of a new-style Runnable status file.
                 if os.path.exists(os.path.join(
                         drms_align_lane.working_directory,
-                        string.join(words=(drms_align_lane.name, replicate_key, 'completed.txt'), sep='_'))):
+                        '_'.join((drms_align_lane.name, replicate_key, 'completed.txt')))):
                     run_bwa.submit = False
 
                     # Set run_bwa options.
@@ -1033,7 +1032,7 @@ class VariantCallingGATK(Analysis):
                 run_bwa.add_option_long(key='pickler_path', value=pickler_path)
                 run_bwa.add_option_long(key='debug', value=str(self.debug))
 
-                prefix_lane = string.join(words=(drms_process_lane.name, replicate_key), sep='_')
+                prefix_lane = '_'.join((drms_process_lane.name, replicate_key))
 
                 # Lane-specific file paths
 
@@ -1395,7 +1394,7 @@ class VariantCallingGATK(Analysis):
             #   Picard CollectAlignmentSummaryMetrics
             #   GATK HaplotypeCaller
 
-            prefix_sample = string.join(words=(drms_process_sample.name, sample.name), sep='_')
+            prefix_sample = '_'.join((drms_process_sample.name, sample.name))
 
             file_path_dict_sample = dict(
                 temporary_directory=prefix_sample + '_temporary',
@@ -1688,7 +1687,7 @@ class VariantCallingGATK(Analysis):
 
             # Diagnose the sample
 
-            prefix_diagnosis = string.join(words=(drms_diagnose_sample.name, sample.name), sep='_')
+            prefix_diagnosis = '_'.join((drms_diagnose_sample.name, sample.name))
 
             file_path_dict_diagnosis = dict(
                 temporary_directory=prefix_diagnosis + '_temporary',
@@ -1914,7 +1913,7 @@ class VariantCallingGATK(Analysis):
         #   GATK ApplyRecalibration for SNPs
         #   GATK ApplyRecalibration for INDELs
 
-        prefix_cohort = string.join(words=(drms_process_cohort.name, self.cohort_name), sep='_')
+        prefix_cohort = '_'.join((drms_process_cohort.name, self.cohort_name))
 
         file_path_dict_cohort = dict(
             temporary_directory=prefix_cohort + '_temporary',
@@ -2338,13 +2337,13 @@ class VariantCallingGATK(Analysis):
             if len(self.annotation_resources_dict[annotation_resource][0]) \
                     and len(self.annotation_resources_dict[annotation_resource][1]):
                 sub_command.add_option_long(
-                    key=string.join(words=('resource', annotation_resource), sep=':'),
+                    key=':'.join(('resource', annotation_resource)),
                     value=self.annotation_resources_dict[annotation_resource][0])
                 for annotation in self.annotation_resources_dict[annotation_resource][1]:
                     assert isinstance(annotation, str)
                     sub_command.add_option_long(
                         key='expression',
-                        value=string.join(words=(annotation_resource, annotation), sep='.'))
+                        value='.'.join((annotation_resource, annotation)))
 
         sub_command.add_option_long(key='variant', value=file_path_dict_cohort['multi_sample_vcf'])
         # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
@@ -2366,7 +2365,7 @@ class VariantCallingGATK(Analysis):
 
         for sample in self.samples:
 
-            prefix_split = string.join(words=(drms_split_cohort.name, sample.name), sep='_')
+            prefix_split = '_'.join((drms_split_cohort.name, sample.name))
 
             file_path_dict_split = dict(
                 temporary_directory=prefix_split + '_temporary',
@@ -2479,7 +2478,7 @@ class VariantCallingGATK(Analysis):
                         assert isinstance(annotation, str)
                         sub_command.add_option_long(
                             key='fields',
-                            value=string.join(words=(annotation_resource, annotation), sep='.'))
+                            value='.'.join((annotation_resource, annotation)))
 
             # Create an Executable for splitting the cohort.
 
@@ -2568,10 +2567,10 @@ class VariantCallingGATK(Analysis):
                 print sample.trace(1)
 
             runnable_process_sample = self.runnable_dict[
-                string.join(words=(self.drms_name_process_sample, sample.name), sep='_')]
+                '_'.join((self.drms_name_process_sample, sample.name))]
             assert isinstance(runnable_process_sample, Runnable)
             runnable_split_cohort = self.runnable_dict[
-                string.join(words=(self.drms_name_split_cohort, sample.name), sep='_')]
+                '_'.join((self.drms_name_split_cohort, sample.name))]
             assert isinstance(runnable_split_cohort, Runnable)
 
             track_output += 'track {}_alignments\n'. \
@@ -2630,7 +2629,7 @@ class VariantCallingGATK(Analysis):
             for replicate_key in replicate_keys:
 
                 runnable_process_lane = self.runnable_dict[
-                    string.join(words=(self.drms_name_process_lane, replicate_key), sep='_')]
+                    '_'.join((self.drms_name_process_lane, replicate_key))]
                 assert isinstance(runnable_process_lane, Runnable)
                 output += '<tr>\n'
                 output += '<td></td>\n'  # Sample
@@ -2662,7 +2661,7 @@ class VariantCallingGATK(Analysis):
         output += '<tbody>\n'
 
         runnable_process_cohort = self.runnable_dict[
-            string.join(words=(self.drms_name_process_cohort, self.cohort_name), sep='_')]
+            '_'.join((self.drms_name_process_cohort, self.cohort_name))]
         assert isinstance(runnable_process_cohort, Runnable)
 
         output += '<tr>\n'

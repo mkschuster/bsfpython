@@ -30,7 +30,6 @@ import inspect
 import os.path
 import re
 from stat import *
-import string
 
 from bsf import Default
 import bsf.defaults.web as web
@@ -67,7 +66,7 @@ def scan_directory(report_dict, directory_root, directory_path=None):
             match = re.search(pattern=r'^(.*)_report.html$', string=file_name)
             if match:
                 report_type = match.group(1)
-                if not directory_path in report_dict:
+                if directory_path not in report_dict:
                     report_dict[directory_path] = list()
                 report_dict[directory_path].append(report_type)
 
@@ -89,14 +88,14 @@ def scan_projects(project_name):
             return file_name
 
 
-parser = argparse.ArgumentParser(description='Create index.html documents in BSF public_html/project folders.')
+argument_parser = argparse.ArgumentParser(description='Create index.html documents in BSF public_html/project folders.')
 
-parser.add_argument('--project', required=True, help='Project identifier')
+argument_parser.add_argument('--project', required=True, help='Project identifier')
 
-args = parser.parse_args()
+name_space = argument_parser.parse_args()
 
-project_name = str(args.project)
-project_directory = str(args.project)
+project_name = str(name_space.project)
+project_directory = str(name_space.project)
 
 if not os.path.isabs(project_directory):
 
@@ -111,10 +110,10 @@ if not os.path.isabs(project_directory):
         # If the absolute directory path still does not exist,
         # scan the projects directory for an entry that begins with the project name.
 
-        project_name = scan_projects(project_name=args.project)
+        project_name = scan_projects(project_name=name_space.project)
 
         if not project_name:
-            raise Exception('Cannot locate project directory for project {!r}.'.format(args.project))
+            raise Exception('Cannot locate project directory for project {!r}.'.format(name_space.project))
 
         project_directory = os.path.join(Default.absolute_public_html(), 'projects', project_name)
 
@@ -128,7 +127,7 @@ scan_directory(report_dict=report_dict, directory_root=project_directory, direct
 
 components = project_name.split('_')
 if re.search(pattern=r'^[0-9a-f]{32,32}$', string=components[-1]):
-    project_name = string.join(words=components[:-1], sep='_')
+    project_name = '_'.join(components[:-1])
 
 # Now evaluate the report_dictionary.
 

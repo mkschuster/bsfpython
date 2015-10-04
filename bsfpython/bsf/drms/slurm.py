@@ -31,7 +31,6 @@ import errno
 import math
 import os.path
 import re
-import string
 import subprocess
 import warnings
 
@@ -209,10 +208,10 @@ def submit(drms, debug=0):
                         raise
 
             command.append('--error')
-            command.append(os.path.join(output_directory, string.join(words=(executable.name, '%j.err'), sep='_')))
+            command.append(os.path.join(output_directory, '_'.join((executable.name, '%j.err'))))
 
             command.append('--output')
-            command.append(os.path.join(output_directory, string.join(words=(executable.name, '%j.out'), sep='_')))
+            command.append(os.path.join(output_directory, '_'.join((executable.name, '%j.out'))))
 
         # Job name
 
@@ -244,7 +243,7 @@ def submit(drms, debug=0):
             # Only set the dependency option if there are some on the process identifier list.
             # The identifier list may be empty if no dependencies exist or no Executable has been submitted before.
             command.append('--dependency')
-            command.append(string.join(words=map(lambda x: 'afterok:' + x, process_identifier_list), sep=','))
+            command.append(','.join(map(lambda x: 'afterok:' + x, process_identifier_list)))
 
         command.extend(executable.command_list())
 
@@ -296,7 +295,7 @@ def submit(drms, debug=0):
 
         # Copy the SLURM command line to the Bash script.
 
-        output += string.join(words=command, sep=' ') + "\n"
+        output += ' '.join(command) + "\n"
         output += "\n"
 
         # Regardless of an actual Executable submission, UPDATE it in or INSERT it into the SQLite database.

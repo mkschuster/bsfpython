@@ -28,7 +28,6 @@
 
 from argparse import ArgumentParser
 import os
-import string
 
 from bsf.annotation import LibraryAnnotationSheet
 
@@ -75,7 +74,7 @@ for file_name in file_name_list:
 
         for i in range(1, 9):
             key = str(i)
-            lane_name = string.join(words=(file_name[:-15], key), sep='_')
+            lane_name = '_'.join((file_name[:-15], key))
             if key in lane_dict:
                 print lane_name + ',' + str(lane_dict[key])
             else:

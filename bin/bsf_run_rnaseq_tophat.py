@@ -32,7 +32,6 @@ import os
 from pickle import Unpickler
 import re
 import shutil
-import string
 
 from bsf import Command, Default, Executable
 
@@ -54,7 +53,7 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     # Create a temporary SAM file of the same name to store the SAM header.
 
     path_temporary_sam = os.path.basename(input_path)
-    path_temporary_sam = string.replace(s=path_temporary_sam, old='.bam', new='.sam')
+    path_temporary_sam = path_temporary_sam.replace('.bam', '.sam')
 
     samtools = Executable(name='samtools_view',
                           program='samtools',
@@ -108,7 +107,8 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
 
     platform_unit = str()
     for line in sam_header_rg:
-        for field in string.split(s=line.rstrip()):
+        assert isinstance(line, (str, unicode))
+        for field in line.rstrip().split():
             if field.startswith('PU:'):
                 platform_unit = str(field[3:])
 
@@ -193,8 +193,8 @@ assert isinstance(run_tophat, Executable)
 
 new_file_paths_1 = list()
 new_file_paths_2 = list()
-old_file_paths_1 = string.split(s=run_tophat.arguments[1], sep=',')
-old_file_paths_2 = string.split(s=run_tophat.arguments[2], sep=',')
+old_file_paths_1 = run_tophat.arguments[1].split(',')
+old_file_paths_2 = run_tophat.arguments[2].split(',')
 temporary_files = list()
 
 for i in range(0, len(old_file_paths_1)):
@@ -215,10 +215,10 @@ for i in range(0, len(old_file_paths_1)):
         if old_file_paths_2[i] and os.path.exists(path=old_file_paths_2[i]):
             new_file_paths_2.append(old_file_paths_2[i])
 
-run_tophat.arguments[1] = string.join(words=new_file_paths_1, sep=',')
+run_tophat.arguments[1] = ','.join(new_file_paths_1)
 
 if len(new_file_paths_2):
-    run_tophat.arguments[2] = string.join(words=new_file_paths_2, sep=',')
+    run_tophat.arguments[2] = ','.join(new_file_paths_2)
 else:
     # If the list of arguments is now empty truncate it to just two.
     run_tophat.arguments = run_tophat.arguments[:2]

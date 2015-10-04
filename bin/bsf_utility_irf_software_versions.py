@@ -29,7 +29,6 @@
 from argparse import ArgumentParser
 import os
 import re
-import string
 import xml
 
 from bsf.illumina import RunFolder
@@ -97,11 +96,11 @@ for file_name in file_name_list:
         irf = RunFolder.from_file_path(file_path=file_path)
     except IOError as exception:
         if name_space.debug:
-            print string.join(words=(file_name, '?', '?', '?'), sep='\t')
+            print "\t".join((file_name, '?', '?', '?'))
         continue
     except xml.etree.ElementTree.ParseError:
         if name_space.debug:
-            print string.join(words=(file_name, '?', '?', '?'), sep='\t')
+            print "\t".join((file_name, '?', '?', '?'))
         continue
     except:
         print 'Exception in run folder {!r}'.format(file_name)
