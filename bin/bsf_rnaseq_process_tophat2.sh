@@ -100,6 +100,11 @@ samtools index "${directory}/accepted_hits.bam" \
 
 # Use RseQC bam.wig.py to create a UCSC Wig file.
 
+# TODO: This is a hack and entirely CeMM cluster dependant.
+# RSeQC comes with a private copy of PySAM that overrides and thus breaks the standard Python installation.
+
+module load RSeQC/2.6.1 || exit 1
+
 # TODO: This should set the --strand rule option.
 
 bam2wig.py \
