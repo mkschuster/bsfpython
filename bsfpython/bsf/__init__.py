@@ -36,7 +36,6 @@ import os
 from pickle import Pickler, Unpickler, HIGHEST_PROTOCOL
 import shutil
 from stat import *
-import string
 from subprocess import PIPE, Popen
 import sys
 from threading import Lock, Thread
@@ -169,79 +168,88 @@ class Analysis(object):
         @rtype:
         """
 
-        if configuration:
-            self.configuration = configuration
-        else:
+        if configuration is None:
             self.configuration = Configuration()
-
-        if project_name:
-            self.project_name = project_name
         else:
+            assert isinstance(configuration, Configuration)
+            self.configuration = configuration
+
+        if project_name is None:
             self.project_name = str()
-
-        if genome_version:
-            self.genome_version = genome_version
         else:
+            self.project_name = project_name
+
+        if genome_version is None:
             self.genome_version = str()
-
-        if input_directory:
-            self.input_directory = input_directory
         else:
+            self.genome_version = genome_version
+
+        if input_directory is None:
             self.input_directory = str()
-
-        if output_directory:
-            self.output_directory = output_directory
         else:
+            self.input_directory = input_directory
+
+        if output_directory is None:
             self.output_directory = str()
-
-        if project_directory:
-            self.project_directory = project_directory
         else:
+            self.output_directory = output_directory
+
+        if project_directory is None:
             self.project_directory = str()
-
-        if genome_directory:
-            self.genome_directory = genome_directory
         else:
+            self.project_directory = project_directory
+
+        if genome_directory is None:
             self.genome_directory = str()
-
-        if sas_file:
-            self.sas_file = sas_file
         else:
+            self.genome_directory = genome_directory
+
+        if sas_file is None:
             self.sas_file = str()
-
-        if sas_prefix:
-            self.sas_prefix = sas_prefix
         else:
+            self.sas_file = sas_file
+
+        if sas_prefix is None:
             self.sas_prefix = str()
-
-        if e_mail:
-            self.e_mail = e_mail
         else:
+            self.sas_prefix = sas_prefix
+
+        if e_mail is None:
             self.e_mail = str()
-
-        self.debug = debug
-
-        if drms_list:
-            self.drms_list = drms_list
         else:
+            self.e_mail = e_mail
+
+        if debug is None:
+            self.debug = int(x=0)
+        else:
+            assert isinstance(debug, int)
+            self.debug = debug
+
+        if drms_list is None:
             self.drms_list = list()
-
-        if runnable_dict:
-            self.runnable_dict = runnable_dict
         else:
+            self.drms_list = drms_list
+
+        if runnable_dict is None:
             self.runnable_dict = dict()
-
-        self.collection = collection
-
-        if comparisons:
-            self.comparisons = comparisons
         else:
+            self.runnable_dict = runnable_dict
+
+        if collection is None:
+            self.collection = Collection()
+        else:
+            assert isinstance(collection, Collection)
+            self.collection = collection
+
+        if comparisons is None:
             self.comparisons = dict()
-
-        if samples:
-            self.samples = samples
         else:
+            self.comparisons = comparisons
+
+        if samples is None:
             self.samples = list()
+        else:
+            self.samples = samples
 
         return
 
@@ -447,9 +455,7 @@ class Analysis(object):
                     raise
 
         if self.sas_file:
-
             # Populate a Collection from a SampleAnnotationSheet.
-
             self.sas_file = os.path.expanduser(path=self.sas_file)
             self.sas_file = os.path.expandvars(path=self.sas_file)
 
@@ -466,11 +472,8 @@ class Analysis(object):
             if self.debug > 1:
                 print '{!r} Collection name: {!r}'.format(self, self.collection.name)
                 print self.collection.trace(1)
-
         else:
-
             # Create an empty Collection.
-
             self.collection = Collection()
 
         return
@@ -546,7 +549,7 @@ class Analysis(object):
         # The link_name consists of the absolute public_html directory,
         # the analysis-specific sub-directory, the project name and a 128 bit hexadecimal UUID string.
 
-        link_name = os.path.join(html_path, string.join(words=(self.project_name, uuid.uuid4().hex), sep='_'))
+        link_name = os.path.join(html_path, '_'.join((self.project_name, uuid.uuid4().hex)))
 
         # While checking for already existing symbolic links,
         # the path_name holds the complete path for each link in the sub-directory.
@@ -631,23 +634,20 @@ class Analysis(object):
         @rtype:
         """
 
-        if prefix:
-            file_name = '{}_hub.txt'.format(prefix)
-        else:
-            file_name = 'hub.txt'
-
         output = str()
 
-        if prefix:
-            output += 'hub {}_{}\n'.format(self.project_name, prefix)
-            output += 'shortLabel {}_{}\n'.format(self.project_name, prefix)
-            output += 'longLabel Project {}_{}\n'.format(self.project_name, prefix)
-            output += 'genomesFile {}_genomes.txt\n'.format(prefix)
-        else:
+        if prefix is None or not prefix:
+            file_name = 'hub.txt'
             output += 'hub {}\n'.format(self.project_name)
             output += 'shortLabel {}\n'.format(self.project_name)
             output += 'longLabel Project {}\n'.format(self.project_name)
             output += 'genomesFile genomes.txt\n'
+        else:
+            file_name = '{}_hub.txt'.format(prefix)
+            output += 'hub {}_{}\n'.format(self.project_name, prefix)
+            output += 'shortLabel {}_{}\n'.format(self.project_name, prefix)
+            output += 'longLabel Project {}_{}\n'.format(self.project_name, prefix)
+            output += 'genomesFile {}_genomes.txt\n'.format(prefix)
 
         output += 'email {}\n'.format(self.e_mail)
 
@@ -670,18 +670,15 @@ class Analysis(object):
         @rtype:
         """
 
-        if prefix:
-            file_name = '{}_genomes.txt'.format(prefix)
-        else:
-            file_name = 'genomes.txt'
-
         output = str()
 
         output += 'genome {}\n'.format(self.genome_version)
-        if prefix:
-            output += 'trackDb {}/{}_trackDB.txt\n'.format(self.genome_version, prefix)
-        else:
+        if prefix is None or not prefix:
+            file_name = 'genomes.txt'
             output += 'trackDb {}/trackDB.txt\n'.format(self.genome_version)
+        else:
+            file_name = '{}_genomes.txt'.format(prefix)
+            output += 'trackDb {}/{}_trackDB.txt\n'.format(self.genome_version, prefix)
 
         # The [prefix_]genomes.txt goes into the project directory above the genome directory.
         file_path = os.path.join(self.project_directory, file_name)
@@ -701,10 +698,10 @@ class Analysis(object):
         @rtype:
         """
 
-        if prefix:
-            file_name = '{}_trackDB.txt'.format(prefix)
-        else:
+        if prefix is None or not prefix:
             file_name = 'trackDB.txt'
+        else:
+            file_name = '{}_trackDB.txt'.format(prefix)
 
         # The [prefix_]trackDB.txt goes into the genome directory under the project directory.
         file_path = os.path.join(self.genome_directory, file_name)
@@ -784,9 +781,9 @@ class Configuration(object):
         # Python "object" instances the "__class__" variable provides the Python "type" object.
 
         if isinstance(instance, type):
-            return string.join(words=(instance.__module__, instance.__name__), sep='.')
+            return '.'.join((instance.__module__, instance.__name__))
         else:
-            return string.join(words=(instance.__module__, instance.__class__.__name__), sep='.')
+            return '.'.join((instance.__module__, instance.__class__.__name__))
 
     @classmethod
     def from_config_path(cls, config_path):
@@ -833,15 +830,16 @@ class Configuration(object):
         @rtype:
         """
 
-        if config_path:
-            self.config_path = config_path
-        else:
+        if config_path is None:
             self.config_path = str()
-
-        if config_parser:
-            self.config_parser = config_parser
         else:
+            self.config_path = config_path
+
+        if config_parser is None:
             self.config_parser = SafeConfigParser()
+        else:
+            assert isinstance(config_parser, SafeConfigParser)
+            self.config_parser = config_parser
 
         return
 
@@ -984,7 +982,7 @@ class Default(object):
         @rtype: Default
         """
 
-        if not Default.global_default:
+        if Default.global_default is None:
             Default.global_default = Default.from_global_file_path()
 
         return Default.global_default
@@ -1033,7 +1031,8 @@ class Default(object):
     def __init__(self, classpath_gatk=None, classpath_illumina2bam=None, classpath_picard=None, classpath_snpeff=None,
                  directory_home=None, directory_runs_illumina=None, directory_sequences=None, directory_samples=None,
                  directory_projects=None, directory_public_html=None, directory_genomes=None,
-                 directory_annotations=None, directory_gatk_bundle=None, directory_snpeff_data=None,
+                 directory_annotations=None, directory_gatk_bundle=None, directory_intervals=None,
+                 directory_snpeff_data=None,
                  indices=None, drms_implementation=None,
                  drms_maximum_threads=None, drms_memory_limit_hard=None, drms_memory_limit_soft=None,
                  drms_time_limit=None, drms_parallel_environment=None, drms_queue=None,
@@ -1067,6 +1066,8 @@ class Default(object):
         @type directory_annotations: str | unicode
         @param directory_gatk_bundle: Sub-directory for GATK bundle data
         @type directory_gatk_bundle: str | unicode
+        @param directory_intervals: Directory for interval list files
+        @type directory_intervals: str | unicode
         @param directory_snpeff_data: snpEff database directory
         @type directory_snpeff_data: str | unicode
         @param indices: Python C{dict} of program name key and index directory name value data
@@ -1103,157 +1104,162 @@ class Default(object):
 
         # Set Java class path information.
 
-        if classpath_gatk:
-            self.classpath_gatk = classpath_gatk
-        else:
+        if classpath_gatk is None:
             self.classpath_gatk = str()
-
-        if classpath_illumina2bam:
-            self.classpath_illumina2bam = classpath_illumina2bam
         else:
+            self.classpath_gatk = classpath_gatk
+
+        if classpath_illumina2bam is None:
             self.classpath_illumina2bam = str()
-
-        if classpath_picard:
-            self.classpath_picard = classpath_picard
         else:
+            self.classpath_illumina2bam = classpath_illumina2bam
+
+        if classpath_picard is None:
             self.classpath_picard = str()
-
-        if classpath_snpeff:
-            self.classpath_snpeff = classpath_snpeff
         else:
+            self.classpath_picard = classpath_picard
+
+        if classpath_snpeff is None:
             self.classpath_snpeff = str()
+        else:
+            self.classpath_snpeff = classpath_snpeff
 
         # Set directory information.
 
-        if directory_home:
-            self.directory_home = directory_home
-        else:
+        if directory_home is None:
             self.directory_home = str()
-
-        if directory_runs_illumina:
-            self.directory_runs_illumina = directory_runs_illumina
         else:
+            self.directory_home = directory_home
+
+        if directory_runs_illumina is None:
             self.directory_runs_illumina = str()
-
-        if directory_sequences:
-            self.directory_sequences = directory_sequences
         else:
+            self.directory_runs_illumina = directory_runs_illumina
+
+        if directory_sequences is None:
             self.directory_sequences = str()
-
-        if directory_samples:
-            self.directory_samples = directory_samples
         else:
+            self.directory_sequences = directory_sequences
+
+        if directory_samples is None:
             self.directory_samples = str()
-
-        if directory_projects:
-            self.directory_projects = directory_projects
         else:
+            self.directory_samples = directory_samples
+
+        if directory_projects is None:
             self.directory_projects = str()
-
-        if directory_public_html:
-            self.directory_public_html = directory_public_html
         else:
+            self.directory_projects = directory_projects
+
+        if directory_public_html is None:
             self.directory_public_html = str()
-
-        if directory_genomes:
-            self.directory_genomes = directory_genomes
         else:
+            self.directory_public_html = directory_public_html
+
+        if directory_genomes is None:
             self.directory_genomes = str()
-
-        if directory_annotations:
-            self.directory_annotations = directory_annotations
         else:
+            self.directory_genomes = directory_genomes
+
+        if directory_annotations is None:
             self.directory_annotations = str()
-
-        if directory_gatk_bundle:
-            self.directory_gatk_bundle = directory_gatk_bundle
         else:
+            self.directory_annotations = directory_annotations
+
+        if directory_gatk_bundle is None:
             self.directory_gatk_bundle = str()
-
-        if directory_snpeff_data:
-            self.directory_snpeff_data = directory_snpeff_data
         else:
+            self.directory_gatk_bundle = directory_gatk_bundle
+
+        if directory_intervals is None:
+            self.directory_intervals = str()
+        else:
+            self.directory_intervals = directory_intervals
+
+        if directory_snpeff_data is None:
             self.directory_snpeff_data = str()
+        else:
+            self.directory_snpeff_data = directory_snpeff_data
 
         # Set index information.
 
-        if indices:
-            self.indices = indices
-        else:
+        if indices is None:
             self.indices = dict()
+        else:
+            self.indices = indices
 
         # Set DRMS information.
 
-        if drms_implementation:
-            self.drms_implementation = drms_implementation
-        else:
+        if drms_implementation is None:
             self.drms_implementation = str()
-
-        if drms_maximum_threads:
-            self.drms_maximum_threads = drms_maximum_threads
         else:
+            self.drms_implementation = drms_implementation
+
+        if drms_maximum_threads is None:
             self.drms_maximum_threads = str()
-
-        if drms_memory_limit_hard:
-            self.drms_memory_limit_hard = drms_memory_limit_hard
         else:
+            self.drms_maximum_threads = drms_maximum_threads
+
+        if drms_memory_limit_hard is None:
             self.drms_memory_limit_hard = str()
-
-        if drms_memory_limit_soft:
-            self.drms_memory_limit_soft = drms_memory_limit_soft
         else:
+            self.drms_memory_limit_hard = drms_memory_limit_hard
+
+        if drms_memory_limit_soft is None:
             self.drms_memory_limit_soft = str()
-
-        if drms_time_limit:
-            self.drms_time_limit = drms_time_limit
         else:
+            self.drms_memory_limit_soft = drms_memory_limit_soft
+
+        if drms_time_limit is None:
             self.drms_time_limit = str()
-
-        if drms_parallel_environment:
-            self.drms_parallel_environment = drms_parallel_environment
         else:
+            self.drms_time_limit = drms_time_limit
+
+        if drms_parallel_environment is None:
             self.drms_parallel_environment = str()
-
-        if drms_queue:
-            self.drms_queue = drms_queue
         else:
+            self.drms_parallel_environment = drms_parallel_environment
+
+        if drms_queue is None:
             self.drms_queue = str()
+        else:
+            self.drms_queue = drms_queue
 
         # Set operator information.
 
-        if operator_e_mail:
-            self.operator_e_mail = operator_e_mail
-        else:
+        if operator_e_mail is None:
             self.operator_e_mail = str()
-
-        if operator_sequencing_centre:
-            self.operator_sequencing_centre = operator_sequencing_centre
         else:
+            self.operator_e_mail = operator_e_mail
+
+        if operator_sequencing_centre is None:
             self.operator_sequencing_centre = str()
+        else:
+            self.operator_sequencing_centre = operator_sequencing_centre
 
         # Set UCSC Genome Browser information.
 
-        if ucsc_host_name:
-            self.ucsc_host_name = ucsc_host_name
-        else:
+        if ucsc_host_name is None:
             self.ucsc_host_name = str()
+        else:
+            self.ucsc_host_name = ucsc_host_name
 
         # Set URL information.
 
-        if url_protocol:
-            self.url_protocol = url_protocol
-        else:
+        if url_protocol is None:
             self.url_protocol = str()
-
-        if url_host_name:
-            self.url_host_name = url_host_name
         else:
+            self.url_protocol = url_protocol
+
+        if url_host_name is None:
             self.url_host_name = str()
-
-        if url_relative_projects:
-            self.url_relative_projects = url_relative_projects
         else:
+            self.url_host_name = url_host_name
+
+        if url_relative_projects is None:
             self.url_relative_projects = str()
+        else:
+            self.url_relative_projects = url_relative_projects
 
         return
 
@@ -1292,6 +1298,7 @@ class Default(object):
         self.directory_genomes = cp.get(section=section, option='genomes')
         self.directory_annotations = cp.get(section=section, option='annotations')
         self.directory_gatk_bundle = cp.get(section=section, option='gatk_bundle')
+        self.directory_intervals = cp.get(section=section, option='intervals')
         self.directory_snpeff_data = cp.get(section=section, option='snpeff_data')
 
         section = 'indices'
@@ -1459,6 +1466,21 @@ class Default(object):
             return default.directory_genomes
 
     @staticmethod
+    def absolute_intervals():
+        """Get the absolute directory path for interval list files.
+
+        @return: Absolute path to the interval list directory
+        @rtype: str | unicode
+        """
+
+        default = Default.get_global_default()
+
+        if os.path.isabs(default.directory_intervals):
+            return default.directory_intervals
+        else:
+            return os.path.join(default.directory_home, default.directory_intervals)
+
+    @staticmethod
     def absolute_genome_annotation(genome_version):
         """Get the absolute directory path for genome annotation.
 
@@ -1517,7 +1539,7 @@ class Default(object):
 
         default = Default.get_global_default()
 
-        return string.join(words=(default.url_absolute_base(), default.url_relative_projects), sep='/')
+        return '/'.join((default.url_absolute_base(), default.url_relative_projects))
 
 
 class DRMS(object):
@@ -1585,9 +1607,7 @@ class DRMS(object):
         # A "bsf.Analysis.DRMS" or "bsf.analyses.*.DRMS" pseudo-class section specifies
         # Analysis-specific or sub-class-specific options for the DRMS, respectively.
 
-        section = string.join(
-            words=(Configuration.section_from_instance(instance=analysis), 'DRMS'),
-            sep='.')
+        section = '.'.join((Configuration.section_from_instance(instance=analysis), 'DRMS'))
         drms.set_configuration(configuration=analysis.configuration, section=section)
 
         if analysis.debug > 1:
@@ -1596,9 +1616,7 @@ class DRMS(object):
         # A "bsf.Analysis.DRMS.name" or "bsf.analyses.*.DRMS.name" section specifies defaults
         # for a particular DRMS object of an Analysis or sub-class, respectively.
 
-        section = string.join(
-            words=(Configuration.section_from_instance(instance=analysis), 'DRMS', drms.name),
-            sep='.')
+        section = '.'.join((Configuration.section_from_instance(instance=analysis), 'DRMS', drms.name))
         drms.set_configuration(configuration=analysis.configuration, section=section)
 
         if analysis.debug > 1:
@@ -1673,74 +1691,82 @@ class DRMS(object):
         @rtype:
         """
 
-        if name:
-            self.name = name
-        else:
+        if name is None:
             self.name = str()
-
-        if working_directory:
-            self.working_directory = working_directory
         else:
+            self.name = name
+
+        if working_directory is None:
             self.working_directory = str()
-
-        if implementation:
-            self.implementation = implementation
         else:
+            self.working_directory = working_directory
+
+        if implementation is None:
             self.implementation = str()
-
-        if memory_free_mem:
-            self.memory_free_mem = memory_free_mem
         else:
+            self.implementation = implementation
+
+        if memory_free_mem is None:
             self.memory_free_mem = str()
-
-        if memory_free_swap:
-            self.memory_free_swap = memory_free_swap
         else:
+            self.memory_free_mem = memory_free_mem
+
+        if memory_free_swap is None:
             self.memory_free_swap = str()
-
-        if memory_free_virtual:
-            self.memory_free_virtual = memory_free_virtual
         else:
+            self.memory_free_swap = memory_free_swap
+
+        if memory_free_virtual is None:
             self.memory_free_virtual = str()
-
-        if memory_limit_hard:
-            self.memory_limit_hard = memory_limit_hard
         else:
+            self.memory_free_virtual = memory_free_virtual
+
+        if memory_limit_hard is None:
             self.memory_limit_hard = str()
-
-        if memory_limit_soft:
-            self.memory_limit_soft = memory_limit_soft
         else:
+            self.memory_limit_hard = memory_limit_hard
+
+        if memory_limit_soft is None:
             self.memory_limit_soft = str()
-
-        if time_limit:
-            self.time_limit = time_limit
         else:
+            self.memory_limit_soft = memory_limit_soft
+
+        if time_limit is None:
             self.time_limit = str()
-
-        if parallel_environment:
-            self.parallel_environment = parallel_environment
         else:
+            self.time_limit = time_limit
+
+        if parallel_environment is None:
             self.parallel_environment = str()
-
-        if queue:
-            self.queue = queue
         else:
+            self.parallel_environment = parallel_environment
+
+        if queue is None:
             self.queue = str()
-
-        self.threads = threads
-
-        if hold:
-            self.hold = hold
         else:
+            self.queue = queue
+
+        if threads is None:
+            self.threads = int(x=1)
+        else:
+            assert isinstance(threads, int)
+            self.threads = threads
+
+        if hold is None:
             self.hold = str()
-
-        self.is_script = is_script
-
-        if executables:
-            self.executables = executables
         else:
+            self.hold = hold
+
+        if is_script is None:
+            self.is_script = False
+        else:
+            assert isinstance(is_script, bool)
+            self.is_script = is_script
+
+        if executables is None:
             self.executables = list()
+        else:
+            self.executables = executables
 
         return
 
@@ -1916,7 +1942,7 @@ class DRMS(object):
 
         # Dynamically import the module specific for the configured DRMS implementation.
 
-        module = importlib.import_module(string.join(words=(__name__, 'drms', self.implementation), sep='.'))
+        module = importlib.import_module('.'.join((__name__, 'drms', self.implementation)))
 
         module.submit(drms=self, debug=debug)
 
@@ -1955,19 +1981,19 @@ class Command(object):
         @rtype:
         """
 
-        self.command = command
+        self.command = command  # Can be None.
 
-        if options:
-            self.options = options
-        else:
+        if options is None:
             self.options = dict()
-
-        if arguments:
-            self.arguments = arguments
         else:
-            self.arguments = list()
+            self.options = options
 
-        self.sub_command = sub_command
+        if arguments is None:
+            self.arguments = list()
+        else:
+            self.arguments = arguments
+
+        self.sub_command = sub_command  # Can be None.
 
         return
 
@@ -2615,44 +2641,51 @@ class Executable(Command):
         @rtype:
         """
 
-        self.name = name
-
         super(Executable, self).__init__(command=program, options=options, arguments=arguments,
                                          sub_command=sub_command)
 
-        if stderr_path:
-            self.stderr_path = stderr_path
-        else:
+        self.name = name  # Can be None.
+
+        if stderr_path is None:
             self.stderr_path = str()
-
-        if stdout_path:
-            self.stdout_path = stdout_path
         else:
+            self.stderr_path = stderr_path
+
+        if stdout_path is None:
             self.stdout_path = str()
-
-        if dependencies:
-            self.dependencies = dependencies
         else:
+            self.stdout_path = stdout_path
+
+        if dependencies is None:
             self.dependencies = list()
-
-        if hold:
-            self.hold = hold
         else:
+            self.dependencies = dependencies
+
+        if hold is None:
             self.hold = str()
-
-        self.submit = submit
-
-        self.maximum_attempts = maximum_attempts
-
-        if process_identifier:
-            self.process_identifier = process_identifier
         else:
+            self.hold = hold
+
+        if submit is None:
+            self.submit = True
+        else:
+            assert isinstance(submit, bool)
+            self.submit = submit
+
+        if maximum_attempts is None:
+            self.maximum_attempts = int(x=1)
+        else:
+            self.maximum_attempts = maximum_attempts
+
+        if process_identifier is None:
             self.process_identifier = str()
-
-        if process_name:
-            self.process_name = process_name
         else:
+            self.process_identifier = process_identifier
+
+        if process_name is None:
             self.process_name = str()
+        else:
+            self.process_name = process_name
 
         return
 
@@ -2911,10 +2944,10 @@ class RunnableStep(Executable):
             stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold, submit=submit,
             process_identifier=process_identifier, process_name=process_name)
 
-        if obsolete_file_path_list:
-            self.obsolete_file_path_list = obsolete_file_path_list
-        else:
+        if obsolete_file_path_list is None:
             self.obsolete_file_path_list = list()
+        else:
+            self.obsolete_file_path_list = obsolete_file_path_list
 
         return
 
@@ -2999,15 +3032,15 @@ class RunnableStepLink(RunnableStep):
             process_identifier=process_identifier, process_name=process_name,
             obsolete_file_path_list=obsolete_file_path_list)
 
-        if source_path:
-            self.source_path = source_path
-        else:
+        if source_path is None:
             self.source_path = str()
-
-        if target_path:
-            self.target_path = target_path
         else:
+            self.source_path = source_path
+
+        if target_path is None:
             self.target_path = str()
+        else:
+            self.target_path = target_path
 
         return
 
@@ -3094,7 +3127,9 @@ class RunnableStepMakeDirectory(RunnableStep):
             process_identifier=process_identifier, process_name=process_name,
             obsolete_file_path_list=obsolete_file_path_list)
 
-        if directory_path:
+        if directory_path is None:
+            self.directory_path = str()
+        else:
             self.directory_path = directory_path
 
         return
@@ -3186,15 +3221,15 @@ class RunnableStepMove(RunnableStep):
             process_identifier=process_identifier, process_name=process_name,
             obsolete_file_path_list=obsolete_file_path_list)
 
-        if source_path:
-            self.source_path = source_path
-        else:
+        if source_path is None:
             self.source_path = str()
-
-        if target_path:
-            self.target_path = target_path
         else:
+            self.source_path = source_path
+
+        if target_path is None:
             self.target_path = str()
+        else:
+            self.target_path = target_path
 
         return
 
@@ -3278,10 +3313,11 @@ class RunnableStepSleep(RunnableStep):
             process_identifier=process_identifier, process_name=process_name,
             obsolete_file_path_list=obsolete_file_path_list)
 
-        if sleep_time:
-            self.sleep_time = sleep_time
-        else:
+        if sleep_time is None:
             self.sleep_time = float()
+        else:
+            assert isinstance(sleep_time, float)
+            self.sleep_time = sleep_time
 
         return
 
@@ -3355,26 +3391,30 @@ class Runnable(object):
         @rtype:
         """
 
-        self.name = name
-        self.code_module = code_module
-        self.working_directory = working_directory
+        self.name = name  # Can be None.
+        self.code_module = code_module  # Can be None.
+        self.working_directory = working_directory  # Can be None.
 
-        if file_path_dict:
-            self.file_path_dict = file_path_dict
-        else:
+        if file_path_dict is None:
             self.file_path_dict = dict()
-
-        if executable_dict:
-            self.executable_dict = executable_dict
         else:
+            self.file_path_dict = file_path_dict
+
+        if executable_dict is None:
             self.executable_dict = dict()
-
-        if runnable_step_list:
-            self.runnable_step_list = runnable_step_list
         else:
-            self.runnable_step_list = list()
+            self.executable_dict = executable_dict
 
-        self.debug = debug
+        if runnable_step_list is None:
+            self.runnable_step_list = list()
+        else:
+            self.runnable_step_list = runnable_step_list
+
+        if debug is None:
+            self.debug = int(x=0)
+        else:
+            assert isinstance(debug, int)
+            self.debug = debug
 
         return
 
@@ -3491,7 +3531,7 @@ class Runnable(object):
         @rtype: str | unicode
         """
 
-        return os.path.join(self.working_directory, string.join(words=(self.name, 'pkl'), sep='.'))
+        return os.path.join(self.working_directory, '.'.join((self.name, 'pkl')))
 
     def to_pickler_path(self):
         """Write this C{Runnable} object as a Python C{pickle.Pickler} file into the working directory.
@@ -3533,7 +3573,7 @@ class Runnable(object):
         @rtype: str
         """
 
-        return string.join(words=(self.name, 'completed.txt'), sep='_')
+        return '_'.join((self.name, 'completed.txt'))
 
     @property
     def get_relative_temporary_directory_path(self):
@@ -3543,7 +3583,7 @@ class Runnable(object):
         @rtype: str
         """
 
-        return string.join(words=(self.name, 'temporary'), sep='_')
+        return '_'.join((self.name, 'temporary'))
 
     @property
     def get_absolute_status_path(self):
