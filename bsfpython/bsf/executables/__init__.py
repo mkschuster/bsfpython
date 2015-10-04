@@ -76,6 +76,8 @@ class Bowtie2(Executable):
 
         # Set default Bowtie2 options.
 
+        # None for the moment.
+
 
 class BWA(Executable):
     """Burrows-Wheeler Aligner version class.
@@ -135,15 +137,7 @@ class TopHat(Executable):
 
         # Set default TopHat options.
 
-        if not ('library-type' in self.options and self.options['library-type']):
-            self.add_option_long(key='library-type', value='fr-unstranded')
-
-        if not ('num-threads' in self.options and self.options['num-threads']):
-            self.add_option_long(key='num-threads', value='1')
-
-        # TODO: Is this required?
-        if not ('coverage-search' in self.options and self.options['coverage-search']):
-            self.add_switch_long(key='no-coverage-search')
+        # None for the moment.
 
 
 class Macs14(Executable):
