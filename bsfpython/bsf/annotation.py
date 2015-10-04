@@ -42,13 +42,13 @@ class AnnotationSheet(object):
 
     Attributes:
     @cvar _regular_expression_non_alpha: Regular expression for non-alphanumeric characters
-    @type _regular_expression_non_alpha: __Regex
+    @type _regular_expression_non_alpha: re.RegexObject
     @cvar _regular_expression_non_numeric: Regular expression for non-numeric characters
-    @type _regular_expression_non_numeric: __Regex
+    @type _regular_expression_non_numeric: re.RegexObject
     @cvar _regular_expression_non_sequence: Regular expression for non-sequence characters
-    @type _regular_expression_non_sequence: __Regex
+    @type _regular_expression_non_sequence: re.RegexObject
     @cvar _regular_expression_multiple_underscore: Regular expression for multiple underscore characters
-    @type _regular_expression_multiple_underscore: __Regex
+    @type _regular_expression_multiple_underscore: re.RegexObject
     @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
     @type _file_type: str
     @cvar _header_line: Header line exists
@@ -371,33 +371,37 @@ class AnnotationSheet(object):
         @rtype:
         """
 
-        if file_path:
-            self.file_path = file_path
-        else:
+        if file_path is None:
             self.file_path = str()
+        else:
+            self.file_path = file_path
 
-        if file_type:
+        if file_type is None:
+            # Copy the class variable.
+            self.file_type = str(self._file_type)
+        else:
             self.file_type = file_type
-        else:
-            self.file_type = self._file_type
 
-        if name:
-            self.name = name
-        else:
+        if name is None:
             self.name = str()
+        else:
+            self.name = name
 
         if header is None:
-            self.header = self._header_line
+            # Copy the class variable.
+            self.header = bool(self._header_line)
         else:
             self.header = header
 
         if field_names is None:
-            self.field_names = self._field_names
+            # Copy the class variable.
+            self.field_names = list(self._field_names)
         else:
             self.field_names = field_names
 
         if test_methods is None:
-            self.test_methods = self._test_methods
+            # Copy the class variable.
+            self.test_methods = dict(self._test_methods)
         else:
             self.test_methods = test_methods
 
@@ -426,12 +430,12 @@ class AnnotationSheet(object):
         # However, the DictReader should always do so, if a header line is expected since
         # otherwise, the header line would get repeated as data line.
 
-        if len(self.field_names) and not self.header:
+        if self.field_names and not self.header:
             csv_field_names = self.field_names
         else:
             csv_field_names = None
 
-        if len(self.file_type):
+        if self.file_type:
             csv_file_type = self.file_type
         else:
             csv_file_type = None
@@ -445,7 +449,7 @@ class AnnotationSheet(object):
         # Automatically set the field names from the DictReader,
         # if the field_names list is empty and if possible.
 
-        if len(self._csv_reader_object.fieldnames) and not len(self.field_names):
+        if self._csv_reader_object.fieldnames and not self.field_names:
             self.field_names.extend(self._csv_reader_object.fieldnames)
 
         return
@@ -472,10 +476,10 @@ class AnnotationSheet(object):
         initialise a Python C{csv.DictWriter} object and write the header line if one has been defined.
         """
 
-        if not len(self.field_names):
+        if not self.field_names:
             raise Exception("A csv.DictWriter object requires a Python list of field_names.")
 
-        if len(self.file_type):
+        if self.file_type:
             csv_file_type = self.file_type
         else:
             csv_file_type = None
@@ -773,41 +777,50 @@ class SampleAnnotationSheet(AnnotationSheet):
     _header_line = True
 
     _field_names = [
-        'ProcessedRunFolder',
-        'Project',
-        'Sample',
-        'Reads1',
-        'File1',
-        'Reads2',
-        'File2',
-        'LibrarySize',
-        'Barcode1',
-        'Barcode2',
+        'File Type',
+        'ProcessedRunFolder Name',
+        'Project Name',
+        'Project Size',
+        'Sample Name',
+        'PairedReads Barcode1',
+        'PairedReads Barcode2',
+        'PairedReads ReadGroup',
+        'Reads1 Name',
+        'Reads1 File',
+        'Reads2 Name',
+        'Reads2 File',
     ]
 
-    _test_methods = dict(
-        ProcessedRunFolder=[
+    _test_methods = dict({
+        # File Type
+        'ProcessedRunFolder Name': [
             AnnotationSheet.check_alphanumeric
         ],
-        Project=[
+        'Project Name': [
             AnnotationSheet.check_alphanumeric
         ],
-        Sample=[
+        'Project Size': [
+            AnnotationSheet.check_numeric
+        ],
+        'Sample Name': [
             AnnotationSheet.check_alphanumeric
         ],
-        Reads1=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Reads2=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Barcode1=[
+        'PairedReads Barcode1': [
             AnnotationSheet.check_sequence_optional
         ],
-        Barcode2=[
+        'PairedReads Barcode2': [
             AnnotationSheet.check_sequence_optional
-        ]
-    )
+        ],
+        # PairedReads ReadGroup
+        'Reads1 Name': [
+            AnnotationSheet.check_alphanumeric
+        ],
+        # Reads1 File
+        'Reads2 Name': [
+            AnnotationSheet.check_alphanumeric
+        ],
+        # Reads2 File
+    })
 
 
 class ChIPSeqDiffBindSheet(AnnotationSheet):
