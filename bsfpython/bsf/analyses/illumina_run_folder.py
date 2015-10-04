@@ -29,7 +29,6 @@ A package of classes and methods supporting analyses to archive and restore Illu
 
 import errno
 import os
-import string
 
 from bsf import Analysis, Command, Configuration, Default, DRMS, Executable, Runnable, RunnableStep, RunnableStepSleep
 from bsf.illumina import RunFolder, RunFolderNotComplete
@@ -73,7 +72,7 @@ class IlluminaRunFolderArchive(Analysis):
         @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_pre_process, project_name), sep='_')
+        return '_'.join((cls.drms_name_pre_process, project_name))
 
     @classmethod
     def get_prefix_base_calls(cls, project_name, lane):
@@ -86,7 +85,7 @@ class IlluminaRunFolderArchive(Analysis):
         @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_base_calls, project_name, lane), sep='_')
+        return '_'.join((cls.drms_name_base_calls, project_name, lane))
 
     @classmethod
     def get_prefix_intensities(cls, project_name, lane):
@@ -99,7 +98,7 @@ class IlluminaRunFolderArchive(Analysis):
         @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_intensities, project_name, lane), sep='_')
+        return '_'.join((cls.drms_name_intensities, project_name, lane))
 
     @classmethod
     def get_prefix_archive_folder(cls, project_name):
@@ -110,42 +109,7 @@ class IlluminaRunFolderArchive(Analysis):
         @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_archive_folder, project_name), sep='_')
-
-    @classmethod
-    def from_config_file_path(cls, config_path):
-        """Create a new C{IlluminaRunFolderArchive} object from a UNIX-style configuration file via the
-        C{Configuration} class.
-
-        @param config_path: UNIX-style configuration file
-        @type config_path: str | unicode
-        @return: C{IlluminaRunFolderArchive}
-        @rtype: IlluminaRunFolderArchive
-        """
-
-        return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
-
-    @classmethod
-    def from_configuration(cls, configuration):
-        """Create a new C{IlluminaRunFolderArchive} object from a C{Configuration} object.
-
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
-        @return: C{IlluminaRunFolderArchive}
-        @rtype: IlluminaRunFolderArchive
-        """
-
-        assert isinstance(configuration, Configuration)
-
-        irf_archive = cls(configuration=configuration)
-
-        # A "bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive" section specifies defaults
-        # for this Analysis sub-class.
-
-        section = string.join(words=(__name__, cls.__name__), sep='.')
-        irf_archive.set_configuration(irf_archive.configuration, section=section)
-
-        return irf_archive
+        return '_'.join((cls.drms_name_archive_folder, project_name))
 
     def __init__(self, configuration=None,
                  project_name=None, genome_version=None,
@@ -215,24 +179,28 @@ class IlluminaRunFolderArchive(Analysis):
 
         # Sub-class specific ...
 
-        if archive_directory:
-            self.archive_directory = archive_directory
-        else:
+        if archive_directory is None:
             self.archive_directory = str()
-
-        if run_directory:
-            self.run_directory = run_directory
         else:
+            self.archive_directory = archive_directory
+
+        if run_directory is None:
             self.run_directory = str()
-
-        if experiment_name:
-            self.experiment_name = experiment_name
         else:
+            self.run_directory = run_directory
+
+        if experiment_name is None:
             self.experiment_name = str()
+        else:
+            self.experiment_name = experiment_name
 
-        self.force = force
+        if force is None:
+            self.force = False
+        else:
+            assert isinstance(force, bool)
+            self.force = force
 
-        self._run_name = str()
+        self._run_name = None
 
         return
 
@@ -244,7 +212,7 @@ class IlluminaRunFolderArchive(Analysis):
         @rtype: str | unicode
         """
 
-        if not self._run_name:
+        if self._run_name is None:
             self._run_name = os.path.basename(self.run_directory)
 
         return self._run_name
@@ -369,7 +337,7 @@ class IlluminaRunFolderArchive(Analysis):
                 raise Exception('The archive directory {!r} does not exist.'.format(self.archive_directory))
         else:
             # If an archive directory has not been defined, simply append 'archive' to the run directory.
-            self.archive_directory = string.join(words=(self.run_directory, 'archive'), sep='_')
+            self.archive_directory = '_'.join((self.run_directory, 'archive'))
 
         # Check that the directory above the archive directory exists to avoid creation of rogue paths.
 
@@ -403,7 +371,7 @@ class IlluminaRunFolderArchive(Analysis):
         # Run Information of the Illumina Run Folder.
 
         if not self.project_name:
-            self.project_name = string.join(words=(self.experiment_name, irf.run_information.flow_cell), sep='_')
+            self.project_name = '_'.join((self.experiment_name, irf.run_information.flow_cell))
 
         super(IlluminaRunFolderArchive, self).run()
 
@@ -598,11 +566,11 @@ class IlluminaRunFolderArchive(Analysis):
                 # IRF/Data/Intensities/BaseCalls/ directory.
                 # Since *_pos.txt files are in IRF/Data/Intensities/, they do not need excluding.
 
-                archive_file_path = string.join(words=(self.get_run_name, 'L{:03d}'.format(lane)), sep='_')
+                archive_file_path = '_'.join((self.get_run_name, 'L{:03d}'.format(lane)))
                 if self.compress_archive_files:
-                    archive_file_path = string.join(words=(archive_file_path, 'tar', 'gz'), sep='.')
+                    archive_file_path = '.'.join((archive_file_path, 'tar', 'gz'))
                 else:
-                    archive_file_path = string.join(words=(archive_file_path, 'tar'), sep='.')
+                    archive_file_path = '.'.join((archive_file_path, 'tar'))
                 archive_file_path = os.path.join(self.archive_directory, archive_file_path)
 
                 archive_intensities = runnable_intensities.add_runnable_step(
@@ -676,9 +644,9 @@ class IlluminaRunFolderArchive(Analysis):
 
         archive_file_path = self.get_run_name
         if self.compress_archive_files:
-            archive_file_path = string.join(words=(archive_file_path, 'tar', 'gz'), sep='.')
+            archive_file_path = '.'.join((archive_file_path, 'tar', 'gz'))
         else:
-            archive_file_path = string.join(words=(archive_file_path, 'tar'), sep='.')
+            archive_file_path = '.'.join((archive_file_path, 'tar'))
         archive_file_path = os.path.join(self.archive_directory, archive_file_path)
 
         archive_folder = runnable_archive_folder.add_runnable_step(
@@ -754,7 +722,7 @@ class IlluminaRunFolderRestore(Analysis):
         @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_extract_archive, project_name, lane), sep='_')
+        return '_'.join((cls.drms_name_extract_archive, project_name, lane))
 
     @classmethod
     def get_prefix_compress_base_calls(cls, project_name, lane):
@@ -767,7 +735,7 @@ class IlluminaRunFolderRestore(Analysis):
         @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_compress_base_calls, project_name, lane), sep='_')
+        return '_'.join((cls.drms_name_compress_base_calls, project_name, lane))
 
     @classmethod
     def get_prefix_compress_logs(cls, project_name):
@@ -778,42 +746,7 @@ class IlluminaRunFolderRestore(Analysis):
         @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_compress_logs, project_name), sep='_')
-
-    @classmethod
-    def from_config_file_path(cls, config_path):
-        """Create a new C{IlluminaRunFolderRestore} object from a UNIX-style configuration file via the
-        C{Configuration} class.
-
-        @param config_path: UNIX-style configuration file
-        @type config_path: str | unicode
-        @return: C{IlluminaRunFolderRestore}
-        @rtype: IlluminaRunFolderRestore
-        """
-
-        return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
-
-    @classmethod
-    def from_configuration(cls, configuration):
-        """Create a new C{IlluminaRunFolderRestore} object from a C{Configuration} object.
-
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
-        @return: C{IlluminaRunFolderRestore}
-        @rtype: IlluminaRunFolderRestore
-        """
-
-        assert isinstance(configuration, Configuration)
-
-        irf_restore = cls(configuration=configuration)
-
-        # A "bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore" section specifies defaults
-        # for this Analysis sub-class.
-
-        section = string.join(words=(__name__, cls.__name__), sep='.')
-        irf_restore.set_configuration(irf_restore.configuration, section=section)
-
-        return irf_restore
+        return '_'.join((cls.drms_name_compress_logs, project_name))
 
     def __init__(self, configuration=None,
                  project_name=None, genome_version=None,
@@ -822,7 +755,7 @@ class IlluminaRunFolderRestore(Analysis):
                  e_mail=None, debug=0, drms_list=None,
                  collection=None, comparisons=None, samples=None,
                  archive_directory=None, illumina_directory=None, experiment_name=None,
-                 extract_intensities=None, force=False):
+                 extract_intensities=False, force=False):
         """Initialise an C{IlluminaRunFolderRestore} C{Analysis}.
 
         @param configuration: C{Configuration}
@@ -885,27 +818,32 @@ class IlluminaRunFolderRestore(Analysis):
 
         # Sub-class specific ...
 
-        if archive_directory:
-            self.archive_directory = archive_directory
-        else:
+        if archive_directory is None:
             self.archive_directory = str()
-
-        if illumina_directory:
-            self.illumina_directory = illumina_directory
         else:
+            self.archive_directory = archive_directory
+
+        if illumina_directory is None:
             self.illumina_directory = str()
-
-        if experiment_name:
-            self.experiment_name = experiment_name
         else:
+            self.illumina_directory = illumina_directory
+
+        if experiment_name is None:
             self.experiment_name = str()
-
-        if extract_intensities:
-            self.extract_intensities = extract_intensities
         else:
-            self.extract_intensities = False
+            self.experiment_name = experiment_name
 
-        self.force = force
+        if extract_intensities is None:
+            self.extract_intensities = False
+        else:
+            assert isinstance(extract_intensities, bool)
+            self.extract_intensities = extract_intensities
+
+        if force is None:
+            self.force = False
+        else:
+            assert isinstance(force, bool)
+            self.force = force
 
         self._run_directory_name = None
         self._run_directory_path = None
@@ -920,7 +858,7 @@ class IlluminaRunFolderRestore(Analysis):
         @rtype: str | unicode
         """
 
-        if not self._run_directory_name:
+        if self._run_directory_name is None:
             self.archive_directory = os.path.normpath(self.archive_directory)
             # Strip the '_archive' suffix i.e. the last 8 characters to get the run directory.
             self._run_directory_name = os.path.basename(self.archive_directory)[:-8]
@@ -935,7 +873,7 @@ class IlluminaRunFolderRestore(Analysis):
         @rtype: str | unicode
         """
 
-        if not self._run_directory_path:
+        if self._run_directory_path is None:
             self._run_directory_path = os.path.join(self.illumina_directory, self.get_run_directory_name)
 
         return self._run_directory_path
@@ -1021,13 +959,11 @@ class IlluminaRunFolderRestore(Analysis):
                             format(self.get_run_directory_path))
 
         archive_name = dict(
-            folder=string.join(words=(self.get_run_directory_name, 'Folder.tar'), sep='_'),
-            intensities=string.join(words=(self.get_run_directory_name, 'Intensities.tar'), sep='_'))
+            folder='_'.join((self.get_run_directory_name, 'Folder.tar')),
+            intensities='_'.join((self.get_run_directory_name, 'Intensities.tar')))
 
         for lane in range(0 + 1, self.maximum_lane_number + 1):
-            archive_name['L{:03d}'.format(lane)] = string.join(
-                words=(self.get_run_directory_name, 'L{:03d}.tar'.format(lane)),
-                sep='_')
+            archive_name['L{:03d}'.format(lane)] = '_'.join((self.get_run_directory_name, 'L{:03d}.tar'.format(lane)))
 
         file_path_dict = dict()
 
