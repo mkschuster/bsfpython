@@ -29,7 +29,6 @@ A package of classes and methods supporting analyses of the Illumina2Bam-Tools p
 
 import errno
 import os
-import string
 import warnings
 
 from bsf import Analysis, Command, Configuration, Default, DRMS, Executable, Runnable, RunnableStep,\
@@ -53,7 +52,7 @@ class IlluminaToBam(Analysis):
     @ivar basecalls_directory: File path to the I{BaseCalls} directory,
         defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
     @type basecalls_directory: str | unicode
-    @ivar experiment_name: Experiment name (i.e. flow-cell identifier) normally automatically read from
+    @ivar experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
         Illumina Run Folder parameters
     @type experiment_name: str
     @ivar sequencing_centre: Sequencing centre
@@ -66,6 +65,8 @@ class IlluminaToBam(Analysis):
     @type classpath_illumina2bam: str | unicode
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
     @type classpath_picard: str | unicode
+    @ivar vendor_quality_filter: Python C{dict} of flow cell chemistry type and Python bool value for filtering
+    @type vendor_quality_filter: dict[str, bool]
     @ivar force: Force processing of incomplete Illumina Run Folders
     @type force: bool
     """
@@ -83,41 +84,7 @@ class IlluminaToBam(Analysis):
         @return: The dependency string for an C{Executable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_illumina_to_bam, project_name, lane), sep='_')
-
-    @classmethod
-    def from_config_file_path(cls, config_path):
-        """Create a new C{IlluminaToBam} object from a UNIX-style configuration file via the C{Configuration} class.
-
-        @param config_path: UNIX-style configuration file
-        @type config_path: str | unicode
-        @return: IlluminaToBam
-        @rtype: IlluminaToBam
-        """
-
-        return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
-
-    @classmethod
-    def from_configuration(cls, configuration):
-        """Create a new C{IlluminaToBam} object from a C{Configuration} object.
-
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
-        @return: C{IlluminaToBam}
-        @rtype: IlluminaToBam
-        """
-
-        assert isinstance(configuration, Configuration)
-
-        itb = cls(configuration=configuration)
-
-        # A "bsf.analyses.IlluminaToBamTools.IlluminaToBam" section specifies defaults
-        # for this Analysis sub-class.
-
-        section = string.join(words=(__name__, cls.__name__), sep='.')
-        itb.set_configuration(itb.configuration, section=section)
-
-        return itb
+        return '_'.join((cls.drms_name_illumina_to_bam, project_name, lane))
 
     def __init__(self, configuration=None,
                  project_name=None, genome_version=None,
@@ -129,7 +96,7 @@ class IlluminaToBam(Analysis):
                  experiment_name=None, sequencing_centre=None,
                  sequences_directory=None, experiment_directory=None,
                  classpath_illumina2bam=None, classpath_picard=None,
-                 force=False):
+                 vendor_quality_filter=None, force=False):
         """Initialise a C{IlluminaToBam} object.
 
         @param configuration: C{Configuration}
@@ -168,7 +135,7 @@ class IlluminaToBam(Analysis):
         @param basecalls_directory: File path to the I{BaseCalls} directory,
             defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
         @type basecalls_directory: str | unicode
-        @param experiment_name: Experiment name (i.e. flow-cell identifier) normally automatically read from
+        @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
             Illumina Run Folder parameters
         @type experiment_name: str
         @param sequencing_centre: Sequencing centre
@@ -181,6 +148,8 @@ class IlluminaToBam(Analysis):
         @type classpath_illumina2bam: str | unicode
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: str | unicode
+        @param vendor_quality_filter: Python C{dict} of flow cell chemistry type and Python bool value for filtering
+        @type vendor_quality_filter: dict[str, bool]
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool
         @return:
@@ -204,52 +173,61 @@ class IlluminaToBam(Analysis):
 
         # Sub-class specific ...
 
-        if run_directory:
-            self.run_directory = run_directory
-        else:
+        if run_directory is None:
             self.run_directory = str()
-
-        if intensity_directory:
-            self.intensity_directory = intensity_directory
         else:
+            self.run_directory = run_directory
+
+        if intensity_directory is None:
             self.intensity_directory = str()
-
-        if basecalls_directory:
-            self.basecalls_directory = basecalls_directory
         else:
+            self.intensity_directory = intensity_directory
+
+        if basecalls_directory is None:
             self.basecalls_directory = str()
-
-        if experiment_name:
-            self.experiment_name = experiment_name
         else:
+            self.basecalls_directory = basecalls_directory
+
+        if experiment_name is None:
             self.experiment_name = str()
-
-        if sequencing_centre:
-            self.sequencing_centre = sequencing_centre
         else:
+            self.experiment_name = experiment_name
+
+        if sequencing_centre is None:
             self.sequencing_centre = str()
-
-        if sequences_directory:
-            self.sequences_directory = sequences_directory
         else:
+            self.sequencing_centre = sequencing_centre
+
+        if sequences_directory is None:
             self.sequences_directory = str()
-
-        if experiment_directory:
-            self.experiment_directory = experiment_directory
         else:
+            self.sequences_directory = sequences_directory
+
+        if experiment_directory is None:
             self.experiment_directory = str()
-
-        if classpath_illumina2bam:
-            self.classpath_illumina2bam = classpath_illumina2bam
         else:
+            self.experiment_directory = experiment_directory
+
+        if classpath_illumina2bam is None:
             self.classpath_illumina2bam = str()
-
-        if classpath_picard:
-            self.classpath_picard = classpath_picard
         else:
-            self.classpath_picard = str()
+            self.classpath_illumina2bam = classpath_illumina2bam
 
-        self.force = force
+        if classpath_picard is None:
+            self.classpath_picard = str()
+        else:
+            self.classpath_picard = classpath_picard
+
+        if vendor_quality_filter is None:
+            self.vendor_quality_filter = dict()
+        else:
+            self.vendor_quality_filter = vendor_quality_filter
+
+        if force is None:
+            self.force = False
+        else:
+            assert isinstance(force, bool)
+            self.force = force
 
         return
 
@@ -329,15 +307,26 @@ class IlluminaToBam(Analysis):
                 section=section,
                 option='force')
 
+        # Read the VendorQualityFilter section, which consists of flow cell chemistry type keys and boolean values
+        # to set filtering.
+
+        vqf_section = '.'.join((section, 'VendorQualityFilter'))
+
+        if configuration.config_parser.has_section(section=vqf_section):
+            for option_name in configuration.config_parser.options(section=vqf_section):
+                self.vendor_quality_filter[option_name] = configuration.config_parser.getboolean(
+                    section=vqf_section,
+                    option=option_name)
+
         return
 
     def run(self):
         """Run this C{IlluminaToBam} C{Analysis}.
 
-        Convert an Illumina flow-cell into lane-specific archive BAM files.
+        Convert an Illumina flow cell into lane-specific archive BAM files.
 
         To convert an Illumina flow cell, Illumina2bam is run first, setting the SAM Read Group (@RG)
-        library name (LB) and sample name (SM) to 'flow-cell identifier.lane'.
+        library name (LB) and sample name (SM) to 'flow cell identifier.lane'.
         The resulting archive BAM file is then sorted by query name with Picard SortSam.
         @return:
         @rtype:
@@ -422,7 +411,7 @@ class IlluminaToBam(Analysis):
         # Run Information of the Illumina Run Folder.
 
         if not self.project_name:
-            self.project_name = string.join(words=(self.experiment_name, irf.run_information.flow_cell), sep='_')
+            self.project_name = '_'.join((self.experiment_name, irf.run_information.flow_cell))
 
         # Get sequencing centre information.
 
@@ -456,6 +445,11 @@ class IlluminaToBam(Analysis):
         if not self.classpath_picard:
             self.classpath_picard = default.classpath_picard
 
+        # Check that the flow cell chemistry type is defined in the vendor quality filter.
+
+        if irf.run_parameters.get_flow_cell_type not in self.vendor_quality_filter:
+            raise Exception('Flow cell chemistry type {!r} not defined.'.format(irf.run_parameters.get_flow_cell_type))
+
         # Call the run method of the super class after the project_name has been defined.
 
         super(IlluminaToBam, self).run()
@@ -473,10 +467,10 @@ class IlluminaToBam(Analysis):
                 illumina_directory=self.run_directory,  # contains full path information
                 sequences_directory=self.sequences_directory,  # contains full path information
                 experiment_directory=self.experiment_directory,  # contains full path information
-                unsorted_bam=string.join(words=(self.project_name, lane_str, 'unsorted.bam'), sep='_'),
-                unsorted_md5=string.join(words=(self.project_name, lane_str, 'unsorted.bam.md5'), sep='_'),
-                sorted_bam=string.join(words=(self.project_name, lane_str, 'sorted.bam'), sep='_'),
-                sorted_md5=string.join(words=(self.project_name, lane_str, 'sorted.bam.md5'), sep='_'),
+                unsorted_bam='_'.join((self.project_name, lane_str, 'unsorted.bam')),
+                unsorted_md5='_'.join((self.project_name, lane_str, 'unsorted.bam.md5')),
+                sorted_bam='_'.join((self.project_name, lane_str, 'sorted.bam')),
+                sorted_md5='_'.join((self.project_name, lane_str, 'sorted.bam.md5')),
                 lane_bam='{}_{:d}.bam'.format(self.project_name, lane),
                 lane_md5='{}_{:d}.bam.md5'.format(self.project_name, lane),
             )
@@ -549,18 +543,19 @@ class IlluminaToBam(Analysis):
                 value=file_path_dict['unsorted_bam'])
             # GENERATE_SECONDARY_BASE_CALLS defaults to 'false'.
             # PF_FILTER defaults to 'true'.
-            sub_command.add_option_pair(
-                key='PF_FILTER',
-                value='false')
+            if not self.vendor_quality_filter[irf.run_parameters.get_flow_cell_type]:
+                sub_command.add_option_pair(
+                    key='PF_FILTER',
+                    value='false')
             # READ_GROUP_ID defaults to '1'.
             sub_command.add_option_pair(
                 key='READ_GROUP_ID',
-                value=string.join((irf.run_information.flow_cell, lane_str), sep='_'))
+                value='_'.join((irf.run_information.flow_cell, lane_str)))
             # SAMPLE_ALIAS defaults to 'null', using LIBRARY_NAME.
             # LIBRARY_NAME defaults to 'unknown'.
             sub_command.add_option_pair(
                 key='LIBRARY_NAME',
-                value=string.join((irf.run_information.flow_cell, lane_str), sep='_'))
+                value='_'.join((irf.run_information.flow_cell, lane_str)))
             # STUDY_NAME defaults to 'null'.
             # PLATFORM_UNIT defaults to 'null', using run folder name plus lane number.
             # RUN_START_DATE defaults to 'null', using the configuration file value.
@@ -722,41 +717,7 @@ class BamIndexDecoder(Analysis):
         @return: The dependency string for an C{Executable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_bam_index_decoder, project_name, lane), sep='_')
-
-    @classmethod
-    def from_config_file_path(cls, config_path):
-        """Create a new C{BamIndexDecoder} object from a UNIX-style configuration file via the C{Configuration} class.
-
-        @param config_path: UNIX-style configuration file
-        @type config_path: str | unicode
-        @return: C{BamIndexDecoder}
-        @rtype: BamIndexDecoder
-        """
-
-        return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
-
-    @classmethod
-    def from_configuration(cls, configuration):
-        """Create a new C{BamIndexDecoder} object from a C{Configuration} object.
-
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
-        @return: C{BamIndexDecoder}
-        @rtype: BamIndexDecoder
-        """
-
-        assert isinstance(configuration, Configuration)
-
-        itb = cls(configuration=configuration)
-
-        # A "bsf.analyses.IlluminaToBamTools.BamIndexDecoder" section specifies defaults
-        # for this Analysis sub-class.
-
-        section = string.join(words=(__name__, cls.__name__), sep='.')
-        itb.set_configuration(itb.configuration, section=section)
-
-        return itb
+        return '_'.join((cls.drms_name_bam_index_decoder, project_name, lane))
 
     def __init__(self, configuration=None, project_name=None, genome_version=None, input_directory=None,
                  output_directory=None, project_directory=None, genome_directory=None, e_mail=None, debug=0,
@@ -830,39 +791,47 @@ class BamIndexDecoder(Analysis):
 
         # Sub-class specific ...
 
-        if library_path:
-            self.library_path = library_path
-        else:
+        if library_path is None:
             self.library_path = str()
-
-        if sequences_directory:
-            self.sequences_directory = sequences_directory
         else:
+            self.library_path = library_path
+
+        if sequences_directory is None:
             self.sequences_directory = str()
-
-        if samples_directory:
-            self.samples_directory = samples_directory
         else:
+            self.sequences_directory = sequences_directory
+
+        if samples_directory is None:
             self.samples_directory = str()
-
-        if experiment_directory:
-            self.experiment_directory = experiment_directory
         else:
+            self.samples_directory = samples_directory
+
+        if experiment_directory is None:
             self.experiment_directory = str()
-
-        if classpath_illumina2bam:
-            self.classpath_illumina2bam = classpath_illumina2bam
         else:
+            self.experiment_directory = experiment_directory
+
+        if classpath_illumina2bam is None:
             self.classpath_illumina2bam = str()
-
-        if classpath_picard:
-            self.classpath_picard = classpath_picard
         else:
+            self.classpath_illumina2bam = classpath_illumina2bam
+
+        if classpath_picard is None:
             self.classpath_picard = str()
+        else:
+            self.classpath_picard = classpath_picard
 
-        self.lanes = lanes
+        if lanes is None:
+            self.lanes = int()
+        else:
+            assert isinstance(lanes, int)
+            self.lanes = lanes
 
-        self.force = force
+        if force is None:
+            self.force = False
+        else:
+            assert isinstance(force, bool)
+            self.force = force
 
         return
 
@@ -939,11 +908,6 @@ class BamIndexDecoder(Analysis):
 
         super(BamIndexDecoder, self).run()
 
-        # Read configuration options.
-
-        # config_parser = self.configuration.config_parser
-        # config_section = self.configuration.section_from_instance(self)
-
         default = Default.get_global_default()
 
         # Load from the configuration file and override with the default if necessary.
@@ -981,7 +945,7 @@ class BamIndexDecoder(Analysis):
         self.library_path = os.path.expandvars(path=self.library_path)
 
         if not self.library_path:
-            self.library_path = string.join(words=(self.project_name, 'libraries.csv'), sep='_')
+            self.library_path = '_'.join((self.project_name, 'libraries.csv'))
 
         self.library_path = os.path.normpath(path=self.library_path)
 
@@ -1029,7 +993,7 @@ class BamIndexDecoder(Analysis):
 
         # Create a Sample Annotation Sheet in the project directory and
         # eventually transfer it into the experiment_directory.
-        sample_annotation_name = string.join(words=(self.project_name, 'samples.csv'), sep='_')
+        sample_annotation_name = '_'.join((self.project_name, 'samples.csv'))
         sample_annotation_sheet = SampleAnnotationSheet(
             file_path=os.path.join(self.project_directory, sample_annotation_name))
         sample_annotation_transferred = 0
@@ -1042,10 +1006,10 @@ class BamIndexDecoder(Analysis):
             # The key represents the lane number as a Python str.
 
             file_path_dict = dict(
-                project_barcode=string.join(words=(self.project_name, key, 'barcode.tsv'), sep='_'),
-                samples_directory=string.join(words=(self.project_name, key, 'samples'), sep='_'),
-                barcode_tsv=string.join(words=(self.project_name, key, 'barcode.tsv'), sep='_'),
-                metrics_tsv=string.join(words=(self.project_name, key, 'metrics.tsv'), sep='_'),
+                project_barcode='_'.join((self.project_name, key, 'barcode.tsv')),
+                samples_directory='_'.join((self.project_name, key, 'samples')),
+                barcode_tsv='_'.join((self.project_name, key, 'barcode.tsv')),
+                metrics_tsv='_'.join((self.project_name, key, 'metrics.tsv')),
                 input_bam=os.path.join(
                     self.sequences_directory,
                     '{}_{}.bam'.format(self.project_name, key)),
@@ -1082,20 +1046,26 @@ class BamIndexDecoder(Analysis):
                     description=str()
                 ))
 
-                # Add a row to the flow-cell-specific sample annotation sheet.
+                # Add a row to the flow cell-specific sample annotation sheet.
 
-                sample_dict = dict(
-                    ProcessedRunFolder=self.project_name,
-                    Project=row_dict['library_name'],
-                    Sample=row_dict['sample_name'],
-                    Reads1=string.join(words=(self.project_name, key, row_dict['sample_name']), sep='_'),
-                    File1=os.path.join(
+                sample_dict = dict({
+                    'File Type': 'Automatic',
+                    'ProcessedRunFolder Name': self.project_name,
+                    'Project Name': row_dict['library_name'],
+                    'Project Size': row_dict['library_size'],
+                    'Sample Name': row_dict['sample_name'],
+                    'PairedReads Barcode1': row_dict['barcode_sequence_1'],
+                    'PairedReads Barcode2': row_dict['barcode_sequence_2'],
+                    # TODO: It would be good to add a RunnableStep to populate the ReadGroup.
+                    'PairedReads ReadGroup': '',
+                    'Reads1 Name': '_'.join((self.project_name, key, row_dict['sample_name'])),
+                    'Reads1 File': os.path.join(
                         os.path.basename(self.experiment_directory),
                         file_path_dict['samples_directory'],
                         '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])),
-                    LibrarySize=row_dict['library_size'],
-                    Barcode1=row_dict['barcode_sequence_1'],
-                    Barcode2=row_dict['barcode_sequence_2'])
+                    'Reads2 Name': '',
+                    'Reads2 File': '',
+                })
 
                 sample_annotation_sheet.row_dicts.append(sample_dict)
 
@@ -1167,7 +1137,7 @@ class BamIndexDecoder(Analysis):
                 # OUTPUT_PREFIX is required, but cannot be used with OUTPUT.
                 sub_command.add_option_pair(
                     key='OUTPUT_PREFIX',
-                    value=string.join(words=(self.project_name, key), sep='_'))
+                    value='_'.join((self.project_name, key)))
                 # OUTPUT_FORMAT is required, but cannot be used with OUTPUT.
                 sub_command.add_option_pair(
                     key='OUTPUT_FORMAT',
@@ -1347,7 +1317,7 @@ class BamIndexDecoder(Analysis):
                         source_path=os.path.join(self.project_directory, sample_annotation_name),
                         target_path=self.experiment_directory))
 
-        # Finally, write the flow-cell-specific SampleAnnotationSheet to the internal file path.
+        # Finally, write the flow cell-specific SampleAnnotationSheet to the internal file path.
 
         sample_annotation_sheet.write_to_file()
 
