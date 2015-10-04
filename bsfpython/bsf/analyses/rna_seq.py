@@ -29,7 +29,6 @@ A package of classes and methods supporting RNA-Seq analyses.
 import os.path
 from pickle import Pickler, HIGHEST_PROTOCOL
 import re
-import string
 
 from bsf import Analysis, Configuration, Default, defaults, DRMS, Executable, Runnable, RunnableStep
 from bsf.annotation import AnnotationSheet, TuxedoSamplePairSheet
@@ -76,6 +75,8 @@ class Tuxedo(Analysis):
     @ivar library_type: Library type
         Cuffquant and Cuffdiff I{fr-unstranded} (default), I{fr-firststrand} or I{fr-secondstrand}
     @type library_type: str
+    @ivar no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
+    @type no_length_correction: bool
     """
 
     # Replicate stage
@@ -100,7 +101,7 @@ class Tuxedo(Analysis):
         @return: The dependency string for an C{Executable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_run_tophat, replicate_key), sep='_')
+        return '_'.join((cls.drms_name_run_tophat, replicate_key))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffmerge(cls, comparison_key):
@@ -111,7 +112,7 @@ class Tuxedo(Analysis):
         @return: The dependency string for an C{Executable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_run_cuffmerge, comparison_key), sep='_')
+        return '_'.join((cls.drms_name_run_cuffmerge, comparison_key))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffquant(cls, comparison_key):
@@ -122,7 +123,7 @@ class Tuxedo(Analysis):
         @return: The dependency string for an C{Executable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_run_cuffquant, comparison_key), sep='_')
+        return '_'.join((cls.drms_name_run_cuffquant, comparison_key))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffnorm(cls, comparison_key):
@@ -133,7 +134,7 @@ class Tuxedo(Analysis):
         @return: The dependency string for an C{Executable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_run_cuffnorm, comparison_key), sep='_')
+        return '_'.join((cls.drms_name_run_cuffnorm, comparison_key))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffdiff(cls, comparison_key):
@@ -144,7 +145,7 @@ class Tuxedo(Analysis):
         @return: The dependency string for an C{Executable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_run_cuffdiff, comparison_key), sep='_')
+        return '_'.join((cls.drms_name_run_cuffdiff, comparison_key))
 
     @classmethod
     def get_prefix_rnaseq_process_cuffdiff(cls, comparison_key):
@@ -155,46 +156,13 @@ class Tuxedo(Analysis):
         @return: The dependency string for an C{Executable} of this C{Analysis}
         @rtype: str
         """
-        return string.join(words=(cls.drms_name_process_cuffdiff, comparison_key), sep='_')
-
-    @classmethod
-    def from_config_file_path(cls, config_path):
-        """Create a new C{Tuxedo} object from a UNIX-style configuration file via the C{Configuration} class.
-
-        @param config_path: UNIX-style configuration file
-        @type config_path: str | unicode
-        @return: C{Tuxedo}
-        @rtype: Tuxedo
-        """
-
-        return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
-
-    @classmethod
-    def from_configuration(cls, configuration):
-        """Create a new C{Tuxedo} object from a C{Configuration} object.
-
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
-        @return: Tuxedo
-        @rtype: Tuxedo
-        """
-
-        assert isinstance(configuration, Configuration)
-
-        rnaseq = cls(configuration=configuration)
-
-        # A "bsf.analyses.rna_seq.Tuxedo" section specifies defaults for this Analysis sub-class.
-
-        section = string.join(words=(__name__, cls.__name__), sep='.')
-        rnaseq.set_configuration(rnaseq.configuration, section=section)
-
-        return rnaseq
+        return '_'.join((cls.drms_name_process_cuffdiff, comparison_key))
 
     def __init__(self, configuration=None, project_name=None, genome_version=None, input_directory=None,
                  output_directory=None, project_directory=None, genome_directory=None, e_mail=None, debug=0,
-                 drms_list=None, collection=None, comparisons=None, samples=None, replicate_grouping=None,
+                 drms_list=None, collection=None, comparisons=None, samples=None, replicate_grouping=False,
                  cmp_file=None, genome_fasta_path=None, transcriptome_gtf_path=None, transcriptome_index_path=None,
-                 mask_gtf_path=None, multi_read_correction=None, library_type=None):
+                 mask_gtf_path=None, multi_read_correction=None, library_type=None, no_length_correction=False):
         """Initialise a C{Tuxedo} object.
 
         @param configuration: C{Configuration}
@@ -221,8 +189,9 @@ class Tuxedo(Analysis):
         @type drms_list: list
         @param collection: C{Collection}
         @type collection: Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{Sample} objects
-        @type comparisons: dict
+        @param comparisons: Python C{dict} of Python C{str} (comparison name) key objects and
+            Python C{tuple} value objects of C{Sample.name} and Python C{list} of C{Sample} objects
+        @type comparisons: dict[str, (Sample.name, list[Sample])]
         @param samples: Python C{list} of C{Sample} objects
         @type samples: list
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
@@ -242,6 +211,10 @@ class Tuxedo(Analysis):
         @param library_type: Library type
             Cuffquant and Cuffdiff I{fr-unstranded} (default), I{fr-firststrand} or I{fr-secondstrand}
         @type library_type: str
+        @param no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
+        @type no_length_correction: bool
+        @return:
+        @rtype:
         """
 
         super(Tuxedo, self).__init__(
@@ -257,42 +230,52 @@ class Tuxedo(Analysis):
         if replicate_grouping is None:
             self.replicate_grouping = False
         else:
+            assert isinstance(replicate_grouping, bool)
             self.replicate_grouping = replicate_grouping
 
-        if cmp_file:
-            self.cmp_file = cmp_file
-        else:
+        if cmp_file is None:
             self.cmp_file = str()
-
-        if genome_fasta_path:
-            self.genome_fasta_path = genome_fasta_path
         else:
+            self.cmp_file = cmp_file
+
+        if genome_fasta_path is None:
             self.genome_fasta_path = str()
-
-        if transcriptome_gtf_path:
-            self.transcriptome_gtf_path = transcriptome_gtf_path
         else:
+            self.genome_fasta_path = genome_fasta_path
+
+        if transcriptome_gtf_path is None:
             self.transcriptome_gtf_path = str()
-
-        if transcriptome_index_path:
-            self.transcriptome_index_path = transcriptome_index_path
         else:
+            self.transcriptome_gtf_path = transcriptome_gtf_path
+
+        if transcriptome_index_path is None:
             self.transcriptome_index_path = str()
-
-        if mask_gtf_path:
-            self.mask_gtf_path = mask_gtf_path
         else:
+            self.transcriptome_index_path = transcriptome_index_path
+
+        if mask_gtf_path is None:
             self.mask_gtf_path = str()
-
-        if multi_read_correction:
-            self.multi_read_correction = multi_read_correction
         else:
+            self.mask_gtf_path = mask_gtf_path
+
+        if multi_read_correction is None:
             self.multi_read_correction = False
-
-        if library_type:
-            self.library_type = library_type
         else:
+            assert isinstance(multi_read_correction, bool)
+            self.multi_read_correction = multi_read_correction
+
+        if library_type is None:
             self.library_type = str()
+        else:
+            self.library_type = library_type
+
+        if no_length_correction is None:
+            self.no_length_correction = False
+        else:
+            assert isinstance(no_length_correction, bool)
+            self.no_length_correction = no_length_correction
+
+        return
 
     def set_configuration(self, configuration, section):
         """Set instance variables of a C{Tuxedo} object via a section of a C{Configuration} object.
@@ -302,6 +285,8 @@ class Tuxedo(Analysis):
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
+        @return:
+        @rtype:
         """
 
         super(Tuxedo, self).set_configuration(configuration=configuration, section=section)
@@ -348,9 +333,18 @@ class Tuxedo(Analysis):
                 section=section,
                 option='library_type')
 
-    def _calculate_comparisons(self):
+        if configuration.config_parser.has_option(section=section, option='no_length_correction'):
+            self.no_length_correction = configuration.config_parser.getboolean(
+                section=section,
+                option='no_length_correction')
+
+        return
+
+    def _calculate_comparisons_from_samples(self):
         """Calculate the comparisons on the basis of the sample annotation sheet alone.
         An all-against-all sample comparison gets configured.
+        @return:
+        @rtype:
         """
 
         # Without a comparison file path, simply add all Sample objects from the Collection.
@@ -364,7 +358,36 @@ class Tuxedo(Analysis):
             # Add a tuple of group (i.e. sample) name and a Python list of the Sample object.
             comparison_groups.append((sample.name, [sample]))
 
+        # Sort the list of comparison groups by Sample.name.
+        comparison_groups.sort(cmp=lambda x, y: cmp(x[0], y[0]))
+
         self.comparisons['global'] = comparison_groups
+
+        return
+
+    def _calculate_comparisons_from_groups(self):
+        """Calculate the comparisons on the basis of the sample annotation sheet alone.
+        An all-against-all group comparison gets configured.
+
+        @return:
+        @rtype:
+        """
+
+        # Without a comparison file path, simply add all Sample objects from the Collection.
+        self.samples.extend(self.collection.get_all_samples())
+
+        # Create a global comparison by adding all sample groups.
+
+        comparison_groups = list()
+        for key in self.collection.sample_groups.keys():
+            comparison_groups.append((key, self.collection.sample_groups[key]))
+
+        # Sort the list of comparison groups by group name.
+        comparison_groups.sort(cmp=lambda x, y: cmp(x[0], y[0]))
+
+        self.comparisons['global'] = comparison_groups
+
+        return
 
     def _read_comparisons(self, cmp_file):
         """Read an C{AnnotationSheet} CSV file specifying comparisons from disk.
@@ -386,6 +409,8 @@ class Tuxedo(Analysis):
                 - Treatment/Control/Point N File:
         @param cmp_file: Comparisons file path
         @type cmp_file: str | unicode
+        @return:
+        @rtype:
         """
 
         if self.debug > 1:
@@ -409,7 +434,7 @@ class Tuxedo(Analysis):
             i = -2
             key = str()
             comparison_groups = list()
-            while 1:
+            while True:
                 i += 1
                 if i == -1:
                     prefix = 'Control'
@@ -422,6 +447,8 @@ class Tuxedo(Analysis):
                 # depending on 'Group' or 'Sample' column entries.
                 # In RNA-Seq experiments, entire pools of Sample objects (replicates) are compared with each other.
                 group_name, group_samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix=prefix)
+                assert isinstance(group_name, str)
+                assert isinstance(group_samples, list)
                 if group_name and len(group_samples):
                     key += group_name
                     key += '__'
@@ -456,12 +483,16 @@ class Tuxedo(Analysis):
                 key = re.sub(pattern=regular_expression, repl='_', string=key)
             else:
                 # Truncate the last '__' separator off the key string.
-                key = key[:-2]
+                key = key.rstrip('_')
 
             self.comparisons[key] = comparison_groups
 
+        return
+
     def run(self):
         """Run this C{Tuxedo} analysis.
+        @return:
+        @rtype:
         """
 
         super(Tuxedo, self).run()
@@ -471,27 +502,29 @@ class Tuxedo(Analysis):
         if not self.genome_version:
             raise Exception('A Tuxedo analysis requires a genome_version configuration option.')
 
-        if self.cmp_file and self.cmp_file == '*samples*':
-            # The special file name *samples* creates the comparisons on the basis of an
-            # all-against-all sample comparison.
-            self._calculate_comparisons()
-        elif self.cmp_file:
+        if self.cmp_file:
             # A comparison file path has been provided.
-            # Expand an eventual user part i.e. on UNIX ~ or ~user and
-            # expand any environment variables i.e. on UNIX ${NAME} or $NAME
-            # Check if an absolute path has been provided, if not,
-            # automatically prepend standard directory paths.
-
-            self.cmp_file = os.path.expanduser(path=self.cmp_file)
-            self.cmp_file = os.path.expandvars(path=self.cmp_file)
-
-            if not os.path.isabs(self.cmp_file) and not os.path.exists(path=self.cmp_file):
-                self.cmp_file = os.path.join(self.project_directory, self.cmp_file)
-
-            # Read and process the comparison file, which includes adding only those sample objects,
-            # which are referenced in a comparison.
-
-            self._read_comparisons(cmp_file=self.cmp_file)
+            if self.cmp_file == '*groups*':
+                # The special file name *groups* creates the comparisons on the basis of an
+                # all-against-all group comparison.
+                self._calculate_comparisons_from_groups()
+            elif self.cmp_file == '*samples*':
+                # The special file name *samples* creates the comparisons on the basis of an
+                # all-against-all sample comparison.
+                self._calculate_comparisons_from_samples()
+            else:
+                # A comparison file path has been provided.
+                # Expand an eventual user part i.e. on UNIX ~ or ~user and
+                # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+                # Check if an absolute path has been provided, if not,
+                # automatically prepend standard directory paths.
+                self.cmp_file = os.path.expanduser(path=self.cmp_file)
+                self.cmp_file = os.path.expandvars(path=self.cmp_file)
+                if not os.path.isabs(self.cmp_file) and not os.path.exists(path=self.cmp_file):
+                    self.cmp_file = os.path.join(self.project_directory, self.cmp_file)
+                # Read and process the comparison file, which includes adding only those sample objects,
+                # which are referenced in a comparison.
+                self._read_comparisons(cmp_file=self.cmp_file)
         else:
             # Without a comparison file path, simply add all Sample objects from the Collection.
             # This means that only the initial pipeline stages, but not the comparison stage gets run.
@@ -516,12 +549,9 @@ class Tuxedo(Analysis):
         # prepend the annotation default if not.
 
         if self.transcriptome_index_path:
-            if not os.path.isabs(self.transcriptome_index_path):
-                self.transcriptome_index_path = os.path.join(
-                    Default.absolute_genomes(genome_version=self.genome_version),
-                    self.transcriptome_index_path)
-
-            self.transcriptome_index_path = os.path.normpath(self.transcriptome_index_path)
+            self.transcriptome_index_path = Default.get_absolute_path(
+                file_path=self.transcriptome_index_path,
+                default_path=Default.absolute_genomes(genome_version=self.genome_version))
 
             if not os.path.isdir(self.transcriptome_index_path):
                 raise Exception("Reference transcriptome index directory {!r} does not exist.".
@@ -535,30 +565,34 @@ class Tuxedo(Analysis):
 
             self.transcriptome_gtf_path = os.path.join(
                 self.transcriptome_index_path,
-                string.join(words=(transcriptome_index, 'gtf'), sep='.'))
+                '.'.join((transcriptome_index, 'gtf')))
 
             if not os.path.exists(self.transcriptome_gtf_path):
                 raise Exception("Reference transcriptome GTF file {!r} does not exist.".
                                 format(self.transcriptome_gtf_path))
 
         elif self.transcriptome_gtf_path:
-            if not os.path.isabs(self.transcriptome_gtf_path):
-                self.transcriptome_gtf_path = os.path.join(
-                    Default.absolute_genome_annotation(genome_version=self.genome_version),
-                    self.transcriptome_gtf_path)
-
-            self.transcriptome_gtf_path = os.path.normpath(self.transcriptome_gtf_path)
+            self.transcriptome_gtf_path = Default.get_absolute_path(
+                file_path=self.transcriptome_gtf_path,
+                default_path=Default.absolute_genome_annotation(genome_version=self.genome_version))
 
             if not os.path.exists(self.transcriptome_gtf_path):
                 raise Exception("Reference transcriptome GTF file {!r} does not exist.".
                                 format(self.transcriptome_gtf_path))
 
+        if not self.transcriptome_gtf_path:
+            raise Exception("Reference transcriptome GTF file not defined.")
+
         self._create_tophat_cufflinks_jobs()
         self._create_cuffmerge_cuffdiff_jobs()
+
+        return
 
     def _create_tophat_cufflinks_jobs(self):
         """Create a TopHat aligner process and a Cufflinks transcript assembler process
         for each sample or replicate.
+        @return:
+        @rtype:
         """
 
         if self.debug > 1:
@@ -610,6 +644,8 @@ class Tuxedo(Analysis):
             working_directory=self.genome_directory,
             analysis=self))
 
+        process_cufflinks_dependencies = list()
+
         for sample in self.samples:
             assert isinstance(sample, Sample)
             if self.debug > 0:
@@ -632,14 +668,14 @@ class Tuxedo(Analysis):
 
                 # TODO: Activate the new code once the bsf_run_rnaseq_tophat.py script has been retired.
 
-                # prefix_run_tophat = string.join(words=(drms_run_tophat.name, replicate_key), sep='_')
+                # prefix_run_tophat = '_'.join((drms_run_tophat.name, replicate_key))
 
                 file_path_dict_tophat = dict(
                     # The output directory deviates from the prefix_run_tophat that itself is based on
                     # drms_run_tophat.name. Both rnaseq_run_tophat and rnaseq_process_tophat processes should
                     # use the same rnaseq_tophat directory.
                     # output_directory=prefix_run_tophat,
-                    output_directory=string.join(words=('rnaseq_tophat', replicate_key), sep='_')
+                    output_directory='_'.join(('rnaseq_tophat', replicate_key))
                 )
 
                 # runnable_run_tophat = self.add_runnable(runnable=Runnable(
@@ -662,7 +698,7 @@ class Tuxedo(Analysis):
                 #     program='tophat2'))
 
                 tophat = TopHat(
-                    name=string.join(words=('rnaseq_tophat', replicate_key), sep='_'),
+                    name='_'.join(('rnaseq_tophat', replicate_key)),
                     analysis=self)
 
                 # Set tophat options.
@@ -723,8 +759,8 @@ class Tuxedo(Analysis):
                     if paired_reads.reads2:
                         reads2.append(paired_reads.reads2.file_path)
 
-                tophat.arguments.append(string.join(words=reads1, sep=','))
-                tophat.arguments.append(string.join(words=reads2, sep=','))
+                tophat.arguments.append(','.join(reads1))
+                tophat.arguments.append(','.join(reads2))
 
                 # Create a new rnaseq_run_tophat Executable.
                 # TODO: The following code block is required as long as the bsf_run_rnaseq_tophat.py script
@@ -744,7 +780,7 @@ class Tuxedo(Analysis):
                 pickler_file.close()
 
                 run_tophat = drms_run_tophat.add_executable(executable=Executable.from_analysis(
-                    name=string.join(words=(drms_run_tophat.name, replicate_key), sep='_'),
+                    name='_'.join((drms_run_tophat.name, replicate_key)),
                     program='bsf_run_rnaseq_tophat.py',
                     analysis=self))
 
@@ -757,10 +793,10 @@ class Tuxedo(Analysis):
 
                 # TODO: End of code block.
 
-                # Create a new rnaseq_process_tophat Executable
+                # Create a new rnaseq_process_tophat Executable.
 
                 process_tophat = drms_process_tophat.add_executable(executable=Executable.from_analysis(
-                    name=string.join(words=(drms_process_tophat.name, replicate_key), sep='_'),
+                    name='_'.join((drms_process_tophat.name, replicate_key)),
                     program='bsf_rnaseq_process_tophat2.sh',
                     analysis=self))
 
@@ -773,16 +809,34 @@ class Tuxedo(Analysis):
                 process_tophat.arguments.append(file_path_dict_tophat['output_directory'])
                 process_tophat.arguments.append(genome_sizes)
 
+                # TODO: Switch from an external Bash script to a set of Runnable and RunnableStep objects.
+                # Since the Bash script includes Perl code to reset the BED score field to 0, rather than
+                # re-scale it properly, it would be good to write a new bsf.runnables.process_tophat module
+                # to implement this in Python code.
+
+                # Create a process_tophat Runnable.
+
+                # file_path_dict_process_tophat = dict(
+                #
+                # )
+                #
+                # runnable_process_tophat = self.add_runnable(runnable=Runnable(
+                #     name='rnaseq_process_tophat',
+                #     code_module='bsf.runnables.generic',
+                #     working_directory=self.genome_directory,
+                #     file_path_dict=file_path_dict_process_tophat,
+                #     debug=self.debug))
+
                 # Create a Cufflinks Runnable per replicate (replicate_key).
 
-                prefix_run_cufflinks = string.join(words=(drms_run_cufflinks.name, replicate_key), sep='_')
+                prefix_run_cufflinks = '_'.join((drms_run_cufflinks.name, replicate_key))
 
                 file_path_dict_cufflinks = dict(
                     # The output directory deviates from the prefix_run_cufflinks that itself is based on
                     # drms_run_cufflinks.name. Both rnaseq_run_cufflinks and rnaseq_process_cufflinks processes should
                     # use the same rnaseq_cufflinks directory.
                     # output_directory=prefix_run_cufflinks,
-                    output_directory=string.join(words=('rnaseq_cufflinks', replicate_key), sep='_'),
+                    output_directory='_'.join(('rnaseq_cufflinks', replicate_key)),
                     tophat_accepted_hits=os.path.join(file_path_dict_tophat['output_directory'], 'accepted_hits.bam')
                 )
 
@@ -844,6 +898,10 @@ class Tuxedo(Analysis):
 
                 # Cufflinks has a --library-norm-method option, but only one option (classic-fpkm) seems supported.
 
+                if self.no_length_correction:
+                    cufflinks.add_switch_long(
+                        key='no-length-correction')
+
                 cufflinks.add_option_long(
                     key='output-dir',
                     value=file_path_dict_cufflinks['output_directory'])
@@ -862,23 +920,27 @@ class Tuxedo(Analysis):
 
                 cufflinks.arguments.append(file_path_dict_cufflinks['tophat_accepted_hits'])
 
-                # Create a new Process Cufflinks Executable.
+                # Add the run_cufflinks dependency for process_cufflinks.
+                process_cufflinks_dependencies.append(run_cufflinks.name)
 
-                prefix_process_cufflinks = string.join(words=(drms_process_cufflinks.name, replicate_key), sep='_')
+        # Create one process_cufflinks Executable to process all sub-directories.
 
-                process_cufflinks = drms_process_cufflinks.add_executable(executable=Executable.from_analysis(
-                    name=prefix_process_cufflinks,
-                    program='bsf_rnaseq_process_cufflinks.R',
-                    analysis=self))
+        process_cufflinks = drms_process_cufflinks.add_executable(executable=Executable.from_analysis(
+            name=drms_process_cufflinks.name,
+            program='bsf_rnaseq_process_cufflinks.R',
+            analysis=self))
 
-                process_cufflinks.dependencies.append(run_cufflinks.name)
+        process_cufflinks.dependencies.extend(process_cufflinks_dependencies)
 
-                # Set process Cufflinks options.
+        # Set process_cufflinks options.
+        # None so far.
 
-                process_cufflinks.add_option_long(key='sample', value=replicate_key)
+        return
 
     def _create_cuffmerge_cuffdiff_jobs(self):
         """Create a Cuffmerge and a Cuffdiff process for each comparison.
+        @return:
+        @rtype:
         """
 
         run_cuffquant_before_cuffdiff = False
@@ -923,7 +985,7 @@ class Tuxedo(Analysis):
             file_path_dict_cuffmerge = dict(
                 output_directory=prefix_cuffmerge,
                 merged_gtf=os.path.join(prefix_cuffmerge, 'merged.gtf'),
-                assembly_txt=string.join(words=(prefix_cuffmerge, 'assembly.txt'), sep='_'))
+                assembly_txt='_'.join((prefix_cuffmerge, 'assembly.txt')))
 
             runnable_run_cuffmerge = self.add_runnable(runnable=Runnable(
                 name=prefix_cuffmerge,
@@ -965,9 +1027,7 @@ class Tuxedo(Analysis):
             # This file requires an absolute path, because the working directory is not set at the stage of
             # job submission.
 
-            assembly_path = os.path.join(
-                self.genome_directory,
-                string.join(words=(prefix_cuffmerge, 'assembly.txt'), sep='_'))
+            assembly_path = os.path.join(self.genome_directory, '_'.join((prefix_cuffmerge, 'assembly.txt')))
             assembly_file = open(name=assembly_path, mode='w')
 
             # Process rnaseq_cuffmerge and rnaseq_cuffdiff arguments in parallel.
@@ -1005,28 +1065,26 @@ class Tuxedo(Analysis):
 
                         transcripts_path = os.path.join(
                             self.genome_directory,
-                            string.join(words=('rnaseq_cufflinks', replicate_key), sep='_'),
+                            '_'.join(('rnaseq_cufflinks', replicate_key)),
                             'transcripts.gtf')
                         assembly_file.write(transcripts_path + '\n')
 
                         # Wait for each Cufflinks replicate to finish, before Cuffmerge can run.
 
-                        run_cuffmerge.dependencies.append(
-                            string.join(words=(self.drms_name_run_cufflinks, replicate_key), sep='_'))
+                        run_cuffmerge.dependencies.append('_'.join((self.drms_name_run_cufflinks, replicate_key)))
 
                         # Create a Cuffquant Runnable per comparison (comparison_key) and replicate (replicate_key)
                         # on the basis of the Cuffmerge GTF file.
 
-                        prefix_cuffquant = string.join(words=(drms_run_cuffquant.name, comparison_key, replicate_key),
-                                                       sep='_')
+                        prefix_cuffquant = '_'.join((drms_run_cuffquant.name, comparison_key, replicate_key))
 
                         file_path_dict_cuffquant = dict(
                             output_directory=prefix_cuffquant,
                             abundances=os.path.join(prefix_cuffquant, 'abundances.cxb'),
                             merged_gtf=file_path_dict_cuffmerge['merged_gtf'],
-                            tophat_directory=string.join(words=('rnaseq_tophat', replicate_key), sep='_'),
+                            tophat_directory='_'.join(('rnaseq_tophat', replicate_key)),
                             tophat_accepted_hits=os.path.join(
-                                string.join(words=('rnaseq_tophat', replicate_key), sep='_'),
+                                '_'.join(('rnaseq_tophat', replicate_key)),
                                 'accepted_hits.bam'))
 
                         runnable_run_cuffquant = self.add_runnable(runnable=Runnable(
@@ -1074,6 +1132,9 @@ class Tuxedo(Analysis):
                             cuffquant.add_option_long(
                                 key='library-type',
                                 value=self.library_type)
+                        if self.no_length_correction:
+                            cuffquant.add_switch_long(
+                                key='no-length-correction')
                         cuffquant.add_switch_long(
                             key='quiet')
                         cuffquant.add_switch_long(
@@ -1104,7 +1165,7 @@ class Tuxedo(Analysis):
 
             # Create a Cuffnorm Runnable per comparison.
 
-            prefix_cuffnorm = string.join(words=(drms_run_cuffnorm.name, comparison_key), sep='_')
+            prefix_cuffnorm = '_'.join((drms_run_cuffnorm.name, comparison_key))
 
             file_path_dict_cuffnorm = dict(
                 output_directory=prefix_cuffnorm,
@@ -1138,7 +1199,7 @@ class Tuxedo(Analysis):
                 value=file_path_dict_cuffnorm['output_directory'])
             cuffnorm.add_option_long(
                 key='labels',
-                value=string.join(words=cuffdiff_cuffnorm_labels, sep=','))
+                value=','.join(cuffdiff_cuffnorm_labels))
             cuffnorm.add_option_long(
                 key='num-threads',
                 value=str(drms_run_cuffnorm.threads))
@@ -1157,11 +1218,11 @@ class Tuxedo(Analysis):
             # Add the Cuffquant abundances files per point as Cuffnorm arguments.
             for per_group_abundances_list in cuffdiff_cuffnorm_abundances:
                 assert isinstance(per_group_abundances_list, list)
-                cuffnorm.arguments.append(string.join(words=per_group_abundances_list, sep=','))
+                cuffnorm.arguments.append(','.join(per_group_abundances_list))
 
             # Create a Cuffdiff Runnable per comparison.
 
-            prefix_cuffdiff = string.join(words=(drms_run_cuffdiff.name, comparison_key), sep='_')
+            prefix_cuffdiff = '_'.join((drms_run_cuffdiff.name, comparison_key))
 
             file_path_dict_cuffdiff = dict(
                 output_directory=prefix_cuffdiff,
@@ -1200,7 +1261,7 @@ class Tuxedo(Analysis):
                 value=file_path_dict_cuffdiff['output_directory'])
             cuffdiff.add_option_long(
                 key='labels',
-                value=string.join(words=cuffdiff_cuffnorm_labels, sep=','))
+                value=','.join(cuffdiff_cuffnorm_labels))
             cuffdiff.add_option_long(
                 key='num-threads',
                 value=str(drms_run_cuffdiff.threads))
@@ -1218,6 +1279,9 @@ class Tuxedo(Analysis):
                 cuffdiff.add_option_long(
                     key='library-type',
                     value=self.library_type)
+            if self.no_length_correction:
+                cuffdiff.add_switch_long(
+                    key='no-length-correction')
             cuffdiff.add_switch_long(
                 key='quiet')
             cuffdiff.add_switch_long(
@@ -1233,17 +1297,17 @@ class Tuxedo(Analysis):
                 # Add the Cuffquant abundances files per comparison group as Cuffdiff arguments.
                 for per_group_abundances_list in cuffdiff_cuffnorm_abundances:
                     assert isinstance(per_group_abundances_list, list)
-                    cuffdiff.arguments.append(string.join(words=per_group_abundances_list, sep=','))
+                    cuffdiff.arguments.append(','.join(per_group_abundances_list))
             else:
                 # Add the TopHat BAM files per comparison group as Cuffdiff arguments.
                 for per_group_alignments_list in cuffdiff_cuffnorm_alignments:
                     assert isinstance(per_group_alignments_list, list)
-                    cuffdiff.arguments.append(string.join(words=per_group_alignments_list, sep=','))
+                    cuffdiff.arguments.append(','.join(per_group_alignments_list))
 
             # Create a new rnaseq_process_cuffdiff Executable.
 
             process_cuffdiff = drms_process_cuffdiff.add_executable(executable=Executable.from_analysis(
-                name=string.join(words=(drms_process_cuffdiff.name, comparison_key), sep='_'),
+                name='_'.join((drms_process_cuffdiff.name, comparison_key)),
                 program='bsf_rnaseq_process_cuffdiff.R',
                 analysis=self))
 
@@ -1256,7 +1320,7 @@ class Tuxedo(Analysis):
                 value=comparison_key)
             process_cuffdiff.add_option_long(
                 key='gtf-file',
-                value=self.transcriptome_gtf_path)
+                value=file_path_dict_cuffdiff['merged_gtf'])
             process_cuffdiff.add_option_long(
                 key='genome-version',
                 value=self.genome_version)
@@ -1265,14 +1329,16 @@ class Tuxedo(Analysis):
 
             # None so far.
 
+        return
+
     def report(self):
         """Create a C{Tuxedo} report in HTML format and a UCSC Genome Browser Track Hub.
+        @return:
+        @rtype:
         """
 
         config_parser = self.configuration.config_parser
         config_section = self.configuration.section_from_instance(self)
-
-        replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
 
         if config_parser.has_option(section=config_section, option='ucsc_location'):
             ucsc_location = config_parser.get(section=config_section, option='ucsc_location')
@@ -1359,12 +1425,12 @@ class Tuxedo(Analysis):
         output += '</p>\n'
         output += '\n'
 
-        #output += '<p>\n'
-        #output += 'Follow the links below to attach\n'
-        #output += 'Tophat junction, deletion and insertion annotation to the\n'
-        #output += 'UCSC Genome Browser. Since each file needs transferring to\n'
-        #output += 'the UCSC site, subsequent pages will take some time to load.\n'
-        #output += '</p>\n'
+        # output += '<p>\n'
+        # output += 'Follow the links below to attach\n'
+        # output += 'Tophat junction, deletion and insertion annotation to the\n'
+        # output += 'UCSC Genome Browser. Since each file needs transferring to\n'
+        # output += 'the UCSC site, subsequent pages will take some time to load.\n'
+        # output += '</p>\n'
 
         output += '<h2>Gene Expression Profiles</h2>\n'
         output += '\n'
@@ -1404,6 +1470,7 @@ class Tuxedo(Analysis):
         output += '<th>Isoforms (Symbols)</th>\n'
         output += '<th>Aligned BAM file</th>\n'
         output += '<th>Aligned BAI file</th>\n'
+        output += '<th>Unaligned BAM file</th>\n'
         output += '</tr>\n'
         output += '</thead>\n'
         output += '<tbody>\n'
@@ -1460,7 +1527,7 @@ class Tuxedo(Analysis):
             # Python str key and Python list of Python list objects
             # of bsf.data.PairedReads objects.
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping)
+            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
             replicate_keys = replicate_dict.keys()
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -1764,7 +1831,7 @@ class Tuxedo(Analysis):
             sample_pair_path = os.path.join(
                 self.genome_directory,
                 prefix,
-                string.join(words=(prefix, 'sample_pairs.tsv'), sep='_'))
+                '_'.join((prefix, 'sample_pairs.tsv')))
 
             if os.path.exists(sample_pair_path):
 
@@ -2011,10 +2078,7 @@ class Tuxedo(Analysis):
 
             # Read sample pair information if available.
 
-            sample_pair_path = os.path.join(
-                self.genome_directory,
-                prefix,
-                string.join(words=(prefix, 'sample_pairs.tsv'), sep='_'))
+            sample_pair_path = os.path.join(self.genome_directory, prefix, '_'.join((prefix, 'sample_pairs.tsv')))
 
             if os.path.exists(sample_pair_path):
 
@@ -2072,3 +2136,5 @@ class Tuxedo(Analysis):
         self.ucsc_hub_write_hub(prefix='rnaseq')
         self.ucsc_hub_write_genomes(prefix='rnaseq')
         self.ucsc_hub_write_tracks(output=track_output, prefix='rnaseq')
+
+        return
