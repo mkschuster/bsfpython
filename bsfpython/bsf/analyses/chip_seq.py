@@ -29,7 +29,6 @@ A package of classes and methods supporting ChIP-Seq analyses.
 import errno
 import os
 from pickle import Pickler, HIGHEST_PROTOCOL
-import string
 import warnings
 
 from bsf import Analysis, Command, Configuration, Default, defaults, DRMS, Executable, Runnable
@@ -41,6 +40,25 @@ from bsf.annotation import AnnotationSheet, SampleAnnotationSheet, ChIPSeqDiffBi
 class ChIPSeqComparison(object):
     """ChIP-Seq comparison annotation sheet.
 
+    Attributes:
+    @ivar c_name: Control name
+    @type c_name: str
+    @ivar t_name: Treatment name
+    @type t_name: str
+    @ivar c_samples: Python C{list} of control C{Sample} objects
+    @type c_samples: list[Sample]
+    @ivar t_samples: Python C{list} of treatment C{Sample} objects
+    @type t_samples: list[Sample]
+    @ivar factor: ChIP factor
+    @type factor: str
+    @ivar tissue: Tissue
+    @type tissue: str
+    @ivar condition: Condition
+    @type condition: str
+    @ivar treatment: Treatment
+    @type treatment: str
+    @ivar replicate: replicate number
+    @type replicate: int
     """
 
     def __init__(self, c_name, t_name, c_samples, t_samples,
@@ -52,9 +70,9 @@ class ChIPSeqComparison(object):
         @param t_name: Treatment name
         @type t_name: str
         @param c_samples: Python C{list} of control C{Sample} objects
-        @type c_samples: list
+        @type c_samples: list[Sample]
         @param t_samples: Python C{list} of treatment C{Sample} objects
-        @type t_samples:list
+        @type t_samples: list[Sample]
         @param factor: ChIP factor
         @type factor: str
         @param tissue: Tissue
@@ -65,96 +83,68 @@ class ChIPSeqComparison(object):
         @type treatment: str
         @param replicate: replicate number
         @type replicate: int
+        @return:
+        @rtype:
         """
 
         # Condition', 'Treatment', 'Replicate',
         # 'bamReads', 'bamControl', 'ControlID', 'Peaks', 'PeakCaller', 'PeakFormat'
 
-        if c_name:
-            self.c_name = c_name
-        else:
+        if c_name is None:
             self.c_name = str()
-
-        if t_name:
-            self.t_name = t_name
         else:
+            self.c_name = c_name
+
+        if t_name is None:
             self.t_name = str()
-
-        if c_samples:
-            self.c_samples = c_samples
         else:
+            self.t_name = t_name
+
+        if c_samples is None:
             self.c_samples = list()
-
-        if t_samples:
-            self.t_samples = t_samples
         else:
+            self.c_samples = c_samples
+
+        if t_samples is None:
             self.t_samples = list()
-
-        if factor:
-            self.factor = factor
         else:
+            self.t_samples = t_samples
+
+        if factor is None:
             self.factor = str()
-
-        if tissue:
-            self.tissue = tissue
         else:
+            self.factor = factor
+
+        if tissue is None:
             self.tissue = str()
-
-        if condition:
-            self.condition = condition
         else:
+            self.tissue = tissue
+
+        if condition is None:
             self.condition = str()
-
-        if treatment:
-            self.treatment = treatment
         else:
+            self.condition = condition
+
+        if treatment is None:
             self.treatment = str()
-
-        if replicate:
-            self.replicate = replicate
         else:
+            self.treatment = treatment
+
+        if replicate is None:
             self.replicate = int(x=0)
+        else:
+            self.replicate = replicate
+
+        return
 
 
 class ChIPSeq(Analysis):
     """The C{ChIPSeq} class represents the logic to run a ChIP-Seq-specific C{Analysis}.
 
     Attributes:
-    None
+    @ivar cmp_file: Comparison file
+    @type cmp_file: str | unicode
     """
-
-    @classmethod
-    def from_config_file_path(cls, config_path):
-        """Create a new C{ChIPSeq} object from a UNIX-style configuration file via the C{Configuration} class.
-
-        @param config_path: UNIX-style configuration file
-        @type config_path: str | unicode
-        @return: C{ChIPSeq}
-        @rtype: ChIPSeq
-        """
-
-        return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
-
-    @classmethod
-    def from_configuration(cls, configuration):
-        """Create a new C{ChIPSeq} object from a C{Configuration} object.
-
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
-        @return: C{ChIPSeq}
-        @rtype: ChIPSeq
-        """
-
-        assert isinstance(configuration, Configuration)
-
-        chipseq = cls(configuration=configuration)
-
-        # A "bsf.analyses.chip_seq.ChIPSeq" section specifies defaults for this Analysis.
-
-        section = string.join(words=(__name__, cls.__name__), sep='.')
-        chipseq.set_configuration(chipseq.configuration, section=section)
-
-        return chipseq
 
     def __init__(self, configuration=None,
                  project_name=None, genome_version=None,
@@ -186,15 +176,17 @@ class ChIPSeq(Analysis):
         @param debug: Integer debugging level
         @type debug: int
         @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list
+        @type drms_list: list[DRMS]
         @param collection: C{Collection}
         @type collection: Collection
         @param comparisons: Python C{dict} of Python C{list} objects of C{Sample} objects
-        @type comparisons: dict
+        @type comparisons: dict[str, list[Sample]]
         @param samples: Python C{list} of C{Sample} objects
-        @type samples: list
+        @type samples: list[Sample]
         @param cmp_file: Comparison file
         @type cmp_file: str | unicode
+        @return:
+        @rtype:
         """
 
         super(ChIPSeq, self).__init__(configuration=configuration,
@@ -206,10 +198,12 @@ class ChIPSeq(Analysis):
 
         # Sub-class specific ...
 
-        if cmp_file:
-            self.cmp_file = cmp_file
-        else:
+        if cmp_file is None:
             self.cmp_file = str()
+        else:
+            self.cmp_file = cmp_file
+
+        return
 
     def set_configuration(self, configuration, section):
         """Set instance variables of a C{ChIPSeq} object via a section of a
@@ -221,6 +215,8 @@ class ChIPSeq(Analysis):
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
+        @return:
+        @rtype:
         """
 
         super(ChIPSeq, self).set_configuration(configuration=configuration, section=section)
@@ -229,6 +225,8 @@ class ChIPSeq(Analysis):
 
         if configuration.config_parser.has_option(section=section, option='cmp_file'):
             self.cmp_file = configuration.config_parser.get(section=section, option='cmp_file')
+
+        return
 
     def _read_comparisons(self, cmp_file):
         """Read a C{SampleAnnotationSheet} CSV file from disk.
@@ -249,6 +247,8 @@ class ChIPSeq(Analysis):
                 - Treatment/Control File:
         @param cmp_file: Comparison file path
         @type cmp_file: str | unicode
+        @return:
+        @rtype:
         """
 
         if self.debug > 1:
@@ -375,8 +375,13 @@ class ChIPSeq(Analysis):
                 self.comparisons[key2].replicate = i
                 i += 1
 
+        return
+
     def run(self):
         """Run this C{ChIPSeq} analysis.
+
+        @return:
+        @rtype:
         """
 
         super(ChIPSeq, self).run()
@@ -411,6 +416,8 @@ class ChIPSeq(Analysis):
         self._create_macs2_jobs()
         self._create_diffbind_jobs()
 
+        return
+
     def _create_bwa_jobs(self):
 
         default = Default.get_global_default()
@@ -443,14 +450,14 @@ class ChIPSeq(Analysis):
 
             for replicate_key in replicate_keys:
 
-                prefix = string.join(words=(alignment_drms.name, replicate_key))
+                prefix = '_'.join((alignment_drms.name, replicate_key))
 
                 file_path_dict = dict(
-                    temporary_directory=string.join(words=(prefix, 'temporary'), sep='_'),
+                    temporary_directory='_'.join((prefix, 'temporary')),
                     replicate_directory=prefix,
-                    aligned_sam=os.path.join(prefix, string.join(words=(prefix, 'aligned.sam'), sep='_')),
-                    cleaned_sam=os.path.join(prefix, string.join(words=(prefix, 'cleaned.sam'), sep='_')),
-                    sorted_bam=os.path.join(prefix, string.join(words=(prefix, 'sorted.bam'), sep='_')))
+                    aligned_sam=os.path.join(prefix, '_'.join((prefix, 'aligned.sam'))),
+                    cleaned_sam=os.path.join(prefix, '_'.join((prefix, 'cleaned.sam'))),
+                    sorted_bam=os.path.join(prefix, '_'.join((prefix, 'sorted.bam'))))
 
                 runnable_alignment = self.add_runnable(runnable=Runnable(
                     name=prefix,
@@ -501,10 +508,10 @@ class ChIPSeq(Analysis):
                     bwa_mem.add_option_short(key='R', value=read_group)
 
                 if len(reads1) and not len(reads2):
-                    bwa_mem.arguments.append(string.join(words=reads1, sep=','))
+                    bwa_mem.arguments.append(','.join(reads1))
                 elif len(reads1) and len(reads2):
-                    bwa_mem.arguments.append(string.join(words=reads1, sep=','))
-                    bwa_mem.arguments.append(string.join(words=reads2, sep=','))
+                    bwa_mem.arguments.append(','.join(reads1))
+                    bwa_mem.arguments.append(','.join(reads2))
                 if len(reads2):
                     warnings.warn('Only second reads, but no first reads have been defined.')
 
@@ -536,15 +543,14 @@ class ChIPSeq(Analysis):
                 # Create a bsf_run_bwa.py job to run the pickled object.
 
                 run_bwa = alignment_drms.add_executable(executable=Executable.from_analysis(
-                    name=string.join(words=(alignment_drms.name, replicate_key), sep='_'),
+                    name='_'.join((alignment_drms.name, replicate_key)),
                     program='bsf_run_bwa.py',
                     analysis=self))
 
                 # Only submit this Executable if the final result file does not exist.
-                if (os.path.exists(
-                        os.path.join(self.genome_directory, file_path_chipseq_alignment['aligned_md5']))
-                    and os.path.getsize(
-                        os.path.join(self.genome_directory, file_path_chipseq_alignment['aligned_md5']))):
+                if (os.path.exists(os.path.join(self.genome_directory, file_path_chipseq_alignment['aligned_md5'])) and
+                        os.path.getsize(
+                            os.path.join(self.genome_directory, file_path_chipseq_alignment['aligned_md5']))):
                     run_bwa.submit = False
 
                     # Set run_bwa options.
@@ -552,8 +558,13 @@ class ChIPSeq(Analysis):
                 run_bwa.add_option_long(key='pickler_path', value=pickler_path)
                 run_bwa.add_option_long(key='debug', value=str(self.debug))
 
+        return
+
     def _create_bowtie2_jobs(self):
         """Create Bowtie2 alignment jobs.
+
+        @return:
+        @rtype:
         """
 
         # Get global defaults.
@@ -612,14 +623,14 @@ class ChIPSeq(Analysis):
 
             for replicate_key in replicate_keys:
 
-                prefix = string.join(words=(alignment_drms.name, replicate_key), sep='_')
+                prefix = '_'.join((alignment_drms.name, replicate_key))
 
                 file_path_dict = dict(
-                    temporary_directory=string.join(words=(prefix, 'temporary'), sep='_'),
+                    temporary_directory='_'.join((prefix, 'temporary')),
                     replicate_directory=prefix,
-                    aligned_sam=os.path.join(prefix, string.join(words=(prefix, 'aligned.sam'), sep='_')),
-                    cleaned_sam=os.path.join(prefix, string.join(words=(prefix, 'cleaned.sam'), sep='_')),
-                    sorted_bam=os.path.join(prefix, string.join(words=(prefix, 'sorted.bam'), sep='_')))
+                    aligned_sam=os.path.join(prefix, '_'.join((prefix, 'aligned.sam'))),
+                    cleaned_sam=os.path.join(prefix, '_'.join((prefix, 'cleaned.sam'))),
+                    sorted_bam=os.path.join(prefix, '_'.join((prefix, 'sorted.bam'))))
 
                 # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
                 runnable = self.add_runnable(runnable=Runnable(
@@ -650,11 +661,11 @@ class ChIPSeq(Analysis):
                 print 'Reads2 ', repr(reads2)
 
                 if len(reads1) and not len(reads2):
-                    bowtie2.add_option_short(key='U', value=string.join(words=reads1, sep=','))
+                    bowtie2.add_option_short(key='U', value=','.join(reads1))
                 elif len(reads1) and len(reads2):
-                    bowtie2.add_option_short(key='1', value=string.join(words=reads1, sep=','))
+                    bowtie2.add_option_short(key='1', value=','.join(reads1))
                 if len(reads2):
-                    bowtie2.add_option_short(key='2', value=string.join(words=reads2, sep=','))
+                    bowtie2.add_option_short(key='2', value=','.join(reads2))
 
                 # TODO: The following options are properties of the Sample,
                 # PairedReads and Reads objects.
@@ -723,8 +734,13 @@ class ChIPSeq(Analysis):
                     analysis=self,
                     runnable_name=prefix))
 
+        return
+
     def _create_macs14_jobs(self):
         """Create Macs14 peak caller jobs.
+
+        @return:
+        @rtype:
         """
 
         config_parser = self.configuration.config_parser
@@ -861,8 +877,8 @@ class ChIPSeq(Analysis):
                             else:
                                 warnings.warn(
                                     'Unable to set MACS14 parameters for unknown factor {!r}.\n'
-                                    'Please use default factor {!r} or adjust Python code if necessary.'.
-                                    format(factor, defaults.web.chipseq_default_factor),
+                                    'Please use default factor {!r} or adjust Python code if necessary.'.format(
+                                        factor, defaults.web.chipseq_default_factor),
                                     UserWarning)
 
                             # Set macs14 arguments.
@@ -874,8 +890,13 @@ class ChIPSeq(Analysis):
                             process_macs14.arguments.append(os.path.join('.', prefix, prefix))
                             process_macs14.arguments.append(genome_sizes)
 
+        return
+
     def _create_macs2_jobs(self):
         """Create Macs2 peak caller jobs.
+
+        @return:
+        @rtype:
         """
 
         config_parser = self.configuration.config_parser
@@ -942,7 +963,7 @@ class ChIPSeq(Analysis):
                             prefix = '{}_{}__{}'.format(peakcalling_drms.name, t_replicate_key, c_replicate_key)
 
                             file_path_dict = dict(
-                                temporary_directory=string.join(words=(prefix, 'temporary'), sep='_'),
+                                temporary_directory='_'.join((prefix, 'temporary')),
                                 replicate_directory=prefix,
                             )
 
@@ -1048,8 +1069,8 @@ class ChIPSeq(Analysis):
                             else:
                                 warnings.warn(
                                     'Unable to set MACS2 parameters for unknown factor {!r}.\n'
-                                    'Please use default factor {!r} or adjust Python code if necessary.'.
-                                    format(factor, defaults.web.chipseq_default_factor),
+                                    'Please use default factor {!r} or adjust Python code if necessary.'.format(
+                                        factor, defaults.web.chipseq_default_factor),
                                     UserWarning)
 
                             # Set macs2_callpeak sub-command arguments.
@@ -1096,8 +1117,13 @@ class ChIPSeq(Analysis):
                             process_macs2.arguments.append('{}__{}'.format(t_replicate_key, c_replicate_key))
                             process_macs2.arguments.append(genome_sizes)
 
+        return
+
     def _create_diffbind_jobs(self):
         """Create Bioconductor DiffBind jobs.
+
+        @return:
+        @rtype:
         """
 
         config_parser = self.configuration.config_parser
@@ -1236,8 +1262,13 @@ class ChIPSeq(Analysis):
             diffbind.add_option_long(key='genome_directory', value=self.genome_directory)
             diffbind.add_option_long(key='sample_annotation', value=file_path)
 
+        return
+
     def _report_macs14(self):
         """Create a C{ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
+
+        @return:
+        @rtype:
         """
 
         config_parser = self.configuration.config_parser
@@ -1496,8 +1527,13 @@ class ChIPSeq(Analysis):
         self.ucsc_hub_write_genomes(prefix='chipseq')
         self.ucsc_hub_write_tracks(output=track_output, prefix='chipseq')
 
+        return
+
     def report(self):
         """Create a C{ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
+
+        @return:
+        @rtype:
         """
 
         config_parser = self.configuration.config_parser
@@ -2117,3 +2153,5 @@ class ChIPSeq(Analysis):
         self.ucsc_hub_write_hub(prefix='chipseq')
         self.ucsc_hub_write_genomes(prefix='chipseq')
         self.ucsc_hub_write_tracks(output=track_output, prefix='chipseq')
+
+        return
