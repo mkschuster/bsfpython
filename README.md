@@ -1,33 +1,43 @@
+# BSF Python Library
 
-BSF Python Library
+## Introduction
 
-Introduction
-
-The Biomedical Sequencing Facility (BSF) [1] is part of the joint genomics core facility of the
-Medical University of Vienna [2] and the CeMM Research Center for Molecular Medicine [3] of the
-Austrian Academy of Sciences [4]. The BSF is Austria’s first technology platform dedicated to
-next generation sequencing in biomedicine and expected to play a catalyzing role for the
-development of genomic medicine in Vienna and Austria.
+The [Biomedical Sequencing Facility](http://www.biomedical-sequencing.at/) (BSF) is part of the
+joint [Genomics Core Facility](http://corefacilities.meduniwien.ac.at/genomics/?L=1) of the
+[Medical University of Vienna](http://www.meduniwien.ac.at/) (MUW) and the
+[Research Center for Molecular Medicine](http://www.cemm.oeaw.ac.at/) (CeMM) of the
+[Austrian Academy of Sciences](http://www.oeaw.ac.at/) (OeAW).
+The BSF is Austria’s first technology platform dedicated to
+[next-generation sequencing](http://en.wikipedia.org/wiki/DNA_sequencing#Next-generation_methods) (NGS)
+in biomedicine and expected to play a catalyzing role for the
+development of genomic medicine in [Vienna](http://en.wikipedia.org/wiki/Vienna) and
+[Austria](http://en.wikipedia.org/wiki/Austria).
 
 This Python library and the accompanying scripts are used for day-to-day analysis of
-next-generation sequencing (NGS) data sets.
+next-generation sequencing data sets. The library consists of two main functions.
 
-BSF Python General Configuration File
+The `Analysis` class and its sub-classes implement the logic required for submitting processes on a
+cluster login node.
 
-General settings for the BSF Python library are configured via a $HOME/.bsfpython.ini file
+The `Runnable` class and its sub-classes implements the logic required to run processes on a
+cluster compute node via the common `bsf_runner.py` script.
+
+## BSF Python General Configuration File
+
+General settings for the BSF Python library are configured via a `${HOME}/.bsfpython.ini` file
 in the user's home directory. This file is site-specific and its information allows for automatic
 discovery of raw (e.g. Illumina run folders) and pre-processed (e.g. de-multiplexed lanes and samples)
-NGS data. A template file (bsf_init_template.txt) can be found in the doc sub-directory. The template,
+NGS data. A template file (`bsf_init_template.txt`) can be found in the doc sub-directory. The template,
 which documents the configuration options and provides, as far as possible, sensible default settings,
-needs copying to $HOME/.bsfpython.ini before editing accordingly.
+needs copying to `${HOME}/.bsfpython.ini` before editing accordingly.
 
-Analysis
+## Analysis
 
-The BSF Analysis is central to the BSF pipeline infrastructure. It encapsulates both, logic and data
+The BSF `Analysis` is central to the BSF pipeline infrastructure. It encapsulates both, logic and data
 for a multi-step analysis procedure. Specific Analysis objects are available, tailored to recurring
 tasks.
 
-Analysis Configuration File
+## Analysis Configuration File
 
 BSF Analysis objects are initialised and configured via UNIX-style configuration (*.ini) files.
 Templates for these files are again provided in the doc sub-directory, document configuration options and
@@ -35,7 +45,7 @@ provide, as far as possible, sensible default settings. Generally, only few conf
 options need filling in. Most importantly, the location of sample annotation sheets and, depending on the
 analysis type, sample comparison sheets, need to be specified.
 
-Sample Annotation Sheet
+## Sample Annotation Sheet
 
 A sample annotation sheet specifies the file system location of NGS reads. For data pre-processed via
 Illumina CASAVA, a hierarchy of run folders, projects samples, and paired reads can be automatically
@@ -52,9 +62,9 @@ Sample annotation sheets also provide grouping of samples that is available to t
     - File2
     - Group
 
-Analyses
+## Analyses
 
-ChIPSeq
+### ChIPSeq
 
 The ChIPSeq analysis aligns each BSF Sample object to the genome sequence via BWA. Regions of interest
 are then defined by means of the MACS2 peak caller.
@@ -62,10 +72,12 @@ are then defined by means of the MACS2 peak caller.
 In the context of the ChIPSeq analysis, BSF Paired Reads objects of BSF Sample objects are aligned as a pool.
 
 
-RNASeq
+### RNASeq
 
-The RNA-Seq pipeline is based on the Tuxedo suite. NGS reads are aligned with Tophat2 [] an aligner that
-implements a splice site model and uses a reference transcriptome as the base. is based on the Bowtie2 [] short read aligner.
+The RNA-Seq pipeline is based on the Tuxedo suite. NGS reads are aligned with
+[Tophat2](http://ccb.jhu.edu/software/tophat/index.shtml) an aligner that
+implements a splice site model and uses a reference transcriptome as the base.
+it is based on the [Bowtie2](http://bowtie-bio.sourceforge.net/bowtie2/index.shtml) short read aligner.
 
 In the context of the Tuxedo analysis, BSF Sample objects are aligned and assembled into transcriptomes individually.
 According to a group_replicates configuration option, each BSF Paired Reads object of a BSF Sample object can be
@@ -73,23 +85,21 @@ processed individually by TopHat and Cufflinks or pooled before alignment. The r
 for each BSF Sample resulting from each BSF Paired Reads object are then merged via Cuffmerge. Cuffdiff then compares
 the merged assemblies on the basis of the BAM alignments produced by Tophat2.
 
+### Genetic Variant Calling
 
-References
-
-[1] http://www.biomedical-sequencing.at/
-[2] http://www.meduniwien.ac.at/
-[3] http://www.cemm.oeaw.ac.at/
-[4] http://www.oeaw.ac.at/
+## References
 
 
-Licence
+## Licence
 
-Copyright 2013 Michael K. Schuster
+Copyright 2013 - 2015 Michael K. Schuster
 
-Biomedical Sequencing Facility (BSF), part of the genomics core facility
-of the Research Center for Molecular Medicine (CeMM) of the
-Austrian Academy of Sciences and the Medical University of Vienna (MUW).
-
+[Biomedical Sequencing Facility](http://www.biomedical-sequencing.at/) (BSF),
+part of the joint
+[Genomics Core Facility](http://corefacilities.meduniwien.ac.at/genomics/?L=1) of the
+[Medical University of Vienna](http://www.meduniwien.ac.at/) (MUW) and the
+[Research Center for Molecular Medicine](http://www.cemm.oeaw.ac.at/) (CeMM) of the
+[Austrian Academy of Sciences](http://www.oeaw.ac.at/) (OeAW).
 
 This file is part of BSF Python.
 

@@ -1,18 +1,18 @@
+# BSF Python Library
 
-BSF Python Library
-
-
-Sample Annotation Sheet
+## Sample Annotation Sheet
 
 A sample annotation sheet defines a hierarchy of BSF ProcessedRunFolder, BSF Project,
 BSF Sample, BSF PairedReads, BSF Reads objects in a comma-separated value (CSV) format.
 For Illumina run folders post-processed with CASAVA, all hierarchical objects can be
 automatically discovered.
 
+### Columns
+
 The Sample Annotation Sheet format is defined in bsf.data.Collection._process_row_dict
 
  - FileType: BSF Data object file_type (i.e. 'CASAVA', 'External' or 'Automatic'), defaults to 'Automatic'.
-             The FileType 'CASAVA' allows for auto-discovery of BSF ProcessedRunFolder objects.
+             The FileType 'CASAVA' allows for auto-discovery of BSF ProcessedRunFolder and subsequent objects.
 
  - ProcessedRunFolder: bsf.data.ProcessedRunFolder.file_path, can be automatically registered.
 
@@ -33,14 +33,24 @@ The Sample Annotation Sheet format is defined in bsf.data.Collection._process_ro
  - Groups: BSF Sample objects can be grouped for further analysis in
            e.g. RNA-Seq or ChIP-Seq experiments.
 
+### Class Hierarchy
 
-Sample naming and Replicates
+ - ProcessedRunFolder Name
+     - Project Name
+         - Sample Name
+             - PairedReads ReadGroup
+                 - Reads1 Name
+                 - Reads1 File
+                 - Reads2 Name
+                 - Reads2 File
+
+## Sample naming and Replicates
 
 Initially, replicates were implemented as BSF PairedReads objects inside BSF Sample objects.
 This strategy was in line with CASAVA processed run folder directory structures, as long as all
-BSF Sample objects resulted from the same BSF Processed Run Folder object (i.e flow-cell).
+BSF Sample objects resulted from the same BSF Processed Run Folder object (i.e flow cell).
 
-Later, when it became clear that samples could result from different flow-cells resulting in
+Later, when it became clear that samples could result from different flow cells resulting in
 BSF Sample objects bearing the same name, the code base needed some adjustments.
 
 The bsf.data.Collection.sample_groups instance variable has been changed from a Python dict of
@@ -56,7 +66,7 @@ check avoiding duplicates is in place in the bsf.Analysis.add_sample method.
 BSF Sample objects can now have the same name and be treated as replicates via grouping.
 
 
-Sample Grouping
+## Sample Grouping
 
 BSF Python sample annotation sheets allow for grouping of BSF Sample objects. The meaning of the
 grouping is dependent on the analysis.
@@ -92,11 +102,11 @@ individually or as a pool and a subsequent comparison stage.
     BSF PairedReads objects as list (i.e. pooled) or separately.
 
 
-    However, BSF PairedReads objects that result from different flow-cells could potentially bear
+    However, BSF PairedReads objects that result from different flow cells could potentially bear
     the same name, which causes problems with SGE job names that need be unique.
     The bsf.data.Collection
 
-    A remaining problem is that BSF PairedReads and BSF Sample objects from different flow-cells
+    A remaining problem is that BSF PairedReads and BSF Sample objects from different flow cells
     may have the same name. Although the BSF Collection could hold them apart, SGE jobs could still
     end up with the same name.
     Therefore, it may be desirable to make available the complete hierarchy of ProcessRunFolder,
@@ -147,7 +157,7 @@ on more than one lane and represent sequencing replicates. For the moment, a sol
 merge two samples is implemented in the bsf.analyses.chip_seq.ChIPSeq class.
 
 
-RNA-Seq Pipeline:
+## RNA-Seq Pipeline:
 
 * Integrate with Doris post-processing R-code
 * Add PCA and MDS plots as in the cummeRbund manual.
@@ -160,7 +170,7 @@ RNA-Seq Pipeline:
   * Maybe create a ZIP or Gzip archive to download and archive locally.
 
 
-Object Hierarchy
+## Object Hierarchy
 
 bsf
   - from bsf import Defaults (no further dependency)
