@@ -1062,7 +1062,7 @@ class IlluminaRunFolderRestore(Analysis):
                 runnable_name=runnable_extract_intensities.name))
 
         # Sleep 60 seconds to allow the first process to create all directories.
-        runnable_extract_intensities.add_runnable_step(runnable_step=RunnableStepSleep(name='sleep', sleep_time=60))
+        runnable_extract_intensities.add_runnable_step(runnable_step=RunnableStepSleep(name='sleep', sleep_time=60.0))
 
         extract_intensities = runnable_extract_intensities.add_runnable_step(runnable_step=RunnableStep(
             name='extract_intensities',
@@ -1092,7 +1092,7 @@ class IlluminaRunFolderRestore(Analysis):
                     runnable_name=runnable_extract_lane.name))
 
             # Sleep 90 seconds to allow the first process to create all directories.
-            runnable_extract_lane.add_runnable_step(runnable_step=RunnableStepSleep(name='sleep', sleep_time=90))
+            runnable_extract_lane.add_runnable_step(runnable_step=RunnableStepSleep(name='sleep', sleep_time=90.0))
 
             extract_lane = runnable_extract_lane.add_runnable_step(runnable_step=RunnableStep(
                 name='extract_lane',
