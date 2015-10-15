@@ -89,6 +89,8 @@ class VariantCallingGATK(Analysis):
     @type exclude_intervals_list: list[str]
     @ivar include_intervals_list: Python C{list} of Python C{str} (intervals) to include in the analysis
     @type include_intervals_list: list[str]
+    @ivar interval_padding: Interval padding
+    @type interval_padding: int
     @ivar downsample_to_fraction: Down-sample to fraction
     @type downsample_to_fraction: str
     @ivar gatk_bundle_version: GATK resource bundle version
@@ -127,6 +129,7 @@ class VariantCallingGATK(Analysis):
                  vqsr_annotations_indel_list=None, vqsr_annotations_snp_list=None,
                  exclude_intervals_list=None,
                  include_intervals_list=None,
+                 interval_padding=None,
                  downsample_to_fraction=None,
                  gatk_bundle_version=None, snpeff_genome_version=None,
                  classpath_gatk=None, classpath_picard=None, classpath_snpeff=None):
@@ -204,6 +207,8 @@ class VariantCallingGATK(Analysis):
         @type exclude_intervals_list: list[str]
         @param include_intervals_list: Python C{list} of Python C{str} (intervals) to include in the analysis
         @type include_intervals_list: list[str]
+        @param interval_padding: Interval padding
+        @type interval_padding: int
         @param downsample_to_fraction: Down-sample to fraction
         @type downsample_to_fraction: str
         @param gatk_bundle_version: GATK resource bundle version
@@ -333,6 +338,12 @@ class VariantCallingGATK(Analysis):
             self.include_intervals_list = list()
         else:
             self.include_intervals_list = include_intervals_list
+
+        if interval_padding is None:
+            self.interval_padding = int()
+        else:
+            assert isinstance(interval_padding, int)
+            self.interval_padding = interval_padding
 
         if downsample_to_fraction is None:
             self.downsample_to_fraction = str()
@@ -569,6 +580,13 @@ class VariantCallingGATK(Analysis):
             # For comma-separated interval lists split into components on commas, strip white space and
             # push them onto the list individually.
             self.include_intervals_list.extend(map(lambda x: x.strip(), include_intervals.split(',')))
+
+        # Get the interval padding.
+
+        if configuration.config_parser.has_option(section=section, option='interval_padding'):
+            self.interval_padding = configuration.config_parser.getint(
+                section=section,
+                option='interval_padding')
 
         # Get the down-sample to fraction information.
 
@@ -1154,6 +1172,8 @@ class VariantCallingGATK(Analysis):
                     sub_command.add_option_long(key='excludeIntervals', value=interval)
                 for interval in self.include_intervals_list:
                     sub_command.add_option_long(key='intervals', value=interval)
+                if self.interval_padding:
+                    sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
                 for file_path in self.known_sites_realignment:
                     sub_command.add_option_long(key='known', value=file_path)
                 sub_command.add_option_long(key='input_file', value=file_path_dict_lane['duplicates_marked_bam'])
@@ -1192,6 +1212,8 @@ class VariantCallingGATK(Analysis):
                     sub_command.add_option_long(key='excludeIntervals', value=interval)
                 for interval in self.include_intervals_list:
                     sub_command.add_option_long(key='intervals', value=interval)
+                if self.interval_padding:
+                    sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
                 for file_path in self.known_sites_realignment:
                     sub_command.add_option_long(key='knownAlleles', value=file_path)
                 sub_command.add_option_long(key='input_file', value=file_path_dict_lane['duplicates_marked_bam'])
@@ -1226,6 +1248,8 @@ class VariantCallingGATK(Analysis):
                     sub_command.add_option_long(key='excludeIntervals', value=interval)
                 for interval in self.include_intervals_list:
                     sub_command.add_option_long(key='intervals', value=interval)
+                if self.interval_padding:
+                    sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
                 for file_path in self.known_sites_recalibration:
                     sub_command.add_option_long(key='knownSites', value=file_path)
                 sub_command.add_option_long(key='input_file', value=file_path_dict_lane['realigned_bam'])
@@ -1258,6 +1282,8 @@ class VariantCallingGATK(Analysis):
                     sub_command.add_option_long(key='excludeIntervals', value=interval)
                 for interval in self.include_intervals_list:
                     sub_command.add_option_long(key='intervals', value=interval)
+                if self.interval_padding:
+                    sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
                 for file_path in self.known_sites_recalibration:
                     sub_command.add_option_long(key='knownSites', value=file_path)
                 sub_command.add_option_long(key='BQSR', value=file_path_dict_lane['recalibration_table_pre'])
@@ -1291,6 +1317,8 @@ class VariantCallingGATK(Analysis):
                     sub_command.add_option_long(key='excludeIntervals', value=interval)
                 for interval in self.include_intervals_list:
                     sub_command.add_option_long(key='intervals', value=interval)
+                if self.interval_padding:
+                    sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
                 sub_command.add_option_long(key='afterReportFile',
                                             value=file_path_dict_lane['recalibration_table_post'])
                 sub_command.add_option_long(key='beforeReportFile',
@@ -1330,6 +1358,8 @@ class VariantCallingGATK(Analysis):
                     sub_command.add_option_long(key='excludeIntervals', value=interval)
                 for interval in self.include_intervals_list:
                     sub_command.add_option_long(key='intervals', value=interval)
+                if self.interval_padding:
+                    sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
                 sub_command.add_option_long(key='input_file', value=file_path_dict_lane['realigned_bam'])
                 sub_command.add_option_long(key='BQSR', value=file_path_dict_lane['recalibration_table_pre'])
                 sub_command.add_option_long(key='out', value=file_path_dict_lane['recalibrated_bam'])
@@ -1546,6 +1576,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='excludeIntervals', value=interval)
             for interval in self.include_intervals_list:
                 sub_command.add_option_long(key='intervals', value=interval)
+            if self.interval_padding:
+                sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
             for file_path in self.known_sites_realignment:
                 sub_command.add_option_long(key='known', value=file_path)
             sub_command.add_option_long(key='input_file', value=file_path_dict_sample['duplicates_marked_bam'])
@@ -1584,6 +1616,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='excludeIntervals', value=interval)
             for interval in self.include_intervals_list:
                 sub_command.add_option_long(key='intervals', value=interval)
+            if self.interval_padding:
+                sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
             for file_path in self.known_sites_realignment:
                 sub_command.add_option_long(key='knownAlleles', value=file_path)
             sub_command.add_option_long(key='input_file', value=file_path_dict_sample['duplicates_marked_bam'])
@@ -1656,6 +1690,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='excludeIntervals', value=interval)
             for interval in self.include_intervals_list:
                 sub_command.add_option_long(key='intervals', value=interval)
+            if self.interval_padding:
+                sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
             # TODO: The number of threads should be configurable.
             # sub_command.add_option_long(key='num_cpu_threads_per_data_thread', value='1')
             sub_command.add_option_long(key='pair_hmm_implementation', value='VECTOR_LOGLESS_CACHING')
@@ -1781,6 +1817,8 @@ class VariantCallingGATK(Analysis):
                     sub_command.add_option_long(key='excludeIntervals', value=interval)
                 for interval in self.include_intervals_list:
                     sub_command.add_option_long(key='intervals', value=interval)
+                # if self.interval_padding:
+                #     sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
 
                 sub_command.add_option_long(key='intervals', value=target_interval_path)
                 sub_command.add_option_long(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
@@ -1818,6 +1856,8 @@ class VariantCallingGATK(Analysis):
                     sub_command.add_option_long(key='excludeIntervals', value=interval)
                 for interval in self.include_intervals_list:
                     sub_command.add_option_long(key='intervals', value=interval)
+                # if self.interval_padding:
+                #     sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
 
                 sub_command.add_option_long(key='intervals', value=file_path_dict_diagnosis['missing_intervals'])
                 sub_command.add_option_long(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
@@ -1851,6 +1891,8 @@ class VariantCallingGATK(Analysis):
                     sub_command.add_option_long(key='excludeIntervals', value=interval)
                 for interval in self.include_intervals_list:
                     sub_command.add_option_long(key='intervals', value=interval)
+                # if self.interval_padding:
+                #     sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
 
                 sub_command.add_option_long(key='intervals', value=target_interval_path)
                 sub_command.add_option_long(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
@@ -1994,6 +2036,8 @@ class VariantCallingGATK(Analysis):
             sub_command.add_option_long(key='excludeIntervals', value=interval)
         for interval in self.include_intervals_list:
             sub_command.add_option_long(key='intervals', value=interval)
+        if self.interval_padding:
+            sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
         for file_path in vc_process_cohort_replicates:
             sub_command.add_option_long(key='variant', value=file_path)
         sub_command.add_option_long(key='out', value=file_path_dict_cohort['combined_gvcf_vcf'])
@@ -2024,6 +2068,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='excludeIntervals', value=interval)
             for interval in self.include_intervals_list:
                 sub_command.add_option_long(key='intervals', value=interval)
+            if self.interval_padding:
+                sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
             for file_path in self.accessory_cohort_gvcfs:
                 sub_command.add_option_long(key='variant', value=file_path)
             sub_command.add_option_long(key='variant', value=file_path_dict_cohort['combined_gvcf_vcf'])
@@ -2054,6 +2100,8 @@ class VariantCallingGATK(Analysis):
             sub_command.add_option_long(key='excludeIntervals', value=interval)
         for interval in self.include_intervals_list:
             sub_command.add_option_long(key='intervals', value=interval)
+        if self.interval_padding:
+            sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
         if self.known_sites_discovery:
             sub_command.add_option_long(key='dbsnp', value=self.known_sites_discovery)
         if len(self.accessory_cohort_gvcfs):
@@ -2094,6 +2142,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='excludeIntervals', value=interval)
             for interval in self.include_intervals_list:
                 sub_command.add_option_long(key='intervals', value=interval)
+            if self.interval_padding:
+                sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
             sub_command.add_option_long(key='mode', value='SNP')
             for resource in self.vqsr_resources_snp_dict.keys():
                 resource_option = 'resource:{},known={},training={},truth={},prior={}'. \
@@ -2137,6 +2187,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='excludeIntervals', value=interval)
             for interval in self.include_intervals_list:
                 sub_command.add_option_long(key='intervals', value=interval)
+            if self.interval_padding:
+                sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
             sub_command.add_option_long(key='mode', value='SNP')
             sub_command.add_option_long(key='input', value=file_path_dict_cohort['genotyped_raw_vcf'])
             sub_command.add_option_long(key='recal_file', value=file_path_dict_cohort['recalibration_snp'])
@@ -2180,6 +2232,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='excludeIntervals', value=interval)
             for interval in self.include_intervals_list:
                 sub_command.add_option_long(key='intervals', value=interval)
+            if self.interval_padding:
+                sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
             sub_command.add_option_long(key='mode', value='INDEL')
             for resource in self.vqsr_resources_indel_dict.keys():
                 resource_option = 'resource:{},known={},training={},truth={},prior={}'. \
@@ -2224,6 +2278,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='excludeIntervals', value=interval)
             for interval in self.include_intervals_list:
                 sub_command.add_option_long(key='intervals', value=interval)
+            if self.interval_padding:
+                sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
             sub_command.add_option_long(key='mode', value='INDEL')
             sub_command.add_option_long(key='input', value=file_path_dict_cohort['recalibrated_snp_raw_indel_vcf'])
             sub_command.add_option_long(key='recal_file', value=file_path_dict_cohort['recalibration_indel'])
@@ -2262,6 +2318,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='excludeIntervals', value=interval)
             for interval in self.include_intervals_list:
                 sub_command.add_option_long(key='intervals', value=interval)
+            if self.interval_padding:
+                sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
 
             sub_command.add_option_long(
                 key='variant',
@@ -2328,6 +2386,8 @@ class VariantCallingGATK(Analysis):
             sub_command.add_option_long(key='excludeIntervals', value=interval)
         for interval in self.include_intervals_list:
             sub_command.add_option_long(key='intervals', value=interval)
+        if self.interval_padding:
+            sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
         if self.known_sites_discovery:
             sub_command.add_option_long(key='dbsnp', value=self.known_sites_discovery)
 
@@ -2405,6 +2465,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='excludeIntervals', value=interval)
             for interval in self.include_intervals_list:
                 sub_command.add_option_long(key='intervals', value=interval)
+            if self.interval_padding:
+                sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
 
             sub_command.add_option_long(key='variant', value=file_path_dict_cohort['annotated_vcf'])
             sub_command.add_option_long(key='out', value=file_path_dict_split['sample_vcf'])
@@ -2436,7 +2498,8 @@ class VariantCallingGATK(Analysis):
                 sub_command.add_option_long(key='excludeIntervals', value=interval)
             for interval in self.include_intervals_list:
                 sub_command.add_option_long(key='intervals', value=interval)
-
+            if self.interval_padding:
+                sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
             sub_command.add_option_long(key='variant', value=file_path_dict_split['sample_vcf'])
             sub_command.add_option_long(key='out', value=file_path_dict_split['sample_tsv'])
             sub_command.add_switch_long(key='allowMissingData')
