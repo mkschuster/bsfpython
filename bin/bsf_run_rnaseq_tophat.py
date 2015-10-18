@@ -55,10 +55,11 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     path_temporary_sam = os.path.basename(input_path)
     path_temporary_sam = path_temporary_sam.replace('.bam', '.sam')
 
-    samtools = Executable(name='samtools_view',
-                          program='samtools',
-                          sub_command=Command(command='view'),
-                          stdout_path=path_temporary_sam)
+    samtools = Executable(
+        name='samtools_view',
+        program='samtools',
+        sub_command=Command(program='view'),
+        stdout_path=path_temporary_sam)
 
     samtools_view = samtools.sub_command
     samtools_view.add_switch_short(key='H')
@@ -85,7 +86,7 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     # At this stage, the SAM @PG and @RG lines are stored internally.
     # Now run Picard SamToFastq to convert.
 
-    java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command(command=str()))
+    java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
     java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'SamToFastq.jar'))
     java_process.add_switch_short(key='Xmx4G')

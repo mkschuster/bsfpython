@@ -689,7 +689,7 @@ class ChIPSeq(Analysis):
                 java_process = runnable.add_executable(executable=Executable(
                     name='picard_clean_sam',
                     program='java',
-                    sub_command=Command(command=str())))
+                    sub_command=Command()))
 
                 java_process.add_switch_short(key='d64')
                 java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'CleanSam.jar'))
@@ -709,7 +709,7 @@ class ChIPSeq(Analysis):
                 java_process = runnable.add_executable(executable=Executable(
                     name='picard_sort_sam',
                     program='java',
-                    sub_command=Command(command=str())))
+                    sub_command=Command()))
 
                 java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'SortSam.jar'))
                 java_process.add_switch_short(key='d64')

@@ -112,7 +112,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     samtools = Executable(
         name='samtools_view',
         program='samtools',
-        sub_command=Command(command='view'),
+        sub_command=Command(program='view'),
         stdout_path=sam_file_path)
 
     samtools_view = samtools.sub_command
@@ -140,7 +140,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     # At this stage, the SAM @PG and @RG lines are stored internally.
     # Now run Picard SamToFastq to convert.
 
-    java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command(command=str()))
+    java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
     java_process.add_option_short(key='jar', value=os.path.join(default.classpath_picard, 'SamToFastq.jar'))
     java_process.add_switch_short(key='Xmx2G')
@@ -298,7 +298,7 @@ def run_bowtie2(runnable):
 
         default = Default.get_global_default()
 
-        java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command(command=str()))
+        java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command())
         java_process.add_switch_short(key='d64')
         java_process.add_option_short(key='jar', value=os.path.join(default.classpath_picard, 'SamToFastq.jar'))
         java_process.add_switch_short(key='Xmx2G')

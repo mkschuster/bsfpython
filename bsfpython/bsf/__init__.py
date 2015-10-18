@@ -1950,12 +1950,12 @@ class DRMS(object):
 
 
 class Command(object):
-    """C{Command} class representing one (subordinate) command,
-    its options and arguments and possibly another subordinate command.
+    """C{Command} class representing one program, its options and arguments and possibly
+    another subordinate C{Command}.
 
     Attributes:
-    @ivar command: Command or program
-    @type command: str
+    @ivar program: Program
+    @type program: str
     @ivar options: Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
         C{Argument} objects
     @type options: dict[Argument.key, list[Argument]]
@@ -1965,12 +1965,12 @@ class Command(object):
     @type sub_command: Command
     """
 
-    def __init__(self, command, options=None, arguments=None, sub_command=None):
+    def __init__(self, program=None, options=None, arguments=None, sub_command=None):
         """Initialise a C{Command} object.
 
-        @param command: Command
-        @type command: str
-        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+        @param program: Program
+        @type program: str
+        @param options: Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
             C{Argument} objects
         @type options: dict[Argument.key, list[Argument]]
         @param arguments: Python C{list} of Python C{str} (program argument) objects
@@ -1981,7 +1981,7 @@ class Command(object):
         @rtype:
         """
 
-        self.command = command  # Can be None.
+        self.program = program  # Can be None.
 
         if options is None:
             self.options = dict()
@@ -2009,8 +2009,8 @@ class Command(object):
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
-        output += '{}  command:            {!r}\n'. \
-            format(indent, self.command)
+        output += '{}  program:            {!r}\n'. \
+            format(indent, self.program)
 
         # List all options
 
@@ -2054,8 +2054,8 @@ class Command(object):
 
         if not override and argument.key in self.options:
             warnings.warn(
-                'Adding an Argument with key {!r} that exits already in Command {!r}.'.
-                format(argument.key, self.command),
+                'Adding an Argument with key {!r} that exits already in Command.program {!r}.'.
+                format(argument.key, self.program),
                 UserWarning)
 
         if argument.key in self.options:
@@ -2155,8 +2155,8 @@ class Command(object):
 
         if not override and argument.key in self.options:
             warnings.warn(
-                'Setting an Argument with key {!r} that exits already in Command {!r}.'.
-                format(argument.key, self.command),
+                'Setting an Argument with key {!r} that exits already in Command.program {!r}.'.
+                format(argument.key, self.program),
                 UserWarning)
 
         self.options[argument.key] = [argument]
@@ -2274,8 +2274,8 @@ class Command(object):
 
         command_line = list()
 
-        if self.command:
-            command_line.append(self.command)
+        if self.program:
+            command_line.append(self.program)
 
         # Add all options and switches in alphabetical order.
 
@@ -2330,8 +2330,8 @@ class Command(object):
 
         command_line = str()
 
-        if self.command:
-            command_line += self.command
+        if self.program:
+            command_line += self.program
 
         # Add all options and switches in alphabetical order.
 
@@ -2538,7 +2538,7 @@ class Executable(Command):
 
         if section == 'bsf.Executable':
             section += '.'
-            section += executable.command
+            section += executable.program
 
         if analysis.debug > 1:
             print 'Executable configuration section: {!r}.'.format(section)
@@ -2641,7 +2641,7 @@ class Executable(Command):
         @rtype:
         """
 
-        super(Executable, self).__init__(command=program, options=options, arguments=arguments,
+        super(Executable, self).__init__(program=program, options=options, arguments=arguments,
                                          sub_command=sub_command)
 
         self.name = name  # Can be None.

@@ -199,7 +199,7 @@ elif file_type == ".sam":
     parse_sam_format(file_handle=file_handle)
     file_handle.close()
 elif file_type == ".bam":
-    executable = Executable(name='samtools_view', program='samtools', sub_command=Command(command='view'))
+    executable = Executable(name='samtools_view', program='samtools', sub_command=Command(program='view'))
     sub_command = executable.sub_command
     sub_command.add_switch_short(key='h')
     sub_command.arguments.append(args.input_file)

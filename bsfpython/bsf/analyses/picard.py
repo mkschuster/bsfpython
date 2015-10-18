@@ -615,7 +615,7 @@ class SamToFastq(Analysis):
                         java_process = runnable_picard_stf.add_runnable_step(runnable_step=RunnableStep(
                             name='sam_to_fastq',
                             program='java',
-                            sub_command=Command(command=str())))
+                            sub_command=Command()))
 
                         java_process.add_switch_short(
                             key='d64')

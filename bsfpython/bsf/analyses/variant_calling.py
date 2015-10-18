@@ -1095,7 +1095,7 @@ class VariantCallingGATK(Analysis):
                     java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                         name='picard_mark_duplicates',
                         program='java',
-                        sub_command=Command(command=str()),
+                        sub_command=Command(),
                         obsolete_file_path_list=[
                             # It may not be the best idea to remove the aligned BAM file from the previous
                             # lane-specific alignment step here. For the moment, keep pipeline steps independent
@@ -1150,7 +1150,7 @@ class VariantCallingGATK(Analysis):
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_realigner_target_creator',
                     program='java',
-                    sub_command=Command(command=str())))
+                    sub_command=Command()))
 
                 java_process.add_switch_short(
                     key='d64')
@@ -1185,7 +1185,7 @@ class VariantCallingGATK(Analysis):
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_indel_realigner',
                     program='java',
-                    sub_command=Command(command=str()),
+                    sub_command=Command(),
                     obsolete_file_path_list=[
                         file_path_dict_lane['duplicates_marked_bam'],
                         file_path_dict_lane['duplicates_marked_bai'],
@@ -1226,7 +1226,7 @@ class VariantCallingGATK(Analysis):
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_base_recalibrator_pre',
                     program='java',
-                    sub_command=Command(command=str())))
+                    sub_command=Command()))
 
                 java_process.add_switch_short(
                     key='d64')
@@ -1260,7 +1260,7 @@ class VariantCallingGATK(Analysis):
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_base_recalibrator_post',
                     program='java',
-                    sub_command=Command(command=str())))
+                    sub_command=Command()))
 
                 java_process.add_switch_short(
                     key='d64')
@@ -1295,7 +1295,7 @@ class VariantCallingGATK(Analysis):
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_analyze_covariates',
                     program='java',
-                    sub_command=Command(command=str())))
+                    sub_command=Command()))
 
                 java_process.add_switch_short(
                     key='d64')
@@ -1332,7 +1332,7 @@ class VariantCallingGATK(Analysis):
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_print_reads',
                     program='java',
-                    sub_command=Command(command=str()),
+                    sub_command=Command(),
                     obsolete_file_path_list=[
                         file_path_dict_lane['realigned_bam'],
                         file_path_dict_lane['realigned_bai']
@@ -1369,7 +1369,7 @@ class VariantCallingGATK(Analysis):
                 java_process = runnable_process_lane.add_runnable_step(runnable_step=RunnableStep(
                     name='picard_collect_alignment_summary_metrics',
                     program='java',
-                    sub_command=Command(command=str())))
+                    sub_command=Command()))
 
                 java_process.add_switch_short(
                     key='d64')
@@ -1456,7 +1456,7 @@ class VariantCallingGATK(Analysis):
             java_process = runnable_process_sample.add_runnable_step(runnable_step=RunnableStep(
                 name='picard_merge_sam_files',
                 program='java',
-                sub_command=Command(command=str())))
+                sub_command=Command()))
 
             java_process.add_switch_short(
                 key='d64')
@@ -1503,7 +1503,7 @@ class VariantCallingGATK(Analysis):
                 java_process = runnable_process_sample.add_runnable_step(runnable_step=RunnableStep(
                     name='picard_mark_duplicates',
                     program='java',
-                    sub_command=Command(command=str()),
+                    sub_command=Command(),
                     obsolete_file_path_list=[
                         file_path_dict_sample['merged_bam'],
                         file_path_dict_sample['merged_bai'],
@@ -1554,7 +1554,7 @@ class VariantCallingGATK(Analysis):
             java_process = runnable_process_sample.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_realigner_target_creator',
                 program='java',
-                sub_command=Command(command=str())))
+                sub_command=Command()))
 
             java_process.add_switch_short(
                 key='d64')
@@ -1589,7 +1589,7 @@ class VariantCallingGATK(Analysis):
             java_process = runnable_process_sample.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_indel_realigner',
                 program='java',
-                sub_command=Command(command=str()),
+                sub_command=Command(),
                 obsolete_file_path_list=[
                     file_path_dict_sample['duplicates_marked_bam'],
                     file_path_dict_sample['duplicates_marked_bai'],
@@ -1631,7 +1631,7 @@ class VariantCallingGATK(Analysis):
             java_process = runnable_process_sample.add_runnable_step(runnable_step=RunnableStep(
                 name='picard_collect_alignment_summary_metrics',
                 program='java',
-                sub_command=Command(command=str())))
+                sub_command=Command()))
 
             java_process.add_switch_short(
                 key='d64')
@@ -1668,7 +1668,7 @@ class VariantCallingGATK(Analysis):
             java_process = runnable_process_sample.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_haplotype_caller',
                 program='java',
-                sub_command=Command(command=str())))
+                sub_command=Command()))
 
             java_process.add_switch_short(
                 key='d64')
@@ -1795,7 +1795,7 @@ class VariantCallingGATK(Analysis):
                 java_process = runnable_diagnose_sample.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_diagnose_target',
                     program='java',
-                    sub_command=Command(command=str())))
+                    sub_command=Command()))
 
                 java_process.add_switch_short(
                     key='d64')
@@ -1834,7 +1834,7 @@ class VariantCallingGATK(Analysis):
                 java_process = runnable_diagnose_sample.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_qualify_missing_intervals',
                     program='java',
-                    sub_command=Command(command=str())))
+                    sub_command=Command()))
 
                 java_process.add_switch_short(
                     key='d64')
@@ -1869,7 +1869,7 @@ class VariantCallingGATK(Analysis):
                 java_process = runnable_diagnose_sample.add_runnable_step(runnable_step=RunnableStep(
                     name='gatk_callable_loci',
                     program='java',
-                    sub_command=Command(command=str())))
+                    sub_command=Command()))
 
                 java_process.add_switch_short(
                     key='d64')
@@ -1904,7 +1904,7 @@ class VariantCallingGATK(Analysis):
                 java_process = runnable_diagnose_sample.add_runnable_step(runnable_step=RunnableStep(
                     name='picard_calculate_hybrid_selection_metrics',
                     program='java',
-                    sub_command=Command(command=str())))
+                    sub_command=Command()))
 
                 java_process.add_switch_short(
                     key='d64')
@@ -2016,7 +2016,7 @@ class VariantCallingGATK(Analysis):
         java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
             name='gatk_combine_gvcfs',
             program='java',
-            sub_command=Command(command=str())))
+            sub_command=Command()))
 
         java_process.add_switch_short(
             key='d64')
@@ -2048,7 +2048,7 @@ class VariantCallingGATK(Analysis):
             java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_combine_gvcfs_accessory',
                 program='java',
-                sub_command=Command(command=str())))
+                sub_command=Command()))
 
             java_process.add_switch_short(
                 key='d64')
@@ -2080,7 +2080,7 @@ class VariantCallingGATK(Analysis):
         java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
             name='gatk_genotype_gvcfs',
             program='java',
-            sub_command=Command(command=str())))
+            sub_command=Command()))
 
         java_process.add_switch_short(
             key='d64')
@@ -2122,7 +2122,7 @@ class VariantCallingGATK(Analysis):
             java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_variant_recalibrator_snp',
                 program='java',
-                sub_command=Command(command=str())))
+                sub_command=Command()))
 
             java_process.add_switch_short(
                 key='d64')
@@ -2167,7 +2167,7 @@ class VariantCallingGATK(Analysis):
             java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_apply_recalibration_snp',
                 program='java',
-                sub_command=Command(command=str())))
+                sub_command=Command()))
 
             java_process.add_switch_short(
                 key='d64')
@@ -2212,7 +2212,7 @@ class VariantCallingGATK(Analysis):
             java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_variant_recalibrator_indel',
                 program='java',
-                sub_command=Command(command=str())))
+                sub_command=Command()))
 
             java_process.add_switch_short(
                 key='d64')
@@ -2258,7 +2258,7 @@ class VariantCallingGATK(Analysis):
             java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_apply_recalibration_indel',
                 program='java',
-                sub_command=Command(command=str())))
+                sub_command=Command()))
 
             java_process.add_switch_short(
                 key='d64')
@@ -2298,7 +2298,7 @@ class VariantCallingGATK(Analysis):
             java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_select_variants_cohort',
                 program='java',
-                sub_command=Command(command=str())))
+                sub_command=Command()))
 
             java_process.add_switch_short(
                 key='d64')
@@ -2339,7 +2339,7 @@ class VariantCallingGATK(Analysis):
         java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
             name='snpeff',
             program='java',
-            sub_command=Command(command='eff')))
+            sub_command=Command(program='eff')))
 
         java_process.add_switch_short(
             key='d64')
@@ -2367,7 +2367,7 @@ class VariantCallingGATK(Analysis):
         java_process = runnable_process_cohort.add_runnable_step(runnable_step=RunnableStep(
             name='gatk_variant_annotator',
             program='java',
-            sub_command=Command(command=str())))
+            sub_command=Command()))
 
         java_process.add_switch_short(
             key='d64')
@@ -2445,7 +2445,7 @@ class VariantCallingGATK(Analysis):
             java_process = runnable_split_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_select_variants',
                 program='java',
-                sub_command=Command(command=str())))
+                sub_command=Command()))
 
             java_process.add_switch_short(
                 key='d64')
@@ -2478,7 +2478,7 @@ class VariantCallingGATK(Analysis):
             java_process = runnable_split_cohort.add_runnable_step(runnable_step=RunnableStep(
                 name='gatk_variants_to_table',
                 program='java',
-                sub_command=Command(command=str())))
+                sub_command=Command()))
 
             java_process.add_switch_short(
                 key='d64')

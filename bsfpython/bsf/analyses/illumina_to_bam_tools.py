@@ -502,7 +502,7 @@ class IlluminaToBam(Analysis):
             java_process = runnable_illumina_to_bam.add_runnable_step(runnable_step=RunnableStep(
                 name='illumina_to_bam',
                 program='java',
-                sub_command=Command(command=str())))
+                sub_command=Command()))
 
             java_process.add_switch_short(key='d64')
             java_process.add_option_short(
@@ -601,7 +601,7 @@ class IlluminaToBam(Analysis):
             java_process = runnable_illumina_to_bam.add_runnable_step(runnable_step=RunnableStep(
                 name='picard_sort_sam',
                 program='java',
-                sub_command=Command(command=str()),
+                sub_command=Command(),
                 obsolete_file_path_list=[
                     file_path_dict['unsorted_bam'],
                     file_path_dict['unsorted_md5']
@@ -1109,7 +1109,7 @@ class BamIndexDecoder(Analysis):
                 java_process = runnable_bam_index_decoder.add_runnable_step(runnable_step=RunnableStep(
                     name='bam_index_decoder',
                     program='java',
-                    sub_command=Command(command=str()),
+                    sub_command=Command(),
                     obsolete_file_path_list=[
                         file_path_dict['barcode_tsv']
                     ]))
@@ -1214,7 +1214,7 @@ class BamIndexDecoder(Analysis):
                 java_process = runnable_bam_index_decoder.add_runnable_step(runnable_step=RunnableStep(
                     name='picard_collect_alignment_summary_metrics',
                     program='java',
-                    sub_command=Command(command=str()),
+                    sub_command=Command(),
                     obsolete_file_path_list=[
                         file_path_dict['barcode_tsv']
                     ]))

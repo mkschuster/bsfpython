@@ -125,14 +125,15 @@ run_bwa.stdout_path = path_aligned_sam
 # https://github.com/samtools/htsjdk/blob/1.114/src/java/htsjdk/samtools/util/IOUtil.java#L719
 # TODO: Once this works, it should be turned into a generic method useful in the ChIPSeq and RNASeq analyses, too.
 
-if run_bwa.sub_command.command == 'mem' and run_bwa.sub_command.arguments[1][-4:] == '.bam':
+if run_bwa.sub_command.program == 'mem' and run_bwa.sub_command.arguments[1][-4:] == '.bam':
 
     # Propagate SAM header lines @PG and @RG into the final BAM file.
 
-    samtools = Executable(name='samtools_view',
-                          program='samtools',
-                          sub_command=Command(command='view'),
-                          stdout_path=path_temporary_sam)
+    samtools = Executable(
+        name='samtools_view',
+        program='samtools',
+        sub_command=Command(program='view'),
+        stdout_path=path_temporary_sam)
 
     samtools_view = samtools.sub_command
     samtools_view.add_switch_short(key='H')
@@ -157,7 +158,7 @@ if run_bwa.sub_command.command == 'mem' and run_bwa.sub_command.arguments[1][-4:
     # At this stage, the SAM @PG and @RG lines are stored internally.
     # Now run Picard SamToFastq to convert.
 
-    java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command(command=str()))
+    java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
     java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'SamToFastq.jar'))
     java_process.add_switch_short(key='Xmx4G')
@@ -208,9 +209,7 @@ if os.path.exists(path=path_fastq_2):
 
 # Run Picard CleanSam to convert the aligned SAM file into a cleaned SAM file.
 
-java_process = Executable(name='clean_sam',
-                          program='java',
-                          sub_command=Command(command=str()))
+java_process = Executable(name='clean_sam', program='java', sub_command=Command())
 java_process.add_switch_short(key='d64')
 java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'CleanSam.jar'))
 java_process.add_switch_short(key='Xmx4G')
@@ -232,10 +231,11 @@ if child_return_code:
 
 if len(sam_header_pg) or len(sam_header_rg):
 
-    samtools = Executable(name='samtools_view',
-                          program='samtools',
-                          sub_command=Command(command='view'),
-                          stdout_path=path_temporary_sam)
+    samtools = Executable(
+        name='samtools_view',
+        program='samtools',
+        sub_command=Command(program='view'),
+        stdout_path=path_temporary_sam)
 
     samtools_view = samtools.sub_command
     samtools_view.add_switch_short(key='H')
@@ -272,7 +272,7 @@ if len(sam_header_pg) or len(sam_header_rg):
 
     # Run Picard ReplaceSamHeader.
 
-    java_process = Executable(name='replace_sam_header', program='java', sub_command=Command(command=str()))
+    java_process = Executable(name='replace_sam_header', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
     java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'ReplaceSamHeader.jar'))
     java_process.add_switch_short(key='Xmx4G')
@@ -305,7 +305,7 @@ if os.path.exists(path=path_aligned_sam):
 
 # Run Picard SortSam to convert the cleaned SAM file into a coordinate sorted BAM file.
 
-java_process = Executable(name='sort_sam', program='java', sub_command=Command(command=str()))
+java_process = Executable(name='sort_sam', program='java', sub_command=Command())
 java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'SortSam.jar'))
 java_process.add_switch_short(key='d64')
 java_process.add_switch_short(key='Xmx6G')

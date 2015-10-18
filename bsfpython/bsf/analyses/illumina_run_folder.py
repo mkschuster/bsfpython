@@ -423,11 +423,11 @@ class IlluminaRunFolderArchive(Analysis):
                 name='reset_directory_permissions',
                 program='find',
                 sub_command=Command(
-                    command=self.run_directory,
+                    program=self.run_directory,
                     sub_command=Command(
-                        command='-execdir',
+                        program='-execdir',
                         sub_command=Command(
-                            command='chmod')))))
+                            program='chmod')))))
 
         find_command = reset_directory_permissions.sub_command  # directory option
         find_command.add_option_short(key='type', value='d')
@@ -444,11 +444,11 @@ class IlluminaRunFolderArchive(Analysis):
                 name='reset_file_permissions',
                 program='find',
                 sub_command=Command(
-                    command=self.run_directory,
+                    program=self.run_directory,
                     sub_command=Command(
-                        command='-execdir',
+                        program='-execdir',
                         sub_command=Command(
-                            command='chmod')))))
+                            program='chmod')))))
 
         find_command = reset_file_permissions.sub_command  # directory option
         find_command.add_option_short(key='type', value='f')
@@ -524,12 +524,12 @@ class IlluminaRunFolderArchive(Analysis):
                     name='compress_base_calls',
                     program='find',
                     sub_command=Command(
-                        command=os.path.join(
+                        program=os.path.join(
                             self.run_directory, 'Data', 'Intensities', 'BaseCalls', 'L{:03d}'.format(lane)),
                         sub_command=Command(
-                            command='-execdir',
+                            program='-execdir',
                             sub_command=Command(
-                                command='gzip')))))
+                                program='gzip')))))
 
             find_command = compress_base_calls.sub_command  # directory option
             find_command.add_option_short(key='name', value='*.bcl')
@@ -1128,12 +1128,12 @@ class IlluminaRunFolderRestore(Analysis):
                 name='compress_base_calls',
                 program='find',
                 sub_command=Command(
-                    command=os.path.join(
+                    program=os.path.join(
                         self.get_run_directory_path, 'Data', 'Intensities', 'BaseCalls', 'L{:03d}'.format(lane)),
                     sub_command=Command(
-                        command='-execdir',
+                        program='-execdir',
                         sub_command=Command(
-                            command='gzip')))))
+                            program='gzip')))))
 
             find_command = compress_base_calls.sub_command  # directory option
             find_command.add_option_short(key='name', value='*.bcl')

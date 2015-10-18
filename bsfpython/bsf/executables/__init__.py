@@ -97,7 +97,7 @@ class BWA(Executable):
 
         assert isinstance(analysis, Analysis)
 
-        super(BWA, self).__init__(name=name, program='bwa', sub_command=Command(command='mem'))
+        super(BWA, self).__init__(name=name, program='bwa', sub_command=Command(program='mem'))
 
         # The options have to be set for the 'mem' sub-command.
         section = analysis.configuration.section_from_instance(self)
@@ -190,7 +190,7 @@ class Macs2Bdgcmp(Executable):
         super(Macs2Bdgcmp, self).__init__(
             name=name,
             program='bsf_chipseq_run_macs2.bash',
-            sub_command=Command(command='bdgcmp'))
+            sub_command=Command(program='bdgcmp'))
 
         # The options have to be set for the 'bdgcmp' sub-command.
         section = analysis.configuration.section_from_instance(self)
@@ -221,7 +221,7 @@ class Macs2Callpeak(Executable):
         super(Macs2Callpeak, self).__init__(
             name=name,
             program='bsf_chipseq_run_macs2.bash',
-            sub_command=Command(command='callpeak'))
+            sub_command=Command(program='callpeak'))
 
         # The options have to be set for the 'callpeak' sub-command.
         section = analysis.configuration.section_from_instance(self)

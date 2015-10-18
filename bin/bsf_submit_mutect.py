@@ -252,9 +252,7 @@ for key in key_list:
 
     # Run the MuTect analysis
 
-    java_process = Executable(name='mutect',
-                              program='java',
-                              sub_command=Command(command=str()))
+    java_process = Executable(name='mutect', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
     java_process.add_option_short(key='jar', value=os.path.join(classpath_mutect, 'muTect.jar'))
     java_process.add_switch_short(key='Xmx4G')
@@ -288,9 +286,7 @@ for key in key_list:
     # Run the Indel Genotyper analysis
     # Note that the Indel Genotyper is based on a much older GATK version.
 
-    java_process = Executable(name='indel_genotyper',
-                              program='java',
-                              sub_command=Command(command=str()))
+    java_process = Executable(name='indel_genotyper', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
     java_process.add_option_short(
         key='jar',
@@ -335,9 +331,7 @@ for key in key_list:
 
     # Run the GATK Combine Variants analysis
 
-    java_process = Executable(name='gatk_combine_variants',
-                              program='java',
-                              sub_command=Command(command=str()))
+    java_process = Executable(name='gatk_combine_variants', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
     java_process.add_option_short(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
     java_process.add_switch_short(key='Xmx6G')
@@ -362,7 +356,7 @@ for key in key_list:
 
     java_process = Executable(name='snpeff',
                               program='java',
-                              sub_command=Command(command='eff'))
+                              sub_command=Command(program='eff'))
     java_process.add_switch_short(key='d64')
     java_process.add_option_short(key='jar', value=os.path.join(classpath_snpeff, 'snpEff.jar'))
     java_process.add_switch_short(key='Xmx6G')
@@ -382,9 +376,7 @@ for key in key_list:
 
     # Run the GATK Variant Annotator
 
-    java_process = Executable(name='gatk_variant_annotator',
-                              program='java',
-                              sub_command=Command(command=str()))
+    java_process = Executable(name='gatk_variant_annotator', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
     java_process.add_option_short(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
     java_process.add_switch_short(key='Xmx6G')
@@ -423,9 +415,7 @@ for key in key_list:
 
     # Run the GATK VariantsToTable step.
 
-    java_process = Executable(name='gatk_variants_to_table',
-                              program='java',
-                              sub_command=Command(command=str()))
+    java_process = Executable(name='gatk_variants_to_table', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
     java_process.add_option_short(key='jar', value=os.path.join(classpath_gatk, 'GenomeAnalysisTK.jar'))
     java_process.add_switch_short(key='Xmx4G')
