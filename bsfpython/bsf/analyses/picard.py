@@ -33,8 +33,8 @@ import os.path
 import warnings
 import weakref
 
-from bsf import Analysis, Command, Configuration, Default, DRMS, Executable, Runnable, RunnableStep,\
-    RunnableStepMakeDirectory
+from bsf import Analysis, Configuration, Default, DRMS, Executable, Runnable, RunnableStep, \
+    RunnableStepMakeDirectory, RunnableStepPicard
 from bsf.annotation import LibraryAnnotationSheet
 from bsf.data import Reads, PairedReads, Sample
 from bsf.illumina import RunFolder
@@ -149,19 +149,21 @@ def extract_illumina_barcodes(config_path):
         assert isinstance(row_dict, dict)
         _process_row_dict(row_dict=row_dict, prefix=analysis.sas_prefix, barcode_dict=barcode_dict)
 
-    # Picard ExtractIlluminaBarcodes
+    # Create a DRMS for the Picard ExtractIlluminaBarcodes stage.
 
-    eib_drms = analysis.add_drms(drms=DRMS.from_analysis(
-        name='ExtractIlluminaBarcodes',
-        working_directory=analysis.genome_directory,
-        analysis=analysis))
+    drms_picard_eib = analysis.add_drms(
+        drms=DRMS.from_analysis(
+            name='picard_extract_illumina_barcodes',
+            working_directory=analysis.genome_directory,
+            analysis=analysis))
 
-    # Picard IlluminaBasecallsToSam
+    # Create a DRMS fro the Picard IlluminaBasecallsToSam stage.
 
-    ibs_drms = analysis.add_drms(drms=DRMS.from_analysis(
-        name='IlluminaBasecallsToSam',
-        working_directory=analysis.genome_directory,
-        analysis=analysis))
+    drms_picard_ibs = analysis.add_drms(
+        drms=DRMS.from_analysis(
+            name='picard_illumina_basecalls_to_sam',
+            working_directory=analysis.genome_directory,
+            analysis=analysis))
 
     # For each lane in the barcode_dict ...
 
@@ -239,6 +241,7 @@ def extract_illumina_barcodes(config_path):
                     warnings.warn()
 
         # Create a BARCODE_FILE file for Picard ExtractIlluminaBarcodes.
+
         field_names = ['barcode_sequence_1', 'barcode_sequence_2', 'barcode_name', 'library_name']
         barcodes_file = open(barcodes_path, 'w')
         csv_writer = csv.DictWriter(f=barcodes_file, fieldnames=field_names, dialect=csv.excel_tab)
@@ -271,69 +274,95 @@ def extract_illumina_barcodes(config_path):
 
         # Picard ExtractIlluminaBarcodes
 
-        eib = eib_drms.add_executable(executable=Executable.from_analysis(
-            name='eib',
-            program='java',
-            analysis=analysis))
+        prefix_picard_eib = '_'.join((drms_picard_eib.name, key))
 
-        # Set Java options for Picard ExtractIlluminaBarcodes.
+        file_path_dict_picard_eib = dict()
 
-        eib.add_switch_short(key='Xmx6G')  # TODO: Make this configurable somewhere ...
+        # Create a Runnable for the Picard ExtractIlluminaBarcodes stage.
 
-        if default.classpath_picard:
-            eib.add_option_short(key='cp', value=default.classpath_picard)
+        runnable_picard_eib = analysis.add_runnable(
+            runnable=Runnable(
+                name=prefix_picard_eib,
+                code_module='bsf.runnables.generic',
+                working_directory=analysis.project_directory,
+                file_path_dict=file_path_dict_picard_eib))
 
-        eib.add_option_short(key='jar', value='ExtractIlluminaBarcodes.jar')
+        # Create an Executable for running the Picard ExtractIlluminaBarcodes Runnable.
 
-        # These Picard 'options' can be just arguments ...
+        executable_picard_eib = drms_picard_eib.add_executable(
+            executable=Executable.from_analysis_runnable(
+                analysis=analysis,
+                runnable_name=runnable_picard_eib.name))
 
-        eib.arguments.append('BASECALLS_DIR={}'.format(base_calls_directory))
+        runnable_step = runnable_picard_eib.add_runnable_step(
+            runnable_step=RunnableStepPicard(
+                name='picard_eib',
+                java_temporary_path=runnable_picard_eib.get_relative_temporary_directory_path,
+                java_heap_maximum='Xmx2G',
+                picard_classpath=default.classpath_picard,  # TODO: This has to be self.classpath_picard.
+                picard_command='ExtractIlluminaBarcodes'))
+        assert isinstance(runnable_step, RunnableStepPicard)
+        runnable_step.add_picard_option(key='BASECALLS_DIR', value=base_calls_directory)
         # OUTPUT_DIR for s_l_t_barcode.txt files not set. Defaults to BASECALLS_DIR.
-        eib.arguments.append('LANE={}'.format(int(key)))
-        eib.arguments.append('READ_STRUCTURE={}'.format())  # TODO: This would also require barcode lengths.
+        runnable_step.add_picard_option(key='LANE', value=key)
+        # TODO: This would also require barcode lengths.
+        runnable_step.add_picard_option(key='READ_STRUCTURE', value='')
         # BARCODE not set, since BARCODE_FILE gets used.
-        eib.arguments.append('BARCODE_FILE={}'.format(barcodes_path))
-        eib.arguments.append('METRICS_FILE={}'.format(metrics_path))
+        runnable_step.add_picard_option(key='BARCODE_FILE', value=barcodes_path)
+        runnable_step.add_picard_option(key='METRICS_FILE', value=metrics_path)
         if max_mismatches:
-            eib.arguments.append('MAX_MISMATCHES={}').format()
+            runnable_step.add_picard_option(key='MAX_MISMATCHES', value=max_mismatches)
             # MIN_MISMATCH_DELTA
         # MAX_NO_CALLS
         if min_base_quality:
-            eib.arguments.append('MINIMUM_BASE_QUALITY={}'.format(min_base_quality))
+            runnable_step.add_picard_option(key='MINIMUM_BASE_QUALITY', value=min_base_quality)
             # MINIMUM_QUALITY
         # COMPRESS_OUTPUTS for s_l_t_barcode.txt files
-        eib.arguments.append('NUM_PROCESSORS={}'.format(int(eib_drms.threads)))
-        eib.arguments.append('COMPRESS_OUTPUTS=TRUE')
+        runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(drms_picard_eib.threads))
+        runnable_step.add_picard_option(key='COMPRESS_OUTPUTS', value='TRUE')
 
         # Picard IlluminaBasecallsToSam
 
-        ibs = ibs_drms.add_executable(executable=Executable.from_analysis(
-            name='ibs',
-            program='java',
-            analysis=analysis))
+        prefix_picard_ibs = '_'.join((drms_picard_ibs.name, key))
 
-        # Set Java options for Picard IlluminaBasecallsToSam.
+        file_path_dict_picard_ibs = dict()
 
-        ibs.add_switch_short(key='Xmx6G')  # TODO: Make this configurable somewhere ...
+        # Create a Runnable for the Picard IlluminaBasecallsToSam stage.
 
-        if default.classpath_picard:
-            ibs.add_option_short(key='cp', value=default.classpath_picard)
+        runnable_picard_ibs = analysis.add_runnable(
+            runnable=Runnable(
+                name=prefix_picard_ibs,
+                code_module='bsf.runnables.generic',
+                working_directory=analysis.project_directory,
+                file_path_dict=file_path_dict_picard_ibs))
 
-        ibs.add_option_short(key='jar', value='IlluminaBasecallsToSam.jar')
+        # Create an Executable for running the Picard IlluminaBasecallsToSam Runnable.
 
-        # These Picard 'options' can be just arguments ...
+        executable_picard_ibs = drms_picard_ibs.add_executable(
+            executable=Executable.from_analysis_runnable(
+                analysis=analysis,
+                runnable_name=runnable_picard_ibs.name))
+        executable_picard_ibs.dependencies.append(executable_picard_eib.name)
 
-        ibs.arguments.append('BASECALLS_DIR={}'.format(base_calls_directory))
-        ibs.arguments.append('LANE={}'.format(int(key)))
-        ibs.arguments.append('RUN_BARCODE={}'.format())  # TODO:
-        ibs.arguments.append('READ_GROUP_ID={}'.format())  # TODO:
-        ibs.arguments.append('SEQUENCING_CENTER={}'.format())  # TODO: Get from Defaults?
-        ibs.arguments.append('RUN_START_DATE={}'.format())  # TODO:
-        ibs.arguments.append('PLATFORM={}'.format())  # TODO: Defaults to illumina
-        ibs.arguments.append('READ_STRUCTURE={}'.format())  # TODO
-        ibs.arguments.append('LIBRARY_PARAMS={}'.format(library_path))
-        ibs.arguments.append('ADAPTERS_TO_CHECK={}'.format())  # TODO
-        ibs.arguments.append('NUM_PROCESSORS={}'.format(int(ibs_drms.threads)))
+        runnable_step = runnable_picard_eib.add_runnable_step(
+            runnable_step=RunnableStepPicard(
+                name='picard_ibs',
+                java_temporary_path=runnable_picard_ibs.get_relative_temporary_directory_path,
+                java_heap_maximum='Xmx2G',
+                picard_classpath=default.classpath_picard,  # TODO: This has to be self.classpath_picard.
+                picard_command='IlluminaBasecallsToSam'))
+        assert isinstance(runnable_step, RunnableStepPicard)
+        runnable_step.add_picard_option(key='BASECALLS_DIR', value=base_calls_directory)
+        runnable_step.add_picard_option(key='LANE', value=key)
+        runnable_step.add_picard_option(key='RUN_BARCODE', value='')  # TODO:
+        runnable_step.add_picard_option(key='READ_GROUP_ID', value='')  # TODO:
+        runnable_step.add_picard_option(key='SEQUENCING_CENTER', value='')  # TODO: Get from Defaults?
+        runnable_step.add_picard_option(key='RUN_START_DATE', value='')  # TODO:
+        runnable_step.add_picard_option(key='PLATFORM', value='')  # TODO: Defaults to illumina
+        runnable_step.add_picard_option(key='READ_STRUCTURE', value='')  # TODO
+        runnable_step.add_picard_option(key='LIBRARY_PARAMS', value=library_path)
+        runnable_step.add_picard_option(key='ADAPTERS_TO_CHECK', value='')  # TODO
+        runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(drms_picard_ibs.threads))
 
     return
 
@@ -586,11 +615,12 @@ class SamToFastq(Analysis):
 
                         # Create a Runnable for running the Picard SamToFastq analysis.
 
-                        runnable_picard_stf = self.add_runnable(runnable=Runnable(
-                            name=prefix_picard_stf,
-                            code_module='bsf.runnables.generic',
-                            working_directory=self.project_directory,
-                            file_path_dict=file_path_dict_picard_stf))
+                        runnable_picard_stf = self.add_runnable(
+                            runnable=Runnable(
+                                name=prefix_picard_stf,
+                                code_module='bsf.runnables.generic',
+                                working_directory=self.project_directory,
+                                file_path_dict=file_path_dict_picard_stf))
 
                         # Create an Executable for running the Picard SamToFastq Runnable.
 
@@ -612,45 +642,25 @@ class SamToFastq(Analysis):
 
                         # Create a new RunnableStep for the Picard SamToFastq program.
 
-                        java_process = runnable_picard_stf.add_runnable_step(runnable_step=RunnableStep(
-                            name='sam_to_fastq',
-                            program='java',
-                            sub_command=Command()))
-
-                        java_process.add_switch_short(
-                            key='d64')
-                        java_process.add_option_short(
-                            key='jar',
-                            value=os.path.join(self.classpath_picard, 'SamToFastq.jar'))
-                        java_process.add_switch_short(
-                            key='Xmx2G')
-                        java_process.add_option_pair(
-                            key='-Djava.io.tmpdir',
-                            value=file_path_dict_picard_stf['temporary_directory'])
-
-                        # Set Picard SamToFastq options.
-
-                        sub_command = java_process.sub_command
-
-                        sub_command.add_option_pair(
-                            key='INPUT',
-                            value=bam_file_path)
-                        sub_command.add_option_pair(
-                            key='OUTPUT_PER_RG',
-                            value='true')
-                        sub_command.add_option_pair(
+                        runnable_step = runnable_picard_stf.add_runnable_step(
+                            runnable_step=RunnableStepPicard(
+                                name='sam_to_fastq',
+                                java_temporary_path=runnable_picard_stf.get_relative_temporary_directory_path,
+                                java_heap_maximum='Xmx2G',
+                                picard_classpath=self.classpath_picard,
+                                picard_command='SamToFastq'))
+                        assert isinstance(runnable_step, RunnableStepPicard)
+                        runnable_step.add_picard_option(key='INPUT', value=bam_file_path)
+                        runnable_step.add_picard_option(key='OUTPUT_PER_RG', value='true')
+                        runnable_step.add_picard_option(
                             key='OUTPUT_DIR',
                             value=file_path_dict_picard_stf['output_directory'])
                         # RE_REVERSE
                         # INTERLEAVE
                         if self.include_non_pass_filter_reads:
-                            sub_command.add_option_pair(
-                                key='INCLUDE_NON_PF_READS',
-                                value='true')
+                            runnable_step.add_picard_option(key='INCLUDE_NON_PF_READS', value='true')
                         else:
-                            sub_command.add_option_pair(
-                                key='INCLUDE_NON_PF_READS',
-                                value='false')
+                            runnable_step.add_picard_option(key='INCLUDE_NON_PF_READS', value='false')
                         # CLIPPING_ATTRIBUTE
                         # CLIPPING_ACTION
                         # READ1_TRIM
@@ -658,21 +668,15 @@ class SamToFastq(Analysis):
                         # READ2_TRIM
                         # READ2_MAX_BASES_TO_WRITE
                         # INCLUDE_NON_PRIMARY_ALIGNMENTS
-                        sub_command.add_option_pair(
+                        runnable_step.add_picard_option(
                             key='TMP_DIR',
                             value=file_path_dict_picard_stf['temporary_directory'])
                         # VERBOSITY defaults to 'INFO'.
-                        sub_command.add_option_pair(
-                            key='VERBOSITY',
-                            value='WARNING')
+                        runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                         # QUIET defaults to 'false'.
-                        sub_command.add_option_pair(
-                            key='QUIET',
-                            value='false')
+                        runnable_step.add_picard_option(key='QUIET', value='false')
                         # VALIDATION_STRINGENCY defaults to 'STRICT'.
-                        sub_command.add_option_pair(
-                            key='VALIDATION_STRINGENCY',
-                            value='STRICT')
+                        runnable_step.add_picard_option(key='VALIDATION_STRINGENCY', value='STRICT')
                         # COMPRESSION_LEVEL defaults to '5'.
                         # MAX_RECORDS_IN_RAM defaults to '500000'.
                         # CREATE_INDEX defaults to 'false'.
@@ -698,11 +702,12 @@ class SamToFastq(Analysis):
             output_directory=prefix_prune_sas,
         )
 
-        runnable_prune_sas = self.add_runnable(runnable=Runnable(
-            name=prefix_prune_sas,
-            code_module='bsf.runnables.picard_sam_to_fastq_sample_sheet',
-            working_directory=self.project_directory,
-            file_path_dict=file_path_dict_prune_sas))
+        runnable_prune_sas = self.add_runnable(
+            runnable=Runnable(
+                name=prefix_prune_sas,
+                code_module='bsf.runnables.picard_sam_to_fastq_sample_sheet',
+                working_directory=self.project_directory,
+                file_path_dict=file_path_dict_prune_sas))
 
         # Create an Executable for running the Runnable for pruning the sample annotation sheet.
 
@@ -717,8 +722,7 @@ class SamToFastq(Analysis):
 
         prune_sas = runnable_prune_sas.add_runnable_step(
             runnable_step=RunnableStep(
-                name='prune_sample_annotation_sheet',
-            ))
+                name='prune_sample_annotation_sheet'))
 
         prune_sas.add_option_long(key='sas_path', value=annotation_sheet.file_path)
 

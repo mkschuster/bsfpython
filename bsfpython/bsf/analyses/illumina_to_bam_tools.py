@@ -32,10 +32,98 @@ import os
 import warnings
 
 from bsf import Analysis, Command, Configuration, Default, DRMS, Executable, Runnable, RunnableStep,\
-    RunnableStepLink, RunnableStepMakeDirectory, RunnableStepMove
+    RunnableStepLink, RunnableStepMakeDirectory, RunnableStepMove, RunnableStepJava, RunnableStepPicard
 from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
 from bsf.annotation import BamIndexDecoderSheet, LibraryAnnotationSheet, SampleAnnotationSheet
 from bsf.illumina import RunFolder, RunFolderNotComplete
+
+
+class RunnableStepIlluminaToBam(RunnableStepJava):
+    """The C{RunnableStepIlluminaToBam} class represents a C{RunnableStepJava} specific to IlluminaToBam tools.
+    IlluminaToBam tools use the old Picard tools interface where each algorithm is implemented as a separate
+    Java Archive (JAR) file
+
+    Attributes:
+    """
+
+    def __init__(self, name,
+                 program=None, options=None, arguments=None, sub_command=None,
+                 stdout_path=None, stderr_path=None, dependencies=None, hold=None,
+                 submit=True, process_identifier=None, process_name=None,
+                 obsolete_file_path_list=None,
+                 java_temporary_path=None, java_heap_maximum=None, java_jar_path=None,
+                 itb_classpath=None, itb_command=None):
+        """Create a C{RunnableStep} for an IlluminaToBam algorithm.
+
+        @param name: Name
+        @type name: str
+        @param program: Program
+        @type program: str
+        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+            C{Argument} objects
+        @type options: dict[Argument.key, list[Argument]]
+        @param arguments: Python C{list} of program arguments
+        @type arguments: list[str | unicode]
+        @param sub_command: Subordinate Command
+        @type sub_command: Command
+        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
+        @type stdout_path: str | unicode
+        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
+        @type stderr_path: str | unicode
+        @param dependencies: Python C{list} of C{Executable.name}
+            properties in the context of C{DRMS} dependencies
+        @type dependencies: list[Executable.name]
+        @param hold: Hold on job scheduling
+        @type hold: str
+        @param submit: Submit the C{Executable} into the C{DRMS}
+        @type submit: bool
+        @param process_identifier: Process identifier
+        @type process_identifier: str
+        @param process_name: Process name
+        @type process_name: str
+        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
+            after successfully completing this C{RunnableStep}
+        @type obsolete_file_path_list: list[str | unicode]
+        @param java_temporary_path: Temporary directory path for the Java Virtual Machine
+        @type java_temporary_path: str | unicode
+        @param java_heap_maximum: Java heap maximum size (-Xmx option)
+        @type java_heap_maximum: str
+        @param java_jar_path: Java archive file path
+        @type java_jar_path: str | unicode
+        @param itb_classpath: IlluminaToBam class path
+        @type itb_classpath: str | unicode
+        @param itb_command: IlluminaToBam command
+        @type itb_command: str
+        @return: C{RunnableStep}
+        @rtype: RunnableStep
+        """
+
+        super(RunnableStepIlluminaToBam, self).__init__(
+            name=name,
+            program=program, options=options, arguments=arguments, sub_command=sub_command,
+            stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold,
+            submit=submit, process_identifier=process_identifier, process_name=process_name,
+            obsolete_file_path_list=obsolete_file_path_list,
+            java_temporary_path=java_temporary_path, java_heap_maximum=java_heap_maximum, java_jar_path=java_jar_path)
+
+        # Set the IlluminaToBam classpath and the IlluminaToBam Java archive.
+        if 'jar' not in self.sub_command.options:
+            self.sub_command.add_option_short(key='jar', value=os.path.join(itb_classpath, itb_command + '.jar'))
+
+        return
+
+    def add_itb_option(self, key, value):
+        """Add an IlluminaToBam option.
+
+        @param key: Option key
+        @type key: str
+        @param value: Option value
+        @type value: str
+        @return:
+        @rtype:
+        """
+
+        return self.sub_command.sub_command.add_option_pair(key=key, value=value)
 
 
 class IlluminaToBam(Analysis):
@@ -476,11 +564,12 @@ class IlluminaToBam(Analysis):
             )
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
-            runnable_illumina_to_bam = self.add_runnable(runnable=Runnable(
-                name=self.get_prefix_illumina_to_bam(project_name=self.project_name, lane=lane_str),
-                code_module='bsf.runnables.generic',
-                working_directory=self.project_directory,
-                file_path_dict=file_path_dict))
+            runnable_illumina_to_bam = self.add_runnable(
+                runnable=Runnable(
+                    name=self.get_prefix_illumina_to_bam(project_name=self.project_name, lane=lane_str),
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.project_directory,
+                    file_path_dict=file_path_dict))
 
             # TODO: The Runnable class could have dependencies just like the Executable class so that they could be
             # passed on upon creation of the Executable from the Runnable via Executable.from_analysis_runnable().
@@ -493,76 +582,49 @@ class IlluminaToBam(Analysis):
                 IlluminaRunFolderRestore.get_prefix_compress_base_calls(project_name=self.project_name, lane=lane_str))
 
             # Only submit this Executable if the final result file does not exist.
-            if (os.path.exists(file_path_dict['sorted_md5'])
-                    and os.path.getsize(file_path_dict['sorted_md5'])):
+            if os.path.exists(file_path_dict['sorted_md5']) and os.path.getsize(file_path_dict['sorted_md5']):
                 executable_illumina_to_bam.submit = False
 
             # Run Illumina2Bam tools Illumina2bam.
 
-            java_process = runnable_illumina_to_bam.add_runnable_step(runnable_step=RunnableStep(
-                name='illumina_to_bam',
-                program='java',
-                sub_command=Command()))
-
-            java_process.add_switch_short(key='d64')
-            java_process.add_option_short(
-                key='jar',
-                value=os.path.join(self.classpath_illumina2bam, 'Illumina2bam.jar'))
-            java_process.add_switch_short(key='Xmx4G')
-            java_process.add_option_pair(
-                key='-Djava.io.tmpdir',
-                value=runnable_illumina_to_bam.get_relative_temporary_directory_path)
-
-            sub_command = java_process.sub_command
-
+            runnable_step = runnable_illumina_to_bam.add_runnable_step(
+                runnable_step=RunnableStepIlluminaToBam(
+                    name='illumina_to_bam',
+                    java_temporary_path=runnable_illumina_to_bam.get_relative_temporary_directory_path,
+                    java_heap_maximum='Xmx4G',
+                    itb_classpath=self.classpath_illumina2bam,
+                    itb_command='Illumina2bam'))
+            assert isinstance(runnable_step, RunnableStepIlluminaToBam)
             if self.intensity_directory:
                 # RUN_FOLDER defaults to 'null'.
                 # Only set the RUN_FOLDER option, if a separate 'Intensities' directory has been configured.
                 # The default is to use the directory two up from the INTENSITY_DIR.
-                sub_command.add_option_pair(
-                    key='RUN_FOLDER',
-                    value=self.run_directory)
+                runnable_step.add_itb_option(key='RUN_FOLDER', value=self.run_directory)
             # INTENSITY_DIR is required.
-            sub_command.add_option_pair(
-                key='INTENSITY_DIR',
-                value=intensity_directory)
+            runnable_step.add_itb_option(key='INTENSITY_DIR', value=intensity_directory)
             if self.basecalls_directory:
                 # BASECALLS_DIR defaults to 'null'.
                 # Only set the BASECALLS_DIR option, if a separate 'BaseCalls' directory has been configured.
                 # The default is to use the 'BaseCalls' directory under the INTENSITY_DIR.
-                sub_command.add_option_pair(
-                    key='BASECALLS_DIR',
-                    value=basecalls_directory)
+                runnable_step.add_itb_option(key='BASECALLS_DIR', value=basecalls_directory)
             # LANE is required.
-            sub_command.add_option_pair(
-                key='LANE',
-                value=lane_str)
+            runnable_step.add_itb_option(key='LANE', value=lane_str)
             # OUTPUT is required.
-            sub_command.add_option_pair(
-                key='OUTPUT',
-                value=file_path_dict['unsorted_bam'])
+            runnable_step.add_itb_option(key='OUTPUT', value=file_path_dict['unsorted_bam'])
             # GENERATE_SECONDARY_BASE_CALLS defaults to 'false'.
             # PF_FILTER defaults to 'true'.
             if not self.vendor_quality_filter[irf.run_parameters.get_flow_cell_type]:
-                sub_command.add_option_pair(
-                    key='PF_FILTER',
-                    value='false')
+                runnable_step.add_itb_option(key='PF_FILTER', value='false')
             # READ_GROUP_ID defaults to '1'.
-            sub_command.add_option_pair(
-                key='READ_GROUP_ID',
-                value='_'.join((irf.run_information.flow_cell, lane_str)))
+            runnable_step.add_itb_option(key='READ_GROUP_ID', value='_'.join((irf.run_information.flow_cell, lane_str)))
             # SAMPLE_ALIAS defaults to 'null', using LIBRARY_NAME.
             # LIBRARY_NAME defaults to 'unknown'.
-            sub_command.add_option_pair(
-                key='LIBRARY_NAME',
-                value='_'.join((irf.run_information.flow_cell, lane_str)))
+            runnable_step.add_itb_option(key='LIBRARY_NAME', value='_'.join((irf.run_information.flow_cell, lane_str)))
             # STUDY_NAME defaults to 'null'.
             # PLATFORM_UNIT defaults to 'null', using run folder name plus lane number.
             # RUN_START_DATE defaults to 'null', using the configuration file value.
             # SEQUENCING_CENTER defaults to 'SC' for Sanger Center.
-            sub_command.add_option_pair(
-                key='SEQUENCING_CENTER',
-                value=self.sequencing_centre)
+            runnable_step.add_itb_option(key='SEQUENCING_CENTER', value=self.sequencing_centre)
             # PLATFORM defaults to 'ILLUMINA'.
             # FIRST_TILE defaults to 'null'.
             # TILE_LIMIT defaults to 'null'.
@@ -578,19 +640,15 @@ class IlluminaToBam(Analysis):
             # FINAL_INDEX_CYCLE
             # ADD_CLUSTER_INDEX_TAG defaults to 'false'.
             # TMP_DIR
-            sub_command.add_option_pair(
+            runnable_step.add_itb_option(
                 key='TMP_DIR',
                 value=runnable_illumina_to_bam.get_relative_temporary_directory_path)
             # VERBOSITY defaults to 'INFO'.
-            sub_command.add_option_pair(
-                key='VERBOSITY',
-                value='WARNING')
+            runnable_step.add_itb_option(key='VERBOSITY', value='WARNING')
             # QUIET defaults to 'false'.
             # VALIDATION_STRINGENCY defaults to 'STRICT'.
             # COMPRESSION_LEVEL defaults to '5'.
-            sub_command.add_option_pair(
-                key='COMPRESSION_LEVEL',
-                value='9')
+            runnable_step.add_itb_option(key='COMPRESSION_LEVEL', value='9')
             # MAX_RECORDS_IN_RAM defaults to '500000'.
             # CREATE_INDEX defaults to 'false'.
             # CREATE_MD5_FILE defaults to 'false'.
@@ -598,59 +656,39 @@ class IlluminaToBam(Analysis):
 
             # Run Picard SortSam
 
-            java_process = runnable_illumina_to_bam.add_runnable_step(runnable_step=RunnableStep(
-                name='picard_sort_sam',
-                program='java',
-                sub_command=Command(),
-                obsolete_file_path_list=[
-                    file_path_dict['unsorted_bam'],
-                    file_path_dict['unsorted_md5']
-                ]))
-
-            java_process.add_switch_short(key='d64')
-            java_process.add_option_short(key='jar', value=os.path.join(self.classpath_picard, 'SortSam.jar'))
-            java_process.add_switch_short(key='Xmx4G')
-            java_process.add_option_pair(
-                key='-Djava.io.tmpdir',
-                value=runnable_illumina_to_bam.get_relative_temporary_directory_path)
-
-            sub_command = java_process.sub_command
-
+            runnable_step = runnable_illumina_to_bam.add_runnable_step(
+                runnable_step=RunnableStepPicard(
+                    name='picard_sort_sam',
+                    obsolete_file_path_list=[
+                        file_path_dict['unsorted_bam'],
+                        file_path_dict['unsorted_md5'],
+                    ],
+                    java_temporary_path=runnable_illumina_to_bam.get_relative_temporary_directory_path,
+                    java_heap_maximum='Xmx6G',
+                    picard_classpath=self.classpath_picard,
+                    picard_command='SortSam'))
+            assert isinstance(runnable_step, RunnableStepPicard)
             # INPUT is required.
-            sub_command.add_option_pair(
-                key='INPUT',
-                value=file_path_dict['unsorted_bam'])
+            runnable_step.add_picard_option(key='INPUT', value=file_path_dict['unsorted_bam'])
             # OUTPUT is required.
-            sub_command.add_option_pair(
-                key='OUTPUT',
-                value=file_path_dict['sorted_bam'])
+            runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict['sorted_bam'])
             # SORT_ORDER is required.
-            sub_command.add_option_pair(
-                key='SORT_ORDER',
-                value='queryname')
+            runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
             # TMP_DIR
-            sub_command.add_option_pair(
+            runnable_step.add_picard_option(
                 key='TMP_DIR',
                 value=runnable_illumina_to_bam.get_relative_temporary_directory_path)
-            # VERBOSITY defaults to 'INFO'
-            sub_command.add_option_pair(
-                key='VERBOSITY',
-                value='WARNING')
+            # VERBOSITY defaults to 'INFO'.
+            runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
             # QUIET defaults to 'false'.
             # VALIDATION_STRINGENCY defaults to 'STRICT'.
             # COMPRESSION_LEVEL defaults to '5'.
-            sub_command.add_option_pair(
-                key='COMPRESSION_LEVEL',
-                value='9')
+            runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
             # MAX_RECORDS_IN_RAM defaults to '500000'.
-            sub_command.add_option_pair(
-                key='MAX_RECORDS_IN_RAM',
-                value='2000000')
+            runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
             # CREATE_INDEX defaults to 'false'.
             # CREATE_MD5_FILE defaults to 'false'.
-            sub_command.add_option_pair(
-                key='CREATE_MD5_FILE',
-                value='true')
+            runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
             # OPTIONS_FILE
 
             # Create the experiment directory if it does not exist already.
@@ -1070,11 +1108,12 @@ class BamIndexDecoder(Analysis):
                 sample_annotation_sheet.row_dicts.append(sample_dict)
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
-            runnable_bam_index_decoder = self.add_runnable(runnable=Runnable(
-                name=self.get_prefix_bam_index_decoder(project_name=self.project_name, lane=key),
-                code_module='bsf.runnables.generic',
-                working_directory=self.project_directory,
-                file_path_dict=file_path_dict))
+            runnable_bam_index_decoder = self.add_runnable(
+                runnable=Runnable(
+                    name=self.get_prefix_bam_index_decoder(project_name=self.project_name, lane=key),
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.project_directory,
+                    file_path_dict=file_path_dict))
 
             # TODO: It would be good to extend the Runnable so that it holds dependencies on other Runnable objects
             # and that it could be submitted to a DRMS so that the Executable gets automatically created and submitted.
@@ -1106,82 +1145,51 @@ class BamIndexDecoder(Analysis):
 
                 # Run the BamIndexDecoder if there is at least one line containing a barcode sequence.
 
-                java_process = runnable_bam_index_decoder.add_runnable_step(runnable_step=RunnableStep(
-                    name='bam_index_decoder',
-                    program='java',
-                    sub_command=Command(),
-                    obsolete_file_path_list=[
-                        file_path_dict['barcode_tsv']
-                    ]))
-
-                java_process.add_switch_short(key='d64')
-                java_process.add_option_short(
-                    key='jar',
-                    value=os.path.join(self.classpath_illumina2bam, 'BamIndexDecoder.jar'))
-                java_process.add_switch_short(key='Xmx4G')
-                java_process.add_option_pair(
-                    key='-Djava.io.tmpdir',
-                    value=runnable_bam_index_decoder.get_relative_temporary_directory_path)
-
-                sub_command = java_process.sub_command
-
+                runnable_step = runnable_bam_index_decoder.add_runnable_step(
+                    runnable_step=RunnableStepIlluminaToBam(
+                        name='illumina_to_bam',
+                        java_temporary_path=runnable_bam_index_decoder.get_relative_temporary_directory_path,
+                        java_heap_maximum='Xmx4G',
+                        itb_classpath=self.classpath_illumina2bam,
+                        itb_command='BamIndexDecoder'))
+                assert isinstance(runnable_step, RunnableStepIlluminaToBam)
                 # INPUT is required
-                sub_command.add_option_pair(
-                    key='INPUT',
-                    value=file_path_dict['input_bam'])
+                runnable_step.add_itb_option(key='INPUT', value=file_path_dict['input_bam'])
                 # OUTPUT is required, but cannot be used together with OUTPUT_FORMAT, OUTPUT_PREFIX and OUTPUT_DIR.
                 # OUTPUT_DIR is required, but cannot be used with OUTPUT.
-                sub_command.add_option_pair(
-                    key='OUTPUT_DIR',
-                    value=file_path_dict['samples_directory'])
+                runnable_step.add_itb_option(key='OUTPUT_DIR', value=file_path_dict['samples_directory'])
                 # OUTPUT_PREFIX is required, but cannot be used with OUTPUT.
-                sub_command.add_option_pair(
-                    key='OUTPUT_PREFIX',
-                    value='_'.join((self.project_name, key)))
+                runnable_step.add_itb_option(key='OUTPUT_PREFIX', value='_'.join((self.project_name, key)))
                 # OUTPUT_FORMAT is required, but cannot be used with OUTPUT.
-                sub_command.add_option_pair(
-                    key='OUTPUT_FORMAT',
-                    value='bam')
+                runnable_step.add_itb_option(key='OUTPUT_FORMAT', value='bam')
                 # BARCODE_TAG_NAME defaults to 'BC'.
                 # BARCODE_QUALITY_TAG_NAME defaults to 'QT'.
                 # BARCODE cannot be used with BARCODE_FILE.
                 # BARCODE_FILE is required, but cannot be used with BARCODE.
-                sub_command.add_option_pair(
-                    key='BARCODE_FILE',
-                    value=file_path_dict['barcode_tsv'])
+                runnable_step.add_itb_option(key='BARCODE_FILE', value=file_path_dict['barcode_tsv'])
                 # METRICS_FILE is required.
-                sub_command.add_option_pair(
-                    key='METRICS_FILE',
-                    value=file_path_dict['metrics_tsv'])
+                runnable_step.add_itb_option(key='METRICS_FILE', value=file_path_dict['metrics_tsv'])
                 # MAX_MISMATCHES defaults to '1'.
                 if barcode_number == 2:
-                    sub_command.add_option_pair(
-                        key='MAX_MISMATCHES',
-                        value='2')
+                    runnable_step.add_itb_option(key='MAX_MISMATCHES', value='2')
                 # MIN_MISMATCH_DELTA defaults to '1'.
                 # MAX_NO_CALLS defaults to '2'.
                 # CONVERT_LOW_QUALITY_TO_NO_CALL defaults to 'false'.
                 # MAX_LOW_QUALITY_TO_CONVERT defaults to '15'.
                 # TMP_DIR
-                sub_command.add_option_pair(
+                runnable_step.add_itb_option(
                     key='TMP_DIR',
                     value=runnable_bam_index_decoder.get_relative_temporary_directory_path)
                 # VERBOSITY defaults to 'INFO'.
-                sub_command.add_option_pair(
-                    key='VERBOSITY',
-                    value='WARNING')
+                runnable_step.add_itb_option(key='VERBOSITY', value='WARNING')
                 # QUIET defaults to 'false'.
                 # VALIDATION_STRINGENCY defaults to 'STRICT'.
                 # COMPRESSION_LEVEL defaults to '5'.
-                sub_command.add_option_pair(
-                    key='COMPRESSION_LEVEL',
-                    value='9')
+                runnable_step.add_itb_option(key='COMPRESSION_LEVEL', value='9')
                 # MAX_RECORDS_IN_RAM defaults to '500000'.
                 # CREATE_INDEX defaults to 'false'.
                 # CREATE_MD5_FILE defaults to 'false'.
-                sub_command.add_option_pair(
-                    key='CREATE_MD5_FILE',
-                    value='true')
+                runnable_step.add_itb_option(key='CREATE_MD5_FILE', value='true')
                 # OPTIONS_FILE
 
                 # Create the experiment directory if it does not exist already.
@@ -1211,51 +1219,35 @@ class BamIndexDecoder(Analysis):
 
                 # Run Picard CollectAlignmentSummaryMetrics if there is no line containing a barcode sequence.
 
-                java_process = runnable_bam_index_decoder.add_runnable_step(runnable_step=RunnableStep(
-                    name='picard_collect_alignment_summary_metrics',
-                    program='java',
-                    sub_command=Command(),
-                    obsolete_file_path_list=[
-                        file_path_dict['barcode_tsv']
-                    ]))
-
-                java_process.add_switch_short(key='d64')
-                java_process.add_option_short(
-                    key='jar',
-                    value=os.path.join(self.classpath_picard, 'CollectAlignmentSummaryMetrics.jar'))
-                java_process.add_switch_short(key='Xmx4G')
-                java_process.add_option_pair(
-                    key='-Djava.io.tmpdir',
-                    value=runnable_bam_index_decoder.get_relative_temporary_directory_path)
-
-                sub_command = java_process.sub_command
-
+                runnable_step = runnable_bam_index_decoder.add_runnable_step(
+                    runnable_step=RunnableStepPicard(
+                        name='picard_collect_alignment_summary_metrics',
+                        obsolete_file_path_list=[
+                            file_path_dict['barcode_tsv'],
+                        ],
+                        java_temporary_path=runnable_bam_index_decoder.get_relative_temporary_directory_path,
+                        java_heap_maximum='Xmx4G',
+                        picard_classpath=self.classpath_picard,
+                        picard_command='CollectAlignmentSummaryMetrics'))
+                assert isinstance(runnable_step, RunnableStepPicard)
                 # MAX_INSERT_SIZE defaults to '100000'.
                 # ADAPTER_SEQUENCE
                 # METRIC_ACCUMULATION_LEVEL.
-                sub_command.add_option_pair(
-                    key='METRIC_ACCUMULATION_LEVEL',
-                    value='READ_GROUP')
+                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP')
                 # IS_BISULFITE_SEQUENCED defaults to 'false'.
                 # INPUT is required.
-                sub_command.add_option_pair(
-                    key='INPUT',
-                    value=file_path_dict['input_bam'])
+                runnable_step.add_picard_option(key='INPUT', value=file_path_dict['input_bam'])
                 # OUTPUT is required.
-                sub_command.add_option_pair(
-                    key='OUTPUT',
-                    value=file_path_dict['metrics_tsv'])
+                runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict['metrics_tsv'])
                 # REFERENCE_SEQUENCE defaults to 'null'.
                 # ASSUME_SORTED defaults to 'true'.
                 # STOP_AFTER defaults to '0'.
                 # TMP_DIR
-                sub_command.add_option_pair(
+                runnable_step.add_picard_option(
                     key='TMP_DIR',
                     value=runnable_bam_index_decoder.get_relative_temporary_directory_path)
                 # VERBOSITY defaults to 'INFO'.
-                sub_command.add_option_pair(
-                    key='VERBOSITY',
-                    value='WARNING')
+                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                 # QUIET defaults to 'false'.
                 # VALIDATION_STRINGENCY defaults to 'STRICT'.
                 # COMPRESSION_LEVEL defaults to '5'.

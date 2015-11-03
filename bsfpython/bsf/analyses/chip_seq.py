@@ -686,17 +686,22 @@ class ChIPSeq(Analysis):
 
                 # Run Picard CleanSam to convert the aligned SAM file into a cleaned SAM file.
 
-                java_process = runnable.add_executable(executable=Executable(
-                    name='picard_clean_sam',
-                    program='java',
-                    sub_command=Command()))
+                # TODO: Add a RunnableStepPicard here?
+                java_process = runnable.add_executable(
+                    executable=Executable(
+                        name='picard_clean_sam',
+                        program='java',
+                        sub_command=Command()))
 
                 java_process.add_switch_short(key='d64')
-                java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'CleanSam.jar'))
+                java_process.add_switch_short(key='server')
                 java_process.add_switch_short(key='Xmx4G')
 
-                clean_sam = java_process.sub_command
+                picard_process = java_process.sub_command
+                picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
+                picard_process.sub_command = Command(program='CleanSam')
 
+                clean_sam = picard_process.sub_command
                 clean_sam.add_option_pair(key='INPUT', value=file_path_dict['aligned_sam'])
                 clean_sam.add_option_pair(key='OUTPUT', value=file_path_dict['cleaned_sam'])
                 clean_sam.add_option_pair(key='TMP_DIR', value=file_path_dict['temporary_directory'])
@@ -706,17 +711,22 @@ class ChIPSeq(Analysis):
 
                 # Run Picard SortSam to convert the cleaned SAM file into a coordinate sorted BAM file.
 
-                java_process = runnable.add_executable(executable=Executable(
-                    name='picard_sort_sam',
-                    program='java',
-                    sub_command=Command()))
+                # TODO: Add a RunnableStepPicard here?
+                java_process = runnable.add_executable(
+                    executable=Executable(
+                        name='picard_sort_sam',
+                        program='java',
+                        sub_command=Command()))
 
-                java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'SortSam.jar'))
                 java_process.add_switch_short(key='d64')
+                java_process.add_switch_short(key='server')
                 java_process.add_switch_short(key='Xmx6G')
 
-                sort_sam = java_process.sub_command
+                picard_process = java_process.sub_command
+                picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
+                picard_process.sub_command = Command(program='SortSam')
 
+                sort_sam = picard_process.sub_command
                 sort_sam.add_option_pair(key='INPUT', value=file_path_dict['cleaned_sam'])
                 sort_sam.add_option_pair(key='OUTPUT', value=file_path_dict['sorted_bam'])
                 sort_sam.add_option_pair(key='SORT_ORDER', value='coordinate')
@@ -730,9 +740,10 @@ class ChIPSeq(Analysis):
                 sort_sam.add_option_pair(key='CREATE_MD5_FILE', value='true')
 
                 # TODO: Create the Executable for the Runnable.
-                alignment_drms.add_executable(executable=Executable.from_analysis_runnable(
-                    analysis=self,
-                    runnable_name=prefix))
+                alignment_drms.add_executable(
+                    executable=Executable.from_analysis_runnable(
+                        analysis=self,
+                        runnable_name=prefix))
 
         return
 

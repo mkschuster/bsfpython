@@ -62,7 +62,7 @@ if test "$#" -lt '2'; then
 fi
 
 declare input_file="${1}"
-declare sam_to_fastq_jar="${2}"
+declare picard_jar="${2}"
 
 if test -n "${3}"; then
     declare directory="${3}"
@@ -87,7 +87,8 @@ if test -f "${read1}.gz" -o -f "${read2}.gz"; then
     echo "BAM or SAM file ${input_file} has already been converted." \
     || bsf_error
 else
-    java -Xmx2g -jar "${sam_to_fastq_jar}" \
+    java -Xmx2g -jar "${picard_jar}" \
+        'SamToFastq' \
         INPUT="${input_file}" \
         FASTQ="${read1}" \
         SECOND_END_FASTQ="${read2}" \

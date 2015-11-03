@@ -88,10 +88,14 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
 
     java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
-    java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'SamToFastq.jar'))
+    java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx4G')
 
-    sam_to_fastq = java_process.sub_command
+    picard_process = java_process.sub_command
+    picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
+    picard_process.sub_command = Command(program='SamToFastq')
+
+    sam_to_fastq = picard_process.sub_command
     sam_to_fastq.add_option_pair(key='INPUT', value=input_path)
     sam_to_fastq.add_option_pair(key='OUTPUT_PER_RG', value='true')
     sam_to_fastq.add_option_pair(key='OUTPUT_DIR', value=temporary_path)

@@ -572,8 +572,7 @@ class ChIPSeq(Analysis):
                                                       replicate_directory,
                                                       replicate_key))
 
-                if (os.path.exists('{}.aligned.sorted.bam.bai'.format(replicate_key))
-                    and
+                if (os.path.exists('{}.aligned.sorted.bam.bai'.format(replicate_key)) and
                         os.path.getsize('{}.aligned.sorted.bam.bai'.format(replicate_key))):
                     bowtie2.submit = False
                     sam2bam.submit = False
@@ -2428,10 +2427,8 @@ class RunBamToFastq(Analysis):
                                 analysis=self))
 
                             sam_to_fastq.arguments.append(paired_reads.reads1.file_path)
-                            sam_to_fastq.arguments.append(os.path.join(default.classpath_picard,
-                                                                       'SamToFastq.jar'))
-                            sam_to_fastq.arguments.append(os.path.join(self.genome_directory,
-                                                                       match.group(1)))
+                            sam_to_fastq.arguments.append(os.path.join(default.classpath_picard, 'picard.jar'))
+                            sam_to_fastq.arguments.append(os.path.join(self.genome_directory, match.group(1)))
 
                     if paired_reads.reads2:
                         file_name = str(paired_reads.reads2.file_path)
@@ -2446,7 +2443,5 @@ class RunBamToFastq(Analysis):
                                 analysis=self))
 
                             sam_to_fastq.arguments.append(paired_reads.reads2.file_path)
-                            sam_to_fastq.arguments.append(os.path.join(default.classpath_picard,
-                                                                       'SamToFastq.jar'))
-                            sam_to_fastq.arguments.append(os.path.join(self.genome_directory,
-                                                                       match.group(1)))
+                            sam_to_fastq.arguments.append(os.path.join(default.classpath_picard, 'picard.jar'))
+                            sam_to_fastq.arguments.append(os.path.join(self.genome_directory, match.group(1)))

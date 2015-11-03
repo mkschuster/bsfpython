@@ -2534,7 +2534,7 @@ class Executable(Command):
         section = Configuration.section_from_instance(executable)
 
         # For plain Executable objects append the value of the
-        # Executable.command to make this more meaningful.
+        # Executable.program to make this more meaningful.
 
         if section == 'bsf.Executable':
             section += '.'
@@ -2967,6 +2967,185 @@ class RunnableStep(Executable):
         output += super(RunnableStep, self).trace(level=level + 1)
 
         return output
+
+
+class RunnableStepJava(RunnableStep):
+    """The C{RunnableStepJava} class represents a C{RunnableStep} with all peculiarities of Java programs.
+
+    Attributes:
+    """
+
+    def __init__(self, name,
+                 program=None, options=None, arguments=None, sub_command=None,
+                 stdout_path=None, stderr_path=None, dependencies=None, hold=None,
+                 submit=True, process_identifier=None, process_name=None,
+                 obsolete_file_path_list=None,
+                 java_temporary_path=None, java_heap_maximum=None, java_jar_path=None):
+        """Create a C{RunnableStep} for a Java program.
+
+        @param name: Name
+        @type name: str
+        @param program: Program
+        @type program: str
+        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+            C{Argument} objects
+        @type options: dict[Argument.key, list[Argument]]
+        @param arguments: Python C{list} of program arguments
+        @type arguments: list[str | unicode]
+        @param sub_command: Subordinate Command
+        @type sub_command: Command
+        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
+        @type stdout_path: str | unicode
+        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
+        @type stderr_path: str | unicode
+        @param dependencies: Python C{list} of C{Executable.name}
+            properties in the context of C{DRMS} dependencies
+        @type dependencies: list[Executable.name]
+        @param hold: Hold on job scheduling
+        @type hold: str
+        @param submit: Submit the C{Executable} into the C{DRMS}
+        @type submit: bool
+        @param process_identifier: Process identifier
+        @type process_identifier: str
+        @param process_name: Process name
+        @type process_name: str
+        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
+            after successfully completing this C{RunnableStep}
+        @type obsolete_file_path_list: list[str | unicode]
+        @param java_temporary_path: Temporary directory path for the Java Virtual Machine
+        @type java_temporary_path: str | unicode
+        @param java_heap_maximum: Java heap maximum size (-Xmx option)
+        @type java_heap_maximum: str
+        @param java_jar_path: Java archive file path
+        @type java_jar_path: str | unicode
+        @return: C{RunnableStep}
+        @rtype: RunnableStep
+        """
+
+        super(RunnableStepJava, self).__init__(
+            name=name,
+            program=program, options=options, arguments=arguments, sub_command=sub_command,
+            stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold,
+            submit=submit, process_identifier=process_identifier, process_name=process_name,
+            obsolete_file_path_list=obsolete_file_path_list)
+
+        # JavaVM command
+        if self.program is None:
+            self.program = 'java'
+
+        # JavaVM options
+        if 'd64' not in self.options:
+            self.add_switch_short(key='d64')
+
+        if 'server' not in self.options:
+            self.add_switch_short(key='server')
+
+        if java_heap_maximum and java_heap_maximum not in self.options:
+            self.add_switch_short(key=java_heap_maximum)
+
+        if '-Djava.io.tmpdir' not in self.options:
+            self.add_option_pair(key='-Djava.io.tmpdir', value=java_temporary_path)
+
+        if self.sub_command is None:
+            # The Picard command line interface is a bit broken, as the -jar option needs to come last,
+            # just before the Picard command. GATK does this slightly better with the --analysis_type option.
+            # To be on the safe side, an empty sub command is required to separate the -jar option from the
+            # other JavaVM options.
+            self.sub_command = Command()
+            if java_jar_path is not None:
+                self.sub_command.add_option_short(key='jar', value=java_jar_path)
+
+        return
+
+
+class RunnableStepPicard(RunnableStepJava):
+    """The C{RunnableStepPicard} class represents a C{RunnableStepJava} specific to Picard tools.
+
+    Attributes:
+    """
+
+    def __init__(self, name,
+                 program=None, options=None, arguments=None, sub_command=None,
+                 stdout_path=None, stderr_path=None, dependencies=None, hold=None,
+                 submit=True, process_identifier=None, process_name=None,
+                 obsolete_file_path_list=None,
+                 java_temporary_path=None, java_heap_maximum=None, java_jar_path=None,
+                 picard_classpath=None, picard_command=None):
+        """Create a C{RunnableStep} for a Picard algorithm.
+
+        @param name: Name
+        @type name: str
+        @param program: Program
+        @type program: str
+        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+            C{Argument} objects
+        @type options: dict[Argument.key, list[Argument]]
+        @param arguments: Python C{list} of program arguments
+        @type arguments: list[str | unicode]
+        @param sub_command: Subordinate Command
+        @type sub_command: Command
+        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
+        @type stdout_path: str | unicode
+        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
+        @type stderr_path: str | unicode
+        @param dependencies: Python C{list} of C{Executable.name}
+            properties in the context of C{DRMS} dependencies
+        @type dependencies: list[Executable.name]
+        @param hold: Hold on job scheduling
+        @type hold: str
+        @param submit: Submit the C{Executable} into the C{DRMS}
+        @type submit: bool
+        @param process_identifier: Process identifier
+        @type process_identifier: str
+        @param process_name: Process name
+        @type process_name: str
+        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
+            after successfully completing this C{RunnableStep}
+        @type obsolete_file_path_list: list[str | unicode]
+        @param java_temporary_path: Temporary directory path for the Java Virtual Machine
+        @type java_temporary_path: str | unicode
+        @param java_heap_maximum: Java heap maximum size (-Xmx option)
+        @type java_heap_maximum: str
+        @param java_jar_path: Java archive file path
+        @type java_jar_path: str | unicode
+        @param picard_classpath: Picard class path
+        @type picard_classpath: str | unicode
+        @param picard_command: Picard command
+        @type picard_command: str
+        @return: C{RunnableStep}
+        @rtype: RunnableStep
+        """
+
+        super(RunnableStepPicard, self).__init__(
+            name=name,
+            program=program, options=options, arguments=arguments, sub_command=sub_command,
+            stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold,
+            submit=submit, process_identifier=process_identifier, process_name=process_name,
+            obsolete_file_path_list=obsolete_file_path_list,
+            java_temporary_path=java_temporary_path, java_heap_maximum=java_heap_maximum, java_jar_path=java_jar_path)
+
+        # Set the Picard classpath and the Picard Java archive.
+        if 'jar' not in self.sub_command.options:
+            self.sub_command.add_option_short(key='jar', value=os.path.join(picard_classpath, 'picard.jar'))
+
+        # The Picard algorithm is then another sub-command.
+        if self.sub_command.sub_command is None:
+            self.sub_command.sub_command = Command(program=picard_command)
+
+        return
+
+    def add_picard_option(self, key, value):
+        """Add an option to the Picard command.
+
+        @param key: Option key
+        @type key: str
+        @param value: Option value
+        @type value: str
+        @return:
+        @rtype:
+        """
+
+        return self.sub_command.sub_command.add_option_pair(key=key, value=value)
 
 
 class RunnableStepLink(RunnableStep):

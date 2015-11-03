@@ -489,10 +489,8 @@ for key in key_list:
         analysis=analysis))
 
     # Only submit this Executable if the final result file does not exist.
-    if (os.path.exists(
-            os.path.join(analysis.genome_directory, file_path_somatic['annotated_tsv']))
-        and os.path.getsize(
-            os.path.join(analysis.genome_directory, file_path_somatic['annotated_tsv']))):
+    if (os.path.exists(os.path.join(analysis.genome_directory, file_path_somatic['annotated_tsv'])) and
+            os.path.getsize(os.path.join(analysis.genome_directory, file_path_somatic['annotated_tsv']))):
         vc_run_somatic.submit = False
 
     # TODO: Set dependencies on sample-level processing in case this gets moved into the VariantCalling module.

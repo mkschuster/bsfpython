@@ -160,10 +160,14 @@ if run_bwa.sub_command.program == 'mem' and run_bwa.sub_command.arguments[1][-4:
 
     java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
-    java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'SamToFastq.jar'))
+    java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx4G')
 
-    sam_to_fastq = java_process.sub_command
+    picard_process = java_process.sub_command
+    picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
+    picard_process.sub_command = Command(program='SamToFastq')
+
+    sam_to_fastq = picard_process.sub_command
     sam_to_fastq.add_option_pair(key='INPUT', value=run_bwa.sub_command.arguments[1])
     sam_to_fastq.add_option_pair(key='FASTQ', value=path_fastq_1)
     sam_to_fastq.add_option_pair(key='SECOND_END_FASTQ', value=path_fastq_2)
@@ -211,10 +215,14 @@ if os.path.exists(path=path_fastq_2):
 
 java_process = Executable(name='clean_sam', program='java', sub_command=Command())
 java_process.add_switch_short(key='d64')
-java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'CleanSam.jar'))
+java_process.add_switch_short(key='server')
 java_process.add_switch_short(key='Xmx4G')
 
-clean_sam = java_process.sub_command
+picard_process = java_process.sub_command
+picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
+picard_process.sub_command = Command(program='CleanSam')
+
+clean_sam = picard_process.sub_command
 clean_sam.add_option_pair(key='INPUT', value=path_aligned_sam)
 clean_sam.add_option_pair(key='OUTPUT', value=path_cleaned_sam)
 clean_sam.add_option_pair(key='TMP_DIR', value=path_temporary)
@@ -274,10 +282,14 @@ if len(sam_header_pg) or len(sam_header_rg):
 
     java_process = Executable(name='replace_sam_header', program='java', sub_command=Command())
     java_process.add_switch_short(key='d64')
-    java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'ReplaceSamHeader.jar'))
+    java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx4G')
 
-    replace_sam_header = java_process.sub_command
+    picard_process = java_process.sub_command
+    picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
+    picard_process.sub_command = Command(program='ReplaceSamHeader')
+
+    replace_sam_header = picard_process.sub_command
     replace_sam_header.add_option_pair(key='INPUT', value=path_cleaned_sam)
     replace_sam_header.add_option_pair(key='HEADER', value=path_header_sam)
     replace_sam_header.add_option_pair(key='OUTPUT', value=path_temporary_sam)
@@ -306,11 +318,15 @@ if os.path.exists(path=path_aligned_sam):
 # Run Picard SortSam to convert the cleaned SAM file into a coordinate sorted BAM file.
 
 java_process = Executable(name='sort_sam', program='java', sub_command=Command())
-java_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'SortSam.jar'))
 java_process.add_switch_short(key='d64')
+java_process.add_switch_short(key='server')
 java_process.add_switch_short(key='Xmx6G')
 
-sort_sam = java_process.sub_command
+picard_process = java_process.sub_command
+picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
+picard_process.sub_command = Command(program='SortSam')
+
+sort_sam = picard_process.sub_command
 sort_sam.add_option_pair(key='INPUT', value=path_cleaned_sam)
 sort_sam.add_option_pair(key='OUTPUT', value=path_sorted_bam)
 sort_sam.add_option_pair(key='SORT_ORDER', value='coordinate')
@@ -336,5 +352,10 @@ if os.path.exists(path=path_cleaned_sam):
 # Remove the temporary directory and everything within it.
 
 shutil.rmtree(path=path_temporary, ignore_errors=False)
+
+# Write a status file.
+
+status_path = "{}{}_completed.txt".format(prefix, replicate_key)
+open(status_path, 'w').close()
 
 # Job done.
