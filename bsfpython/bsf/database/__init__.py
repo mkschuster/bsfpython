@@ -27,7 +27,6 @@ A package that centralises (SQLite) Database access.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 import sqlite3
-import string
 
 
 class DatabaseConnection(object):

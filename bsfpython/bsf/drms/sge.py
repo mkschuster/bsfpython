@@ -30,7 +30,6 @@ A package of methods supporting the Son of Grid Engine (SGE) system.
 import errno
 import os.path
 import re
-import string
 import subprocess
 
 # TODO: This module could create a file that records SGE Process identifiers, which could be used by
