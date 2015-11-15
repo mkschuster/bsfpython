@@ -110,20 +110,26 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
         if 'jar' not in self.sub_command.options:
             self.sub_command.add_option_short(key='jar', value=os.path.join(itb_classpath, itb_command + '.jar'))
 
+        # Introduce another empty sub-command to separate Illumina2Bam-tools options.
+        if self.sub_command.sub_command is None:
+            self.sub_command.sub_command = Command()
+
         return
 
-    def add_itb_option(self, key, value):
+    def add_itb_option(self, key, value, override=False):
         """Add an IlluminaToBam option.
 
         @param key: Option key
         @type key: str
         @param value: Option value
         @type value: str
+        @param override: Override existing C{Argument} without warning
+        @type override: bool
         @return:
         @rtype:
         """
 
-        return self.sub_command.sub_command.add_option_pair(key=key, value=value)
+        return self.sub_command.sub_command.add_option_pair(key=key, value=value, override=override)
 
 
 class IlluminaToBam(Analysis):
