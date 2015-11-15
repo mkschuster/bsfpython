@@ -692,6 +692,8 @@ class Analysis(object):
     def ucsc_hub_write_tracks(self, output, prefix=None):
         """Write a UCSC Track Hub I{trackDB.txt} file into the C{Analysis.genome_directory}.
 
+        @param output: Content
+        @type output: str
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
         @return:
@@ -3134,18 +3136,20 @@ class RunnableStepPicard(RunnableStepJava):
 
         return
 
-    def add_picard_option(self, key, value):
+    def add_picard_option(self, key, value, override=False):
         """Add an option to the Picard command.
 
         @param key: Option key
         @type key: str
         @param value: Option value
         @type value: str
+        @param override: Override existing C{Argument} without warning
+        @type override: bool
         @return:
         @rtype:
         """
 
-        return self.sub_command.sub_command.add_option_pair(key=key, value=value)
+        return self.sub_command.sub_command.add_option_pair(key=key, value=value, override=override)
 
 
 class RunnableStepLink(RunnableStep):
