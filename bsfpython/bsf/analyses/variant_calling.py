@@ -31,7 +31,7 @@ from pickle import Pickler, HIGHEST_PROTOCOL
 import warnings
 
 from bsf import Analysis, Command, Configuration, Default, defaults, DRMS, Executable, Runnable, RunnableStep, \
-    RunnableStepJava, RunnableStepPicard
+    RunnableStepMove, RunnableStepJava, RunnableStepPicard
 from bsf.data import PairedReads
 from bsf.executables import BWA
 
@@ -118,18 +118,20 @@ class RunnableStepGATK(RunnableStepJava):
 
         return
 
-    def add_gatk_option(self, key, value):
+    def add_gatk_option(self, key, value, override=False):
         """Add an option to the GATK command.
 
         @param key: Option key
         @type key: str
         @param value: Option value
         @type value: str
+        @param override: Override existing C{Argument} without warning
+        @type override: bool
         @return:
         @rtype:
         """
 
-        return self.sub_command.sub_command.add_option_long(key=key, value=value)
+        return self.sub_command.sub_command.add_option_long(key=key, value=value, override=override)
 
     def add_gatk_switch(self, key):
         """Add a switch to the GATK command.
@@ -193,6 +195,14 @@ class VariantCallingGATK(Analysis):
     @type vqsr_annotations_indel_list: list[str]
     @ivar vqsr_annotations_snp_list: Python C{list} of Python C{str} (variant annotation) objects
     @type vqsr_annotations_snp_list: list[str]
+    @ivar vqsr_bad_lod_cutoff_indel: LOD score cutoff for negative training set for INDELs
+    @type vqsr_bad_lod_cutoff_indel: float
+    @ivar vqsr_bad_lod_cutoff_snp: LOD score cutoff for negative training set for SNPs
+    @type vqsr_bad_lod_cutoff_snp: float
+    @ivar vqsr_max_gaussians_pos_indel: Maximum number of Gaussians in the positive training for INDELs
+    @type vqsr_max_gaussians_pos_indel: int
+    @ivar vqsr_max_gaussians_pos_snp: Maximum number of Gaussians in the positive training for SNPs
+    @type vqsr_max_gaussians_pos_snp: int
     @ivar exclude_intervals_list: Python C{list} of Python C{str} (intervals) to exclude from the analysis
     @type exclude_intervals_list: list[str]
     @ivar include_intervals_list: Python C{list} of Python C{str} (intervals) to include in the analysis
@@ -217,6 +227,7 @@ class VariantCallingGATK(Analysis):
     drms_name_process_lane = 'variant_calling_process_lane'
     drms_name_process_sample = 'variant_calling_process_sample'
     drms_name_diagnose_sample = 'variant_calling_diagnose_sample'
+    drms_name_merge_cohort = 'variant_calling_merge_cohort'
     drms_name_process_cohort = 'variant_calling_process_cohort'
     drms_name_split_cohort = 'variant_calling_split_cohort'
 
@@ -235,6 +246,8 @@ class VariantCallingGATK(Analysis):
                  vqsr_skip_indel=False, vqsr_skip_snp=False,
                  vqsr_resources_indel_dict=None, vqsr_resources_snp_dict=None,
                  vqsr_annotations_indel_list=None, vqsr_annotations_snp_list=None,
+                 vqsr_bad_lod_cutoff_indel=None, vqsr_bad_lod_cutoff_snp=None,
+                 vqsr_max_gaussians_pos_indel=4, vqsr_max_gaussians_pos_snp=None,
                  exclude_intervals_list=None,
                  include_intervals_list=None,
                  interval_padding=None,
@@ -311,6 +324,14 @@ class VariantCallingGATK(Analysis):
         @type vqsr_annotations_indel_list: list[str]
         @param vqsr_annotations_snp_list: Python C{list} of Python C{str} (variant annotation) objects
         @type vqsr_annotations_snp_list: list[str]
+        @param vqsr_bad_lod_cutoff_indel: LOD score cutoff for negative training set for INDELs
+        @type vqsr_bad_lod_cutoff_indel: float
+        @param vqsr_bad_lod_cutoff_snp: LOD score cutoff for negative training set for SNPs
+        @type vqsr_bad_lod_cutoff_snp: float
+        @param vqsr_max_gaussians_pos_indel: Maximum number of Gaussians in the positive training for INDELs
+        @type vqsr_max_gaussians_pos_indel: int
+        @param vqsr_max_gaussians_pos_snp: Maximum number of Gaussians in the positive training for SNPs
+        @type vqsr_max_gaussians_pos_snp: int
         @param exclude_intervals_list: Python C{list} of Python C{str} (intervals) to exclude from the analysis
         @type exclude_intervals_list: list[str]
         @param include_intervals_list: Python C{list} of Python C{str} (intervals) to include in the analysis
@@ -444,6 +465,11 @@ class VariantCallingGATK(Analysis):
         else:
             self.vqsr_annotations_snp_list = vqsr_annotations_snp_list
 
+        self.vqsr_bad_lod_cutoff_indel = vqsr_bad_lod_cutoff_indel  # Can be None.
+        self.vqsr_bad_lod_cutoff_snp = vqsr_bad_lod_cutoff_snp  # Can be None.
+        self.vqsr_max_gaussians_pos_indel = vqsr_max_gaussians_pos_indel  # Can be None.
+        self.vqsr_max_gaussians_pos_snp = vqsr_max_gaussians_pos_snp  # Can be None.
+
         if exclude_intervals_list is None:
             self.exclude_intervals_list = list()
         else:
@@ -518,94 +544,106 @@ class VariantCallingGATK(Analysis):
 
         super(VariantCallingGATK, self).set_configuration(configuration=configuration, section=section)
 
-        if configuration.config_parser.has_option(section=section, option='replicate_grouping'):
-            self.replicate_grouping = configuration.config_parser.getboolean(
-                section=section,
-                option='replicate_grouping')
+        option = 'replicate_grouping'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.replicate_grouping = configuration.config_parser.getboolean(section=section, option=option)
 
         # Get the genome database.
 
-        if configuration.config_parser.has_option(section=section, option='bwa_genome_db'):
-            self.bwa_genome_db = configuration.config_parser.get(
-                section=section,
-                option='bwa_genome_db')
+        option = 'bwa_genome_db'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.bwa_genome_db = configuration.config_parser.get(section=section, option=option)
 
         # Read a comparison file.
 
         # if configuration.config_parser.has_option(section=section, option='comparison_path'):
         #     self.comparison_path = configuration.config_parser.get(section=section, option='comparison_path')
         # Use the sample annotation sheet instead of a separate comparison file.
-        if configuration.config_parser.has_option(section=section, option='sas_file'):
-            self.comparison_path = configuration.config_parser.get(
-                section=section,
-                option='sas_file')
+        option = 'sas_file'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.comparison_path = configuration.config_parser.get(section=section, option=option)
 
         # Get the cohort name.
 
-        if configuration.config_parser.has_option(section=section, option='cohort_name'):
-            self.cohort_name = configuration.config_parser.get(
-                section=section,
-                option='cohort_name')
+        option = 'cohort_name'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.cohort_name = configuration.config_parser.get(section=section, option=option)
 
         # Comma-separated list of GVCF files from accessory cohorts
         # that should be used in the recalibration procedure.
 
-        if configuration.config_parser.has_option(section=section, option='accessory_cohort_gvcfs'):
-            for file_path in configuration.config_parser.get(
-                    section=section,
-                    option='accessory_cohort_gvcfs').split(','):
+        option = 'accessory_cohort_gvcfs'
+        if configuration.config_parser.has_option(section=section, option=option):
+            for file_path in configuration.config_parser.get(section=section, option=option).split(','):
                 self.accessory_cohort_gvcfs.append(file_path.strip())  # Strip white space around commas.
 
         # Get the skip mark duplicates option.
 
-        if configuration.config_parser.has_option(section=section, option='skip_mark_duplicates'):
-            self.skip_mark_duplicates = configuration.config_parser.getboolean(
-                section=section,
-                option='skip_mark_duplicates')
+        option = 'skip_mark_duplicates'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.skip_mark_duplicates = configuration.config_parser.getboolean(section=section, option=option)
 
         # Get the truth sensitivity filter level for INDELs.
 
-        if configuration.config_parser.has_option(section=section, option='truth_sensitivity_filter_level_indel'):
-            self.truth_sensitivity_filter_level_indel = configuration.config_parser.get(
-                section=section,
-                option='truth_sensitivity_filter_level_indel')
+        option = 'truth_sensitivity_filter_level_indel'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.truth_sensitivity_filter_level_indel = configuration.config_parser.get(section=section, option=option)
 
         # Get the truth sensitivity filter level for SNPs.
 
-        if configuration.config_parser.has_option(section=section, option='truth_sensitivity_filter_level_snp'):
-            self.truth_sensitivity_filter_level_snp = configuration.config_parser.get(
-                section=section,
-                option='truth_sensitivity_filter_level_snp')
+        option = 'truth_sensitivity_filter_level_snp'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.truth_sensitivity_filter_level_snp = configuration.config_parser.get(section=section, option=option)
 
         # Get the flag for skipping the Variant Quality Score Recalibration (VQSR) for INDELs.
 
-        if configuration.config_parser.has_option(section=section, option='vqsr_skip_indel'):
-            self.vqsr_skip_indel = configuration.config_parser.getboolean(
-                section=section,
-                option='vqsr_skip_indel')
+        option = 'vqsr_skip_indel'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.vqsr_skip_indel = configuration.config_parser.getboolean(section=section, option=option)
 
         # Get the flag for skipping the Variant Quality Score Recalibration (VQSR) for SNPs.
 
-        if configuration.config_parser.has_option(section=section, option='vqsr_skip_snp'):
-            self.vqsr_skip_snp = configuration.config_parser.getboolean(
-                section=section,
-                option='vqsr_skip_snp')
+        option = 'vqsr_skip_snp'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.vqsr_skip_snp = configuration.config_parser.getboolean(section=section, option=option)
 
         # Get the list of annotations for the Variant Quality Score Recalibration (VQSR) for INDELs.
 
-        if configuration.config_parser.has_option(section=section, option='vqsr_annotations_indel'):
-            for annotation in configuration.config_parser.get(
-                    section=section,
-                    option='vqsr_annotations_indel').split(','):
+        option = 'vqsr_annotations_indel'
+        if configuration.config_parser.has_option(section=section, option=option):
+            for annotation in configuration.config_parser.get(section=section, option=option).split(','):
                 self.vqsr_annotations_indel_list.append(annotation.strip())  # Strip white space around commas.
 
         # Get the list of annotations for the Variant Quality Score Recalibration (VQSR) for SNPs.
 
-        if configuration.config_parser.has_option(section=section, option='vqsr_annotations_snp'):
-            for annotation in configuration.config_parser.get(
-                    section=section,
-                    option='vqsr_annotations_snp').split(','):
+        option = 'vqsr_annotations_snp'
+        if configuration.config_parser.has_option(section=section, option=option):
+            for annotation in configuration.config_parser.get(section=section, option=option).split(','):
                 self.vqsr_annotations_snp_list.append(annotation.strip())  # Strip white space around commas.
+
+        # Get the bad LOD cutoff for the negative training set for INDELs.
+
+        option = 'vqsr_bad_lod_cutoff_indel'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.vqsr_bad_lod_cutoff_indel = configuration.config_parser.getfloat(section=section, option=option)
+
+        # Get the bad LOD cutoff for the negative training set for SNPs.
+
+        option = 'vqsr_bad_lod_cutoff_snp'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.vqsr_bad_lod_cutoff_snp = configuration.config_parser.getfloat(section=section, option=option)
+
+        # Get the maximum number of Gaussians in the positive training for INDELs.
+
+        option = 'vqsr_max_gaussians_pos_indel'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.vqsr_max_gaussians_pos_indel = configuration.config_parser.getint(section=section, option=option)
+
+        # Get the maximum number of Gaussians in the positive training for SNPs.
+
+        option = 'vqsr_max_gaussians_pos_snp'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.vqsr_max_gaussians_pos_snp = configuration.config_parser.getint(section=section, option=option)
 
         self._read_vqsr_configuration(vqsr_resources_dict=self.vqsr_resources_indel_dict, variation_type='indel')
         self._read_vqsr_configuration(vqsr_resources_dict=self.vqsr_resources_snp_dict, variation_type='snp')
@@ -616,10 +654,9 @@ class VariantCallingGATK(Analysis):
         # Python tuple of
         # Python str (file path) and Python list of Python str (annotation) value data.
 
-        if configuration.config_parser.has_option(section=section, option='annotation_resources'):
-            for annotation_resource in configuration.config_parser.get(
-                    section=section,
-                    option='annotation_resources').split(','):
+        option = 'annotation_resources'
+        if configuration.config_parser.has_option(section=section, option=option):
+            for annotation_resource in configuration.config_parser.get(section=section, option=option).split(','):
                 annotation_resource = annotation_resource.strip()  # Strip white space around commas.
                 resource_section = '_'.join((annotation_resource, 'resource'))
                 if configuration.config_parser.has_section(section=resource_section):
@@ -653,97 +690,85 @@ class VariantCallingGATK(Analysis):
         # Single VCF file of known sites for the
         # GATK HaplotypeCaller and GenotypeGVCFs steps.
 
-        if configuration.config_parser.has_option(section=section, option='known_sites_discovery'):
-            self.known_sites_discovery = configuration.config_parser.get(
-                section=section,
-                option='known_sites_discovery')
+        option = 'known_sites_discovery'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.known_sites_discovery = configuration.config_parser.get(section=section, option=option)
 
         # Comma-separated list of VCF files with known variant sites for the
         # GATK RealignerTargetCreator and IndelRealigner steps.
 
-        if configuration.config_parser.has_option(section=section, option='known_sites_realignment'):
-            for file_path in configuration.config_parser.get(
-                    section=section,
-                    option='known_sites_realignment').split(','):
+        option = 'known_sites_realignment'
+        if configuration.config_parser.has_option(section=section, option=option):
+            for file_path in configuration.config_parser.get(section=section, option=option).split(','):
                 self.known_sites_realignment.append(file_path.strip())  # Strip white space around commas.
 
         # Comma-separated list of VCF files with known variant sites for the
         # GATK BaseRecalibrator and PrintReads steps.
 
-        if configuration.config_parser.has_option(section=section, option='known_sites_recalibration'):
-            for file_path in configuration.config_parser.get(
-                    section=section,
-                    option='known_sites_recalibration').split(','):
+        option = 'known_sites_recalibration'
+        if configuration.config_parser.has_option(section=section, option=option):
+            for file_path in configuration.config_parser.get(section=section, option=option).split(','):
                 self.known_sites_recalibration.append(file_path.strip())  # Strip white space around commas.
 
         # Get the list of intervals to exclude.
 
-        if configuration.config_parser.has_option(section=section, option='exclude_intervals'):
-            exclude_intervals = configuration.config_parser.get(
-                section=section,
-                option='exclude_intervals')
+        option = 'exclude_intervals'
+        if configuration.config_parser.has_option(section=section, option=option):
+            exclude_intervals = configuration.config_parser.get(section=section, option=option)
             # For comma-separated interval lists split into components on commas, strip white space
             # and push them onto the list individually.
             self.exclude_intervals_list.extend(map(lambda x: x.strip(), exclude_intervals.split(',')))
 
         # Get the list of intervals to include.
 
-        if configuration.config_parser.has_option(section=section, option='include_intervals'):
-            include_intervals = configuration.config_parser.get(
-                section=section,
-                option='include_intervals')
+        option = 'include_intervals'
+        if configuration.config_parser.has_option(section=section, option=option):
+            include_intervals = configuration.config_parser.get(section=section, option=option)
             # For comma-separated interval lists split into components on commas, strip white space and
             # push them onto the list individually.
             self.include_intervals_list.extend(map(lambda x: x.strip(), include_intervals.split(',')))
 
         # Get the interval padding.
 
-        if configuration.config_parser.has_option(section=section, option='interval_padding'):
-            self.interval_padding = configuration.config_parser.getint(
-                section=section,
-                option='interval_padding')
+        option = 'interval_padding'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.interval_padding = configuration.config_parser.getint(section=section, option=option)
 
         # Get the down-sample to fraction information.
 
-        if configuration.config_parser.has_option(section=section, option='downsample_to_fraction'):
-            self.downsample_to_fraction = configuration.config_parser.get(
-                section=section,
-                option='downsample_to_fraction')
+        option = 'downsample_to_fraction'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.downsample_to_fraction = configuration.config_parser.get(section=section, option=option)
 
         # Get the GATK bundle version.
 
-        if configuration.config_parser.has_option(section=section, option='gatk_bundle_version'):
-            self.gatk_bundle_version = configuration.config_parser.get(
-                section=section,
-                option='gatk_bundle_version')
+        option = 'gatk_bundle_version'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.gatk_bundle_version = configuration.config_parser.get(section=section, option=option)
 
         # Get the snpEff genome version.
 
-        if configuration.config_parser.has_option(section=section, option='snpeff_genome_version'):
-            self.snpeff_genome_version = configuration.config_parser.get(
-                section=section,
-                option='snpeff_genome_version')
+        option = 'snpeff_genome_version'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.snpeff_genome_version = configuration.config_parser.get(section=section, option=option)
 
         # Get the Genome Analysis Tool Kit (GATK) Java Archive (JAR) class path directory.
 
-        if configuration.config_parser.has_option(section=section, option='classpath_gatk'):
-            self.classpath_gatk = configuration.config_parser.get(
-                section=section,
-                option='classpath_gatk')
+        option = 'classpath_gatk'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.classpath_gatk = configuration.config_parser.get(section=section, option=option)
 
         # Get the Picard tools Java Archive (JAR) class path directory.
 
-        if configuration.config_parser.has_option(section=section, option='classpath_picard'):
-            self.classpath_picard = configuration.config_parser.get(
-                section=section,
-                option='classpath_picard')
+        option = 'classpath_picard'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.classpath_picard = configuration.config_parser.get(section=section, option=option)
 
         # Get the snpEff tool Java Archive (JAR) class path directory.
 
-        if configuration.config_parser.has_option(section=section, option='classpath_snpeff'):
-            self.classpath_snpeff = configuration.config_parser.get(
-                section=section,
-                option='classpath_snpeff')
+        option = 'classpath_snpeff'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.classpath_snpeff = configuration.config_parser.get(section=section, option=option)
 
         return
 
@@ -953,7 +978,7 @@ class VariantCallingGATK(Analysis):
 
         temporary_list = list()
         for interval in self.exclude_intervals_list:
-            if interval[-10:] == '.intervals' or interval[-14:] == '.interval_list':
+            if interval.endswith('.intervals') or interval.endswith('.interval_list'):
                 # For Picard-style interval lists prepend the current directory if necessary.
                 if not os.path.isabs(interval):
                     interval = os.path.join(os.path.realpath(os.path.curdir), interval)
@@ -961,13 +986,15 @@ class VariantCallingGATK(Analysis):
                     temporary_list.append(interval)
                 else:
                     raise Exception('Exclude intervals file {!r} does not exist.'.format(interval))
+            else:
+                temporary_list.append(interval)
         self.exclude_intervals_list = temporary_list
 
         # Include intervals
 
         temporary_list = list()
         for interval in self.include_intervals_list:
-            if interval[-10:] == '.intervals' or interval[-14:] == '.interval_list':
+            if interval.endswith('.intervals') or interval.endswith('.interval_list'):
                 # For Picard-style interval lists prepend the current directory if necessary.
                 if not os.path.isabs(interval):
                     interval = os.path.join(os.path.realpath(os.path.curdir), interval)
@@ -975,6 +1002,8 @@ class VariantCallingGATK(Analysis):
                     temporary_list.append(interval)
                 else:
                     raise Exception('Include intervals file {!r} does not exist.'.format(interval))
+            else:
+                temporary_list.append(interval)
         self.include_intervals_list = temporary_list
 
         # The comparison file can be absolute, in the same directory or in the project directory.
@@ -995,53 +1024,68 @@ class VariantCallingGATK(Analysis):
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # bsf_run_bwa.py script.
 
-        drms_align_lane = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_align_lane,
-            working_directory=self.genome_directory,
-            analysis=self))
+        drms_align_lane = self.add_drms(
+            drms=DRMS.from_analysis(
+                name=self.drms_name_align_lane,
+                working_directory=self.genome_directory,
+                analysis=self))
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_process_lane Runnable.
 
-        drms_process_lane = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_process_lane,
-            working_directory=self.genome_directory,
-            analysis=self))
+        drms_process_lane = self.add_drms(
+            drms=DRMS.from_analysis(
+                name=self.drms_name_process_lane,
+                working_directory=self.genome_directory,
+                analysis=self))
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_process_sample Runnable.
 
-        drms_process_sample = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_process_sample,
-            working_directory=self.genome_directory,
-            analysis=self))
+        drms_process_sample = self.add_drms(
+            drms=DRMS.from_analysis(
+                name=self.drms_name_process_sample,
+                working_directory=self.genome_directory,
+                analysis=self))
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_diagnose_sample Runnable.
 
-        drms_diagnose_sample = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_diagnose_sample,
-            working_directory=self.genome_directory,
-            analysis=self))
+        drms_diagnose_sample = self.add_drms(
+            drms=DRMS.from_analysis(
+                name=self.drms_name_diagnose_sample,
+                working_directory=self.genome_directory,
+                analysis=self))
+
+        # Initialise a Distributed Resource Management System (DRMS) object for the
+        # variant_calling_merge_cohort Runnable.
+
+        drms_merge_cohort = self.add_drms(
+            drms=DRMS.from_analysis(
+                name=self.drms_name_merge_cohort,
+                working_directory=self.genome_directory,
+                analysis=self))
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_process_cohort Runnable.
 
-        drms_process_cohort = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_process_cohort,
-            working_directory=self.genome_directory,
-            analysis=self))
+        drms_process_cohort = self.add_drms(
+            drms=DRMS.from_analysis(
+                name=self.drms_name_process_cohort,
+                working_directory=self.genome_directory,
+                analysis=self))
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_split_cohort Runnable.
 
-        drms_split_cohort = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_split_cohort,
-            working_directory=self.genome_directory,
-            analysis=self))
+        drms_split_cohort = self.add_drms(
+            drms=DRMS.from_analysis(
+                name=self.drms_name_split_cohort,
+                working_directory=self.genome_directory,
+                analysis=self))
 
-        vc_process_cohort_dependencies = list()
-        vc_process_cohort_replicates = list()
+        vc_merge_cohort_dependency_dict = dict()
+        vc_merge_cohort_sample_dict = dict()
 
         for sample in self.samples:
 
@@ -1181,7 +1225,7 @@ class VariantCallingGATK(Analysis):
                     duplicates_marked_bai=prefix_lane + '_duplicates_marked.bai',
                     duplicates_marked_md5=prefix_lane + '_duplicates_marked.bam.md5',
                     duplicate_metrics=prefix_lane + '_duplicate_metrics.tsv',
-                    realigner_targets=prefix_lane + '_realigner.intervals',
+                    realigner_targets=prefix_lane + '_realigner.interval_list',
                     realigned_bam=prefix_lane + '_realigned.bam',
                     realigned_bai=prefix_lane + '_realigned.bai',
                     recalibration_table_pre=prefix_lane + '_recalibration_pre.table',
@@ -1191,7 +1235,7 @@ class VariantCallingGATK(Analysis):
                     recalibrated_bai=prefix_lane + '_recalibrated.bai',
                     alignment_summary_metrics=prefix_lane + '_alignment_summary_metrics.tsv')
 
-                # Create a lane-specific Runnable
+                # Create a Runnable and Executable for processing each lane.
 
                 runnable_process_lane = self.add_runnable(
                     runnable=Runnable(
@@ -1200,6 +1244,11 @@ class VariantCallingGATK(Analysis):
                         working_directory=self.genome_directory,
                         file_path_dict=file_path_dict_lane,
                         debug=self.debug))
+                executable_process_lane = drms_process_lane.add_executable(
+                    executable=Executable.from_analysis_runnable(
+                        analysis=self,
+                        runnable_name=runnable_process_lane.name))
+                executable_process_lane.dependencies.append(run_bwa.name)
 
                 # Run the Picard MarkDuplicates analysis, unless configured to skip it.
 
@@ -1210,7 +1259,7 @@ class VariantCallingGATK(Analysis):
                 else:
                     runnable_step = runnable_process_lane.add_runnable_step(
                         runnable_step=RunnableStepPicard(
-                            name='picard_mark_duplicates',
+                            name='process_lane_picard_mark_duplicates',
                             obsolete_file_path_list=[
                                 # It may not be the best idea to remove the aligned BAM file from the previous
                                 # lane-specific alignment step here. For the moment, keep pipeline steps independent
@@ -1257,7 +1306,7 @@ class VariantCallingGATK(Analysis):
 
                 runnable_step = runnable_process_lane.add_runnable_step(
                     runnable_step=RunnableStepGATK(
-                        name='gatk_realigner_target_creator',
+                        name='process_lane_gatk_realigner_target_creator',
                         java_temporary_path=file_path_dict_lane['temporary_directory'],
                         java_heap_maximum='Xmx6G',
                         gatk_classpath=self.classpath_gatk))
@@ -1267,13 +1316,13 @@ class VariantCallingGATK(Analysis):
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
                 for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
                 for interval in self.include_intervals_list:
-                    runnable_step.add_gatk_option(key='intervals', value=interval)
+                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
                 if self.interval_padding:
                     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 for file_path in self.known_sites_realignment:
-                    runnable_step.add_gatk_option(key='known', value=file_path)
+                    runnable_step.add_gatk_option(key='known', value=file_path, override=True)
                 runnable_step.add_gatk_option(key='input_file', value=file_path_dict_lane['duplicates_marked_bam'])
                 runnable_step.add_gatk_option(key='out', value=file_path_dict_lane['realigner_targets'])
 
@@ -1282,7 +1331,7 @@ class VariantCallingGATK(Analysis):
 
                 runnable_step = runnable_process_lane.add_runnable_step(
                     runnable_step=RunnableStepGATK(
-                        name='gatk_indel_realigner',
+                        name='process_lane_gatk_indel_realigner',
                         obsolete_file_path_list=[
                             file_path_dict_lane['duplicates_marked_bam'],
                             file_path_dict_lane['duplicates_marked_bai'],
@@ -1297,13 +1346,13 @@ class VariantCallingGATK(Analysis):
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
                 for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
                 for interval in self.include_intervals_list:
-                    runnable_step.add_gatk_option(key='intervals', value=interval)
+                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
                 if self.interval_padding:
                     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 for file_path in self.known_sites_realignment:
-                    runnable_step.add_gatk_option(key='knownAlleles', value=file_path)
+                    runnable_step.add_gatk_option(key='knownAlleles', value=file_path, override=True)
                 runnable_step.add_gatk_option(key='input_file', value=file_path_dict_lane['duplicates_marked_bam'])
                 runnable_step.add_gatk_option(key='targetIntervals', value=file_path_dict_lane['realigner_targets'])
                 runnable_step.add_gatk_option(key='out', value=file_path_dict_lane['realigned_bam'])
@@ -1313,7 +1362,7 @@ class VariantCallingGATK(Analysis):
 
                 runnable_step = runnable_process_lane.add_runnable_step(
                     runnable_step=RunnableStepGATK(
-                        name='gatk_base_recalibrator_pre',
+                        name='process_lane_gatk_base_recalibrator_pre',
                         java_temporary_path=file_path_dict_lane['temporary_directory'],
                         java_heap_maximum='Xmx6G',
                         gatk_classpath=self.classpath_gatk))
@@ -1323,13 +1372,13 @@ class VariantCallingGATK(Analysis):
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
                 for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
                 for interval in self.include_intervals_list:
-                    runnable_step.add_gatk_option(key='intervals', value=interval)
+                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
                 if self.interval_padding:
                     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 for file_path in self.known_sites_recalibration:
-                    runnable_step.add_gatk_option(key='knownSites', value=file_path)
+                    runnable_step.add_gatk_option(key='knownSites', value=file_path, override=True)
                 runnable_step.add_gatk_option(key='input_file', value=file_path_dict_lane['realigned_bam'])
                 runnable_step.add_gatk_option(key='out', value=file_path_dict_lane['recalibration_table_pre'])
 
@@ -1337,7 +1386,7 @@ class VariantCallingGATK(Analysis):
 
                 runnable_step = runnable_process_lane.add_runnable_step(
                     runnable_step=RunnableStepGATK(
-                        name='gatk_base_recalibrator_post',
+                        name='process_lane_gatk_base_recalibrator_post',
                         java_temporary_path=file_path_dict_lane['temporary_directory'],
                         java_heap_maximum='Xmx6G',
                         gatk_classpath=self.classpath_gatk))
@@ -1347,13 +1396,13 @@ class VariantCallingGATK(Analysis):
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
                 for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
                 for interval in self.include_intervals_list:
-                    runnable_step.add_gatk_option(key='intervals', value=interval)
+                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
                 if self.interval_padding:
                     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 for file_path in self.known_sites_recalibration:
-                    runnable_step.add_gatk_option(key='knownSites', value=file_path)
+                    runnable_step.add_gatk_option(key='knownSites', value=file_path, override=True)
                 runnable_step.add_gatk_option(key='BQSR', value=file_path_dict_lane['recalibration_table_pre'])
                 runnable_step.add_gatk_option(key='input_file', value=file_path_dict_lane['realigned_bam'])
                 runnable_step.add_gatk_option(key='out', value=file_path_dict_lane['recalibration_table_post'])
@@ -1362,7 +1411,7 @@ class VariantCallingGATK(Analysis):
 
                 runnable_step = runnable_process_lane.add_runnable_step(
                     runnable_step=RunnableStepGATK(
-                        name='gatk_analyze_covariates',
+                        name='process_lane_gatk_analyze_covariates',
                         java_temporary_path=file_path_dict_lane['temporary_directory'],
                         java_heap_maximum='Xmx6G',
                         gatk_classpath=self.classpath_gatk))
@@ -1372,9 +1421,9 @@ class VariantCallingGATK(Analysis):
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
                 for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
                 for interval in self.include_intervals_list:
-                    runnable_step.add_gatk_option(key='intervals', value=interval)
+                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
                 if self.interval_padding:
                     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 runnable_step.add_gatk_option(
@@ -1392,7 +1441,7 @@ class VariantCallingGATK(Analysis):
 
                 runnable_step = runnable_process_lane.add_runnable_step(
                     runnable_step=RunnableStepGATK(
-                        name='gatk_print_reads',
+                        name='process_lane_gatk_print_reads',
                         obsolete_file_path_list=[
                             file_path_dict_lane['realigned_bam'],
                             file_path_dict_lane['realigned_bai'],
@@ -1406,9 +1455,9 @@ class VariantCallingGATK(Analysis):
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
                 for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
                 for interval in self.include_intervals_list:
-                    runnable_step.add_gatk_option(key='intervals', value=interval)
+                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
                 if self.interval_padding:
                     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 runnable_step.add_gatk_option(key='input_file', value=file_path_dict_lane['realigned_bam'])
@@ -1419,7 +1468,7 @@ class VariantCallingGATK(Analysis):
 
                 runnable_step = runnable_process_lane.add_runnable_step(
                     runnable_step=RunnableStepPicard(
-                        name='picard_collect_alignment_summary_metrics',
+                        name='process_lane_picard_collect_alignment_summary_metrics',
                         java_temporary_path=file_path_dict_lane['temporary_directory'],
                         java_heap_maximum='Xmx6G',
                         picard_classpath=self.classpath_picard,
@@ -1427,10 +1476,10 @@ class VariantCallingGATK(Analysis):
                 assert isinstance(runnable_step, RunnableStepPicard)
                 runnable_step.add_picard_option(key='INPUT', value=file_path_dict_lane['recalibrated_bam'])
                 runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_lane['alignment_summary_metrics'])
-                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='ALL_READS')
-                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='SAMPLE')
-                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='LIBRARY')
-                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP')
+                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='ALL_READS', override=True)
+                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='SAMPLE', override=True)
+                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='LIBRARY', override=True)
+                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP', override=True)
                 runnable_step.add_picard_option(key='REFERENCE_SEQUENCE', value=self.bwa_genome_db)
                 runnable_step.add_picard_option(key='TMP_DIR', value=file_path_dict_lane['temporary_directory'])
                 # VERBOSITY defaults to 'INFO'.
@@ -1443,19 +1492,12 @@ class VariantCallingGATK(Analysis):
                 # CREATE_MD5_FILE defaults to 'false'.
                 # OPTIONS_FILE
 
-                # Create an Executable for the Runnable processing the lane.
-
-                executable_process_lane = drms_process_lane.add_executable(
-                    executable=Executable.from_analysis_runnable(
-                        analysis=self,
-                        runnable_name=runnable_process_lane.name))
-
-                executable_process_lane.dependencies.append(run_bwa.name)
-
                 # Set dependencies for the next stage.
                 vc_process_sample_dependencies.append(executable_process_lane.name)
                 # Add the result of the variant_calling_process_lane Runnable.
-                vc_process_sample_replicates.append(file_path_dict_lane['recalibrated_bam'])
+                vc_process_sample_replicates.append((
+                    file_path_dict_lane['recalibrated_bam'],
+                    file_path_dict_lane['recalibrated_bai']))
 
             # Step 2: Process per sample.
             #
@@ -1482,9 +1524,9 @@ class VariantCallingGATK(Analysis):
                 realigned_bai=prefix_sample + '_realigned.bai',
                 alignment_summary_metrics=prefix_sample + '_alignment_summary_metrics.tsv',
                 raw_variants_gvcf_vcf=prefix_sample + '_raw_variants.g.vcf.gz',
-                raw_variants_gvcf_idx=prefix_sample + '_raw_variants.g.vcf.tbi')
+                raw_variants_gvcf_idx=prefix_sample + '_raw_variants.g.vcf.gz.tbi')
 
-            # Create a sample-specific Runnable
+            # Create a Runnable and Executable for processing each Sample object.
 
             runnable_process_sample = self.add_runnable(
                 runnable=Runnable(
@@ -1493,75 +1535,46 @@ class VariantCallingGATK(Analysis):
                     working_directory=self.genome_directory,
                     file_path_dict=file_path_dict_sample,
                     debug=self.debug))
+            executable_process_sample = drms_process_sample.add_executable(
+                executable=Executable.from_analysis_runnable(
+                    analysis=self,
+                    runnable_name=runnable_process_sample.name))
+            executable_process_sample.dependencies.extend(vc_process_sample_dependencies)
 
-            # Run the Picard MergeSamFiles analysis.
+            if len(vc_process_sample_replicates) == 1:
+                # If there is only one replicate, just rename the BAM and BAI files.
 
-            runnable_step = runnable_process_sample.add_runnable_step(
-                runnable_step=RunnableStepPicard(
-                    name='picard_merge_sam_files',
-                    java_temporary_path=file_path_dict_sample['temporary_directory'],
-                    java_heap_maximum='Xmx6G',
-                    picard_classpath=self.classpath_picard,
-                    picard_command='MergeSamFiles'))
-            assert isinstance(runnable_step, RunnableStepPicard)
-            for file_path in vc_process_sample_replicates:
-                runnable_step.add_picard_option(
-                    key='INPUT',
-                    value=file_path)
-                # TODO: Delete the lane-specific recalibrated.bam, recalibrated.bai and recalibrated.bam.md5 files?
-            runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_sample['merged_bam'])
-            runnable_step.add_picard_option(key='USE_THREADING', value='true')
-            runnable_step.add_picard_option(key='COMMENT', value='Merged from the following files:')
-            for file_path in vc_process_sample_replicates:
-                runnable_step.add_picard_option(key='COMMENT', value=file_path)
-            runnable_step.add_picard_option(key='TMP_DIR', value=file_path_dict_sample['temporary_directory'])
-            # VERBOSITY defaults to 'INFO'.
-            runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-            # QUIET defaults to 'false'.
-            # VALIDATION_STRINGENCY defaults to 'STRICT'.
-            # COMPRESSION_LEVEL defaults to '5'.
-            runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
-            # MAX_RECORDS_IN_RAM defaults to '500000'.
-            runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='4000000')
-            # CREATE_INDEX defaults to 'false'.
-            runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
-            # CREATE_MD5_FILE defaults to 'false'.
-            runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
-            # OPTIONS_FILE
+                runnable_process_sample.add_runnable_step(
+                    runnable_step=RunnableStepMove(
+                        name='process_sample_move_recalibrated_bam',
+                        source_path=vc_process_sample_replicates[0][0],
+                        target_path=file_path_dict_sample['realigned_bam']))
 
-            # Run the Picard MarkDuplicates analysis, unless configured to skip it.
-            # Optical duplicates should already have been flagged in the lane-specific processing step.
-
-            if self.skip_mark_duplicates:
-                file_path_dict_sample['duplicates_marked_bam'] = file_path_dict_sample['merged_bam']
-                file_path_dict_sample['duplicates_marked_bai'] = file_path_dict_sample['merged_bai']
-                file_path_dict_sample['duplicates_marked_md5'] = file_path_dict_sample['merged_md5']
+                runnable_process_sample.add_runnable_step(
+                    runnable_step=RunnableStepMove(
+                        name='process_sample_move_recalibrated_bai',
+                        source_path=vc_process_sample_replicates[0][1],
+                        target_path=file_path_dict_sample['realigned_bai']))
             else:
+                # Run the Picard MergeSamFiles analysis.
+
                 runnable_step = runnable_process_sample.add_runnable_step(
                     runnable_step=RunnableStepPicard(
-                        name='picard_mark_duplicates',
-                        obsolete_file_path_list=[
-                            file_path_dict_sample['merged_bam'],
-                            file_path_dict_sample['merged_bai'],
-                            file_path_dict_sample['merged_md5'],
-                        ],
+                        name='process_sample_picard_merge_sam_files',
                         java_temporary_path=file_path_dict_sample['temporary_directory'],
                         java_heap_maximum='Xmx6G',
                         picard_classpath=self.classpath_picard,
-                        picard_command='MarkDuplicates'))
+                        picard_command='MergeSamFiles'))
                 assert isinstance(runnable_step, RunnableStepPicard)
-                runnable_step.add_picard_option(key='INPUT', value=file_path_dict_sample['merged_bam'])
-                runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_sample['duplicates_marked_bam'])
-                runnable_step.add_picard_option(key='METRICS_FILE', value=file_path_dict_sample['duplicate_metrics'])
-                # Since read names typically contain a dash and an underscore, the READ_NAME_REGEX needs adjusting,
-                # as otherwise optical duplicates could not be detected. This is a consequence of using Illumina2bam
-                # rather than Picard ExtractIlluminaBarcodes, IlluminaBasecallsToFastq and IlluminaBasecallsToSam.
-                # See BioStar post: http://www.biostars.org/p/12538/
-                # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
-                # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
-                runnable_step.add_picard_option(
-                    key='READ_NAME_REGEX',
-                    value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
+                for file_path_tuple in vc_process_sample_replicates:
+                    runnable_step.add_picard_option(key='INPUT', value=file_path_tuple[0], override=True)
+                    runnable_step.obsolete_file_path_list.append(file_path_tuple[0])
+                    runnable_step.obsolete_file_path_list.append(file_path_tuple[1])
+                runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_sample['merged_bam'])
+                runnable_step.add_picard_option(key='USE_THREADING', value='true')
+                runnable_step.add_picard_option(key='COMMENT', value='Merged from the following files:')
+                for file_path_tuple in vc_process_sample_replicates:
+                    runnable_step.add_picard_option(key='COMMENT', value=file_path_tuple[0], override=True)
                 runnable_step.add_picard_option(key='TMP_DIR', value=file_path_dict_sample['temporary_directory'])
                 # VERBOSITY defaults to 'INFO'.
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
@@ -1577,69 +1590,120 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
                 # OPTIONS_FILE
 
-            # Run the GATK RealignerTargetCreator analysis as the first-pass walker
-            # for the GATK IndelRealigner analysis.
+                # Run the Picard MarkDuplicates analysis, unless configured to skip it.
+                # Optical duplicates should already have been flagged in the lane-specific processing step.
 
-            runnable_step = runnable_process_sample.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='gatk_realigner_target_creator',
-                    java_temporary_path=file_path_dict_sample['temporary_directory'],
-                    java_heap_maximum='Xmx6G',
-                    gatk_classpath=self.classpath_gatk))
-            assert isinstance(runnable_step, RunnableStepGATK)
-            runnable_step.add_gatk_option(key='analysis_type', value='RealignerTargetCreator')
-            runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
-            if self.downsample_to_fraction:
-                runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-            for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
-            for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval)
-            if self.interval_padding:
-                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            for file_path in self.known_sites_realignment:
-                runnable_step.add_gatk_option(key='known', value=file_path)
-            runnable_step.add_gatk_option(key='input_file', value=file_path_dict_sample['duplicates_marked_bam'])
-            runnable_step.add_gatk_option(key='out', value=file_path_dict_sample['realigner_targets'])
+                if self.skip_mark_duplicates:
+                    file_path_dict_sample['duplicates_marked_bam'] = file_path_dict_sample['merged_bam']
+                    file_path_dict_sample['duplicates_marked_bai'] = file_path_dict_sample['merged_bai']
+                    file_path_dict_sample['duplicates_marked_md5'] = file_path_dict_sample['merged_md5']
+                else:
+                    runnable_step = runnable_process_sample.add_runnable_step(
+                        runnable_step=RunnableStepPicard(
+                            name='process_sample_picard_mark_duplicates',
+                            obsolete_file_path_list=[
+                                file_path_dict_sample['merged_bam'],
+                                file_path_dict_sample['merged_bai'],
+                                file_path_dict_sample['merged_md5'],
+                            ],
+                            java_temporary_path=file_path_dict_sample['temporary_directory'],
+                            java_heap_maximum='Xmx6G',
+                            picard_classpath=self.classpath_picard,
+                            picard_command='MarkDuplicates'))
+                    assert isinstance(runnable_step, RunnableStepPicard)
+                    runnable_step.add_picard_option(key='INPUT', value=file_path_dict_sample['merged_bam'])
+                    runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_sample['duplicates_marked_bam'])
+                    runnable_step.add_picard_option(
+                        key='METRICS_FILE',
+                        value=file_path_dict_sample['duplicate_metrics'])
+                    # Since read names typically contain a dash and an underscore, the READ_NAME_REGEX needs adjusting,
+                    # as otherwise optical duplicates could not be detected. This is a consequence of using
+                    # Illumina2bam rather than Picard ExtractIlluminaBarcodes, IlluminaBasecallsToFastq and
+                    # IlluminaBasecallsToSam.
+                    # See BioStar post: http://www.biostars.org/p/12538/
+                    # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
+                    # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
+                    runnable_step.add_picard_option(
+                        key='READ_NAME_REGEX',
+                        value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
+                    runnable_step.add_picard_option(key='TMP_DIR', value=file_path_dict_sample['temporary_directory'])
+                    # VERBOSITY defaults to 'INFO'.
+                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
+                    # QUIET defaults to 'false'.
+                    # VALIDATION_STRINGENCY defaults to 'STRICT'.
+                    # COMPRESSION_LEVEL defaults to '5'.
+                    runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+                    # MAX_RECORDS_IN_RAM defaults to '500000'.
+                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='4000000')
+                    # CREATE_INDEX defaults to 'false'.
+                    runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
+                    # CREATE_MD5_FILE defaults to 'false'.
+                    runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+                    # OPTIONS_FILE
 
-            # Run the GATK IndelRealigner analysis as a second-pass walker
-            # after the GATK RealignerTargetCreator analysis.
+                # Run the GATK RealignerTargetCreator analysis as the first-pass walker
+                # for the GATK IndelRealigner analysis.
 
-            runnable_step = runnable_process_sample.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='gatk_indel_realigner',
-                    obsolete_file_path_list=[
-                        file_path_dict_sample['duplicates_marked_bam'],
-                        file_path_dict_sample['duplicates_marked_bai'],
-                        file_path_dict_sample['duplicates_marked_md5']
-                    ],
-                    java_temporary_path=file_path_dict_sample['temporary_directory'],
-                    java_heap_maximum='Xmx6G',
-                    gatk_classpath=self.classpath_gatk))
-            assert isinstance(runnable_step, RunnableStepGATK)
-            runnable_step.add_gatk_option(key='analysis_type', value='IndelRealigner')
-            runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
-            if self.downsample_to_fraction:
-                runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-            for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
-            for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval)
-            if self.interval_padding:
-                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            for file_path in self.known_sites_realignment:
-                runnable_step.add_gatk_option(key='knownAlleles', value=file_path)
-            runnable_step.add_gatk_option(key='input_file', value=file_path_dict_sample['duplicates_marked_bam'])
-            runnable_step.add_gatk_option(key='targetIntervals', value=file_path_dict_sample['realigner_targets'])
-            runnable_step.add_gatk_option(key='out', value=file_path_dict_sample['realigned_bam'])
-            # For debugging only.
-            # runnable_step.add_gatk_option(key='logging_level', value='DEBUG')
+                runnable_step = runnable_process_sample.add_runnable_step(
+                    runnable_step=RunnableStepGATK(
+                        name='process_sample_gatk_realigner_target_creator',
+                        java_temporary_path=file_path_dict_sample['temporary_directory'],
+                        java_heap_maximum='Xmx6G',
+                        gatk_classpath=self.classpath_gatk))
+                assert isinstance(runnable_step, RunnableStepGATK)
+                runnable_step.add_gatk_option(key='analysis_type', value='RealignerTargetCreator')
+                runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
+                if self.downsample_to_fraction:
+                    runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
+                for interval in self.exclude_intervals_list:
+                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                for interval in self.include_intervals_list:
+                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                if self.interval_padding:
+                    runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                for file_path in self.known_sites_realignment:
+                    runnable_step.add_gatk_option(key='known', value=file_path, override=True)
+                runnable_step.add_gatk_option(key='input_file', value=file_path_dict_sample['duplicates_marked_bam'])
+                runnable_step.add_gatk_option(key='out', value=file_path_dict_sample['realigner_targets'])
+
+                # Run the GATK IndelRealigner analysis as a second-pass walker
+                # after the GATK RealignerTargetCreator analysis.
+
+                runnable_step = runnable_process_sample.add_runnable_step(
+                    runnable_step=RunnableStepGATK(
+                        name='process_sample_gatk_indel_realigner',
+                        obsolete_file_path_list=[
+                            file_path_dict_sample['duplicates_marked_bam'],
+                            file_path_dict_sample['duplicates_marked_bai'],
+                            file_path_dict_sample['duplicates_marked_md5']
+                        ],
+                        java_temporary_path=file_path_dict_sample['temporary_directory'],
+                        java_heap_maximum='Xmx6G',
+                        gatk_classpath=self.classpath_gatk))
+                assert isinstance(runnable_step, RunnableStepGATK)
+                runnable_step.add_gatk_option(key='analysis_type', value='IndelRealigner')
+                runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
+                if self.downsample_to_fraction:
+                    runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
+                for interval in self.exclude_intervals_list:
+                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                for interval in self.include_intervals_list:
+                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                if self.interval_padding:
+                    runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                for file_path in self.known_sites_realignment:
+                    runnable_step.add_gatk_option(key='knownAlleles', value=file_path, override=True)
+                runnable_step.add_gatk_option(key='input_file', value=file_path_dict_sample['duplicates_marked_bam'])
+                runnable_step.add_gatk_option(key='targetIntervals', value=file_path_dict_sample['realigner_targets'])
+                runnable_step.add_gatk_option(key='out', value=file_path_dict_sample['realigned_bam'])
+                # For debugging only.
+                # runnable_step.add_gatk_option(key='logging_level', value='DEBUG')
 
             # Run the Picard CollectAlignmentSummaryMetrics analysis.
 
             runnable_step = runnable_process_sample.add_runnable_step(
                 runnable_step=RunnableStepPicard(
-                    name='picard_collect_alignment_summary_metrics',
+                    name='process_sample_picard_collect_alignment_summary_metrics',
                     java_temporary_path=file_path_dict_sample['temporary_directory'],
                     java_heap_maximum='Xmx6G',
                     picard_classpath=self.classpath_picard,
@@ -1647,10 +1711,10 @@ class VariantCallingGATK(Analysis):
             assert isinstance(runnable_step, RunnableStepPicard)
             runnable_step.add_picard_option(key='INPUT', value=file_path_dict_sample['realigned_bam'])
             runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_sample['alignment_summary_metrics'])
-            runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='ALL_READS')
-            runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='SAMPLE')
-            runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='LIBRARY')
-            runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP')
+            runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='ALL_READS', override=True)
+            runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='SAMPLE', override=True)
+            runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='LIBRARY', override=True)
+            runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP', override=True)
             runnable_step.add_picard_option(key='REFERENCE_SEQUENCE', value=self.bwa_genome_db)
             runnable_step.add_picard_option(key='TMP_DIR', value=file_path_dict_sample['temporary_directory'])
             # VERBOSITY defaults to 'INFO'.
@@ -1667,7 +1731,7 @@ class VariantCallingGATK(Analysis):
 
             runnable_step = runnable_process_sample.add_runnable_step(
                 runnable_step=RunnableStepGATK(
-                    name='gatk_haplotype_caller',
+                    name='process_sample_gatk_haplotype_caller',
                     java_temporary_path=file_path_dict_sample['temporary_directory'],
                     java_heap_maximum='Xmx8G',
                     gatk_classpath=self.classpath_gatk))
@@ -1677,12 +1741,12 @@ class VariantCallingGATK(Analysis):
             if self.downsample_to_fraction:
                 runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
             for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
             for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval)
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # TODO: The number of threads should be configurable.
+            # The number of threads should be configurable, but multi-threading seems to cause the occasional problem.
             # runnable_step.add_gatk_option(key='num_cpu_threads_per_data_thread', value='1')
             runnable_step.add_gatk_option(key='pair_hmm_implementation', value='VECTOR_LOGLESS_CACHING')
             runnable_step.add_gatk_option(key='genotyping_mode', value='DISCOVERY')
@@ -1697,19 +1761,29 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='variant_index_type', value='LINEAR')
             runnable_step.add_gatk_option(key='variant_index_parameter', value='128000')
 
-            # Create an Executable for processing the sample.
+            # Finally, record GVCF files and dependencies for the merge cohort stage.
+            # Check if the Sample has annotation for a 'Cohort Name', if not use the cohort name defined for this
+            # Analysis in the configuration file.
 
-            executable_process_sample = drms_process_sample.add_executable(
-                executable=Executable.from_analysis_runnable(
-                    analysis=self,
-                    runnable_name=runnable_process_sample.name))
+            if 'Cohort Name' in sample.annotation:
+                cohort_key = sample.annotation['Cohort Name'][0]
+            else:
+                cohort_key = self.cohort_name
 
-            executable_process_sample.dependencies.extend(vc_process_sample_dependencies)
+            # Record the Executable.name in the cohort dictionary.
 
-            # Record dependencies for the next stage.
-            vc_process_cohort_dependencies.append(executable_process_sample.name)
-            # Add the result of the variant_calling_process_sample Runnable.
-            vc_process_cohort_replicates.append(file_path_dict_sample['raw_variants_gvcf_vcf'])
+            if cohort_key not in vc_merge_cohort_dependency_dict:
+                vc_merge_cohort_dependency_dict[cohort_key] = list()
+            sample_list = vc_merge_cohort_dependency_dict[cohort_key]
+            sample_list.append(executable_process_sample.name)
+
+            # Record the sample-specific GVCF file in the cohort dictionary.
+
+            if cohort_key not in vc_merge_cohort_sample_dict:
+                vc_merge_cohort_sample_dict[cohort_key] = list()
+            sample_list = vc_merge_cohort_sample_dict[cohort_key]
+            assert isinstance(sample_list, list)
+            sample_list.append(file_path_dict_sample['raw_variants_gvcf_vcf'])
 
             # Diagnose the sample
 
@@ -1719,8 +1793,8 @@ class VariantCallingGATK(Analysis):
                 temporary_directory=prefix_diagnosis + '_temporary',
                 realigned_bam=file_path_dict_sample['realigned_bam'],
                 realigned_bai=file_path_dict_sample['realigned_bai'],
-                diagnose_targets_vcf=prefix_diagnosis + '_diagnose_targets.vcf',
-                diagnose_targets_idx=prefix_diagnosis + '_diagnose_targets.vcf.idx',
+                diagnose_targets_vcf=prefix_diagnosis + '_diagnose_targets.vcf.gz',
+                diagnose_targets_idx=prefix_diagnosis + '_diagnose_targets.vcf.gz.tbi',
                 missing_intervals=prefix_diagnosis + '_missing.intervals',
                 missing_report=prefix_diagnosis + '_missing.gatkreport',
                 callable_bed=prefix_diagnosis + '_callable_loci.bed',
@@ -1735,15 +1809,17 @@ class VariantCallingGATK(Analysis):
             if 'Target Name' in sample.annotation:
                 target_name_list = sample.annotation['Target Name']
                 if len(target_name_list) > 1:
-                    warnings.warn('More than one set of Target Name annotations is currently not supported.\n{!r}'.
-                                  format(target_name_list))
+                    warnings.warn('More than one set of Target Name annotations is currently not supported.\n'
+                                  'Choosing the first one of {!r} for sample {!r}'.
+                                  format(target_name_list, sample.name))
                 target_interval_name = target_name_list[0]
 
             if 'Target Intervals' in sample.annotation:
                 target_interval_list = sample.annotation['Target Intervals']
                 if len(target_interval_list) > 1:
-                    warnings.warn('More than one set of Target Interval annotations is currently not supported.\n{!r}'.
-                                  format(target_interval_list))
+                    warnings.warn('More than one set of Target Interval annotations is currently not supported.\n'
+                                  'Choosing the first one of {!r} for sample {!r}'.
+                                  format(target_interval_list, sample.name))
                 target_interval_path = target_interval_list[0]
                 if target_interval_path and not os.path.isabs(target_interval_path):
                     target_interval_path = Default.get_absolute_path(
@@ -1753,8 +1829,9 @@ class VariantCallingGATK(Analysis):
             if 'Probe Intervals' in sample.annotation:
                 probe_interval_list = sample.annotation['Probe Intervals']
                 if len(probe_interval_list) > 1:
-                    warnings.warn('More than one set of Probe Interval annotations is currently not supported.\n{!r}'.
-                                  format(probe_interval_list))
+                    warnings.warn('More than one set of Probe Interval annotations is currently not supported.\n'
+                                  'Choosing the first one of {!r} for sample {!r}'.
+                                  format(probe_interval_list, sample.name))
                 probe_interval_path = probe_interval_list[0]
                 if probe_interval_path and not os.path.isabs(probe_interval_path):
                     probe_interval_path = Default.get_absolute_path(
@@ -1762,7 +1839,7 @@ class VariantCallingGATK(Analysis):
                         default_path=Default.absolute_intervals())
 
             if target_interval_path:
-                # Create a sample diagnosis-specific Runnable
+                # Create a Runnable and Executable for diagnosing each sample.
 
                 runnable_diagnose_sample = self.add_runnable(
                     runnable=Runnable(
@@ -1771,21 +1848,17 @@ class VariantCallingGATK(Analysis):
                         working_directory=self.genome_directory,
                         file_path_dict=file_path_dict_diagnosis,
                         debug=self.debug))
-
-                # Create an Executable for diagnosing the sample.
-
                 executable_diagnose_sample = drms_diagnose_sample.add_executable(
                     executable=Executable.from_analysis_runnable(
                         analysis=self,
                         runnable_name=runnable_diagnose_sample.name))
-
                 executable_diagnose_sample.dependencies.extend(vc_process_sample_dependencies)
 
                 # Run the GATK DiagnoseTarget analysis per sample.
 
                 runnable_step = runnable_diagnose_sample.add_runnable_step(
                     runnable_step=RunnableStepGATK(
-                        name='gatk_diagnose_target',
+                        name='diagnose_sample_gatk_diagnose_target',
                         java_temporary_path=file_path_dict_diagnosis['temporary_directory'],
                         java_heap_maximum='Xmx8G',
                         gatk_classpath=self.classpath_gatk))
@@ -1794,10 +1867,10 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
-                for interval in self.include_intervals_list:
-                    runnable_step.add_gatk_option(key='intervals', value=interval)
+                # for interval in self.exclude_intervals_list:
+                #     runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                # for interval in self.include_intervals_list:
+                #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
                 runnable_step.add_gatk_option(key='intervals', value=target_interval_path)
                 # if self.interval_padding:
                 #     sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
@@ -1811,7 +1884,7 @@ class VariantCallingGATK(Analysis):
 
                 runnable_step = runnable_diagnose_sample.add_runnable_step(
                     runnable_step=RunnableStepGATK(
-                        name='gatk_qualify_missing_intervals',
+                        name='diagnose_sample_gatk_qualify_missing_intervals',
                         java_temporary_path=file_path_dict_diagnosis['temporary_directory'],
                         java_heap_maximum='Xmx8G',
                         gatk_classpath=self.classpath_gatk))
@@ -1820,22 +1893,23 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
-                for interval in self.include_intervals_list:
-                    runnable_step.add_gatk_option(key='intervals', value=interval)
+                # for interval in self.exclude_intervals_list:
+                #     runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                # for interval in self.include_intervals_list:
+                #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
                 runnable_step.add_gatk_option(key='intervals', value=file_path_dict_diagnosis['missing_intervals'])
                 # if self.interval_padding:
                 #     sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
                 runnable_step.add_gatk_option(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
                 runnable_step.add_gatk_option(key='targetsfile', value=target_interval_path)
+                # TODO: Add baitsfile option if available?
                 runnable_step.add_gatk_option(key='out', value=file_path_dict_diagnosis['missing_report'])
 
                 # Run the GATK CallableLoci analysis per sample.
 
                 runnable_step = runnable_diagnose_sample.add_runnable_step(
                     runnable_step=RunnableStepGATK(
-                        name='gatk_callable_loci',
+                        name='diagnose_sample_gatk_callable_loci',
                         java_temporary_path=file_path_dict_diagnosis['temporary_directory'],
                         java_heap_maximum='Xmx8G',
                         gatk_classpath=self.classpath_gatk))
@@ -1844,10 +1918,10 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
-                for interval in self.include_intervals_list:
-                    runnable_step.add_gatk_option(key='intervals', value=interval)
+                # for interval in self.exclude_intervals_list:
+                #     runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                # for interval in self.include_intervals_list:
+                #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
                 runnable_step.add_gatk_option(key='intervals', value=target_interval_path)
                 # if self.interval_padding:
                 #     sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
@@ -1857,10 +1931,10 @@ class VariantCallingGATK(Analysis):
 
                 # Run the Picard CalculateHsMetrics analysis per sample.
 
-                runnable_step = runnable_process_sample.add_runnable_step(
+                runnable_step = runnable_diagnose_sample.add_runnable_step(
                     runnable_step=RunnableStepPicard(
-                        name='picard_calculate_hybrid_selection_metrics',
-                        java_temporary_path=file_path_dict_sample['temporary_directory'],
+                        name='diagnose_sample_picard_calculate_hybrid_selection_metrics',
+                        java_temporary_path=file_path_dict_diagnosis['temporary_directory'],
                         java_heap_maximum='Xmx6G',
                         picard_classpath=self.classpath_picard,
                         picard_command='CalculateHsMetrics'))
@@ -1876,10 +1950,10 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_picard_option(
                     key='OUTPUT',
                     value=file_path_dict_diagnosis['hybrid_selection_metrics'])
-                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='ALL_READS')
-                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='SAMPLE')
-                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='LIBRARY')
-                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP')
+                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='ALL_READS', override=True)
+                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='SAMPLE', override=True)
+                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='LIBRARY', override=True)
+                runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP', override=True)
                 runnable_step.add_picard_option(key='REFERENCE_SEQUENCE', value=self.bwa_genome_db)
                 # PER_TARGET_COVERAGE
                 # TMP_DIR
@@ -1894,7 +1968,124 @@ class VariantCallingGATK(Analysis):
                 # CREATE_MD5_FILE defaults to 'false'.
                 # OPTIONS_FILE
 
-        # Step 3: Process per cohort.
+        # Step 3: Hierarchically merge cohorts.
+        #
+        # GATK CombineGVCFs for each cohort and each sample
+        # GATK CombineGVCFs for each cohort
+        #
+        # The cohorts to merge in need to be configurable and it would be essential,
+        # How should sample names be checked before the merge to avoid clashes?
+        # Should sample annotation sheets be read or can the combined GVCF file be read in
+        # to extract the actual sample names?
+
+        vc_merge_cohort_file_path_list = list()
+        vc_merge_cohort_dependency_list = list()
+        vc_merge_cohort_prefix_list = list()
+
+        # Run the GATK CombineGVCFs analysis for each cohort and Sample defined in this project to build up
+        # cohort-specific GVCF files.
+
+        for cohort_key, sample_gvcf_list in vc_merge_cohort_sample_dict.iteritems():
+            prefix_merge = '_'.join((drms_merge_cohort.name, cohort_key))
+
+            vc_merge_cohort_prefix_list.append(prefix_merge)
+
+            file_path_dict_merge = dict(
+                temporary_directory=prefix_merge + '_temporary',
+                combined_gvcf_vcf=prefix_merge + '_combined.g.vcf.gz',
+                combined_gvcf_tbi=prefix_merge + '_combined.g.vcf.gz.tbi',
+            )
+
+            # Create a Runnable and Executable for merging each sub-cohort from its Sample objects.
+
+            runnable_merge_cohort = self.add_runnable(
+                runnable=Runnable(
+                    name=prefix_merge,
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.genome_directory,
+                    file_path_dict=file_path_dict_merge,
+                    debug=self.debug))
+            executable_merge_cohort = drms_merge_cohort.add_executable(
+                executable=Executable.from_analysis_runnable(
+                    analysis=self,
+                    runnable_name=runnable_merge_cohort.name))
+            executable_merge_cohort.dependencies.extend(vc_merge_cohort_dependency_dict[cohort_key])
+
+            runnable_step = runnable_merge_cohort.add_runnable_step(
+                runnable_step=RunnableStepGATK(
+                    name='merge_cohort_gatk_combine_gvcfs',
+                    java_temporary_path=file_path_dict_merge['temporary_directory'],
+                    java_heap_maximum='Xmx4G',
+                    gatk_classpath=self.classpath_gatk))
+            assert isinstance(runnable_step, RunnableStepGATK)
+            runnable_step.add_gatk_option(key='analysis_type', value='CombineGVCFs')
+            runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
+            for interval in self.exclude_intervals_list:
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+            for interval in self.include_intervals_list:
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+            if self.interval_padding:
+                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+            for file_path in sample_gvcf_list:
+                runnable_step.add_gatk_option(key='variant', value=file_path, override=True)
+            runnable_step.add_gatk_option(key='out', value=file_path_dict_merge['combined_gvcf_vcf'])
+
+            # Finally record dependencies for the process cohort stage.
+            vc_merge_cohort_file_path_list.append(file_path_dict_merge['combined_gvcf_vcf'])
+            vc_merge_cohort_dependency_list.append(executable_merge_cohort.name)
+
+        # Run the GATK CombineGVCFs analysis once more to merge all cohort-specific GVCF files defined in this project.
+
+        if len(vc_merge_cohort_sample_dict) > 1:
+            prefix_merge = '_'.join((drms_merge_cohort.name, self.cohort_name))
+
+            vc_merge_cohort_prefix_list.append(prefix_merge)
+
+            file_path_dict_merge = dict(
+                temporary_directory=prefix_merge + '_temporary',
+                combined_gvcf_vcf=prefix_merge + '_combined.g.vcf.gz',
+                combined_gvcf_tbi=prefix_merge + '_combined.g.vcf.gz.tbi',
+            )
+
+            # Create a Runnable and Executable for merging the final cohort from its sub-cohorts.
+
+            runnable_merge_cohort = self.add_runnable(
+                runnable=Runnable(
+                    name=prefix_merge,
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.genome_directory,
+                    file_path_dict=file_path_dict_merge,
+                    debug=self.debug))
+            executable_merge_cohort = drms_merge_cohort.add_executable(
+                executable=Executable.from_analysis_runnable(
+                    analysis=self,
+                    runnable_name=runnable_merge_cohort.name))
+            executable_merge_cohort.dependencies.extend(vc_merge_cohort_dependency_list)
+
+            runnable_step = runnable_merge_cohort.add_runnable_step(
+                runnable_step=RunnableStepGATK(
+                    name='merge_cohort_gatk_combine_gvcfs',
+                    java_temporary_path=file_path_dict_merge['temporary_directory'],
+                    java_heap_maximum='Xmx4G',
+                    gatk_classpath=self.classpath_gatk))
+            assert isinstance(runnable_step, RunnableStepGATK)
+            runnable_step.add_gatk_option(key='analysis_type', value='CombineGVCFs')
+            runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
+            for interval in self.exclude_intervals_list:
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+            for interval in self.include_intervals_list:
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+            if self.interval_padding:
+                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+            for file_path in vc_merge_cohort_file_path_list:
+                runnable_step.add_gatk_option(key='variant', value=file_path, override=True)
+            runnable_step.add_gatk_option(key='out', value=file_path_dict_merge['combined_gvcf_vcf'])
+
+            vc_merge_cohort_final_dependency = executable_merge_cohort.name
+        else:
+            vc_merge_cohort_final_dependency = vc_merge_cohort_dependency_list[0]
+
+        # Step 4: Process per cohort.
         #
         #   GATK CombineGVCFs
         #   GATK GenotypeGVCFs
@@ -1908,24 +2099,24 @@ class VariantCallingGATK(Analysis):
         file_path_dict_cohort = dict(
             temporary_directory=prefix_cohort + '_temporary',
             # Combined GVCF file for the cohort defined in this project.
-            combined_gvcf_vcf=prefix_cohort + '_combined.g.vcf.gz',
-            combined_gvcf_idx=prefix_cohort + '_combined.g.vcf.tbi',
+            combined_gvcf_vcf=vc_merge_cohort_prefix_list[-1] + '_combined.g.vcf.gz',
+            combined_gvcf_idx=vc_merge_cohort_prefix_list[-1] + '_combined.g.vcf.gz.tbi',
             # Temporary GVCF file with other cohorts merged in to facilitate recalibration.
             temporary_gvcf_vcf=prefix_cohort + '_temporary.g.vcf.gz',
-            temporary_gvcf_idx=prefix_cohort + '_temporary.g.vcf.tbi',
-            genotyped_raw_vcf=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf',
-            genotyped_raw_idx=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.idx',
-            recalibrated_snp_raw_indel_vcf=prefix_cohort + '_recalibrated_snp_raw_indel.vcf',
-            recalibrated_snp_raw_indel_idx=prefix_cohort + '_recalibrated_snp_raw_indel.vcf.idx',
-            recalibrated_snp_recalibrated_indel_vcf=prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf',
-            recalibrated_snp_recalibrated_indel_idx=prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.idx',
-            multi_sample_vcf=prefix_cohort + '_multi_sample.vcf',
-            multi_sample_idx=prefix_cohort + '_multi_sample.vcf.idx',
+            temporary_gvcf_idx=prefix_cohort + '_temporary.g.vcf.gz.tbi',
+            genotyped_raw_vcf=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.gz',
+            genotyped_raw_idx=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.gz.tbi',
+            recalibrated_snp_raw_indel_vcf=prefix_cohort + '_recalibrated_snp_raw_indel.vcf.gz',
+            recalibrated_snp_raw_indel_idx=prefix_cohort + '_recalibrated_snp_raw_indel.vcf.gz.tbi',
+            recalibrated_snp_recalibrated_indel_vcf=prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.gz',
+            recalibrated_snp_recalibrated_indel_idx=prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.gz.tbi',
+            multi_sample_vcf=prefix_cohort + '_multi_sample.vcf.gz',
+            multi_sample_idx=prefix_cohort + '_multi_sample.vcf.gz.tbi',
             snpeff_vcf=prefix_cohort + '_snpeff.vcf',
             snpeff_idx=prefix_cohort + '_snpeff.vcf.idx',
             snpeff_stats=prefix_cohort + '_snpeff_summary.html',
             annotated_vcf=prefix_cohort + '_annotated.vcf.gz',
-            annotated_idx=prefix_cohort + '_annotated.vcf.tbi',
+            annotated_idx=prefix_cohort + '_annotated.vcf.gz.tbi',
             recalibration_indel=prefix_cohort + '_recalibration_indel.recal',
             recalibration_snp=prefix_cohort + '_recalibration_snp.recal',
             tranches_indel=prefix_cohort + '_recalibration_indel.tranches',
@@ -1933,7 +2124,7 @@ class VariantCallingGATK(Analysis):
             plots_indel=prefix_cohort + '_recalibration_indel.R',
             plots_snp=prefix_cohort + '_recalibration_snp.R')
 
-        # Cohort-specific Runnable
+        # Create a Runnable and Executable for processing the cohort.
 
         runnable_process_cohort = self.add_runnable(
             runnable=Runnable(
@@ -1942,51 +2133,18 @@ class VariantCallingGATK(Analysis):
                 working_directory=self.genome_directory,
                 file_path_dict=file_path_dict_cohort,
                 debug=self.debug))
-
-        # Hierarchical merging of samples before GenotypeGVCFs processing.
-        #
-        # First, merge all samples from this analysis project into a project-specific cohort.
-        # Ideally, an VariantCallingGATK-specific sub-class of the SampleAnnotationSheet extends it with
-        # another column 'cohort', so that samples of the same project could be merged into one or multiple cohorts.
-        #
-        # Second, allow merging with other cohorts to facilitate recalibration of project with too few samples.
-        # This would generate a temporary cohort file on which all recalibration steps are run on.
-        #
-        # Third, it would be good to run another GATK SelectVariants step to select all samples from this cohort,
-        # so that a clean multi-sample VCF file can be delivered.
-        #
-        # The cohorts to merge in need to be configurable and it would be essential,
-        # to check for sample name clashes beforehand. How should this be done?
-        # Should sample annotation sheets be read or can the combined GVCF file be read in
-        # to extract the actual sample names?
-
-        # Run the GATK CombineGVCFs analysis for the cohort defined in this project.
-
-        runnable_step = runnable_process_cohort.add_runnable_step(
-            runnable_step=RunnableStepGATK(
-                name='gatk_combine_gvcfs',
-                java_temporary_path=file_path_dict_cohort['temporary_directory'],
-                java_heap_maximum='Xmx4G',
-                gatk_classpath=self.classpath_gatk))
-        assert isinstance(runnable_step, RunnableStepGATK)
-        runnable_step.add_gatk_option(key='analysis_type', value='CombineGVCFs')
-        runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
-        for interval in self.exclude_intervals_list:
-            runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
-        for interval in self.include_intervals_list:
-            runnable_step.add_gatk_option(key='intervals', value=interval)
-        if self.interval_padding:
-            runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-        for file_path in vc_process_cohort_replicates:
-            runnable_step.add_gatk_option(key='variant', value=file_path)
-        runnable_step.add_gatk_option(key='out', value=file_path_dict_cohort['combined_gvcf_vcf'])
+        executable_process_cohort = drms_process_cohort.add_executable(
+            executable=Executable.from_analysis_runnable(
+                analysis=self,
+                runnable_name=runnable_process_cohort.name))
+        executable_process_cohort.dependencies.append(vc_merge_cohort_final_dependency)
 
         # Run an additional GATK CombineGVCFs analysis to merge into a super-cohort.
 
         if len(self.accessory_cohort_gvcfs):
             runnable_step = runnable_process_cohort.add_runnable_step(
                 runnable_step=RunnableStepGATK(
-                    name='gatk_combine_gvcfs_accessory',
+                    name='process_cohort_gatk_combine_gvcfs_accessory',
                     java_temporary_path=file_path_dict_cohort['temporary_directory'],
                     java_heap_maximum='Xmx4G',
                     gatk_classpath=self.classpath_gatk))
@@ -1994,21 +2152,24 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='analysis_type', value='CombineGVCFs')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
             for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
             for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval)
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
             for file_path in self.accessory_cohort_gvcfs:
-                runnable_step.add_gatk_option(key='variant', value=file_path)
-            runnable_step.add_gatk_option(key='variant', value=file_path_dict_cohort['combined_gvcf_vcf'])
+                runnable_step.add_gatk_option(key='variant', value=file_path, override=True)
+            runnable_step.add_gatk_option(
+                key='variant',
+                value=file_path_dict_cohort['combined_gvcf_vcf'],
+                override=True)
             runnable_step.add_gatk_option(key='out', value=file_path_dict_cohort['temporary_gvcf_vcf'])
 
         # Run the GATK GenotypeGVCFs analysis.
 
         runnable_step = runnable_process_cohort.add_runnable_step(
             runnable_step=RunnableStepGATK(
-                name='gatk_genotype_gvcfs',
+                name='process_cohort_gatk_genotype_gvcfs',
                 java_temporary_path=file_path_dict_cohort['temporary_directory'],
                 java_heap_maximum='Xmx6G',
                 gatk_classpath=self.classpath_gatk))
@@ -2016,9 +2177,9 @@ class VariantCallingGATK(Analysis):
         runnable_step.add_gatk_option(key='analysis_type', value='GenotypeGVCFs')
         runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
         for interval in self.exclude_intervals_list:
-            runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+            runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
         for interval in self.include_intervals_list:
-            runnable_step.add_gatk_option(key='intervals', value=interval)
+            runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
         if self.interval_padding:
             runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
         if self.known_sites_discovery:
@@ -2040,7 +2201,7 @@ class VariantCallingGATK(Analysis):
 
             runnable_step = runnable_process_cohort.add_runnable_step(
                 runnable_step=RunnableStepGATK(
-                    name='gatk_variant_recalibrator_snp',
+                    name='process_cohort_gatk_variant_recalibrator_snp',
                     java_temporary_path=file_path_dict_cohort['temporary_directory'],
                     java_heap_maximum='Xmx8G',
                     gatk_classpath=self.classpath_gatk))
@@ -2048,9 +2209,9 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='analysis_type', value='VariantRecalibrator')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
             for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
             for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval)
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
             runnable_step.add_gatk_option(key='mode', value='SNP')
@@ -2065,17 +2226,21 @@ class VariantCallingGATK(Analysis):
                     key=resource_option,
                     value=self.vqsr_resources_snp_dict[resource]['file_path'])
             for annotation in self.vqsr_annotations_snp_list:
-                runnable_step.add_gatk_option(key='use_annotation', value=annotation)
+                runnable_step.add_gatk_option(key='use_annotation', value=annotation, override=True)
+            if self.vqsr_max_gaussians_pos_snp is not None:
+                runnable_step.add_gatk_option(key='maxGaussians', value=str(self.vqsr_max_gaussians_pos_snp))
             runnable_step.add_gatk_option(key='input', value=file_path_dict_cohort['genotyped_raw_vcf'])
             runnable_step.add_gatk_option(key='recal_file', value=file_path_dict_cohort['recalibration_snp'])
             runnable_step.add_gatk_option(key='tranches_file', value=file_path_dict_cohort['tranches_snp'])
             runnable_step.add_gatk_option(key='rscript_file', value=file_path_dict_cohort['plots_snp'])
+            if self.vqsr_bad_lod_cutoff_snp is not None:
+                runnable_step.add_gatk_option(key='badLodCutoff', value=str(self.vqsr_bad_lod_cutoff_snp))
 
             # Run the GATK ApplyRecalibration analysis on SNPs.
 
             runnable_step = runnable_process_cohort.add_runnable_step(
                 runnable_step=RunnableStepGATK(
-                    name='gatk_apply_recalibration_snp',
+                    name='process_cohort_gatk_apply_recalibration_snp',
                     java_temporary_path=file_path_dict_cohort['temporary_directory'],
                     java_heap_maximum='Xmx4G',
                     gatk_classpath=self.classpath_gatk))
@@ -2083,9 +2248,9 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='analysis_type', value='ApplyRecalibration')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
             for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
             for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval)
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
             runnable_step.add_gatk_option(key='mode', value='SNP')
@@ -2110,7 +2275,7 @@ class VariantCallingGATK(Analysis):
 
             runnable_step = runnable_process_cohort.add_runnable_step(
                 runnable_step=RunnableStepGATK(
-                    name='gatk_variant_recalibrator_indel',
+                    name='process_cohort_gatk_variant_recalibrator_indel',
                     java_temporary_path=file_path_dict_cohort['temporary_directory'],
                     java_heap_maximum='Xmx8G',
                     gatk_classpath=self.classpath_gatk))
@@ -2118,9 +2283,9 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='analysis_type', value='VariantRecalibrator')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
             for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
             for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval)
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
             runnable_step.add_gatk_option(key='mode', value='INDEL')
@@ -2135,19 +2300,21 @@ class VariantCallingGATK(Analysis):
                     key=resource_option,
                     value=self.vqsr_resources_indel_dict[resource]['file_path'])
             for annotation in self.vqsr_annotations_indel_list:
-                runnable_step.add_gatk_option(key='use_annotation', value=annotation)
-            # TODO: Would be good to have maxGaussians configurable.
-            runnable_step.add_gatk_option(key='maxGaussians', value='4')
+                runnable_step.add_gatk_option(key='use_annotation', value=annotation, override=True)
+            if self.vqsr_max_gaussians_pos_indel is not None:
+                runnable_step.add_gatk_option(key='maxGaussians', value=str(self.vqsr_max_gaussians_pos_indel))
             runnable_step.add_gatk_option(key='input', value=file_path_dict_cohort['recalibrated_snp_raw_indel_vcf'])
             runnable_step.add_gatk_option(key='recal_file', value=file_path_dict_cohort['recalibration_indel'])
             runnable_step.add_gatk_option(key='tranches_file', value=file_path_dict_cohort['tranches_indel'])
             runnable_step.add_gatk_option(key='rscript_file', value=file_path_dict_cohort['plots_indel'])
+            if self.vqsr_bad_lod_cutoff_indel is not None:
+                runnable_step.add_gatk_option(key='badLodCutoff', value=str(self.vqsr_bad_lod_cutoff_indel))
 
             # Run the GATK ApplyRecalibration analysis on INDELs.
 
             runnable_step = runnable_process_cohort.add_runnable_step(
                 runnable_step=RunnableStepGATK(
-                    name='gatk_apply_recalibration_indel',
+                    name='process_cohort_gatk_apply_recalibration_indel',
                     java_temporary_path=file_path_dict_cohort['temporary_directory'],
                     java_heap_maximum='Xmx4G',
                     gatk_classpath=self.classpath_gatk))
@@ -2155,9 +2322,9 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='analysis_type', value='ApplyRecalibration')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
             for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
             for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval)
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
             runnable_step.add_gatk_option(key='mode', value='INDEL')
@@ -2177,7 +2344,7 @@ class VariantCallingGATK(Analysis):
         if len(self.accessory_cohort_gvcfs):
             runnable_step = runnable_process_cohort.add_runnable_step(
                 runnable_step=RunnableStepGATK(
-                    name='gatk_select_variants_cohort',
+                    name='process_cohort_gatk_select_variants_cohort',
                     java_temporary_path=file_path_dict_cohort['temporary_directory'],
                     java_heap_maximum='Xmx4G',
                     gatk_classpath=self.classpath_gatk))
@@ -2185,9 +2352,9 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='analysis_type', value='SelectVariants')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
             for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
             for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval)
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
 
@@ -2196,7 +2363,7 @@ class VariantCallingGATK(Analysis):
                 value=file_path_dict_cohort['recalibrated_snp_recalibrated_indel_vcf'])
             runnable_step.add_gatk_option(key='out', value=file_path_dict_cohort['multi_sample_vcf'])
             for sample in self.samples:
-                runnable_step.add_gatk_option(key='sample_name', value=sample.name)
+                runnable_step.add_gatk_option(key='sample_name', value=sample.name, override=True)
             runnable_step.add_gatk_switch(key='excludeNonVariants')
         else:
             file_path_dict_cohort['multi_sample_vcf'] = \
@@ -2208,7 +2375,7 @@ class VariantCallingGATK(Analysis):
 
         java_process = runnable_process_cohort.add_runnable_step(
             runnable_step=RunnableStep(
-                name='snpeff',
+                name='process_cohort_snpeff',
                 program='java',
                 sub_command=Command(program='eff')))
 
@@ -2237,7 +2404,7 @@ class VariantCallingGATK(Analysis):
 
         runnable_step = runnable_process_cohort.add_runnable_step(
             runnable_step=RunnableStepGATK(
-                name='gatk_variant_annotator',
+                name='process_cohort_gatk_variant_annotator',
                 java_temporary_path=file_path_dict_cohort['temporary_directory'],
                 java_heap_maximum='Xmx4G',
                 gatk_classpath=self.classpath_gatk))
@@ -2245,9 +2412,9 @@ class VariantCallingGATK(Analysis):
         runnable_step.add_gatk_option(key='analysis_type', value='VariantAnnotator')
         runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
         for interval in self.exclude_intervals_list:
-            runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+            runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
         for interval in self.include_intervals_list:
-            runnable_step.add_gatk_option(key='intervals', value=interval)
+            runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
         if self.interval_padding:
             runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
         if self.known_sites_discovery:
@@ -2265,7 +2432,8 @@ class VariantCallingGATK(Analysis):
                     assert isinstance(annotation, str)
                     runnable_step.add_gatk_option(
                         key='expression',
-                        value='.'.join((annotation_resource, annotation)))
+                        value='.'.join((annotation_resource, annotation)),
+                        override=True)
 
         runnable_step.add_gatk_option(key='variant', value=file_path_dict_cohort['multi_sample_vcf'])
         # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
@@ -2273,15 +2441,6 @@ class VariantCallingGATK(Analysis):
         runnable_step.add_gatk_option(key='annotation', value='SnpEff')
         runnable_step.add_gatk_option(key='snpEffFile', value=file_path_dict_cohort['snpeff_vcf'])
         runnable_step.add_gatk_option(key='out', value=file_path_dict_cohort['annotated_vcf'])
-
-        # Create an Executable for processing the cohort.
-
-        executable_process_cohort = drms_process_cohort.add_executable(
-            executable=Executable.from_analysis_runnable(
-                analysis=self,
-                runnable_name=runnable_process_cohort.name))
-
-        executable_process_cohort.dependencies.extend(vc_process_cohort_dependencies)
 
         # Re-process and split the cohort by sample.
 
@@ -2291,8 +2450,8 @@ class VariantCallingGATK(Analysis):
 
             file_path_dict_split = dict(
                 temporary_directory=prefix_split + '_temporary',
-                sample_vcf=prefix_split + '.vcf',
-                sample_idx=prefix_split + '.vcf.idx',
+                sample_vcf=prefix_split + '.vcf.gz',
+                sample_idx=prefix_split + '.vcf.gz.tbi',
                 sample_tsv=prefix_split + '.tsv')
 
             runnable_split_cohort = self.add_runnable(
@@ -2307,7 +2466,7 @@ class VariantCallingGATK(Analysis):
 
             runnable_step = runnable_split_cohort.add_runnable_step(
                 runnable_step=RunnableStepGATK(
-                    name='gatk_select_variants',
+                    name='split_cohort_gatk_select_variants',
                     java_temporary_path=file_path_dict_split['temporary_directory'],
                     java_heap_maximum='Xmx2G',
                     gatk_classpath=self.classpath_gatk))
@@ -2315,9 +2474,9 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='analysis_type', value='SelectVariants')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
             for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
             for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval)
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
 
@@ -2330,7 +2489,7 @@ class VariantCallingGATK(Analysis):
 
             runnable_step = runnable_split_cohort.add_runnable_step(
                 runnable_step=RunnableStepGATK(
-                    name='gatk_variants_to_table',
+                    name='split_cohort_gatk_variants_to_table',
                     java_temporary_path=file_path_dict_split['temporary_directory'],
                     java_heap_maximum='Xmx2G',
                     gatk_classpath=self.classpath_gatk))
@@ -2338,9 +2497,9 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
             for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval)
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
             for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval)
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
             runnable_step.add_gatk_option(key='variant', value=file_path_dict_split['sample_vcf'])
@@ -2348,32 +2507,32 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_switch(key='allowMissingData')
             runnable_step.add_gatk_switch(key='showFiltered')
             # Set of standard VCF fields.
-            runnable_step.add_gatk_option(key='fields', value='CHROM')
-            runnable_step.add_gatk_option(key='fields', value='POS')
-            runnable_step.add_gatk_option(key='fields', value='ID')
-            runnable_step.add_gatk_option(key='fields', value='REF')
-            runnable_step.add_gatk_option(key='fields', value='ALT')
-            runnable_step.add_gatk_option(key='fields', value='QUAL')
-            runnable_step.add_gatk_option(key='fields', value='FILTER')
+            runnable_step.add_gatk_option(key='fields', value='CHROM', override=True)
+            runnable_step.add_gatk_option(key='fields', value='POS', override=True)
+            runnable_step.add_gatk_option(key='fields', value='ID', override=True)
+            runnable_step.add_gatk_option(key='fields', value='REF', override=True)
+            runnable_step.add_gatk_option(key='fields', value='ALT', override=True)
+            runnable_step.add_gatk_option(key='fields', value='QUAL', override=True)
+            runnable_step.add_gatk_option(key='fields', value='FILTER', override=True)
             #
-            runnable_step.add_gatk_option(key='fields', value='VQSLOD')
-            runnable_step.add_gatk_option(key='fields', value='AF')
+            runnable_step.add_gatk_option(key='fields', value='VQSLOD', override=True)
+            runnable_step.add_gatk_option(key='fields', value='AF', override=True)
             # GATK Haplotype Caller genotype fields: GT:AD:DP:GQ:PL
-            runnable_step.add_gatk_option(key='genotypeFields', value='GT')
-            runnable_step.add_gatk_option(key='genotypeFields', value='AD')
-            runnable_step.add_gatk_option(key='genotypeFields', value='DP')
-            runnable_step.add_gatk_option(key='genotypeFields', value='GQ')
-            runnable_step.add_gatk_option(key='genotypeFields', value='PL')
+            runnable_step.add_gatk_option(key='genotypeFields', value='GT', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='AD', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='DP', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='GQ', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='PL', override=True)
             # Set of snpEff fields.
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_EFFECT')
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_IMPACT')
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_FUNCTIONAL_CLASS')
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_CODON_CHANGE')
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_AMINO_ACID_CHANGE')
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_GENE_NAME')
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_GENE_BIOTYPE')
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_TRANSCRIPT_ID')
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_EXON_ID')
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_EFFECT', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_IMPACT', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_FUNCTIONAL_CLASS', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_CODON_CHANGE', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_AMINO_ACID_CHANGE', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_GENE_NAME', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_GENE_BIOTYPE', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_TRANSCRIPT_ID', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_EXON_ID', override=True)
 
             # Automatically add all fields defined for the Variant Annotator resources, above.
             for annotation_resource in self.annotation_resources_dict.keys():
@@ -2382,7 +2541,10 @@ class VariantCallingGATK(Analysis):
                         and len(self.annotation_resources_dict[annotation_resource][1]):
                     for annotation in self.annotation_resources_dict[annotation_resource][1]:
                         assert isinstance(annotation, str)
-                        runnable_step.add_gatk_option(key='fields', value='.'.join((annotation_resource, annotation)))
+                        runnable_step.add_gatk_option(
+                            key='fields',
+                            value='.'.join((annotation_resource, annotation)),
+                            override=True)
 
             # Create an Executable for splitting the cohort.
 
@@ -2426,7 +2588,7 @@ class VariantCallingGATK(Analysis):
 
         options_dict = dict()
         options_dict['db'] = self.genome_version
-        options_dict['hubUrl'] = '{}/{}/rnaseq_hub.txt'. \
+        options_dict['hubUrl'] = '{}/{}/variant_calling_hub.txt'. \
             format(Default.url_absolute_projects(), link_name)
 
         output += '<p>\n'
@@ -2459,9 +2621,15 @@ class VariantCallingGATK(Analysis):
         track_output += 'track Alignments\n'
         track_output += 'shortLabel Alignments\n'
         track_output += 'longLabel BWA NGS read alignments\n'
-        track_output += 'visibility show\n'
-        track_output += 'superTrack on\n'
+        track_output += 'superTrack on show\n'
         track_output += 'group alignments\n'
+        track_output += '\n'
+
+        track_output += 'track Variants\n'
+        track_output += 'shortLabel Variants\n'
+        track_output += 'longLabel Variant calls\n'
+        track_output += 'superTrack on show\n'
+        track_output += 'group variants\n'
         track_output += '\n'
 
         for sample in self.samples:
@@ -2477,6 +2645,9 @@ class VariantCallingGATK(Analysis):
                 '_'.join((self.drms_name_split_cohort, sample.name))]
             assert isinstance(runnable_split_cohort, Runnable)
 
+            # Alignment track
+            # Common settings
+
             track_output += 'track {}_alignments\n'. \
                 format(sample.name)
             track_output += 'type bam\n'
@@ -2486,8 +2657,8 @@ class VariantCallingGATK(Analysis):
                 format(sample.name)
             track_output += 'bigDataUrl ./{}\n'. \
                 format(runnable_process_sample.file_path_dict['realigned_bam'])
-            track_output += 'visibility squish\n'
             # track_output += 'html {}\n'.format()
+            track_output += 'visibility squish\n'
 
             # Common optional settings.
 
@@ -2501,6 +2672,25 @@ class VariantCallingGATK(Analysis):
             # Composite track settings.
 
             track_output += 'parent Alignments\n'
+            track_output += '\n'
+
+            # Variant track
+
+            track_output += 'track {}_variants\n'.format(sample.name)
+            track_output += 'type vcfTabix\n'
+            track_output += 'shortLabel {}_variants\n'.format(sample.name)
+            track_output += 'longLabel {} variant calls\n'.format(sample.name)
+            track_output += 'bigDataUrl ./{}\n'.format(runnable_split_cohort.file_path_dict['sample_vcf'])
+            # track_output += 'html {}\n'.format()
+            track_output += 'visibility dense\n'
+
+            # vcfTabix specific settings
+
+            # None so far.
+
+            # Composite track settings.
+
+            track_output += 'parent Variants\n'
             track_output += '\n'
 
             output += '<tr>\n'
@@ -2596,6 +2786,101 @@ class VariantCallingGATK(Analysis):
         output += '</table>\n'
         output += '\n'
 
+        output += '<h2>QC Plots</h2>\n'
+        output += '\n'
+        output += '<table>\n'
+        output += '<tr><th>Sample</th><th>Aliquot</th><th>Metrics</th></tr>\n'
+
+        # Alignment Summary - Percent Aligned
+        if os.path.exists(os.path.join(
+                self.genome_directory, 'variant_calling_summary_alignment_percentage_sample.png')):
+            output += '<tr>\n'
+            output += '<td>'
+            output += '<a href="variant_calling_summary_alignment_percentage_sample.pdf">'
+            output += '<img alt="Alignment Summary - Percent Aligned per Sample" ' \
+                      'src="variant_calling_summary_alignment_percentage_sample.png" ' \
+                      'height="100" width="100" />'
+            output += '</a>'
+            output += '</td>\n'
+            output += '<td>'
+            output += '<a href="variant_calling_summary_alignment_percentage_read_group.pdf">'
+            output += '<img alt="Alignment Summary - Percent Aligned per Aliquot" ' \
+                      'src="variant_calling_summary_alignment_percentage_read_group.png" ' \
+                      'height="100" width="100" />'
+            output += '</a>'
+            output += '</td>\n'
+            output += '<td>Alignment Summary - Percent Aligned</td>\n'
+            output += '</tr>\n'
+            output += '\n'
+
+        # Alignment Summary - Reads Aligned
+        if os.path.exists(os.path.join(
+                self.genome_directory, 'variant_calling_summary_alignment_reads_sample.png')):
+            output += '<tr>\n'
+            output += '<td>'
+            output += '<a href="variant_calling_summary_alignment_reads_sample.pdf">'
+            output += '<img alt="Alignment Summary - Reads Aligned per Sample" ' \
+                      'src="variant_calling_summary_alignment_reads_sample.png" ' \
+                      'height="100" width="100" />'
+            output += '</a>'
+            output += '</td>\n'
+            output += '<td>'
+            output += '<a href="variant_calling_summary_alignment_reads_read_group.pdf">'
+            output += '<img alt="Alignment Summary - Reads Aligned per Aliquot" ' \
+                      'src="variant_calling_summary_alignment_reads_read_group.png" ' \
+                      'height="100" width="100" />'
+            output += '</a>'
+            output += '</td>\n'
+            output += '<td>Alignment Summary - Reads Aligned</td>\n'
+            output += '</tr>\n'
+            output += '\n'
+
+        # Hybrid Selection - Mean Target Coverage
+        if os.path.exists(os.path.join(
+                self.genome_directory, 'variant_calling_summary_hybrid_target_coverage_sample.png')):
+            output += '<tr>\n'
+            output += '<td>'
+            output += '<a href="variant_calling_summary_hybrid_target_coverage_sample.pdf">'
+            output += '<img alt="Hybrid Selection - Mean Target Coverage per Sample" ' \
+                      'src="variant_calling_summary_hybrid_target_coverage_sample.png" ' \
+                      'height="100" width="100" />'
+            output += '</a>'
+            output += '</td>\n'
+            output += '<td>'
+            output += '<a href="variant_calling_summary_hybrid_target_coverage_read_group.pdf">'
+            output += '<img alt="Hybrid Selection - Mean Target Coverage per Aliquot" ' \
+                      'src="variant_calling_summary_hybrid_target_coverage_read_group.png" ' \
+                      'height="100" width="100" />'
+            output += '</a>'
+            output += '</td>\n'
+            output += '<td>Hybrid Selection - Mean Target Coverage</td>\n'
+            output += '</tr>\n'
+            output += '\n'
+
+        # Hybrid Selection - Percent Unique Reads
+        if os.path.exists(os.path.join(
+                self.genome_directory, 'variant_calling_summary_hybrid_unique_percentage_sample.png')):
+            output += '<tr>\n'
+            output += '<td>'
+            output += '<a href="variant_calling_summary_hybrid_unique_percentage_sample.pdf">'
+            output += '<img alt="Hybrid Selection - Percent Unique Reads per Sample" ' \
+                      'src="variant_calling_summary_hybrid_unique_percentage_sample.png" ' \
+                      'height="100" width="100" />'
+            output += '</a>'
+            output += '</td>\n'
+            output += '<td>'
+            output += '<a href="variant_calling_summary_hybrid_unique_percentage_read_group.pdf">'
+            output += '<img alt="Hybrid Selection - Percent Unique Reads per Aliquot" ' \
+                      'src="variant_calling_summary_hybrid_unique_percentage_read_group.png" ' \
+                      'height="100" width="100" />'
+            output += '</a>'
+            output += '</td>\n'
+            output += '<td>Hybrid Selection - Percent Unique Reads</td>\n'
+            output += '</tr>\n'
+            output += '\n'
+
+        output += '</table>\n'
+        output += '\n'
         output += '</body>\n'
         output += defaults.web.html_footer()
 
