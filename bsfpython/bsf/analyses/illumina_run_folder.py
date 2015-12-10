@@ -581,8 +581,8 @@ class IlluminaRunFolderArchive(Analysis):
                 archive_intensities.add_switch_long(key='create')
                 archive_intensities.add_option_long(key='directory', value=os.path.dirname(self.run_directory))
                 archive_intensities.add_option_long(key='file', value=archive_file_path)
-                archive_intensities.add_option_long(key='exclude', value='*.clocs')
-                archive_intensities.add_option_long(key='exclude', value='*.locs')
+                archive_intensities.add_option_long(key='exclude', value='*.clocs', override=True)
+                archive_intensities.add_option_long(key='exclude', value='*.locs', override=True)
                 if self.compress_archive_files:
                     archive_intensities.add_switch_long(key='gzip')
 
@@ -658,7 +658,7 @@ class IlluminaRunFolderArchive(Analysis):
         archive_folder.add_option_long(key='directory', value=os.path.dirname(self.run_directory))
         archive_folder.add_option_long(key='file', value=archive_file_path)
         for pattern in exclude_intensities_patterns:
-            archive_folder.add_option_long(key='exclude', value=pattern)
+            archive_folder.add_option_long(key='exclude', value=pattern, override=True)
         if self.compress_archive_files:
             archive_folder.add_switch_long(key='gzip')
 
@@ -1103,7 +1103,7 @@ class IlluminaRunFolderRestore(Analysis):
             extract_lane.add_option_long(key='file', value=file_path_dict['L{:03d}'.format(lane)])
 
             if not self.extract_intensities:
-                extract_lane.add_option_long(key='exclude', value='C*.1')
+                extract_lane.add_option_long(key='exclude', value='C*.1', override=True)
 
             # Create one process per lane to compress the base call (*.bcl) files.
 
