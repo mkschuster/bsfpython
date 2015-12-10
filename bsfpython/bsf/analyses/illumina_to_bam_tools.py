@@ -100,11 +100,21 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
 
         super(RunnableStepIlluminaToBam, self).__init__(
             name=name,
-            program=program, options=options, arguments=arguments, sub_command=sub_command,
-            stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold,
-            submit=submit, process_identifier=process_identifier, process_name=process_name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
             obsolete_file_path_list=obsolete_file_path_list,
-            java_temporary_path=java_temporary_path, java_heap_maximum=java_heap_maximum, java_jar_path=java_jar_path)
+            java_temporary_path=java_temporary_path,
+            java_heap_maximum=java_heap_maximum,
+            java_jar_path=java_jar_path)
 
         # Set the IlluminaToBam classpath and the IlluminaToBam Java archive.
         if 'jar' not in self.sub_command.options:

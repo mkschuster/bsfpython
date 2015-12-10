@@ -371,6 +371,8 @@ class AnnotationSheet(object):
         @rtype:
         """
 
+        super(AnnotationSheet, self).__init__()
+        
         if file_path is None:
             self.file_path = str()
         else:

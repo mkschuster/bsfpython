@@ -51,6 +51,8 @@ class ReadGroupContainer(object):
         @type fastq_2_path: str | unicode
         """
 
+        super(ReadGroupContainer, self).__init__()
+
         if rg_string:
             self.rg_string = rg_string
         else:

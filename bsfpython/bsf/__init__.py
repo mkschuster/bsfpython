@@ -168,6 +168,8 @@ class Analysis(object):
         @rtype:
         """
 
+        super(Analysis, self).__init__()
+
         if configuration is None:
             self.configuration = Configuration()
         else:
@@ -832,6 +834,8 @@ class Configuration(object):
         @rtype:
         """
 
+        super(Configuration, self).__init__()
+
         if config_path is None:
             self.config_path = str()
         else:
@@ -1103,6 +1107,8 @@ class Default(object):
         @return:
         @rtype:
         """
+
+        super(Default, self).__init__()
 
         # Set Java class path information.
 
@@ -1693,6 +1699,8 @@ class DRMS(object):
         @rtype:
         """
 
+        super(DRMS, self).__init__()
+
         if name is None:
             self.name = str()
         else:
@@ -1982,6 +1990,8 @@ class Command(object):
         @return:
         @rtype:
         """
+
+        super(Command, self).__init__()
 
         self.program = program  # Can be None.
 
@@ -2643,8 +2653,11 @@ class Executable(Command):
         @rtype:
         """
 
-        super(Executable, self).__init__(program=program, options=options, arguments=arguments,
-                                         sub_command=sub_command)
+        super(Executable, self).__init__(
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command)
 
         self.name = name  # Can be None.
 
@@ -3573,6 +3586,8 @@ class Runnable(object):
         @return:
         @rtype:
         """
+
+        super(Runnable, self).__init__()
 
         self.name = name  # Can be None.
         self.code_module = code_module  # Can be None.

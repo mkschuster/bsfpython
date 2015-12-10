@@ -123,6 +123,8 @@ class Reads(object):
         @rtype:
         """
 
+        super(Reads, self).__init__()
+
         if file_path is None:
             self.file_path = str()
         else:
@@ -311,6 +313,8 @@ class PairedReads(object):
 
         if (reads1 and reads2) and (not reads1.match_paired(reads=reads2)):
             raise Exception('The Reads objects do not match.')
+
+        super(PairedReads, self).__init__()
 
         self.reads1 = None
         self.reads2 = None
@@ -638,6 +642,8 @@ class Sample(object):
         @rtype:
         """
 
+        super(Sample, self).__init__()
+
         if file_path is None:
             self.file_path = str()
         else:
@@ -957,6 +963,8 @@ class Project(object):
         @rtype:
         """
 
+        super(Project, self).__init__()
+
         if file_path is None:
             self.file_path = str()
         else:
@@ -1240,6 +1248,8 @@ class ProcessedRunFolder(object):
         @rtype:
         @raise Exception: If C{Project.name} values are not unique for file_type I{CASAVA}
         """
+
+        super(ProcessedRunFolder, self).__init__()
 
         if file_path is None:
             self.file_path = str()
@@ -1595,6 +1605,8 @@ class Collection(object):
         @return:
         @rtype:
         """
+
+        super(Collection, self).__init__()
 
         if file_path is None:
             self.file_path = str()
@@ -2367,6 +2379,8 @@ class SampleGroup(object):
         @return:
         @rtype:
         """
+
+        super(SampleGroup, self).__init__()
 
         if name is None:
             self.name = str()

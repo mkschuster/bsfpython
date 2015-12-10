@@ -219,11 +219,18 @@ class Tuxedo(Analysis):
 
         super(Tuxedo, self).__init__(
             configuration=configuration,
-            project_name=project_name, genome_version=genome_version,
-            input_directory=input_directory, output_directory=output_directory,
-            project_directory=project_directory, genome_directory=genome_directory,
-            e_mail=e_mail, debug=debug, drms_list=drms_list,
-            collection=collection, comparisons=comparisons, samples=samples)
+            project_name=project_name,
+            genome_version=genome_version,
+            input_directory=input_directory,
+            output_directory=output_directory,
+            project_directory=project_directory,
+            genome_directory=genome_directory,
+            e_mail=e_mail,
+            debug=debug,
+            drms_list=drms_list,
+            collection=collection,
+            comparisons=comparisons,
+            samples=samples)
 
         # Sub-class specific ...
 

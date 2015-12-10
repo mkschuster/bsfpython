@@ -91,6 +91,8 @@ class Argument(object):
         if not key:
             raise Exception('The key argument has to be defined.')
 
+        super(Argument, self).__init__()
+
         self.key = key
 
     def trace(self, level):
@@ -127,9 +129,9 @@ class Switch(Argument):
         @type is_long: bool
         """
 
-        super(Switch, self).__init__(key=key)
-
         assert isinstance(is_long, bool)
+
+        super(Switch, self).__init__(key=key)
 
         self.is_long = is_long
 

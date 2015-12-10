@@ -92,11 +92,21 @@ class RunnableStepGATK(RunnableStepJava):
 
         super(RunnableStepGATK, self).__init__(
             name=name,
-            program=program, options=options, arguments=arguments, sub_command=sub_command,
-            stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold,
-            submit=submit, process_identifier=process_identifier, process_name=process_name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
             obsolete_file_path_list=obsolete_file_path_list,
-            java_temporary_path=java_temporary_path, java_heap_maximum=java_heap_maximum, java_jar_path=java_jar_path)
+            java_temporary_path=java_temporary_path,
+            java_heap_maximum=java_heap_maximum,
+            java_jar_path=java_jar_path)
 
         # Set the GATK classpath and the GATK Java archive.
         if 'jar' not in self.sub_command.options:
@@ -325,11 +335,18 @@ class VariantCallingGATK(Analysis):
 
         super(VariantCallingGATK, self).__init__(
             configuration=configuration,
-            project_name=project_name, genome_version=genome_version,
-            input_directory=input_directory, output_directory=output_directory,
-            project_directory=project_directory, genome_directory=genome_directory,
-            e_mail=e_mail, debug=debug, drms_list=drms_list,
-            collection=collection, comparisons=comparisons, samples=samples)
+            project_name=project_name,
+            genome_version=genome_version,
+            input_directory=input_directory,
+            output_directory=output_directory,
+            project_directory=project_directory,
+            genome_directory=genome_directory,
+            e_mail=e_mail,
+            debug=debug,
+            drms_list=drms_list,
+            collection=collection,
+            comparisons=comparisons,
+            samples=samples)
 
         # Sub-class specific ...
 

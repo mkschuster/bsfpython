@@ -45,6 +45,8 @@ class DatabaseConnection(object):
         @type file_path: str | unicode
         """
 
+        super(DatabaseConnection, self).__init__()
+
         self.file_path = file_path
 
         self.connection = sqlite3.connect(database=self.file_path)
@@ -98,6 +100,8 @@ class DatabaseAdaptor(object):
         @param connection: SQLite connection
         @type connection: sqlite3.Connection
         """
+
+        super(DatabaseAdaptor, self).__init__()
 
         self.database_connection = database_connection
 
@@ -379,6 +383,7 @@ class JobSubmission(object):
         @param command: Command line
         @type command: str
         """
+        super(JobSubmission, self).__init__()
         self.executable_id = executable_id
         self.name = name
         self.command = command
@@ -634,6 +639,7 @@ class ProcessSLURM(object):
         @param average_disk_write: Average number of bytes written by all tasks in job
         @type average_disk_write: str
         """
+        super(ProcessSLURM, self).__init__()
         self.process_slurm_id = process_slurm_id
         self.job_id = job_id
         self.job_name = job_name
@@ -1016,6 +1022,7 @@ class ProcessSGE(object):
         @param arid: Advance reservation identifier
         @type arid: str
         """
+        super(ProcessSGE, self).__init__()
         self.process_sge_id = process_sge_id
         self.qname = qname
         self.hostname = hostname

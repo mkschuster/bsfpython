@@ -63,6 +63,8 @@ class RunInformationFlowcellLayout(object):
         @rtype:
         """
 
+        super(RunInformationFlowcellLayout, self).__init__()
+
         self.lane_count = lane_count
         self.surface_count = surface_count
         self.swath_count = swath_count
@@ -94,6 +96,8 @@ class RunInformationRead(object):
         @return:
         @rtype:
         """
+
+        super(RunInformationRead, self).__init__()
 
         self.number = number
         self.cycles = cycles
@@ -317,6 +321,8 @@ class RunInformation(object):
         @rtype:
         """
 
+        super(RunInformation, self).__init__()
+
         if file_path:
             self.file_path = file_path
         else:
@@ -495,6 +501,8 @@ class RunParameters(object):
         @return:
         @rtype:
         """
+
+        super(RunParameters, self).__init__()
 
         if file_path:
             self.file_path = file_path
@@ -865,6 +873,8 @@ class XMLConfiguration(object):
         @rtype:
         """
 
+        super(XMLConfiguration, self).__init__()
+
         if file_path:
             self.file_path = file_path
         else:
@@ -1057,6 +1067,8 @@ class RunFolder(object):
         @return:
         @rtype:
         """
+
+        super(RunFolder, self).__init__()
 
         if file_path:
             self.file_path = file_path

@@ -112,6 +112,8 @@ class VULGAR(object):
         @type triplet_list: list[tuple]
         """
 
+        super(VULGAR, self).__init__()
+
         self.q_name = q_name
         self.q_start = q_start
         self.q_end = q_end
