@@ -2267,13 +2267,13 @@ class Command(object):
         # The configuration section is available.
 
         for option in configuration.config_parser.options(section=section):
-            argument = Argument.from_key_value(
-                key=option,
-                value=configuration.config_parser.get(
-                    section=section,
-                    option=option))
-
-            self.add_argument(argument=argument, override=False)
+            self.add_argument(
+                argument=Argument.from_key_value(
+                    key=option,
+                    value=configuration.config_parser.get(
+                        section=section,
+                        option=option)),
+                override=False)
 
         return
 
@@ -2582,7 +2582,11 @@ class Executable(Command):
         runnable = analysis.runnable_dict[runnable_name]
         assert isinstance(runnable, Runnable)
         executable = cls(name=runnable.name, program=Runnable.runner_script)
-        executable.set_configuration(configuration=analysis.configuration, section=runnable.code_module)
+        # TODO: Read configuration files for RunnableStep objects rather than Runnable objects.
+        # Since bsf.Runnable.code_module objects such as 'bsf.runnables.generic' can be very generic,
+        # it makes no sense to read standard configuration options from a Configuration object.
+        # It would be better to read standard configuration options for RunnableStep objects.
+        # executable.set_configuration(configuration=analysis.configuration, section=runnable.code_module)
         executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
 
         # Only submit the Executable if the status file does not exist already.
