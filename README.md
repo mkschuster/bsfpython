@@ -92,7 +92,7 @@ the merged assemblies on the basis of the BAM alignments produced by Tophat2.
 
 ## Licence
 
-Copyright 2013 - 2015 Michael K. Schuster
+Copyright 2013 - 2016 Michael K. Schuster
 
 [Biomedical Sequencing Facility](http://www.biomedical-sequencing.at/) (BSF),
 part of the joint
@@ -100,6 +100,7 @@ part of the joint
 [Medical University of Vienna](http://www.meduniwien.ac.at/) (MUW) and the
 [Research Center for Molecular Medicine](http://www.cemm.oeaw.ac.at/) (CeMM) of the
 [Austrian Academy of Sciences](http://www.oeaw.ac.at/) (OeAW).
+
 
 This file is part of BSF Python.
 

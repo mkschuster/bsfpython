@@ -3,8 +3,8 @@
 # BSF Python script to list multiplexing indices (barcodes).
 #
 #
-# Copyright 2012-2013 Andreas Schoenegger
-# Copyright 2013 Michael K. Schuster
+# Copyright 2012 - 2013 Andreas Schoenegger
+# Copyright 2013 - 2016 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the

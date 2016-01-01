@@ -4,7 +4,7 @@ A package of classes and methods modelling Comma-Separated Value (CSV) and Tab-S
 """
 
 #
-# Copyright 2013 - 2014 Michael K. Schuster
+# Copyright 2013 - 2016 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -372,7 +372,7 @@ class AnnotationSheet(object):
         """
 
         super(AnnotationSheet, self).__init__()
-        
+
         if file_path is None:
             self.file_path = str()
         else:

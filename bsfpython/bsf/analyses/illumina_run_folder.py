@@ -4,7 +4,7 @@ A package of classes and methods supporting analyses to archive and restore Illu
 """
 
 #
-# Copyright 2013 - 2015 Michael K. Schuster
+# Copyright 2013 - 2016 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the

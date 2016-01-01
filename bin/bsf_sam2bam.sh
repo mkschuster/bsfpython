@@ -5,9 +5,12 @@
 # The samtools application has to be in the PATH.
 #
 #
-# Copyright 2013 Michael Schuster
-# CeMM - Research Center for Molecular Medicine of the
-# Austrian Academy of Sciences
+# Copyright 2013 - 2016 Michael K. Schuster
+#
+# Biomedical Sequencing Facility (BSF), part of the genomics core facility
+# of the Research Center for Molecular Medicine (CeMM) of the
+# Austrian Academy of Sciences and the Medical University of Vienna (MUW).
+#
 #
 # This file is part of BSF Python.
 #
