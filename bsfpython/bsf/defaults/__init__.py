@@ -27,4 +27,4 @@ A package that centralises (configuration) information.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from bsf.defaults import sequence, web
+from bsf.defaults import web
