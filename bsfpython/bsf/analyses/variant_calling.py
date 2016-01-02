@@ -31,7 +31,8 @@ from pickle import Pickler, HIGHEST_PROTOCOL
 import warnings
 
 from bsf import Analysis, Command, Configuration, Default, defaults, DRMS, Executable, Runnable, RunnableStep, \
-    RunnableStepMove, RunnableStepJava, RunnableStepPicard
+    RunnableStepLink, RunnableStepMove, RunnableStepJava, RunnableStepPicard
+from bsf.annotation import SampleAnnotationSheet
 from bsf.data import PairedReads
 from bsf.executables import BWA
 
@@ -161,6 +162,8 @@ class VariantCallingGATK(Analysis):
     @type drms_name_process_cohort: str
     @cvar drms_name_split_cohort: C{DRMS.name} for the cohort splitting C{Analysis} stage
     @type drms_name_split_cohort: str
+    @cvar drms_name_somatic: C{DRMS.name} for the somatic C{Analysis} stage
+    @type drms_name_somatic: str
     @ivar replicate_grouping: Group individual C{PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool
     @ivar comparison_path: Comparison file
@@ -230,6 +233,7 @@ class VariantCallingGATK(Analysis):
     drms_name_merge_cohort = 'variant_calling_merge_cohort'
     drms_name_process_cohort = 'variant_calling_process_cohort'
     drms_name_split_cohort = 'variant_calling_split_cohort'
+    drms_name_somatic = 'variant_calling_somatic'
 
     def __init__(self, configuration=None,
                  project_name=None, genome_version=None,
@@ -240,6 +244,7 @@ class VariantCallingGATK(Analysis):
                  replicate_grouping=False, bwa_genome_db=None, comparison_path=None,
                  cohort_name=None, accessory_cohort_gvcfs=None, skip_mark_duplicates=False,
                  known_sites_discovery=None, known_sites_realignment=None, known_sites_recalibration=None,
+                 known_somatic_discovery=None,
                  annotation_resources_dict=None,
                  truth_sensitivity_filter_level_indel=None,
                  truth_sensitivity_filter_level_snp=None,
@@ -304,6 +309,8 @@ class VariantCallingGATK(Analysis):
         @param known_sites_recalibration: Python C{list} of Python C{str} or C{unicode} (VCF file paths)
             for recalibration
         @type known_sites_recalibration: list[str | unicode]
+        @param known_somatic_discovery: Cosmic VCF file path for somatic variant discovery via MuTect2
+        @type known_somatic_discovery: list[str | unicode]
         @param annotation_resources_dict: Python C{dict} of Python C{str} (annotation resource name) key and
             Python C{tuple} of
             Python C{str} (file path) and Python C{list} of Python C{str} (annotation) value data
@@ -417,6 +424,11 @@ class VariantCallingGATK(Analysis):
             self.known_sites_recalibration = list()
         else:
             self.known_sites_recalibration = known_sites_recalibration
+
+        if known_somatic_discovery is None:
+            self.known_somatic_discovery = list()
+        else:
+            self.known_somatic_discovery = known_somatic_discovery
 
         if annotation_resources_dict is None:
             self.annotation_resources_dict = dict()
@@ -556,10 +568,7 @@ class VariantCallingGATK(Analysis):
 
         # Read a comparison file.
 
-        # if configuration.config_parser.has_option(section=section, option='comparison_path'):
-        #     self.comparison_path = configuration.config_parser.get(section=section, option='comparison_path')
-        # Use the sample annotation sheet instead of a separate comparison file.
-        option = 'sas_file'
+        option = 'cmp_file'
         if configuration.config_parser.has_option(section=section, option=option):
             self.comparison_path = configuration.config_parser.get(section=section, option=option)
 
@@ -710,6 +719,14 @@ class VariantCallingGATK(Analysis):
             for file_path in configuration.config_parser.get(section=section, option=option).split(','):
                 self.known_sites_recalibration.append(file_path.strip())  # Strip white space around commas.
 
+        # Comma-separated list of VCF files with known somatic variant sites for the
+        # GATK MuTect2 steps.
+
+        option = 'known_somatic_discovery'
+        if configuration.config_parser.has_option(section=section, option=option):
+            for file_path in configuration.config_parser.get(section=section, option=option).split(','):
+                self.known_somatic_discovery.append(file_path.strip())  # Strip white space around commas.
+
         # Get the list of intervals to exclude.
 
         option = 'exclude_intervals'
@@ -794,16 +811,43 @@ class VariantCallingGATK(Analysis):
         @rtype:
         """
 
-        # Method Collection.get_sample_from_row_dict dies not work with normalised SampleAnnotationSheet objects.
-        # sas = SampleAnnotationSheet.from_file_path(file_path=comparison_path)
-        #
-        # for row_dict in sas.row_dicts:
-        #     self.add_sample(sample=self.collection.get_sample_from_row_dict(row_dict=row_dict))
+        assert isinstance(comparison_path, (str, unicode, None))
 
-        assert isinstance(comparison_path, (str, unicode))  # Not really used.
-
+        # For variant calling, all samples need adding to the Analysis object regardless.
         for sample in self.collection.get_all_samples():
             self.add_sample(sample=sample)
+
+        if comparison_path:
+            sas = SampleAnnotationSheet.from_file_path(file_path=comparison_path, name='Somatic Comparisons')
+
+            for row_dict in sas.row_dicts:
+                key = str()
+                comparison_groups = list()
+
+                if self.debug > 0:
+                    print "Comparison sheet row_dict {!r}".format(row_dict)
+
+                for prefix in 'Normal', 'Tumor':
+                    # TODO: Collection.get_samples_from_row_dict() may not work with normalised
+                    # Sample Annotation Sheets.
+                    group_name, group_samples = self.collection.get_samples_from_row_dict(
+                        row_dict=row_dict, prefix=prefix)
+                    if group_name and len(group_samples):
+                        key += group_name
+                        key += '__'
+                        # key = '__'.join((key, group_name))
+                        comparison_groups.append((group_name, group_samples))
+                        # Also expand each Python list of Sample objects to get all those Sample objects
+                        # that this Analysis needs considering.
+                        for sample in group_samples:
+                            if self.debug > 1:
+                                print '  {} Sample name: {!r} file_path:{!r}'.\
+                                    format(prefix, sample.name, sample.file_path)
+                                # print sample.trace(1)
+                            # self.add_sample(sample=sample)
+
+                # Remove the last '__' from the key.
+                self.comparisons[key[:-2]] = comparison_groups
 
         return
 
@@ -1012,7 +1056,7 @@ class VariantCallingGATK(Analysis):
                 file_path=self.comparison_path,
                 default_path=self.project_directory)
 
-        # Real comparisons would be required for somatic mutation calling.
+        # Read comparisons for somatic mutation calling.
         self._read_comparisons(comparison_path=self.comparison_path)
 
         # Experimentally, sort the Python list of Sample objects by the Sample name.
@@ -1083,6 +1127,15 @@ class VariantCallingGATK(Analysis):
                 name=self.drms_name_split_cohort,
                 working_directory=self.genome_directory,
                 analysis=self))
+
+        # Initialise a Distributed Resource Management System (DRMS) object for the
+        # variant_calling_somatic Runnable.
+
+        drms_somatic = self.add_drms(
+                drms=DRMS.from_analysis(
+                    name=self.drms_name_somatic,
+                    working_directory=self.genome_directory,
+                    analysis=self))
 
         vc_merge_cohort_dependency_dict = dict()
         vc_merge_cohort_sample_dict = dict()
@@ -1497,7 +1550,9 @@ class VariantCallingGATK(Analysis):
                 # Add the result of the variant_calling_process_lane Runnable.
                 vc_process_sample_replicates.append((
                     file_path_dict_lane['recalibrated_bam'],
-                    file_path_dict_lane['recalibrated_bai']))
+                    file_path_dict_lane['recalibrated_bai'],
+                    file_path_dict_lane['alignment_summary_metrics'],
+                    file_path_dict_lane['duplicate_metrics']))
 
             # Step 2: Process per sample.
             #
@@ -1543,7 +1598,6 @@ class VariantCallingGATK(Analysis):
 
             if len(vc_process_sample_replicates) == 1:
                 # If there is only one replicate, just rename the BAM and BAI files.
-
                 runnable_process_sample.add_runnable_step(
                     runnable_step=RunnableStepMove(
                         name='process_sample_move_recalibrated_bam',
@@ -1555,6 +1609,20 @@ class VariantCallingGATK(Analysis):
                         name='process_sample_move_recalibrated_bai',
                         source_path=vc_process_sample_replicates[0][1],
                         target_path=file_path_dict_sample['realigned_bai']))
+
+                # Link the Picard Alignment Summary Metrics.
+                runnable_process_sample.add_runnable_step(
+                    runnable_step=RunnableStepLink(
+                        name='process_sample_link_alignment_metrics',
+                        source_path=vc_process_sample_replicates[0][2],
+                        target_path=file_path_dict_sample['alignment_summary_metrics']))
+
+                # Link the Picard Duplicate Metrics.
+                runnable_process_sample.add_runnable_step(
+                    runnable_step=RunnableStepLink(
+                        name='process_sample_link_duplicate_metrics',
+                        source_path=vc_process_sample_replicates[0][3],
+                        target_path=file_path_dict_sample['duplicate_metrics']))
             else:
                 # Run the Picard MergeSamFiles analysis.
 
@@ -2461,6 +2529,11 @@ class VariantCallingGATK(Analysis):
                     working_directory=self.genome_directory,
                     file_path_dict=file_path_dict_split,
                     debug=self.debug))
+            executable_split_cohort = drms_split_cohort.add_executable(
+                executable=Executable.from_analysis_runnable(
+                    analysis=self,
+                    runnable_name=runnable_split_cohort.name))
+            executable_split_cohort.dependencies.append(executable_process_cohort.name)
 
             # Run the GATK SelectVariants analysis to split multi-sample VCF files into one per sample.
 
@@ -2546,14 +2619,221 @@ class VariantCallingGATK(Analysis):
                             value='.'.join((annotation_resource, annotation)),
                             override=True)
 
-            # Create an Executable for splitting the cohort.
+        # Somatic variant calling.
 
-            executable_split_cohort = drms_split_cohort.add_executable(
+        key_list = self.comparisons.keys()
+        key_list.sort(cmp=lambda x, y: cmp(x, y))
+
+        if self.debug > 0:
+            print "Somatic variant calling: {!r}".format(key_list)
+
+        for key in key_list:
+
+            # The list of samples must contain exactly one normal and one tumor sample.
+            if len(self.comparisons[key]) != 2:
+                continue
+
+            prefix_somatic = '_'.join((drms_somatic.name, key))
+
+            # Somatic variant calling-specific file paths
+
+            file_path_dict_somatic = dict(
+                temporary_directory=prefix_somatic + '_temporary',
+                somatic_vcf=prefix_somatic + '_somatic.vcf.gz',
+                somatic_idx=prefix_somatic + '_somatic.vcf.gz.tbi',
+                snpeff_vcf=prefix_somatic + '_snpeff.vcf',
+                snpeff_idx=prefix_somatic + '_snpeff.vcf.idx',
+                snpeff_stats=prefix_somatic + '_snpeff_summary.html',
+                snpeff_genes=prefix_somatic + '_snpeff_summary.genes.txt',
+                annotated_vcf=prefix_somatic + '_annotated.vcf.gz',
+                annotated_idx=prefix_somatic + '_annotated.vcf.gz.tbi',
+                annotated_tsv=prefix_somatic + '_annotated.tsv')
+
+            runnable_somatic = self.add_runnable(
+                runnable=Runnable(
+                    name=prefix_somatic,
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.genome_directory,
+                    file_path_dict=file_path_dict_somatic,
+                    debug=self.debug))
+            executable_somatic = drms_somatic.add_executable(
                 executable=Executable.from_analysis_runnable(
                     analysis=self,
-                    runnable_name=runnable_split_cohort.name))
+                    runnable_name=runnable_somatic.name))
+            executable_somatic.dependencies.append(
+                    'variant_calling_process_sample_' + self.comparisons[key][0][1][0].name)
+            executable_somatic.dependencies.append(
+                    'variant_calling_process_sample_' + self.comparisons[key][-1][1][0].name)
 
-            executable_split_cohort.dependencies.append(executable_process_cohort.name)
+            # Run the GATK MuTect2 analysis to characterise somatic variants.
+
+            runnable_step = runnable_somatic.add_runnable_step(
+                runnable_step=RunnableStepGATK(
+                    name='somatic_gatk_mutect2',
+                    java_temporary_path=file_path_dict_somatic['temporary_directory'],
+                    java_heap_maximum='Xmx4G',
+                    gatk_classpath=self.classpath_gatk))
+            assert isinstance(runnable_step, RunnableStepGATK)
+            runnable_step.add_gatk_option(key='analysis_type', value='MuTect2')
+            runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
+            for interval in self.exclude_intervals_list:
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+            for interval in self.include_intervals_list:
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+            if self.interval_padding:
+                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+            if self.known_sites_discovery:
+                runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
+            for file_path in self.known_somatic_discovery:
+                runnable_step.add_gatk_option(key='cosmic', value=file_path, override=True)
+            runnable_step.add_gatk_option(
+                key='input_file:normal',
+                value='variant_calling_process_sample_{}_realigned.bam'.format(self.comparisons[key][0][1][0].name))
+            runnable_step.add_gatk_option(
+                key='input_file:tumor',
+                value='variant_calling_process_sample_{}_realigned.bam'.format(self.comparisons[key][-1][1][0].name))
+            runnable_step.add_gatk_option(key='out', value=file_path_dict_somatic['somatic_vcf'])
+
+            # Run the snpEff tool for functional variant annotation.
+
+            java_process = runnable_somatic.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='somatic_snpeff',
+                    program='java',
+                    sub_command=Command(program='eff')))
+
+            java_process.add_switch_short(
+                key='d64')
+            java_process.add_option_short(
+                key='jar',
+                value=os.path.join(self.classpath_snpeff, 'snpEff.jar'))
+            java_process.add_switch_short(
+                key='Xmx6G')
+            java_process.add_option_pair(
+                key='-Djava.io.tmpdir',
+                value=file_path_dict_somatic['temporary_directory'])
+            java_process.stdout_path = file_path_dict_somatic['snpeff_vcf']
+
+            sub_command = java_process.sub_command
+            sub_command.add_switch_short(key='download')
+            sub_command.add_option_short(key='o', value='gatk')
+            sub_command.add_option_short(key='stats', value=file_path_dict_somatic['snpeff_stats'])
+            sub_command.add_option_short(key='config', value=os.path.join(self.classpath_snpeff, 'snpEff.config'))
+
+            sub_command.arguments.append(self.snpeff_genome_version)
+            sub_command.arguments.append(file_path_dict_somatic['somatic_vcf'])
+
+            # Run the GATK VariantAnnotator analysis.
+
+            runnable_step = runnable_somatic.add_runnable_step(
+                runnable_step=RunnableStepGATK(
+                    name='somatic_gatk_variant_annotator',
+                    java_temporary_path=file_path_dict_somatic['temporary_directory'],
+                    java_heap_maximum='Xmx4G',
+                    gatk_classpath=self.classpath_gatk))
+            assert isinstance(runnable_step, RunnableStepGATK)
+            runnable_step.add_gatk_option(key='analysis_type', value='VariantAnnotator')
+            runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
+            for interval in self.exclude_intervals_list:
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+            for interval in self.include_intervals_list:
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+            if self.interval_padding:
+                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+            if self.known_sites_discovery:
+                runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
+
+            # Add annotation resources and their corresponding expression options.
+            for annotation_resource in self.annotation_resources_dict.keys():
+                assert isinstance(annotation_resource, str)
+                if len(self.annotation_resources_dict[annotation_resource][0]) \
+                        and len(self.annotation_resources_dict[annotation_resource][1]):
+                    runnable_step.add_gatk_option(
+                        key=':'.join(('resource', annotation_resource)),
+                        value=self.annotation_resources_dict[annotation_resource][0])
+                    for annotation in self.annotation_resources_dict[annotation_resource][1]:
+                        assert isinstance(annotation, str)
+                        runnable_step.add_gatk_option(
+                            key='expression',
+                            value='.'.join((annotation_resource, annotation)),
+                            override=True)
+
+            runnable_step.add_gatk_option(key='variant', value=file_path_dict_somatic['somatic_vcf'])
+            # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
+            # runnable_step.add_gatk_option(key='annotation', value='AlleleBalanceBySample')
+            runnable_step.add_gatk_option(key='annotation', value='SnpEff')
+            runnable_step.add_gatk_option(key='snpEffFile', value=file_path_dict_somatic['snpeff_vcf'])
+            runnable_step.add_gatk_option(key='out', value=file_path_dict_somatic['annotated_vcf'])
+
+            # Run the GATK VariantsToTable analysis.
+
+            runnable_step = runnable_somatic.add_runnable_step(
+                runnable_step=RunnableStepGATK(
+                    name='somatic_gatk_variants_to_table',
+                    java_temporary_path=file_path_dict_somatic['temporary_directory'],
+                    java_heap_maximum='Xmx2G',
+                    gatk_classpath=self.classpath_gatk))
+            assert isinstance(runnable_step, RunnableStepGATK)
+            runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
+            runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
+            for interval in self.exclude_intervals_list:
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+            for interval in self.include_intervals_list:
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+            if self.interval_padding:
+                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+            runnable_step.add_gatk_option(key='variant', value=file_path_dict_somatic['annotated_vcf'])
+            runnable_step.add_gatk_option(key='out', value=file_path_dict_somatic['annotated_tsv'])
+            runnable_step.add_gatk_switch(key='allowMissingData')
+            runnable_step.add_gatk_switch(key='showFiltered')
+            # Set of standard VCF fields.
+            runnable_step.add_gatk_option(key='fields', value='CHROM', override=True)
+            runnable_step.add_gatk_option(key='fields', value='POS', override=True)
+            runnable_step.add_gatk_option(key='fields', value='ID', override=True)
+            runnable_step.add_gatk_option(key='fields', value='REF', override=True)
+            runnable_step.add_gatk_option(key='fields', value='ALT', override=True)
+            runnable_step.add_gatk_option(key='fields', value='QUAL', override=True)
+            runnable_step.add_gatk_option(key='fields', value='FILTER', override=True)
+            # GATK MuTect2 info fields.
+            runnable_step.add_gatk_option(key='fields', value='NLOD', override=True)
+            runnable_step.add_gatk_option(key='fields', value='TLOD', override=True)
+            # GATK MuTect2 genotype fields: GT:AD:AF:ALT_F1R2:ALT_F2R1:FOXOG:QSS:REF_F1R2:REF_F2R1
+            runnable_step.add_gatk_option(key='genotypeFields', value='AD', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='AF', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='ALT_F1R2', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='ALT_F2R1', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='DP', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='FOXOG', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='GQ', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='GT', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='PGT', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='PID', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='PL', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='QSS', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='REF_F1R2', override=True)
+            runnable_step.add_gatk_option(key='genotypeFields', value='REF_F2R1', override=True)
+            # Set of snpEff fields.
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_EFFECT', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_IMPACT', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_FUNCTIONAL_CLASS', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_CODON_CHANGE', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_AMINO_ACID_CHANGE', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_GENE_NAME', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_GENE_BIOTYPE', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_TRANSCRIPT_ID', override=True)
+            runnable_step.add_gatk_option(key='fields', value='SNPEFF_EXON_ID', override=True)
+
+            # Automatically add all fields defined for the Variant Annotator resources, above.
+            for annotation_resource in self.annotation_resources_dict.keys():
+                assert isinstance(annotation_resource, str)
+                if len(self.annotation_resources_dict[annotation_resource][0]) \
+                        and len(self.annotation_resources_dict[annotation_resource][1]):
+                    for annotation in self.annotation_resources_dict[annotation_resource][1]:
+                        assert isinstance(annotation, str)
+                        runnable_step.add_gatk_option(
+                            key='fields',
+                            value='.'.join((annotation_resource, annotation)),
+                            override=True)
 
         return
 
@@ -2585,22 +2865,22 @@ class VariantCallingGATK(Analysis):
         output += '\n'
 
         output += '<h2>UCSC Alignment Track Hub</h2>\n'
+        output += '\n'
 
         options_dict = dict()
         options_dict['db'] = self.genome_version
         options_dict['hubUrl'] = '{}/{}/variant_calling_hub.txt'. \
             format(Default.url_absolute_projects(), link_name)
 
-        output += '<p>\n'
-        output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'.format(
+        output += '<p>UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.</p>\n'.format(
             defaults.web.ucsc_track_url(
                 options_dict=options_dict,
                 host_name=default.ucsc_host_name),
             self.project_name)
-        output += '</p>\n'
+        output += '\n'
 
-        output += '<h2>Sample and Replicate Level</h2>\n'
-
+        output += '<h2>Sample and Aliquot Level</h2>\n'
+        output += '\n'
         output += '<table>\n'
         output += '<thead>\n'
         output += '<tr>\n'
@@ -2609,7 +2889,7 @@ class VariantCallingGATK(Analysis):
         output += '<th>Variants TSV file</th>\n'
         output += '<th>Aligned BAM file</th>\n'
         output += '<th>Aligned BAI file</th>\n'
-        output += '<th>Replicate</th>\n'
+        output += '<th>Aliquot</th>\n'
         output += '<th>Duplicate Metrics</th>\n'
         output += '<th>Alignment Summary Metrics</th>\n'
         output += '</tr>\n'
@@ -2704,7 +2984,7 @@ class VariantCallingGATK(Analysis):
                 format(runnable_process_sample.file_path_dict['realigned_bam'])
             output += '<td><a href="{}">BAI</a></td>\n'. \
                 format(runnable_process_sample.file_path_dict['realigned_bai'])
-            output += '<td></td>\n'  # Replicate
+            output += '<td></td>\n'  # Aliquot
             output += '<td><a href="{}">TSV</a></td>\n'. \
                 format(runnable_process_sample.file_path_dict['duplicate_metrics'])
             output += '<td><a href="{}">TSV</a></td>\n'. \
@@ -2743,7 +3023,7 @@ class VariantCallingGATK(Analysis):
         output += '\n'
 
         output += '<h2>Cohort Level</h2>\n'
-
+        output += '\n'
         output += '<table>\n'
         output += '<thead>\n'
         output += '<tr>\n'
@@ -2786,10 +3066,52 @@ class VariantCallingGATK(Analysis):
         output += '</table>\n'
         output += '\n'
 
+        # Somatic variant calling.
+
+        key_list = self.comparisons.keys()
+        key_list.sort(cmp=lambda x, y: cmp(x, y))
+
+        if len(key_list):
+            output += '<h2>Somatic Variants</h2>\n'
+            output += '\n'
+            output += '<table>\n'
+            output += '<thead>\n'
+            output += '<tr>\n'
+            output += '<th>Comparison</th>\n'
+            output += '<th>Annotated VCF</th>\n'
+            output += '<th>Annotated TSV</th>\n'
+            output += '<th>snpEff Summary Statistics</th>\n'
+            output += '<th>snpEff Genes</th>\n'
+            output += '</tr>\n'
+            output += '</thead>\n'
+            output += '<tbody>\n'
+
+            for key in key_list:
+                # The list of samples must contain exactly one normal and one tumor sample.
+                if len(self.comparisons[key]) != 2:
+                    continue
+
+                runnable_somatic = self.runnable_dict['_'.join((self.drms_name_somatic, key))]
+                assert isinstance(runnable_somatic, Runnable)
+                output += '<tr>\n'
+                output += '<td>{}</td>\n'.format(key)
+                output += '<td><a href="{}">VCF</a></td>\n'.format(runnable_somatic.file_path_dict['annotated_vcf'])
+                output += '<td><a href="{}">TSV</a></td>\n'.format(runnable_somatic.file_path_dict['annotated_tsv'])
+                output += '<td><a href="{}">HTML</a></td>\n'.format(runnable_somatic.file_path_dict['snpeff_stats'])
+                output += '<td><a href="{}">TXT</a></td>\n'.format(runnable_somatic.file_path_dict['snpeff_genes'])
+                output += '</tr>\n'
+
+            output += '</tbody>\n'
+            output += '</table>\n'
+            output += '\n'
+
         output += '<h2>QC Plots</h2>\n'
         output += '\n'
         output += '<table>\n'
+        output += '<thead>\n'
         output += '<tr><th>Sample</th><th>Aliquot</th><th>Metrics</th></tr>\n'
+        output += '</thead>\n'
+        output += '<tbody>\n'
 
         # Alignment Summary - Percent Aligned
         if os.path.exists(os.path.join(
@@ -2811,7 +3133,6 @@ class VariantCallingGATK(Analysis):
             output += '</td>\n'
             output += '<td>Alignment Summary - Percent Aligned</td>\n'
             output += '</tr>\n'
-            output += '\n'
 
         # Alignment Summary - Reads Aligned
         if os.path.exists(os.path.join(
@@ -2833,7 +3154,6 @@ class VariantCallingGATK(Analysis):
             output += '</td>\n'
             output += '<td>Alignment Summary - Reads Aligned</td>\n'
             output += '</tr>\n'
-            output += '\n'
 
         # Hybrid Selection - Mean Target Coverage
         if os.path.exists(os.path.join(
@@ -2855,7 +3175,6 @@ class VariantCallingGATK(Analysis):
             output += '</td>\n'
             output += '<td>Hybrid Selection - Mean Target Coverage</td>\n'
             output += '</tr>\n'
-            output += '\n'
 
         # Hybrid Selection - Percent Unique Reads
         if os.path.exists(os.path.join(
@@ -2877,8 +3196,8 @@ class VariantCallingGATK(Analysis):
             output += '</td>\n'
             output += '<td>Hybrid Selection - Percent Unique Reads</td>\n'
             output += '</tr>\n'
-            output += '\n'
 
+        output += '</tbody>\n'
         output += '</table>\n'
         output += '\n'
         output += '</body>\n'
