@@ -1381,7 +1381,8 @@ class Tuxedo(Analysis):
         output += '\n'
 
         output += '<p>\n'
-        output += '<strong><a href="http://tophat.cbcb.umd.edu/manual.html">TopHat</a></strong> '
+        # http://tophat.cbcb.umd.edu/manual.html
+        output += '<strong><a href="http://ccb.jhu.edu/software/tophat/index.shtml">TopHat</a></strong> '
         output += 'aligns RNA-Seq reads to a genome in order to identify '
         output += 'exon-exon splice junctions. It is built on the ultra fast\n'
         output += 'short read mapping program\n'
@@ -1443,7 +1444,8 @@ class Tuxedo(Analysis):
         output += '\n'
 
         output += '<p>\n'
-        output += '<strong><a href="http://cufflinks.cbcb.umd.edu/howitworks.html">Cufflinks</a></strong>\n'
+        # http://cufflinks.cbcb.umd.edu/howitworks.html
+        output += '<strong><a href="http://cole-trapnell-lab.github.io/cufflinks/">Cufflinks</a></strong>\n'
         output += 'assembles aligned RNA-Seq reads into transcripts,\n'
         output += 'estimates their abundances, and tests for differential\n'
         output += 'expression and regulation transcriptome-wide.\n'
@@ -1458,12 +1460,20 @@ class Tuxedo(Analysis):
         output += 'below.\n'
         output += 'The isoforms.fpkm_tracking and genes.fpkm_tracking files\n'
         output += 'contain the estimated isoform or gene expression values in the generic\n'
-        output += '<a href="http://cufflinks.cbcb.umd.edu/manual.html#fpkm_tracking_format">FPKM Tracking format</a>.\n'
+        # http://cufflinks.cbcb.umd.edu/manual.html#fpkm_tracking_format
+        output += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
+                  'fpkm-tracking-format">FPKM Tracking format</a>.\n'
+        output += 'The isofroms.count_tracking and genes.count_tracking files\n'
+        output += 'contain the scaled isofrom or gene count values in the generic\n'
+        output += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
+                  'count-tracking-format">Count Tracking format</a>.\n'
         output += '</p>\n'
 
         output += '<p>\n'
-        output += 'Please see a more detailed description of Cufflinks\n'
-        output += '<a href="http://cufflinks.cbcb.umd.edu/manual.html#cufflinks_output">output</a>.\n'
+        output += 'Please see a more detailed description of\n'
+        # http://cufflinks.cbcb.umd.edu/manual.html#cufflinks_output
+        output += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
+                  'output-formats-used-in-the-cufflinks-suite">Cufflinks output</a>.\n'
         output += '</p>\n'
 
         output += '<table>\n'
