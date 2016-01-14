@@ -27,7 +27,8 @@ A package of classes and methods supporting executable programs and scripts.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from bsf import Analysis, Command, Executable
+from bsf import Analysis
+from bsf.process import Command, Executable
 
 
 class Bowtie1(Executable):
@@ -166,8 +167,7 @@ class Macs14(Executable):
 
         if not ('gsize' in self.options and self.options['gsize']):
             raise Exception(
-                "A 'gsize' option is required in the {!r} configuration section.".
-                format(section))
+                    "A 'gsize' option is required in the {!r} configuration section.".format(section))
 
 
 class Macs2Bdgcmp(Executable):
@@ -188,9 +188,9 @@ class Macs2Bdgcmp(Executable):
         assert isinstance(analysis, Analysis)
 
         super(Macs2Bdgcmp, self).__init__(
-            name=name,
-            program='bsf_chipseq_run_macs2.bash',
-            sub_command=Command(program='bdgcmp'))
+                name=name,
+                program='bsf_chipseq_run_macs2.bash',
+                sub_command=Command(program='bdgcmp'))
 
         # The options have to be set for the 'bdgcmp' sub-command.
         section = analysis.configuration.section_from_instance(self)
@@ -219,9 +219,9 @@ class Macs2Callpeak(Executable):
         assert isinstance(analysis, Analysis)
 
         super(Macs2Callpeak, self).__init__(
-            name=name,
-            program='bsf_chipseq_run_macs2.bash',
-            sub_command=Command(program='callpeak'))
+                name=name,
+                program='bsf_chipseq_run_macs2.bash',
+                sub_command=Command(program='callpeak'))
 
         # The options have to be set for the 'callpeak' sub-command.
         section = analysis.configuration.section_from_instance(self)
@@ -231,8 +231,7 @@ class Macs2Callpeak(Executable):
 
         if not ('gsize' in self.sub_command.options and self.sub_command.options['gsize']):
             raise Exception(
-                "A 'gsize' option is required in the {!r} configuration section.".
-                format(section))
+                    "A 'gsize' option is required in the {!r} configuration section.".format(section))
 
 
 class FastQC(Executable):

@@ -28,8 +28,8 @@
 from argparse import ArgumentParser
 import os
 
-from bsf import Default
 from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder
+from bsf.standards import Default
 
 
 argument_parser = ArgumentParser(

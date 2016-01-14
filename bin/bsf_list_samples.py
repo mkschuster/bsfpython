@@ -31,8 +31,8 @@ import csv
 import os
 import re
 
-from bsf import Default
 from bsf.data import ProcessedRunFolder, Project, Sample, PairedReads
+from bsf.standards import Default
 
 
 parser = argparse.ArgumentParser(description='List projects and samples.')

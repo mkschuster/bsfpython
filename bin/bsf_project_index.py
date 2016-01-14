@@ -31,21 +31,21 @@ import os.path
 import re
 from stat import *
 
-from bsf import Default
 import bsf.defaults.web as web
+from bsf.standards import Default
 
 
-def scan_directory(report_dict, directory_root, directory_path=None):
+def scan_directory(report_dict_local, directory_root, directory_path=None):
 
     """
     Scan a directory recursively for *_report.html files and add them to a Python dict of
     directory_path key data and Python list of report_type value data.
-    :param report_dict: Python dict of directory_path key data and Python list of report_type value data
-    :type report_dict: dict
+    :param report_dict_local: Python dict of directory_path key data and Python list of report_type value data
+    :type report_dict_local: dict
     :param directory_root: Directory root
-    :type directory_root: str, unicode
+    :type directory_root: str | unicode
     :param directory_path: Directory path
-    :type directory_path: str, unicode
+    :type directory_path: str | unicode
     :return: Nothing
     :rtype: None
     """
@@ -59,31 +59,31 @@ def scan_directory(report_dict, directory_root, directory_path=None):
         file_path = os.path.join(directory_absolute, file_name)
         mode = os.stat(file_path).st_mode
         if S_ISDIR(mode):
-            scan_directory(report_dict=report_dict,
+            scan_directory(report_dict_local=report_dict_local,
                            directory_root=directory_root,
                            directory_path=os.path.join(directory_path, file_name))
         elif S_ISREG(mode):
             match = re.search(pattern=r'^(.*)_report.html$', string=file_name)
             if match:
                 report_type = match.group(1)
-                if directory_path not in report_dict:
-                    report_dict[directory_path] = list()
-                report_dict[directory_path].append(report_type)
+                if directory_path not in report_dict_local:
+                    report_dict_local[directory_path] = list()
+                report_dict_local[directory_path].append(report_type)
 
 
-def scan_projects(project_name):
+def scan_projects(project_name_local):
 
     """
     Scan a public_html project directory for full project directory names to match the given prefix.
     Resolve something like BSA_0001 to BSA_0001_ASP14_40d0aa70bf854ac99599caf5a52a9aa3
-    :param project_name: Project name or prefix
-    :type project_name: str, unicode
+    :param project_name_local: Project name or prefix
+    :type project_name_local: str | unicode
     """
 
     directory_path = os.path.join(Default.absolute_public_html(), 'projects')
 
     for file_name in os.listdir(directory_path):
-        match = re.search(pattern=r'^{}'.format(project_name), string=file_name)
+        match = re.search(pattern=r'^{}'.format(project_name_local), string=file_name)
         if match:
             return file_name
 
@@ -110,7 +110,7 @@ if not os.path.isabs(project_directory):
         # If the absolute directory path still does not exist,
         # scan the projects directory for an entry that begins with the project name.
 
-        project_name = scan_projects(project_name=name_space.project)
+        project_name = scan_projects(project_name_local=name_space.project)
 
         if not project_name:
             raise Exception('Cannot locate project directory for project {!r}.'.format(name_space.project))
@@ -120,7 +120,7 @@ if not os.path.isabs(project_directory):
 
 report_dict = dict()
 
-scan_directory(report_dict=report_dict, directory_root=project_directory, directory_path='.')
+scan_directory(report_dict_local=report_dict, directory_root=project_directory, directory_path='.')
 
 # Remove the random string from the project_directory name if it exists
 # BSA_0001_ASP14_40d0aa70bf854ac99599caf5a52a9aa3

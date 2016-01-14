@@ -30,11 +30,13 @@ import os.path
 from pickle import Pickler, HIGHEST_PROTOCOL
 import warnings
 
-from bsf import Analysis, Command, Configuration, Default, defaults, DRMS, Executable, Runnable, RunnableStep, \
-    RunnableStepLink, RunnableStepMove, RunnableStepJava, RunnableStepPicard
+from bsf import Analysis, defaults, DRMS, Runnable
 from bsf.annotation import SampleAnnotationSheet
 from bsf.data import PairedReads
 from bsf.executables import BWA
+from bsf.process import Command, Executable, RunnableStep, RunnableStepJava, RunnableStepPicard, RunnableStepLink, \
+    RunnableStepMove
+from bsf.standards import Configuration, Default
 
 
 class RunnableStepGATK(RunnableStepJava):
@@ -92,22 +94,22 @@ class RunnableStepGATK(RunnableStepJava):
         """
 
         super(RunnableStepGATK, self).__init__(
-            name=name,
-            program=program,
-            options=options,
-            arguments=arguments,
-            sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
-            dependencies=dependencies,
-            hold=hold,
-            submit=submit,
-            process_identifier=process_identifier,
-            process_name=process_name,
-            obsolete_file_path_list=obsolete_file_path_list,
-            java_temporary_path=java_temporary_path,
-            java_heap_maximum=java_heap_maximum,
-            java_jar_path=java_jar_path)
+                name=name,
+                program=program,
+                options=options,
+                arguments=arguments,
+                sub_command=sub_command,
+                stdout_path=stdout_path,
+                stderr_path=stderr_path,
+                dependencies=dependencies,
+                hold=hold,
+                submit=submit,
+                process_identifier=process_identifier,
+                process_name=process_name,
+                obsolete_file_path_list=obsolete_file_path_list,
+                java_temporary_path=java_temporary_path,
+                java_heap_maximum=java_heap_maximum,
+                java_jar_path=java_jar_path)
 
         # Set the GATK classpath and the GATK Java archive.
         if 'jar' not in self.sub_command.options:
@@ -362,19 +364,19 @@ class VariantCallingGATK(Analysis):
         """
 
         super(VariantCallingGATK, self).__init__(
-            configuration=configuration,
-            project_name=project_name,
-            genome_version=genome_version,
-            input_directory=input_directory,
-            output_directory=output_directory,
-            project_directory=project_directory,
-            genome_directory=genome_directory,
-            e_mail=e_mail,
-            debug=debug,
-            drms_list=drms_list,
-            collection=collection,
-            comparisons=comparisons,
-            samples=samples)
+                configuration=configuration,
+                project_name=project_name,
+                genome_version=genome_version,
+                input_directory=input_directory,
+                output_directory=output_directory,
+                project_directory=project_directory,
+                genome_directory=genome_directory,
+                e_mail=e_mail,
+                debug=debug,
+                drms_list=drms_list,
+                collection=collection,
+                comparisons=comparisons,
+                samples=samples)
 
         # Sub-class specific ...
 
@@ -539,8 +541,8 @@ class VariantCallingGATK(Analysis):
         @rtype: str | unicode
         """
         return Default.absolute_gatk_bundle(
-            gatk_bundle_version=self.gatk_bundle_version,
-            genome_version=self.genome_version)
+                gatk_bundle_version=self.gatk_bundle_version,
+                genome_version=self.genome_version)
 
     def set_configuration(self, configuration, section):
         """Set instance variables of a C{VariantCallingGATK} object via a section of a C{Configuration} object.
@@ -674,8 +676,8 @@ class VariantCallingGATK(Analysis):
                         file_path = configuration.config_parser.get(section=resource_section, option='file_path')
                     else:
                         raise Exception(
-                            "Missing configuration option 'file_path' in configuration section {!r}.".
-                            format(resource_section))
+                                "Missing configuration option 'file_path' in configuration section {!r}.".format(
+                                        resource_section))
                     if configuration.config_parser.has_option(
                             section=resource_section,
                             option='annotations'):
@@ -685,16 +687,16 @@ class VariantCallingGATK(Analysis):
                             annotation_list.append(annotation.strip())  # Strip white space around commas.
                     else:
                         raise Exception(
-                            "Missing configuration option 'annotations' in configuration section {!r}.".
-                            format(resource_section))
+                                "Missing configuration option 'annotations' in configuration section {!r}.".format(
+                                        resource_section))
                     # Create a dict key and a tuple of a Python str and Python list.
                     if annotation_resource not in self.annotation_resources_dict:
                         self.annotation_resources_dict[annotation_resource] = file_path, annotation_list
                 else:
                     raise Exception(
-                        'Missing configuration section {!r} declared in option annotation_resources {!r}.'.
-                        format(resource_section,
-                               configuration.config_parser.get(section=section, option='annotation_resources')))
+                            'Missing configuration section {!r} declared in option annotation_resources {!r}.'.format(
+                                    resource_section,
+                                    configuration.config_parser.get(section=section, option='annotation_resources')))
 
         # Single VCF file of known sites for the
         # GATK HaplotypeCaller and GenotypeGVCFs steps.
@@ -831,7 +833,7 @@ class VariantCallingGATK(Analysis):
                     # TODO: Collection.get_samples_from_row_dict() may not work with normalised
                     # Sample Annotation Sheets.
                     group_name, group_samples = self.collection.get_samples_from_row_dict(
-                        row_dict=row_dict, prefix=prefix)
+                            row_dict=row_dict, prefix=prefix)
                     if group_name and len(group_samples):
                         key += group_name
                         key += '__'
@@ -841,10 +843,10 @@ class VariantCallingGATK(Analysis):
                         # that this Analysis needs considering.
                         for sample in group_samples:
                             if self.debug > 1:
-                                print '  {} Sample name: {!r} file_path:{!r}'.\
+                                print '  {} Sample name: {!r} file_path:{!r}'. \
                                     format(prefix, sample.name, sample.file_path)
                                 # print sample.trace(1)
-                            # self.add_sample(sample=sample)
+                                # self.add_sample(sample=sample)
 
                 # Remove the last '__' from the key.
                 self.comparisons[key[:-2]] = comparison_groups
@@ -892,9 +894,10 @@ class VariantCallingGATK(Analysis):
                         resource_dict['file_path'] = config_parser.get(section=resource_section, option='file_path')
                 else:
                     raise Exception(
-                        'Missing configuration section {!r} declared in option {!r} {!r}.'.
-                        format(resource_section, resource_option,
-                               config_parser.get(section=config_section, option=resource_option)))
+                            'Missing configuration section {!r} declared in option {!r} {!r}.'.format(
+                                    resource_section,
+                                    resource_option,
+                                    config_parser.get(section=config_section, option=resource_option)))
 
         return
 
@@ -939,8 +942,8 @@ class VariantCallingGATK(Analysis):
         # Check for absolute paths and adjust if required before checking for existence.
 
         self.bwa_genome_db = Default.get_absolute_path(
-            file_path=self.bwa_genome_db,
-            default_path=self.get_gatk_bundle_path)
+                file_path=self.bwa_genome_db,
+                default_path=self.get_gatk_bundle_path)
         if not os.path.exists(path=self.bwa_genome_db):
             raise Exception("The bwa_genome_db file {!r} does not exist.".format(self.bwa_genome_db))
 
@@ -951,7 +954,7 @@ class VariantCallingGATK(Analysis):
                 temporary_list.append(file_path)
             else:
                 raise Exception('The accessory_cohort_gvcf file {!r} does not exist.'.format(file_path))
-            # TODO: Check the cohorts so that their sample names do not clash.
+                # TODO: Check the cohorts so that their sample names do not clash.
         self.accessory_cohort_gvcfs = temporary_list
 
         for key in self.annotation_resources_dict.keys():
@@ -968,8 +971,8 @@ class VariantCallingGATK(Analysis):
 
         if self.known_sites_discovery:
             self.known_sites_discovery = Default.get_absolute_path(
-                file_path=self.known_sites_discovery,
-                default_path=self.get_gatk_bundle_path)
+                    file_path=self.known_sites_discovery,
+                    default_path=self.get_gatk_bundle_path)
             if not os.path.exists(self.known_sites_discovery):
                 raise Exception('The known_sites_discovery file {!r} does not exist.'.
                                 format(self.known_sites_discovery))
@@ -1001,8 +1004,8 @@ class VariantCallingGATK(Analysis):
             resource_dict = self.vqsr_resources_indel_dict[key]
             assert isinstance(resource_dict, dict)
             resource_dict['file_path'] = Default.get_absolute_path(
-                file_path=resource_dict['file_path'],
-                default_path=self.get_gatk_bundle_path)
+                    file_path=resource_dict['file_path'],
+                    default_path=self.get_gatk_bundle_path)
             if not os.path.exists(resource_dict['file_path']):
                 raise Exception('The file path {!r} for vqsr_resources_indel {!r} does not exist.'.
                                 format(resource_dict['file_path'], key))
@@ -1012,8 +1015,8 @@ class VariantCallingGATK(Analysis):
             resource_dict = self.vqsr_resources_snp_dict[key]
             assert isinstance(resource_dict, dict)
             resource_dict['file_path'] = Default.get_absolute_path(
-                file_path=resource_dict['file_path'],
-                default_path=self.get_gatk_bundle_path)
+                    file_path=resource_dict['file_path'],
+                    default_path=self.get_gatk_bundle_path)
             if not os.path.exists(resource_dict['file_path']):
                 raise Exception('The file path {!r} for vqsr_resources_snp {!r} does not exist.'.
                                 format(resource_dict['file_path'], key))
@@ -1050,11 +1053,12 @@ class VariantCallingGATK(Analysis):
                 temporary_list.append(interval)
         self.include_intervals_list = temporary_list
 
+        # TODO: Looking for comparison and sample annotation files in the project directory is no longer a good idea.
         # The comparison file can be absolute, in the same directory or in the project directory.
-        if not os.path.isabs(self.comparison_path) and not os.path.exists(self.comparison_path):
-            self.comparison_path = Default.get_absolute_path(
-                file_path=self.comparison_path,
-                default_path=self.project_directory)
+        # if not os.path.isabs(self.comparison_path) and not os.path.exists(self.comparison_path):
+        #     self.comparison_path = Default.get_absolute_path(
+        #             file_path=self.comparison_path,
+        #             default_path=self.project_directory)
 
         # Read comparisons for somatic mutation calling.
         self._read_comparisons(comparison_path=self.comparison_path)
@@ -1069,73 +1073,73 @@ class VariantCallingGATK(Analysis):
         # bsf_run_bwa.py script.
 
         drms_align_lane = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_align_lane,
-                working_directory=self.genome_directory,
-                analysis=self))
+                drms=DRMS.from_analysis(
+                        name=self.drms_name_align_lane,
+                        working_directory=self.genome_directory,
+                        analysis=self))
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_process_lane Runnable.
 
         drms_process_lane = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_process_lane,
-                working_directory=self.genome_directory,
-                analysis=self))
+                drms=DRMS.from_analysis(
+                        name=self.drms_name_process_lane,
+                        working_directory=self.genome_directory,
+                        analysis=self))
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_process_sample Runnable.
 
         drms_process_sample = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_process_sample,
-                working_directory=self.genome_directory,
-                analysis=self))
+                drms=DRMS.from_analysis(
+                        name=self.drms_name_process_sample,
+                        working_directory=self.genome_directory,
+                        analysis=self))
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_diagnose_sample Runnable.
 
         drms_diagnose_sample = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_diagnose_sample,
-                working_directory=self.genome_directory,
-                analysis=self))
+                drms=DRMS.from_analysis(
+                        name=self.drms_name_diagnose_sample,
+                        working_directory=self.genome_directory,
+                        analysis=self))
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_merge_cohort Runnable.
 
         drms_merge_cohort = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_merge_cohort,
-                working_directory=self.genome_directory,
-                analysis=self))
+                drms=DRMS.from_analysis(
+                        name=self.drms_name_merge_cohort,
+                        working_directory=self.genome_directory,
+                        analysis=self))
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_process_cohort Runnable.
 
         drms_process_cohort = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_process_cohort,
-                working_directory=self.genome_directory,
-                analysis=self))
+                drms=DRMS.from_analysis(
+                        name=self.drms_name_process_cohort,
+                        working_directory=self.genome_directory,
+                        analysis=self))
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_split_cohort Runnable.
 
         drms_split_cohort = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_split_cohort,
-                working_directory=self.genome_directory,
-                analysis=self))
+                drms=DRMS.from_analysis(
+                        name=self.drms_name_split_cohort,
+                        working_directory=self.genome_directory,
+                        analysis=self))
 
         # Initialise a Distributed Resource Management System (DRMS) object for the
         # variant_calling_somatic Runnable.
 
         drms_somatic = self.add_drms(
                 drms=DRMS.from_analysis(
-                    name=self.drms_name_somatic,
-                    working_directory=self.genome_directory,
-                    analysis=self))
+                        name=self.drms_name_somatic,
+                        working_directory=self.genome_directory,
+                        analysis=self))
 
         vc_merge_cohort_dependency_dict = dict()
         vc_merge_cohort_sample_dict = dict()
@@ -1215,12 +1219,12 @@ class VariantCallingGATK(Analysis):
                     warnings.warn('No reads have been defined.')
 
                 file_path_align_lane = dict(
-                    # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
-                    # It is currently based on the drms_align_lane.name and replicate_key.
-                    # The script should also be changed to pre-set all file names beforehand.
-                    aligned_bam='{}_{}.bam'.format(drms_align_lane.name, replicate_key),
-                    aligned_bai='{}_{}.bai'.format(drms_align_lane.name, replicate_key),
-                    aligned_md5='{}_{}.bam.md5'.format(drms_align_lane.name, replicate_key))
+                        # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
+                        # It is currently based on the drms_align_lane.name and replicate_key.
+                        # The script should also be changed to pre-set all file names beforehand.
+                        aligned_bam='{}_{}.bam'.format(drms_align_lane.name, replicate_key),
+                        aligned_bai='{}_{}.bai'.format(drms_align_lane.name, replicate_key),
+                        aligned_md5='{}_{}.bam.md5'.format(drms_align_lane.name, replicate_key))
 
                 # Normally, the bwa object would be pushed onto the drms list.
                 # Experimentally, use Pickler to serialize the Executable object into a file.
@@ -1233,8 +1237,8 @@ class VariantCallingGATK(Analysis):
                 pickler_dict_align_lane['bwa_executable'] = bwa
 
                 pickler_path = os.path.join(
-                    self.genome_directory,
-                    '{}_{}.pkl'.format(drms_align_lane.name, replicate_key))
+                        self.genome_directory,
+                        '{}_{}.pkl'.format(drms_align_lane.name, replicate_key))
                 pickler_file = open(pickler_path, 'wb')
                 pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
                 pickler.dump(obj=pickler_dict_align_lane)
@@ -1242,10 +1246,10 @@ class VariantCallingGATK(Analysis):
 
                 # Create a bsf_run_bwa.py job to run the pickled object.
 
-                run_bwa = drms_align_lane.add_executable(executable=Executable.from_analysis(
-                    name='_'.join((drms_align_lane.name, replicate_key)),
-                    program='bsf_run_bwa.py',
-                    analysis=self))
+                run_bwa = drms_align_lane.add_executable(
+                        executable=Executable(
+                                name='_'.join((drms_align_lane.name, replicate_key)),
+                                program='bsf_run_bwa.py'))
 
                 # Only submit this Executable if the final result file does not exist.
                 if (os.path.exists(os.path.join(self.genome_directory, file_path_align_lane['aligned_md5'])) and
@@ -1259,6 +1263,7 @@ class VariantCallingGATK(Analysis):
 
                     # Set run_bwa options.
 
+                self.set_command_configuration(command=run_bwa)
                 run_bwa.add_option_long(key='pickler_path', value=pickler_path)
                 run_bwa.add_option_long(key='debug', value=str(self.debug))
 
@@ -1267,40 +1272,39 @@ class VariantCallingGATK(Analysis):
                 # Lane-specific file paths
 
                 file_path_dict_lane = dict(
-                    temporary_directory=prefix_lane + '_temporary',
-                    # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
-                    # It is currently based on the drms_align_lane.name and replicate_key.
-                    # The script should also be changed to pre-set all file names beforehand.
-                    aligned_bam='{}_{}.bam'.format(drms_align_lane.name, replicate_key),
-                    aligned_bai='{}_{}.bai'.format(drms_align_lane.name, replicate_key),
-                    aligned_md5='{}_{}.bam.md5'.format(drms_align_lane.name, replicate_key),
-                    duplicates_marked_bam=prefix_lane + '_duplicates_marked.bam',
-                    duplicates_marked_bai=prefix_lane + '_duplicates_marked.bai',
-                    duplicates_marked_md5=prefix_lane + '_duplicates_marked.bam.md5',
-                    duplicate_metrics=prefix_lane + '_duplicate_metrics.tsv',
-                    realigner_targets=prefix_lane + '_realigner.interval_list',
-                    realigned_bam=prefix_lane + '_realigned.bam',
-                    realigned_bai=prefix_lane + '_realigned.bai',
-                    recalibration_table_pre=prefix_lane + '_recalibration_pre.table',
-                    recalibration_table_post=prefix_lane + '_recalibration_post.table',
-                    recalibration_plot=prefix_lane + '_recalibration_report.pdf',
-                    recalibrated_bam=prefix_lane + '_recalibrated.bam',
-                    recalibrated_bai=prefix_lane + '_recalibrated.bai',
-                    alignment_summary_metrics=prefix_lane + '_alignment_summary_metrics.tsv')
+                        temporary_directory=prefix_lane + '_temporary',
+                        # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
+                        # It is currently based on the drms_align_lane.name and replicate_key.
+                        # The script should also be changed to pre-set all file names beforehand.
+                        aligned_bam='{}_{}.bam'.format(drms_align_lane.name, replicate_key),
+                        aligned_bai='{}_{}.bai'.format(drms_align_lane.name, replicate_key),
+                        aligned_md5='{}_{}.bam.md5'.format(drms_align_lane.name, replicate_key),
+                        duplicates_marked_bam=prefix_lane + '_duplicates_marked.bam',
+                        duplicates_marked_bai=prefix_lane + '_duplicates_marked.bai',
+                        duplicates_marked_md5=prefix_lane + '_duplicates_marked.bam.md5',
+                        duplicate_metrics=prefix_lane + '_duplicate_metrics.tsv',
+                        realigner_targets=prefix_lane + '_realigner.interval_list',
+                        realigned_bam=prefix_lane + '_realigned.bam',
+                        realigned_bai=prefix_lane + '_realigned.bai',
+                        recalibration_table_pre=prefix_lane + '_recalibration_pre.table',
+                        recalibration_table_post=prefix_lane + '_recalibration_post.table',
+                        recalibration_plot=prefix_lane + '_recalibration_report.pdf',
+                        recalibrated_bam=prefix_lane + '_recalibrated.bam',
+                        recalibrated_bai=prefix_lane + '_recalibrated.bai',
+                        alignment_summary_metrics=prefix_lane + '_alignment_summary_metrics.tsv')
 
                 # Create a Runnable and Executable for processing each lane.
 
                 runnable_process_lane = self.add_runnable(
-                    runnable=Runnable(
-                        name=prefix_lane,
-                        code_module='bsf.runnables.generic',
-                        working_directory=self.genome_directory,
-                        file_path_dict=file_path_dict_lane,
-                        debug=self.debug))
-                executable_process_lane = drms_process_lane.add_executable(
-                    executable=Executable.from_analysis_runnable(
-                        analysis=self,
-                        runnable_name=runnable_process_lane.name))
+                        runnable=Runnable(
+                                name=prefix_lane,
+                                code_module='bsf.runnables.generic',
+                                working_directory=self.genome_directory,
+                                file_path_dict=file_path_dict_lane,
+                                debug=self.debug))
+                executable_process_lane = self.set_drms_runnable(
+                        drms=drms_process_lane,
+                        runnable=runnable_process_lane)
                 executable_process_lane.dependencies.append(run_bwa.name)
 
                 # Run the Picard MarkDuplicates analysis, unless configured to skip it.
@@ -1311,20 +1315,20 @@ class VariantCallingGATK(Analysis):
                     file_path_dict_lane['duplicates_marked_md5'] = file_path_dict_lane['aligned_md5']
                 else:
                     runnable_step = runnable_process_lane.add_runnable_step(
-                        runnable_step=RunnableStepPicard(
-                            name='process_lane_picard_mark_duplicates',
-                            obsolete_file_path_list=[
-                                # It may not be the best idea to remove the aligned BAM file from the previous
-                                # lane-specific alignment step here. For the moment, keep pipeline steps independent
-                                # from each other.
-                                file_path_dict_lane['aligned_bam'],
-                                file_path_dict_lane['aligned_bai'],
-                                file_path_dict_lane['aligned_md5']
-                            ],
-                            java_temporary_path=file_path_dict_lane['temporary_directory'],
-                            java_heap_maximum='Xmx6G',
-                            picard_classpath=self.classpath_picard,
-                            picard_command='MarkDuplicates'))
+                            runnable_step=RunnableStepPicard(
+                                    name='process_lane_picard_mark_duplicates',
+                                    obsolete_file_path_list=[
+                                        # It may not be the best idea to remove the aligned BAM file from the previous
+                                        # lane-specific alignment step here. For the moment, keep pipeline steps
+                                        # independent from each other.
+                                        file_path_dict_lane['aligned_bam'],
+                                        file_path_dict_lane['aligned_bai'],
+                                        file_path_dict_lane['aligned_md5']
+                                    ],
+                                    java_temporary_path=file_path_dict_lane['temporary_directory'],
+                                    java_heap_maximum='Xmx6G',
+                                    picard_classpath=self.classpath_picard,
+                                    picard_command='MarkDuplicates'))
                     assert isinstance(runnable_step, RunnableStepPicard)
                     runnable_step.add_picard_option(key='INPUT', value=file_path_dict_lane['aligned_bam'])
                     runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_lane['duplicates_marked_bam'])
@@ -1337,8 +1341,8 @@ class VariantCallingGATK(Analysis):
                     # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
                     # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
                     runnable_step.add_picard_option(
-                        key='READ_NAME_REGEX',
-                        value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
+                            key='READ_NAME_REGEX',
+                            value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
                     runnable_step.add_picard_option(key='TMP_DIR', value=file_path_dict_lane['temporary_directory'])
                     # VERBOSITY defaults to 'INFO'.
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
@@ -1358,11 +1362,11 @@ class VariantCallingGATK(Analysis):
                 # for the GATK IndelRealigner analysis.
 
                 runnable_step = runnable_process_lane.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='process_lane_gatk_realigner_target_creator',
-                        java_temporary_path=file_path_dict_lane['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk))
+                        runnable_step=RunnableStepGATK(
+                                name='process_lane_gatk_realigner_target_creator',
+                                java_temporary_path=file_path_dict_lane['temporary_directory'],
+                                java_heap_maximum='Xmx6G',
+                                gatk_classpath=self.classpath_gatk))
                 assert isinstance(runnable_step, RunnableStepGATK)
                 runnable_step.add_gatk_option(key='analysis_type', value='RealignerTargetCreator')
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -1383,16 +1387,16 @@ class VariantCallingGATK(Analysis):
                 # GATK RealignerTargetCreator analysis.
 
                 runnable_step = runnable_process_lane.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='process_lane_gatk_indel_realigner',
-                        obsolete_file_path_list=[
-                            file_path_dict_lane['duplicates_marked_bam'],
-                            file_path_dict_lane['duplicates_marked_bai'],
-                            file_path_dict_lane['duplicates_marked_md5'],
-                        ],
-                        java_temporary_path=file_path_dict_lane['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk))
+                        runnable_step=RunnableStepGATK(
+                                name='process_lane_gatk_indel_realigner',
+                                obsolete_file_path_list=[
+                                    file_path_dict_lane['duplicates_marked_bam'],
+                                    file_path_dict_lane['duplicates_marked_bai'],
+                                    file_path_dict_lane['duplicates_marked_md5'],
+                                ],
+                                java_temporary_path=file_path_dict_lane['temporary_directory'],
+                                java_heap_maximum='Xmx6G',
+                                gatk_classpath=self.classpath_gatk))
                 assert isinstance(runnable_step, RunnableStepGATK)
                 runnable_step.add_gatk_option(key='analysis_type', value='IndelRealigner')
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -1414,11 +1418,11 @@ class VariantCallingGATK(Analysis):
                 # for the GATK PrintReads analysis.
 
                 runnable_step = runnable_process_lane.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='process_lane_gatk_base_recalibrator_pre',
-                        java_temporary_path=file_path_dict_lane['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk))
+                        runnable_step=RunnableStepGATK(
+                                name='process_lane_gatk_base_recalibrator_pre',
+                                java_temporary_path=file_path_dict_lane['temporary_directory'],
+                                java_heap_maximum='Xmx6G',
+                                gatk_classpath=self.classpath_gatk))
                 assert isinstance(runnable_step, RunnableStepGATK)
                 runnable_step.add_gatk_option(key='analysis_type', value='BaseRecalibrator')
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -1438,11 +1442,11 @@ class VariantCallingGATK(Analysis):
                 # Run the GATK BaseRecalibrator on-the-fly recalibration analysis to generate plots.
 
                 runnable_step = runnable_process_lane.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='process_lane_gatk_base_recalibrator_post',
-                        java_temporary_path=file_path_dict_lane['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk))
+                        runnable_step=RunnableStepGATK(
+                                name='process_lane_gatk_base_recalibrator_post',
+                                java_temporary_path=file_path_dict_lane['temporary_directory'],
+                                java_heap_maximum='Xmx6G',
+                                gatk_classpath=self.classpath_gatk))
                 assert isinstance(runnable_step, RunnableStepGATK)
                 runnable_step.add_gatk_option(key='analysis_type', value='BaseRecalibrator')
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -1463,11 +1467,11 @@ class VariantCallingGATK(Analysis):
                 # Run the GATK AnalyzeCovariates analysis to create a recalibration plot.
 
                 runnable_step = runnable_process_lane.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='process_lane_gatk_analyze_covariates',
-                        java_temporary_path=file_path_dict_lane['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk))
+                        runnable_step=RunnableStepGATK(
+                                name='process_lane_gatk_analyze_covariates',
+                                java_temporary_path=file_path_dict_lane['temporary_directory'],
+                                java_heap_maximum='Xmx6G',
+                                gatk_classpath=self.classpath_gatk))
                 assert isinstance(runnable_step, RunnableStepGATK)
                 runnable_step.add_gatk_option(key='analysis_type', value='AnalyzeCovariates')
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -1480,28 +1484,28 @@ class VariantCallingGATK(Analysis):
                 if self.interval_padding:
                     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 runnable_step.add_gatk_option(
-                    key='afterReportFile',
-                    value=file_path_dict_lane['recalibration_table_post'])
+                        key='afterReportFile',
+                        value=file_path_dict_lane['recalibration_table_post'])
                 runnable_step.add_gatk_option(
-                    key='beforeReportFile',
-                    value=file_path_dict_lane['recalibration_table_pre'])
+                        key='beforeReportFile',
+                        value=file_path_dict_lane['recalibration_table_pre'])
                 runnable_step.add_gatk_option(
-                    key='plotsReportFile',
-                    value=file_path_dict_lane['recalibration_plot'])
+                        key='plotsReportFile',
+                        value=file_path_dict_lane['recalibration_plot'])
                 # runnable_step.add_gatk_option(key='logging_level', value='DEBUG')
 
                 # Run the GATK PrintReads analysis as second-pass walker after the GATK BaseRecalibrator analysis.
 
                 runnable_step = runnable_process_lane.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='process_lane_gatk_print_reads',
-                        obsolete_file_path_list=[
-                            file_path_dict_lane['realigned_bam'],
-                            file_path_dict_lane['realigned_bai'],
-                        ],
-                        java_temporary_path=file_path_dict_lane['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk))
+                        runnable_step=RunnableStepGATK(
+                                name='process_lane_gatk_print_reads',
+                                obsolete_file_path_list=[
+                                    file_path_dict_lane['realigned_bam'],
+                                    file_path_dict_lane['realigned_bai'],
+                                ],
+                                java_temporary_path=file_path_dict_lane['temporary_directory'],
+                                java_heap_maximum='Xmx6G',
+                                gatk_classpath=self.classpath_gatk))
                 assert isinstance(runnable_step, RunnableStepGATK)
                 runnable_step.add_gatk_option(key='analysis_type', value='PrintReads')
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -1520,12 +1524,12 @@ class VariantCallingGATK(Analysis):
                 # Run the Picard CollectAlignmentSummaryMetrics analysis.
 
                 runnable_step = runnable_process_lane.add_runnable_step(
-                    runnable_step=RunnableStepPicard(
-                        name='process_lane_picard_collect_alignment_summary_metrics',
-                        java_temporary_path=file_path_dict_lane['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        picard_classpath=self.classpath_picard,
-                        picard_command='CollectAlignmentSummaryMetrics'))
+                        runnable_step=RunnableStepPicard(
+                                name='process_lane_picard_collect_alignment_summary_metrics',
+                                java_temporary_path=file_path_dict_lane['temporary_directory'],
+                                java_heap_maximum='Xmx6G',
+                                picard_classpath=self.classpath_picard,
+                                picard_command='CollectAlignmentSummaryMetrics'))
                 assert isinstance(runnable_step, RunnableStepPicard)
                 runnable_step.add_picard_option(key='INPUT', value=file_path_dict_lane['recalibrated_bam'])
                 runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_lane['alignment_summary_metrics'])
@@ -1566,73 +1570,72 @@ class VariantCallingGATK(Analysis):
             prefix_sample = '_'.join((drms_process_sample.name, sample.name))
 
             file_path_dict_sample = dict(
-                temporary_directory=prefix_sample + '_temporary',
-                merged_bam=prefix_sample + '_merged.bam',
-                merged_bai=prefix_sample + '_merged.bai',
-                merged_md5=prefix_sample + '_merged.bam.md5',
-                duplicates_marked_bam=prefix_sample + '_duplicates_marked.bam',
-                duplicates_marked_bai=prefix_sample + '_duplicates_marked.bai',
-                duplicates_marked_md5=prefix_sample + '_duplicates_marked.bam.md5',
-                duplicate_metrics=prefix_sample + '_duplicate_metrics.tsv',
-                realigner_targets=prefix_sample + '_realigner.intervals',
-                realigned_bam=prefix_sample + '_realigned.bam',
-                realigned_bai=prefix_sample + '_realigned.bai',
-                alignment_summary_metrics=prefix_sample + '_alignment_summary_metrics.tsv',
-                raw_variants_gvcf_vcf=prefix_sample + '_raw_variants.g.vcf.gz',
-                raw_variants_gvcf_idx=prefix_sample + '_raw_variants.g.vcf.gz.tbi')
+                    temporary_directory=prefix_sample + '_temporary',
+                    merged_bam=prefix_sample + '_merged.bam',
+                    merged_bai=prefix_sample + '_merged.bai',
+                    merged_md5=prefix_sample + '_merged.bam.md5',
+                    duplicates_marked_bam=prefix_sample + '_duplicates_marked.bam',
+                    duplicates_marked_bai=prefix_sample + '_duplicates_marked.bai',
+                    duplicates_marked_md5=prefix_sample + '_duplicates_marked.bam.md5',
+                    duplicate_metrics=prefix_sample + '_duplicate_metrics.tsv',
+                    realigner_targets=prefix_sample + '_realigner.intervals',
+                    realigned_bam=prefix_sample + '_realigned.bam',
+                    realigned_bai=prefix_sample + '_realigned.bai',
+                    alignment_summary_metrics=prefix_sample + '_alignment_summary_metrics.tsv',
+                    raw_variants_gvcf_vcf=prefix_sample + '_raw_variants.g.vcf.gz',
+                    raw_variants_gvcf_idx=prefix_sample + '_raw_variants.g.vcf.gz.tbi')
 
             # Create a Runnable and Executable for processing each Sample object.
 
             runnable_process_sample = self.add_runnable(
-                runnable=Runnable(
-                    name=prefix_sample,
-                    code_module='bsf.runnables.generic',
-                    working_directory=self.genome_directory,
-                    file_path_dict=file_path_dict_sample,
-                    debug=self.debug))
-            executable_process_sample = drms_process_sample.add_executable(
-                executable=Executable.from_analysis_runnable(
-                    analysis=self,
-                    runnable_name=runnable_process_sample.name))
+                    runnable=Runnable(
+                            name=prefix_sample,
+                            code_module='bsf.runnables.generic',
+                            working_directory=self.genome_directory,
+                            file_path_dict=file_path_dict_sample,
+                            debug=self.debug))
+            executable_process_sample = self.set_drms_runnable(
+                    drms=drms_process_sample,
+                    runnable=runnable_process_sample)
             executable_process_sample.dependencies.extend(vc_process_sample_dependencies)
 
             if len(vc_process_sample_replicates) == 1:
                 # If there is only one replicate, just rename the BAM and BAI files.
                 runnable_process_sample.add_runnable_step(
-                    runnable_step=RunnableStepMove(
-                        name='process_sample_move_recalibrated_bam',
-                        source_path=vc_process_sample_replicates[0][0],
-                        target_path=file_path_dict_sample['realigned_bam']))
+                        runnable_step=RunnableStepMove(
+                                name='process_sample_move_recalibrated_bam',
+                                source_path=vc_process_sample_replicates[0][0],
+                                target_path=file_path_dict_sample['realigned_bam']))
 
                 runnable_process_sample.add_runnable_step(
-                    runnable_step=RunnableStepMove(
-                        name='process_sample_move_recalibrated_bai',
-                        source_path=vc_process_sample_replicates[0][1],
-                        target_path=file_path_dict_sample['realigned_bai']))
+                        runnable_step=RunnableStepMove(
+                                name='process_sample_move_recalibrated_bai',
+                                source_path=vc_process_sample_replicates[0][1],
+                                target_path=file_path_dict_sample['realigned_bai']))
 
                 # Link the Picard Alignment Summary Metrics.
                 runnable_process_sample.add_runnable_step(
-                    runnable_step=RunnableStepLink(
-                        name='process_sample_link_alignment_metrics',
-                        source_path=vc_process_sample_replicates[0][2],
-                        target_path=file_path_dict_sample['alignment_summary_metrics']))
+                        runnable_step=RunnableStepLink(
+                                name='process_sample_link_alignment_metrics',
+                                source_path=vc_process_sample_replicates[0][2],
+                                target_path=file_path_dict_sample['alignment_summary_metrics']))
 
                 # Link the Picard Duplicate Metrics.
                 runnable_process_sample.add_runnable_step(
-                    runnable_step=RunnableStepLink(
-                        name='process_sample_link_duplicate_metrics',
-                        source_path=vc_process_sample_replicates[0][3],
-                        target_path=file_path_dict_sample['duplicate_metrics']))
+                        runnable_step=RunnableStepLink(
+                                name='process_sample_link_duplicate_metrics',
+                                source_path=vc_process_sample_replicates[0][3],
+                                target_path=file_path_dict_sample['duplicate_metrics']))
             else:
                 # Run the Picard MergeSamFiles analysis.
 
                 runnable_step = runnable_process_sample.add_runnable_step(
-                    runnable_step=RunnableStepPicard(
-                        name='process_sample_picard_merge_sam_files',
-                        java_temporary_path=file_path_dict_sample['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        picard_classpath=self.classpath_picard,
-                        picard_command='MergeSamFiles'))
+                        runnable_step=RunnableStepPicard(
+                                name='process_sample_picard_merge_sam_files',
+                                java_temporary_path=file_path_dict_sample['temporary_directory'],
+                                java_heap_maximum='Xmx6G',
+                                picard_classpath=self.classpath_picard,
+                                picard_command='MergeSamFiles'))
                 assert isinstance(runnable_step, RunnableStepPicard)
                 for file_path_tuple in vc_process_sample_replicates:
                     runnable_step.add_picard_option(key='INPUT', value=file_path_tuple[0], override=True)
@@ -1667,23 +1670,23 @@ class VariantCallingGATK(Analysis):
                     file_path_dict_sample['duplicates_marked_md5'] = file_path_dict_sample['merged_md5']
                 else:
                     runnable_step = runnable_process_sample.add_runnable_step(
-                        runnable_step=RunnableStepPicard(
-                            name='process_sample_picard_mark_duplicates',
-                            obsolete_file_path_list=[
-                                file_path_dict_sample['merged_bam'],
-                                file_path_dict_sample['merged_bai'],
-                                file_path_dict_sample['merged_md5'],
-                            ],
-                            java_temporary_path=file_path_dict_sample['temporary_directory'],
-                            java_heap_maximum='Xmx6G',
-                            picard_classpath=self.classpath_picard,
-                            picard_command='MarkDuplicates'))
+                            runnable_step=RunnableStepPicard(
+                                    name='process_sample_picard_mark_duplicates',
+                                    obsolete_file_path_list=[
+                                        file_path_dict_sample['merged_bam'],
+                                        file_path_dict_sample['merged_bai'],
+                                        file_path_dict_sample['merged_md5'],
+                                    ],
+                                    java_temporary_path=file_path_dict_sample['temporary_directory'],
+                                    java_heap_maximum='Xmx6G',
+                                    picard_classpath=self.classpath_picard,
+                                    picard_command='MarkDuplicates'))
                     assert isinstance(runnable_step, RunnableStepPicard)
                     runnable_step.add_picard_option(key='INPUT', value=file_path_dict_sample['merged_bam'])
                     runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_sample['duplicates_marked_bam'])
                     runnable_step.add_picard_option(
-                        key='METRICS_FILE',
-                        value=file_path_dict_sample['duplicate_metrics'])
+                            key='METRICS_FILE',
+                            value=file_path_dict_sample['duplicate_metrics'])
                     # Since read names typically contain a dash and an underscore, the READ_NAME_REGEX needs adjusting,
                     # as otherwise optical duplicates could not be detected. This is a consequence of using
                     # Illumina2bam rather than Picard ExtractIlluminaBarcodes, IlluminaBasecallsToFastq and
@@ -1692,8 +1695,8 @@ class VariantCallingGATK(Analysis):
                     # Default:  [a-zA-Z0-9]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
                     # Adjusted: [a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*
                     runnable_step.add_picard_option(
-                        key='READ_NAME_REGEX',
-                        value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
+                            key='READ_NAME_REGEX',
+                            value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
                     runnable_step.add_picard_option(key='TMP_DIR', value=file_path_dict_sample['temporary_directory'])
                     # VERBOSITY defaults to 'INFO'.
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
@@ -1713,11 +1716,11 @@ class VariantCallingGATK(Analysis):
                 # for the GATK IndelRealigner analysis.
 
                 runnable_step = runnable_process_sample.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='process_sample_gatk_realigner_target_creator',
-                        java_temporary_path=file_path_dict_sample['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk))
+                        runnable_step=RunnableStepGATK(
+                                name='process_sample_gatk_realigner_target_creator',
+                                java_temporary_path=file_path_dict_sample['temporary_directory'],
+                                java_heap_maximum='Xmx6G',
+                                gatk_classpath=self.classpath_gatk))
                 assert isinstance(runnable_step, RunnableStepGATK)
                 runnable_step.add_gatk_option(key='analysis_type', value='RealignerTargetCreator')
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -1738,16 +1741,16 @@ class VariantCallingGATK(Analysis):
                 # after the GATK RealignerTargetCreator analysis.
 
                 runnable_step = runnable_process_sample.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='process_sample_gatk_indel_realigner',
-                        obsolete_file_path_list=[
-                            file_path_dict_sample['duplicates_marked_bam'],
-                            file_path_dict_sample['duplicates_marked_bai'],
-                            file_path_dict_sample['duplicates_marked_md5']
-                        ],
-                        java_temporary_path=file_path_dict_sample['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk))
+                        runnable_step=RunnableStepGATK(
+                                name='process_sample_gatk_indel_realigner',
+                                obsolete_file_path_list=[
+                                    file_path_dict_sample['duplicates_marked_bam'],
+                                    file_path_dict_sample['duplicates_marked_bai'],
+                                    file_path_dict_sample['duplicates_marked_md5']
+                                ],
+                                java_temporary_path=file_path_dict_sample['temporary_directory'],
+                                java_heap_maximum='Xmx6G',
+                                gatk_classpath=self.classpath_gatk))
                 assert isinstance(runnable_step, RunnableStepGATK)
                 runnable_step.add_gatk_option(key='analysis_type', value='IndelRealigner')
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -1770,12 +1773,12 @@ class VariantCallingGATK(Analysis):
             # Run the Picard CollectAlignmentSummaryMetrics analysis.
 
             runnable_step = runnable_process_sample.add_runnable_step(
-                runnable_step=RunnableStepPicard(
-                    name='process_sample_picard_collect_alignment_summary_metrics',
-                    java_temporary_path=file_path_dict_sample['temporary_directory'],
-                    java_heap_maximum='Xmx6G',
-                    picard_classpath=self.classpath_picard,
-                    picard_command='CollectAlignmentSummaryMetrics'))
+                    runnable_step=RunnableStepPicard(
+                            name='process_sample_picard_collect_alignment_summary_metrics',
+                            java_temporary_path=file_path_dict_sample['temporary_directory'],
+                            java_heap_maximum='Xmx6G',
+                            picard_classpath=self.classpath_picard,
+                            picard_command='CollectAlignmentSummaryMetrics'))
             assert isinstance(runnable_step, RunnableStepPicard)
             runnable_step.add_picard_option(key='INPUT', value=file_path_dict_sample['realigned_bam'])
             runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_sample['alignment_summary_metrics'])
@@ -1798,11 +1801,11 @@ class VariantCallingGATK(Analysis):
             # Run the GATK HaplotypeCaller analysis per sample.
 
             runnable_step = runnable_process_sample.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='process_sample_gatk_haplotype_caller',
-                    java_temporary_path=file_path_dict_sample['temporary_directory'],
-                    java_heap_maximum='Xmx8G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='process_sample_gatk_haplotype_caller',
+                            java_temporary_path=file_path_dict_sample['temporary_directory'],
+                            java_heap_maximum='Xmx8G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='HaplotypeCaller')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -1858,16 +1861,16 @@ class VariantCallingGATK(Analysis):
             prefix_diagnosis = '_'.join((drms_diagnose_sample.name, sample.name))
 
             file_path_dict_diagnosis = dict(
-                temporary_directory=prefix_diagnosis + '_temporary',
-                realigned_bam=file_path_dict_sample['realigned_bam'],
-                realigned_bai=file_path_dict_sample['realigned_bai'],
-                diagnose_targets_vcf=prefix_diagnosis + '_diagnose_targets.vcf.gz',
-                diagnose_targets_idx=prefix_diagnosis + '_diagnose_targets.vcf.gz.tbi',
-                missing_intervals=prefix_diagnosis + '_missing.intervals',
-                missing_report=prefix_diagnosis + '_missing.gatkreport',
-                callable_bed=prefix_diagnosis + '_callable_loci.bed',
-                callable_txt=prefix_diagnosis + '_callable_loci.txt',
-                hybrid_selection_metrics=prefix_diagnosis + '_hybrid_selection_metrics.tsv',
+                    temporary_directory=prefix_diagnosis + '_temporary',
+                    realigned_bam=file_path_dict_sample['realigned_bam'],
+                    realigned_bai=file_path_dict_sample['realigned_bai'],
+                    diagnose_targets_vcf=prefix_diagnosis + '_diagnose_targets.vcf.gz',
+                    diagnose_targets_idx=prefix_diagnosis + '_diagnose_targets.vcf.gz.tbi',
+                    missing_intervals=prefix_diagnosis + '_missing.intervals',
+                    missing_report=prefix_diagnosis + '_missing.gatkreport',
+                    callable_bed=prefix_diagnosis + '_callable_loci.bed',
+                    callable_txt=prefix_diagnosis + '_callable_loci.txt',
+                    hybrid_selection_metrics=prefix_diagnosis + '_hybrid_selection_metrics.tsv',
             )
 
             target_interval_name = str()
@@ -1891,8 +1894,8 @@ class VariantCallingGATK(Analysis):
                 target_interval_path = target_interval_list[0]
                 if target_interval_path and not os.path.isabs(target_interval_path):
                     target_interval_path = Default.get_absolute_path(
-                        file_path=target_interval_path,
-                        default_path=Default.absolute_intervals())
+                            file_path=target_interval_path,
+                            default_path=Default.absolute_intervals())
 
             if 'Probe Intervals' in sample.annotation:
                 probe_interval_list = sample.annotation['Probe Intervals']
@@ -1903,33 +1906,32 @@ class VariantCallingGATK(Analysis):
                 probe_interval_path = probe_interval_list[0]
                 if probe_interval_path and not os.path.isabs(probe_interval_path):
                     probe_interval_path = Default.get_absolute_path(
-                        file_path=probe_interval_path,
-                        default_path=Default.absolute_intervals())
+                            file_path=probe_interval_path,
+                            default_path=Default.absolute_intervals())
 
             if target_interval_path:
                 # Create a Runnable and Executable for diagnosing each sample.
 
                 runnable_diagnose_sample = self.add_runnable(
-                    runnable=Runnable(
-                        name=prefix_diagnosis,
-                        code_module='bsf.runnables.generic',
-                        working_directory=self.genome_directory,
-                        file_path_dict=file_path_dict_diagnosis,
-                        debug=self.debug))
-                executable_diagnose_sample = drms_diagnose_sample.add_executable(
-                    executable=Executable.from_analysis_runnable(
-                        analysis=self,
-                        runnable_name=runnable_diagnose_sample.name))
+                        runnable=Runnable(
+                                name=prefix_diagnosis,
+                                code_module='bsf.runnables.generic',
+                                working_directory=self.genome_directory,
+                                file_path_dict=file_path_dict_diagnosis,
+                                debug=self.debug))
+                executable_diagnose_sample = self.set_drms_runnable(
+                        drms=drms_diagnose_sample,
+                        runnable=runnable_diagnose_sample)
                 executable_diagnose_sample.dependencies.extend(vc_process_sample_dependencies)
 
                 # Run the GATK DiagnoseTarget analysis per sample.
 
                 runnable_step = runnable_diagnose_sample.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='diagnose_sample_gatk_diagnose_target',
-                        java_temporary_path=file_path_dict_diagnosis['temporary_directory'],
-                        java_heap_maximum='Xmx8G',
-                        gatk_classpath=self.classpath_gatk))
+                        runnable_step=RunnableStepGATK(
+                                name='diagnose_sample_gatk_diagnose_target',
+                                java_temporary_path=file_path_dict_diagnosis['temporary_directory'],
+                                java_heap_maximum='Xmx8G',
+                                gatk_classpath=self.classpath_gatk))
                 assert isinstance(runnable_step, RunnableStepGATK)
                 runnable_step.add_gatk_option(key='analysis_type', value='DiagnoseTargets')
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -1945,17 +1947,17 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
                 runnable_step.add_gatk_option(key='out', value=file_path_dict_diagnosis['diagnose_targets_vcf'])
                 runnable_step.add_gatk_option(
-                    key='missing_intervals',
-                    value=file_path_dict_diagnosis['missing_intervals'])
+                        key='missing_intervals',
+                        value=file_path_dict_diagnosis['missing_intervals'])
 
                 # Run the GATK QualifyMissingIntervals analysis per sample.
 
                 runnable_step = runnable_diagnose_sample.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='diagnose_sample_gatk_qualify_missing_intervals',
-                        java_temporary_path=file_path_dict_diagnosis['temporary_directory'],
-                        java_heap_maximum='Xmx8G',
-                        gatk_classpath=self.classpath_gatk))
+                        runnable_step=RunnableStepGATK(
+                                name='diagnose_sample_gatk_qualify_missing_intervals',
+                                java_temporary_path=file_path_dict_diagnosis['temporary_directory'],
+                                java_heap_maximum='Xmx8G',
+                                gatk_classpath=self.classpath_gatk))
                 assert isinstance(runnable_step, RunnableStepGATK)
                 runnable_step.add_gatk_option(key='analysis_type', value='QualifyMissingIntervals')
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -1976,11 +1978,11 @@ class VariantCallingGATK(Analysis):
                 # Run the GATK CallableLoci analysis per sample.
 
                 runnable_step = runnable_diagnose_sample.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='diagnose_sample_gatk_callable_loci',
-                        java_temporary_path=file_path_dict_diagnosis['temporary_directory'],
-                        java_heap_maximum='Xmx8G',
-                        gatk_classpath=self.classpath_gatk))
+                        runnable_step=RunnableStepGATK(
+                                name='diagnose_sample_gatk_callable_loci',
+                                java_temporary_path=file_path_dict_diagnosis['temporary_directory'],
+                                java_heap_maximum='Xmx8G',
+                                gatk_classpath=self.classpath_gatk))
                 assert isinstance(runnable_step, RunnableStepGATK)
                 runnable_step.add_gatk_option(key='analysis_type', value='CallableLoci')
                 runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2000,12 +2002,12 @@ class VariantCallingGATK(Analysis):
                 # Run the Picard CalculateHsMetrics analysis per sample.
 
                 runnable_step = runnable_diagnose_sample.add_runnable_step(
-                    runnable_step=RunnableStepPicard(
-                        name='diagnose_sample_picard_calculate_hybrid_selection_metrics',
-                        java_temporary_path=file_path_dict_diagnosis['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        picard_classpath=self.classpath_picard,
-                        picard_command='CalculateHsMetrics'))
+                        runnable_step=RunnableStepPicard(
+                                name='diagnose_sample_picard_calculate_hybrid_selection_metrics',
+                                java_temporary_path=file_path_dict_diagnosis['temporary_directory'],
+                                java_heap_maximum='Xmx6G',
+                                picard_classpath=self.classpath_picard,
+                                picard_command='CalculateHsMetrics'))
                 assert isinstance(runnable_step, RunnableStepPicard)
                 if probe_interval_path:
                     runnable_step.add_picard_option(key='BAIT_INTERVALS', value=probe_interval_path)
@@ -2016,8 +2018,8 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_picard_option(key='TARGET_INTERVALS', value=target_interval_path)
                 runnable_step.add_picard_option(key='INPUT', value=file_path_dict_diagnosis['realigned_bam'])
                 runnable_step.add_picard_option(
-                    key='OUTPUT',
-                    value=file_path_dict_diagnosis['hybrid_selection_metrics'])
+                        key='OUTPUT',
+                        value=file_path_dict_diagnosis['hybrid_selection_metrics'])
                 runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='ALL_READS', override=True)
                 runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='SAMPLE', override=True)
                 runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='LIBRARY', override=True)
@@ -2059,32 +2061,31 @@ class VariantCallingGATK(Analysis):
             vc_merge_cohort_prefix_list.append(prefix_merge)
 
             file_path_dict_merge = dict(
-                temporary_directory=prefix_merge + '_temporary',
-                combined_gvcf_vcf=prefix_merge + '_combined.g.vcf.gz',
-                combined_gvcf_tbi=prefix_merge + '_combined.g.vcf.gz.tbi',
+                    temporary_directory=prefix_merge + '_temporary',
+                    combined_gvcf_vcf=prefix_merge + '_combined.g.vcf.gz',
+                    combined_gvcf_tbi=prefix_merge + '_combined.g.vcf.gz.tbi',
             )
 
             # Create a Runnable and Executable for merging each sub-cohort from its Sample objects.
 
             runnable_merge_cohort = self.add_runnable(
-                runnable=Runnable(
-                    name=prefix_merge,
-                    code_module='bsf.runnables.generic',
-                    working_directory=self.genome_directory,
-                    file_path_dict=file_path_dict_merge,
-                    debug=self.debug))
-            executable_merge_cohort = drms_merge_cohort.add_executable(
-                executable=Executable.from_analysis_runnable(
-                    analysis=self,
-                    runnable_name=runnable_merge_cohort.name))
+                    runnable=Runnable(
+                            name=prefix_merge,
+                            code_module='bsf.runnables.generic',
+                            working_directory=self.genome_directory,
+                            file_path_dict=file_path_dict_merge,
+                            debug=self.debug))
+            executable_merge_cohort = self.set_drms_runnable(
+                    drms=drms_merge_cohort,
+                    runnable=runnable_merge_cohort)
             executable_merge_cohort.dependencies.extend(vc_merge_cohort_dependency_dict[cohort_key])
 
             runnable_step = runnable_merge_cohort.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='merge_cohort_gatk_combine_gvcfs',
-                    java_temporary_path=file_path_dict_merge['temporary_directory'],
-                    java_heap_maximum='Xmx4G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='merge_cohort_gatk_combine_gvcfs',
+                            java_temporary_path=file_path_dict_merge['temporary_directory'],
+                            java_heap_maximum='Xmx4G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='CombineGVCFs')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2110,32 +2111,31 @@ class VariantCallingGATK(Analysis):
             vc_merge_cohort_prefix_list.append(prefix_merge)
 
             file_path_dict_merge = dict(
-                temporary_directory=prefix_merge + '_temporary',
-                combined_gvcf_vcf=prefix_merge + '_combined.g.vcf.gz',
-                combined_gvcf_tbi=prefix_merge + '_combined.g.vcf.gz.tbi',
+                    temporary_directory=prefix_merge + '_temporary',
+                    combined_gvcf_vcf=prefix_merge + '_combined.g.vcf.gz',
+                    combined_gvcf_tbi=prefix_merge + '_combined.g.vcf.gz.tbi',
             )
 
             # Create a Runnable and Executable for merging the final cohort from its sub-cohorts.
 
             runnable_merge_cohort = self.add_runnable(
-                runnable=Runnable(
-                    name=prefix_merge,
-                    code_module='bsf.runnables.generic',
-                    working_directory=self.genome_directory,
-                    file_path_dict=file_path_dict_merge,
-                    debug=self.debug))
-            executable_merge_cohort = drms_merge_cohort.add_executable(
-                executable=Executable.from_analysis_runnable(
-                    analysis=self,
-                    runnable_name=runnable_merge_cohort.name))
+                    runnable=Runnable(
+                            name=prefix_merge,
+                            code_module='bsf.runnables.generic',
+                            working_directory=self.genome_directory,
+                            file_path_dict=file_path_dict_merge,
+                            debug=self.debug))
+            executable_merge_cohort = self.set_drms_runnable(
+                    drms=drms_merge_cohort,
+                    runnable=runnable_merge_cohort)
             executable_merge_cohort.dependencies.extend(vc_merge_cohort_dependency_list)
 
             runnable_step = runnable_merge_cohort.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='merge_cohort_gatk_combine_gvcfs',
-                    java_temporary_path=file_path_dict_merge['temporary_directory'],
-                    java_heap_maximum='Xmx4G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='merge_cohort_gatk_combine_gvcfs',
+                            java_temporary_path=file_path_dict_merge['temporary_directory'],
+                            java_heap_maximum='Xmx4G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='CombineGVCFs')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2165,57 +2165,57 @@ class VariantCallingGATK(Analysis):
         prefix_cohort = '_'.join((drms_process_cohort.name, self.cohort_name))
 
         file_path_dict_cohort = dict(
-            temporary_directory=prefix_cohort + '_temporary',
-            # Combined GVCF file for the cohort defined in this project.
-            combined_gvcf_vcf=vc_merge_cohort_prefix_list[-1] + '_combined.g.vcf.gz',
-            combined_gvcf_idx=vc_merge_cohort_prefix_list[-1] + '_combined.g.vcf.gz.tbi',
-            # Temporary GVCF file with other cohorts merged in to facilitate recalibration.
-            temporary_gvcf_vcf=prefix_cohort + '_temporary.g.vcf.gz',
-            temporary_gvcf_idx=prefix_cohort + '_temporary.g.vcf.gz.tbi',
-            genotyped_raw_vcf=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.gz',
-            genotyped_raw_idx=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.gz.tbi',
-            recalibrated_snp_raw_indel_vcf=prefix_cohort + '_recalibrated_snp_raw_indel.vcf.gz',
-            recalibrated_snp_raw_indel_idx=prefix_cohort + '_recalibrated_snp_raw_indel.vcf.gz.tbi',
-            recalibrated_snp_recalibrated_indel_vcf=prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.gz',
-            recalibrated_snp_recalibrated_indel_idx=prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.gz.tbi',
-            multi_sample_vcf=prefix_cohort + '_multi_sample.vcf.gz',
-            multi_sample_idx=prefix_cohort + '_multi_sample.vcf.gz.tbi',
-            snpeff_vcf=prefix_cohort + '_snpeff.vcf',
-            snpeff_idx=prefix_cohort + '_snpeff.vcf.idx',
-            snpeff_stats=prefix_cohort + '_snpeff_summary.html',
-            annotated_vcf=prefix_cohort + '_annotated.vcf.gz',
-            annotated_idx=prefix_cohort + '_annotated.vcf.gz.tbi',
-            recalibration_indel=prefix_cohort + '_recalibration_indel.recal',
-            recalibration_snp=prefix_cohort + '_recalibration_snp.recal',
-            tranches_indel=prefix_cohort + '_recalibration_indel.tranches',
-            tranches_snp=prefix_cohort + '_recalibration_snp.tranches',
-            plots_indel=prefix_cohort + '_recalibration_indel.R',
-            plots_snp=prefix_cohort + '_recalibration_snp.R')
+                temporary_directory=prefix_cohort + '_temporary',
+                # Combined GVCF file for the cohort defined in this project.
+                combined_gvcf_vcf=vc_merge_cohort_prefix_list[-1] + '_combined.g.vcf.gz',
+                combined_gvcf_idx=vc_merge_cohort_prefix_list[-1] + '_combined.g.vcf.gz.tbi',
+                # Temporary GVCF file with other cohorts merged in to facilitate recalibration.
+                temporary_gvcf_vcf=prefix_cohort + '_temporary.g.vcf.gz',
+                temporary_gvcf_idx=prefix_cohort + '_temporary.g.vcf.gz.tbi',
+                genotyped_raw_vcf=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.gz',
+                genotyped_raw_idx=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.gz.tbi',
+                recalibrated_snp_raw_indel_vcf=prefix_cohort + '_recalibrated_snp_raw_indel.vcf.gz',
+                recalibrated_snp_raw_indel_idx=prefix_cohort + '_recalibrated_snp_raw_indel.vcf.gz.tbi',
+                recalibrated_snp_recalibrated_indel_vcf=prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.gz',
+                recalibrated_snp_recalibrated_indel_idx=(
+                    prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.gz.tbi'),
+                multi_sample_vcf=prefix_cohort + '_multi_sample.vcf.gz',
+                multi_sample_idx=prefix_cohort + '_multi_sample.vcf.gz.tbi',
+                snpeff_vcf=prefix_cohort + '_snpeff.vcf',
+                snpeff_idx=prefix_cohort + '_snpeff.vcf.idx',
+                snpeff_stats=prefix_cohort + '_snpeff_summary.html',
+                annotated_vcf=prefix_cohort + '_annotated.vcf.gz',
+                annotated_idx=prefix_cohort + '_annotated.vcf.gz.tbi',
+                recalibration_indel=prefix_cohort + '_recalibration_indel.recal',
+                recalibration_snp=prefix_cohort + '_recalibration_snp.recal',
+                tranches_indel=prefix_cohort + '_recalibration_indel.tranches',
+                tranches_snp=prefix_cohort + '_recalibration_snp.tranches',
+                plots_indel=prefix_cohort + '_recalibration_indel.R',
+                plots_snp=prefix_cohort + '_recalibration_snp.R')
 
         # Create a Runnable and Executable for processing the cohort.
 
         runnable_process_cohort = self.add_runnable(
-            runnable=Runnable(
-                name=prefix_cohort,
-                code_module='bsf.runnables.generic',
-                working_directory=self.genome_directory,
-                file_path_dict=file_path_dict_cohort,
-                debug=self.debug))
-        executable_process_cohort = drms_process_cohort.add_executable(
-            executable=Executable.from_analysis_runnable(
-                analysis=self,
-                runnable_name=runnable_process_cohort.name))
+                runnable=Runnable(
+                        name=prefix_cohort,
+                        code_module='bsf.runnables.generic',
+                        working_directory=self.genome_directory,
+                        file_path_dict=file_path_dict_cohort,
+                        debug=self.debug))
+        executable_process_cohort = self.set_drms_runnable(
+                drms=drms_process_cohort,
+                runnable=runnable_process_cohort)
         executable_process_cohort.dependencies.append(vc_merge_cohort_final_dependency)
 
         # Run an additional GATK CombineGVCFs analysis to merge into a super-cohort.
 
         if len(self.accessory_cohort_gvcfs):
             runnable_step = runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='process_cohort_gatk_combine_gvcfs_accessory',
-                    java_temporary_path=file_path_dict_cohort['temporary_directory'],
-                    java_heap_maximum='Xmx4G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='process_cohort_gatk_combine_gvcfs_accessory',
+                            java_temporary_path=file_path_dict_cohort['temporary_directory'],
+                            java_heap_maximum='Xmx4G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='CombineGVCFs')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2228,19 +2228,19 @@ class VariantCallingGATK(Analysis):
             for file_path in self.accessory_cohort_gvcfs:
                 runnable_step.add_gatk_option(key='variant', value=file_path, override=True)
             runnable_step.add_gatk_option(
-                key='variant',
-                value=file_path_dict_cohort['combined_gvcf_vcf'],
-                override=True)
+                    key='variant',
+                    value=file_path_dict_cohort['combined_gvcf_vcf'],
+                    override=True)
             runnable_step.add_gatk_option(key='out', value=file_path_dict_cohort['temporary_gvcf_vcf'])
 
         # Run the GATK GenotypeGVCFs analysis.
 
         runnable_step = runnable_process_cohort.add_runnable_step(
-            runnable_step=RunnableStepGATK(
-                name='process_cohort_gatk_genotype_gvcfs',
-                java_temporary_path=file_path_dict_cohort['temporary_directory'],
-                java_heap_maximum='Xmx6G',
-                gatk_classpath=self.classpath_gatk))
+                runnable_step=RunnableStepGATK(
+                        name='process_cohort_gatk_genotype_gvcfs',
+                        java_temporary_path=file_path_dict_cohort['temporary_directory'],
+                        java_heap_maximum='Xmx6G',
+                        gatk_classpath=self.classpath_gatk))
         assert isinstance(runnable_step, RunnableStepGATK)
         runnable_step.add_gatk_option(key='analysis_type', value='GenotypeGVCFs')
         runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2268,11 +2268,11 @@ class VariantCallingGATK(Analysis):
             # Run the GATK VariantRecalibrator analysis on SNPs.
 
             runnable_step = runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='process_cohort_gatk_variant_recalibrator_snp',
-                    java_temporary_path=file_path_dict_cohort['temporary_directory'],
-                    java_heap_maximum='Xmx8G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='process_cohort_gatk_variant_recalibrator_snp',
+                            java_temporary_path=file_path_dict_cohort['temporary_directory'],
+                            java_heap_maximum='Xmx8G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='VariantRecalibrator')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2291,8 +2291,8 @@ class VariantCallingGATK(Analysis):
                            self.vqsr_resources_snp_dict[resource]['truth'],
                            self.vqsr_resources_snp_dict[resource]['prior'])
                 runnable_step.add_gatk_option(
-                    key=resource_option,
-                    value=self.vqsr_resources_snp_dict[resource]['file_path'])
+                        key=resource_option,
+                        value=self.vqsr_resources_snp_dict[resource]['file_path'])
             for annotation in self.vqsr_annotations_snp_list:
                 runnable_step.add_gatk_option(key='use_annotation', value=annotation, override=True)
             if self.vqsr_max_gaussians_pos_snp is not None:
@@ -2307,11 +2307,11 @@ class VariantCallingGATK(Analysis):
             # Run the GATK ApplyRecalibration analysis on SNPs.
 
             runnable_step = runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='process_cohort_gatk_apply_recalibration_snp',
-                    java_temporary_path=file_path_dict_cohort['temporary_directory'],
-                    java_heap_maximum='Xmx4G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='process_cohort_gatk_apply_recalibration_snp',
+                            java_temporary_path=file_path_dict_cohort['temporary_directory'],
+                            java_heap_maximum='Xmx4G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='ApplyRecalibration')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2342,11 +2342,11 @@ class VariantCallingGATK(Analysis):
             # Run the GATK VariantRecalibrator analysis on INDELs.
 
             runnable_step = runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='process_cohort_gatk_variant_recalibrator_indel',
-                    java_temporary_path=file_path_dict_cohort['temporary_directory'],
-                    java_heap_maximum='Xmx8G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='process_cohort_gatk_variant_recalibrator_indel',
+                            java_temporary_path=file_path_dict_cohort['temporary_directory'],
+                            java_heap_maximum='Xmx8G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='VariantRecalibrator')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2365,8 +2365,8 @@ class VariantCallingGATK(Analysis):
                            self.vqsr_resources_indel_dict[resource]['truth'],
                            self.vqsr_resources_indel_dict[resource]['prior'])
                 runnable_step.add_gatk_option(
-                    key=resource_option,
-                    value=self.vqsr_resources_indel_dict[resource]['file_path'])
+                        key=resource_option,
+                        value=self.vqsr_resources_indel_dict[resource]['file_path'])
             for annotation in self.vqsr_annotations_indel_list:
                 runnable_step.add_gatk_option(key='use_annotation', value=annotation, override=True)
             if self.vqsr_max_gaussians_pos_indel is not None:
@@ -2381,11 +2381,11 @@ class VariantCallingGATK(Analysis):
             # Run the GATK ApplyRecalibration analysis on INDELs.
 
             runnable_step = runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='process_cohort_gatk_apply_recalibration_indel',
-                    java_temporary_path=file_path_dict_cohort['temporary_directory'],
-                    java_heap_maximum='Xmx4G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='process_cohort_gatk_apply_recalibration_indel',
+                            java_temporary_path=file_path_dict_cohort['temporary_directory'],
+                            java_heap_maximum='Xmx4G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='ApplyRecalibration')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2400,8 +2400,8 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='recal_file', value=file_path_dict_cohort['recalibration_indel'])
             runnable_step.add_gatk_option(key='tranches_file', value=file_path_dict_cohort['tranches_indel'])
             runnable_step.add_gatk_option(
-                key='out',
-                value=file_path_dict_cohort['recalibrated_snp_recalibrated_indel_vcf'])
+                    key='out',
+                    value=file_path_dict_cohort['recalibrated_snp_recalibrated_indel_vcf'])
             # The lodCutoff (VQSLOD score) filter is not applied for the moment.
             if self.truth_sensitivity_filter_level_indel:
                 runnable_step.add_gatk_option(key='ts_filter_level', value=self.truth_sensitivity_filter_level_indel)
@@ -2411,11 +2411,11 @@ class VariantCallingGATK(Analysis):
 
         if len(self.accessory_cohort_gvcfs):
             runnable_step = runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='process_cohort_gatk_select_variants_cohort',
-                    java_temporary_path=file_path_dict_cohort['temporary_directory'],
-                    java_heap_maximum='Xmx4G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='process_cohort_gatk_select_variants_cohort',
+                            java_temporary_path=file_path_dict_cohort['temporary_directory'],
+                            java_heap_maximum='Xmx4G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='SelectVariants')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2427,8 +2427,8 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
 
             runnable_step.add_gatk_option(
-                key='variant',
-                value=file_path_dict_cohort['recalibrated_snp_recalibrated_indel_vcf'])
+                    key='variant',
+                    value=file_path_dict_cohort['recalibrated_snp_recalibrated_indel_vcf'])
             runnable_step.add_gatk_option(key='out', value=file_path_dict_cohort['multi_sample_vcf'])
             for sample in self.samples:
                 runnable_step.add_gatk_option(key='sample_name', value=sample.name, override=True)
@@ -2442,21 +2442,21 @@ class VariantCallingGATK(Analysis):
         # Run the snpEff tool for functional variant annotation.
 
         java_process = runnable_process_cohort.add_runnable_step(
-            runnable_step=RunnableStep(
-                name='process_cohort_snpeff',
-                program='java',
-                sub_command=Command(program='eff')))
+                runnable_step=RunnableStep(
+                        name='process_cohort_snpeff',
+                        program='java',
+                        sub_command=Command(program='eff')))
 
         java_process.add_switch_short(
-            key='d64')
+                key='d64')
         java_process.add_option_short(
-            key='jar',
-            value=os.path.join(self.classpath_snpeff, 'snpEff.jar'))
+                key='jar',
+                value=os.path.join(self.classpath_snpeff, 'snpEff.jar'))
         java_process.add_switch_short(
-            key='Xmx6G')
+                key='Xmx6G')
         java_process.add_option_pair(
-            key='-Djava.io.tmpdir',
-            value=file_path_dict_cohort['temporary_directory'])
+                key='-Djava.io.tmpdir',
+                value=file_path_dict_cohort['temporary_directory'])
         java_process.stdout_path = file_path_dict_cohort['snpeff_vcf']
 
         sub_command = java_process.sub_command
@@ -2471,11 +2471,11 @@ class VariantCallingGATK(Analysis):
         # Run the GATK VariantAnnotator analysis.
 
         runnable_step = runnable_process_cohort.add_runnable_step(
-            runnable_step=RunnableStepGATK(
-                name='process_cohort_gatk_variant_annotator',
-                java_temporary_path=file_path_dict_cohort['temporary_directory'],
-                java_heap_maximum='Xmx4G',
-                gatk_classpath=self.classpath_gatk))
+                runnable_step=RunnableStepGATK(
+                        name='process_cohort_gatk_variant_annotator',
+                        java_temporary_path=file_path_dict_cohort['temporary_directory'],
+                        java_heap_maximum='Xmx4G',
+                        gatk_classpath=self.classpath_gatk))
         assert isinstance(runnable_step, RunnableStepGATK)
         runnable_step.add_gatk_option(key='analysis_type', value='VariantAnnotator')
         runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2494,14 +2494,14 @@ class VariantCallingGATK(Analysis):
             if len(self.annotation_resources_dict[annotation_resource][0]) \
                     and len(self.annotation_resources_dict[annotation_resource][1]):
                 runnable_step.add_gatk_option(
-                    key=':'.join(('resource', annotation_resource)),
-                    value=self.annotation_resources_dict[annotation_resource][0])
+                        key=':'.join(('resource', annotation_resource)),
+                        value=self.annotation_resources_dict[annotation_resource][0])
                 for annotation in self.annotation_resources_dict[annotation_resource][1]:
                     assert isinstance(annotation, str)
                     runnable_step.add_gatk_option(
-                        key='expression',
-                        value='.'.join((annotation_resource, annotation)),
-                        override=True)
+                            key='expression',
+                            value='.'.join((annotation_resource, annotation)),
+                            override=True)
 
         runnable_step.add_gatk_option(key='variant', value=file_path_dict_cohort['multi_sample_vcf'])
         # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
@@ -2517,32 +2517,31 @@ class VariantCallingGATK(Analysis):
             prefix_split = '_'.join((drms_split_cohort.name, sample.name))
 
             file_path_dict_split = dict(
-                temporary_directory=prefix_split + '_temporary',
-                sample_vcf=prefix_split + '.vcf.gz',
-                sample_idx=prefix_split + '.vcf.gz.tbi',
-                sample_tsv=prefix_split + '.tsv')
+                    temporary_directory=prefix_split + '_temporary',
+                    sample_vcf=prefix_split + '.vcf.gz',
+                    sample_idx=prefix_split + '.vcf.gz.tbi',
+                    sample_tsv=prefix_split + '.tsv')
 
             runnable_split_cohort = self.add_runnable(
-                runnable=Runnable(
-                    name=prefix_split,
-                    code_module='bsf.runnables.generic',
-                    working_directory=self.genome_directory,
-                    file_path_dict=file_path_dict_split,
-                    debug=self.debug))
-            executable_split_cohort = drms_split_cohort.add_executable(
-                executable=Executable.from_analysis_runnable(
-                    analysis=self,
-                    runnable_name=runnable_split_cohort.name))
+                    runnable=Runnable(
+                            name=prefix_split,
+                            code_module='bsf.runnables.generic',
+                            working_directory=self.genome_directory,
+                            file_path_dict=file_path_dict_split,
+                            debug=self.debug))
+            executable_split_cohort = self.set_drms_runnable(
+                    drms=drms_split_cohort,
+                    runnable=runnable_split_cohort)
             executable_split_cohort.dependencies.append(executable_process_cohort.name)
 
             # Run the GATK SelectVariants analysis to split multi-sample VCF files into one per sample.
 
             runnable_step = runnable_split_cohort.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='split_cohort_gatk_select_variants',
-                    java_temporary_path=file_path_dict_split['temporary_directory'],
-                    java_heap_maximum='Xmx2G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='split_cohort_gatk_select_variants',
+                            java_temporary_path=file_path_dict_split['temporary_directory'],
+                            java_heap_maximum='Xmx2G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='SelectVariants')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2561,11 +2560,11 @@ class VariantCallingGATK(Analysis):
             # Run the GATK VariantsToTable analysis.
 
             runnable_step = runnable_split_cohort.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='split_cohort_gatk_variants_to_table',
-                    java_temporary_path=file_path_dict_split['temporary_directory'],
-                    java_heap_maximum='Xmx2G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='split_cohort_gatk_variants_to_table',
+                            java_temporary_path=file_path_dict_split['temporary_directory'],
+                            java_heap_maximum='Xmx2G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2615,9 +2614,9 @@ class VariantCallingGATK(Analysis):
                     for annotation in self.annotation_resources_dict[annotation_resource][1]:
                         assert isinstance(annotation, str)
                         runnable_step.add_gatk_option(
-                            key='fields',
-                            value='.'.join((annotation_resource, annotation)),
-                            override=True)
+                                key='fields',
+                                value='.'.join((annotation_resource, annotation)),
+                                override=True)
 
         # Somatic variant calling.
 
@@ -2638,28 +2637,27 @@ class VariantCallingGATK(Analysis):
             # Somatic variant calling-specific file paths
 
             file_path_dict_somatic = dict(
-                temporary_directory=prefix_somatic + '_temporary',
-                somatic_vcf=prefix_somatic + '_somatic.vcf.gz',
-                somatic_idx=prefix_somatic + '_somatic.vcf.gz.tbi',
-                snpeff_vcf=prefix_somatic + '_snpeff.vcf',
-                snpeff_idx=prefix_somatic + '_snpeff.vcf.idx',
-                snpeff_stats=prefix_somatic + '_snpeff_summary.html',
-                snpeff_genes=prefix_somatic + '_snpeff_summary.genes.txt',
-                annotated_vcf=prefix_somatic + '_annotated.vcf.gz',
-                annotated_idx=prefix_somatic + '_annotated.vcf.gz.tbi',
-                annotated_tsv=prefix_somatic + '_annotated.tsv')
+                    temporary_directory=prefix_somatic + '_temporary',
+                    somatic_vcf=prefix_somatic + '_somatic.vcf.gz',
+                    somatic_idx=prefix_somatic + '_somatic.vcf.gz.tbi',
+                    snpeff_vcf=prefix_somatic + '_snpeff.vcf',
+                    snpeff_idx=prefix_somatic + '_snpeff.vcf.idx',
+                    snpeff_stats=prefix_somatic + '_snpeff_summary.html',
+                    snpeff_genes=prefix_somatic + '_snpeff_summary.genes.txt',
+                    annotated_vcf=prefix_somatic + '_annotated.vcf.gz',
+                    annotated_idx=prefix_somatic + '_annotated.vcf.gz.tbi',
+                    annotated_tsv=prefix_somatic + '_annotated.tsv')
 
             runnable_somatic = self.add_runnable(
-                runnable=Runnable(
-                    name=prefix_somatic,
-                    code_module='bsf.runnables.generic',
-                    working_directory=self.genome_directory,
-                    file_path_dict=file_path_dict_somatic,
-                    debug=self.debug))
-            executable_somatic = drms_somatic.add_executable(
-                executable=Executable.from_analysis_runnable(
-                    analysis=self,
-                    runnable_name=runnable_somatic.name))
+                    runnable=Runnable(
+                            name=prefix_somatic,
+                            code_module='bsf.runnables.generic',
+                            working_directory=self.genome_directory,
+                            file_path_dict=file_path_dict_somatic,
+                            debug=self.debug))
+            executable_somatic = self.set_drms_runnable(
+                    drms=drms_somatic,
+                    runnable=runnable_somatic)
             executable_somatic.dependencies.append(
                     'variant_calling_process_sample_' + self.comparisons[key][0][1][0].name)
             executable_somatic.dependencies.append(
@@ -2668,11 +2666,11 @@ class VariantCallingGATK(Analysis):
             # Run the GATK MuTect2 analysis to characterise somatic variants.
 
             runnable_step = runnable_somatic.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='somatic_gatk_mutect2',
-                    java_temporary_path=file_path_dict_somatic['temporary_directory'],
-                    java_heap_maximum='Xmx4G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='somatic_gatk_mutect2',
+                            java_temporary_path=file_path_dict_somatic['temporary_directory'],
+                            java_heap_maximum='Xmx4G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='MuTect2')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2687,31 +2685,32 @@ class VariantCallingGATK(Analysis):
             for file_path in self.known_somatic_discovery:
                 runnable_step.add_gatk_option(key='cosmic', value=file_path, override=True)
             runnable_step.add_gatk_option(
-                key='input_file:normal',
-                value='variant_calling_process_sample_{}_realigned.bam'.format(self.comparisons[key][0][1][0].name))
+                    key='input_file:normal',
+                    value='variant_calling_process_sample_{}_realigned.bam'.format(self.comparisons[key][0][1][0].name))
             runnable_step.add_gatk_option(
-                key='input_file:tumor',
-                value='variant_calling_process_sample_{}_realigned.bam'.format(self.comparisons[key][-1][1][0].name))
+                    key='input_file:tumor',
+                    value='variant_calling_process_sample_{}_realigned.bam'.format(
+                            self.comparisons[key][-1][1][0].name))
             runnable_step.add_gatk_option(key='out', value=file_path_dict_somatic['somatic_vcf'])
 
             # Run the snpEff tool for functional variant annotation.
 
             java_process = runnable_somatic.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='somatic_snpeff',
-                    program='java',
-                    sub_command=Command(program='eff')))
+                    runnable_step=RunnableStep(
+                            name='somatic_snpeff',
+                            program='java',
+                            sub_command=Command(program='eff')))
 
             java_process.add_switch_short(
-                key='d64')
+                    key='d64')
             java_process.add_option_short(
-                key='jar',
-                value=os.path.join(self.classpath_snpeff, 'snpEff.jar'))
+                    key='jar',
+                    value=os.path.join(self.classpath_snpeff, 'snpEff.jar'))
             java_process.add_switch_short(
-                key='Xmx6G')
+                    key='Xmx6G')
             java_process.add_option_pair(
-                key='-Djava.io.tmpdir',
-                value=file_path_dict_somatic['temporary_directory'])
+                    key='-Djava.io.tmpdir',
+                    value=file_path_dict_somatic['temporary_directory'])
             java_process.stdout_path = file_path_dict_somatic['snpeff_vcf']
 
             sub_command = java_process.sub_command
@@ -2726,11 +2725,11 @@ class VariantCallingGATK(Analysis):
             # Run the GATK VariantAnnotator analysis.
 
             runnable_step = runnable_somatic.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='somatic_gatk_variant_annotator',
-                    java_temporary_path=file_path_dict_somatic['temporary_directory'],
-                    java_heap_maximum='Xmx4G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='somatic_gatk_variant_annotator',
+                            java_temporary_path=file_path_dict_somatic['temporary_directory'],
+                            java_heap_maximum='Xmx4G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='VariantAnnotator')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2749,14 +2748,14 @@ class VariantCallingGATK(Analysis):
                 if len(self.annotation_resources_dict[annotation_resource][0]) \
                         and len(self.annotation_resources_dict[annotation_resource][1]):
                     runnable_step.add_gatk_option(
-                        key=':'.join(('resource', annotation_resource)),
-                        value=self.annotation_resources_dict[annotation_resource][0])
+                            key=':'.join(('resource', annotation_resource)),
+                            value=self.annotation_resources_dict[annotation_resource][0])
                     for annotation in self.annotation_resources_dict[annotation_resource][1]:
                         assert isinstance(annotation, str)
                         runnable_step.add_gatk_option(
-                            key='expression',
-                            value='.'.join((annotation_resource, annotation)),
-                            override=True)
+                                key='expression',
+                                value='.'.join((annotation_resource, annotation)),
+                                override=True)
 
             runnable_step.add_gatk_option(key='variant', value=file_path_dict_somatic['somatic_vcf'])
             # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
@@ -2768,11 +2767,11 @@ class VariantCallingGATK(Analysis):
             # Run the GATK VariantsToTable analysis.
 
             runnable_step = runnable_somatic.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='somatic_gatk_variants_to_table',
-                    java_temporary_path=file_path_dict_somatic['temporary_directory'],
-                    java_heap_maximum='Xmx2G',
-                    gatk_classpath=self.classpath_gatk))
+                    runnable_step=RunnableStepGATK(
+                            name='somatic_gatk_variants_to_table',
+                            java_temporary_path=file_path_dict_somatic['temporary_directory'],
+                            java_heap_maximum='Xmx2G',
+                            gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
             runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
             runnable_step.add_gatk_option(key='reference_sequence', value=self.bwa_genome_db)
@@ -2831,9 +2830,9 @@ class VariantCallingGATK(Analysis):
                     for annotation in self.annotation_resources_dict[annotation_resource][1]:
                         assert isinstance(annotation, str)
                         runnable_step.add_gatk_option(
-                            key='fields',
-                            value='.'.join((annotation_resource, annotation)),
-                            override=True)
+                                key='fields',
+                                value='.'.join((annotation_resource, annotation)),
+                                override=True)
 
         return
 
@@ -2873,10 +2872,10 @@ class VariantCallingGATK(Analysis):
             format(Default.url_absolute_projects(), link_name)
 
         output += '<p>UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.</p>\n'.format(
-            defaults.web.ucsc_track_url(
-                options_dict=options_dict,
-                host_name=default.ucsc_host_name),
-            self.project_name)
+                defaults.web.ucsc_track_url(
+                        options_dict=options_dict,
+                        host_name=default.ucsc_host_name),
+                self.project_name)
         output += '\n'
 
         output += '<h2>Sample and Aliquot Level</h2>\n'
@@ -3001,7 +3000,6 @@ class VariantCallingGATK(Analysis):
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
             for replicate_key in replicate_keys:
-
                 runnable_process_lane = self.runnable_dict[
                     '_'.join((self.drms_name_process_lane, replicate_key))]
                 assert isinstance(runnable_process_lane, Runnable)

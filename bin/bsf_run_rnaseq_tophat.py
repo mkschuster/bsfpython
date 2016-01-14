@@ -33,16 +33,17 @@ from pickle import Unpickler
 import re
 import shutil
 
-from bsf import Command, Default, Executable
+from bsf.process import Command, Executable
+from bsf.standards import Default
 
 
 def run_picard_sam_to_fastq(input_path, temporary_path):
     """Convert a BAM file into a pair of FASTQ files for each read group (@RG).
 
     :param input_path: File path to the BAM file
-    :type input_path: str, unicode
+    :type input_path: str | unicode
     :param temporary_path: File path to a temporary directory
-    :type temporary_path: str, unicode
+    :type temporary_path: str | unicode
     :return: Python list of tuple objects of file paths of read1 and read2
     :rtype: list
     """

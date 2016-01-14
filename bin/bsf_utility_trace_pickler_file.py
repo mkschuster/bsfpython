@@ -29,8 +29,8 @@
 
 from argparse import ArgumentParser
 
-from bsf import Executable, Runnable
-
+from bsf import Runnable
+from bsf.process import Executable
 
 argument_parser = ArgumentParser(
     description='Trace a pickled BSF Runnable.')

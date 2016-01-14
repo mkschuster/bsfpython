@@ -29,8 +29,9 @@
 import argparse
 import os
 
-from bsf import Default, DRMS, Executable
-
+from bsf import DRMS
+from bsf.process import Executable
+from bsf.standards import Default
 
 # Set the environment consistently.
 

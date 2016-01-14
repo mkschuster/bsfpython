@@ -27,8 +27,8 @@
 
 import csv
 
-from bsf import Executable
 from bsf.database import DatabaseConnection, ProcessSLURM, ProcessSLURMAdaptor
+from bsf.process import Executable
 
 sacct = Executable(name='sacct', program='sacct', stdout_path='sacct_mschuster.csv', stderr_path='sacct_mschuster.err')
 sacct.add_option_long(key='user', value='mschuster')
@@ -45,44 +45,44 @@ process_slurm_list = list()
 dict_file = open('sacct_mschuster.csv', 'r')
 dict_reader = csv.DictReader(f=dict_file, delimiter='|')
 
-for row in dict_reader:
+for row_dict in dict_reader:
     process_slurm = ProcessSLURM(
-        job_id=row['JobID'],
-        job_name=row['JobName'],
-        partition=row['Partition'],
-        max_vm_size=row['MaxVMSize'],
-        max_vm_size_node=row['MaxVMSizeNode'],
-        max_vm_size_task=row['MaxVMSizeTask'],
-        average_vm_size=row['AveVMSize'],
-        max_rss=row['MaxRSS'],
-        max_rss_node=row['MaxRSSNode'],
-        max_rss_task=row['MaxRSSTask'],
-        average_rss=row['AveRSS'],
-        max_pages=row['MaxPages'],
-        max_pages_node=row['MaxPagesNode'],
-        max_pages_task=row['MaxPagesTask'],
-        average_pages=row['AvePages'],
-        min_cpu=row['MinCPU'],
-        min_cpu_node=row['MinCPUNode'],
-        min_cpu_task=row['MinCPUTask'],
-        average_cpu=row['AveCPU'],
-        number_tasks=row['NTasks'],
-        allocated_cpus=row['AllocCPUS'],
-        elapsed=row['Elapsed'],
-        state=row['State'],
-        exit_code=row['ExitCode'],
-        average_cpu_frequency=row['AveCPUFreq'],
-        requested_cpu_frequency=row['ReqCPUFreq'],
-        requested_memory=row['ReqMem'],
-        consumed_energy=row['ConsumedEnergy'],
-        max_disk_read=row['MaxDiskRead'],
-        max_disk_read_node=row['MaxDiskReadNode'],
-        max_disk_read_task=row['MaxDiskReadTask'],
-        average_disk_read=row['AveDiskRead'],
-        max_disk_write=row['MaxDiskWrite'],
-        max_disk_write_node=row['MaxDiskWriteNode'],
-        max_disk_write_task=row['MaxDiskWriteTask'],
-        average_disk_write=row['AveDiskWrite'])
+            job_id=row_dict['JobID'],
+            job_name=row_dict['JobName'],
+            partition=row_dict['Partition'],
+            max_vm_size=row_dict['MaxVMSize'],
+            max_vm_size_node=row_dict['MaxVMSizeNode'],
+            max_vm_size_task=row_dict['MaxVMSizeTask'],
+            average_vm_size=row_dict['AveVMSize'],
+            max_rss=row_dict['MaxRSS'],
+            max_rss_node=row_dict['MaxRSSNode'],
+            max_rss_task=row_dict['MaxRSSTask'],
+            average_rss=row_dict['AveRSS'],
+            max_pages=row_dict['MaxPages'],
+            max_pages_node=row_dict['MaxPagesNode'],
+            max_pages_task=row_dict['MaxPagesTask'],
+            average_pages=row_dict['AvePages'],
+            min_cpu=row_dict['MinCPU'],
+            min_cpu_node=row_dict['MinCPUNode'],
+            min_cpu_task=row_dict['MinCPUTask'],
+            average_cpu=row_dict['AveCPU'],
+            number_tasks=row_dict['NTasks'],
+            allocated_cpus=row_dict['AllocCPUS'],
+            elapsed=row_dict['Elapsed'],
+            state=row_dict['State'],
+            exit_code=row_dict['ExitCode'],
+            average_cpu_frequency=row_dict['AveCPUFreq'],
+            requested_cpu_frequency=row_dict['ReqCPUFreq'],
+            requested_memory=row_dict['ReqMem'],
+            consumed_energy=row_dict['ConsumedEnergy'],
+            max_disk_read=row_dict['MaxDiskRead'],
+            max_disk_read_node=row_dict['MaxDiskReadNode'],
+            max_disk_read_task=row_dict['MaxDiskReadTask'],
+            average_disk_read=row_dict['AveDiskRead'],
+            max_disk_write=row_dict['MaxDiskWrite'],
+            max_disk_write_node=row_dict['MaxDiskWriteNode'],
+            max_disk_write_task=row_dict['MaxDiskWriteTask'],
+            average_disk_write=row_dict['AveDiskWrite'])
 
     process_slurm_list.append(process_slurm)
 

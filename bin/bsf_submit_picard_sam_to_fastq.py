@@ -27,8 +27,8 @@
 
 import argparse
 
-from bsf import Default
 from bsf.analyses.picard import SamToFastq
+from bsf.standards import Default
 
 
 argument_parser = argparse.ArgumentParser(

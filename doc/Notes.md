@@ -126,7 +126,7 @@ The bsf.Analysis class represents a high-level analysis of NGS data.
         - bsf.Analysis.Comparison
           For analyses that involve comparisons of BSF Sample objects.
 
-The bsf.Executable class represents an executable program, its options and arguments.
+The bsf.process.Executable class represents an executable program, its options and arguments.
 
 bsf.data class hierarchy:
 

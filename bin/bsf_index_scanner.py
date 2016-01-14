@@ -28,19 +28,21 @@
 
 import argparse
 from collections import OrderedDict
+import datetime
 import platform
 import os
-import string
 from subprocess import PIPE, Popen
 import sys
 from threading import Lock, Thread
 
-from bsf import Command, Executable
-
+from bsf.process import Command, Executable
 
 # Set the environment consistently.
 
 os.environ['LANG'] = 'C'
+
+max_thread_joins = 5
+thread_join_timeout = 5
 
 # Parse the arguments.
 
@@ -52,13 +54,13 @@ parser.add_argument('--debug', required=False, type=int,
 
 parser.add_argument('input_file', help='file path to a BAM file.')
 
-args = parser.parse_args()
+name_space = parser.parse_args()
 
 
 # TODO: dual indices not supported
 # TODO: GNU Zip FASTQ files could be read directly: http://docs.python.org/2/library/gzip.html
 
-file_type = os.path.splitext(args.input_file)[-1]     # supported formats: .fastq/.sam/.bam
+file_type = os.path.splitext(name_space.input_file)[-1]     # supported formats: .fastq/.sam/.bam
 
 log_after_x_processed_reads = 1000000
 
@@ -67,39 +69,39 @@ log_after_x_processed_reads = 1000000
 barcode_dict = dict()
 
 
-def parse_sam_format(file_handle):
+def parse_sam_format(sam_file_handle):
     """Parses SAM format columns.
-    This function identifies the column with the barcode based on its suffix BC:X:
+    This function identifies the column with the barcode based on its suffix BC:Z:
     and increments the respective count in a Python dict.
 
-    :param file_handle: File handle
-    :type file_handle: file
+    :param sam_file_handle: File handle
+    :type sam_file_handle: FileIO
     :return: Python dict of barcode key and count value data
     :rtype: dict
     """
 
-    for line in file_handle:
+    for line in sam_file_handle:
+        assert isinstance(line, str)
         if line.startswith("@"):
             continue
-        columns = string.split(s=line.rstrip(), sep='\t')
-        # Find the column with the BC:X: tag.
+        columns = line.rstrip().split('\t')
+        # Find the column with the BC:Z: tag.
         # The first 11 columns are fixed.
         for i in range(10, len(columns)):
             if columns[i].startswith("BC:Z:"):
-                barcode = columns[i][5:]
-                if barcode in barcode_dict:
-                    barcode_dict[barcode] += 1
+                barcode_str = columns[i][5:]
+                if barcode_str in barcode_dict:
+                    barcode_dict[barcode_str] += 1
                 else:
-                    barcode_dict[barcode] = 1
+                    barcode_dict[barcode_str] = 1
                 break
 
 
 def parse_sam_file(input_filename):
-
     """
     Parse a SAM file, processing barcodes in the 12th column.
     :param input_filename: File path
-    :type input_filename: str, unicode
+    :type input_filename: str | unicode
     :return: Python dict of barcode key and count value data
     :rtype: dict
     """
@@ -142,7 +144,7 @@ def parse_bam_file(input_filename):
     Parse a BAM file.
     Internally converts a BA;M file to a SAM file and subsequently runs parse_sam_file over it.
     :param input_filename: File path
-    :type input_filename: str, unicode
+    :type input_filename: str | unicode
     :return: Python dict of barcode key and count value data
     :rtype: dict
     """
@@ -193,16 +195,18 @@ def parse_fastq_file(input_filename):
 
 
 if file_type == ".fastq":
-    barcodes = parse_fastq_file(args.input_file)
+    barcodes_dict = parse_fastq_file(name_space.input_file)
 elif file_type == ".sam":
-    file_handle = open(args.input_file, 'r')
-    parse_sam_format(file_handle=file_handle)
+    file_handle = open(name_space.input_file, 'r')
+    parse_sam_format(sam_file_handle=file_handle)
     file_handle.close()
 elif file_type == ".bam":
     executable = Executable(name='samtools_view', program='samtools', sub_command=Command(program='view'))
     sub_command = executable.sub_command
+    sub_command.add_option_short(key='f', value='64')  # Select only the first read of a pair.
+    sub_command.add_option_short(key='F', value='512')  # Suppress all reads that fail vendor quality filtering.
     sub_command.add_switch_short(key='h')
-    sub_command.arguments.append(args.input_file)
+    sub_command.arguments.append(name_space.input_file)
 
     on_posix = 'posix' in sys.builtin_module_names
 
@@ -222,7 +226,7 @@ elif file_type == ".bam":
     thread_out = Thread(
         target=parse_sam_format,
         kwargs=dict(
-            file_handle=child_process.stdout))
+            sam_file_handle=child_process.stdout))
     thread_out.daemon = True  # Thread dies with the program.
     thread_out.start()
 
@@ -239,8 +243,43 @@ elif file_type == ".bam":
     # Wait for the child process to finish.
 
     child_return_code = child_process.wait()
+
+    thread_join_counter = 0
+
+    while thread_out.is_alive() and thread_join_counter < max_thread_joins:
+        thread_lock.acquire(True)
+        # print '[{}] Waiting for STDOUT processor to finish.'. \
+        #     format(datetime.datetime.now().isoformat())
+        thread_lock.release()
+
+        thread_out.join(timeout=thread_join_timeout)
+        thread_join_counter += 1
+
+    thread_join_counter = 0
+
+    while thread_err.is_alive() and thread_join_counter < max_thread_joins:
+        thread_lock.acquire(True)
+        # print '[{}] Waiting for STDERR processor to finish.'. \
+        #     format(datetime.datetime.now().isoformat())
+        thread_lock.release()
+
+        thread_err.join(timeout=thread_join_timeout)
+        thread_join_counter += 1
+
+    if child_return_code > 0:
+        if name_space.debug > 0:
+            print '[{}] Child process {!r} failed with exit code {}'. \
+                format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
+    elif child_return_code < 0:
+        if name_space.debug > 0:
+            print '[{}] Child process {!r} received signal {}.'. \
+                format(datetime.datetime.now().isoformat(), executable.name, -child_return_code)
+    else:
+        if name_space.debug > 0:
+            print '[{}] Child process {!r} completed successfully {}.'. \
+                format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
 else:
-    raise Exception()
+    raise Exception("Unsupported file format.")
 
 
 # write report

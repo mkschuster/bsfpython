@@ -31,7 +31,8 @@ import os.path
 from pickle import Unpickler
 import shutil
 
-from bsf import Command, Default, Executable
+from bsf.process import Command, Executable
+from bsf.standards import Default
 
 # Set the environment consistently.
 
@@ -162,6 +163,7 @@ if run_bwa.sub_command.program == 'mem' and run_bwa.sub_command.arguments[1][-4:
     java_process.add_switch_short(key='d64')
     java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx4G')
+    java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
 
     picard_process = java_process.sub_command
     picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
@@ -217,6 +219,7 @@ java_process = Executable(name='clean_sam', program='java', sub_command=Command(
 java_process.add_switch_short(key='d64')
 java_process.add_switch_short(key='server')
 java_process.add_switch_short(key='Xmx4G')
+java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
 
 picard_process = java_process.sub_command
 picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
@@ -284,6 +287,7 @@ if len(sam_header_pg) or len(sam_header_rg):
     java_process.add_switch_short(key='d64')
     java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx4G')
+    java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
 
     picard_process = java_process.sub_command
     picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
@@ -320,7 +324,8 @@ if os.path.exists(path=path_aligned_sam):
 java_process = Executable(name='sort_sam', program='java', sub_command=Command())
 java_process.add_switch_short(key='d64')
 java_process.add_switch_short(key='server')
-java_process.add_switch_short(key='Xmx6G')
+java_process.add_switch_short(key='Xmx4G')
+java_process.add_option_pair(key='-Djava.io.tmpdir', value=path_temporary)
 
 picard_process = java_process.sub_command
 picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
@@ -334,8 +339,8 @@ sort_sam.add_option_pair(key='TMP_DIR', value=path_temporary)
 sort_sam.add_option_pair(key='VERBOSITY', value='WARNING')
 sort_sam.add_option_pair(key='QUIET', value='false')
 sort_sam.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
-sort_sam.add_option_pair(key='COMPRESSION_LEVEL', value='5')
-sort_sam.add_option_pair(key='MAX_RECORDS_IN_RAM', value='4000000')
+sort_sam.add_option_pair(key='COMPRESSION_LEVEL', value='9')
+sort_sam.add_option_pair(key='MAX_RECORDS_IN_RAM', value='2000000')
 sort_sam.add_option_pair(key='CREATE_INDEX', value='true')
 sort_sam.add_option_pair(key='CREATE_MD5_FILE', value='true')
 

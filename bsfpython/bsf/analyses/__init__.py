@@ -32,10 +32,12 @@ import os
 import re
 import warnings
 
-from bsf import Analysis, Configuration, Default, defaults, DRMS, Executable
+from bsf import Analysis, defaults, DRMS
 from bsf.annotation import AnnotationSheet, SampleAnnotationSheet
 from bsf.data import Collection, ProcessedRunFolder, Sample
 from bsf.executables import Bowtie2, Macs14, Macs2Bdgcmp, Macs2Callpeak, FastQC
+from bsf.process import Executable
+from bsf.standards import Configuration, Default
 
 
 class ChIPSeqComparison(object):
@@ -61,8 +63,8 @@ class ChIPSeqComparison(object):
         @type treatment: str
         @param replicate: replicate number
         @type replicate: int
-        @return: Nothing
-        @rtype: None
+        @return:
+        @rtype:
         """
 
         super(ChIPSeqComparison, self).__init__()
@@ -115,6 +117,8 @@ class ChIPSeqComparison(object):
         else:
             self.replicate = int(x=0)
 
+        return
+
 
 class ChIPSeqDiffBindSheet(AnnotationSheet):
     """ChIP-Seq Bioconductor DiffBind annotation sheet class.
@@ -141,54 +145,62 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     ]
 
     _test_methods = dict(
-        SampleID=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Tissue=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Factor=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Condition=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Treatment=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Replicate=[
-            AnnotationSheet.check_numeric
-        ],
-        ControlID=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        PeakCaller=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        PeakFormat=[
-            AnnotationSheet.check_alphanumeric
-        ]
+            SampleID=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            Tissue=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            Factor=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            Condition=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            Treatment=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            Replicate=[
+                AnnotationSheet.check_numeric
+            ],
+            ControlID=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            PeakCaller=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            PeakFormat=[
+                AnnotationSheet.check_alphanumeric
+            ]
     )
 
     def sort(self):
         """Sort by columns I{Tissue}, I{Factor}, I{Condition}, I{Treatment} and I{Replicate}.
+        @return:
+        @rtype:
         """
         self.row_dicts.sort(
-            cmp=lambda x, y:
-            cmp(x['Tissue'], y['Tissue']) or
-            cmp(x['Factor'], y['Factor']) or
-            cmp(x['Condition'], y['Condition']) or
-            cmp(x['Treatment'], y['Treatment']) or
-            cmp(int(x['Replicate']), int(y['Replicate'])))
+                cmp=lambda x, y:
+                cmp(x['Tissue'], y['Tissue']) or
+                cmp(x['Factor'], y['Factor']) or
+                cmp(x['Condition'], y['Condition']) or
+                cmp(x['Treatment'], y['Treatment']) or
+                cmp(int(x['Replicate']), int(y['Replicate'])))
+
+        return
 
     def write_to_file(self):
         """Write a C{ChIPSeqDiffBindSheet} to a file.
+        @return:
+        @rtype:
         """
 
         # Override the method from the super-class to automatically sort before writing to a file.
 
         self.sort()
         super(ChIPSeqDiffBindSheet, self).write_to_file()
+
+        return
 
 
 class ChIPSeq(Analysis):
@@ -237,24 +249,24 @@ class ChIPSeq(Analysis):
         @type samples: list
         @param cmp_file: Comparison file
         @type cmp_file: str | unicode
-        @return: Nothing
-        @rtype: None
+        @return:
+        @rtype:
         """
 
         super(ChIPSeq, self).__init__(
-            configuration=configuration,
-            project_name=project_name,
-            genome_version=genome_version,
-            input_directory=input_directory,
-            output_directory=output_directory,
-            project_directory=project_directory,
-            genome_directory=genome_directory,
-            e_mail=e_mail,
-            debug=debug,
-            drms_list=drms_list,
-            collection=collection,
-            comparisons=comparisons,
-            samples=samples)
+                configuration=configuration,
+                project_name=project_name,
+                genome_version=genome_version,
+                input_directory=input_directory,
+                output_directory=output_directory,
+                project_directory=project_directory,
+                genome_directory=genome_directory,
+                e_mail=e_mail,
+                debug=debug,
+                drms_list=drms_list,
+                collection=collection,
+                comparisons=comparisons,
+                samples=samples)
 
         # Sub-class specific ...
 
@@ -262,6 +274,8 @@ class ChIPSeq(Analysis):
             self.cmp_file = cmp_file
         else:
             self.cmp_file = str()
+
+        return
 
     def set_configuration(self, configuration, section):
         """Set instance variables of a C{ChIPSeq} object via a section of a
@@ -273,14 +287,19 @@ class ChIPSeq(Analysis):
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
+        @return:
+        @rtype:
         """
 
         super(ChIPSeq, self).set_configuration(configuration=configuration, section=section)
 
         # Read a comparison file.
 
-        if configuration.config_parser.has_option(section=section, option='cmp_file'):
-            self.cmp_file = configuration.config_parser.get(section=section, option='cmp_file')
+        option = 'cmp_file'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.cmp_file = configuration.config_parser.get(section=section, option=option)
+
+        return
 
     def _read_comparisons(self, cmp_file):
         """Read a C{SampleAnnotationSheet} CSV file from disk.
@@ -301,8 +320,8 @@ class ChIPSeq(Analysis):
                 - Treatment/Control Group
         @param cmp_file: Comparison file path
         @type cmp_file: str | unicode
-        @return: Nothing
-        @rtype: None
+        @return:
+        @rtype:
         """
 
         if self.debug > 1:
@@ -403,15 +422,16 @@ class ChIPSeq(Analysis):
 
                 level2_dict[comparison_key] = 0
 
-            self.comparisons[comparison_key] = ChIPSeqComparison(c_name=c_name,
-                                                                 t_name=t_name,
-                                                                 c_samples=c_samples,
-                                                                 t_samples=t_samples,
-                                                                 factor=factor,
-                                                                 tissue=tissue,
-                                                                 condition=condition,
-                                                                 treatment=treatment,
-                                                                 replicate=0)
+            self.comparisons[comparison_key] = ChIPSeqComparison(
+                    c_name=c_name,
+                    t_name=t_name,
+                    c_samples=c_samples,
+                    t_samples=t_samples,
+                    factor=factor,
+                    tissue=tissue,
+                    condition=condition,
+                    treatment=treatment,
+                    replicate=0)
 
         # Sort the comparison keys alphabetically and assign replicate numbers into ChiPSeqComparison objects.
 
@@ -428,8 +448,12 @@ class ChIPSeq(Analysis):
                 self.comparisons[key2].replicate = i
                 i += 1
 
+        return
+
     def run(self):
         """Run this C{ChIPSeq} C{Analysis}.
+        @return:
+        @rtype:
         """
 
         super(ChIPSeq, self).run()
@@ -463,8 +487,12 @@ class ChIPSeq(Analysis):
         self._create_macs2_jobs()
         self._create_diffbind_jobs()
 
+        return
+
     def _create_bowtie2_jobs(self):
         """Create Bowtie2 alignment jobs.
+        @return:
+        @rtype:
         """
 
         config_parser = self.configuration.config_parser
@@ -480,17 +508,17 @@ class ChIPSeq(Analysis):
         # Initialise the Distributed Resource Management System objects for Bowtie2.
 
         bowtie2_drms = self.add_drms(drms=DRMS.from_analysis(
-            name='bowtie2',
-            working_directory=self.genome_directory,
-            analysis=self))
+                name='bowtie2',
+                working_directory=self.genome_directory,
+                analysis=self))
 
         # Use the bsf_sam2bam.sh script to convert aligned SAM into
         # aligned, sorted, indexed BAM files.
 
         sam2bam_drms = self.add_drms(drms=DRMS.from_analysis(
-            name='sam2bam',
-            working_directory=self.genome_directory,
-            analysis=self))
+                name='sam2bam',
+                working_directory=self.genome_directory,
+                analysis=self))
 
         for sample in self.samples:
 
@@ -510,15 +538,16 @@ class ChIPSeq(Analysis):
             for replicate_key in replicate_keys:
 
                 bowtie2 = bowtie2_drms.add_executable(executable=Bowtie2(
-                    name='chipseq_bowtie2_{}'.format(replicate_key),
-                    analysis=self))
+                        name='chipseq_bowtie2_{}'.format(replicate_key),
+                        analysis=self))
 
-                sam2bam = sam2bam_drms.add_executable(executable=Executable.from_analysis(
-                    name='chipseq_sam2bam_{}'.format(replicate_key),
-                    program='bsf_sam2bam.sh',
-                    analysis=self))
-
+                sam2bam = sam2bam_drms.add_executable(
+                        executable=Executable(
+                                name='chipseq_sam2bam_{}'.format(replicate_key),
+                                program='bsf_sam2bam.sh'))
                 sam2bam.dependencies.append(bowtie2.name)
+
+                self.set_command_configuration(command=sam2bam)
 
                 # Set Bowtie2 options.
 
@@ -587,8 +616,12 @@ class ChIPSeq(Analysis):
                     bowtie2.submit = False
                     sam2bam.submit = False
 
+        return
+
     def _create_macs14_jobs(self):
         """Create MACS14 peak caller jobs.
+        @return:
+        @rtype:
         """
 
         config_parser = self.configuration.config_parser
@@ -601,14 +634,14 @@ class ChIPSeq(Analysis):
         genome_sizes = os.path.expandvars(genome_sizes)
 
         macs14_drms = self.add_drms(drms=DRMS.from_analysis(
-            name='macs14',
-            working_directory=self.genome_directory,
-            analysis=self))
+                name='macs14',
+                working_directory=self.genome_directory,
+                analysis=self))
 
         process_macs14_drms = self.add_drms(drms=DRMS.from_analysis(
-            name='process_macs14',
-            working_directory=self.genome_directory,
-            analysis=self))
+                name='process_macs14',
+                working_directory=self.genome_directory,
+                analysis=self))
 
         keys = self.comparisons.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -643,31 +676,33 @@ class ChIPSeq(Analysis):
                         for c_replicate_key in c_replicate_keys:
 
                             macs14 = macs14_drms.add_executable(executable=Macs14(
-                                name='chipseq_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
-                                analysis=self))
+                                    name='chipseq_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
+                                    analysis=self))
 
                             macs14.dependencies.append('chipseq_sam2bam_' + t_replicate_key)
                             macs14.dependencies.append('chipseq_sam2bam_' + c_replicate_key)
 
-                            process_macs14 = process_macs14_drms.add_executable(executable=Executable.from_analysis(
-                                name='chipseq_process_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
-                                program='bsf_chipseq_process_macs14.sh',
-                                analysis=self))
-
+                            process_macs14 = process_macs14_drms.add_executable(
+                                    executable=Executable(
+                                            name='chipseq_process_macs14_{}__{}'.format(t_replicate_key,
+                                                                                        c_replicate_key),
+                                            program='bsf_chipseq_process_macs14.sh'))
                             process_macs14.dependencies.append(macs14.name)
+
+                            self.set_command_configuration(command=process_macs14)
 
                             # Set macs14 options.
 
                             macs14.add_option_long(
-                                key='treatment',
-                                value=os.path.join(self.genome_directory,
-                                                   'chipseq_bowtie2_{}'.format(t_replicate_key),
-                                                   '{}.aligned.sorted.bam'.format(t_replicate_key)))
+                                    key='treatment',
+                                    value=os.path.join(self.genome_directory,
+                                                       'chipseq_bowtie2_{}'.format(t_replicate_key),
+                                                       '{}.aligned.sorted.bam'.format(t_replicate_key)))
                             macs14.add_option_long(
-                                key='control',
-                                value=os.path.join(self.genome_directory,
-                                                   'chipseq_bowtie2_{}'.format(c_replicate_key),
-                                                   '{}.aligned.sorted.bam'.format(c_replicate_key)))
+                                    key='control',
+                                    value=os.path.join(self.genome_directory,
+                                                       'chipseq_bowtie2_{}'.format(c_replicate_key),
+                                                       '{}.aligned.sorted.bam'.format(c_replicate_key)))
 
                             # TODO: Experimentally prepend a chipseq_macs14 directory
                             # MACS14 can hopefully also cope with directories specified in the --name option, but
@@ -724,10 +759,10 @@ class ChIPSeq(Analysis):
                                 pass
                             else:
                                 warnings.warn(
-                                    'Unable to set MACS14 parameters for unknown factor {!r}.\n'
-                                    'Please use default factor {!r} or adjust Python code if necessary.'.
-                                    format(factor, defaults.web.chipseq_default_factor),
-                                    UserWarning)
+                                        'Unable to set MACS14 parameters for unknown factor {!r}.\n'
+                                        'Please use default factor {!r} or adjust Python code if necessary.'.format(
+                                                factor, defaults.web.chipseq_default_factor),
+                                        UserWarning)
 
                             # Set macs14 arguments.
 
@@ -738,8 +773,12 @@ class ChIPSeq(Analysis):
                             process_macs14.arguments.append(os.path.join('.', prefix, prefix))
                             process_macs14.arguments.append(genome_sizes)
 
+        return
+
     def _create_macs2_jobs(self):
         """Create MACS2 peak caller jobs.
+        @return:
+        @rtype:
         """
 
         config_parser = self.configuration.config_parser
@@ -752,19 +791,19 @@ class ChIPSeq(Analysis):
         genome_sizes = os.path.expandvars(genome_sizes)
 
         macs2_callpeak_drms = self.add_drms(drms=DRMS.from_analysis(
-            name='macs2_callpeak',
-            working_directory=self.genome_directory,
-            analysis=self))
+                name='macs2_callpeak',
+                working_directory=self.genome_directory,
+                analysis=self))
 
         macs2_bdgcmp_drms = self.add_drms(drms=DRMS.from_analysis(
-            name='macs2_bdgcmp',
-            working_directory=self.genome_directory,
-            analysis=self))
+                name='macs2_bdgcmp',
+                working_directory=self.genome_directory,
+                analysis=self))
 
         process_macs2_drms = self.add_drms(drms=DRMS.from_analysis(
-            name='process_macs2',
-            working_directory=self.genome_directory,
-            analysis=self))
+                name='process_macs2',
+                working_directory=self.genome_directory,
+                analysis=self))
 
         keys = self.comparisons.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -799,40 +838,42 @@ class ChIPSeq(Analysis):
                         for c_replicate_key in c_replicate_keys:
 
                             macs2_callpeak = macs2_callpeak_drms.add_executable(executable=Macs2Callpeak(
-                                name='chipseq_macs2_callpeak_{}__{}'.format(t_replicate_key, c_replicate_key),
-                                analysis=self))
+                                    name='chipseq_macs2_callpeak_{}__{}'.format(t_replicate_key, c_replicate_key),
+                                    analysis=self))
 
                             macs2_callpeak.dependencies.append('chipseq_sam2bam_' + t_replicate_key)
                             macs2_callpeak.dependencies.append('chipseq_sam2bam_' + c_replicate_key)
 
                             macs2_bdgcmp = macs2_bdgcmp_drms.add_executable(executable=Macs2Bdgcmp(
-                                name='chipseq_macs2_bdgcmp_{}__{}'.format(t_replicate_key, c_replicate_key),
-                                analysis=self))
+                                    name='chipseq_macs2_bdgcmp_{}__{}'.format(t_replicate_key, c_replicate_key),
+                                    analysis=self))
 
                             macs2_bdgcmp.dependencies.append(macs2_callpeak.name)
 
-                            process_macs2 = process_macs2_drms.add_executable(executable=Executable.from_analysis(
-                                name='chipseq_process_macs2_{}__{}'.format(t_replicate_key, c_replicate_key),
-                                program='bsf_chipseq_process_macs2.sh',
-                                analysis=self))
-
+                            process_macs2 = process_macs2_drms.add_executable(
+                                    executable=Executable(
+                                            name='chipseq_process_macs2_{}__{}'.format(t_replicate_key,
+                                                                                       c_replicate_key),
+                                            program='bsf_chipseq_process_macs2.sh'))
                             process_macs2.dependencies.append(macs2_bdgcmp.name)
+
+                            self.set_command_configuration(command=process_macs2)
 
                             # Set MACS2 callpeak sub-command options.
 
                             mc2 = macs2_callpeak.sub_command
 
                             mc2.add_option_long(
-                                key='treatment',
-                                value=os.path.join(self.genome_directory,
-                                                   'chipseq_bowtie2_{}'.format(t_replicate_key),
-                                                   '{}.aligned.sorted.bam'.format(t_replicate_key)))
+                                    key='treatment',
+                                    value=os.path.join(self.genome_directory,
+                                                       'chipseq_bowtie2_{}'.format(t_replicate_key),
+                                                       '{}.aligned.sorted.bam'.format(t_replicate_key)))
 
                             mc2.add_option_long(
-                                key='control',
-                                value=os.path.join(self.genome_directory,
-                                                   'chipseq_bowtie2_{}'.format(c_replicate_key),
-                                                   '{}.aligned.sorted.bam'.format(c_replicate_key)))
+                                    key='control',
+                                    value=os.path.join(self.genome_directory,
+                                                       'chipseq_bowtie2_{}'.format(c_replicate_key),
+                                                       '{}.aligned.sorted.bam'.format(c_replicate_key)))
 
                             # TODO: Experimentally prepend a chipseq_macs2 directory.
                             # MACS2 can cope with directories specified in the --name option, but
@@ -890,10 +931,10 @@ class ChIPSeq(Analysis):
                                 pass
                             else:
                                 warnings.warn(
-                                    'Unable to set MACS2 parameters for unknown factor {!r}.\n'
-                                    'Please use default factor {!r} or adjust Python code if necessary.'.
-                                    format(factor, defaults.web.chipseq_default_factor),
-                                    UserWarning)
+                                        'Unable to set MACS2 parameters for unknown factor {!r}.\n'
+                                        'Please use default factor {!r} or adjust Python code if necessary.'.format(
+                                                factor, defaults.web.chipseq_default_factor),
+                                        UserWarning)
 
                             # Set macs2_callpeak sub-command arguments.
 
@@ -904,12 +945,12 @@ class ChIPSeq(Analysis):
                             mb2 = macs2_bdgcmp.sub_command
 
                             mb2.add_option_long(
-                                key='tfile',
-                                value=os.path.join(prefix, '{}_treat_pileup.bdg'.format(prefix)))
+                                    key='tfile',
+                                    value=os.path.join(prefix, '{}_treat_pileup.bdg'.format(prefix)))
 
                             mb2.add_option_long(
-                                key='cfile',
-                                value=os.path.join(prefix, '{}_control_lambda.bdg'.format(prefix)))
+                                    key='cfile',
+                                    value=os.path.join(prefix, '{}_control_lambda.bdg'.format(prefix)))
 
                             # Sequencing depth for treatment and control. Aim for setting the --SPMR parameter for
                             # macs2_callpeak to get the track normalised.
@@ -918,8 +959,8 @@ class ChIPSeq(Analysis):
                             # --pseudocount
 
                             mb2.add_option_long(
-                                key='ofile',
-                                value=os.path.join(prefix, '{}_bdgcmp.bdg'.format(prefix)))
+                                    key='ofile',
+                                    value=os.path.join(prefix, '{}_bdgcmp.bdg'.format(prefix)))
 
                             # --method defaults to ppois i.e. Poisson Pvalue (-log10(pvalue), which yields data
                             # on a logarithmic scale.
@@ -939,8 +980,12 @@ class ChIPSeq(Analysis):
                             process_macs2.arguments.append('{}__{}'.format(t_replicate_key, c_replicate_key))
                             process_macs2.arguments.append(genome_sizes)
 
+        return
+
     def _create_diffbind_jobs(self):
         """Create Bioconductor DiffBind jobs.
+        @return:
+        @rtype:
         """
 
         config_parser = self.configuration.config_parser
@@ -949,9 +994,9 @@ class ChIPSeq(Analysis):
         replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
 
         diffbind_drms = self.add_drms(drms=DRMS.from_analysis(
-            name='diffbind',
-            working_directory=self.genome_directory,
-            analysis=self))
+                name='diffbind',
+                working_directory=self.genome_directory,
+                analysis=self))
 
         # Reorganise the comparisons by factor.
 
@@ -978,6 +1023,14 @@ class ChIPSeq(Analysis):
 
         for key in keys:
 
+            factor_list = self._factor_dict[key]
+            factor_list.sort(cmp=lambda x, y: cmp(x, y))
+
+            # No comparison for less than two items.
+
+            if len(factor_list) < 2:
+                continue
+
             # Create a directory per factor.
 
             prefix = 'chipseq_diffbind_{}'.format(key)
@@ -999,9 +1052,6 @@ class ChIPSeq(Analysis):
             file_path = os.path.join(factor_directory, 'chipseq_diffbind_{}_samples.csv'.format(key))
 
             dbs = ChIPSeqDiffBindSheet(file_path=file_path)
-
-            factor_list = self._factor_dict[key]
-            factor_list.sort(cmp=lambda x, y: cmp(x, y))
 
             for chipseq_comparison in factor_list:
 
@@ -1065,22 +1115,25 @@ class ChIPSeq(Analysis):
 
             # Create the DiffBind job.
 
-            diffbind = diffbind_drms.add_executable(executable=Executable.from_analysis(
-                name='chipseq_diffbind_{}'.format(key),
-                program='bsf_chipseq_diffbind.R',
-                analysis=self))
-
+            diffbind = diffbind_drms.add_executable(
+                    executable=Executable(
+                            name='chipseq_diffbind_{}'.format(key),
+                            program='bsf_chipseq_diffbind.R'))
             diffbind.dependencies.extend(job_dependencies)
 
             # Add diffbind options.
-
+            self.set_command_configuration(command=diffbind)
             diffbind.add_option_long(key='factor', value=key)
             # diffbind.add_option_long(key='work_directory', value=factor_directory)
             diffbind.add_option_long(key='genome_directory', value=self.genome_directory)
             diffbind.add_option_long(key='sample_annotation', value=file_path)
 
+        return
+
     def _report_macs14(self):
         """Create a BSF ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
+        @return:
+        @rtype:
         """
 
         config_parser = self.configuration.config_parser
@@ -1339,8 +1392,12 @@ class ChIPSeq(Analysis):
         self.ucsc_hub_write_genomes(prefix='chipseq')
         self.ucsc_hub_write_tracks(output=track_output, prefix='chipseq')
 
+        return
+
     def report(self):
         """Create a BSF ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
+        @return:
+        @rtype:
         """
 
         config_parser = self.configuration.config_parser
@@ -1349,7 +1406,7 @@ class ChIPSeq(Analysis):
         # ucsc_location = config_parser.get(section=config_section, option='ucsc_location')
         replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
 
-        contrast_field_names = ["", "Group1", "Members1", "Group2", "Members2", "DB.edgeR"]
+        # contrast_field_names = ["", "Group1", "Members1", "Group2", "Members2", "DB.edgeR"]
 
         # Create a symbolic link containing the project name and a UUID.
         default = Default.get_global_default()
@@ -1879,14 +1936,13 @@ class ChIPSeq(Analysis):
 
             if not os.path.exists(path=file_path):
                 warnings.warn(
-                    'File {!r} does not exist.'.format(file_path),
-                    UserWarning)
+                        'File {!r} does not exist.'.format(file_path),
+                        UserWarning)
                 continue
 
-            sas = SampleAnnotationSheet(file_path=file_path, field_names=contrast_field_names)
-            sas.csv_reader_open()
+            sas = SampleAnnotationSheet.from_file_path(file_path=file_path, file_type='excel')
 
-            for row_dict in sas._csv_reader_object:
+            for row_dict in sas.row_dicts:
                 suffix = '{}__{}'.format(row_dict['Group1'], row_dict['Group2'])
 
                 output += '<tr>\n'
@@ -1943,8 +1999,6 @@ class ChIPSeq(Analysis):
 
                 output += '</tr>\n'
 
-            sas.csv_reader_close()
-
         output += '\n'
         output += '</table>\n'
         output += '\n'
@@ -1964,12 +2018,15 @@ class ChIPSeq(Analysis):
         self.ucsc_hub_write_genomes(prefix='chipseq')
         self.ucsc_hub_write_tracks(output=track_output, prefix='chipseq')
 
+        return
+
 
 class RunFastQC(Analysis):
     """BSF FastQC-specific Quality Assessment Analysis sub-class.
 
     Attributes:
-    None
+    @ivar cmp_file: Comparison file
+    @type cmp_file: str | unicode
     """
 
     def __init__(self, configuration=None,
@@ -1977,7 +2034,8 @@ class RunFastQC(Analysis):
                  input_directory=None, output_directory=None,
                  project_directory=None, genome_directory=None,
                  e_mail=None, debug=0, drms_list=None,
-                 collection=None, comparisons=None, samples=None):
+                 collection=None, comparisons=None, samples=None,
+                 cmp_file=None):
         """Initialise a C{RunFastQC} object.
 
         @param configuration: C{Configuration}
@@ -2008,24 +2066,33 @@ class RunFastQC(Analysis):
         @type comparisons: dict
         @param samples: Python C{list} of C{Sample} objects
         @type samples: list
+        @param cmp_file: Comparison file
+        @type cmp_file: str | unicode
+        @return:
+        @rtype:
         """
 
         super(RunFastQC, self).__init__(
-            configuration=configuration,
-            project_name=project_name,
-            genome_version=genome_version,
-            input_directory=input_directory,
-            output_directory=output_directory,
-            project_directory=project_directory,
-            genome_directory=genome_directory,
-            e_mail=e_mail,
-            debug=debug,
-            drms_list=drms_list,
-            collection=collection,
-            comparisons=comparisons,
-            samples=samples)
+                configuration=configuration,
+                project_name=project_name,
+                genome_version=genome_version,
+                input_directory=input_directory,
+                output_directory=output_directory,
+                project_directory=project_directory,
+                genome_directory=genome_directory,
+                e_mail=e_mail,
+                debug=debug,
+                drms_list=drms_list,
+                collection=collection,
+                comparisons=comparisons,
+                samples=samples)
 
-        # Nothing else to do for this sub-class ...
+        if cmp_file is None:
+            self.cmp_file = str()
+        else:
+            self.cmp_file = cmp_file
+
+        return
 
     def set_configuration(self, configuration, section):
         """Set instance variables of a C{RunFastQC} object via a section of a C{Configuration} object.
@@ -2035,17 +2102,23 @@ class RunFastQC(Analysis):
         @type configuration: Configuration
         @param section: Configuration file section
         @type section: str
+        @return:
+        @rtype:
         """
 
         super(RunFastQC, self).set_configuration(configuration=configuration, section=section)
 
         # Read a comparison file.
 
-        # if configuration.config_parser.has_option(section=section, option='cmp_file'):
-        # self.cmp_file = configuration.config_parser.get(section=section, option='cmp_file')
+        # option = 'cmp_file'
+        # if configuration.config_parser.has_option(section=section, option=option):
+        # self.cmp_file = configuration.config_parser.get(section=section, option=option)
         # Use the sample annotation sheet instead of a separate comparison file.
-        if configuration.config_parser.has_option(section=section, option='sas_file'):
-            self.cmp_file = configuration.config_parser.get(section=section, option='sas_file')
+        option = 'sas_file'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.cmp_file = configuration.config_parser.get(section=section, option=option)
+
+        return
 
     def _read_comparisons(self, cmp_file):
         """Read a C{SampleAnnotationSheet} CSV file from disk.
@@ -2065,20 +2138,21 @@ class RunFastQC(Analysis):
                 - Treatment/Control File:
         @param cmp_file: Comparisons file path
         @type cmp_file: str | unicode
-        @return: Nothing
-        @rtype: None
+        @return:
+        @rtype:
         """
 
-        sas = SampleAnnotationSheet(file_path=cmp_file)
-        sas.csv_reader_open()
+        sas = SampleAnnotationSheet.from_file_path(file_path=cmp_file)
 
-        for row_dict in sas._csv_reader_object:
+        for row_dict in sas.row_dicts:
             self.add_sample(sample=self.collection.get_sample_from_row_dict(row_dict=row_dict))
 
-        sas.csv_reader_close()
+        return
 
     def run(self):
         """Run this C{RunFastQC} C{Analysis}.
+        @return:
+        @rtype:
         """
 
         super(RunFastQC, self).run()
@@ -2098,6 +2172,8 @@ class RunFastQC(Analysis):
         self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
         self._create_fastqc_jobs()
+
+        return
 
     def _create_fastqc_jobs(self):
         """Initialise a C{RunFastQC} object.
@@ -2132,10 +2208,9 @@ class RunFastQC(Analysis):
                         self.add_sample(sample=sample)
                 else:
                     warnings.warn(
-                        "Could not find projects component {!r} in RunFolder {!r}.\n"
-                        "Check projects configuration value {!r}.".
-                        format(component, prf.name, projects),
-                        UserWarning)
+                            "Could not find projects component {!r} in RunFolder {!r}.\n"
+                            "Check projects configuration value {!r}.".format(component, prf.name, projects),
+                            UserWarning)
 
         elif config_parser.has_option(section=config_section, option='samples'):
 
@@ -2170,9 +2245,9 @@ class RunFastQC(Analysis):
             pass
 
         fastqc_drms = self.add_drms(drms=DRMS.from_analysis(
-            name='fastqc',
-            working_directory=self.project_directory,
-            analysis=self))
+                name='fastqc',
+                working_directory=self.project_directory,
+                analysis=self))
 
         for sample in self.samples:
 
@@ -2192,8 +2267,8 @@ class RunFastQC(Analysis):
             for replicate_key in replicate_keys:
 
                 fastqc = fastqc_drms.add_executable(executable=FastQC(
-                    name='fastqc_{}'.format(replicate_key),
-                    analysis=self))
+                        name='fastqc_{}'.format(replicate_key),
+                        analysis=self))
 
                 # Set FastQC options.
 
@@ -2352,19 +2427,19 @@ class RunBamToFastq(Analysis):
         """
 
         super(RunBamToFastq, self).__init__(
-            configuration=configuration,
-            project_name=project_name,
-            genome_version=genome_version,
-            input_directory=input_directory,
-            output_directory=output_directory,
-            project_directory=project_directory,
-            genome_directory=genome_directory,
-            e_mail=e_mail,
-            debug=debug,
-            drms_list=drms_list,
-            collection=collection,
-            comparisons=comparisons,
-            samples=samples)
+                configuration=configuration,
+                project_name=project_name,
+                genome_version=genome_version,
+                input_directory=input_directory,
+                output_directory=output_directory,
+                project_directory=project_directory,
+                genome_directory=genome_directory,
+                e_mail=e_mail,
+                debug=debug,
+                drms_list=drms_list,
+                collection=collection,
+                comparisons=comparisons,
+                samples=samples)
 
         # Nothing else to do for this sub-class ...
 
@@ -2410,9 +2485,9 @@ class RunBamToFastq(Analysis):
         replicate_grouping = False
 
         sam_to_fastq_drms = self.add_drms(drms=DRMS.from_analysis(
-            name='sam_to_fastq',
-            working_directory=self.genome_directory,
-            analysis=self))
+                name='sam_to_fastq',
+                working_directory=self.genome_directory,
+                analysis=self))
 
         for sample in self.collection.get_all_samples():
 
@@ -2447,11 +2522,11 @@ class RunBamToFastq(Analysis):
                         # TODO: The matching part to remove the .bam could be achieved with Bash parameter expansion.
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
-                            sam_to_fastq = sam_to_fastq_drms.add_executable(executable=Executable.from_analysis(
-                                name='picard_sam_to_fastq_{}_1'.format(replicate_key),
-                                program='bsf_bam2fastq.sh',
-                                analysis=self))
-
+                            sam_to_fastq = sam_to_fastq_drms.add_executable(
+                                    executable=Executable(
+                                            name='picard_sam_to_fastq_{}_1'.format(replicate_key),
+                                            program='bsf_bam2fastq.sh'))
+                            self.set_command_configuration(command=sam_to_fastq)
                             sam_to_fastq.arguments.append(paired_reads.reads1.file_path)
                             sam_to_fastq.arguments.append(os.path.join(default.classpath_picard, 'picard.jar'))
                             sam_to_fastq.arguments.append(os.path.join(self.genome_directory, match.group(1)))
@@ -2463,11 +2538,11 @@ class RunBamToFastq(Analysis):
 
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
-                            sam_to_fastq = sam_to_fastq_drms.add_executable(executable=Executable.from_analysis(
-                                name='picard_sam_to_fastq_{}_2'.format(replicate_key),
-                                program='bsf_bam2fastq.sh',
-                                analysis=self))
-
+                            sam_to_fastq = sam_to_fastq_drms.add_executable(
+                                    executable=Executable(
+                                            name='picard_sam_to_fastq_{}_2'.format(replicate_key),
+                                            program='bsf_bam2fastq.sh'))
+                            self.set_command_configuration(command=sam_to_fastq)
                             sam_to_fastq.arguments.append(paired_reads.reads2.file_path)
                             sam_to_fastq.arguments.append(os.path.join(default.classpath_picard, 'picard.jar'))
                             sam_to_fastq.arguments.append(os.path.join(self.genome_directory, match.group(1)))

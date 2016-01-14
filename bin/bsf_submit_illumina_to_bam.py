@@ -27,8 +27,8 @@
 
 from argparse import ArgumentParser
 
-from bsf import Default
 from bsf.analyses.illumina_to_bam_tools import IlluminaToBam
+from bsf.standards import Default
 
 
 argument_parser = ArgumentParser(

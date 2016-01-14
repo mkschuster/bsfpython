@@ -29,9 +29,10 @@ A package of classes and methods to clean a sample sheet for the Picard SamToFas
 
 import os
 
-from bsf import Runnable, RunnableStep
+from bsf import Runnable
 from bsf.argument import OptionLong
 from bsf.data import Collection, ProcessedRunFolder, Project, Sample, PairedReads
+from bsf.process import RunnableStep
 
 
 # TODO: The following methods are a copied from the bsf.runnables.generic module.
@@ -131,10 +132,10 @@ def run(runnable):
         new_file_path = old_file_path
 
     collection = Collection.from_sas_path(
-        file_path='',
-        file_type='',
-        name='picard_sam_to_fastq',
-        sas_path=argument.value)
+            file_path='',
+            file_type='',
+            name='picard_sam_to_fastq',
+            sas_path=argument.value)
 
     for prf in collection.processed_run_folders.itervalues():
         assert isinstance(prf, ProcessedRunFolder)

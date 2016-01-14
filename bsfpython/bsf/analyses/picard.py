@@ -33,11 +33,12 @@ import os.path
 import warnings
 import weakref
 
-from bsf import Analysis, Configuration, Default, DRMS, Executable, Runnable, RunnableStep, \
-    RunnableStepMakeDirectory, RunnableStepPicard
+from bsf import Analysis, DRMS, Runnable
 from bsf.annotation import LibraryAnnotationSheet
 from bsf.data import Reads, PairedReads, Sample
 from bsf.illumina import RunFolder
+from bsf.process import RunnableStep, RunnableStepPicard, RunnableStepMakeDirectory
+from bsf.standards import Configuration, Default
 
 import pysam
 
@@ -152,18 +153,18 @@ def extract_illumina_barcodes(config_path):
     # Create a DRMS for the Picard ExtractIlluminaBarcodes stage.
 
     drms_picard_eib = analysis.add_drms(
-        drms=DRMS.from_analysis(
-            name='picard_extract_illumina_barcodes',
-            working_directory=analysis.genome_directory,
-            analysis=analysis))
+            drms=DRMS.from_analysis(
+                    name='picard_extract_illumina_barcodes',
+                    working_directory=analysis.genome_directory,
+                    analysis=analysis))
 
     # Create a DRMS fro the Picard IlluminaBasecallsToSam stage.
 
     drms_picard_ibs = analysis.add_drms(
-        drms=DRMS.from_analysis(
-            name='picard_illumina_basecalls_to_sam',
-            working_directory=analysis.genome_directory,
-            analysis=analysis))
+            drms=DRMS.from_analysis(
+                    name='picard_illumina_basecalls_to_sam',
+                    working_directory=analysis.genome_directory,
+                    analysis=analysis))
 
     # For each lane in the barcode_dict ...
 
@@ -213,9 +214,11 @@ def extract_illumina_barcodes(config_path):
                 if bc1_length != bc_length:
                     # Barcode lengths do not match ...
                     warnings.warn(
-                        'The length {} of barcode 1 {!r} does not match the length ({}) of other barcodes.'.
-                        format(bc_length, lane_dict['barcode_sequence_1'], bc1_length),
-                        UserWarning)
+                            'The length {} of barcode 1 {!r} does not match the length ({}) of other barcodes.'.format(
+                                    bc_length,
+                                    lane_dict['barcode_sequence_1'],
+                                    bc1_length),
+                            UserWarning)
 
             if lane_dict['barcode_sequence_2'] == 'NoIndex' or not lane_dict['barcode_sequence_2']:
                 bc_length = -1
@@ -228,9 +231,11 @@ def extract_illumina_barcodes(config_path):
                 if bc2_length != bc_length:
                     # Barcode lengths do not match ...
                     warnings.warn(
-                        'The length {} of barcode 2 {!r} does not match the length ({}) of other barcodes.'.
-                        format(bc_length, lane_dict['barcode_sequence_2'], bc2_length),
-                        UserWarning)
+                            'The length {} of barcode 2 {!r} does not match the length ({}) of other barcodes.'.format(
+                                    bc_length,
+                                    lane_dict['barcode_sequence_2'],
+                                    bc2_length),
+                            UserWarning)
 
         # TODO: Get the read structure from the IRF and the bc_lengths above ...
 
@@ -281,26 +286,25 @@ def extract_illumina_barcodes(config_path):
         # Create a Runnable for the Picard ExtractIlluminaBarcodes stage.
 
         runnable_picard_eib = analysis.add_runnable(
-            runnable=Runnable(
-                name=prefix_picard_eib,
-                code_module='bsf.runnables.generic',
-                working_directory=analysis.project_directory,
-                file_path_dict=file_path_dict_picard_eib))
+                runnable=Runnable(
+                        name=prefix_picard_eib,
+                        code_module='bsf.runnables.generic',
+                        working_directory=analysis.project_directory,
+                        file_path_dict=file_path_dict_picard_eib))
 
         # Create an Executable for running the Picard ExtractIlluminaBarcodes Runnable.
 
-        executable_picard_eib = drms_picard_eib.add_executable(
-            executable=Executable.from_analysis_runnable(
-                analysis=analysis,
-                runnable_name=runnable_picard_eib.name))
+        executable_picard_eib = analysis.set_drms_runnable(
+                drms=drms_picard_eib,
+                runnable=runnable_picard_eib)
 
         runnable_step = runnable_picard_eib.add_runnable_step(
-            runnable_step=RunnableStepPicard(
-                name='picard_eib',
-                java_temporary_path=runnable_picard_eib.get_relative_temporary_directory_path,
-                java_heap_maximum='Xmx2G',
-                picard_classpath=default.classpath_picard,  # TODO: This has to be self.classpath_picard.
-                picard_command='ExtractIlluminaBarcodes'))
+                runnable_step=RunnableStepPicard(
+                        name='picard_eib',
+                        java_temporary_path=runnable_picard_eib.get_relative_temporary_directory_path,
+                        java_heap_maximum='Xmx2G',
+                        picard_classpath=default.classpath_picard,  # TODO: This has to be self.classpath_picard.
+                        picard_command='ExtractIlluminaBarcodes'))
         assert isinstance(runnable_step, RunnableStepPicard)
         runnable_step.add_picard_option(key='BASECALLS_DIR', value=base_calls_directory)
         # OUTPUT_DIR for s_l_t_barcode.txt files not set. Defaults to BASECALLS_DIR.
@@ -330,27 +334,26 @@ def extract_illumina_barcodes(config_path):
         # Create a Runnable for the Picard IlluminaBasecallsToSam stage.
 
         runnable_picard_ibs = analysis.add_runnable(
-            runnable=Runnable(
-                name=prefix_picard_ibs,
-                code_module='bsf.runnables.generic',
-                working_directory=analysis.project_directory,
-                file_path_dict=file_path_dict_picard_ibs))
+                runnable=Runnable(
+                        name=prefix_picard_ibs,
+                        code_module='bsf.runnables.generic',
+                        working_directory=analysis.project_directory,
+                        file_path_dict=file_path_dict_picard_ibs))
 
         # Create an Executable for running the Picard IlluminaBasecallsToSam Runnable.
 
-        executable_picard_ibs = drms_picard_ibs.add_executable(
-            executable=Executable.from_analysis_runnable(
-                analysis=analysis,
-                runnable_name=runnable_picard_ibs.name))
+        executable_picard_ibs = analysis.set_drms_runnable(
+                drms=drms_picard_ibs,
+                runnable=runnable_picard_ibs)
         executable_picard_ibs.dependencies.append(executable_picard_eib.name)
 
         runnable_step = runnable_picard_eib.add_runnable_step(
-            runnable_step=RunnableStepPicard(
-                name='picard_ibs',
-                java_temporary_path=runnable_picard_ibs.get_relative_temporary_directory_path,
-                java_heap_maximum='Xmx2G',
-                picard_classpath=default.classpath_picard,  # TODO: This has to be self.classpath_picard.
-                picard_command='IlluminaBasecallsToSam'))
+                runnable_step=RunnableStepPicard(
+                        name='picard_ibs',
+                        java_temporary_path=runnable_picard_ibs.get_relative_temporary_directory_path,
+                        java_heap_maximum='Xmx2G',
+                        picard_classpath=default.classpath_picard,  # TODO: This has to be self.classpath_picard.
+                        picard_command='IlluminaBasecallsToSam'))
         assert isinstance(runnable_step, RunnableStepPicard)
         runnable_step.add_picard_option(key='BASECALLS_DIR', value=base_calls_directory)
         runnable_step.add_picard_option(key='LANE', value=key)
@@ -421,19 +424,19 @@ class SamToFastq(Analysis):
         """
 
         super(SamToFastq, self).__init__(
-            configuration=configuration,
-            project_name=project_name,
-            genome_version=genome_version,
-            input_directory=input_directory,
-            output_directory=output_directory,
-            project_directory=project_directory,
-            genome_directory=genome_directory,
-            e_mail=e_mail,
-            debug=debug,
-            drms_list=drms_list,
-            collection=collection,
-            comparisons=comparisons,
-            samples=samples)
+                configuration=configuration,
+                project_name=project_name,
+                genome_version=genome_version,
+                input_directory=input_directory,
+                output_directory=output_directory,
+                project_directory=project_directory,
+                genome_directory=genome_directory,
+                e_mail=e_mail,
+                debug=debug,
+                drms_list=drms_list,
+                collection=collection,
+                comparisons=comparisons,
+                samples=samples)
 
         if classpath_picard is None:
             self.classpath_picard = str()
@@ -466,15 +469,13 @@ class SamToFastq(Analysis):
 
         # Get the Picard tools Java Archive (JAR) class path directory.
 
-        if configuration.config_parser.has_option(section=section, option='classpath_picard'):
-            self.classpath_picard = configuration.config_parser.get(
-                section=section,
-                option='classpath_picard')
+        option = 'classpath_picard'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.classpath_picard = configuration.config_parser.get(section=section, option=option)
 
-        if configuration.config_parser.has_option(section=section, option='include_non_pass_filter_reads'):
-            self.include_non_pass_filter_reads = configuration.config_parser.getboolean(
-                section=section,
-                option='include_non_pass_filter_reads')
+        option = 'include_non_pass_filter_reads'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.include_non_pass_filter_reads = configuration.config_parser.getboolean(section=section, option=option)
 
         return
 
@@ -508,9 +509,9 @@ class SamToFastq(Analysis):
         # Picard SamToFastq
 
         drms_picard_stf = self.add_drms(drms=DRMS.from_analysis(
-            name='picard_sam_to_fastq',
-            working_directory=self.project_directory,
-            analysis=self))
+                name='picard_sam_to_fastq',
+                working_directory=self.project_directory,
+                analysis=self))
 
         for sample in self.samples:
             assert isinstance(sample, Sample)
@@ -548,8 +549,8 @@ class SamToFastq(Analysis):
                         prefix_picard_stf = '_'.join((drms_picard_stf.name, replicate_key))
 
                         file_path_dict_picard_stf = dict(
-                            temporary_directory='_'.join((prefix_picard_stf, 'temporary')),
-                            output_directory=os.path.join(self.project_directory, prefix_picard_stf),
+                                temporary_directory='_'.join((prefix_picard_stf, 'temporary')),
+                                output_directory=os.path.join(self.project_directory, prefix_picard_stf),
                         )
 
                         # Get the SAM header of a BAM file to extract the read group (@RG), amongst other things.
@@ -570,42 +571,42 @@ class SamToFastq(Analysis):
                                 paired_reads.read_group = '\\t'.join(read_group_list)
                                 paired_reads.reads1.name = platform_unit + '_1'
                                 paired_reads.reads1.file_path = os.path.join(
-                                    file_path_dict_picard_stf['output_directory'],
-                                    platform_unit + '_1.fastq')
-                                paired_reads.reads2 = Reads(
-                                    file_path=os.path.join(
                                         file_path_dict_picard_stf['output_directory'],
-                                        platform_unit + '_2.fastq'),
-                                    file_type=paired_reads.reads1.file_type,
-                                    name=platform_unit + '_2',
-                                    lane=paired_reads.reads1.lane,
-                                    read=paired_reads.reads1.read,
-                                    chunk=paired_reads.reads1.chunk,
-                                    weak_reference_paired_reads=weakref.ref(paired_reads))
+                                        platform_unit + '_1.fastq')
+                                paired_reads.reads2 = Reads(
+                                        file_path=os.path.join(
+                                                file_path_dict_picard_stf['output_directory'],
+                                                platform_unit + '_2.fastq'),
+                                        file_type=paired_reads.reads1.file_type,
+                                        name=platform_unit + '_2',
+                                        lane=paired_reads.reads1.lane,
+                                        read=paired_reads.reads1.read,
+                                        chunk=paired_reads.reads1.chunk,
+                                        weak_reference_paired_reads=weakref.ref(paired_reads))
                             else:
                                 # For further read groups, create new PairedReads objects.
                                 reads1 = Reads(
-                                    file_path=os.path.join(
-                                        file_path_dict_picard_stf['output_directory'],
-                                        platform_unit + '_1.fastq'),
-                                    file_type=paired_reads.reads1.file_type,
-                                    name=platform_unit + '_1',
-                                    lane=paired_reads.reads1.lane,
-                                    read='R1',
-                                    chunk=paired_reads.reads1.chunk)
+                                        file_path=os.path.join(
+                                                file_path_dict_picard_stf['output_directory'],
+                                                platform_unit + '_1.fastq'),
+                                        file_type=paired_reads.reads1.file_type,
+                                        name=platform_unit + '_1',
+                                        lane=paired_reads.reads1.lane,
+                                        read='R1',
+                                        chunk=paired_reads.reads1.chunk)
                                 reads2 = Reads(
-                                    file_path=os.path.join(
-                                        file_path_dict_picard_stf['output_directory'],
-                                        platform_unit + '_2.fastq'),
-                                    file_type=paired_reads.reads2.file_type,
-                                    name=platform_unit + '_2',
-                                    lane=paired_reads.reads1.lane,
-                                    read='R2',
-                                    chunk=paired_reads.reads1.chunk)
+                                        file_path=os.path.join(
+                                                file_path_dict_picard_stf['output_directory'],
+                                                platform_unit + '_2.fastq'),
+                                        file_type=paired_reads.reads2.file_type,
+                                        name=platform_unit + '_2',
+                                        lane=paired_reads.reads1.lane,
+                                        read='R2',
+                                        chunk=paired_reads.reads1.chunk)
                                 new_paired_reads = PairedReads(
-                                    reads1=reads1,
-                                    reads2=reads2,
-                                    read_group='\\t'.join(read_group_list))
+                                        reads1=reads1,
+                                        reads2=reads2,
+                                        read_group='\\t'.join(read_group_list))
 
                                 reads1.weak_reference_paired_reads = weakref.ref(new_paired_reads)
                                 reads2.weak_reference_paired_reads = weakref.ref(new_paired_reads)
@@ -616,18 +617,15 @@ class SamToFastq(Analysis):
                         # Create a Runnable for running the Picard SamToFastq analysis.
 
                         runnable_picard_stf = self.add_runnable(
-                            runnable=Runnable(
-                                name=prefix_picard_stf,
-                                code_module='bsf.runnables.generic',
-                                working_directory=self.project_directory,
-                                file_path_dict=file_path_dict_picard_stf))
+                                runnable=Runnable(
+                                        name=prefix_picard_stf,
+                                        code_module='bsf.runnables.generic',
+                                        working_directory=self.project_directory,
+                                        file_path_dict=file_path_dict_picard_stf))
 
                         # Create an Executable for running the Picard SamToFastq Runnable.
 
-                        drms_picard_stf.add_executable(
-                            executable=Executable.from_analysis_runnable(
-                                analysis=self,
-                                runnable_name=runnable_picard_stf.name))
+                        self.set_drms_runnable(drms=drms_picard_stf, runnable=runnable_picard_stf)
 
                         # Record the Executable.name for the prune_sas dependency.
 
@@ -636,25 +634,25 @@ class SamToFastq(Analysis):
                         # Create a new RunnableStepMakeDirectory in preparation of the Picard program.
 
                         runnable_picard_stf.add_runnable_step(
-                            runnable_step=RunnableStepMakeDirectory(
-                                name='mkdir',
-                                directory_path=file_path_dict_picard_stf['output_directory']))
+                                runnable_step=RunnableStepMakeDirectory(
+                                        name='mkdir',
+                                        directory_path=file_path_dict_picard_stf['output_directory']))
 
                         # Create a new RunnableStep for the Picard SamToFastq program.
 
                         runnable_step = runnable_picard_stf.add_runnable_step(
-                            runnable_step=RunnableStepPicard(
-                                name='sam_to_fastq',
-                                java_temporary_path=runnable_picard_stf.get_relative_temporary_directory_path,
-                                java_heap_maximum='Xmx2G',
-                                picard_classpath=self.classpath_picard,
-                                picard_command='SamToFastq'))
+                                runnable_step=RunnableStepPicard(
+                                        name='sam_to_fastq',
+                                        java_temporary_path=runnable_picard_stf.get_relative_temporary_directory_path,
+                                        java_heap_maximum='Xmx2G',
+                                        picard_classpath=self.classpath_picard,
+                                        picard_command='SamToFastq'))
                         assert isinstance(runnable_step, RunnableStepPicard)
                         runnable_step.add_picard_option(key='INPUT', value=bam_file_path)
                         runnable_step.add_picard_option(key='OUTPUT_PER_RG', value='true')
                         runnable_step.add_picard_option(
-                            key='OUTPUT_DIR',
-                            value=file_path_dict_picard_stf['output_directory'])
+                                key='OUTPUT_DIR',
+                                value=file_path_dict_picard_stf['output_directory'])
                         # RE_REVERSE
                         # INTERLEAVE
                         if self.include_non_pass_filter_reads:
@@ -669,8 +667,8 @@ class SamToFastq(Analysis):
                         # READ2_MAX_BASES_TO_WRITE
                         # INCLUDE_NON_PRIMARY_ALIGNMENTS
                         runnable_step.add_picard_option(
-                            key='TMP_DIR',
-                            value=file_path_dict_picard_stf['temporary_directory'])
+                                key='TMP_DIR',
+                                value=file_path_dict_picard_stf['temporary_directory'])
                         # VERBOSITY defaults to 'INFO'.
                         runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                         # QUIET defaults to 'false'.
@@ -686,10 +684,10 @@ class SamToFastq(Analysis):
         # Convert the (modified) Collection object into a SampleAnnotationSheet object and write it to disk.
 
         annotation_sheet = self.collection.to_sas(
-            file_path=os.path.join(
-                self.project_directory,
-                '_'.join((self.project_name, 'sam_to_fastq_original.csv'))),
-            name='_'.join((self.project_name, 'sam_to_fastq')))
+                file_path=os.path.join(
+                        self.project_directory,
+                        '_'.join((self.project_name, 'sam_to_fastq_original.csv'))),
+                name='_'.join((self.project_name, 'sam_to_fastq')))
 
         annotation_sheet.write_to_file()
 
@@ -698,31 +696,29 @@ class SamToFastq(Analysis):
         prefix_prune_sas = '_'.join((drms_picard_stf.name, self.project_name))
 
         file_path_dict_prune_sas = dict(
-            temporary_directory='_'.join((prefix_prune_sas, 'temporary')),
-            output_directory=prefix_prune_sas,
+                temporary_directory='_'.join((prefix_prune_sas, 'temporary')),
+                output_directory=prefix_prune_sas,
         )
 
         runnable_prune_sas = self.add_runnable(
-            runnable=Runnable(
-                name=prefix_prune_sas,
-                code_module='bsf.runnables.picard_sam_to_fastq_sample_sheet',
-                working_directory=self.project_directory,
-                file_path_dict=file_path_dict_prune_sas))
+                runnable=Runnable(
+                        name=prefix_prune_sas,
+                        code_module='bsf.runnables.picard_sam_to_fastq_sample_sheet',
+                        working_directory=self.project_directory,
+                        file_path_dict=file_path_dict_prune_sas))
 
         # Create an Executable for running the Runnable for pruning the sample annotation sheet.
 
-        executable_prune_sas = drms_picard_stf.add_executable(
-            executable=Executable.from_analysis_runnable(
-                analysis=self,
-                runnable_name=runnable_prune_sas.name))
-
+        executable_prune_sas = self.set_drms_runnable(
+                drms=drms_picard_stf,
+                runnable=runnable_prune_sas)
         executable_prune_sas.dependencies.extend(prune_sas_dependencies)
 
         # Create a new RunnableStep.
 
         prune_sas = runnable_prune_sas.add_runnable_step(
-            runnable_step=RunnableStep(
-                name='prune_sample_annotation_sheet'))
+                runnable_step=RunnableStep(
+                        name='prune_sample_annotation_sheet'))
 
         prune_sas.add_option_long(key='sas_path', value=annotation_sheet.file_path)
 

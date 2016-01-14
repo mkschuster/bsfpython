@@ -26,11 +26,11 @@
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-import os.path
+import os
 import re
 from stat import *
 
-from bsf import Default
+from bsf.standards import Default
 
 
 parser = argparse.ArgumentParser(description='Collect statistics from a processed run folder after de-multiplexing.')

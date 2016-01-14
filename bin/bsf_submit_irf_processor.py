@@ -31,10 +31,10 @@ import datetime
 import os
 import time
 
-from bsf import Default
 # from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
 from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder, IlluminaToBam
 from bsf.illumina import RunFolder, RunFolderNotComplete
+from bsf.standards import Default
 
 
 argument_parser = ArgumentParser(

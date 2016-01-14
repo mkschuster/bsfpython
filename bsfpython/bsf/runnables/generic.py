@@ -34,7 +34,8 @@ import errno
 import os
 import shutil
 
-from bsf import Runnable, RunnableStep
+from bsf import Runnable
+from bsf.process import RunnableStep
 
 
 def _runnable_step_remove_obsolete_file_paths(runnable_step):

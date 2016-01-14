@@ -33,13 +33,14 @@ import re
 import shutil
 
 import bsf
-from bsf import Command, Default, Executable, Runnable
+from bsf import Runnable
 from bsf.argument import OptionShort
 from bsf.executables import Bowtie2
+from bsf.process import Command, Executable
+from bsf.standards import Default
 
 
 class ReadGroupContainer(object):
-
     def __init__(self, rg_string=None, fastq_1_path=None, fastq_2_path=None):
         """Initialise a C{ReadGroupContainer} object.
 
@@ -112,10 +113,10 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     sam_file_path = os.path.join(runnable.file_path_dict['temporary_directory'], bam_file_name[:-4] + '.sam')
 
     samtools = Executable(
-        name='samtools_view',
-        program='samtools',
-        sub_command=Command(program='view'),
-        stdout_path=sam_file_path)
+            name='samtools_view',
+            program='samtools',
+            sub_command=Command(program='view'),
+            stdout_path=sam_file_path)
 
     samtools_view = samtools.sub_command
     samtools_view.add_switch_short(key='H')
@@ -124,8 +125,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     child_return_code = samtools.run()
     if child_return_code:
         raise Exception(
-            'Could not complete the {!r} step on the BAM file for the replicate.'.
-            format(samtools.name))
+                'Could not complete the {!r} step on the BAM file for the replicate.'.format(samtools.name))
 
     sam_pg_list = list()
     sam_rg_list = list()
@@ -284,8 +284,8 @@ def run_bowtie2(runnable):
         bowtie2.add_option_short(key='U', value=','.join(fastq_list))
 
         sam_file_path = os.path.join(
-            runnable.file_path_dict['temporary_directory'],
-            'all_fastq_files.sam')
+                runnable.file_path_dict['temporary_directory'],
+                'all_fastq_files.sam')
         bowtie2.stdout_path = sam_file_path
         sam_file_path_list.append(sam_file_path)
 
@@ -295,11 +295,10 @@ def run_bowtie2(runnable):
         if child_return_code:
             raise Exception('Could not complete the {!r} step.'.format(bowtie2.name))
 
-        # Do not delete the non-temporary FASTQ files.
+            # Do not delete the non-temporary FASTQ files.
 
     # TODO: At this stage, a list of SAM files exists, which needs merging.
     if len(sam_file_path_list) > 1:
-
         # SAM files need merging.
 
         default = Default.get_global_default()

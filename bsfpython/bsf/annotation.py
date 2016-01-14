@@ -57,7 +57,7 @@ class AnnotationSheet(object):
     @type _field_names: list[str]
     @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, func]
+    @type _test_methods: dict[str, list[function]]
     @ivar file_path: File path
     @type file_path: str | unicode
     @ivar file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
@@ -68,7 +68,7 @@ class AnnotationSheet(object):
     @type field_names: list[str]
     @ivar test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type test_methods: dict[str, func]
+    @type test_methods: dict[str, list[function]]
     @ivar row_dicts: Python C{list} of Python C{dict} objects
     @type row_dicts: list[dict[str, str | unicode]]
     """
@@ -187,11 +187,11 @@ class AnnotationSheet(object):
         @rtype: str
         """
         messages, column_value = cls.check_column(
-            row_number=row_number,
-            row_dict=row_dict,
-            column_name=column_name,
-            require_column=require_column,
-            require_value=require_value)
+                row_number=row_number,
+                row_dict=row_dict,
+                column_name=column_name,
+                require_column=require_column,
+                require_value=require_value)
 
         if column_value:
             match = re.search(pattern=cls._regular_expression_non_sequence, string=row_dict[column_name])
@@ -215,11 +215,11 @@ class AnnotationSheet(object):
         @rtype: str
         """
         return cls.check_sequence(
-            row_number=row_number,
-            row_dict=row_dict,
-            column_name=column_name,
-            require_column=True,
-            require_value=True)
+                row_number=row_number,
+                row_dict=row_dict,
+                column_name=column_name,
+                require_column=True,
+                require_value=True)
 
     @classmethod
     def check_sequence_optional(cls, row_number, row_dict, column_name):
@@ -235,11 +235,11 @@ class AnnotationSheet(object):
         @rtype: str
         """
         return cls.check_sequence(
-            row_number=row_number,
-            row_dict=row_dict,
-            column_name=column_name,
-            require_column=True,
-            require_value=False)
+                row_number=row_number,
+                row_dict=row_dict,
+                column_name=column_name,
+                require_column=True,
+                require_value=False)
 
     @classmethod
     def check_underscore_leading(cls, row_number, row_dict, column_name):
@@ -364,7 +364,7 @@ class AnnotationSheet(object):
         @type field_names: list[str]
         @param test_methods: Python C{dict} of Python C{str} (field name) key data and
             Python C{list} of Python C{function} value data
-        @type test_methods: dict[str, func]
+        @type test_methods: dict[str, function]
         @param row_dicts: Python C{list} of Python C{dict} objects
         @type row_dicts: list[dict[str | unicode]]
         @return:
@@ -403,7 +403,7 @@ class AnnotationSheet(object):
 
         if test_methods is None:
             # Copy the class variable.
-            self.test_methods = dict(self._test_methods)
+            self.test_methods = self._test_methods.copy()
         else:
             self.test_methods = test_methods
 
@@ -444,9 +444,9 @@ class AnnotationSheet(object):
 
         self._csv_reader_file = open(name=self.file_path, mode='rb')
         self._csv_reader_object = csv.DictReader(
-            f=self._csv_reader_file,
-            fieldnames=csv_field_names,
-            dialect=csv_file_type)
+                f=self._csv_reader_file,
+                fieldnames=csv_field_names,
+                dialect=csv_file_type)
 
         # Automatically set the field names from the DictReader,
         # if the field_names list is empty and if possible.
@@ -488,9 +488,9 @@ class AnnotationSheet(object):
 
         self._csv_writer_file = open(name=self.file_path, mode='wb')
         self._csv_writer_object = csv.DictWriter(
-            f=self._csv_writer_file,
-            fieldnames=self.field_names,
-            dialect=csv_file_type)
+                f=self._csv_writer_file,
+                fieldnames=self.field_names,
+                dialect=csv_file_type)
 
         if self.header:
             self._csv_writer_object.writeheader()
@@ -520,8 +520,8 @@ class AnnotationSheet(object):
         """
 
         warnings.warn(
-            'Sorting of AnnotationSheet objects has to implemented in the sub-class.',
-            UserWarning)
+                'Sorting of AnnotationSheet objects has to implemented in the sub-class.',
+                UserWarning)
 
     def validate(self):
         """Validate an C{AnnotationSheet}.
@@ -540,9 +540,9 @@ class AnnotationSheet(object):
                     for class_method_pointer in self.test_methods[field_name]:
                         # Only validate fields, for which instructions exist in the test_methods dict.
                         messages += class_method_pointer(
-                            row_number=row_number,
-                            row_dict=row_dict,
-                            column_name=field_name
+                                row_number=row_number,
+                                row_dict=row_dict,
+                                column_name=field_name
                         )
 
         return messages
@@ -572,7 +572,7 @@ class BamIndexDecoderSheet(AnnotationSheet):
     @type _field_names: list[str]
     @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, func]
+    @type _test_methods: dict[str, list[function]]
     """
 
     _file_type = 'excel-tab'
@@ -606,7 +606,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
     @type _field_names: list[str]
     @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, func]
+    @type _test_methods: dict[str, list[function]]
     """
 
     _file_type = 'excel'
@@ -623,27 +623,27 @@ class LibraryAnnotationSheet(AnnotationSheet):
     ]
 
     _test_methods = dict(
-        lane=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        barcode_sequence_1=[
-            AnnotationSheet.check_sequence_optional
-        ],
-        barcode_sequence_2=[
-            AnnotationSheet.check_sequence_optional
-        ],
-        sample_name=[
-            AnnotationSheet.check_alphanumeric,
-            AnnotationSheet.check_underscore_leading,
-            AnnotationSheet.check_underscore_trailing,
-            AnnotationSheet.check_underscore_multiple
-        ],
-        library_name=[
-            AnnotationSheet.check_alphanumeric,
-            AnnotationSheet.check_underscore_leading,
-            AnnotationSheet.check_underscore_trailing,
-            AnnotationSheet.check_underscore_multiple
-        ]
+            lane=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            barcode_sequence_1=[
+                AnnotationSheet.check_sequence_optional
+            ],
+            barcode_sequence_2=[
+                AnnotationSheet.check_sequence_optional
+            ],
+            sample_name=[
+                AnnotationSheet.check_alphanumeric,
+                AnnotationSheet.check_underscore_leading,
+                AnnotationSheet.check_underscore_trailing,
+                AnnotationSheet.check_underscore_multiple
+            ],
+            library_name=[
+                AnnotationSheet.check_alphanumeric,
+                AnnotationSheet.check_underscore_leading,
+                AnnotationSheet.check_underscore_trailing,
+                AnnotationSheet.check_underscore_multiple
+            ]
     )
 
     def validate(self, lanes=8):
@@ -771,7 +771,7 @@ class SampleAnnotationSheet(AnnotationSheet):
     @type _field_names: list[str]
     @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, func]
+    @type _test_methods: dict[str, list[function]]
     """
 
     _file_type = 'excel'
@@ -837,7 +837,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     @type _field_names: list[str]
     @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, func]
+    @type _test_methods: dict[str, list[function]]
     """
 
     _file_type = 'excel'
@@ -860,33 +860,33 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     ]
 
     _test_methods = dict(
-        SampleID=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Tissue=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Factor=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Condition=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Treatment=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        Replicate=[
-            AnnotationSheet.check_numeric
-        ],
-        ControlID=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        PeakCaller=[
-            AnnotationSheet.check_alphanumeric
-        ],
-        PeakFormat=[
-            AnnotationSheet.check_alphanumeric
-        ]
+            SampleID=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            Tissue=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            Factor=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            Condition=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            Treatment=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            Replicate=[
+                AnnotationSheet.check_numeric
+            ],
+            ControlID=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            PeakCaller=[
+                AnnotationSheet.check_alphanumeric
+            ],
+            PeakFormat=[
+                AnnotationSheet.check_alphanumeric
+            ]
     )
 
     def sort(self):
@@ -894,12 +894,12 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         """
 
         self.row_dicts.sort(
-            cmp=lambda x, y:
-            cmp(x['Tissue'], y['Tissue']) or
-            cmp(x['Factor'], y['Factor']) or
-            cmp(x['Condition'], y['Condition']) or
-            cmp(x['Treatment'], y['Treatment']) or
-            cmp(int(x['Replicate']), int(y['Replicate'])))
+                cmp=lambda x, y:
+                cmp(x['Tissue'], y['Tissue']) or
+                cmp(x['Factor'], y['Factor']) or
+                cmp(x['Condition'], y['Condition']) or
+                cmp(x['Treatment'], y['Treatment']) or
+                cmp(int(x['Replicate']), int(y['Replicate'])))
 
     def write_to_file(self):
         """Write a C{ChIPSeqDiffBindSheet} to a file.
@@ -922,7 +922,7 @@ class TuxedoSamplePairSheet(AnnotationSheet):
     @type _field_names: list[str]
     @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, func]
+    @type _test_methods: dict[str, list[function]]
     """
 
     _file_type = "excel-tab"

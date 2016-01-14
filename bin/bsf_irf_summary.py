@@ -29,8 +29,8 @@ import argparse
 import datetime
 import os.path
 
-from bsf import Default
 from bsf.illumina import RunFolder
+from bsf.standards import Default
 
 
 parser = argparse.ArgumentParser(description='Summarise an Illumina Run Folder.')
