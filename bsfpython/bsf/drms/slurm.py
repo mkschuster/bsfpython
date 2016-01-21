@@ -150,6 +150,14 @@ def submit(drms, debug=0):
             command.append('--mem')
             command.append(_recalculate_memory(drms.memory_limit_soft))
 
+        if len(drms.node_list_exclude):
+            command.append('--exclude')
+            command.append(','.join(drms.node_list_exclude))
+
+        if len(drms.node_list_include):
+            command.append('--nodelist')
+            command.append(','.join(drms.node_list_include))
+
         if drms.time_limit:
             command.append('--time')
             command.append(drms.time_limit)

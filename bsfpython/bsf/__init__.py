@@ -834,12 +834,22 @@ class DRMS(object):
     @type working_directory: str
     @ivar implementation: Implementation (e.g. I{sge}, I{slurm}, ...)
     @type implementation: str
-    @ivar memory_free_mem: Memory limit (free)
+    @ivar memory_free_mem: Memory limit (free physical)
     @type memory_free_mem: str
+    @ivar memory_free_swap: Memory limit (free swap)
+    @type memory_free_swap: str
+    @ivar memory_free_virtual: Memory limit (free virtual)
+    @type memory_free_virtual: str
     @ivar memory_limit_hard: Memory limit (hard)
     @type memory_limit_hard: str
     @ivar memory_limit_soft: Memory limit (soft)
     @type memory_limit_soft: str
+    @ivar node_list_exclude: List of nodes to exclude
+    @type node_list_exclude: list[str]
+    @ivar node_list_include: List of nodes to include
+    @type node_list_include: list[str]
+    @ivar time_limit: Time limit
+    @type time_limit: str
     @ivar parallel_environment: Parallel environment
     @type parallel_environment: str
     @ivar queue: Queue
@@ -933,7 +943,8 @@ class DRMS(object):
         return drms
 
     def __init__(self, name, working_directory, implementation=None, memory_free_mem=None, memory_free_swap=None,
-                 memory_free_virtual=None, memory_limit_hard=None, memory_limit_soft=None, time_limit=None,
+                 memory_free_virtual=None, memory_limit_hard=None, memory_limit_soft=None,
+                 node_list_exclude=None, node_list_include=None, time_limit=None,
                  parallel_environment=None, queue=None, threads=1, hold=None, is_script=False, executables=None):
         """Initialise a C{DRMS} object.
 
@@ -953,6 +964,10 @@ class DRMS(object):
         @type memory_limit_hard: str
         @param memory_limit_soft: Memory limit (soft)
         @type memory_limit_soft: str
+        @param node_list_exclude: List of nodes to exclude
+        @type node_list_exclude: list[str]
+        @param node_list_include: List of nodes to include
+        @type node_list_include: list[str]
         @param time_limit: Time limit
         @type time_limit: str
         @param parallel_environment: Parallel environment
@@ -1014,6 +1029,16 @@ class DRMS(object):
         else:
             self.memory_limit_soft = memory_limit_soft
 
+        if node_list_exclude is None:
+            self.node_list_exclude = list()
+        else:
+            self.node_list_exclude = node_list_exclude
+
+        if node_list_include is None:
+            self.node_list_include = list()
+        else:
+            self.node_list_include = node_list_include
+
         if time_limit is None:
             self.time_limit = str()
         else:
@@ -1065,34 +1090,22 @@ class DRMS(object):
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
-        output += '{}  name:                 {!r}\n'. \
-            format(indent, self.name)
-        output += '{}  working_directory:       {!r}\n'. \
-            format(indent, self.working_directory)
-        output += '{}  implementation:       {!r}\n'. \
-            format(indent, self.implementation)
-        output += '{}  memory_free_mem:      {!r}\n'. \
-            format(indent, self.memory_free_mem)
-        output += '{}  memory_free_swap:     {!r}\n'. \
-            format(indent, self.memory_free_swap)
-        output += '{}  memory_free_virtual:  {!r}\n'. \
-            format(indent, self.memory_free_virtual)
-        output += '{}  memory_limit_hard:    {!r}\n'. \
-            format(indent, self.memory_limit_hard)
-        output += '{}  memory_limit_soft:    {!r}\n'. \
-            format(indent, self.memory_limit_soft)
-        output += '{}  time_limit:           {!r}\n'. \
-            format(indent, self.time_limit)
-        output += '{}  queue:                {!r}\n'. \
-            format(indent, self.queue)
-        output += '{}  parallel_environment: {!r}\n'. \
-            format(indent, self.parallel_environment)
-        output += '{}  threads:              {!r}\n'. \
-            format(indent, self.threads)
-        output += '{}  hold:                 {!r}\n'. \
-            format(indent, self.hold)
-        output += '{}  is_script:            {!r}\n'. \
-            format(indent, self.is_script)
+        output += '{}  name:                 {!r}\n'.format(indent, self.name)
+        output += '{}  working_directory:    {!r}\n'.format(indent, self.working_directory)
+        output += '{}  implementation:       {!r}\n'.format(indent, self.implementation)
+        output += '{}  memory_free_mem:      {!r}\n'.format(indent, self.memory_free_mem)
+        output += '{}  memory_free_swap:     {!r}\n'.format(indent, self.memory_free_swap)
+        output += '{}  memory_free_virtual:  {!r}\n'.format(indent, self.memory_free_virtual)
+        output += '{}  memory_limit_hard:    {!r}\n'.format(indent, self.memory_limit_hard)
+        output += '{}  memory_limit_soft:    {!r}\n'.format(indent, self.memory_limit_soft)
+        output += '{}  node_list_exclude:    {!r}\n'.format(indent, self.node_list_exclude)
+        output += '{}  node_list_include:    {!r}\n'.format(indent, self.node_list_include)
+        output += '{}  time_limit:           {!r}\n'.format(indent, self.time_limit)
+        output += '{}  queue:                {!r}\n'.format(indent, self.queue)
+        output += '{}  parallel_environment: {!r}\n'.format(indent, self.parallel_environment)
+        output += '{}  threads:              {!r}\n'.format(indent, self.threads)
+        output += '{}  hold:                 {!r}\n'.format(indent, self.hold)
+        output += '{}  is_script:            {!r}\n'.format(indent, self.is_script)
 
         output += '{}  executables:\n'.format(indent)
 
@@ -1156,6 +1169,16 @@ class DRMS(object):
         option = 'memory_soft'
         if configuration.config_parser.has_option(section=section, option=option):
             self.memory_limit_soft = configuration.config_parser.get(section=section, option=option)
+
+        option = 'node_list_exclude'
+        if configuration.config_parser.has_option(section=section, option=option):
+            for host_name in configuration.config_parser.get(section=section, option=option).split(','):
+                self.node_list_exclude.append(host_name.strip())
+
+        option = 'node_list_include'
+        if configuration.config_parser.has_option(section=section, option=option):
+            for host_name in configuration.config_parser.get(section=section, option=option).split(','):
+                self.node_list_include.append(host_name.strip())
 
         option = 'time_limit'
         if configuration.config_parser.has_option(section=section, option=option):

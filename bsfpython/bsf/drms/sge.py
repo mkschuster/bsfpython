@@ -117,6 +117,10 @@ def submit(drms, debug=0):
         if drms.memory_limit_soft:
             resource_list.append('s_vmem={}'.format(drms.memory_limit_soft))
 
+        # Set the host names ...
+        for node_name in drms.node_list_include:
+            resource_list.append('hostname={}'.format(node_name))
+
         if len(resource_list):
 
             command.append('-l')
