@@ -54,36 +54,46 @@ def _runnable_step_remove_obsolete_file_paths(runnable_step):
         if os.path.exists(file_path):
             os.remove(file_path)
 
+    return
 
-def _runnable_step_status_file_path(runnable, runnable_step):
+
+def _runnable_step_status_file_path(runnable, runnable_step, success=True):
     """Get the status file path for a C{RunnableStep} of a C{Runnable}.
 
     @param runnable: C{Runnable}
     @type runnable: Runnable
     @param runnable_step: C{RunnableStep}
     @type runnable_step: RunnableStep
+    @param success: Successful completion
+    @type success: bool
     @return: Status file path
     @rtype: str
     """
+    if success:
+        return '_'.join((runnable.name, runnable_step.name, 'completed.txt'))
+    else:
+        return '_'.join((runnable.name, runnable_step.name, 'failed.txt'))
 
-    return '_'.join((runnable.name, runnable_step.name, 'completed.txt'))
 
-
-def _runnable_step_status_file_create(runnable, runnable_step):
+def _runnable_step_status_file_create(runnable, runnable_step, success=True):
     """Create an empty status file for a C{RunnableStep} of a C{Runnable}.
 
     @param runnable: C{Runnable}
     @type runnable: Runnable
     @param runnable_step: C{RunnableStep}
     @type runnable_step: RunnableStep
+    @param success: Successful completion
+    @type success: bool
     @return: Nothing
     @rtype: None
     """
     if runnable_step is None:
         return
 
-    status_path = _runnable_step_status_file_path(runnable=runnable, runnable_step=runnable_step)
+    status_path = _runnable_step_status_file_path(runnable=runnable, runnable_step=runnable_step, success=success)
     open(status_path, 'w').close()
+
+    return
 
 
 def _runnable_step_status_file_remove(runnable, runnable_step):
@@ -100,9 +110,17 @@ def _runnable_step_status_file_remove(runnable, runnable_step):
     if runnable_step is None:
         return
 
-    status_path = _runnable_step_status_file_path(runnable=runnable, runnable_step=runnable_step)
+    # Automatically remove both status files, successful or not.
+
+    status_path = _runnable_step_status_file_path(runnable=runnable, runnable_step=runnable_step, success=True)
     if os.path.exists(status_path):
         os.remove(status_path)
+
+    status_path = _runnable_step_status_file_path(runnable=runnable, runnable_step=runnable_step, success=False)
+    if os.path.exists(status_path):
+        os.remove(status_path)
+
+    return
 
 
 def run(runnable):
@@ -120,7 +138,48 @@ def run(runnable):
     if os.path.exists(runnable.get_relative_status_path):
         return
 
-    # Create a Runnable-specific temporary directory if it does not already exist.
+    # Create a Runnable-specific cache directory if it does not exist already.
+
+    cache_directory_path = runnable.get_absolute_cache_directory_path
+    if not os.path.isdir(cache_directory_path):
+        try:
+            os.makedirs(cache_directory_path)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+
+    # Copy files from the cache dictionary into the cache directory.
+
+    for key in runnable.cache_path_dict:
+        source_path = runnable.cache_path_dict[key]
+        target_path = os.path.join(runnable.get_absolute_cache_directory_path, os.path.basename(source_path))
+
+        runnable_step = RunnableStep(name='_'.join((runnable.name, 'cache', key)), program='cp')
+        runnable_step.add_switch_short(key='p')
+        runnable_step.arguments.append(source_path)
+        runnable_step.arguments.append(target_path)
+
+        child_return_code = runnable_step.run()
+
+        if child_return_code != 0:
+            # Remove the Runnable-specific cache directory and everything within it.
+            if os.path.exists(cache_directory_path):
+                shutil.rmtree(path=cache_directory_path, ignore_errors=False)
+            # Raise an Exception.
+            if child_return_code > 0:
+                raise Exception('[{}] Child process {}_{} failed with return code {}'.
+                                format(datetime.datetime.now().isoformat(),
+                                       runnable.name,
+                                       runnable_step.name,
+                                       +child_return_code))
+            elif child_return_code < 0:
+                raise Exception('[{}] Child process {}_{} received signal {}.'.
+                                format(datetime.datetime.now().isoformat(),
+                                       runnable.name,
+                                       runnable_step.name,
+                                       -child_return_code))
+
+    # Create a Runnable-specific temporary directory if it does not exist already.
 
     temporary_directory_path = runnable.get_relative_temporary_directory_path
     if not os.path.isdir(temporary_directory_path):
@@ -143,12 +202,16 @@ def run(runnable):
 
     # Work through the list of RunnableStep objects in logical order. Keep track of the previous RunnableStep.
 
+    child_return_code = 0
+    runnable_step_current = None
     runnable_step_previous = None
+
     for runnable_step_current in runnable_step_list:
         assert isinstance(runnable_step_current, RunnableStep)
 
         # Check for a RunnableStep-specific status file.
-        status_path = _runnable_step_status_file_path(runnable=runnable, runnable_step=runnable_step_current)
+        status_path = _runnable_step_status_file_path(
+            runnable=runnable, runnable_step=runnable_step_current, success=True)
         if os.path.exists(path=status_path):
             # If a status file exists, this RunnableStep is complete.
             # Set it as the previous RunnableStep and continue with the next RunnableStep.
@@ -158,6 +221,56 @@ def run(runnable):
         # Do the work.
 
         child_return_code = runnable_step_current.run()
+
+        # Upon failure, break out of this loop without deleting obsolete files or altering status files at this point.
+
+        if child_return_code != 0:
+            break
+
+        # Delete the list of file paths that the current RunnableStep declared to be obsolete now.
+
+        _runnable_step_remove_obsolete_file_paths(runnable_step=runnable_step_current)
+
+        # Create an empty status file upon success.
+
+        _runnable_step_status_file_create(runnable=runnable, runnable_step=runnable_step_current, success=True)
+
+        # Remove the status file of the previous RunnableStep.
+
+        _runnable_step_status_file_remove(runnable=runnable, runnable_step=runnable_step_previous)
+
+        # Finally, make the current RunnableStep the previous RunnableStep.
+
+        runnable_step_previous = runnable_step_current
+
+    # Irrespective of failure ...
+
+    # Remove the Runnable-specific cache directory and everything within it.
+
+    if os.path.exists(cache_directory_path):
+        shutil.rmtree(path=cache_directory_path, ignore_errors=False)
+
+    # Remove the Runnable-specific temporary directory and everything within it.
+
+    if os.path.exists(temporary_directory_path):
+        shutil.rmtree(path=temporary_directory_path, ignore_errors=False)
+
+    if child_return_code == 0:
+        # Create a status file that indicates completion for the whole Runnable.
+
+        open(runnable.get_relative_status_path, 'w').close()
+
+        # Remove the status file of the previous RunnableStep.
+
+        _runnable_step_status_file_remove(runnable=runnable, runnable_step=runnable_step_previous)
+
+        # Job done.
+
+        return
+    else:
+        _runnable_step_status_file_create(runnable=runnable, runnable_step=runnable_step_current, success=False)
+
+        # Upon failure, create a RunnableStep-specific status file showing failure and raise an Exception.
 
         if child_return_code > 0:
             raise Exception('[{}] Child process {}_{} failed with return code {}'.
@@ -172,33 +285,4 @@ def run(runnable):
                                    runnable_step_current.name,
                                    -child_return_code))
 
-        # Delete the list of file paths that the current RunnableStep declared to be obsolete now.
-
-        _runnable_step_remove_obsolete_file_paths(runnable_step=runnable_step_current)
-
-        # Create an empty status file upon success.
-
-        open(status_path, 'w').close()
-
-        # Remove the status file of the previous RunnableStep.
-
-        _runnable_step_status_file_remove(runnable=runnable, runnable_step=runnable_step_previous)
-
-        # Finally, make the current RunnableStep the previous RunnableStep.
-
-        runnable_step_previous = runnable_step_current
-
-    # Remove the Runnable temporary directory and everything within it.
-
-    if os.path.exists(temporary_directory_path):
-        shutil.rmtree(path=temporary_directory_path, ignore_errors=False)
-
-    # Create a status file that indicates completion for the whole Runnable.
-
-    open(runnable.get_relative_status_path, 'w').close()
-
-    # Remove the status file of the previous RunnableStep.
-
-    _runnable_step_status_file_remove(runnable=runnable, runnable_step=runnable_step_previous)
-
-    # Job done.
+        return

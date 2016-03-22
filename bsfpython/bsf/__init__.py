@@ -111,14 +111,14 @@ class Analysis(object):
         # i.e. "bsf.Analysis" or "bsf.analyses.*", respectively.
 
         analysis.set_configuration(
-                configuration=analysis.configuration,
-                section=Configuration.section_from_instance(instance=analysis))
+            configuration=analysis.configuration,
+            section=Configuration.section_from_instance(instance=analysis))
 
         return analysis
 
     def __init__(self, configuration=None,
                  project_name=None, genome_version=None,
-                 input_directory=None, output_directory=None,
+                 cache_directory=None, input_directory=None, output_directory=None,
                  project_directory=None, genome_directory=None,
                  sas_file=None, sas_prefix=None, e_mail=None, debug=0, drms_list=None,
                  runnable_dict=None, collection=None, comparisons=None, samples=None):
@@ -130,6 +130,8 @@ class Analysis(object):
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
+        @param cache_directory: C{Analysis}-wide cache directory
+        @type cache_directory: str
         @param input_directory: C{Analysis}-wide input directory
         @type input_directory: str
         @param output_directory: C{Analysis}-wide output directory
@@ -181,6 +183,11 @@ class Analysis(object):
             self.genome_version = str()
         else:
             self.genome_version = genome_version
+
+        if cache_directory is None:
+            self.cache_directory = str()
+        else:
+            self.cache_directory = cache_directory
 
         if input_directory is None:
             self.input_directory = str()
@@ -265,6 +272,7 @@ class Analysis(object):
         output += '{}{!r}\n'.format(indent, self)
         output += '{}  project_name: {!r}\n'.format(indent, self.project_name)
         output += '{}  genome_version: {!r}\n'.format(indent, self.genome_version)
+        output += '{}  cache_directory: {!r}\n'.format(indent, self.cache_directory)
         output += '{}  input_directory: {!r}\n'.format(indent, self.input_directory)
         output += '{}  output_directory: {!r}\n'.format(indent, self.output_directory)
         output += '{}  genome_directory: {!r}\n'.format(indent, self.genome_directory)
@@ -366,9 +374,9 @@ class Analysis(object):
 
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
-                    'Section {!r} not defined in Configuration file {!r}.'.format(
-                            section,
-                            configuration.config_path))
+                'Section {!r} not defined in Configuration file {!r}.'.format(
+                    section,
+                    configuration.config_path))
 
         # The configuration section is available.
 
@@ -379,6 +387,10 @@ class Analysis(object):
         option = 'project_name'
         if configuration.config_parser.has_option(section=section, option=option):
             self.project_name = configuration.config_parser.get(section=section, option=option)
+
+        option = 'cache_directory'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.cache_directory = configuration.config_parser.get(section=section, option=option)
 
         option = 'input_directory'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -487,13 +499,17 @@ class Analysis(object):
         # Check if an absolute path has been provided, if not,
         # automatically prepend standard directory paths.
 
+        self.cache_directory = Default.get_absolute_path(
+            file_path=self.cache_directory,
+            default_path=Default.absolute_cache())
+
         self.input_directory = Default.get_absolute_path(
-                file_path=self.input_directory,
-                default_path=Default.absolute_samples())
+            file_path=self.input_directory,
+            default_path=Default.absolute_samples())
 
         self.output_directory = Default.get_absolute_path(
-                file_path=self.output_directory,
-                default_path=Default.absolute_projects())
+            file_path=self.output_directory,
+            default_path=Default.absolute_projects())
 
         # As a safety measure, to prevent creation of rogue directory paths, the output_directory has to exist.
 
@@ -529,11 +545,11 @@ class Analysis(object):
                 self.sas_file = os.path.join(self.project_directory, self.sas_file)
 
             self.collection = Collection.from_sas_path(
-                    file_path=self.input_directory,
-                    file_type='Automatic',
-                    name=self.project_name,
-                    sas_path=self.sas_file,
-                    sas_prefix=self.sas_prefix)
+                file_path=self.input_directory,
+                file_type='Automatic',
+                name=self.project_name,
+                sas_path=self.sas_file,
+                sas_prefix=self.sas_prefix)
 
             if self.debug > 1:
                 print '{!r} Collection name: {!r}'.format(self, self.collection.name)
@@ -553,8 +569,8 @@ class Analysis(object):
         """
 
         warnings.warn(
-                "The 'report' method must be implemented in the sub-class.",
-                UserWarning)
+            "The 'report' method must be implemented in the sub-class.",
+            UserWarning)
 
         return
 
@@ -568,8 +584,8 @@ class Analysis(object):
 
         if not os.path.isdir(self.genome_directory):
             answer = raw_input(
-                    "Output (genome) directory {!r} does not exist.\n"
-                    'Create? [Y/n] '.format(self.genome_directory))
+                "Output (genome) directory {!r} does not exist.\n"
+                'Create? [Y/n] '.format(self.genome_directory))
 
             if not answer or answer == 'Y' or answer == 'y':
                 # In principle, a race condition could occur as the directory
@@ -581,7 +597,7 @@ class Analysis(object):
                         raise
             else:
                 raise Exception(
-                        'Output (genome) directory {!r} does not exist.'.format(self.genome_directory))
+                    'Output (genome) directory {!r} does not exist.'.format(self.genome_directory))
 
         return
 
@@ -609,8 +625,8 @@ class Analysis(object):
 
         if not os.path.isdir(html_path):
             raise Exception(
-                    "The public HTML path {!r} does not exist.\n"
-                    "Please check the optional sub-directory name {!r}.".format(html_path, sub_directory))
+                "The public HTML path {!r} does not exist.\n"
+                "Please check the optional sub-directory name {!r}.".format(html_path, sub_directory))
 
         # The link_name consists of the absolute public_html directory,
         # the analysis-specific sub-directory, the project name and a 128 bit hexadecimal UUID string.
@@ -640,8 +656,8 @@ class Analysis(object):
                     # Both paths for os.path.samefile have to exist.
                     # Check for dangling symbolic links.
                     warnings.warn(
-                            'Dangling symbolic link {!r} to {!r}'.format(path_name, target_name),
-                            UserWarning)
+                        'Dangling symbolic link {!r} to {!r}'.format(path_name, target_name),
+                        UserWarning)
                     continue
                 if os.path.samefile(target_name, self.project_directory):
                     link_exists = True
@@ -651,8 +667,8 @@ class Analysis(object):
         if link_exists:
             # Ask the user to re-create the symbolic link.
             answer = raw_input(
-                    "Public HTML link {!r} to {!r} does exist.\n"
-                    "Re-create? [y/N] ".format(path_name, self.project_directory))
+                "Public HTML link {!r} to {!r} does exist.\n"
+                "Re-create? [y/N] ".format(path_name, self.project_directory))
 
             if not answer or answer == 'N' or answer == 'n':
                 print 'Public HTML link {!r} to {!r} not reset.'. \
@@ -673,8 +689,8 @@ class Analysis(object):
         else:
             # Ask the user to create a symbolic link.
             answer = raw_input(
-                    'Public HTML link {!r} to {!r} does not exist.\n'
-                    'Create? [Y/n] '.format(link_name, self.project_directory))
+                'Public HTML link {!r} to {!r} does not exist.\n'
+                'Create? [Y/n] '.format(link_name, self.project_directory))
 
             if not answer or answer == 'Y' or answer == 'y':
                 # In principle, a race condition could occur as the directory
@@ -1132,9 +1148,9 @@ class DRMS(object):
 
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
-                    'Section {!r} not defined in Configuration file {!r}.'.format(
-                            section,
-                            configuration.config_path))
+                'Section {!r} not defined in Configuration file {!r}.'.format(
+                    section,
+                    configuration.config_path))
 
         # The configuration section is available.
 
@@ -1270,6 +1286,11 @@ class Runnable(object):
     @type code_module: str
     @ivar executable_dict: Python C{dict} of Python C{str} (C{Executable.name}) key data and C{Executable} value data
     @type executable_dict: dict[bsf.process.Executable.name, bsf.process.Executable]
+    @ivar cache_directory: Cache directory
+    @type cache_directory: str | unicode
+    @ivar cache_path_dict: Python C{dict} of Python C{str} (name) key and
+        Python C{str} (file_path) value data of files that will be copied into the C{Runnable.cache_directory}
+    @type cache_path_dict: dict[str, str|unicode]
     @ivar file_path_dict: Python C{dict} of Python C{str} (name) key data and Python C{str} (file_path) value data
     @type file_path_dict: dict[str, str | unicode]
     @ivar runnable_step_list: Python C{list} of C{RunnableStep} objects
@@ -1282,8 +1303,17 @@ class Runnable(object):
 
     runner_script = 'bsf_runner.py'
 
-    def __init__(self, name, code_module, working_directory, file_path_dict=None, executable_dict=None,
-                 runnable_step_list=None, debug=0):
+    def __init__(
+            self,
+            name,
+            code_module,
+            working_directory,
+            cache_directory=None,
+            cache_path_dict=None,
+            file_path_dict=None,
+            executable_dict=None,
+            runnable_step_list=None,
+            debug=0):
         """Initialise a C{Runnable} object.
 
         @param name: Name
@@ -1293,6 +1323,11 @@ class Runnable(object):
         @type code_module: str
         @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
         @type working_directory: str | unicode
+        @param cache_directory: Cache directory
+        @type cache_directory: str | unicode
+        @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
+            Python C{str} (file_path) value data of files that will be copied into the C{Runnable.cache_directory}
+        @type cache_path_dict: dict[str, str|unicode]
         @param file_path_dict: Python C{dict} of Python C{str} (name) key data and
             Python C{str} (file_path) value data
         @type file_path_dict: dict[bsf.process.Executable.name, bsf.process.Executable]
@@ -1312,6 +1347,16 @@ class Runnable(object):
         self.name = name  # Can be None.
         self.code_module = code_module  # Can be None.
         self.working_directory = working_directory  # Can be None.
+
+        if cache_directory is None:
+            self.cache_directory = str()
+        else:
+            self.cache_directory = cache_directory
+
+        if cache_path_dict is None:
+            self.cache_path_dict = dict()
+        else:
+            self.cache_path_dict = cache_path_dict
 
         if file_path_dict is None:
             self.file_path_dict = dict()
@@ -1351,10 +1396,19 @@ class Runnable(object):
         output += '{}  name: {!r}\n'.format(indent, self.name)
         output += '{}  code_module: {!r}\n'.format(indent, self.code_module)
         output += '{}  working_directory: {!r}\n'.format(indent, self.working_directory)
+        output += '{}  cache_directory: {!r}\n'.format(indent, self.cache_directory)
+        output += '{}  cache_path_dict: {!r}\n'.format(indent, self.cache_path_dict)
         output += '{}  file_path_dict: {!r}\n'.format(indent, self.file_path_dict)
         output += '{}  executable_dict: {!r}\n'.format(indent, self.executable_dict)
         output += '{}  runnable_step_list: {!r}\n'.format(indent, self.runnable_step_list)
         output += '{}  debug: {!r}\n'.format(indent, self.debug)
+
+        output += '{}  Python dict of Python str (file path) objects:\n'.format(indent)
+        keys = self.cache_path_dict.keys()
+        keys.sort(cmp=lambda x, y: cmp(x, y))
+        for key in keys:
+            assert isinstance(key, str)
+            output += '{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.cache_path_dict[key])
 
         output += '{}  Python dict of Python str (file path) objects:\n'.format(indent)
         keys = self.file_path_dict.keys()
@@ -1484,8 +1538,20 @@ class Runnable(object):
         return runnable
 
     @property
+    def get_relative_cache_directory_path(self):
+        """Get the relative cache directory path for this C{Runnable}.
+        (i.e. C{Runnable.name}_cache)
+
+        @return: Relative cache directory path
+        @rtype: str
+        """
+
+        return '_'.join((self.name, 'cache'))
+
+    @property
     def get_relative_status_path(self):
         """Get the relative status file path indicating successful completion of this C{Runnable}.
+        (i.e. C{Runnable.name}_completed.txt)
 
         @return: Relative status file path
         @rtype: str
@@ -1496,6 +1562,7 @@ class Runnable(object):
     @property
     def get_relative_temporary_directory_path(self):
         """Get the relative temporary directory path for this C{Runnable}.
+        (i.e. C{Runnable.name}_temporary)
 
         @return: Relative temporary directory path
         @rtype: str
@@ -1504,8 +1571,45 @@ class Runnable(object):
         return '_'.join((self.name, 'temporary'))
 
     @property
+    def get_absolute_cache_directory_path(self):
+        """Get the absolute cache directory path including the C{Runnable.cache_directory}.
+        If C{Runnable.cache_directory} is not defined, C{Runnable.working_directory} will be prepended.
+        Since the relative cache directory path includes the C{Runnable.name},
+        the directory is C{Runnable}-specific.
+        (i.e. C{Runnable.cache_directory}/C{Runnable.name}_cache or
+        C{Runnable.working_directory}/C{Runnable.name}_cache)
+
+        @return: Absolute cache directory path
+        @rtype: str
+        """
+
+        if self.cache_directory:
+            return Default.get_absolute_path(
+                file_path=self.get_relative_cache_directory_path,
+                default_path=self.cache_directory)
+        else:
+            return Default.get_absolute_path(
+                file_path=self.get_relative_cache_directory_path,
+                default_path=self.working_directory)
+
+    def get_absolute_cache_file_path(self, file_path):
+        """Get the absolute cache file path for a file path.
+
+        @param file_path: Default file path
+        @type file_path: str | unicode
+        @return: Absolute cache file path
+        @rtype: str
+        """
+
+        file_path = os.path.normpath(file_path)
+        file_name = os.path.basename(file_path)
+
+        return os.path.join(self.get_absolute_cache_directory_path, file_name)
+
+    @property
     def get_absolute_status_path(self):
         """Get the absolute status file path including the C{Runnable.working_directory}.
+        (i.e. C{Runnable.working_directory}/C{Runnable.name}_completed.txt)
 
         @return: Absolute status file path
         @rtype: str
@@ -1515,7 +1619,8 @@ class Runnable(object):
 
     @property
     def get_absolute_temporary_directory_path(self):
-        """Get the absolute temporary directory path including the  C{Runnable.working_directory}.
+        """Get the absolute temporary directory path including the C{Runnable.working_directory}.
+        (i.e. C{Runnable.working_directory}/C{Runnable.name}_temporary)
 
         @return: Absolute temporary directory path
         @rtype: str
