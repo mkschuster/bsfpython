@@ -1315,8 +1315,11 @@ class Tuxedo(Analysis):
                     key='comparison-name',
                     value=comparison_key)
             process_cuffdiff.add_option_long(
-                    key='gtf-file',
+                    key='gtf-assembly',
                     value=file_path_dict_cuffdiff['merged_gtf'])
+            process_cuffdiff.add_option_long(
+                    key='gtf-reference',
+                    value=self.transcriptome_gtf_path)
             process_cuffdiff.add_option_long(
                     key='genome-version',
                     value=self.genome_version)
