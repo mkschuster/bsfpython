@@ -279,16 +279,23 @@ class PairedReads(object):
     @type reads1: Reads
     @ivar reads2: Second C{Reads} object
     @type reads2: Reads
+    @ivar index_1: Index sequence 1
+    @type index_1: str
+    @ivar index_2: Index sequence 2
+    @type index_2: str
     @ivar annotation: Python C{dict} for annotation of Python C{str} key and
         Python C{list} of Python C{str} value data
     @type annotation: dict[str, list[str]]
+    @ivar exclude: Exclude from processing
+    @type exclude: bool
     @ivar read_group: SAM read group (@RG) information
     @type read_group: str
     @ivar weak_reference_sample: C{weakref.ReferenceType} to a C{Sample}
     @type weak_reference_sample: weakref.ReferenceType
     """
 
-    def __init__(self, reads1=None, reads2=None, annotation=None, read_group=None, weak_reference_sample=None):
+    def __init__(self, reads1=None, reads2=None, annotation=None, exclude=None, index_1=None, index_2=None,
+                 read_group=None, weak_reference_sample=None):
         """Initialise a C{PairedReads} object.
 
         For the C{Reads.file_type} I{CASAVA} the reads object will be
@@ -298,9 +305,15 @@ class PairedReads(object):
         @type reads1: Reads
         @param reads2: Second C{Reads} object
         @type reads2: Reads
+        @param index_1: Index sequence 1
+        @type index_1: str
+        @param index_2: Index sequence 2
+        @type index_2: str
         @param annotation: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
         @type annotation: dict[str, list[str]]
+        @param exclude: Exclude from processing
+        @type exclude: bool
         @param read_group: SAM read group (@RG) information
         @type read_group: str
         @param weak_reference_sample: C{weakref.ReferenceType} pointing at a C{Sample}
@@ -356,6 +369,21 @@ class PairedReads(object):
         else:
             self.annotation = annotation
 
+        if exclude is None:
+            self.exclude = False
+        else:
+            self.exclude = exclude
+
+        if index_1 is None:
+            self.index_1 = str()
+        else:
+            self.index_1 = index_1
+
+        if index_2 is None:
+            self.index_2 = str()
+        else:
+            self.index_2 = index_2
+
         if read_group is None:
             self.read_group = str()
         else:
@@ -384,6 +412,9 @@ class PairedReads(object):
         for key in self.annotation.keys():
             output += '{}    {!r} {!r}\n'.format(indent, key, self.annotation[key])
 
+        output += '{}  index_1: {!r}\n'.format(indent, self.index_1)
+        output += '{}  index_2: {!r}\n'.format(indent, self.index_2)
+        output += '{}  exclude: {!r}\n'.format(indent, self.exclude)
         output += '{}  read_group: {!r}\n'.format(indent, self.read_group)
 
         if isinstance(self.reads1, Reads):
@@ -420,8 +451,7 @@ class PairedReads(object):
                     raise Exception(
                         'PairedReads reads1 has already been defined.\n'
                         '  reads1: {!r}\n'
-                        '  reads:  {!r}'.
-                        format(self.reads1.file_path, reads.file_path))
+                        '  reads:  {!r}'.format(self.reads1.file_path, reads.file_path))
                 elif reads.read == 'R2':
                     self.reads2 = reads
                     reads.weak_reference_paired_reads = weakref.ref(self)
@@ -448,8 +478,7 @@ class PairedReads(object):
                     raise Exception(
                         'PairedReads reads2 has already been defined.\n'
                         '  reads2: {!r}\n'
-                        '  reads:  {!r}'.
-                        format(self.reads2.file_path, reads.file_path))
+                        '  reads:  {!r}'.format(self.reads2.file_path, reads.file_path))
                 else:
                     raise Exception('Unknown Reads read attribute {!r}.'.format(reads.read))
             else:
@@ -471,6 +500,12 @@ class PairedReads(object):
 
         if self is paired_reads:
             return True
+
+        if self.index_1 != paired_reads.index_1:
+            return False
+
+        if self.index_2 != paired_reads.index_2:
+            return False
 
         if self.read_group != paired_reads.read_group:
             return False
@@ -598,8 +633,7 @@ class Sample(object):
 
         if sample1.name != sample2.name:
             warnings.warn(
-                'Merged Sample objects {!r} and {!r} should have the same name.'.
-                format(sample1.name, sample2.name),
+                'Merged Sample objects {!r} and {!r} should have the same name.'.format(sample1.name, sample2.name),
                 UserWarning)
 
         # A file_path does not make sense for merged Sample objects.
@@ -823,7 +857,7 @@ class Sample(object):
 
         return
 
-    def get_all_paired_reads(self, replicate_grouping, full=False):
+    def get_all_paired_reads(self, replicate_grouping, exclude=False, full=False):
         """Get all C{PairedReads} objects of a C{Sample} grouped or un-grouped.
 
         A C{Sample} object can hold several C{PairedReads} objects (i.e. biological or technical
@@ -836,6 +870,8 @@ class Sample(object):
             list them individually
         @type replicate_grouping: bool
         @param full: Return the full name including read and chunk information
+        @param exclude: Exclude on the basis of C{PairedReads.exclude}
+        @type exclude: bool
         @type full: bool
         @return: Python C{dict} of Python C{str} (sensible replicate name) key and
             Python C{list} object of C{PairedReads} objects value data
@@ -845,6 +881,10 @@ class Sample(object):
         groups = dict()
 
         for paired_reads in self.paired_reads_list:
+
+            if exclude and paired_reads.exclude:
+                # Skip excluded PairedReads objects.
+                continue
 
             if replicate_grouping:
                 # If grouped, use the Sample.name instance variable as key so that all PairedReds objects
@@ -1528,17 +1568,36 @@ class Collection(object):
                 file_type=file_type,
                 project=project)
 
-            reads1 = collection._process_reads(row_dict=row_dict, key_list=key_list, prefix=sas_prefix,
-                                               file_type=file_type, suffix='1')
-            reads2 = collection._process_reads(row_dict=row_dict, key_list=key_list, prefix=sas_prefix,
-                                               file_type=file_type, suffix='2')
-            read_group = collection._process_paired_reads(row_dict=row_dict, key_list=key_list, prefix=sas_prefix)
+            reads1 = collection._process_reads(
+                row_dict=row_dict,
+                key_list=key_list,
+                prefix=sas_prefix,
+                file_type=file_type,
+                suffix='1')
+
+            reads2 = collection._process_reads(
+                row_dict=row_dict,
+                key_list=key_list,
+                prefix=sas_prefix,
+                file_type=file_type,
+                suffix='2')
+
+            pr_exclude, pr_index_1, pr_index_2, pr_read_group = collection._process_paired_reads(
+                row_dict=row_dict,
+                key_list=key_list,
+                prefix=sas_prefix)
 
             # If none of the Reads objects has been defined, the Sample
             # may have been automatically loaded from a CASAVA ProcessedRunFolder.
 
             if reads1 or reads2:
-                sample.add_paired_reads(paired_reads=PairedReads(reads1=reads1, reads2=reads2, read_group=read_group))
+                sample.add_paired_reads(paired_reads=PairedReads(
+                    reads1=reads1,
+                    reads2=reads2,
+                    exclude=pr_exclude,
+                    index_1=pr_index_1,
+                    index_2=pr_index_2,
+                    read_group=pr_read_group))
 
             # Optionally group the Sample objects.
 
@@ -2073,12 +2132,19 @@ class Collection(object):
 
         return reads
 
+    # Taken from ConfigParser.RawConfigParser.getboolean()
+
+    _boolean_states = {
+        '1': True, 'yes': True, 'true': True, 'on': True,
+        '0': False, 'no': False, 'false': False, 'off': False}
+
     @staticmethod
     def _process_paired_reads(row_dict, key_list, prefix):
         """Get or create a C{PairedReads} object.
 
-        A 'I{[Prefix] PairedReads ReadGroup}' key is optional, in which case the default is an empty
-        Python C{str} object.
+        The 'I{[Prefix] PairedReads Exclude}' key is optional, in which case the default is Python C{bool} I{False}.
+        The 'I{[Prefix] PairedReads Index 1}', 'I{[Prefix] PairedReads Index 2}' and 'I{[Prefix] PairedReads ReadGroup}'
+        keys are optional, in which case the default is an empty Python C{str} object.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str | unicode]
         @param key_list: A Python list of Python str (key) objects in the row
@@ -2088,9 +2154,42 @@ class Collection(object):
             '[Treatment] PairedReads ReadGroup',
             '[Point N] PairedReads ReadGroup', ...)
         @type prefix: str
-        @return: Read group string
+        @return: Python C{tuple} of Python C{bool} (exclude flag), Python C{str} (read group), Python C{str} (index 1)
+            and Python C{str} (index 2)
         @rtype: str
         """
+
+        key = '{} PairedReads Exclude'.format(prefix).lstrip()
+
+        if key in key_list:
+            key_list.remove(key)
+
+        if key in row_dict and row_dict[key]:
+            if row_dict[key].lower() not in Collection._boolean_states:
+                raise ValueError('Value in field {!r} is not a boolean: {!r}'.format(key, row_dict[key]))
+            exclude = Collection._boolean_states[row_dict[key].lower()]
+        else:
+            exclude = False
+
+        key = '{} PairedReads Index 1'.format(prefix).lstrip()
+
+        if key in key_list:
+            key_list.remove(key)
+
+        if key in row_dict and row_dict[key]:
+            index_1 = row_dict[key]
+        else:
+            index_1 = str()
+
+        key = '{} PairedReads Index 2'.format(prefix).lstrip()
+
+        if key in key_list:
+            key_list.remove(key)
+
+        if key in row_dict and row_dict[key]:
+            index_2 = row_dict[key]
+        else:
+            index_2 = str()
 
         key = '{} PairedReads ReadGroup'.format(prefix).lstrip()
 
@@ -2102,7 +2201,7 @@ class Collection(object):
         else:
             read_group = str()
 
-        return read_group
+        return exclude, index_1, index_2, read_group
 
     def get_sample_from_row_dict(self, row_dict, prefix=None):
         """Get a Sample from a C{SampleAnnotationSheet} row Python C{dict}.
