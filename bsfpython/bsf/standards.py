@@ -90,7 +90,7 @@ class Configuration(object):
 
         if len(files) == 0:
             raise Exception(
-                    'Configuration file {!r} does not exist.'.format(configuration.config_path))
+                'Configuration file {!r} does not exist.'.format(configuration.config_path))
 
         return configuration
 
@@ -171,6 +171,8 @@ class Default(object):
     @type classpath_illumina2bam: str | unicode
     @ivar classpath_snpeff: snpEff Java Archive (JAR) class path directory
     @type classpath_snpeff: str | unicode
+    @ivar directory_cache: Local cache directory on the compute node (e.g. /dev/shm)
+    @type directory_cache: str | unicode
     @ivar directory_home: Home directory for all data
     @type directory_home: str | unicode
     @ivar directory_runs_illumina: Sub-directory for Illumina runs
@@ -229,11 +231,12 @@ class Default(object):
     def get_absolute_path(file_path, default_path=None):
         """Return an absolute file path.
 
-        Expand an eventual user part i.e. on UNIX ~ or ~user and
-        expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        Expand an eventual user part (i.e. on UNIX ~ or ~user) and
+        expand any environment variables (i.e. on UNIX ${NAME} or $NAME).
         Check if an absolute path has been provided, if not,
-        automatically prepend default directory paths.
-        Finally, normalise the path.
+        automatically prepend default directory paths,
+        which again has user part and environment variables expanded.
+        Finally, normalise the file path.
 
         @param file_path: File path
         @type file_path: str | unicode
@@ -247,6 +250,8 @@ class Default(object):
         absolute_path = os.path.expandvars(path=absolute_path)
 
         if default_path and not os.path.isabs(absolute_path):
+            default_path = os.path.expanduser(path=default_path)
+            default_path = os.path.expandvars(path=default_path)
             absolute_path = os.path.join(default_path, absolute_path)
 
         return os.path.normpath(absolute_path)
@@ -306,7 +311,8 @@ class Default(object):
         return default
 
     def __init__(self, classpath_gatk=None, classpath_illumina2bam=None, classpath_picard=None, classpath_snpeff=None,
-                 directory_home=None, directory_runs_illumina=None, directory_sequences=None, directory_samples=None,
+                 directory_cache=None, directory_home=None, directory_runs_illumina=None, directory_sequences=None,
+                 directory_samples=None,
                  directory_projects=None, directory_public_html=None, directory_genomes=None,
                  directory_annotations=None, directory_gatk_bundle=None, directory_intervals=None,
                  directory_snpeff_data=None,
@@ -325,6 +331,8 @@ class Default(object):
         @type classpath_picard: str | unicode
         @param classpath_snpeff: snpEff Java Archive (JAR) class path directory
         @type classpath_snpeff: str | unicode
+        @param directory_cache: Local cache directory on the compute node (e.g. /dev/shm)
+        @type directory_cache: str | unicode
         @param directory_home: Home directory for all data
         @type directory_home: str | unicode
         @param directory_runs_illumina: Sub-directory for Illumina runs
@@ -404,6 +412,11 @@ class Default(object):
             self.classpath_snpeff = classpath_snpeff
 
         # Set directory information.
+
+        if directory_cache is None:
+            self.directory_cache = str()
+        else:
+            self.directory_cache = directory_cache
 
         if directory_home is None:
             self.directory_home = str()
@@ -568,6 +581,7 @@ class Default(object):
 
         section = 'directories'
 
+        self.directory_cache = cp.get(section=section, option='cache')
         self.directory_home = cp.get(section=section, option='home')
         self.directory_runs_illumina = cp.get(section=section, option='runs_illumina')
         self.directory_sequences = cp.get(section=section, option='sequences')
@@ -614,6 +628,19 @@ class Default(object):
         self.url_relative_projects = cp.get(section=section, option='relative_projects')
 
         return
+
+    @staticmethod
+    def absolute_cache():
+        """
+        Get the absolute directory path for the cache directory.
+
+        @return: Absolute path to the cache directory
+        @rtype: str | unicode
+        """
+
+        default = Default.get_global_default()
+
+        return default.directory_cache
 
     @staticmethod
     def absolute_home():
@@ -790,7 +817,7 @@ class Default(object):
 
         if genome_index not in default.indices:
             raise Exception(
-                    'Unknown genome index name {!r}.'.format(genome_index))
+                'Unknown genome index name {!r}.'.format(genome_index))
 
         return os.path.join(Default.absolute_genomes(genome_version),
                             default.indices[genome_index],
