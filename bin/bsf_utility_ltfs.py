@@ -387,17 +387,17 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--total-buffer-size',
-    default='1G',
+    default='4G',
     dest='total_buffer_size',
-    help='total buffer size',
+    help='The default total buffer size is 400M. The maximum total buffer size is 4G. [4G]',
     required=False,
     type=str)
 
 argument_parser.add_argument(
     '--buffer-size',
-    default='1M',
+    default='1G',
     dest='buffer_size',
-    help='buffer size',
+    help='The default buffer size is 128K. The maximum buffer size is 1G. [1G]',
     required=False,
     type=str)
 
