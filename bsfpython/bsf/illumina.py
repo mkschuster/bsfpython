@@ -74,9 +74,9 @@ class Adaptors(object):
         @rtype: Adaptors
         """
         annotation_sheet = AnnotationSheet.from_file_path(
-                file_path=file_path,
-                file_type='excel_tab',
-                name='Illumina Adaptors')
+            file_path=file_path,
+            file_type='excel_tab',
+            name='Illumina Adaptors')
 
         adaptors = cls()
 
@@ -345,9 +345,9 @@ class RunInformation(object):
                     warnings.warn(warning)
 
                 reads.append(RunInformationRead(
-                        number=int(read_element.get(key='Number')),
-                        cycles=int(read_element.get(key='NumCycles')),
-                        index=bool(is_index == 'Y')))
+                    number=int(read_element.get(key='Number')),
+                    cycles=int(read_element.get(key='NumCycles')),
+                    index=bool(is_index == 'Y')))
 
             # <ApplicationName>HiSeq Control Software</ApplicationName>
             # <ApplicationVersion>1.1.37</ApplicationVersion>
@@ -364,9 +364,9 @@ class RunInformation(object):
                 # FirstCycle attribute of the SecondRead, then it must be the index read. Sigh!
 
                 reads.append(RunInformationRead(
-                        number=number,
-                        cycles=int(read_element.get(key='LastCycle')) - int(read_element.get(key='FirstCycle')),
-                        index=bool(number > 1 and int(read_element.get(key='FirstCycle')) < second_read)))
+                    number=number,
+                    cycles=int(read_element.get(key='LastCycle')) - int(read_element.get(key='FirstCycle')),
+                    index=bool(number > 1 and int(read_element.get(key='FirstCycle')) < second_read)))
 
                 number += 1
 
@@ -377,8 +377,8 @@ class RunInformation(object):
         non_index_reads = filter(lambda read: not read.index, reads)
         if len(non_index_reads) == 0:
             warnings.warn(
-                    'No non-index read in Illumina RunInformation {!r}'.format(file_path),
-                    UserWarning)
+                'No non-index read in Illumina RunInformation {!r}'.format(file_path),
+                UserWarning)
 
         # Set a paired_end attribute if more than one read without index is defined?
 
@@ -388,10 +388,10 @@ class RunInformation(object):
         assert isinstance(xml_flow_cell_layout, Element)
         if xml_flow_cell_layout is not None:
             flow_cell_layout = RunInformationFlowcellLayout(
-                    lane_count=int(xml_flow_cell_layout.get(key='LaneCount')),
-                    surface_count=int(xml_flow_cell_layout.get(key='SurfaceCount')),
-                    swath_count=int(xml_flow_cell_layout.get(key='SwathCount')),
-                    tile_count=int(xml_flow_cell_layout.get(key='TileCount')))
+                lane_count=int(xml_flow_cell_layout.get(key='LaneCount')),
+                surface_count=int(xml_flow_cell_layout.get(key='SurfaceCount')),
+                swath_count=int(xml_flow_cell_layout.get(key='SwathCount')),
+                tile_count=int(xml_flow_cell_layout.get(key='TileCount')))
         else:
             flow_cell_layout = None
 
@@ -1132,19 +1132,19 @@ class RunFolder(object):
         components = file_name.split('_')
 
         irf = cls(
-                file_path=file_path,
-                file_type='Illumina',
-                name='_'.join(components),
-                date=components[0],
-                instrument=components[1],
-                run=components[2],
-                flow_cell=components[3],
-                run_information=RunInformation.from_file_path(file_path=os.path.join(file_path, 'RunInfo.xml')),
-                run_parameters=RunParameters.from_file_path(file_path=os.path.join(file_path, 'runParameters.xml')),
-                image_analysis=ImageAnalysis.from_file_path(file_path=os.path.join(
-                        file_path, 'Data', 'Intensities', 'config.xml')),
-                base_call_analysis=BaseCallAnalysis.from_file_path(file_path=os.path.join(
-                        file_path, 'Data', 'Intensities', 'BaseCalls', 'config.xml')))
+            file_path=file_path,
+            file_type='Illumina',
+            name='_'.join(components),
+            date=components[0],
+            instrument=components[1],
+            run=components[2],
+            flow_cell=components[3],
+            run_information=RunInformation.from_file_path(file_path=os.path.join(file_path, 'RunInfo.xml')),
+            run_parameters=RunParameters.from_file_path(file_path=os.path.join(file_path, 'runParameters.xml')),
+            image_analysis=ImageAnalysis.from_file_path(file_path=os.path.join(
+                file_path, 'Data', 'Intensities', 'config.xml')),
+            base_call_analysis=BaseCallAnalysis.from_file_path(file_path=os.path.join(
+                file_path, 'Data', 'Intensities', 'BaseCalls', 'config.xml')))
 
         return irf
 
@@ -1377,6 +1377,10 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
+        if rta in '2.7.3':
+            # HCS 3.3.52 (HiSeq 3000/4000) no longer has this directory.
+            return
+
         matrix_name = 'Matrix'
         if matrix_name in base_calls_dict:
             del base_calls_dict[matrix_name]
@@ -1388,13 +1392,11 @@ class RunFolder(object):
         matrix_dict = dict(map(lambda x: (x, 1), os.listdir(matrix_path)))
 
         if debug:
-            print "Processing '{}'".format(matrix_name)
+            print "Processing 'IRF/Data/Intensities/BaseCalls/{}/'".format(matrix_name)
 
-        if rta in ('2.5.2', '2.7.3'):
-            # For the HiSeq 3000 platform, process IRF/Data/Intensities/BaseCalls/Matrix/L00[1-8] directories.
-
+        if rta in '2.5.2':
+            # For HCS 3.3.20 (HiSeq 3000/4000) process IRF/Data/Intensities/BaseCalls/Matrix/L00[1-8] directories.
             for lane in range(1, fcl.lane_count + 1):
-
                 lane_name = 'L{:03d}'.format(lane)
                 if lane_name in matrix_dict:
                     del matrix_dict[lane_name]
@@ -1402,13 +1404,15 @@ class RunFolder(object):
                     print "Missing directory IRF/Data/Intensities/BaseCalls/{}/{}/".format(matrix_name, lane_name)
                     continue
 
+                if debug:
+                    print "Processing 'IRF/Data/Intensities/BaseCalls/{}/{}/'".format(matrix_name, lane_name)
+
                 lane_path = os.path.join(matrix_path, lane_name)
                 lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
 
                 # Process IRF/Data/Intensities/BaseCalls/Matrix/L00[1-8]/C[0-9]+.1/ directories.
 
                 for cycle in range(1, self.run_information.get_cycle_number + 1):
-
                     cycle_name = 'C{:d}.1'.format(cycle)
                     if cycle_name in lane_dict:
                         del lane_dict[cycle_name]
@@ -1433,7 +1437,7 @@ class RunFolder(object):
                                     print "Missing tile matrix file IRF/Data/Intensities/BaseCalls/{}/{}/{}/{}". \
                                         format(matrix_name, lane_name, cycle_name, tile_file)
         else:
-            # HiSeq 2000 has a flat list of matrix.txt files.
+            # All other platforms have a flat list of matrix.txt files.
             for read in range(1, self.run_information.get_read_number + 1):
                 # Process read matrix files.
                 # s_1_matrix.txt
@@ -1455,6 +1459,7 @@ class RunFolder(object):
                     else:
                         print "Missing lane matrix file IRF/Data/Intensities/BaseCalls/{}/{}". \
                             format(matrix_name, lane_file)
+
                     for surface in range(1, fcl.surface_count + 1):
                         for swath in range(1, fcl.swath_count + 1):
                             for tile in range(1, fcl.tile_count + 1):
@@ -1499,6 +1504,10 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
+        if rta in '2.7.3':
+            # HCS 3.3.52 (HiSeq 3000/4000) does no longer have a IRF/Data/Intensities/BaseCalls/Phasing/ directory.
+            return
+
         phasing_name = 'Phasing'
         if phasing_name in base_calls_dict:
             del base_calls_dict[phasing_name]
@@ -1510,7 +1519,7 @@ class RunFolder(object):
         phasing_dict = dict(map(lambda x: (x, 1), os.listdir(phasing_path)))
 
         if debug:
-            print "Processing '{}'".format(phasing_name)
+            print "Processing 'IRF/Data/intensities/BaseCalls/{}/'".format(phasing_name)
 
         for ri_read in self.run_information.reads:
             assert isinstance(ri_read, RunInformationRead)
@@ -1542,7 +1551,7 @@ class RunFolder(object):
                             tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
                             if self._is_missing_base_call_tile(lane=lane, tile=tile_name):
                                 continue
-                            if rta in ('1.12.4.2', '1.13.48', '1.17.21.3') and not ri_read.index:
+                            if rta in ('1.12.4', '1.12.4.2', '1.13.48', '1.17.21.3') and not ri_read.index:
                                 # Process tile cycle files, which only exist for payload, but not index reads.
                                 # s_1_1_1101_cycle.txt
                                 # s_8_1_2316_cycle.txt
@@ -1565,20 +1574,19 @@ class RunFolder(object):
                                 print "Missing file IRF/Data/intensities/BaseCalls/{}/{}". \
                                     format(phasing_name, tile_file)
 
-                            if rta not in ('1.12.4.2', '1.13.48', '1.17.21.3'):
+                            if rta not in ('1.12.4', '1.12.4.2', '1.13.48', '1.17.21.3'):
                                 # Process the tile empirical phasing files.
                                 tile_file = 'EmpiricalPhasingCorrection_{:1d}_{:1d}_{:1d}{:1d}{:02d}.txt'. \
                                     format(lane, ri_read.number, surface, swath, tile)
                                 if tile_file in phasing_dict:
                                     del phasing_dict[tile_file]
                                 else:
-                                    print "Missing file IRF/Data/intensities/BaseCalls/{}/{}/". \
+                                    print "Missing file IRF/Data/intensities/BaseCalls/{}/{}". \
                                         format(phasing_name, tile_file)
 
-        if rta in '2.5.2':
-            # HiSeq 3000 does not have IRF/DataIntensities/BaseCalls/Phasing/s_lane_cycle_phasing.xml files.
-            pass
-        else:
+        if rta not in '2.5.2':
+            # HCS 3.3.20 (HiSeq 3000/4000) does not have
+            # IRF/DataIntensities/BaseCalls/Phasing/s_{lane}_{cycle}_phasing.xml files.
             for lane in range(1, fcl.lane_count + 1):
                 for read_start in self.run_information.get_read_start_list:
                     file_name = 's_{:1d}_{:02d}_phasing.xml'.format(lane, read_start + 2)
@@ -1623,7 +1631,7 @@ class RunFolder(object):
         base_calls_dict = dict(map(lambda x: (x, 1), os.listdir(base_calls_path)))
 
         if debug:
-            print "Processing '{}'".format(base_calls_name)
+            print "Processing 'IRF/Data/Intensities/{}/'".format(base_calls_name)
 
         # Process the IRF/Data/Intensities/BaseCalls/config.xml file.
 
@@ -1641,7 +1649,6 @@ class RunFolder(object):
         # Process IRF/Data/Intensities/BaseCalls/L00[1-8]/ directories.
 
         for lane in range(1, fcl.lane_count + 1):
-
             lane_name = 'L{:03d}'.format(lane)
             if lane_name in base_calls_dict:
                 del base_calls_dict[lane_name]
@@ -1649,13 +1656,15 @@ class RunFolder(object):
                 print "Missing directory IRF/Data/Intensities/{}/{}/".format(base_calls_name, lane_name)
                 continue
 
+            if debug:
+                print "Processing 'IRF/Data/Intensities/{}/{}/'".format(base_calls_name, lane_name)
+
             lane_path = os.path.join(base_calls_path, lane_name)
             lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
 
             # Process IRF/Data/Intensities/BaseCalls/L00[1-8]/C[0-9]+.1 directories.
 
             for cycle in range(1, self.run_information.get_cycle_number + 1):
-
                 cycle_name = 'C{:d}.1'.format(cycle)
                 if cycle_name in lane_dict:
                     del lane_dict[cycle_name]
@@ -1695,10 +1704,8 @@ class RunFolder(object):
                             # Process tile stats files.
                             # s_1_1101.stats
                             # s_1_2316.stats
-                            if rta in ('2.5.2', '2.7.3'):
-                                # HiSeq 3000 does not have stats files.
-                                pass
-                            else:
+                            if rta not in ('2.5.2', '2.7.3'):
+                                # HiSeq 3000/4000 does not have stats files.
                                 tile_file = 's_{:1d}_{:1d}{:1d}{:02d}.stats'.format(lane, surface, swath, tile)
                                 if tile_file in cycle_dict:
                                     del cycle_dict[tile_file]
@@ -1728,10 +1735,8 @@ class RunFolder(object):
                         # Process tile control files.
                         # s_1_1101.control
                         # s_1_2316.control
-                        if rta in ('2.5.2', '2.7.3'):
-                            # HiSeq 3000 does not have control files.
-                            pass
-                        else:
+                        if rta not in ('2.5.2', '2.7.3'):
+                            # HiSeq 3000/4000 does not have control files.
                             tile_file = 's_{:1d}_{:1d}{:1d}{:02d}.control'.format(lane, surface, swath, tile)
                             if tile_file in lane_dict:
                                 del lane_dict[tile_file]
@@ -1760,23 +1765,17 @@ class RunFolder(object):
 
         # Process the IRF/Data/Intensities/BaseCalls/Matrix/ directory.
 
-        if rta not in '2.7.3':
-            # The HiSeq 3000/4000 platform does no longer have the directory.
-            self._check_data_intensities_base_calls_matrix(
-                    base_calls_dict=base_calls_dict,
-                    base_calls_path=base_calls_path,
-                    debug=debug)
+        self._check_data_intensities_base_calls_matrix(
+            base_calls_dict=base_calls_dict,
+            base_calls_path=base_calls_path,
+            debug=debug)
 
         # Process the IRF/Data/Intensities/BaseCalls/Phasing/ directory.
 
-        if rta in ('2.5.2', '2.7.3'):
-            # HiSeq 3000 does not have a IRF/Data/Intensities/BaseCalls/Phasing/ directory.
-            pass
-        else:
-            self._check_data_intensities_base_calls_phasing(
-                    base_calls_dict=base_calls_dict,
-                    base_calls_path=base_calls_path,
-                    debug=debug)
+        self._check_data_intensities_base_calls_phasing(
+            base_calls_dict=base_calls_dict,
+            base_calls_path=base_calls_path,
+            debug=debug)
 
         # Check the IRF/Data/Intensities/BaseCalls/SampleSheet.csv file.
 
@@ -1822,7 +1821,7 @@ class RunFolder(object):
         directory_dict = dict(map(lambda x: (x, 1), os.listdir(directory_path)))
 
         if debug:
-            print "Processing '{}'".format(directory_name)
+            print "Processing 'IRF/Data/Intensities/{}/'".format(directory_name)
 
         # Check the IRF/Data/Intensities/Offsets/offsets.txt file.
 
@@ -1876,7 +1875,7 @@ class RunFolder(object):
         intensities_dict = dict(map(lambda x: (x, 1), os.listdir(intensities_path)))
 
         if debug:
-            print "Processing '{}'".format(intensities_name)
+            print "Processing 'IRF/Data/{}/'".format(intensities_name)
 
         # Build a list of cycle numbers that have no error map such as the last cycle of a read and index cycles.
         no_error_cycles = list()
@@ -1895,13 +1894,15 @@ class RunFolder(object):
         # Check the IRF/Data/Intensities/BaseCalls/ directory.
 
         self._check_data_intensities_base_calls(
-                intensities_dict=intensities_dict,
-                intensities_path=intensities_path,
-                debug=debug)
+            intensities_dict=intensities_dict,
+            intensities_path=intensities_path,
+            debug=debug)
 
         if rta in ('2.5.2', '2.7.3'):
-            # The HiSeq 3000 platform has:
+            # The HiSeq 3000/4000 platform has:
             # s.locs
+
+            # Process the IRF/Data/Intensities/s.locs file.
 
             file_name = 's.locs'
             if file_name in intensities_dict:
@@ -1930,13 +1931,15 @@ class RunFolder(object):
             # Process IRF/Data/Intensities/L00[1-8]/ directories.
 
             for lane in range(1, fcl.lane_count + 1):
-
                 lane_name = 'L{:03d}'.format(lane)
                 if lane_name in intensities_dict:
                     del intensities_dict[lane_name]
                 else:
-                    print "Missing directory IRF/Data/{}/{}".format(intensities_name, lane_name)
+                    print "Missing directory IRF/Data/{}/{}/".format(intensities_name, lane_name)
                     continue
+
+                if debug:
+                    print "Processing 'IRF/Data/{}/{}/'".format(intensities_name, lane_name)
 
                 lane_path = os.path.join(intensities_path, lane_name)
                 lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
@@ -1971,10 +1974,12 @@ class RunFolder(object):
 
                 # Process IRF/Data/Intensities/L00[1-8]/C[0-9]+.1 directories.
 
-                if rta not in ('2.5.2', '1.18.64', '1.18.54'):
-                    # Not for HiSeq 3000, HiSeq 2500 and MiSeq platforms.
+                if rta not in ('1.18.54', '1.18.64'):
+                    # Exclude the MiSeq and HiSeq 2500 platforms,
+                    # as they do no longer store cycle-specific sub directories with
+                    # cluster intensity files (*.cif), error map (*.errorMap) and
+                    # full width at half maximum (*.FWHMMap) files.
                     for cycle in range(1, self.run_information.get_cycle_number + 1):
-
                         cycle_name = 'C{:d}.1'.format(cycle)
                         if cycle_name in lane_dict:
                             del lane_dict[cycle_name]
@@ -2003,9 +2008,11 @@ class RunFolder(object):
                                         print "Missing cif file IRF/Data/{}/{}/{}/{}". \
                                             format(intensities_name, lane_name, cycle_name, cif_name)
 
-                                    if rta in ('1.12.4.2', '1.13.48'):
+                                    if rta in ('1.12.4', '1.12.4.2', '1.13.48'):
+                                        # Older RTA versions store error map (*.errorMap) and
+                                        # full width at half maximum map (*.FWHMMap) files.
                                         if cycle not in no_error_cycles:
-                                            # Process error map files, that do not exist for index cycles.
+                                            # Process *.errorMap files, that do not exist for index cycles.
                                             # s_1_1101.errorMap
                                             # s_1_2308.errorMap
                                             error_name = 's_{}_{:d}{:d}{:02d}.errorMap'. \
@@ -2016,7 +2023,7 @@ class RunFolder(object):
                                                 print "Missing error map file IRF/Data/{}/{}/{}/{}". \
                                                     format(intensities_name, lane_name, cycle_name, error_name)
 
-                                        # Process FWHM map files.
+                                        # Process *.FWHMMap files.
                                         # s_1_1101_T.FWHMMap
                                         # s_1_2308_T.FWHMMap
                                         fwhm_name = 's_{}_{:d}{:d}{:02d}_T.FWHMMap'. \
@@ -2043,12 +2050,10 @@ class RunFolder(object):
 
             # Check the IRF/Data/Intensities/Offsets/ directory.
 
-            if rta not in '2.7.3':
-                # The HiSeq 3000/4000 platform does no longer have the directory.
-                self._check_data_intensities_offsets(
-                        intensities_dict=intensities_dict,
-                        intensities_path=intensities_path,
-                        debug=debug)
+            self._check_data_intensities_offsets(
+                intensities_dict=intensities_dict,
+                intensities_path=intensities_path,
+                debug=debug)
 
             # Check the IRF/Data/Intensities/RTAConfiguration.xml file.
 
@@ -2059,20 +2064,20 @@ class RunFolder(object):
                 print "Missing Real Time Analysis configuration file IRF/Data/{}/{}". \
                     format(intensities_name, file_name)
 
-        if rta in ('1.12.4.2', '1.13.48'):
-            # RTA 1.12.4.2 has position files in addition to clocs files.
-            # s_1_1101_pos.txt
-            # s_8_2308_pos.txt
-            for lane in range(1, fcl.lane_count + 1):
-                for surface in range(1, fcl.surface_count + 1):
-                    for swath in range(1, fcl.swath_count + 1):
-                        for tile in range(1, fcl.tile_count + 1):
-                            pos_name = 's_{}_{:d}{:d}{:02d}_pos.txt'.format(lane, surface, swath, tile)
-                            if pos_name in intensities_dict:
-                                del intensities_dict[pos_name]
-                            else:
-                                print "Missing pos file IRF/Data/{}/L{:03d}/{}". \
-                                    format(intensities_name, lane, pos_name)
+            if rta in ('1.12.4', '1.12.4.2', '1.13.48'):
+                # Older RTA version have position (*_pos.txt) files in addition to cluster location (*.clocs) files.
+                # s_1_1101_pos.txt
+                # s_8_2308_pos.txt
+                for lane in range(1, fcl.lane_count + 1):
+                    for surface in range(1, fcl.surface_count + 1):
+                        for swath in range(1, fcl.swath_count + 1):
+                            for tile in range(1, fcl.tile_count + 1):
+                                pos_name = 's_{}_{:d}{:d}{:02d}_pos.txt'.format(lane, surface, swath, tile)
+                                if pos_name in intensities_dict:
+                                    del intensities_dict[pos_name]
+                                else:
+                                    print "Missing pos file IRF/Data/{}/L{:03d}/{}". \
+                                        format(intensities_name, lane, pos_name)
 
         # The intensities_dict should now be empty.
 
@@ -2096,6 +2101,11 @@ class RunFolder(object):
         """
 
         fcl = self.run_information.flow_cell_layout
+        rta = self.run_parameters.get_real_time_analysis_version
+
+        if rta not in '1.18.54':
+            # Check the IRF/Data/TileStatus/ directory that only exist on the MiSeq platform.
+            return
 
         directory_name = 'TileStatus'
         if directory_name in data_dict:
@@ -2108,7 +2118,7 @@ class RunFolder(object):
         directory_dict = dict(map(lambda x: (x, 1), os.listdir(directory_path)))
 
         if debug:
-            print "Processing '{}'".format(directory_name)
+            print "Processing 'IRF/Data/{}/'".format(directory_name)
 
         for lane in range(1, fcl.lane_count + 1):
             for surface in range(1, fcl.surface_count + 1):
@@ -2163,19 +2173,17 @@ class RunFolder(object):
         data_dict = dict(map(lambda x: (x, 1), os.listdir(data_path)))
 
         if debug:
-            print "Processing '{}'".format(data_name)
+            print "Processing 'IRF/{}/'".format(data_name)
 
         # Check the IRF/Data/Intensities/ directory.
 
         self._check_data_intensities(
-                data_path=data_path,
-                data_dict=data_dict,
-                debug=debug)
+            data_path=data_path,
+            data_dict=data_dict,
+            debug=debug)
 
-        if rta in ('2.5.2', '2.7.3'):
-            # HiSeq 3000 does not have a IRF/Data/ImageSize.dat file.
-            pass
-        else:
+        if rta not in ('2.5.2', '2.7.3'):
+            # Exclude HiSeq 3000/4000.
             # Check the IRF/Data/ImageSize.dat file.
             file_name = 'ImageSize.dat'
             if file_name in data_dict:
@@ -2190,7 +2198,7 @@ class RunFolder(object):
             else:
                 print "Missing directory IRF/{}/{}/".format(data_name, directory_name)
 
-        if rta in ('1.12.4.2', '1.13.48'):
+        if rta in ('1.12.4', '1.12.4.2', '1.13.48'):
             # Check the IRF/Data/reports/ directory.
             # TODO: Check the directory for completeness?
             directory_name = 'reports'
@@ -2214,12 +2222,12 @@ class RunFolder(object):
             else:
                 print "Missing file IRF/{}/{}".format(data_name, file_name)
 
-        if rta in '1.18.54':
-            # Check the IRF/Data/TileStatus/ directory that only exist on the MiSeq platform.
-            self._check_data_tile_status(
-                    data_path=data_path,
-                    data_dict=data_dict,
-                    debug=debug)
+        # Process the IRF/Data/TileStatus/ directory.
+
+        self._check_data_tile_status(
+            data_path=data_path,
+            data_dict=data_dict,
+            debug=debug)
 
         # The data_dict should now be empty.
 
@@ -2255,14 +2263,16 @@ class RunFolder(object):
         directory_dict = dict(map(lambda x: (x, 1), os.listdir(directory_path)))
 
         file_list = [
-            # 'ControlMetricsOut.bin',
             'CorrectedIntMetricsOut.bin',
             'ErrorMetricsOut.bin',
             'ExtractionMetricsOut.bin',
-            # 'ImageMetricsOut.bin',
             'QMetricsOut.bin',
             'TileMetricsOut.bin',
         ]
+
+        if rta in '1.18.54':
+            # Only on the MiSeq platform.
+            file_list.append('IndexMetricsOut.bin')
 
         if rta in ('2.5.2', '2.7.3'):
             # HiSeq 3000 platform
@@ -2270,25 +2280,25 @@ class RunFolder(object):
             file_list.append('EventMetricsOut.bin')
             file_list.append('PFGridMetricsOut.bin')
             file_list.append('RegistrationMetricsOut.bin')
-        else:
-            # other platforms
-            file_list.append('ControlMetricsOut.bin')
-            if rta not in '1.18.54':
-                file_list.append('ImageMetricsOut.bin')
 
         if rta in '2.7.3':
             file_list.append('ColorMatrixMetricsOut.bin')
             file_list.append('FWHMGridMetricsOut.bin')
             file_list.append('ImageMetricsOut.bin')
             file_list.append('StaticRunMetricsOut.bin')
-        if rta in '1.18.54':
-            file_list.append('IndexMetricsOut.bin')
+
+        if rta not in ('1.18.54', '2.5.2'):
+            file_list.append('ImageMetricsOut.bin')
+
+        if rta not in ('2.5.2', '2.7.3'):
+            # other platforms
+            file_list.append('ControlMetricsOut.bin')
 
         self._check_files(
-                directory_dict=directory_dict,
-                directory_path=directory_path,
-                file_list=file_list,
-                debug=debug)
+            directory_dict=directory_dict,
+            directory_path=directory_path,
+            file_list=file_list,
+            debug=debug)
 
         # The directory_dict should now be empty.
 
@@ -2326,10 +2336,10 @@ class RunFolder(object):
         ]
 
         self._check_files(
-                directory_dict=directory_dict,
-                directory_path=directory_path,
-                file_list=file_list,
-                debug=debug)
+            directory_dict=directory_dict,
+            directory_path=directory_path,
+            file_list=file_list,
+            debug=debug)
 
         # The directory_dict should now be empty.
 
@@ -2370,7 +2380,7 @@ class RunFolder(object):
             # The MiSeq platform uses the reagent kit barcode.
 
             file_list.append(
-                    self.run_parameters.element_tree.find(path='ReagentKitRFIDTag/SerialNumber').text + '.xml')
+                self.run_parameters.element_tree.find(path='ReagentKitRFIDTag/SerialNumber').text + '.xml')
             file_list.append('RunState.xml')
         else:
             file_list.append(flow_cell_barcode + '.xml')
@@ -2380,10 +2390,10 @@ class RunFolder(object):
                 file_list.append(flow_cell_barcode + '_RunState.xml')
 
         self._check_files(
-                directory_dict=directory_dict,
-                directory_path=directory_path,
-                file_list=file_list,
-                debug=debug)
+            directory_dict=directory_dict,
+            directory_path=directory_path,
+            file_list=file_list,
+            debug=debug)
 
         # The directory_dict should now be empty.
 
@@ -2430,7 +2440,7 @@ class RunFolder(object):
         thumbnail_dict = dict(map(lambda x: (x, 1), os.listdir(thumbnail_path)))
 
         if debug:
-            print "Processing '{}'".format(thumbnail_name)
+            print "Processing 'IRF/{}/'".format(thumbnail_name)
 
         for lane in range(1, fcl.lane_count + 1):
 
@@ -2442,6 +2452,9 @@ class RunFolder(object):
             else:
                 print "Missing IRF/{}/{}/ directory".format(thumbnail_name, lane_name)
                 continue
+
+            if debug:
+                print "Processing 'IRF/{}/{}/'".format(thumbnail_name, lane_name)
 
             lane_path = os.path.join(thumbnail_path, lane_name)
             lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
@@ -2547,14 +2560,15 @@ class RunFolder(object):
         rta = self.run_parameters.get_real_time_analysis_version
 
         if rta not in (
-                '1.12.4.2',
-                '1.13.48',
-                '1.17.21.3',
-                '1.18.54',  # MiSeq
-                '1.18.61',
-                '1.18.64',
-                '2.5.2',  # HiSeq 3000/4000
-                '2.7.3',  # HiSeq 3000/4000
+                '1.12.4',  # HiSeq Control Software 1.4.5
+                '1.12.4.2',  # HiSeq Control Software 1.4.8
+                '1.13.48',  # HiSeq Control Software 1.5.15.1
+                '1.17.21.3',  # HiSeq Control Software 2.0.12.0
+                '1.18.54',  # MiSeq Control Software 2.5.0.5
+                '1.18.61',  # HiSeq Control Software 2.2.38
+                '1.18.64',  # HiSeq Control Software 2.2.58
+                '2.5.2',  # HiSeq Control Software 3.3.20 (HiSeq 3000/4000)
+                '2.7.3',  # HiSeq Control Software 3.3.52 (HiSeq 3000/4000)
         ):
             raise Exception("Unsupported RTA version: '{}'".format(rta))
 
@@ -2566,39 +2580,39 @@ class RunFolder(object):
         # Check the IRF/Data/ directory.
 
         self._check_data(
-                folder_dict=folder_dict,
-                folder_path=folder_path,
-                debug=debug)
+            folder_dict=folder_dict,
+            folder_path=folder_path,
+            debug=debug)
 
         # Check the IRF/InterOp/ directory.
 
         self._check_inter_op(
-                folder_dict=folder_dict,
-                folder_path=folder_path,
-                debug=debug)
+            folder_dict=folder_dict,
+            folder_path=folder_path,
+            debug=debug)
 
         # Check the IRF/PeriodicSaveRates/ directory.
 
         if rta not in '1.18.54':
             # The MiSeq platform does not have this directory.
             self._check_periodic_save_rates(
-                    folder_dict=folder_dict,
-                    folder_path=folder_path,
-                    debug=debug)
+                folder_dict=folder_dict,
+                folder_path=folder_path,
+                debug=debug)
 
         # Check the IRF/Recipe/ directory.
 
         self._check_recipe(
-                folder_dict=folder_dict,
-                folder_path=folder_path,
-                debug=debug)
+            folder_dict=folder_dict,
+            folder_path=folder_path,
+            debug=debug)
 
         # Check the IRF/Thumbnail_Images/ directory.
 
         self._check_thumbnail_images(
-                folder_dict=folder_dict,
-                folder_path=folder_path,
-                debug=debug)
+            folder_dict=folder_dict,
+            folder_path=folder_path,
+            debug=debug)
 
         # Check files.
 
