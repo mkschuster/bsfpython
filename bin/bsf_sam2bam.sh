@@ -47,13 +47,13 @@ declare prefix="${1}"
 # BAM (-b) output stream and sort the BAM output stream.
 # Warning: The samtools sort command attaches a *.bam to the prefix.
 
-samtools view -b -S -u "${prefix}.aligned.sam" | \
-    samtools sort - "${prefix}.aligned.sorted" || exit 1
+samtools view -b -S -u "${prefix}.sam" | \
+    samtools sort -o "${prefix}.bam" -T "$(dirname ${prefix})" - || exit 1
 
 # Index the aligned and sorted BAM file.
 
-samtools index "${prefix}.aligned.sorted.bam" || exit 1
+samtools index "${prefix}.bam" "${prefix}.bai" || exit 1
 
-rm "${prefix}.aligned.sam" || exit 1
+rm "${prefix}.sam" || exit 1
 
 exit 0

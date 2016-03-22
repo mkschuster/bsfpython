@@ -42,7 +42,7 @@ from bsf.standards import Configuration, Default
 
 class ChIPSeqComparison(object):
     def __init__(self, c_name, t_name, c_samples, t_samples,
-                 factor, tissue=None, condition=None, treatment=None, replicate=None):
+                 factor, tissue=None, condition=None, treatment=None, replicate=None, diff_bind=None):
         """Initialise a C{ChIPSeqComparison} object.
 
         @param c_name: Control name
@@ -63,6 +63,8 @@ class ChIPSeqComparison(object):
         @type treatment: str
         @param replicate: replicate number
         @type replicate: int
+        @param diff_bind: Run the DiffBind analysis
+        @type: bool
         @return:
         @rtype:
         """
@@ -116,6 +118,11 @@ class ChIPSeqComparison(object):
             self.replicate = replicate
         else:
             self.replicate = int(x=0)
+
+        if diff_bind is None:
+            self.diff_bind = True
+        else:
+            self.diff_bind = diff_bind
 
         return
 
@@ -204,10 +211,13 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
 
 
 class ChIPSeq(Analysis):
-    """ChIP-Seq-specific C{Analysis} sub-class.
+    """The C{ChIPSeq} class represents the logic to run a ChIP-Seq-specific C{Analysis}.
 
     Attributes:
-    None
+    @ivar cmp_file: Comparison file
+    @type cmp_file: str | unicode
+    @ivar genome_fasta_path: Reference genome sequence FASTA file path
+    @type genome_fasta_path: str | unicode
     """
 
     def __init__(self, configuration=None,
@@ -216,7 +226,7 @@ class ChIPSeq(Analysis):
                  project_directory=None, genome_directory=None,
                  e_mail=None, debug=0, drms_list=None,
                  collection=None, comparisons=None, samples=None,
-                 cmp_file=None):
+                 cmp_file=None, genome_fasta_path=None):
         """Initialise a C{ChIPSeq} object.
 
         @param configuration: C{Configuration}
@@ -240,15 +250,17 @@ class ChIPSeq(Analysis):
         @param debug: Integer debugging level
         @type debug: int
         @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list
+        @type drms_list: list[DRMS]
         @param collection: C{Collection}
         @type collection: Collection
         @param comparisons: Python C{dict} of Python C{list} objects of C{Sample} objects
-        @type comparisons: dict
+        @type comparisons: dict[str, list[Sample]]
         @param samples: Python C{list} of C{Sample} objects
-        @type samples: list
+        @type samples: list[Sample]
         @param cmp_file: Comparison file
         @type cmp_file: str | unicode
+        @param genome_fasta_path: Reference genome sequence FASTA file path
+        @type genome_fasta_path: str | unicode
         @return:
         @rtype:
         """
@@ -270,10 +282,15 @@ class ChIPSeq(Analysis):
 
         # Sub-class specific ...
 
-        if cmp_file:
-            self.cmp_file = cmp_file
-        else:
+        if cmp_file is None:
             self.cmp_file = str()
+        else:
+            self.cmp_file = cmp_file
+
+        if genome_fasta_path is None:
+            self.genome_fasta_path = str()
+        else:
+            self.genome_fasta_path = genome_fasta_path
 
         return
 
@@ -299,7 +316,17 @@ class ChIPSeq(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.cmp_file = configuration.config_parser.get(section=section, option=option)
 
+        option = 'genome_fasta'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.genome_fasta_path = configuration.config_parser.get(section=section, option=option)
+
         return
+
+    # Taken from ConfigParser.RawConfigParser.getboolean()
+
+    _boolean_states = {
+        '1': True, 'yes': True, 'true': True, 'on': True,
+        '0': False, 'no': False, 'false': False, 'off': False}
 
     def _read_comparisons(self, cmp_file):
         """Read a C{SampleAnnotationSheet} CSV file from disk.
@@ -314,10 +341,10 @@ class ChIPSeq(Analysis):
                 - Treatment/Control Sample:
                     - CASAVA Sample name, no default
             - Column headers for independent samples:
-                - Treatment/Control Sample
+                - Treatment/Control Group:
+                - Treatment/Control Sample:
                 - Treatment/Control Reads:
-                - Treatment/Control File
-                - Treatment/Control Group
+                - Treatment/Control File:
         @param cmp_file: Comparison file path
         @type cmp_file: str | unicode
         @return:
@@ -330,13 +357,13 @@ class ChIPSeq(Analysis):
         sas = SampleAnnotationSheet.from_file_path(file_path=cmp_file)
 
         # Unfortunately, two passes through the comparison sheet are required.
-        # In the first one merge all BSF Sample objects that share the name.
-        # Merging BSF Sample objects is currently the only way to pool BSF PairedReads objects,
+        # In the first one merge all Sample objects that share the name.
+        # Merging Sample objects is currently the only way to pool PairedReads objects,
         # which is required for ChIP-Seq experiments.
 
         sample_dict = dict()
 
-        # First pass, merge BSF Sample objects, if they have the same name.
+        # First pass, merge Sample objects, if they have the same name.
         for row_dict in sas.row_dicts:
             for prefix in ('Control', 'Treatment'):
                 name, samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix=prefix)
@@ -347,7 +374,7 @@ class ChIPSeq(Analysis):
                         n_sample = Sample.from_samples(sample1=sample_dict[o_sample.name], sample2=o_sample)
                         sample_dict[n_sample.name] = n_sample
 
-        # Second pass, add all BSF Sample objects mentioned in a comparison.
+        # Second pass, add all Sample objects mentioned in a comparison.
         level1_dict = dict()
 
         for row_dict in sas.row_dicts:
@@ -358,7 +385,7 @@ class ChIPSeq(Analysis):
             # ChIP-Seq experiments use the order treatment versus control in comparisons.
             comparison_key = '{}__{}'.format(t_name, c_name)
 
-            # For a successful comparison, both Python list objects of BSF Sample objects have to be defined.
+            # For a successful comparison, both Python list objects of Sample objects have to be defined.
 
             if not (len(t_samples) and len(c_samples)):
                 if self.debug > 1:
@@ -366,17 +393,17 @@ class ChIPSeq(Analysis):
                         format(t_name, len(t_samples), c_name, len(c_samples))
                 continue
 
-            # Add all control BSF Sample or BSF SampleGroup objects to the Sample list.
+            # Add all control Sample or SampleGroup objects to the Sample list.
 
             for c_sample in c_samples:
                 if self.debug > 1:
                     print '  Control Sample name: {!r} file_path:{!r}'.format(c_sample.name, c_sample.file_path)
                     print c_sample.trace(1)
-                    # Find the BSF Sample in the unified sample dictionary.
+                    # Find the Sample in the unified sample dictionary.
                 if c_sample.name in sample_dict:
                     self.add_sample(sample=sample_dict[c_sample.name])
 
-            # Add all treatment BSF Sample or BSF SampleGroup objects to the Sample list.
+            # Add all treatment Sample or SampleGroup objects to the Sample list.
 
             for t_sample in t_samples:
                 if self.debug > 1:
@@ -405,6 +432,15 @@ class ChIPSeq(Analysis):
             else:
                 treatment = str()
 
+            if 'DiffBind' in row_dict:
+                if row_dict['DiffBind'].lower() not in ChIPSeq._boolean_states:
+                    raise ValueError('Value in field {!r} is not a boolean: {!r}'.format(
+                        'DiffBind',
+                        row_dict['DiffBind']))
+                diff_bind = ChIPSeq._boolean_states[row_dict['DiffBind'].lower()]
+            else:
+                diff_bind = True
+
             # Automatically create replicate numbers for the sample annotation sheet required by the
             # DiffBind Bioconductor package.
             # Use a first-level dict with replicate key data and second-level dict value data.
@@ -431,9 +467,10 @@ class ChIPSeq(Analysis):
                     tissue=tissue,
                     condition=condition,
                     treatment=treatment,
-                    replicate=0)
+                    replicate=0,
+                    diff_bind=diff_bind)
 
-        # Sort the comparison keys alphabetically and assign replicate numbers into ChiPSeqComparison objects.
+        # Sort the comparison keys alphabetically and assign replicate numbers into ChIPSeqComparison objects.
 
         for key1 in level1_dict.keys():
 
@@ -444,6 +481,8 @@ class ChIPSeq(Analysis):
 
             i = 1
             for key2 in keys2:
+                if not self.comparisons[key2].diff_bind:
+                    continue
                 level2_dict[key2] = i
                 self.comparisons[key2].replicate = i
                 i += 1
@@ -466,7 +505,7 @@ class ChIPSeq(Analysis):
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
         # Check if an absolute path has been provided, if not,
-        # automatically prepend standard BSF directory paths.
+        # automatically prepend standard directory paths.
 
         self.cmp_file = os.path.expanduser(path=self.cmp_file)
         self.cmp_file = os.path.expandvars(path=self.cmp_file)
@@ -476,14 +515,22 @@ class ChIPSeq(Analysis):
 
         self._read_comparisons(cmp_file=self.cmp_file)
 
-        # Experimentally, sort the Python list of BSF Sample objects by the BSF Sample name.
-        # This cannot be done in the super-class, because BSF Samples are only put into the Analysis.samples list
+        # Experimentally, sort the Python list of Sample objects by the Sample name.
+        # This cannot be done in the super-class, because Samples are only put into the Analysis.samples list
         # by the _read_comparisons method.
 
         self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
+        # Define the reference genome FASTA file path.
+        # If it does not exist, construct it from defaults.
+
+        if not self.genome_fasta_path:
+            self.genome_fasta_path = Default.absolute_genome_fasta(
+                    genome_version=self.genome_version,
+                    genome_index='bowtie2')
+
         self._create_bowtie2_jobs()
-        # self._create_Macs14_jobs()
+        # self._create_macs14_jobs()
         self._create_macs2_jobs()
         self._create_diffbind_jobs()
 
@@ -502,8 +549,17 @@ class ChIPSeq(Analysis):
 
         # Get the Bowtie2 index.
 
-        bowtie2_index = os.path.join(Default.absolute_genomes(self.genome_version),
-                                     'forBowtie2', self.genome_version)
+        if self.genome_fasta_path.endswith('.fasta'):
+            bowtie2_index = self.genome_fasta_path[:-6]
+        elif self.genome_fasta_path.endswith('.fa'):
+            bowtie2_index = self.genome_fasta_path[:-3]
+        else:
+            raise Exception(
+                    "The genome_fasta option has to end with '.fa' or '.fasta'. {!r}".
+                    format(self.genome_fasta_path))
+
+        # bowtie2_index = os.path.join(Default.absolute_genomes(self.genome_version),
+        #                              'forBowtie2', self.genome_version)
 
         # Initialise the Distributed Resource Management System objects for Bowtie2.
 
@@ -603,7 +659,7 @@ class ChIPSeq(Analysis):
 
                 bowtie2.stdout_path = os.path.join(self.genome_directory,
                                                    replicate_directory,
-                                                   replicate_key + '.aligned.sam')
+                                                   replicate_key + '.sam')
 
                 # Set bsf_sam2bam.sh options.
 
@@ -611,8 +667,8 @@ class ChIPSeq(Analysis):
                                                       replicate_directory,
                                                       replicate_key))
 
-                if (os.path.exists('{}.aligned.sorted.bam.bai'.format(replicate_key)) and
-                        os.path.getsize('{}.aligned.sorted.bam.bai'.format(replicate_key))):
+                if (os.path.exists('{}.bai'.format(replicate_key)) and
+                        os.path.getsize('{}.bai'.format(replicate_key))):
                     bowtie2.submit = False
                     sam2bam.submit = False
 
@@ -697,12 +753,12 @@ class ChIPSeq(Analysis):
                                     key='treatment',
                                     value=os.path.join(self.genome_directory,
                                                        'chipseq_bowtie2_{}'.format(t_replicate_key),
-                                                       '{}.aligned.sorted.bam'.format(t_replicate_key)))
+                                                       '{}.bam'.format(t_replicate_key)))
                             macs14.add_option_long(
                                     key='control',
                                     value=os.path.join(self.genome_directory,
                                                        'chipseq_bowtie2_{}'.format(c_replicate_key),
-                                                       '{}.aligned.sorted.bam'.format(c_replicate_key)))
+                                                       '{}.bam'.format(c_replicate_key)))
 
                             # TODO: Experimentally prepend a chipseq_macs14 directory
                             # MACS14 can hopefully also cope with directories specified in the --name option, but
@@ -867,13 +923,13 @@ class ChIPSeq(Analysis):
                                     key='treatment',
                                     value=os.path.join(self.genome_directory,
                                                        'chipseq_bowtie2_{}'.format(t_replicate_key),
-                                                       '{}.aligned.sorted.bam'.format(t_replicate_key)))
+                                                       '{}.bam'.format(t_replicate_key)))
 
                             mc2.add_option_long(
                                     key='control',
                                     value=os.path.join(self.genome_directory,
                                                        'chipseq_bowtie2_{}'.format(c_replicate_key),
-                                                       '{}.aligned.sorted.bam'.format(c_replicate_key)))
+                                                       '{}.bam'.format(c_replicate_key)))
 
                             # TODO: Experimentally prepend a chipseq_macs2 directory.
                             # MACS2 can cope with directories specified in the --name option, but
@@ -980,6 +1036,11 @@ class ChIPSeq(Analysis):
                             process_macs2.arguments.append('{}__{}'.format(t_replicate_key, c_replicate_key))
                             process_macs2.arguments.append(genome_sizes)
 
+                            if os.path.exists(os.path.join(prefix, '{}_peaks.bb'.format(prefix))):
+                                macs2_callpeak.submit = False
+                                macs2_bdgcmp.submit = False
+                                process_macs2.submit = False
+
         return
 
     def _create_diffbind_jobs(self):
@@ -1009,6 +1070,9 @@ class ChIPSeq(Analysis):
 
             chipseq_comparison = self.comparisons[key]
             assert isinstance(chipseq_comparison, ChIPSeqComparison)
+
+            if not chipseq_comparison.diff_bind:
+                continue
 
             if chipseq_comparison.factor in self._factor_dict:
                 factor_list = self._factor_dict[chipseq_comparison.factor]
@@ -1047,13 +1111,16 @@ class ChIPSeq(Analysis):
 
             job_dependencies = list()
 
-            # Create a new BSF ChIPSeq DiffBind Sheet per factor.
+            # Create a new ChIPSeq DiffBind Sheet per factor.
 
             file_path = os.path.join(factor_directory, 'chipseq_diffbind_{}_samples.csv'.format(key))
 
             dbs = ChIPSeqDiffBindSheet(file_path=file_path)
 
             for chipseq_comparison in factor_list:
+
+                if not chipseq_comparison.diff_bind:
+                    continue
 
                 for t_sample in chipseq_comparison.t_samples:
 
@@ -1086,10 +1153,10 @@ class ChIPSeq(Analysis):
                                 row_dict['Replicate'] = chipseq_comparison.replicate
                                 row_dict['bamReads'] = os.path.join(self.genome_directory,
                                                                     'chipseq_bowtie2_{}'.format(t_replicate_key),
-                                                                    '{}.aligned.sorted.bam'.format(t_replicate_key))
+                                                                    '{}.bam'.format(t_replicate_key))
                                 row_dict['bamControl'] = os.path.join(self.genome_directory,
                                                                       'chipseq_bowtie2_{}'.format(c_replicate_key),
-                                                                      '{}.aligned.sorted.bam'.format(c_replicate_key))
+                                                                      '{}.bam'.format(c_replicate_key))
                                 row_dict['ControlID'] = c_replicate_key
                                 row_dict['Peaks'] = os.path.join(self.genome_directory,
                                                                  'chipseq_macs2_{}__{}'.
@@ -1125,13 +1192,18 @@ class ChIPSeq(Analysis):
             self.set_command_configuration(command=diffbind)
             diffbind.add_option_long(key='factor', value=key)
             # diffbind.add_option_long(key='work_directory', value=factor_directory)
-            diffbind.add_option_long(key='genome_directory', value=self.genome_directory)
-            diffbind.add_option_long(key='sample_annotation', value=file_path)
+            diffbind.add_option_long(key='genome-directory', value=self.genome_directory)
+            diffbind.add_option_long(key='sample-annotation', value=file_path)
+
+            if os.path.exists(os.path.join(
+                    factor_directory,
+                    'chipseq_diffbind_{}_correlation_read_counts.png'.format(key))):
+                diffbind.submit = False
 
         return
 
     def _report_macs14(self):
-        """Create a BSF ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
+        """Create a ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
         @return:
         @rtype:
         """
@@ -1360,7 +1432,7 @@ class ChIPSeq(Analysis):
                 track_output += 'shortLabel Alignment_{}\n'.format(replicate_key)
                 track_output += 'longLabel Bowtie2 alignment of {}\n'. \
                     format(replicate_key)
-                track_output += 'bigDataUrl ./{}.aligned.sorted.bam\n'. \
+                track_output += 'bigDataUrl ./{}.bam\n'. \
                     format(replicate_key)
                 track_output += 'visibility hide\n'
                 # TODO: The 'html' option is missing.
@@ -1395,7 +1467,7 @@ class ChIPSeq(Analysis):
         return
 
     def report(self):
-        """Create a BSF ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
+        """Create a ChIPSeq report in HTML format and a UCSC Genome Browser Track Hub.
         @return:
         @rtype:
         """
@@ -1830,7 +1902,7 @@ class ChIPSeq(Analysis):
 
             for replicate_key in replicate_keys:
                 #
-                # Add a UCSC trackDB entry for each NAME.aligned.sorted.bam file.
+                # Add a UCSC trackDB entry for each NAME.bam file.
                 #
 
                 # Common trackDb settings.
@@ -1840,7 +1912,7 @@ class ChIPSeq(Analysis):
                 track_output += 'shortLabel {}_alignment\n'.format(replicate_key)
                 track_output += 'longLabel {} ChIP read alignment\n'. \
                     format(replicate_key)
-                track_output += 'bigDataUrl ./chipseq_bowtie2_{}/{}.aligned.sorted.bam\n'. \
+                track_output += 'bigDataUrl ./chipseq_bowtie2_{}/{}.bam\n'. \
                     format(replicate_key, replicate_key)
                 track_output += 'visibility hide\n'
                 # track_output += 'html {}\n'.format()

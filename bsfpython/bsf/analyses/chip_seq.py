@@ -391,7 +391,7 @@ class ChIPSeq(Analysis):
         return
 
     def run(self):
-        """Run this C{ChIPSeq} analysis.
+        """Run this C{ChIPSeq} C{Analysis}.
 
         @return:
         @rtype:
@@ -644,7 +644,7 @@ class ChIPSeq(Analysis):
                         replicate_directory=prefix,
                         aligned_sam=os.path.join(prefix, '_'.join((prefix, 'aligned.sam'))),
                         cleaned_sam=os.path.join(prefix, '_'.join((prefix, 'cleaned.sam'))),
-                        sorted_bam=os.path.join(prefix, '_'.join((prefix, 'sorted.bam'))))
+                        sorted_bam=os.path.join(prefix, '_'.join((prefix, '.bam'))))
 
                 # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
                 runnable = self.add_runnable(runnable=Runnable(
@@ -1280,8 +1280,8 @@ class ChIPSeq(Analysis):
             self.set_command_configuration(command=diffbind)
             diffbind.add_option_long(key='factor', value=key)
             # diffbind.add_option_long(key='work_directory', value=factor_directory)
-            diffbind.add_option_long(key='genome_directory', value=self.genome_directory)
-            diffbind.add_option_long(key='sample_annotation', value=file_path)
+            diffbind.add_option_long(key='genome-directory', value=self.genome_directory)
+            diffbind.add_option_long(key='sample-annotation', value=file_path)
 
         return
 
