@@ -415,7 +415,7 @@ argument_parser.add_argument(
     '--log-level',
     default='INFO',
     dest='log_level',
-    help='log level',
+    help='log level [INFO]',
     required=False,
     type=str)
 
@@ -423,7 +423,7 @@ argument_parser.add_argument(
     '--target-path',
     default='/mnt/ltfs',
     dest='target_path',
-    help='default target path',
+    help='default target path [/mnt/ltfs]',
     required=False,
     type=str)
 
@@ -431,14 +431,14 @@ argument_parser.add_argument(
     '--source-specification',
     default='',
     dest='source_specification',
-    help='source specification pattern',
+    help='source specification pattern []',
     required=False,
     type=str)
 
 argument_parser.add_argument(
     '--type',
     default='',
-    help='cartridge type i.e. LTO5 or LTO6',
+    help='cartridge type i.e. LTO5 or LTO6 []',
     required=False,
     type=str)
 
