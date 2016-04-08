@@ -105,6 +105,12 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
+    '--no-validation',
+    action='store_true',
+    dest='no_validation',
+    help='force processing even if library annotation sheet validation fails')
+
+argument_parser.add_argument(
     '--loop',
     action='store_true',
     help='loop until a RTAComplete.txt file has been copied by the Illumina Real-Time Analysis (RTA) software',
@@ -218,6 +224,9 @@ if name_space.mode:
         raise Exception("Unknown output mode " + name_space.mode)
 else:
     bid.lanes = RunFolder.from_file_path(file_path=itb.run_directory).run_information.flow_cell_layout.lane_count
+
+if name_space.no_validation:
+    bid.force = name_space.no_validation
 
 if name_space.library_path:
     bid.library_path = name_space.library_path
