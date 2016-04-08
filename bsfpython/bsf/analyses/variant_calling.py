@@ -1991,6 +1991,7 @@ class VariantCallingGATK(Analysis):
             #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             # if self.interval_padding:
             #     sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
+            # The Diagnose Targets analysis is run on the target intervals, only.
             if target_interval_path:
                 runnable_step.add_gatk_option(key='intervals', value=target_interval_path)
             runnable_step.add_gatk_option(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
@@ -2018,8 +2019,9 @@ class VariantCallingGATK(Analysis):
             #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             # if self.interval_padding:
             #     sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
-            if target_interval_path:
-                runnable_step.add_gatk_option(key='intervals', value=file_path_dict_diagnosis['missing_intervals'])
+            # The Qualify Missing Intervals analysis is run on the missing intervals
+            # of the Diagnose Targets analysis, regardless.
+            runnable_step.add_gatk_option(key='intervals', value=file_path_dict_diagnosis['missing_intervals'])
             runnable_step.add_gatk_option(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
             if probe_interval_path:
                 runnable_step.add_gatk_option(key='baitsfile', value=probe_interval_path)
@@ -2046,6 +2048,7 @@ class VariantCallingGATK(Analysis):
             #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             # if self.interval_padding:
             #     sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
+            # The Callable Loci analysis is run on the target intervals, only.
             if target_interval_path:
                 runnable_step.add_gatk_option(key='intervals', value=target_interval_path)
             runnable_step.add_gatk_option(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
