@@ -518,11 +518,13 @@ class IlluminaToBam(Analysis):
         # Define the sequences directory in which to create the experiment directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
-        # Check if an absolute path has been provided, if not,
+        # An absolute path cannot be prepended.
 
-        self.sequences_directory = Default.get_absolute_path(
-                file_path=self.sequences_directory,
-                default_path=Default.absolute_sequences())
+        if self.sequences_directory:
+            self.sequences_directory = Default.get_absolute_path(
+                    file_path=self.sequences_directory)
+        else:
+            self.sequences_directory = Default.absolute_sequences()
 
         # As a safety measure, to prevent creation of rogue directory paths, the sequences_directory has to exist.
 
