@@ -3091,7 +3091,7 @@ class VariantCallingGATK(Analysis):
             # Python str key and Python list of Python list objects
             # of bsf.data.PairedReads objects.
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
             replicate_keys = replicate_dict.keys()
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
