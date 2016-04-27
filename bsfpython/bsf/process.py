@@ -55,7 +55,12 @@ class Command(object):
     @type sub_command: Command
     """
 
-    def __init__(self, program=None, options=None, arguments=None, sub_command=None):
+    def __init__(
+            self,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None):
         """Initialise a C{Command} object.
 
         @param program: Program
@@ -146,10 +151,10 @@ class Command(object):
 
         if not override and argument.key in self.options:
             warnings.warn(
-                    'Adding an Argument with key {!r} that exits already in Command.program {!r}.'.format(
-                            argument.key,
-                            self.program),
-                    UserWarning)
+                'Adding an Argument with key {!r} that exits already in Command.program {!r}.'.format(
+                    argument.key,
+                    self.program),
+                UserWarning)
 
         if argument.key in self.options:
             arguments_list = self.options[argument.key]
@@ -248,10 +253,10 @@ class Command(object):
 
         if not override and argument.key in self.options:
             warnings.warn(
-                    'Setting an Argument with key {!r} that exits already in Command.program {!r}.'.format(
-                            argument.key,
-                            self.program),
-                    UserWarning)
+                'Setting an Argument with key {!r} that exits already in Command.program {!r}.'.format(
+                    argument.key,
+                    self.program),
+                UserWarning)
 
         self.options[argument.key] = [argument]
 
@@ -340,8 +345,8 @@ class Command(object):
 
         if not configuration.config_parser.has_section(section=section):
             warnings.warn(
-                    'Section {!r} not defined in Configuration file {!r}.'.format(section, configuration.config_path),
-                    UserWarning)
+                'Section {!r} not defined in Configuration file {!r}.'.format(section, configuration.config_path),
+                UserWarning)
 
             return
 
@@ -349,12 +354,12 @@ class Command(object):
 
         for option in configuration.config_parser.options(section=section):
             self.add_argument(
-                    argument=Argument.from_key_value(
-                            key=option,
-                            value=configuration.config_parser.get(
-                                    section=section,
-                                    option=option)),
-                    override=False)
+                argument=Argument.from_key_value(
+                    key=option,
+                    value=configuration.config_parser.get(
+                        section=section,
+                        option=option)),
+                override=False)
 
         return
 
@@ -397,8 +402,8 @@ class Command(object):
                     command_line.append('{}={}'.format(argument.key, argument.value))
                 else:
                     warnings.warn(
-                            'Unexpected object {!r} in Command.options dict.'.format(argument),
-                            UserWarning)
+                        'Unexpected object {!r} in Command.options dict.'.format(argument),
+                        UserWarning)
 
         # Add all arguments.
 
@@ -448,8 +453,8 @@ class Command(object):
                     command_line += ' {}={}'.format(argument.key, argument.value)
                 else:
                     warnings.warn(
-                            'Unexpected object {!r} in Command.options dict.'.format(argument),
-                            UserWarning)
+                        'Unexpected object {!r} in Command.options dict.'.format(argument),
+                        UserWarning)
 
         # Add all arguments.
 
@@ -573,11 +578,11 @@ class Executable(Command):
         """
 
         return Executable.process_stream(
-                file_type='STDOUT',
-                file_handle=stdout_handle,
-                thread_lock=thread_lock,
-                file_path=stdout_path,
-                debug=debug)
+            file_type='STDOUT',
+            file_handle=stdout_handle,
+            thread_lock=thread_lock,
+            file_path=stdout_path,
+            debug=debug)
 
     @staticmethod
     def process_stderr(stderr_handle, thread_lock, stderr_path=None, debug=0):
@@ -596,16 +601,27 @@ class Executable(Command):
         """
 
         return Executable.process_stream(
-                file_type='STDERR',
-                file_handle=stderr_handle,
-                thread_lock=thread_lock,
-                file_path=stderr_path,
-                debug=debug)
+            file_type='STDERR',
+            file_handle=stderr_handle,
+            thread_lock=thread_lock,
+            file_path=stderr_path,
+            debug=debug)
 
-    def __init__(self, name,
-                 program=None, options=None, arguments=None, sub_command=None,
-                 stdout_path=None, stderr_path=None, dependencies=None, hold=None,
-                 submit=True, maximum_attempts=1, process_identifier=None, process_name=None):
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdout_path=None,
+            stderr_path=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            maximum_attempts=1,
+            process_identifier=None,
+            process_name=None):
         """Initialise an C{Executable} object.
 
         @param name: Name
@@ -641,10 +657,10 @@ class Executable(Command):
         """
 
         super(Executable, self).__init__(
-                program=program,
-                options=options,
-                arguments=arguments,
-                sub_command=sub_command)
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command)
 
         self.name = name  # Can be None.
 
@@ -787,13 +803,13 @@ class Executable(Command):
         while attempt_counter < self.maximum_attempts:
 
             child_process = Popen(
-                    args=self.command_list(),
-                    bufsize=0,
-                    stdin=PIPE,
-                    stdout=PIPE,
-                    stderr=PIPE,
-                    shell=False,
-                    close_fds=on_posix)
+                args=self.command_list(),
+                bufsize=0,
+                stdin=PIPE,
+                stdout=PIPE,
+                stderr=PIPE,
+                shell=False,
+                close_fds=on_posix)
 
             # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
             # should make sure that buffers are not filling up.
@@ -801,22 +817,22 @@ class Executable(Command):
             thread_lock = Lock()
 
             thread_out = Thread(
-                    target=Executable.process_stdout,
-                    kwargs=dict(
-                            stdout_handle=child_process.stdout,
-                            thread_lock=thread_lock,
-                            stdout_path=self.stdout_path,
-                            debug=debug))
+                target=Executable.process_stdout,
+                kwargs=dict(
+                    stdout_handle=child_process.stdout,
+                    thread_lock=thread_lock,
+                    stdout_path=self.stdout_path,
+                    debug=debug))
             thread_out.daemon = True  # Thread dies with the program.
             thread_out.start()
 
             thread_err = Thread(
-                    target=Executable.process_stderr,
-                    kwargs=dict(
-                            stderr_handle=child_process.stderr,
-                            thread_lock=thread_lock,
-                            stderr_path=self.stderr_path,
-                            debug=debug))
+                target=Executable.process_stderr,
+                kwargs=dict(
+                    stderr_handle=child_process.stderr,
+                    thread_lock=thread_lock,
+                    stderr_path=self.stderr_path,
+                    debug=debug))
             thread_err.daemon = True  # Thread dies with the program.
             thread_err.start()
 
@@ -901,11 +917,21 @@ class RunnableStep(Executable):
     @type obsolete_file_path_list: list[str | unicode]
     """
 
-    def __init__(self, name,
-                 program=None, options=None, arguments=None, sub_command=None,
-                 stdout_path=None, stderr_path=None, dependencies=None, hold=None,
-                 submit=True, process_identifier=None, process_name=None,
-                 obsolete_file_path_list=None):
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdout_path=None,
+            stderr_path=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            obsolete_file_path_list=None):
         """Initialise a C{RunnableStep} object.
 
         @param name: Name
@@ -942,9 +968,18 @@ class RunnableStep(Executable):
         """
 
         super(RunnableStep, self).__init__(
-                name=name, program=program, options=options, arguments=arguments, sub_command=sub_command,
-                stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold, submit=submit,
-                process_identifier=process_identifier, process_name=process_name)
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name)
 
         if obsolete_file_path_list is None:
             self.obsolete_file_path_list = list()
@@ -975,14 +1010,27 @@ class RunnableStepJava(RunnableStep):
     """The C{RunnableStepJava} class represents a C{RunnableStep} with all peculiarities of Java programs.
 
     Attributes:
+    None
     """
 
-    def __init__(self, name,
-                 program=None, options=None, arguments=None, sub_command=None,
-                 stdout_path=None, stderr_path=None, dependencies=None, hold=None,
-                 submit=True, process_identifier=None, process_name=None,
-                 obsolete_file_path_list=None,
-                 java_temporary_path=None, java_heap_maximum=None, java_jar_path=None):
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdout_path=None,
+            stderr_path=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            obsolete_file_path_list=None,
+            java_temporary_path=None,
+            java_heap_maximum=None,
+            java_jar_path=None):
         """Create a C{RunnableStep} for a Java program.
 
         @param name: Name
@@ -1025,11 +1073,19 @@ class RunnableStepJava(RunnableStep):
         """
 
         super(RunnableStepJava, self).__init__(
-                name=name,
-                program=program, options=options, arguments=arguments, sub_command=sub_command,
-                stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold,
-                submit=submit, process_identifier=process_identifier, process_name=process_name,
-                obsolete_file_path_list=obsolete_file_path_list)
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            obsolete_file_path_list=obsolete_file_path_list)
 
         # JavaVM command
         if self.program is None:
@@ -1064,15 +1120,29 @@ class RunnableStepPicard(RunnableStepJava):
     """The C{RunnableStepPicard} class represents a C{RunnableStepJava} specific to Picard tools.
 
     Attributes:
+    None
     """
 
-    def __init__(self, name,
-                 program=None, options=None, arguments=None, sub_command=None,
-                 stdout_path=None, stderr_path=None, dependencies=None, hold=None,
-                 submit=True, process_identifier=None, process_name=None,
-                 obsolete_file_path_list=None,
-                 java_temporary_path=None, java_heap_maximum=None, java_jar_path=None,
-                 picard_classpath=None, picard_command=None):
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdout_path=None,
+            stderr_path=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            obsolete_file_path_list=None,
+            java_temporary_path=None,
+            java_heap_maximum=None,
+            java_jar_path=None,
+            picard_classpath=None,
+            picard_command=None):
         """Create a C{RunnableStep} for a Picard algorithm.
 
         @param name: Name
@@ -1119,13 +1189,22 @@ class RunnableStepPicard(RunnableStepJava):
         """
 
         super(RunnableStepPicard, self).__init__(
-                name=name,
-                program=program, options=options, arguments=arguments, sub_command=sub_command,
-                stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold,
-                submit=submit, process_identifier=process_identifier, process_name=process_name,
-                obsolete_file_path_list=obsolete_file_path_list,
-                java_temporary_path=java_temporary_path, java_heap_maximum=java_heap_maximum,
-                java_jar_path=java_jar_path)
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            obsolete_file_path_list=obsolete_file_path_list,
+            java_temporary_path=java_temporary_path,
+            java_heap_maximum=java_heap_maximum,
+            java_jar_path=java_jar_path)
 
         # Set the Picard classpath and the Picard Java archive.
         if 'jar' not in self.sub_command.options:
@@ -1157,20 +1236,29 @@ class RunnableStepLink(RunnableStep):
     """The C{RunnableStepLink} represents a step in a C{Runnable} class.
 
     Attributes:
-    @ivar obsolete_file_path_list: Python C{list} of file paths that can be removed
-        after successfully completing this C{RunnableStep}
-    @type obsolete_file_path_list: list[str | unicode]
     @ivar source_path: Source path
     @type source_path: str | unicode
     @ivar target_path: Target path
     @type target_path: str | unicode
     """
 
-    def __init__(self, name,
-                 program=None, options=None, arguments=None, sub_command=None,
-                 stdout_path=None, stderr_path=None, dependencies=None, hold=None,
-                 submit=True, process_identifier=None, process_name=None,
-                 obsolete_file_path_list=None, source_path=None, target_path=None):
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdout_path=None,
+            stderr_path=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            obsolete_file_path_list=None,
+            source_path=None,
+            target_path=None):
         """Initialise a C{RunnableStepLink} object.
 
         @param name: Name
@@ -1211,10 +1299,19 @@ class RunnableStepLink(RunnableStep):
         """
 
         super(RunnableStepLink, self).__init__(
-                name=name, program=program, options=options, arguments=arguments, sub_command=sub_command,
-                stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold, submit=submit,
-                process_identifier=process_identifier, process_name=process_name,
-                obsolete_file_path_list=obsolete_file_path_list)
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            obsolete_file_path_list=obsolete_file_path_list)
 
         if source_path is None:
             self.source_path = str()
@@ -1256,18 +1353,26 @@ class RunnableStepMakeDirectory(RunnableStep):
     """The C{RunnableStepMakeDirectory} represents a step in a C{Runnable} class.
 
     Attributes:
-    @ivar obsolete_file_path_list: Python C{list} of file paths that can be removed
-        after successfully completing this C{RunnableStep}
-    @type obsolete_file_path_list: list[str | unicode]
     @ivar directory_path: Directory path
     @type directory_path: str | unicode
     """
 
-    def __init__(self, name,
-                 program=None, options=None, arguments=None, sub_command=None,
-                 stdout_path=None, stderr_path=None, dependencies=None, hold=None,
-                 submit=True, process_identifier=None, process_name=None,
-                 obsolete_file_path_list=None, directory_path=None):
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdout_path=None,
+            stderr_path=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            obsolete_file_path_list=None,
+            directory_path=None):
         """Initialise a C{RunnableStepMakeDirectory} object.
 
         @param name: Name
@@ -1306,10 +1411,19 @@ class RunnableStepMakeDirectory(RunnableStep):
         """
 
         super(RunnableStepMakeDirectory, self).__init__(
-                name=name, program=program, options=options, arguments=arguments, sub_command=sub_command,
-                stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold, submit=submit,
-                process_identifier=process_identifier, process_name=process_name,
-                obsolete_file_path_list=obsolete_file_path_list)
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            obsolete_file_path_list=obsolete_file_path_list)
 
         if directory_path is None:
             self.directory_path = str()
@@ -1346,20 +1460,29 @@ class RunnableStepMove(RunnableStep):
     """The C{RunnableStepMove} represents a step in a C{Runnable} class.
 
     Attributes:
-    @ivar obsolete_file_path_list: Python C{list} of file paths that can be removed
-        after successfully completing this C{RunnableStep}
-    @type obsolete_file_path_list: list[str | unicode]
     @ivar source_path: Source path
     @type source_path: str | unicode
     @ivar target_path: Target path
     @type target_path: str | unicode
     """
 
-    def __init__(self, name,
-                 program=None, options=None, arguments=None, sub_command=None,
-                 stdout_path=None, stderr_path=None, dependencies=None, hold=None,
-                 submit=True, process_identifier=None, process_name=None,
-                 obsolete_file_path_list=None, source_path=None, target_path=None):
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdout_path=None,
+            stderr_path=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            obsolete_file_path_list=None,
+            source_path=None,
+            target_path=None):
         """Initialise a C{RunnableStepMove} object.
 
         @param name: Name
@@ -1400,10 +1523,19 @@ class RunnableStepMove(RunnableStep):
         """
 
         super(RunnableStepMove, self).__init__(
-                name=name, program=program, options=options, arguments=arguments, sub_command=sub_command,
-                stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold, submit=submit,
-                process_identifier=process_identifier, process_name=process_name,
-                obsolete_file_path_list=obsolete_file_path_list)
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            obsolete_file_path_list=obsolete_file_path_list)
 
         if source_path is None:
             self.source_path = str()
@@ -1442,18 +1574,26 @@ class RunnableStepSleep(RunnableStep):
     """The C{RunnableStepSleep} represents a step in a C{Runnable} class.
 
     Attributes:
-    @ivar obsolete_file_path_list: Python C{list} of file paths that can be removed
-        after successfully completing this C{RunnableStep}
-    @type obsolete_file_path_list: list[str | unicode]
     @ivar sleep_time: Sleep time in seconds
     @type sleep_time: float
     """
 
-    def __init__(self, name,
-                 program=None, options=None, arguments=None, sub_command=None,
-                 stdout_path=None, stderr_path=None, dependencies=None, hold=None,
-                 submit=True, process_identifier=None, process_name=None,
-                 obsolete_file_path_list=None, sleep_time=None):
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdout_path=None,
+            stderr_path=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            obsolete_file_path_list=None,
+            sleep_time=None):
         """Initialise a C{RunnableStepSleep} object.
 
         @param name: Name
@@ -1492,10 +1632,19 @@ class RunnableStepSleep(RunnableStep):
         """
 
         super(RunnableStepSleep, self).__init__(
-                name=name, program=program, options=options, arguments=arguments, sub_command=sub_command,
-                stdout_path=stdout_path, stderr_path=stderr_path, dependencies=dependencies, hold=hold, submit=submit,
-                process_identifier=process_identifier, process_name=process_name,
-                obsolete_file_path_list=obsolete_file_path_list)
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            obsolete_file_path_list=obsolete_file_path_list)
 
         if sleep_time is None:
             self.sleep_time = float()
