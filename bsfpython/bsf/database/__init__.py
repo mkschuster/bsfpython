@@ -38,7 +38,9 @@ class DatabaseConnection(object):
     @type connection: sqlite3.Connection
     """
 
-    def __init__(self, file_path):
+    def __init__(
+            self,
+            file_path):
         """Initialise a C{DatabaseConnection} object and connect to the sqlite3 database behind.
 
         @param file_path: File path
@@ -84,8 +86,13 @@ class DatabaseAdaptor(object):
     @type connection: sqlite3.Connection
     """
 
-    def __init__(self, database_connection, table_name=None, column_definition=None, table_constraint=None,
-                 connection=None):
+    def __init__(
+            self,
+            database_connection,
+            table_name=None,
+            column_definition=None,
+            table_constraint=None,
+            connection=None):
         """Initialise a C{DatabaseAdaptor} object.
 
         @param database_connection: C{DatabaseConnection}
@@ -93,7 +100,7 @@ class DatabaseAdaptor(object):
         @param table_name: SQL database table name
         @type table_name: str
         @param column_definition: Python C{list} of Python C{list} objects with
-            Python C{str} (SQL column name) and Pyton C{str} (SQL column constraint) objects.
+            Python C{str} (SQL column name) and Python C{str} (SQL column constraint) objects.
         @type column_definition: list
         @param table_constraint: SQL table constraint expression
         @type table_constraint: list
@@ -373,7 +380,11 @@ class JobSubmission(object):
     @type command: str
     """
 
-    def __init__(self, executable_id=0, name=None, command=None):
+    def __init__(
+            self,
+            executable_id=0,
+            name=None,
+            command=None):
         """Initialise a C{JobSubmission} object.
 
         @param executable_id: Primary key
@@ -393,7 +404,9 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
     """The C{JobSubmissionAdaptor} class provides database access for the C{JobSubmission} class.
     """
 
-    def __init__(self, database_connection):
+    def __init__(
+            self,
+            database_connection):
         """Initialise a C{JobSubmissionAdaptor} object.
 
         @param database_connection: C{DatabaseConnection}
@@ -409,7 +422,7 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
                 # Name
                 ['name', 'TEXT UNIQUE'],
                 # Command as submitted into the DRMS
-                ['command', 'TEXT']
+                ['command', 'TEXT'],
             ])
 
     def _objects_from_statement(self, statement, parameters=None):
@@ -550,16 +563,45 @@ class ProcessSLURM(object):
     @type average_disk_write: str
     """
 
-    def __init__(self, process_slurm_id=None, job_id=None, job_name=None, partition=None,
-                 max_vm_size=None, max_vm_size_node=None, max_vm_size_task=None, average_vm_size=None,
-                 max_rss=None, max_rss_node=None, max_rss_task=None, average_rss=None,
-                 max_pages=None, max_pages_node=None, max_pages_task=None, average_pages=None,
-                 min_cpu=None, min_cpu_node=None, min_cpu_task=None, average_cpu=None,
-                 number_tasks=None, allocated_cpus=None, elapsed=None, state=None, exit_code=None,
-                 average_cpu_frequency=None, requested_cpu_frequency=None, requested_memory=None,
-                 consumed_energy=None,
-                 max_disk_read=None, max_disk_read_node=None, max_disk_read_task=None, average_disk_read=None,
-                 max_disk_write=None, max_disk_write_node=None, max_disk_write_task=None, average_disk_write=None):
+    def __init__(
+            self,
+            process_slurm_id=None,
+            job_id=None,
+            job_name=None,
+            partition=None,
+            max_vm_size=None,
+            max_vm_size_node=None,
+            max_vm_size_task=None,
+            average_vm_size=None,
+            max_rss=None,
+            max_rss_node=None,
+            max_rss_task=None,
+            average_rss=None,
+            max_pages=None,
+            max_pages_node=None,
+            max_pages_task=None,
+            average_pages=None,
+            min_cpu=None,
+            min_cpu_node=None,
+            min_cpu_task=None,
+            average_cpu=None,
+            number_tasks=None,
+            allocated_cpus=None,
+            elapsed=None,
+            state=None,
+            exit_code=None,
+            average_cpu_frequency=None,
+            requested_cpu_frequency=None,
+            requested_memory=None,
+            consumed_energy=None,
+            max_disk_read=None,
+            max_disk_read_node=None,
+            max_disk_read_task=None,
+            average_disk_read=None,
+            max_disk_write=None,
+            max_disk_write_node=None,
+            max_disk_write_task=None,
+            average_disk_write=None):
         """Initialise a ProcessSLURM object.
 
         @param process_slurm_id:
@@ -685,7 +727,9 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
     The SQL column names result from SLURM command sacct --parsable --long
     """
 
-    def __init__(self, database_connection):
+    def __init__(
+            self,
+            database_connection):
         """Initialise a ProcessSLURMAdaptor object.
 
         @param database_connection: C{DatabaseConnection}
@@ -809,7 +853,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 ['max_disk_write_task', 'TEXT'],
                 # AveDiskWrite
                 # Average number of bytes written by all tasks in job.
-                ['average_disk_write', 'TEXT']
+                ['average_disk_write', 'TEXT'],
             ])
 
     def _objects_from_statement(self, statement, parameters=None):
@@ -951,11 +995,36 @@ class ProcessSGE(object):
     @type arid: str
     """
 
-    def __init__(self, process_sge_id=None, qname=None, hostname=None, sge_group=None, owner=None, job_name=None,
-                 job_number=None, account=None, priority=None, submission_time=None, start_date=None, end_time=None,
-                 failed=None, exit_status=None, ru_wallclock=None, project=None, department=None, granted_pe=None,
-                 slots=None, task_number=None, cpu=None, mem=None, io=None, category=None, iow=None, pe_taskid=None,
-                 maxvmem=None, arid=None):
+    def __init__(
+            self,
+            process_sge_id=None,
+            qname=None,
+            hostname=None,
+            sge_group=None,
+            owner=None,
+            job_name=None,
+            job_number=None,
+            account=None,
+            priority=None,
+            submission_time=None,
+            start_date=None,
+            end_time=None,
+            failed=None,
+            exit_status=None,
+            ru_wallclock=None,
+            project=None,
+            department=None,
+            granted_pe=None,
+            slots=None,
+            task_number=None,
+            cpu=None,
+            mem=None,
+            io=None,
+            category=None,
+            iow=None,
+            pe_taskid=None,
+            maxvmem=None,
+            arid=None):
         """Initialise a ProcessSGE object.
 
         @param process_sge_id: Primary key
@@ -1227,7 +1296,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
                 # arid
                 # Advance reservation identifier. If the job used the resources of an advance reservation,
                 # then this field contains a positive integer identifier; otherwise the value is "0" .
-                ['arid', 'TEXT']
+                ['arid', 'TEXT'],
             ])
 
     def _objects_from_statement(self, statement, parameters=None):
