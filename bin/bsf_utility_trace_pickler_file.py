@@ -30,16 +30,14 @@
 from argparse import ArgumentParser
 
 from bsf import Runnable
-from bsf.process import Executable
+from bsf.process import RunnableStep
 
 argument_parser = ArgumentParser(
     description='Trace a pickled BSF Runnable.')
 
 argument_parser.add_argument(
-    '--pickler-path',
-    dest='pickler_path',
-    help='file path to a pickled Runnable object',
-    required=True)
+    'pickler_path',
+    help='file path to a pickled Runnable object')
 
 arguments = argument_parser.parse_args()
 
@@ -47,11 +45,6 @@ runnable = Runnable.from_pickler_path(file_path=arguments.pickler_path)
 
 print runnable.trace(level=1)
 
-keys = runnable.executable_dict.keys()
-keys.sort()
-
-for key in keys:
-    executable = runnable.executable_dict[key]
-    assert isinstance(executable, Executable)
-    print 'Executable key:     {}'.format(key)
-    print 'Executable command: {}'.format(executable.command_str())
+for runnable_step in runnable.runnable_step_list:
+    assert isinstance(runnable_step, RunnableStep)
+    print 'RunnableStep command: {}'.format(runnable_step.command_str())

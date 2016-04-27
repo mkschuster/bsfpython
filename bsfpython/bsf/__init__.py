@@ -28,7 +28,6 @@ Reference: http://www.biomedical-sequencing.at/
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import datetime
 import errno
 import importlib
 import os
@@ -116,12 +115,25 @@ class Analysis(object):
 
         return analysis
 
-    def __init__(self, configuration=None,
-                 project_name=None, genome_version=None,
-                 cache_directory=None, input_directory=None, output_directory=None,
-                 project_directory=None, genome_directory=None,
-                 sas_file=None, sas_prefix=None, e_mail=None, debug=0, drms_list=None,
-                 runnable_dict=None, collection=None, comparisons=None, samples=None):
+    def __init__(
+            self,
+            configuration=None,
+            project_name=None,
+            genome_version=None,
+            cache_directory=None,
+            input_directory=None,
+            output_directory=None,
+            project_directory=None,
+            genome_directory=None,
+            sas_file=None,
+            sas_prefix=None,
+            e_mail=None,
+            debug=0,
+            drms_list=None,
+            runnable_dict=None,
+            collection=None,
+            comparisons=None,
+            samples=None):
         """Initialise an C{Analysis} object.
 
         @param configuration: C{Configuration}
@@ -958,10 +970,25 @@ class DRMS(object):
 
         return drms
 
-    def __init__(self, name, working_directory, implementation=None, memory_free_mem=None, memory_free_swap=None,
-                 memory_free_virtual=None, memory_limit_hard=None, memory_limit_soft=None,
-                 node_list_exclude=None, node_list_include=None, time_limit=None,
-                 parallel_environment=None, queue=None, threads=1, hold=None, is_script=False, executables=None):
+    def __init__(
+            self,
+            name,
+            working_directory,
+            implementation=None,
+            memory_free_mem=None,
+            memory_free_swap=None,
+            memory_free_virtual=None,
+            memory_limit_hard=None,
+            memory_limit_soft=None,
+            node_list_exclude=None,
+            node_list_include=None,
+            time_limit=None,
+            parallel_environment=None,
+            queue=None,
+            threads=1,
+            hold=None,
+            is_script=False,
+            executables=None):
         """Initialise a C{DRMS} object.
 
         @param name: Name
@@ -1284,8 +1311,6 @@ class Runnable(object):
     @ivar code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
         C{Executable} objects via the I{Runner} script.
     @type code_module: str
-    @ivar executable_dict: Python C{dict} of Python C{str} (C{Executable.name}) key data and C{Executable} value data
-    @type executable_dict: dict[bsf.process.Executable.name, bsf.process.Executable]
     @ivar cache_directory: Cache directory
     @type cache_directory: str | unicode
     @ivar cache_path_dict: Python C{dict} of Python C{str} (name) key and
@@ -1311,7 +1336,6 @@ class Runnable(object):
             cache_directory=None,
             cache_path_dict=None,
             file_path_dict=None,
-            executable_dict=None,
             runnable_step_list=None,
             debug=0):
         """Initialise a C{Runnable} object.
@@ -1331,9 +1355,6 @@ class Runnable(object):
         @param file_path_dict: Python C{dict} of Python C{str} (name) key data and
             Python C{str} (file_path) value data
         @type file_path_dict: dict[bsf.process.Executable.name, bsf.process.Executable]
-        @param executable_dict: Python C{dict} of Python C{str} (C{Executable.name}) key data and
-            C{Executable} value data
-        @type executable_dict: dict[str, str | unicode]
         @param runnable_step_list: Python C{list} of C{RunnableStep} objects
         @type runnable_step_list: list[bsf.process.RunnableStep]
         @param debug: Integer debugging level
@@ -1362,11 +1383,6 @@ class Runnable(object):
             self.file_path_dict = dict()
         else:
             self.file_path_dict = file_path_dict
-
-        if executable_dict is None:
-            self.executable_dict = dict()
-        else:
-            self.executable_dict = executable_dict
 
         if runnable_step_list is None:
             self.runnable_step_list = list()
@@ -1399,11 +1415,10 @@ class Runnable(object):
         output += '{}  cache_directory: {!r}\n'.format(indent, self.cache_directory)
         output += '{}  cache_path_dict: {!r}\n'.format(indent, self.cache_path_dict)
         output += '{}  file_path_dict: {!r}\n'.format(indent, self.file_path_dict)
-        output += '{}  executable_dict: {!r}\n'.format(indent, self.executable_dict)
         output += '{}  runnable_step_list: {!r}\n'.format(indent, self.runnable_step_list)
         output += '{}  debug: {!r}\n'.format(indent, self.debug)
 
-        output += '{}  Python dict of Python str (file path) objects:\n'.format(indent)
+        output += '{}  Python dict of Python str (cache path) objects:\n'.format(indent)
         keys = self.cache_path_dict.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
         for key in keys:
@@ -1417,42 +1432,12 @@ class Runnable(object):
             assert isinstance(key, str)
             output += '{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.file_path_dict[key])
 
-        output += '{}  Python dict of Executable objects:\n'.format(indent)
-        keys = self.executable_dict.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
-        for key in keys:
-            assert isinstance(key, str)
-            output += '{}    Key: {!r} Executable: {!r}\n'.format(indent, key, self.executable_dict[key])
-            executable = self.executable_dict[key]
-            assert isinstance(executable, Executable)
-            output += executable.trace(level=level + 2)
-
         output += '{}  Python list of RunnableStep objects:\n'.format(indent)
         for runnable_step in self.runnable_step_list:
             assert isinstance(runnable_step, RunnableStep)
             output += runnable_step.trace(level=level + 1)
 
         return output
-
-    def add_executable(self, executable):
-        """Add an C{Executable}.
-
-        @param executable: C{Executable}
-        @type executable: bsf.process.Executable
-        @return: C{Executable}
-        @rtype: bsf.process.Executable
-        @raise Exception: An C{Executable.name} already exists in the C{Runnable}
-        """
-
-        assert isinstance(executable, Executable)
-
-        if executable.name in self.executable_dict:
-            raise Exception("An Executable object with name {!r} already exists in Runnable object {!r}.".
-                            format(executable.name, self.name))
-        else:
-            self.executable_dict[executable.name] = executable
-
-        return executable
 
     def add_runnable_step(self, runnable_step=None):
         """Convenience method to facilitate initialising, adding and retuning a C{RunnableStep}.
@@ -1471,29 +1456,6 @@ class Runnable(object):
         self.runnable_step_list.append(runnable_step)
 
         return runnable_step
-
-    def run_executable(self, name):
-        """Run an C{Executable} defined in the C{Runnable} object.
-
-        @param name: C{Executable.name}
-        @type name: str
-        @return:
-        @rtype:
-        @raise Exception: Child process failed with return code or received a signal
-        """
-
-        executable = self.executable_dict[name]
-        assert isinstance(executable, Executable)
-        child_return_code = executable.run()
-
-        if child_return_code > 0:
-            raise Exception('[{}] Child process {!r} failed with return code {}'.
-                            format(datetime.datetime.now().isoformat(), executable.name, +child_return_code))
-        elif child_return_code < 0:
-            raise Exception('[{}] Child process {!r} received signal {}.'.
-                            format(datetime.datetime.now().isoformat(), executable.name, -child_return_code))
-        else:
-            return
 
     @property
     def pickler_path(self):
