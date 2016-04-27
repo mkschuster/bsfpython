@@ -84,7 +84,7 @@ class AnnotationSheet(object):
     _test_methods = dict()
 
     @classmethod
-    def check_column(cls, row_number, row_dict, column_name, require_column=True, require_value=True):
+    def check_column_value(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
         """Check for a column name and return its associated value, if any.
 
         @param row_number: Row number for warning messages
@@ -95,7 +95,7 @@ class AnnotationSheet(object):
         @type column_name: str
         @param require_column: Require the column_name to be defined in the row_dict
         @type require_column: bool
-        @param require_value: Require a value
+        @param require_value: Require a value, which also implies requiring the column_name
         @type require_value: bool
         @return: Python C{tuple} of Python C{str} (warning message) and Python C{str} (column value)
         @rtype: (str, str)
@@ -104,7 +104,7 @@ class AnnotationSheet(object):
         message = str()
 
         if column_name not in row_dict:
-            if require_column:
+            if require_column or require_value:
                 message += 'Column name {!r} not in dict for row {}.\n'.format(column_name, row_number)
             return message, None
 
@@ -116,11 +116,11 @@ class AnnotationSheet(object):
             return message, None
 
     @classmethod
-    def check_alphanumeric(cls, row_number, row_dict, column_name):
+    def _check_alphanumeric(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
         """Validate a particular column value as I{alphanumeric}.
 
-        Check that the particular column name key exists in the row dictionary and that
-        its associated value contains only alphanumeric characters.
+        If the particular column name key exists in the row dictionary and if it has
+        an associated value, it must contain only alphanumeric characters.
 
         @param row_number: Row number for warning messages
         @type row_number: int
@@ -128,13 +128,22 @@ class AnnotationSheet(object):
         @type row_dict: dict[str, str | unicode]
         @param column_name: Column name
         @type column_name: str
+        @param require_column: Require the column_name to be defined in the row_dict
+        @type require_column: bool
+        @param require_value: Require a value, which also implies requiring the column_name.
+        @type require_value: bool
         @return: Warning messages
         @rtype: str
         """
 
-        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
+        messages, column_value = cls.check_column_value(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=require_column,
+            require_value=require_value)
 
-        if column_value:
+        if column_value is not None:
             match = re.search(pattern=cls._regular_expression_non_alpha, string=row_dict[column_name])
             if match:
                 messages += 'Column {!r} in row {} contains a value {!r} with non-alphanumeric characters.\n'. \
@@ -143,11 +152,110 @@ class AnnotationSheet(object):
         return messages
 
     @classmethod
+    def check_alphanumeric(cls, row_number, row_dict, column_name):
+        """Validate a particular column value as I{alphanumeric}.
+
+        Neither the column nor the value needs existing.
+
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
+        """
+        return cls._check_alphanumeric(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name)
+
+    @classmethod
+    def check_alphanumeric_column(cls, row_number, row_dict, column_name):
+        """Validate a particular column value as I{alphanumeric}.
+
+        The column, but not the value need existing.
+
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
+        """
+        return cls._check_alphanumeric(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=True,
+            require_value=False)
+
+    @classmethod
+    def check_alphanumeric_value(cls, row_number, row_dict, column_name):
+        """Validate a particular column value as I{alphanumeric}.
+
+        Both, the column and value need existing.
+
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
+        """
+        return cls._check_alphanumeric(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=True,
+            require_value=True)
+
+    @classmethod
+    def _check_numeric(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
+        """Validate a particular column value as I{numeric}.
+
+        If the particular column name key exists in the row dictionary and if it has
+        an associated value, it must contain only numeric characters.
+
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param column_name: Column name
+        @type column_name: str
+        @param require_column: Require the column_name to be defined in the row_dict
+        @type require_column: bool
+        @param require_value: Require a value, which also implies requiring the column_name.
+        @type require_value: bool
+        @return: Warning messages
+        @rtype: str
+        """
+
+        messages, column_value = cls.check_column_value(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=require_column,
+            require_value=require_value)
+
+        if column_value is not None:
+            match = re.search(pattern=cls._regular_expression_non_numeric, string=row_dict[column_name])
+            if match:
+                messages += 'Column {!r} in row {} contains a value {!r} with non-numeric characters.\n'. \
+                    format(column_name, row_number, row_dict[column_name])
+
+        return messages
+
+    @classmethod
     def check_numeric(cls, row_number, row_dict, column_name):
         """Validate a particular column value as I{numeric}.
 
-        Check that the particular column name key exists in the row dictionary and that
-        its associated value contains only numeric characters.
+        Neither the column nor the value needs existing.
 
         @param row_number: Row number for warning messages
         @type row_number: int
@@ -159,19 +267,65 @@ class AnnotationSheet(object):
         @rtype: str
         """
 
-        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
-
-        if column_value:
-            match = re.search(pattern=cls._regular_expression_non_numeric, string=row_dict[column_name])
-            if match:
-                messages += 'Column {!r} in row {} contains a value {!r} with non-numeric characters.\n'. \
-                    format(column_name, row_number, row_dict[column_name])
-
-        return messages
+        return cls._check_numeric(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=False,
+            require_value=False)
 
     @classmethod
-    def check_sequence(cls, row_number, row_dict, column_name, require_column=True, require_value=True):
+    def check_numeric_column(cls, row_number, row_dict, column_name):
+        """Validate a particular column value as I{numeric}.
+
+        The column, but not the value need existing.
+
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
+        """
+
+        return cls._check_numeric(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=True,
+            require_value=False)
+
+    @classmethod
+    def check_numeric_value(cls, row_number, row_dict, column_name):
+        """Validate a particular column value as I{numeric}.
+
+        Both, the column and value need existing.
+
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
+        """
+
+        return cls._check_numeric(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=True,
+            require_value=True)
+
+    @classmethod
+    def _check_sequence(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
         """Validate a particular column value as I{sequence}.
+
+        If the particular column name key exists in the row dictionary and if it has
+        an associated value, it must contain only valid sequence characters.
 
         @param row_number: Row number for warning messages
         @type row_number: int
@@ -186,14 +340,14 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-        messages, column_value = cls.check_column(
-                row_number=row_number,
-                row_dict=row_dict,
-                column_name=column_name,
-                require_column=require_column,
-                require_value=require_value)
+        messages, column_value = cls.check_column_value(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=require_column,
+            require_value=require_value)
 
-        if column_value:
+        if column_value is not None:
             match = re.search(pattern=cls._regular_expression_non_sequence, string=row_dict[column_name])
             if match:
                 messages += 'Field {!r} in row {} contains a sequence {!r} with illegal characters.\n'. \
@@ -202,29 +356,11 @@ class AnnotationSheet(object):
         return messages
 
     @classmethod
-    def check_sequence_mandatory(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{mandatory sequence}.
-
-        @param row_number: Row number for warning messages
-        @type row_number: int
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
-        @param column_name: Column name
-        @type column_name: str
-        @return: Warning messages
-        @rtype: str
-        """
-        return cls.check_sequence(
-                row_number=row_number,
-                row_dict=row_dict,
-                column_name=column_name,
-                require_column=True,
-                require_value=True)
-
-    @classmethod
-    def check_sequence_optional(cls, row_number, row_dict, column_name):
+    def check_sequence(cls, row_number, row_dict, column_name):
         """Validate a particular column value as I{optional sequence}.
 
+        Neither the column nor the value needs existing.
+
         @param row_number: Row number for warning messages
         @type row_number: int
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
@@ -234,12 +370,56 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-        return cls.check_sequence(
-                row_number=row_number,
-                row_dict=row_dict,
-                column_name=column_name,
-                require_column=True,
-                require_value=False)
+        return cls._check_sequence(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=False,
+            require_value=False)
+
+    @classmethod
+    def check_sequence_column(cls, row_number, row_dict, column_name):
+        """Validate a particular column value as I{sequence}.
+
+        The column, but not the value need existing.
+
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
+        """
+        return cls._check_sequence(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=True,
+            require_value=False)
+
+    @classmethod
+    def check_sequence_value(cls, row_number, row_dict, column_name):
+        """Validate a particular column value as I{sequence}.
+
+        Both, the column and value need existing.
+
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
+        """
+        return cls._check_sequence(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=True,
+            require_value=True)
 
     @classmethod
     def check_underscore_leading(cls, row_number, row_dict, column_name):
@@ -258,9 +438,12 @@ class AnnotationSheet(object):
         @rtype: str
         """
 
-        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
+        messages, column_value = cls.check_column_value(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name)
 
-        if column_value:
+        if column_value is not None:
             if column_value[:1] == '_':
                 messages += 'Column {!r} in row {} contains a value {!r} with a leading underscore character.\n'. \
                     format(column_name, row_number, row_dict[column_name])
@@ -284,9 +467,12 @@ class AnnotationSheet(object):
         @rtype: str
         """
 
-        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
+        messages, column_value = cls.check_column_value(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name)
 
-        if column_value:
+        if column_value is not None:
             if column_value[-1:] == '_':
                 messages += 'Column {!r} in row {} contains a value {!r} with a trailing underscore character.\n'. \
                     format(column_name, row_number, row_dict[column_name])
@@ -310,9 +496,12 @@ class AnnotationSheet(object):
         @rtype: str
         """
 
-        messages, column_value = cls.check_column(row_number=row_number, row_dict=row_dict, column_name=column_name)
+        messages, column_value = cls.check_column_value(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name)
 
-        if column_value:
+        if column_value is not None:
             match = re.search(pattern=cls._regular_expression_multiple_underscore, string=row_dict[column_name])
             if match:
                 messages += 'Column {!r} in row {} contains a value {!r} with multiple underscore characters.\n'. \
@@ -348,8 +537,15 @@ class AnnotationSheet(object):
 
         return annotation_sheet
 
-    def __init__(self, file_path=None, file_type=None, name=None, header=None, field_names=None, test_methods=None,
-                 row_dicts=None):
+    def __init__(
+            self,
+            file_path=None,
+            file_type=None,
+            name=None,
+            header=None,
+            field_names=None,
+            test_methods=None,
+            row_dicts=None):
         """Initialise an C{AnnotationSheet} object.
 
         @param file_path: File path
@@ -444,9 +640,9 @@ class AnnotationSheet(object):
 
         self._csv_reader_file = open(name=self.file_path, mode='rb')
         self._csv_reader_object = csv.DictReader(
-                f=self._csv_reader_file,
-                fieldnames=csv_field_names,
-                dialect=csv_file_type)
+            f=self._csv_reader_file,
+            fieldnames=csv_field_names,
+            dialect=csv_file_type)
 
         # Automatically set the field names from the DictReader,
         # if the field_names list is empty and if possible.
@@ -488,9 +684,9 @@ class AnnotationSheet(object):
 
         self._csv_writer_file = open(name=self.file_path, mode='wb')
         self._csv_writer_object = csv.DictWriter(
-                f=self._csv_writer_file,
-                fieldnames=self.field_names,
-                dialect=csv_file_type)
+            f=self._csv_writer_file,
+            fieldnames=self.field_names,
+            dialect=csv_file_type)
 
         if self.header:
             self._csv_writer_object.writeheader()
@@ -520,8 +716,8 @@ class AnnotationSheet(object):
         """
 
         warnings.warn(
-                'Sorting of AnnotationSheet objects has to implemented in the sub-class.',
-                UserWarning)
+            'Sorting of AnnotationSheet objects has to implemented in the sub-class.',
+            UserWarning)
 
     def validate(self):
         """Validate an C{AnnotationSheet}.
@@ -540,9 +736,9 @@ class AnnotationSheet(object):
                     for class_method_pointer in self.test_methods[field_name]:
                         # Only validate fields, for which instructions exist in the test_methods dict.
                         messages += class_method_pointer(
-                                row_number=row_number,
-                                row_dict=row_dict,
-                                column_name=field_name
+                            row_number=row_number,
+                            row_dict=row_dict,
+                            column_name=field_name
                         )
 
         return messages
@@ -617,33 +813,37 @@ class LibraryAnnotationSheet(AnnotationSheet):
         'lane',  # Lane number
         'barcode_sequence_1',  # Index read sequence 1
         'barcode_sequence_2',  # Index read sequence 2
+        # 'barcode_mismatches',  # Number of mismatches allowed in index decoding
         'sample_name',  # Sample name (alphanumeric including '_' characters)
         'library_name',  # Library name (alphanumeric including '_' characters)
         'library_size',  # Library size (numeric)
     ]
 
     _test_methods = dict(
-            lane=[
-                AnnotationSheet.check_alphanumeric
-            ],
-            barcode_sequence_1=[
-                AnnotationSheet.check_sequence_optional
-            ],
-            barcode_sequence_2=[
-                AnnotationSheet.check_sequence_optional
-            ],
-            sample_name=[
-                AnnotationSheet.check_alphanumeric,
-                AnnotationSheet.check_underscore_leading,
-                AnnotationSheet.check_underscore_trailing,
-                AnnotationSheet.check_underscore_multiple
-            ],
-            library_name=[
-                AnnotationSheet.check_alphanumeric,
-                AnnotationSheet.check_underscore_leading,
-                AnnotationSheet.check_underscore_trailing,
-                AnnotationSheet.check_underscore_multiple
-            ]
+        lane=[
+            AnnotationSheet.check_alphanumeric_value,
+        ],
+        barcode_sequence_1=[
+            AnnotationSheet.check_sequence_value,
+        ],
+        barcode_sequence_2=[
+            AnnotationSheet.check_sequence,
+        ],
+        barcode_mismatches=[
+            AnnotationSheet.check_numeric,
+        ],
+        sample_name=[
+            AnnotationSheet.check_alphanumeric_value,
+            AnnotationSheet.check_underscore_leading,
+            AnnotationSheet.check_underscore_trailing,
+            AnnotationSheet.check_underscore_multiple,
+        ],
+        library_name=[
+            AnnotationSheet.check_alphanumeric_value,
+            AnnotationSheet.check_underscore_leading,
+            AnnotationSheet.check_underscore_trailing,
+            AnnotationSheet.check_underscore_multiple,
+        ],
     )
 
     def validate(self, lanes=8):
@@ -686,10 +886,13 @@ class LibraryAnnotationSheet(AnnotationSheet):
 
             if row_dict['lane'] in lane_index:
                 barcode_dict, sample_dict, library_name = lane_index[row_dict['lane']]
+                # barcode_dict, sample_dict, library_name, barcode_mismatches = lane_index[row_dict['lane']]
             else:
                 barcode_dict = dict()
                 sample_dict = dict()
-                library_name = str(row_dict['library_name'])
+                library_name = row_dict['library_name']
+                # barcode_mismatches = row_dict['barcode_mismatches']
+                # lane_index[row_dict['lane']] = (barcode_dict, sample_dict, library_name, barcode_mismatches)
                 lane_index[row_dict['lane']] = (barcode_dict, sample_dict, library_name)
 
             barcode_sequence = str()
@@ -713,15 +916,22 @@ class LibraryAnnotationSheet(AnnotationSheet):
             sample_name = str()
             sample_name += row_dict['sample_name']
 
+            # Check for duplicate sample names.
             if sample_name in sample_dict:
                 messages += 'Sample name {!r} from row {} duplicated in row {}.\n'. \
                     format(sample_name, sample_dict[sample_name], row_number)
             else:
                 sample_dict[sample_name] = row_number
 
+            # Check for identical library names.
             if library_name != row_dict['library_name']:
                 messages += 'Library name {!r} in row {} does not match previous name {!r}.\n'. \
                     format(row_dict['library_name'], row_number, library_name)
+
+                # Check for identical mismatches.
+                # if barcode_mismatches != row_dict['barcode_mismatches']:
+                #     messages += 'Barcode mismatches {!r} in row {} does not match previous mismatches [!r].\n'. \
+                #         format(row_dict['barcode_mismatches'], row_number, barcode_mismatches)
 
         for lane_number in range(0 + 1, lanes + 1):
             lane_string = str(lane_number)
@@ -733,7 +943,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
 
             barcode_dict, sample_dict, library_name = lane_index[lane_string]
 
-            # Check that all or none of the rows has barcode sequence 1 or 2 populated.
+            # Check that all or none of the rows have index sequence 1 or 2 populated.
             no_index_1 = 0
             no_index_2 = 0
             for key in barcode_dict.keys():
@@ -796,30 +1006,30 @@ class SampleAnnotationSheet(AnnotationSheet):
     _test_methods = dict({
         # File Type
         'ProcessedRunFolder Name': [
-            AnnotationSheet.check_alphanumeric
+            AnnotationSheet.check_alphanumeric,
         ],
         'Project Name': [
-            AnnotationSheet.check_alphanumeric
+            AnnotationSheet.check_alphanumeric,
         ],
         'Project Size': [
-            AnnotationSheet.check_numeric
+            AnnotationSheet.check_numeric,
         ],
         'Sample Name': [
-            AnnotationSheet.check_alphanumeric
+            AnnotationSheet.check_alphanumeric,
         ],
         'PairedReads Barcode1': [
-            AnnotationSheet.check_sequence_optional
+            AnnotationSheet.check_sequence,
         ],
         'PairedReads Barcode2': [
-            AnnotationSheet.check_sequence_optional
+            AnnotationSheet.check_sequence,
         ],
         # PairedReads ReadGroup
         'Reads1 Name': [
-            AnnotationSheet.check_alphanumeric
+            AnnotationSheet.check_alphanumeric,
         ],
         # Reads1 File
         'Reads2 Name': [
-            AnnotationSheet.check_alphanumeric
+            AnnotationSheet.check_alphanumeric,
         ],
         # Reads2 File
     })
@@ -860,33 +1070,33 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     ]
 
     _test_methods = dict(
-            SampleID=[
-                AnnotationSheet.check_alphanumeric
-            ],
-            Tissue=[
-                AnnotationSheet.check_alphanumeric
-            ],
-            Factor=[
-                AnnotationSheet.check_alphanumeric
-            ],
-            Condition=[
-                AnnotationSheet.check_alphanumeric
-            ],
-            Treatment=[
-                AnnotationSheet.check_alphanumeric
-            ],
-            Replicate=[
-                AnnotationSheet.check_numeric
-            ],
-            ControlID=[
-                AnnotationSheet.check_alphanumeric
-            ],
-            PeakCaller=[
-                AnnotationSheet.check_alphanumeric
-            ],
-            PeakFormat=[
-                AnnotationSheet.check_alphanumeric
-            ]
+        SampleID=[
+            AnnotationSheet.check_alphanumeric,
+        ],
+        Tissue=[
+            AnnotationSheet.check_alphanumeric,
+        ],
+        Factor=[
+            AnnotationSheet.check_alphanumeric,
+        ],
+        Condition=[
+            AnnotationSheet.check_alphanumeric,
+        ],
+        Treatment=[
+            AnnotationSheet.check_alphanumeric,
+        ],
+        Replicate=[
+            AnnotationSheet.check_numeric,
+        ],
+        ControlID=[
+            AnnotationSheet.check_alphanumeric,
+        ],
+        PeakCaller=[
+            AnnotationSheet.check_alphanumeric,
+        ],
+        PeakFormat=[
+            AnnotationSheet.check_alphanumeric,
+        ],
     )
 
     def sort(self):
@@ -894,12 +1104,12 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         """
 
         self.row_dicts.sort(
-                cmp=lambda x, y:
-                cmp(x['Tissue'], y['Tissue']) or
-                cmp(x['Factor'], y['Factor']) or
-                cmp(x['Condition'], y['Condition']) or
-                cmp(x['Treatment'], y['Treatment']) or
-                cmp(int(x['Replicate']), int(y['Replicate'])))
+            cmp=lambda x, y:
+            cmp(x['Tissue'], y['Tissue']) or
+            cmp(x['Factor'], y['Factor']) or
+            cmp(x['Condition'], y['Condition']) or
+            cmp(x['Treatment'], y['Treatment']) or
+            cmp(int(x['Replicate']), int(y['Replicate'])))
 
     def write_to_file(self):
         """Write a C{ChIPSeqDiffBindSheet} to a file.
