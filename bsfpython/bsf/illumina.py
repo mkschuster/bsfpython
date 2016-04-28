@@ -402,9 +402,18 @@ class RunInformation(object):
 
         return iri
 
-    def __init__(self, file_path=None, file_type=None, name=None,
-                 run_identifier=None, run_number=None, flow_cell=None, instrument=None, date=None,
-                 reads=None, flow_cell_layout=None):
+    def __init__(
+            self,
+            file_path=None,
+            file_type=None,
+            name=None,
+            run_identifier=None,
+            run_number=None,
+            flow_cell=None,
+            instrument=None,
+            date=None,
+            reads=None,
+            flow_cell_layout=None):
         """Initialise a C{RunInformation} object.
 
         @param file_path: File path
@@ -1148,10 +1157,19 @@ class RunFolder(object):
 
         return irf
 
-    def __init__(self, file_path=None, file_type=None, name=None,
-                 date=None, instrument=None, run=None, flow_cell=None,
-                 run_information=None, run_parameters=None,
-                 image_analysis=None, base_call_analysis=None):
+    def __init__(
+            self,
+            file_path=None,
+            file_type=None,
+            name=None,
+            date=None,
+            instrument=None,
+            run=None,
+            flow_cell=None,
+            run_information=None,
+            run_parameters=None,
+            image_analysis=None,
+            base_call_analysis=None):
         """Initialise a C{RunFolder} object.
 
         @param file_path: File path
@@ -2284,7 +2302,6 @@ class RunFolder(object):
         if rta in '2.7.3':
             file_list.append('ColorMatrixMetricsOut.bin')
             file_list.append('FWHMGridMetricsOut.bin')
-            file_list.append('ImageMetricsOut.bin')
             file_list.append('StaticRunMetricsOut.bin')
 
         if rta not in ('1.18.54', '2.5.2'):
