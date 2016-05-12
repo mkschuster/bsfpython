@@ -33,7 +33,7 @@ import re
 import warnings
 
 from bsf import Analysis, defaults, DRMS
-from bsf.annotation import AnnotationSheet, SampleAnnotationSheet
+from bsf.annotation import AnnotationSheet
 from bsf.data import Collection, ProcessedRunFolder, Sample
 from bsf.executables import Bowtie2, Macs14, Macs2Bdgcmp, Macs2Callpeak, FastQC
 from bsf.process import Executable
@@ -413,7 +413,7 @@ class ChIPSeq(Analysis):
         '0': False, 'no': False, 'false': False, 'off': False}
 
     def _read_comparisons(self, cmp_file):
-        """Read a C{SampleAnnotationSheet} CSV file from disk.
+        """Read a C{AnnotationSheet} CSV file from disk.
 
             - Column headers for CASAVA folders:
                 - Treatment/Control ProcessedRunFolder:
@@ -438,7 +438,7 @@ class ChIPSeq(Analysis):
         if self.debug > 1:
             print '{!r} method _read_comparisons:'.format(self)
 
-        sas = SampleAnnotationSheet.from_file_path(file_path=cmp_file)
+        annotation_sheet = AnnotationSheet.from_file_path(file_path=cmp_file)
 
         # Unfortunately, two passes through the comparison sheet are required.
         # In the first one merge all Sample objects that share the name.
@@ -448,7 +448,7 @@ class ChIPSeq(Analysis):
         sample_dict = dict()
 
         # First pass, merge Sample objects, if they have the same name.
-        for row_dict in sas.row_dicts:
+        for row_dict in annotation_sheet.row_dicts:
             for prefix in ('Control', 'Treatment'):
                 name, samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix=prefix)
                 for o_sample in samples:
@@ -461,7 +461,7 @@ class ChIPSeq(Analysis):
         # Second pass, add all Sample objects mentioned in a comparison.
         level1_dict = dict()
 
-        for row_dict in sas.row_dicts:
+        for row_dict in annotation_sheet.row_dicts:
 
             c_name, c_samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix='Control')
             t_name, t_samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix='Treatment')
@@ -2076,9 +2076,9 @@ class ChIPSeq(Analysis):
                     UserWarning)
                 continue
 
-            sas = SampleAnnotationSheet.from_file_path(file_path=file_path, file_type='excel')
+            annotation_sheet = AnnotationSheet.from_file_path(file_path=file_path, file_type='excel')
 
-            for row_dict in sas.row_dicts:
+            for row_dict in annotation_sheet.row_dicts:
                 suffix = '{}__{}'.format(row_dict['Group1'], row_dict['Group2'])
 
                 output += '<tr>\n'
@@ -2257,7 +2257,7 @@ class RunFastQC(Analysis):
         return
 
     def _read_comparisons(self, cmp_file):
-        """Read a C{SampleAnnotationSheet} CSV file from disk.
+        """Read a C{AnnotationSheet} CSV file from disk.
 
             - Column headers for CASAVA folders:
                 - Treatment/Control ProcessedRunFolder:
@@ -2278,9 +2278,9 @@ class RunFastQC(Analysis):
         @rtype:
         """
 
-        sas = SampleAnnotationSheet.from_file_path(file_path=cmp_file)
+        annotation_sheet = AnnotationSheet.from_file_path(file_path=cmp_file)
 
-        for row_dict in sas.row_dicts:
+        for row_dict in annotation_sheet.row_dicts:
             self.add_sample(sample=self.collection.get_sample_from_row_dict(row_dict=row_dict))
 
         return
@@ -2370,13 +2370,10 @@ class RunFastQC(Analysis):
             # the sample annotation sheet needs re-reading.
 
             # TODO: This is now done in set_configuration.
-            # sas = SampleAnnotationSheet(file_path=sas_file)
-            # sas.open_csv()
+            # annotation_sheet = AnnotationSheet(file_path=sas_file)
             #
-            # for row_dict in sas._csv_reader:
+            # for row_dict in annotation_sheet.row_dicts:
             # self.add_sample(sample=self.collection.get_sample_from_row_dict(row_dict=row_dict))
-            #
-            # sas.close_csv()
 
             pass
 

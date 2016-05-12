@@ -32,7 +32,7 @@ from pickle import Pickler, HIGHEST_PROTOCOL
 import warnings
 
 from bsf import Analysis, defaults, DRMS, Runnable
-from bsf.annotation import AnnotationSheet, SampleAnnotationSheet, ChIPSeqDiffBindSheet
+from bsf.annotation import AnnotationSheet, ChIPSeqDiffBindSheet
 from bsf.data import Collection, Sample
 from bsf.executables import BWA, Macs14
 from bsf.process import Command, Executable, RunnableStep, RunnableStepPicard
@@ -325,7 +325,7 @@ class ChIPSeq(Analysis):
         '0': False, 'no': False, 'false': False, 'off': False}
 
     def _read_comparisons(self, cmp_file):
-        """Read a C{SampleAnnotationSheet} CSV file from disk.
+        """Read a C{AnnotationSheet} CSV file from disk.
 
             - Column headers for CASAVA folders:
                 - Treatment/Control ProcessedRunFolder:
@@ -350,7 +350,7 @@ class ChIPSeq(Analysis):
         if self.debug > 1:
             print '{!r} method _read_comparisons:'.format(self)
 
-        sas = SampleAnnotationSheet.from_file_path(file_path=cmp_file)
+        annotation_sheet = AnnotationSheet.from_file_path(file_path=cmp_file)
 
         # Unfortunately, two passes through the comparison sheet are required.
         # In the first one merge all Sample objects that share the name.
@@ -360,7 +360,7 @@ class ChIPSeq(Analysis):
         sample_dict = dict()
 
         # First pass, merge Sample objects, if they have the same name.
-        for row_dict in sas.row_dicts:
+        for row_dict in annotation_sheet.row_dicts:
             for prefix in ('Control', 'Treatment'):
                 name, samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix=prefix)
                 for o_sample in samples:
@@ -373,7 +373,7 @@ class ChIPSeq(Analysis):
         # Second pass, add all Sample objects mentioned in a comparison.
         level1_dict = dict()
 
-        for row_dict in sas.row_dicts:
+        for row_dict in annotation_sheet.row_dicts:
 
             c_name, c_samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix='Control')
             t_name, t_samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix='Treatment')
