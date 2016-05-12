@@ -29,8 +29,7 @@
 import argparse
 import warnings
 
-from bsf.annotation import LibraryAnnotationSheet
-
+from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
 
 argument_parser = argparse.ArgumentParser(
     description='BSF Python utility script to validate Library Annotation Sheet files.')

@@ -33,7 +33,7 @@ from stat import *
 import warnings
 import weakref
 
-from bsf.annotation import SampleAnnotationSheet
+from bsf.annotation import AnnotationSheet
 
 
 class Reads(object):
@@ -2537,3 +2537,70 @@ class SampleGroup(object):
                         groups[replicate_key].append(paired_reads)
 
         return groups
+
+
+class SampleAnnotationSheet(AnnotationSheet):
+    """The C{SampleAnnotationSheet} class represents a Comma-Separated Value (CSV) table of sample information
+    after running the C{IlluminaToBamTools.BamIndexDecoder} C{Analysis}.
+
+    Attributes:
+    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
+    @type _file_type: str
+    @cvar _header_line: Header line exists
+    @type _header_line: bool
+    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
+    @type _field_names: list[str]
+    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
+        Python C{list} of Python C{function} value data
+    @type _test_methods: dict[str, list[function]]
+    """
+
+    _file_type = 'excel'
+
+    _header_line = True
+
+    _field_names = [
+        'File Type',
+        'ProcessedRunFolder Name',
+        'Project Name',
+        'Project Size',
+        'Sample Name',
+        'PairedReads Index 1',
+        'PairedReads Index 2',
+        'PairedReads ReadGroup',
+        'Reads1 Name',
+        'Reads1 File',
+        'Reads2 Name',
+        'Reads2 File',
+    ]
+
+    _test_methods = dict({
+        # File Type
+        'ProcessedRunFolder Name': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        'Project Name': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        'Project Size': [
+            AnnotationSheet.check_numeric,
+        ],
+        'Sample Name': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        'PairedReads Index 1': [
+            AnnotationSheet.check_sequence,
+        ],
+        'PairedReads Index 2': [
+            AnnotationSheet.check_sequence,
+        ],
+        # PairedReads ReadGroup
+        'Reads1 Name': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        # Reads1 File
+        'Reads2 Name': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        # Reads2 File
+    })

@@ -34,7 +34,7 @@ import warnings
 import weakref
 
 from bsf import Analysis, DRMS, Runnable
-from bsf.annotation import LibraryAnnotationSheet
+from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
 from bsf.data import Reads, PairedReads, Sample
 from bsf.illumina import RunFolder
 from bsf.process import RunnableStep, RunnableStepPicard, RunnableStepMakeDirectory
