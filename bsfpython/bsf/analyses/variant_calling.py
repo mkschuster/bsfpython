@@ -32,7 +32,7 @@ import re
 import warnings
 
 from bsf import Analysis, defaults, DRMS, Runnable
-from bsf.annotation import SampleAnnotationSheet
+from bsf.annotation import AnnotationSheet
 from bsf.data import PairedReads
 from bsf.executables import BWA
 from bsf.process import Command, Executable, RunnableStep, RunnableStepJava, RunnableStepPicard, RunnableStepLink, \
@@ -795,7 +795,7 @@ class VariantCallingGATK(Analysis):
         return
 
     def _read_comparisons(self, comparison_path):
-        """Read a C{SampleAnnotationSheet} CSV file from disk.
+        """Read a C{AnnotationSheet} CSV file from disk.
 
             - Column headers for CASAVA folders:
                 - Treatment/Control ProcessedRunFolder:
@@ -823,9 +823,9 @@ class VariantCallingGATK(Analysis):
             self.add_sample(sample=sample)
 
         if comparison_path:
-            sas = SampleAnnotationSheet.from_file_path(file_path=comparison_path, name='Somatic Comparisons')
+            annotation_sheet = AnnotationSheet.from_file_path(file_path=comparison_path, name='Somatic Comparisons')
 
-            for row_dict in sas.row_dicts:
+            for row_dict in annotation_sheet.row_dicts:
                 key = str()
                 comparison_groups = list()
 
@@ -1177,9 +1177,6 @@ class VariantCallingGATK(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            vc_process_sample_dependencies = list()
-            vc_process_sample_replicates = list()
-
             # Sample.get_all_paired_reads returns a Python dict of
             # Python str key and Python list of Python list objects
             # of PairedReads objects.
@@ -1190,6 +1187,10 @@ class VariantCallingGATK(Analysis):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+
+            vc_process_sample_dependencies = list()
+            vc_process_sample_replicates = list()
+
             for replicate_key in replicate_keys:
                 if not len(replicate_dict[replicate_key]):
                     # Skip replicate keys, which PairedReads objects have all been excluded.
@@ -2311,7 +2312,7 @@ class VariantCallingGATK(Analysis):
                 runnable_step=RunnableStepGATK(
                         name='process_cohort_gatk_genotype_gvcfs',
                         java_temporary_path=file_path_dict_cohort['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
+                        java_heap_maximum='Xmx12G',
                         gatk_classpath=self.classpath_gatk))
         assert isinstance(runnable_step, RunnableStepGATK)
         runnable_step.add_gatk_option(key='analysis_type', value='GenotypeGVCFs')
@@ -2322,6 +2323,7 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
         if self.interval_padding:
             runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+        runnable_step.add_gatk_option(key='num_threads', value=str(drms_process_cohort.threads))
         if self.known_sites_discovery:
             runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
         if len(self.accessory_cohort_gvcfs):
@@ -3003,6 +3005,18 @@ class VariantCallingGATK(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
+            # bsf.data.Sample.get_all_paired_reads returns a Python dict of
+            # Python str key and Python list of Python list objects
+            # of bsf.data.PairedReads objects.
+
+            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
+
+            replicate_keys = replicate_dict.keys()
+            if not len(replicate_keys):
+                # Skip Sample objects, which PairedReads objects have all been excluded.
+                continue
+            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+
             runnable_process_sample = self.runnable_dict[
                 '_'.join((self.drms_name_process_sample, sample.name))]
             assert isinstance(runnable_process_sample, Runnable)
@@ -3086,15 +3100,6 @@ class VariantCallingGATK(Analysis):
             else:
                 output += '<td></td>\n'
             output += '</tr>\n'
-
-            # bsf.data.Sample.get_all_paired_reads returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
-
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
-
-            replicate_keys = replicate_dict.keys()
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
             for replicate_key in replicate_keys:
                 runnable_process_lane = self.runnable_dict[
