@@ -947,15 +947,16 @@ class Tuxedo(Analysis):
 
         # Create one process_cufflinks Executable to process all sub-directories.
 
-        process_cufflinks = drms_process_cufflinks.add_executable(
-            executable=Executable(
-                name=drms_process_cufflinks.name,
-                program='bsf_rnaseq_process_cufflinks.R'))
-        process_cufflinks.dependencies.extend(process_cufflinks_dependencies)
+        if len(process_cufflinks_dependencies):
+            process_cufflinks = drms_process_cufflinks.add_executable(
+                executable=Executable(
+                    name=drms_process_cufflinks.name,
+                    program='bsf_rnaseq_process_cufflinks.R'))
+            process_cufflinks.dependencies.extend(process_cufflinks_dependencies)
 
-        # Set process_cufflinks options.
-        self.set_command_configuration(command=process_cufflinks)
-        # None so far.
+            # Set process_cufflinks options.
+            self.set_command_configuration(command=process_cufflinks)
+            # None so far.
 
         return
 
@@ -1077,7 +1078,7 @@ class Tuxedo(Analysis):
                 per_group_abundances_list = list()
                 per_group_alignments_list = list()
                 # Count samples that remain after removing excluded PairedReads objects.
-                sample_number = 0
+                sample_count = 0
 
                 for sample in group_samples:
                     assert isinstance(sample, Sample)
@@ -1091,7 +1092,7 @@ class Tuxedo(Analysis):
 
                     replicate_keys = replicate_dict.keys()
                     if len(replicate_keys):
-                        sample_number += 1
+                        sample_count += 1
                     else:
                         # Skip Sample objects, which PairedReads objects have all been excluded.
                         continue
@@ -1197,7 +1198,7 @@ class Tuxedo(Analysis):
 
                         cuffdiff_cuffnorm_dependencies.append(executable_run_cuffquant.name)
 
-                if sample_number:
+                if sample_count:
                     cuffdiff_cuffnorm_labels.append(group_name)
                     cuffdiff_cuffnorm_abundances.append(per_group_abundances_list)
                     cuffdiff_cuffnorm_alignments.append(per_group_alignments_list)
