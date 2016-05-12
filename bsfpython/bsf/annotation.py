@@ -994,8 +994,8 @@ class SampleAnnotationSheet(AnnotationSheet):
         'Project Name',
         'Project Size',
         'Sample Name',
-        'PairedReads Barcode1',
-        'PairedReads Barcode2',
+        'PairedReads Index 1',
+        'PairedReads Index 2',
         'PairedReads ReadGroup',
         'Reads1 Name',
         'Reads1 File',
@@ -1017,10 +1017,10 @@ class SampleAnnotationSheet(AnnotationSheet):
         'Sample Name': [
             AnnotationSheet.check_alphanumeric,
         ],
-        'PairedReads Barcode1': [
+        'PairedReads Index 1': [
             AnnotationSheet.check_sequence,
         ],
-        'PairedReads Barcode2': [
+        'PairedReads Index 2': [
             AnnotationSheet.check_sequence,
         ],
         # PairedReads ReadGroup
