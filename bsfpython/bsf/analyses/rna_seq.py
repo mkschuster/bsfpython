@@ -675,9 +675,12 @@ class Tuxedo(Analysis):
             # Python str key and Python list of Python list objects
             # of bsf.data.PairedReads objects.
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
             replicate_keys = replicate_dict.keys()
+            if not len(replicate_keys):
+                # Skip Sample objects, which PairedReads objects have all been excluded.
+                continue
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
             for replicate_key in replicate_keys:
@@ -1071,11 +1074,10 @@ class Tuxedo(Analysis):
             for group_name, group_samples in self.comparisons[comparison_key]:
                 assert isinstance(group_name, str)
                 assert isinstance(group_samples, list)
-                cuffdiff_cuffnorm_labels.append(group_name)
                 per_group_abundances_list = list()
-                cuffdiff_cuffnorm_abundances.append(per_group_abundances_list)
                 per_group_alignments_list = list()
-                cuffdiff_cuffnorm_alignments.append(per_group_alignments_list)
+                # Count samples that remain after removing excluded PairedReads objects.
+                sample_number = 0
 
                 for sample in group_samples:
                     assert isinstance(sample, Sample)
@@ -1083,9 +1085,16 @@ class Tuxedo(Analysis):
                     # Python str comparison_key and Python list of Python list objects
                     # of bsf.data.PairedReads objects.
 
-                    replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+                    replicate_dict = sample.get_all_paired_reads(
+                        replicate_grouping=self.replicate_grouping,
+                        exclude=True)
 
                     replicate_keys = replicate_dict.keys()
+                    if len(replicate_keys):
+                        sample_number += 1
+                    else:
+                        # Skip Sample objects, which PairedReads objects have all been excluded.
+                        continue
                     replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
                     for replicate_key in replicate_keys:
@@ -1187,6 +1196,11 @@ class Tuxedo(Analysis):
                         # Add the Cuffquant Runnable process name to the Cuffdiff and Cuffnorm dependencies list.
 
                         cuffdiff_cuffnorm_dependencies.append(executable_run_cuffquant.name)
+
+                if sample_number:
+                    cuffdiff_cuffnorm_labels.append(group_name)
+                    cuffdiff_cuffnorm_abundances.append(per_group_abundances_list)
+                    cuffdiff_cuffnorm_alignments.append(per_group_alignments_list)
 
             assembly_file.close()
 
@@ -1567,9 +1581,12 @@ class Tuxedo(Analysis):
             # Python str key and Python list of Python list objects
             # of bsf.data.PairedReads objects.
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
             replicate_keys = replicate_dict.keys()
+            if not len(replicate_keys):
+                # Skip Sample objects, which PairedReads objects have all been excluded.
+                continue
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
             for replicate_key in replicate_keys:
