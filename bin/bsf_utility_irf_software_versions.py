@@ -116,4 +116,4 @@ for file_name in file_name_list:
 
     annotation_sheet.row_dicts.append(row_dict)
 
-annotation_sheet.write_to_file()
+annotation_sheet.to_file_path()

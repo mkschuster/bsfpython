@@ -1413,7 +1413,7 @@ class BamIndexDecoder(Analysis):
 
                 # Write the lane-specific BamIndexDecoderSheet to the internal file path.
 
-                bam_index_decoder_sheet.write_to_file()
+                bam_index_decoder_sheet.to_file_path()
 
             if barcode_number:
 
@@ -1591,6 +1591,6 @@ class BamIndexDecoder(Analysis):
 
         # Finally, write the flow cell-specific SampleAnnotationSheet to the internal file path.
 
-        sample_annotation_sheet.write_to_file()
+        sample_annotation_sheet.to_file_path()
 
         return

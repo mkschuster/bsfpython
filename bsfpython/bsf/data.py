@@ -2447,7 +2447,7 @@ class Collection(object):
         """
 
         sas = self.to_sas(file_path=file_path, name=name)
-        sas.write_to_file()
+        sas.to_file_path()
 
         return
 

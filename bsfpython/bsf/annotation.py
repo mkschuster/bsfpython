@@ -743,10 +743,10 @@ class AnnotationSheet(object):
 
         return messages
 
-    def write_to_file(self):
+    def to_file_path(self):
         """Write an C{AnnotationSheet} to a file path.
         """
-        # TODO: This method should be renamed to to_file_path.
+
         self.csv_writer_open()
 
         for row_dict in self.row_dicts:
@@ -831,14 +831,14 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
             cmp(x['Treatment'], y['Treatment']) or
             cmp(int(x['Replicate']), int(y['Replicate'])))
 
-    def write_to_file(self):
+    def to_file_path(self):
         """Write a C{ChIPSeqDiffBindSheet} to a file.
         """
 
         # Override the method from the super-class to automatically sort before writing to a file.
 
         self.sort()
-        super(ChIPSeqDiffBindSheet, self).write_to_file()
+        super(ChIPSeqDiffBindSheet, self).to_file_path()
 
 
 class TuxedoSamplePairSheet(AnnotationSheet):

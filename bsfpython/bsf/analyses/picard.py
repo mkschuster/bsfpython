@@ -702,7 +702,7 @@ class SamToFastq(Analysis):
                 '_'.join((self.project_name, 'sam_to_fastq_original.csv'))),
             name='_'.join((self.project_name, 'sam_to_fastq')))
 
-        annotation_sheet.write_to_file()
+        annotation_sheet.to_file_path()
 
         # Create a Runnable for pruning the sample annotation sheet.
 

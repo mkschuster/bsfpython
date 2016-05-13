@@ -241,7 +241,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
 
         return
 
-    def write_to_file(self):
+    def to_file_path(self):
         """Write a C{ChIPSeqDiffBindSheet} to a file.
         @return:
         @rtype:
@@ -250,7 +250,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         # Override the method from the super-class to automatically sort before writing to a file.
 
         self.sort()
-        super(ChIPSeqDiffBindSheet, self).write_to_file()
+        super(ChIPSeqDiffBindSheet, self).to_file_path()
 
         return
 
@@ -1254,7 +1254,7 @@ class ChIPSeq(Analysis):
 
             # TODO: Remove once the code works.
             # ## sas.csv_writer_close()
-            dbs.write_to_file()
+            dbs.to_file_path()
 
             # Create the DiffBind job.
 

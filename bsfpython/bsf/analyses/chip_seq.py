@@ -1355,7 +1355,7 @@ class ChIPSeq(Analysis):
 
             # TODO: Remove once the code works.
             # ## sas.csv_writer_close()
-            dbs.write_to_file()
+            dbs.to_file_path()
 
             # Create the DiffBind job.
 
