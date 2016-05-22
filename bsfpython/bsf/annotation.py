@@ -616,6 +616,32 @@ class AnnotationSheet(object):
 
         return
 
+    def trace(self, level=1):
+        """Trace a C{SampleAnnotationSheet} object.
+
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: str
+        """
+
+        indent = '  ' * level
+        output = str()
+        output += '{}{!r}\n'.format(indent, self)
+        output += '{}  file_path:    {!r}\n'.format(indent, self.file_path)
+        output += '{}  file_type:    {!r}\n'.format(indent, self.file_type)
+        output += '{}  name:         {!r}\n'.format(indent, self.name)
+        output += '{}  header:       {!r}\n'.format(indent, self.header)
+        output += '{}  field_names:  {!r}\n'.format(indent, self.field_names)
+        output += '{}  test_methods: {!r}\n'.format(indent, self.test_methods)
+        output += '{}  row_dicts:    {}\n'.format(indent, self.row_dicts)
+
+        output += '{}  Row dictionaries {}:\n'.format(indent, self.row_dicts)
+        for row_dict in self.row_dicts:
+            output += '{}    {!r}\n'.format(indent, row_dict)
+
+        return output
+
     def csv_reader_open(self):
         """Open a Comma-Separated Value (CSV) file linked to an C{AnnotationSheet} object for reading
         and initialise a Python C{csv.DictReader} object.
