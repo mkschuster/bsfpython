@@ -127,7 +127,7 @@ def run(runnable):
     assert isinstance(argument, OptionLong)
     old_file_path = argument.value
     if old_file_path.endswith('_original.csv'):
-        new_file_path = old_file_path[:-13] + '.csv'
+        new_file_path = old_file_path[:-13] + '_samples.csv'
     else:
         new_file_path = old_file_path
 

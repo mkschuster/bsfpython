@@ -655,7 +655,7 @@ class SamToFastq(Analysis):
 
                         runnable_step = runnable_picard_stf.add_runnable_step(
                             runnable_step=RunnableStepPicard(
-                                name='sam_to_fastq',
+                                name='picard_sam_to_fastq',
                                 java_temporary_path=runnable_picard_stf.get_relative_temporary_directory_path,
                                 java_heap_maximum='Xmx2G',
                                 picard_classpath=self.classpath_picard,
@@ -699,8 +699,8 @@ class SamToFastq(Analysis):
         annotation_sheet = self.collection.to_sas(
             file_path=os.path.join(
                 self.project_directory,
-                '_'.join((self.project_name, 'sam_to_fastq_original.csv'))),
-            name='_'.join((self.project_name, 'sam_to_fastq')))
+                '_'.join((self.project_name, 'picard_sam_to_fastq_original.csv'))),
+            name='_'.join((self.project_name, 'picard_sam_to_fastq')))
 
         annotation_sheet.to_file_path()
 
