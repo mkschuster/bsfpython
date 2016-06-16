@@ -59,6 +59,7 @@ if name_space.debug:
     tuxedo.debug = name_space.debug
 
 tuxedo.run()
+tuxedo.check_state()
 tuxedo.submit(drms_name=name_space.stage)
 
 print 'RNA-Seq Analysis'

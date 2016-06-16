@@ -84,6 +84,7 @@ if name_space.force:
 # Do the work.
 
 itb.run()
+itb.check_state()
 itb.submit(drms_name=name_space.stage)
 
 print 'IlluminaToBamTools IlluminaToBam Analysis'

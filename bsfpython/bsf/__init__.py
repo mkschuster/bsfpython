@@ -764,9 +764,19 @@ class Analysis(object):
         @rtype:
         """
 
+        default = Default.get_global_default()
+
+        # Resolve an eventual alias for the UCSC genome assembly name.
+
+        if default.genome_aliases_ucsc_dict is not None and \
+                default.genome_aliases_ucsc_dict.has_key(self.genome_version):
+            ucsc_genome_version = default.genome_aliases_ucsc_dict[self.genome_version]
+        else:
+            ucsc_genome_version = self.genome_version
+
         output = str()
 
-        output += 'genome {}\n'.format(self.genome_version)
+        output += 'genome {}\n'.format(ucsc_genome_version)
         if prefix is None or not prefix:
             file_name = 'genomes.txt'
             output += 'trackDb {}/trackDB.txt\n'.format(self.genome_version)
@@ -805,6 +815,18 @@ class Analysis(object):
         file_handle = open(name=file_path, mode='w')
         file_handle.write(output)
         file_handle.close()
+
+        return
+
+    def check_state(self):
+        """Check the state for each C{DRMS} object.
+
+        @return:
+        @rtype:
+        """
+        for drms in self.drms_list:
+            assert isinstance(drms, DRMS)
+            drms.check_state(debug=self.debug)
 
         return
 
@@ -890,7 +912,7 @@ class DRMS(object):
         or alternatively binary programs
     @type is_script: bool
     @ivar executables: Python C{list} of C{Executable} objects
-    @type executables: list[bsf.process.Executable]
+    @type executables: list[Executable]
     """
 
     @classmethod
@@ -1025,7 +1047,7 @@ class DRMS(object):
             or alternatively binary programs
         @type is_script: bool
         @param executables: Python C{list} of C{Executable} objects
-        @type executables: list[bsf.process.Executable]
+        @type executables: list[Executable]
         @return:
         @rtype:
         """
@@ -1280,6 +1302,23 @@ class DRMS(object):
         self.executables.append(executable)
 
         return executable
+
+    def check_state(self, debug=0):
+        """Check the state for each C{Executable} object.
+
+        @param debug: Debug level
+        @type debug: int
+        @return:
+        @rtype:
+        """
+
+        # Dynamically import the module specific for the configured DRMS implementation.
+
+        module = importlib.import_module('.'.join((__name__, 'drms', self.implementation)))
+
+        module.check_state(drms=self, debug=debug)
+
+        return
 
     def submit(self, debug=0):
         """Submit a command line for each C{Executable} object.

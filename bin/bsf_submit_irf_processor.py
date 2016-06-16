@@ -192,6 +192,7 @@ if name_space.loop:
 else:
     itb.run()
 
+itb.check_state()
 itb.submit(drms_name=name_space.stage)
 
 print 'IlluminaToBamTools IlluminaToBam Analysis'
@@ -244,6 +245,7 @@ if bid.library_path:
     # Do the work if, at this stage, a library file has been set.
 
     bid.run()
+    bid.check_state()
     bid.submit(drms_name=name_space.stage)
 
     print ''

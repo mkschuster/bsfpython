@@ -103,6 +103,7 @@ if name_space.force:
     irf_archive.force = name_space.force
 
 irf_archive.run()
+irf_archive.check_state()
 irf_archive.submit(drms_name=name_space.stage)
 
 print 'IlluminaRunFolderArchive Analysis'

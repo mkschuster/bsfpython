@@ -120,6 +120,7 @@ if not bid.library_path:
 # Do the work.
 
 bid.run()
+bid.check_state()
 bid.submit(drms_name=name_space.stage)
 
 print 'IlluminaToBamTools BamIndexDecoder Analysis'

@@ -104,6 +104,7 @@ if name_space.force:
     irf_restore.force = name_space.force
 
 irf_restore.run()
+irf_restore.check_state()
 irf_restore.submit(drms_name=name_space.stage)
 
 print 'IlluminaRunFolderRestore Analysis'

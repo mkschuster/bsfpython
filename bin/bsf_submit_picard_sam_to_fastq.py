@@ -86,6 +86,7 @@ if name_space.sas_file:
     stf.sas_file = name_space.sas_file
 
 annotation_sheet = stf.run()
+stf.check_state()
 stf.submit(drms_name=name_space.stage)
 
 print 'Picard SamToFastq Analysis'

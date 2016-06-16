@@ -51,6 +51,7 @@ if args.debug:
     chipseq.debug = args.debug
 
 chipseq.run()
+chipseq.check_state()
 
 # Submit all Executable objects of all Distributed Resource Management System objects.
 
