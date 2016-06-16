@@ -1,0 +1,353 @@
+"""bsf.analyses.trimmomatic
+
+A package of classes and methods supporting the Trimmomatic tool.
+"""
+
+#
+# Copyright 2013 - 2016 Michael K. Schuster
+#
+# Biomedical Sequencing Facility (BSF), part of the genomics core facility
+# of the Research Center for Molecular Medicine (CeMM) of the
+# Austrian Academy of Sciences and the Medical University of Vienna (MUW).
+#
+#
+# This file is part of BSF Python.
+#
+# BSF Python is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# BSF Python is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+
+
+import os
+
+from bsf import Analysis, DRMS, Runnable
+from bsf.data import Reads, PairedReads, Sample
+from bsf.process import Command, RunnableStepJava, RunnableStepMakeDirectory
+from bsf.standards import Configuration
+
+
+class Trimmomatic(Analysis):
+    """The C{Trimmomatic} class represents the logic to run the Trimmomatic analysis.
+
+    Attributes:
+
+    @ivar adapter_path: Adapter file path
+    @type adapter_path: str | unicode
+    @ivar classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
+    @type classpath_trimmomatic: str | unicode
+    """
+
+    def __init__(
+            self,
+            configuration=None,
+            project_name=None,
+            genome_version=None,
+            input_directory=None,
+            output_directory=None,
+            project_directory=None,
+            genome_directory=None,
+            e_mail=None,
+            debug=0,
+            drms_list=None,
+            collection=None,
+            comparisons=None,
+            samples=None,
+            adapter_path=None,
+            classpath_trimmomatic=None):
+        """Initialise a C{Trimmomatic} object.
+
+        @param configuration: C{Configuration}
+        @type configuration: Configuration
+        @param project_name: Project name
+        @type project_name: str
+        @param genome_version: Genome version
+        @type genome_version: str
+        @param input_directory: C{Analysis}-wide input directory
+        @type input_directory: str
+        @param output_directory: C{Analysis}-wide output directory
+        @type output_directory: str
+        @param project_directory: C{Analysis}-wide project directory,
+            normally under the C{Analysis}-wide output directory
+        @type project_directory: str
+        @param genome_directory: C{Analysis}-wide genome directory,
+            normally under the C{Analysis}-wide project directory
+        @type genome_directory: str
+        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        @type e_mail: str
+        @param debug: Integer debugging level
+        @type debug: int
+        @param drms_list: Python C{list} of C{DRMS} objects
+        @type drms_list: list
+        @param collection: C{Collection}
+        @type collection: Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{Sample} objects
+        @type comparisons: dict
+        @param samples: Python C{list} of C{Sample} objects
+        @type samples: list
+        @param adapter_path: Adapter file path
+        @type adapter_path: str | unicode
+        @param classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
+        @type classpath_trimmomatic: str | unicode
+        @return:
+        @rtype:
+        """
+
+        super(Trimmomatic, self).__init__(
+            configuration=configuration,
+            project_name=project_name,
+            genome_version=genome_version,
+            input_directory=input_directory,
+            output_directory=output_directory,
+            project_directory=project_directory,
+            genome_directory=genome_directory,
+            e_mail=e_mail,
+            debug=debug,
+            drms_list=drms_list,
+            collection=collection,
+            comparisons=comparisons,
+            samples=samples)
+
+        if adapter_path is None:
+            self.adapter_path = str()
+        else:
+            self.adapter_path = adapter_path
+
+        if classpath_trimmomatic is None:
+            self.classpath_trimmomatic = str()
+        else:
+            self.classpath_trimmomatic = classpath_trimmomatic
+
+        return
+
+    def set_configuration(self, configuration, section):
+        """Set instance variables of a C{Trimmomatic} object via a section of a C{Configuration} object.
+
+        Instance variables without a configuration option remain unchanged.
+        @param configuration: C{Configuration}
+        @type configuration: Configuration
+        @param section: Configuration file section
+        @type section: str
+        @return:
+        @rtype:
+        """
+        assert isinstance(configuration, Configuration)
+
+        super(Trimmomatic, self).set_configuration(configuration=configuration, section=section)
+
+        # Sub-class specific ...
+
+        option = 'adapter_path'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.adapter_path = configuration.config_parser.get(section=section, option=option)
+
+        # Get the Trimmomatic tool Java Archive (JAR) class path directory.
+
+        option = 'classpath_trimmomatic'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.classpath_trimmomatic = configuration.config_parser.get(section=section, option=option)
+
+        return
+
+    def _read_comparisons(self):
+        self.samples.extend(self.collection.get_all_samples())
+
+        return
+
+    def run(self):
+        """Run the C{SamToFastq} C{Analysis} to convert a I{BAM} or I{SAM} file into I{FASTQ} files.
+
+        This method changes the C{Collection} object of this C{Analysis} to update with FASTQ file paths.
+        @return:
+        @rtype:
+        """
+
+        super(Trimmomatic, self).run()
+
+        # default = Default.get_global_default()
+
+        self.adapter_path = 'TruSeq3-PE-2.fa'
+        # TODO: This should be configurable per sample.
+        if not os.path.isabs(self.adapter_path):
+            self.adapter_path = os.path.join(
+                os.path.dirname(self.classpath_trimmomatic), 'adapters', self.adapter_path)
+
+        # Get the Trimmomatic tool Java Archive (JAR) class path directory.
+
+        # if not self.classpath_trimmomatic:
+        #     self.classpath_trimmomatic = default.classpath_picard
+
+        self._read_comparisons()
+
+        # Trimmomatic
+
+        drms_trimmomatic = self.add_drms(drms=DRMS.from_analysis(
+            name='trimmomatic',
+            working_directory=self.project_directory,
+            analysis=self))
+
+        for sample in self.samples:
+            assert isinstance(sample, Sample)
+
+            if self.debug > 0:
+                print '{!r} Sample name: {}'.format(self, sample.name)
+                print sample.trace(level=1)
+
+            # bsf.data.Sample.get_all_paired_reads returns a Python dict of
+            # Python str key and Python list of Python list objects
+            # of bsf.data.PairedReads objects.
+
+            replicate_dict = sample.get_all_paired_reads(replicate_grouping=False)
+
+            replicate_keys = replicate_dict.keys()
+            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+
+            for replicate_key in replicate_keys:
+                assert isinstance(replicate_key, str)
+
+                for paired_reads in replicate_dict[replicate_key]:
+                    assert isinstance(paired_reads, PairedReads)
+
+                    if self.debug > 0:
+                        print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
+
+                    # Apply some sanity checks.
+
+                    # Maybe this case should be allowed after Trimmomatic trimming,
+                    # where only the second Read survives.
+                    if paired_reads.reads2 and not paired_reads.reads1:
+                        raise Exception('PairedReads object with reads1 but no reads2 object.', UserWarning)
+
+                    prefix_trimmomatic = '_'.join((drms_trimmomatic.name, replicate_key))
+
+                    if self.debug > 0:
+                        print 'Trimmomatic Prefix: {}'.format(prefix_trimmomatic)
+
+                    file_path_dict_trimmomatic = dict(
+                        temporary_directory='_'.join((prefix_trimmomatic, 'temporary')),
+                        output_directory=os.path.join(self.project_directory, prefix_trimmomatic),
+                        trim_log='_'.join((prefix_trimmomatic, 'trim_log.tsv')),
+                    )
+
+                    # Create a Runnable and an Executable for running the Trimmomatic analysis.
+
+                    runnable_trimmomatic = self.add_runnable(
+                        runnable=Runnable(
+                            name=prefix_trimmomatic,
+                            code_module='bsf.runnables.generic',
+                            working_directory=self.project_directory,
+                            file_path_dict=file_path_dict_trimmomatic))
+                    self.set_drms_runnable(drms=drms_trimmomatic, runnable=runnable_trimmomatic)
+
+                    # Create a new RunnableStepMakeDirectory in preparation of the Trimmomatic program.
+
+                    runnable_trimmomatic.add_runnable_step(
+                        runnable_step=RunnableStepMakeDirectory(
+                            name='mkdir',
+                            directory_path=file_path_dict_trimmomatic['output_directory']))
+
+                    # Create a RunnableStep for the Trimmomatic program.
+
+                    runnable_step_trimmomatic = runnable_trimmomatic.add_runnable_step(
+                        runnable_step=RunnableStepJava(
+                            name='trimmomatic',
+                            java_temporary_path=file_path_dict_trimmomatic['temporary_directory'],
+                            java_heap_maximum='Xmx4G',
+                            java_jar_path=self.classpath_trimmomatic))
+
+                    if paired_reads.reads2 is None:
+                        runnable_step_trimmomatic.sub_command.sub_command = Command(program='SE')
+                    else:
+                        runnable_step_trimmomatic.sub_command.sub_command = Command(program='PE')
+
+                    # Add options to the sub command.
+                    sub_command = runnable_step_trimmomatic.sub_command.sub_command
+
+                    # For the moment collect a trim log file that would require further processing.
+                    sub_command.add_option_short(key='trimlog', value=file_path_dict_trimmomatic['trim_log'])
+
+                    if paired_reads.reads2 is None:
+                        file_path_1u = os.path.join(
+                            file_path_dict_trimmomatic['output_directory'],
+                            paired_reads.reads1.name + 'U.fastq')
+
+                        sub_command.arguments.append(paired_reads.reads1.file_path)
+                        sub_command.arguments.append(file_path_1u)
+
+                        # Update unpaired Reads information.
+
+                        paired_reads.reads1.name += 'U'
+                        paired_reads.reads1.file_path = file_path_1u
+                    else:
+                        file_path_1p = os.path.join(
+                            file_path_dict_trimmomatic['output_directory'],
+                            paired_reads.reads1.name + 'P.fastq')
+                        file_path_1u = os.path.join(
+                            file_path_dict_trimmomatic['output_directory'],
+                            paired_reads.reads1.name + 'U.fastq')
+                        file_path_2p = os.path.join(
+                            file_path_dict_trimmomatic['output_directory'],
+                            paired_reads.reads2.name + 'P.fastq')
+                        file_path_2u = os.path.join(
+                            file_path_dict_trimmomatic['output_directory'],
+                            paired_reads.reads2.name + 'U.fastq')
+
+                        sub_command.arguments.append(paired_reads.reads1.file_path)
+                        sub_command.arguments.append(paired_reads.reads2.file_path)
+                        sub_command.arguments.append(file_path_1p)
+                        sub_command.arguments.append(file_path_1u)
+                        sub_command.arguments.append(file_path_2p)
+                        sub_command.arguments.append(file_path_2u)
+
+                        # Update paired Reads information.
+
+                        paired_reads.reads1.name += 'P'
+                        paired_reads.reads1.file_path = file_path_1p
+                        paired_reads.reads2.name += 'P'
+                        paired_reads.reads2.file_path = file_path_2p
+
+                        # Add unpaired Reads 1 and 2 as separate PairedReads objects to this sample.
+
+                        # TODO: This needs to copy Reads and PairedReads objects.
+                        sample.add_paired_reads(
+                            paired_reads=PairedReads(
+                                reads1=Reads(file_path=file_path_1u, name=paired_reads.reads1.name[:-1] + 'U'),
+                                annotation=paired_reads.annotation,
+                                exclude=paired_reads.exclude,
+                                read_group=paired_reads.read_group))
+
+                        sample.add_paired_reads(
+                            paired_reads=PairedReads(
+                                reads1=Reads(file_path=file_path_2u, name=paired_reads.reads2.name[:-1] + 'U'),
+                                annotation=paired_reads.annotation,
+                                exclude=paired_reads.exclude,
+                                read_group=paired_reads.read_group))
+
+                    # Append trimming steps.
+                    # TODO: This has to be configurable, ideally by sample.
+                    sub_command.arguments.append('ILLUMINACLIP:{}:2:30:10:1:true'.format(self.adapter_path))
+                    # FIXME: For QUANTseq data.
+                    # sub_command.arguments.append('ILLUMINACLIP:{}:2:30:5:1:true'.format(
+                    #     '/scratch/lab_bsf/projects/BSA_0000_Test/PolyA-SE.fa'))
+                    sub_command.arguments.append('SLIDINGWINDOW:4:15')
+                    sub_command.arguments.append('MINLEN:20')
+
+        # Convert the (modified) Collection object into a SampleAnnotationSheet object and write it to disk.
+
+        annotation_sheet = self.collection.to_sas(
+            file_path=os.path.join(
+                self.project_directory,
+                '_'.join((self.project_name, 'trimmomatic_samples.csv'))),
+            name='_'.join((self.project_name, 'trimmomatic')))
+
+        annotation_sheet.to_file_path()
+
+        return annotation_sheet
