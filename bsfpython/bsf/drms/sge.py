@@ -32,16 +32,398 @@ import os.path
 import re
 import subprocess
 
-# TODO: This module could create a file that records SGE Process identifiers, which could be used by
-# further scripts to query the state of jobs.
+from bsf.database import DatabaseAdaptor
+from bsf.process import Executable
+
+output_directory_name = 'bsfpython_sge_output'
 
 
-output_directory = 'bsfpython_sge_output'
+class ProcessSGE(object):
+    """The C{ProcessSGE} class models one process in the Son of Grid Engine (SGE)
+    Distributed Resource Management System.
+
+    The instance variable names result from the SGE accounting file. See man 5 accounting.
+    @ivar process_sge_id: Primary key
+    @type process_sge_id: int
+    @ivar qname: Name of the cluster queue in which the job has run
+    @type qname: str
+    @ivar hostname: Name of the execution host
+    @type hostname: str
+    @ivar sge_group: The effective group id of the job owner when executing the job
+    @type sge_group: str
+    @ivar owner: Owner of the Grid Engine job
+    @type owner: str
+    @ivar job_name: Job name
+    @type job_name: str
+    @ivar job_number: Job identifier (job number)
+    @type job_number: str
+    @ivar account: An account string as specified by the qsub(1) or qalter(1) -A option
+    @type account: str
+    @ivar priority: Priority value assigned to the job, corresponding to the priority parameter in the
+        queue configuration (see queue_conf(5))
+    @type priority: str
+    @ivar submission_time: Submission time
+    @type submission_time: str
+    @ivar start_date: Start time
+    @type start_date: str
+    @ivar end_time: End time
+    @type end_time: str
+    @ivar failed: Indicates the problem which occurred in case a job could not be started on the execution host
+    @type failed: str
+    @ivar exit_status: Exit status of the job script (or Grid Engine-specific status in case of certain error
+        conditions). The exit status is determined by following the normal shell conventions. If the command
+        terminates normally, the value of the command is its exit status. However, in the case that the command
+        exits abnormally, a value of 0200 (octal), 128 (decimal) is added to the value of the command to make up
+        the exit status.
+    @type exit_status: str
+    @ivar ru_wallclock: Difference between end_time and start_time (see above), except that if the job fails,
+        it is zero
+    @type ru_wallclock: str
+    @ivar project: The department which was assigned to the job
+    @type project: str
+    @ivar department: The parallel environment which was selected for the job
+    @type department: str
+    @ivar granted_pe: The number of slots which were dispatched to the job by the scheduler
+    @type granted_pe: str
+    @ivar slots: The number of slots which were dispatched to the job by the scheduler
+    @type slots: str
+    @ivar task_number: Array job task index number
+    @type task_number: str
+    @ivar cpu: The CPU time usage in seconds
+    @type cpu: str
+    @ivar mem: The integral memory usage in Gbytes seconds
+    @type mem: str
+    @ivar io: The amount of data transferred in input/output operations in GB (if available, otherwise 0)
+    @type io: str
+    @ivar category: A string specifying the job category
+    @type category: str
+    @ivar iow: The input/output wait time in seconds (if available, otherwise 0)
+    @type iow: str
+    @ivar pe_taskid: If this identifier is set, the task was part of a parallel job, and was passed to Grid Engine
+        via the qrsh -inherit interface.
+    @type pe_taskid: str
+    @ivar maxvmem: The maximum vmem size in bytes
+    @type maxvmem: str
+    @ivar arid: Advance reservation identifier
+    @type arid: str
+    """
+
+    def __init__(
+            self,
+            process_sge_id=None,
+            qname=None,
+            hostname=None,
+            sge_group=None,
+            owner=None,
+            job_name=None,
+            job_number=None,
+            account=None,
+            priority=None,
+            submission_time=None,
+            start_date=None,
+            end_time=None,
+            failed=None,
+            exit_status=None,
+            ru_wallclock=None,
+            project=None,
+            department=None,
+            granted_pe=None,
+            slots=None,
+            task_number=None,
+            cpu=None,
+            mem=None,
+            io=None,
+            category=None,
+            iow=None,
+            pe_taskid=None,
+            maxvmem=None,
+            arid=None):
+        """Initialise a C{ProcessSGE} object.
+
+        @param process_sge_id: Primary key
+        @type process_sge_id: int
+        @param qname: Name of the cluster queue in which the job has run
+        @type qname: str
+        @param hostname: Name of the execution host
+        @type hostname: str
+        @param sge_group: The effective group id of the job owner when executing the job
+        @type sge_group: str
+        @param owner: Owner of the Grid Engine job
+        @type owner: str
+        @param job_name: Job name
+        @type job_name: str
+        @param job_number: Job identifier (job number)
+        @type job_number: str
+        @param account: An account string as specified by the qsub(1) or qalter(1) -A option
+        @type account: str
+        @param priority: Priority value assigned to the job, corresponding to the priority parameter in the
+            queue configuration (see queue_conf(5))
+        @type priority: str
+        @param submission_time: Submission time
+        @type submission_time: str
+        @param start_date: Start time
+        @type start_date: str
+        @param end_time: End time
+        @type end_time: str
+        @param failed: Indicates the problem which occurred in case a job could not be started on the execution host
+        @type failed: str
+        @param exit_status: Exit status of the job script (or Grid Engine-specific status in case of certain error
+            conditions). The exit status is determined by following the normal shell conventions. If the command
+            terminates normally, the value of the command is its exit status. However, in the case that the command
+            exits abnormally, a value of 0200 (octal), 128 (decimal) is added to the value of the command to make up
+            the exit status.
+        @type exit_status: str
+        @param ru_wallclock: Difference between end_time and start_time (see above), except that if the job fails,
+            it is zero
+        @type ru_wallclock: str
+        @param project: The department which was assigned to the job
+        @type project: str
+        @param department: The parallel environment which was selected for the job
+        @type department: str
+        @param granted_pe: The number of slots which were dispatched to the job by the scheduler
+        @type granted_pe: str
+        @param slots: The number of slots which were dispatched to the job by the scheduler
+        @type slots: str
+        @param task_number: Array job task index number
+        @type task_number: str
+        @param cpu: The CPU time usage in seconds
+        @type cpu: str
+        @param mem: The integral memory usage in Gbytes seconds
+        @type mem: str
+        @param io: The amount of data transferred in input/output operations in GB (if available, otherwise 0)
+        @type io: str
+        @param category: A string specifying the job category
+        @type category: str
+        @param iow: The input/output wait time in seconds (if available, otherwise 0)
+        @type iow: str
+        @param pe_taskid: If this identifier is set, the task was part of a parallel job, and was passed to Grid Engine
+            via the qrsh -inherit interface.
+        @type pe_taskid: str
+        @param maxvmem: The maximum vmem size in bytes
+        @type maxvmem: str
+        @param arid: Advance reservation identifier
+        @type arid: str
+        """
+
+        super(ProcessSGE, self).__init__()
+
+        self.process_sge_id = process_sge_id
+        self.qname = qname
+        self.hostname = hostname
+        self.sge_group = sge_group
+        self.owner = owner
+        self.job_name = job_name
+        self.job_number = job_number
+        self.account = account
+        self.priority = priority
+        self.submission_time = submission_time
+        self.start_date = start_date
+        self.end_time = end_time
+        self.failed = failed
+        self.exit_status = exit_status
+        self.ru_wallclock = ru_wallclock
+        self.project = project
+        self.department = department
+        self.granted_pe = granted_pe
+        self.slots = slots
+        self.task_number = task_number
+        self.cpu = cpu
+        self.mem = mem
+        self.io = io
+        self.category = category
+        self.iow = iow
+        self.pe_taskid = pe_taskid
+        self.maxvmem = maxvmem
+        self.arid = arid
+
+        return
+
+
+class ProcessSGEAdaptor(DatabaseAdaptor):
+    """C{ProcessSGEAdaptor} class providing database access for the C{ProcessSLURM} class.
+
+    The SQL column names result from the SGE accounting file. See man 5 accounting.
+    """
+
+    def __init__(self, database_connection):
+        """Initialise a C{ProcessSGEAdaptor} object.
+
+        @param database_connection: C{DatabaseConnection}
+        @type database_connection: DatabaseConnection
+        """
+
+        super(ProcessSGEAdaptor, self).__init__(
+            database_connection=database_connection,
+            object_type=ProcessSGE,
+            table_name='process_sge',
+            column_definition=[
+                # Primary key
+                ['process_sge_id', 'INTEGER PRIMARY KEY ASC AUTOINCREMENT'],
+                # qname
+                # Name of the cluster queue in which the job has run.
+                ['qname', 'TEXT'],
+                # hostname
+                # Name of the execution host.
+                ['hostname', 'TEXT'],
+                # group
+                # The effective group id of the job owner when executing the job.
+                # Since group is a reserved word in SQL this had to be renamed to sge_group.
+                ['sge_group', 'TEXT'],
+                # owner
+                # Owner of the Grid Engine job.
+                ['owner', 'TEXT'],
+                # job_name
+                # Job name.
+                ['job_name', 'TEXT'],
+                # job_number
+                # Job identifier (job number).
+                ['job_number', 'TEXT'],
+                # account
+                # An account string as specified by the qsub(1) or qalter(1) -A option.
+                ['account', 'TEXT'],
+                # priority
+                # Priority value assigned to the job, corresponding to the priority parameter in the queue configuration
+                # (see queue_conf(5)).
+                ['priority', 'TEXT'],
+                # submission_time
+                # Submission time.
+                ['submission_time', 'TEXT'],
+                # start_time
+                # Start time.
+                ['start_date', 'TEXT'],
+                # end_time
+                # End time.
+                ['end_time', 'TEXT'],
+                # failed
+                # Indicates the problem which occurred in case a job could not be started on the execution host
+                # (e.g. because the owner of the job did not have a valid account on that machine).
+                # If Grid Engine tries to start a job multiple times, this may lead to multiple entries in the
+                # reporting file corresponding to the same job ID.
+                ['failed', 'TEXT'],
+                # exit_status
+                # Exit status of the job script (or Grid Engine-specific status in case of certain error conditions).
+                # The exit status is determined by following the normal shell conventions. If the command terminates
+                # normally, the value of the command is its exit status. However, in the case that the command exits
+                # abnormally, a value of 0200 (octal), 128 (decimal) is added to the value of the command to make up
+                # the exit status.
+                #
+                # For example: If a job dies through signal 9 (SIGKILL) then the exit status becomes 128 + 9 = 137.
+                ['exit_status', 'TEXT'],
+                # ru_wallclock
+                # Difference between end_time and start_time (see above), except that if the job fails, it is zero.
+                ['ru_wallclock', 'TEXT'],
+                # ru_utime
+                # ru_stime
+                # ru_maxrss
+                # ru_ixrss
+                # ru_ismrss
+                # ru_idrss
+                # ru_isrss
+                # ru_minflt
+                # ru_majflt
+                # ru_nswap
+                # ru_inblock
+                # ru_oublock
+                # ru_msgsnd
+                # ru_msgrcv
+                # ru_nsignals
+                # ru_nvcsw
+                # ru_nivcsw
+                # These entries follow the contents of the standard Unix rusage structure as described in getrusage(2).
+                # Depending on the operating system where the job was executed, some of the fields may be 0.
+                #
+                # project
+                # The project which was assigned to the job.
+                ['project', 'TEXT'],
+                # department
+                # The department which was assigned to the job.
+                ['department', 'TEXT'],
+                # granted_pe
+                # The parallel environment which was selected for the job.
+                ['granted_pe', 'TEXT'],
+                # slots
+                # The number of slots which were dispatched to the job by the scheduler.
+                ['slots', 'TEXT'],
+                # task_number
+                # Array job task index number.
+                ['task_number', 'TEXT'],
+                # cpu
+                # The CPU time usage in seconds.
+                # The value may be affected by the ACCT_RESERVED_USAGE execd parameter (see sge_conf(5)).
+                ['cpu', 'TEXT'],
+                # mem
+                # The integral memory usage in Gbytes seconds.
+                # The value may be affected by the ACCT_RESERVED_USAGE execd parameter (see sge_conf(5)).
+                ['mem', 'TEXT'],
+                # io
+                # The amount of data transferred in input/output operations (if available, otherwise 0).
+                ['io', 'TEXT'],
+                # category
+                # A string specifying the job category.
+                # This contains a space-separated pseudo options list for the sub, with components as follows:
+                #
+                #   -U user_list
+                #       An owner/group ACL list composed from host_conf(5), sge_pe(5),
+                #       And queue_conf(5) user_lists/xuser_lists entries.
+                #       Entries from sge_conf(5) are not considered since they can
+                #       only cause a job to be accepted/rejected at submit time.
+                #       Omitted if there are no such configuration entries.
+                #
+                #   -P project_list
+                #       Like -U, but for project/xproject entries.
+                #
+                #   -u owner
+                #       The owner's user name, if it was referenced in any RQS (see sge_resource_quota(5)).
+                #       Omitted if there was no such reference.
+                #
+                #   -q queue_list
+                #       The hard queue list (only if one was specified).
+                #
+                #   -masterq queue_list
+                #       The master queue list (only if one was specified).
+                #
+                #   -l resource_list
+                #       The hard resource list (only if hard resources were specified).
+                #
+                #   -soft -l resource_list
+                #       The soft resource list (only if soft resources were specified).
+                #
+                #   -pe pe_name pe_range
+                #       The parallel environment specified for the job (only for parallel jobs).
+                #
+                #   -ckpt ckpt_name
+                #   The job's checkpointing environment (only if one was specified).
+                #
+                #   -I y
+                #       Present only for interactive jobs.
+                #
+                #   -ar ar_id
+                #       The advance reservation into which the job was submitted (only if one was specified).
+                ['category', 'TEXT'],
+                # iow
+                # The input/output wait time in seconds (if available, otherwise 0).
+                ['iow', 'TEXT'],
+                # pe_taskid
+                # If this identifier is set, the task was part of a parallel job, and was passed to Grid Engine
+                # via the qrsh -inherit interface.
+                ['pe_taskid', 'TEXT'],
+                # maxvmem
+                # The maximum vmem size in bytes.
+                # The value may be affected by the ACCT_RESERVED_USAGE execd parameter (see sge_conf(5)).
+                ['maxvmem', 'TEXT'],
+                # arid
+                # Advance reservation identifier. If the job used the resources of an advance reservation,
+                # then this field contains a positive integer identifier; otherwise the value is "0" .
+                ['arid', 'TEXT'],
+            ])
+
+        return
 
 
 def submit(drms, debug=0):
-
-    """Submit C{Executable} objects into the Son of Grid Engine (SGE) Distributed Resource Management System (DRMS).
+    """Submit each C{Executable} object of a C{DRMS} object into the
+    Son of Grid Engine (SGE)
+    Distributed Resource Management System (DRMS).
 
     @param drms: Distributed Resource Management System (C{DRMS})
     @type drms: DRMS
@@ -58,6 +440,7 @@ def submit(drms, debug=0):
         output += "\n"
 
     for executable in drms.executables:
+        assert isinstance(executable, Executable)
 
         command = list()
 
@@ -122,7 +505,6 @@ def submit(drms, debug=0):
             resource_list.append('hostname={}'.format(node_name))
 
         if len(resource_list):
-
             command.append('-l')
             command.append(','.join(resource_list))
 
@@ -145,10 +527,12 @@ def submit(drms, debug=0):
             command.append('-wd')
             command.append(drms.working_directory)
 
-            # Write standard output and standard error streams into a
-            # 'bsfpython_sge_output' directory under the 'working_directory'.
+            # Write standard output and standard error streams into an
+            # output directory under the working directory.
+            # Create the output directory first via its absolute path,
+            # then set standard error and standard output relative to it.
 
-            output_directory_path = os.path.join(drms.working_directory, output_directory)
+            output_directory_path = os.path.join(drms.working_directory, output_directory_name)
 
             if not os.path.isdir(output_directory_path):
                 # In principle, a race condition could occur as the directory
@@ -160,10 +544,10 @@ def submit(drms, debug=0):
                         raise
 
             command.append('-e')
-            command.append(output_directory)
+            command.append(output_directory_name)
 
             command.append('-o')
-            command.append(output_directory)
+            command.append(output_directory_name)
 
         # Add Executable-specific options.
 
@@ -195,13 +579,14 @@ def submit(drms, debug=0):
 
         if executable.submit and debug == 0:
 
-            child_process = subprocess.Popen(args=command,
-                                             bufsize=4096,
-                                             stdin=subprocess.PIPE,
-                                             stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE,
-                                             shell=False,
-                                             close_fds=True)
+            child_process = subprocess.Popen(
+                args=command,
+                bufsize=4096,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=False,
+                close_fds=True)
 
             # Although subprocess.communicate() may block when memory buffers
             # have been filled up, not much STDOUT and STDERR is expected from
@@ -216,8 +601,7 @@ def submit(drms, debug=0):
                     "SGE qsub returned exit code {!r}\n"
                     "STDOUT: {}\n"
                     "STDERR: {}\n"
-                    "Command list representation: {!r}".
-                    format(child_return_code, child_stdout, child_stderr, command))
+                    "Command list representation: {!r}".format(child_return_code, child_stdout, child_stderr, command))
 
             # Parse the multi-line STDOUT string to get the SGE process identifier and name.
             # The response to the SGE qsub command looks like:
@@ -242,3 +626,22 @@ def submit(drms, debug=0):
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()
+
+
+def check_state(drms, debug=0):
+    """Check the state of each C{Executable} object in the
+    Distributed Resource Management System (C{DRMS}).
+
+    @param drms: Distributed Resource Management System (C{DRMS})
+    @type drms: DRMS
+    @param debug: Debug level
+    @type debug: int
+    """
+
+    if drms:
+        pass
+
+    if debug:
+        pass
+
+    return

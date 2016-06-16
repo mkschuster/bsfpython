@@ -27,19 +27,455 @@ A package of methods supporting the Simple Linux Utility for Resource Management
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import csv
+import datetime
 import errno
 import math
 import os.path
 import re
 import subprocess
+import sys
+from threading import Lock, Thread
 import warnings
 
 from bsf.database import DatabaseConnection, \
-    JobSubmission, JobSubmissionAdaptor, \
-    ProcessSLURM, ProcessSLURMAdaptor
+    JobSubmission, JobSubmissionAdaptor, DatabaseAdaptor
+from bsf.process import Executable
+
+output_directory_name = 'bsfpython_slurm_output'
+database_file_name = 'bsfpython_slurm_jobs.db'
 
 
-output_directory = 'bsfpython_slurm_output'
+class ProcessSLURM(object):
+    """The C{ProcessSLURM} class models one process in the Simple Linux Utility for Resource Management (SLURM)
+    Distributed Resource Management System (DRMS).
+
+    The instance variable names result from the SLURM command C{sacct --parsable --long}
+    @ivar process_slurm_id: Primary key
+    @type process_slurm_id: int
+    @ivar job_id: The number of the job or job step. It is in the form: job.jobstep
+    @type job_id: str
+    @ivar job_name: The name of the job or job step
+    @type job_name: str
+    @ivar partition: Identifies the partition on which the job ran
+    @type partition: str
+    @ivar max_vm_size: Maximum virtual memory size of all tasks in job
+    @type max_vm_size: str
+    @ivar max_vm_size_node: The node on which the maximum virtual memory size occurred
+    @type max_vm_size_node: str
+    @ivar max_vm_size_task: The task identifier where the maximum virtual memory size occurred
+    @type max_vm_size_task: str
+    @ivar average_vm_size: Average virtual memory size of all tasks in job
+    @type average_vm_size: str
+    @ivar max_rss: Maximum resident set size of all tasks in job
+    @type max_rss: str
+    @ivar max_rss_node: The node on which the maximum resident set size occurred
+    @type max_rss_node: str
+    @ivar max_rss_task: The task identifier where the maximum resident set size occurred
+    @type max_rss_task: str
+    @ivar average_rss: Average resident set size of all tasks in job
+    @type average_rss: str
+    @ivar max_pages: Maximum number of page faults of all tasks in job
+    @type max_pages: str
+    @ivar max_pages_node: The node on which the maximum number of page faults occurred
+    @type max_pages_node: str
+    @ivar max_pages_task: The task identifier where the maximum number of page faults occurred
+    @type max_pages_task: str
+    @ivar average_pages: Average number of page faults of all tasks in job
+    @type average_pages: str
+    @ivar min_cpu: Minimum (system + user) CPU time of all tasks in job
+    @type min_cpu: str
+    @ivar min_cpu_node: The node on which the minimum CPU time occurred
+    @type min_cpu_node: str
+    @ivar min_cpu_task: The task identifier where the minimum CPU time occurred
+    @type min_cpu_task: str
+    @ivar average_cpu: Average (system + user) CPU time of all tasks in job
+    @type average_cpu: str
+    @ivar number_tasks: Total number of tasks in a job or step
+    @type number_tasks: str
+    @ivar allocated_cpus: Count of allocated CPUs
+    @type allocated_cpus: str
+    @ivar elapsed: The jobs elapsed time
+    @type elapsed: str
+    @ivar state: Displays the job status, or state
+        Value can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or NODE_FAIL
+    @type state: str
+    @ivar exit_code: The exit code returned by the job script or salloc, typically as set by the exit() function.
+        Following the colon is the signal that caused the process to terminate if it was terminated by a signal.
+    @type exit_code: str
+    @ivar average_cpu_frequency: Average weighted CPU frequency of all tasks in job, in kHz
+    @type average_cpu_frequency: str
+    @ivar requested_cpu_frequency: Requested CPU frequency for the step, in kHz
+    @type requested_cpu_frequency: str
+    @ivar requested_memory: Minimum required memory for the job, in MB
+    @type requested_memory: str
+    @ivar consumed_energy: Total energy consumed by all tasks in job, in joules
+    @type consumed_energy: str
+    @ivar max_disk_read: Maximum number of bytes read by all tasks in job
+    @type max_disk_read: str
+    @ivar max_disk_read_node: The node on which the maximum number of bytes read occurred
+    @type max_disk_read_node: str
+    @ivar max_disk_read_task: The task identifier where the maximum number of bytes read occurred
+    @type max_disk_read_task: str
+    @ivar average_disk_read: Average number of bytes read by all tasks in job
+    @type average_disk_read: str
+    @ivar max_disk_write: Maximum number of bytes written by all tasks in job
+    @type max_disk_write: str
+    @ivar max_disk_write_node: The node on which the maximum number of bytes written occurred
+    @type max_disk_write_node: str
+    @ivar max_disk_write_task: The task identifier where the maximum number of bytes written occurred
+    @type max_disk_write_task: str
+    @ivar average_disk_write: Average number of bytes written by all tasks in job
+    @type average_disk_write: str
+    """
+
+    def __init__(
+            self,
+            process_slurm_id=None,
+            job_id=None,
+            job_name=None,
+            partition=None,
+            max_vm_size=None,
+            max_vm_size_node=None,
+            max_vm_size_task=None,
+            average_vm_size=None,
+            max_rss=None,
+            max_rss_node=None,
+            max_rss_task=None,
+            average_rss=None,
+            max_pages=None,
+            max_pages_node=None,
+            max_pages_task=None,
+            average_pages=None,
+            min_cpu=None,
+            min_cpu_node=None,
+            min_cpu_task=None,
+            average_cpu=None,
+            number_tasks=None,
+            allocated_cpus=None,
+            elapsed=None,
+            state=None,
+            exit_code=None,
+            average_cpu_frequency=None,
+            requested_cpu_frequency=None,
+            requested_memory=None,
+            consumed_energy=None,
+            max_disk_read=None,
+            max_disk_read_node=None,
+            max_disk_read_task=None,
+            average_disk_read=None,
+            max_disk_write=None,
+            max_disk_write_node=None,
+            max_disk_write_task=None,
+            average_disk_write=None):
+        """Initialise a C{ProcessSLURM} object.
+
+        @param process_slurm_id:
+        @type process_slurm_id: int
+        @param job_id: The number of the job or job step. It is in the form: I{job.jobstep}
+        @type job_id: str
+        @param job_name: The name of the job or job step
+        @type job_name: str
+        @param partition: Identifies the partition on which the job ran
+        @type partition: str
+        @param max_vm_size: Maximum virtual memory size of all tasks in job
+        @type max_vm_size: str
+        @param max_vm_size_node: The node on which the maximum virtual memory size occurred
+        @type max_vm_size_node: str
+        @param max_vm_size_task: The task identifier where the maximum virtual memory size occurred
+        @type max_vm_size_task: str
+        @param average_vm_size: Average virtual memory size of all tasks in job
+        @type average_vm_size: str
+        @param max_rss: Maximum resident set size of all tasks in job
+        @type max_rss: str
+        @param max_rss_node: The node on which the maximum resident set size occurred
+        @type max_rss_node: str
+        @param max_rss_task: The task identifier where the maximum resident set size occurred
+        @type max_rss_task: str
+        @param average_rss: Average resident set size of all tasks in job
+        @type average_rss: str
+        @param max_pages: Maximum number of page faults of all tasks in job
+        @type max_pages: str
+        @param max_pages_node: The node on which the maximum number of page faults occurred
+        @type max_pages_node: str
+        @param max_pages_task: The task identifier where the maximum number of page faults occurred
+        @type max_pages_task: str
+        @param average_pages: Average number of page faults of all tasks in job
+        @type average_pages: str
+        @param min_cpu: Minimum (system + user) CPU time of all tasks in job
+        @type min_cpu: str
+        @param min_cpu_node: The node on which the minimum CPU time occurred
+        @type min_cpu_node: str
+        @param min_cpu_task: The task identifier where the minimum CPU time occurred
+        @type min_cpu_task: str
+        @param average_cpu: Average (system + user) CPU time of all tasks in job
+        @type average_cpu: str
+        @param number_tasks: Total number of tasks in a job or step
+        @type number_tasks: str
+        @param allocated_cpus: Count of allocated CPUs
+        @type allocated_cpus: str
+        @param elapsed: The jobs elapsed time
+        @type elapsed: str
+        @param state: Displays the job status, or state.
+            Value can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or NODE_FAIL
+        @type state: str
+        @param exit_code: The exit code returned by the job script or salloc, typically as set by the exit() function.
+            Following the colon is the signal that caused the process to  terminate if it was terminated by a signal.
+        @type exit_code: str
+        @param average_cpu_frequency: Average weighted CPU frequency of all tasks in job, in kHz
+        @type average_cpu_frequency: str
+        @param requested_cpu_frequency: Requested CPU frequency for the step, in kHz
+        @type requested_cpu_frequency: str
+        @param requested_memory: Minimum required memory for the job, in MB
+        @type requested_memory: str
+        @param consumed_energy: Total energy consumed by all tasks in job, in joules
+        @type consumed_energy: str
+        @param max_disk_read: Maximum number of bytes read by all tasks in job
+        @type max_disk_read: str
+        @param max_disk_read_node: The node on which the maximum number of bytes read occurred
+        @type max_disk_read_node: str
+        @param max_disk_read_task: The task identifier where the maximum number of bytes read occurred
+        @type max_disk_read_task: str
+        @param average_disk_read: Average number of bytes read by all tasks in job
+        @type average_disk_read: str
+        @param max_disk_write: Maximum number of bytes written by all tasks in job
+        @type max_disk_write: str
+        @param max_disk_write_node: The node on which the maximum number of bytes written occurred
+        @type max_disk_write_node: str
+        @param max_disk_write_task: The task identifier where the maximum number of bytes written occurred
+        @type max_disk_write_task: str
+        @param average_disk_write: Average number of bytes written by all tasks in job
+        @type average_disk_write: str
+        """
+        super(ProcessSLURM, self).__init__()
+        self.process_slurm_id = process_slurm_id
+        self.job_id = job_id
+        self.job_name = job_name
+        self.partition = partition
+        self.max_vm_size = max_vm_size
+        self.max_vm_size_node = max_vm_size_node
+        self.max_vm_size_task = max_vm_size_task
+        self.average_vm_size = average_vm_size
+        self.max_rss = max_rss
+        self.max_rss_node = max_rss_node
+        self.max_rss_task = max_rss_task
+        self.average_rss = average_rss
+        self.max_pages = max_pages
+        self.max_pages_node = max_pages_node
+        self.max_pages_task = max_pages_task
+        self.average_pages = average_pages
+        self.min_cpu = min_cpu
+        self.min_cpu_node = min_cpu_node
+        self.min_cpu_task = min_cpu_task
+        self.average_cpu = average_cpu
+        self.number_tasks = number_tasks
+        self.allocated_cpus = allocated_cpus
+        self.elapsed = elapsed
+        self.state = state
+        self.exit_code = exit_code
+        self.average_cpu_frequency = average_cpu_frequency
+        self.requested_cpu_frequency = requested_cpu_frequency
+        self.requested_memory = requested_memory
+        self.consumed_energy = consumed_energy
+        self.max_disk_read = max_disk_read
+        self.max_disk_read_node = max_disk_read_node
+        self.max_disk_read_task = max_disk_read_task
+        self.average_disk_read = average_disk_read
+        self.max_disk_write = max_disk_write
+        self.max_disk_write_node = max_disk_write_node
+        self.max_disk_write_task = max_disk_write_task
+        self.average_disk_write = average_disk_write
+
+
+class ProcessSLURMAdaptor(DatabaseAdaptor):
+    """C{ProcessSLURMAdaptor} class providing database access for the C{ProcessSLURM} class.
+
+    The SQL column names result from SLURM command sacct --parsable --long
+    """
+
+    def __init__(
+            self,
+            database_connection):
+        """Initialise a C{ProcessSLURMAdaptor} object.
+
+        @param database_connection: C{DatabaseConnection}
+        @type database_connection: DatabaseConnection
+        """
+
+        super(ProcessSLURMAdaptor, self).__init__(
+            database_connection=database_connection,
+            object_type=ProcessSLURM,
+            table_name='process_slurm',
+            column_definition=[
+                # Primary key
+                ['process_slurm_id', 'INTEGER PRIMARY KEY ASC AUTOINCREMENT'],
+                # JobID
+                # The number of the job or job step. It is in the form: job.jobstep.
+                ['job_id', 'TEXT UNIQUE'],
+                # JobName
+                # The name of the job or job step.
+                ['job_name', 'TEXT'],
+                # Partition
+                # Identifies the partition on which the job ran.
+                ['partition', 'TEXT'],
+                # MaxVMSize
+                # Maximum virtual memory size of all tasks in job.
+                ['max_vm_size', 'TEXT'],
+                # MaxVMSizeNode
+                # The node on which the maximum virtual memory size occurred.
+                ['max_vm_size_node', 'TEXT'],
+                # MaxVMSizeTask
+                # The task identifier where the maximum virtual memory size occurred.
+                ['max_vm_size_task', 'TEXT'],
+                # AveVMSize
+                # Average virtual memory size of all tasks in job.
+                ['average_vm_size', 'TEXT'],
+                # MaxRSS
+                # Maximum resident set size of all tasks in job.
+                ['max_rss', 'TEXT'],
+                # MaxRSSNode
+                # The node on which the maximum resident set size occurred.
+                ['max_rss_node', 'TEXT'],
+                # MaxRSSTask
+                # The task identifier where the maximum resident set size occurred.
+                ['max_rss_task', 'TEXT'],
+                # AveRSS
+                # Average resident set size of all tasks in job.
+                ['average_rss', 'TEXT'],
+                # MaxPages
+                # Maximum number of page faults of all tasks in job.
+                ['max_pages', 'TEXT'],
+                # MaxPagesNode
+                # The node on which the maximum number of page faults occurred.
+                ['max_pages_node', 'TEXT'],
+                # MaxPagesTask
+                # The task identifier where the maximum number of page faults occurred.
+                ['max_pages_task', 'TEXT'],
+                # AvePages
+                # Average number of page faults of all tasks in job.
+                ['average_pages', 'TEXT'],
+                # MinCPU
+                # Minimum (system + user) CPU time of all tasks in job.
+                ['min_cpu', 'TEXT'],
+                # MinCPUNode
+                # The node on which the minimum CPU time occurred.
+                ['min_cpu_node', 'TEXT'],
+                # MinCPUTask
+                # The task identifier where the minimum CPU time occurred.
+                ['min_cpu_task', 'TEXT'],
+                # AveCPU
+                # Average (system + user) CPU time of all tasks in job.
+                ['average_cpu', 'TEXT'],
+                # NTasks
+                # Total number of tasks in a job or step.
+                ['number_tasks', 'TEXT'],
+                # AllocCPUS
+                # Count of allocated CPUs.
+                ['allocated_cpus', 'TEXT'],
+                # Elapsed
+                # The jobs elapsed time.
+                ['elapsed', 'TEXT'],
+                # State
+                # Displays the job status, or state.
+                # Value can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or
+                # NODE_FAIL.
+                ['state', 'TEXT'],
+                # ExitCode
+                # The exit code returned by the job script or salloc, typically as set by the exit() function.
+                # Following the colon is the signal that caused the process to  terminate if it was terminated by
+                # a signal.
+                ['exit_code', 'TEXT'],
+                # AveCPUFreq
+                # Average weighted CPU frequency of all tasks in job, in kHz.
+                ['average_cpu_frequency', 'TEXT'],
+                # ReqCPUFreq
+                # Requested CPU frequency for the step, in kHz.
+                ['requested_cpu_frequency', 'TEXT'],
+                # ReqMem
+                # Minimum required memory for the job, in MB.
+                ['requested_memory', 'TEXT'],
+                # ConsumedEnergy
+                # Total energy consumed by all tasks in job, in joules.
+                ['consumed_energy', 'TEXT'],
+                # MaxDiskRead
+                # Maximum number of bytes read by all tasks in job.
+                ['max_disk_read', 'TEXT'],
+                # MaxDiskReadNode
+                # The node on which the maximum number of bytes read occurred.
+                ['max_disk_read_node', 'TEXT'],
+                # MaxDiskReadTask
+                # The task identifier where the maximum number of bytes read occurred.
+                ['max_disk_read_task', 'TEXT'],
+                # AveDiskRead
+                # Average number of bytes read by all tasks in job.
+                ['average_disk_read', 'TEXT'],
+                # MaxDiskWrite
+                # Maximum number of bytes written by all tasks in job.
+                ['max_disk_write', 'TEXT'],
+                # MaxDiskWriteNode
+                # The node on which the maximum number of bytes written occurred.
+                ['max_disk_write_node', 'TEXT'],
+                # MaxDiskWriteTask
+                # The task identifier where the maximum number of bytes written occurred.
+                ['max_disk_write_task', 'TEXT'],
+                # AveDiskWrite
+                # Average number of bytes written by all tasks in job.
+                ['average_disk_write', 'TEXT'],
+            ])
+
+    def select_all_by_job_name(self, name):
+        """Select all C{ProcessSLURM} objects by I{job_name}.
+
+        The same C{Executable} can be submitted more than once into the C{DRMS}.
+        @param name: Job name
+        @type name: str
+        @return: Python C{list} of C{ProcessSLURM} objects
+        @rtype: list[ProcessSLURM]
+        """
+        statement = self.statement_select(where_clause='job_name = ?')
+        parameters = list()
+        parameters.append(name)
+
+        return self.select(statement=statement, parameters=parameters)
+
+    def select_all_by_state(self, state=None):
+        """Select all C{ProcessSLURM} objects by I{state}.
+
+        @param state: State
+        @type state: str | None
+        @return: Python C{list} of C{ProcessSLURM} objects
+        @rtype: list[ProcessSLURM]
+        """
+        parameters = list()
+        if state is None:
+            statement = self.statement_select(where_clause='state IS NULL')
+        else:
+            statement = self.statement_select(where_clause='state = ?')
+            parameters.append(state)
+
+        return self.select(statement=statement, parameters=parameters)
+
+    def select_by_job_id(self, job_id):
+        """Select one C{ProcessSLURM} object by job_id.
+
+        @param job_id: Job identifier
+        @type job_id: str
+        @return: Python C{list} of C{ProcessSLURM} objects
+        @rtype: ProcessSLURM
+        """
+        statement = self.statement_select(where_clause='job_id = ?')
+        parameters = list()
+        parameters.append(job_id)
+
+        object_list = self.select(statement=statement, parameters=parameters)
+        object_length = len(object_list)
+
+        if object_length > 1:
+            raise Exception("SQL database returned more than one row for unique field 'job_id'.")
+        elif object_length == 1:
+            return object_list[0]
+        else:
+            return
 
 
 def _recalculate_memory(memory):
@@ -101,7 +537,8 @@ def _recalculate_memory(memory):
 
 
 def submit(drms, debug=0):
-    """Submit C{Executable} objects into the Simple Linux Utility for Resource Management (SLURM)
+    """Submit each C{Executable} object of a C{DRMS} object into the
+    Simple Linux Utility for Resource Management (SLURM)
     Distributed Resource Management System (DRMS).
 
     @param drms: Distributed Resource Management System (C{DRMS})
@@ -112,12 +549,7 @@ def submit(drms, debug=0):
 
     # Open or create a database.
 
-    database_path = os.path.join(drms.working_directory, 'bsfpython_slurm_jobs.db')
-
-    database_connection = DatabaseConnection(file_path=database_path)
-    database_connection.create_schema()
-    # TODO: Not sure it is a good idea to require this after every call?
-    # Should this be part of the DatabaseConnection method?
+    database_connection = DatabaseConnection(file_path=os.path.join(drms.working_directory, database_file_name))
     job_submission_adaptor = JobSubmissionAdaptor(database_connection=database_connection)
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
@@ -130,6 +562,7 @@ def submit(drms, debug=0):
         output += "\n"
 
     for executable in drms.executables:
+        assert isinstance(executable, Executable)
 
         command = list()
 
@@ -199,12 +632,12 @@ def submit(drms, debug=0):
             command.append('--workdir')
             command.append(drms.working_directory)
 
-            # Write standard output and standard error streams into a
-            # 'bsfpython_slurm_output' directory under the 'working_directory'.
+            # Write standard output and standard error streams into an
+            # output directory under the working directory.
+            # Create the output directory first via its absolute path,
+            # then set standard error and standard output relative to it.
 
-            # TODO: Use slurm_output_name to keep --error and --output relative to the --workdir and
-            # slurm_output_path to create the directory.
-            output_directory_path = os.path.join(drms.working_directory, output_directory)
+            output_directory_path = os.path.join(drms.working_directory, output_directory_name)
 
             if not os.path.isdir(output_directory_path):
                 # In principle, a race condition could occur as the directory
@@ -216,10 +649,10 @@ def submit(drms, debug=0):
                         raise
 
             command.append('--error')
-            command.append(os.path.join(output_directory, '_'.join((executable.name, '%j.err'))))
+            command.append(os.path.join(output_directory_name, '_'.join((executable.name, '%j.err'))))
 
             command.append('--output')
-            command.append(os.path.join(output_directory, '_'.join((executable.name, '%j.out'))))
+            command.append(os.path.join(output_directory_name, '_'.join((executable.name, '%j.out'))))
 
         # Job name
 
@@ -244,8 +677,7 @@ def submit(drms, debug=0):
                 warnings.warn(
                     "While submitting Executable with name {!r}, "
                     "Executable with name {!r} that it depends on, "
-                    "has not been submitted before.".
-                    format(executable.name, executable_name),
+                    "has not been submitted before.".format(executable.name, executable_name),
                     UserWarning)
         if len(process_identifier_list):
             # Only set the dependency option if there are some on the process identifier list.
@@ -286,8 +718,7 @@ def submit(drms, debug=0):
                     "SLURM sbatch returned exit code {!r}\n"
                     "STDOUT: {}\n"
                     "STDERR: {}\n"
-                    "Command list representation: {!r}".
-                    format(child_return_code, child_stdout, child_stderr, command))
+                    "Command list representation: {!r}".format(child_return_code, child_stdout, child_stderr, command))
 
             # Parse the multi-line STDOUT string to get the SLURM process identifier and name.
             # The response to the SLURM sbatch command looks like:
@@ -311,13 +742,13 @@ def submit(drms, debug=0):
         job_submission = job_submission_adaptor.select_by_name(name=executable.name)
         if job_submission:
             job_submission.command = executable.command_str()
-            job_submission_adaptor.update(data_object=job_submission)
+            job_submission_adaptor.update(object_instance=job_submission)
         else:
             job_submission = JobSubmission(
                 executable_id=0,
                 name=executable.name,
                 command=executable.command_str())
-            job_submission_adaptor.insert(data_object=job_submission)
+            job_submission_adaptor.insert(object_instance=job_submission)
 
         # Only store a ProcessSLURM object, if an Executable has been submitted into SLURM.
 
@@ -325,12 +756,240 @@ def submit(drms, debug=0):
             process_slurm = process_slurm_adaptor.select_by_job_id(job_id=executable.process_identifier)
             if not process_slurm:
                 process_slurm = ProcessSLURM(job_id=executable.process_identifier, job_name=executable.name)
-                process_slurm_adaptor.insert(data_object=process_slurm)
+                process_slurm_adaptor.insert(object_instance=process_slurm)
 
         # The commit statement should affect both insert statements above.
-        job_submission_adaptor.database_connection.connection.commit()
+        job_submission_adaptor.commit()
 
     script_path = os.path.join(drms.working_directory, 'bsfpython_slurm_{}.bash'.format(drms.name))
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()
+
+
+def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout_path=None, debug=0):
+    """Process the standard output (I{STDOUT}) stream from the C{Popen} child process as a separate thread.
+
+    @param stdout_handle: The I{STDOUT} or I{STDERR} file handle
+    @type stdout_handle: file
+    @param thread_lock: A Python C{threading.Lock} object
+    @type thread_lock: thread.lock
+    @param process_slurm_adaptor: C{ProcessSLURMAdaptor}
+    @type process_slurm_adaptor: ProcessSLURMAdaptor
+    @param stdout_path: I{STDOUT} file path
+    @type stdout_path: str | unicode
+    @param debug: Debug level
+    @type debug: int
+    @return:
+    @rtype:
+    """
+
+    thread_lock.acquire(True)
+    if debug > 0:
+        print '[{}] Started Runner {} processor in module {}.'. \
+            format(datetime.datetime.now().isoformat(), 'STDOUT', __name__)
+    output_file = None
+    if stdout_path:
+        output_file = open(stdout_path, 'w')
+        if debug > 0:
+            print '[{}] Opened {} file {!r}.'. \
+                format(datetime.datetime.now().isoformat(), 'STDOUT', stdout_path)
+    thread_lock.release()
+
+    dict_reader = csv.DictReader(f=stdout_handle, delimiter='|')
+
+    for row_dict in dict_reader:
+        new_process_slurm = ProcessSLURM(
+            job_id=row_dict['JobID'],
+            job_name=row_dict['JobName'],
+            partition=row_dict['Partition'],
+            max_vm_size=row_dict['MaxVMSize'],
+            max_vm_size_node=row_dict['MaxVMSizeNode'],
+            max_vm_size_task=row_dict['MaxVMSizeTask'],
+            average_vm_size=row_dict['AveVMSize'],
+            max_rss=row_dict['MaxRSS'],
+            max_rss_node=row_dict['MaxRSSNode'],
+            max_rss_task=row_dict['MaxRSSTask'],
+            average_rss=row_dict['AveRSS'],
+            max_pages=row_dict['MaxPages'],
+            max_pages_node=row_dict['MaxPagesNode'],
+            max_pages_task=row_dict['MaxPagesTask'],
+            average_pages=row_dict['AvePages'],
+            min_cpu=row_dict['MinCPU'],
+            min_cpu_node=row_dict['MinCPUNode'],
+            min_cpu_task=row_dict['MinCPUTask'],
+            average_cpu=row_dict['AveCPU'],
+            number_tasks=row_dict['NTasks'],
+            allocated_cpus=row_dict['AllocCPUS'],
+            elapsed=row_dict['Elapsed'],
+            state=row_dict['State'],
+            exit_code=row_dict['ExitCode'],
+            average_cpu_frequency=row_dict['AveCPUFreq'],
+            requested_cpu_frequency=row_dict['ReqCPUFreq'],
+            requested_memory=row_dict['ReqMem'],
+            consumed_energy=row_dict['ConsumedEnergy'],
+            max_disk_read=row_dict['MaxDiskRead'],
+            max_disk_read_node=row_dict['MaxDiskReadNode'],
+            max_disk_read_task=row_dict['MaxDiskReadTask'],
+            average_disk_read=row_dict['AveDiskRead'],
+            max_disk_write=row_dict['MaxDiskWrite'],
+            max_disk_write_node=row_dict['MaxDiskWriteNode'],
+            max_disk_write_task=row_dict['MaxDiskWriteTask'],
+            average_disk_write=row_dict['AveDiskWrite'])
+
+        # Do not insert or update nascent states into the database.
+        if new_process_slurm.state in ('PENDING', 'RUNNING'):
+            continue
+
+        # Check if the ProcessSLURM object already exists.
+        old_process_slurm = process_slurm_adaptor.select_by_job_id(job_id=new_process_slurm.job_id)
+        if old_process_slurm is None:
+            # The JobID is not in the database, which is caused by job_id.batch entries.
+            # Insert them afterwards.
+            thread_lock.acquire(True)
+            process_slurm_adaptor.insert(object_instance=new_process_slurm)
+            thread_lock.release()
+        else:
+            new_process_slurm.process_slurm_id = old_process_slurm.process_slurm_id
+            thread_lock.acquire(True)
+            process_slurm_adaptor.update(object_instance=new_process_slurm)
+            thread_lock.release()
+
+    thread_lock.acquire(True)
+    if debug > 0:
+        print '[{}] Received EOF on {} pipe.'.format(datetime.datetime.now().isoformat(), 'STDOUT')
+    if output_file:
+        output_file.close()
+        if debug > 0:
+            print '[{}] Closed {} file {!r}.'. \
+                format(datetime.datetime.now().isoformat(), 'STDOUT', stdout_path)
+    thread_lock.release()
+
+    # Commit changes to the database and explicitly disconnect.
+    process_slurm_adaptor.commit()
+    process_slurm_adaptor.disconnect()
+
+    return
+
+
+def check_state(drms, debug=0):
+    """Check the state of each C{Executable} object in the
+    Distributed Resource Management System (C{DRMS}).
+
+    @param drms: Distributed Resource Management System (C{DRMS})
+    @type drms: DRMS
+    @param debug: Debug level
+    @type debug: int
+    """
+
+    # Open or create a database.
+
+    database_connection = DatabaseConnection(file_path=os.path.join(drms.working_directory, database_file_name))
+    process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
+
+    # Get all Processes from the database that have no state set.
+
+    process_slurm_list = process_slurm_adaptor.select_all_by_state(state=None)
+
+    # Explicitly disconnect here so that the Thread can access the database.
+
+    process_slurm_adaptor.disconnect()
+
+    # Return if no ProcessSLURM objects need updating.
+    if not process_slurm_list:
+        return
+
+    # TODO: The Executable class, so far, does not allow setting specific STDOUT and STDERR handlers ...
+    executable = Executable(name='sacct', program='sacct')
+    executable.add_option_long(key='jobs', value=','.join(map(lambda x: x.job_id, process_slurm_list)))
+    executable.add_switch_long(key='long')
+    executable.add_switch_long(key='parsable')
+
+    # Executable.run() parameters.
+    max_thread_joins = 10
+    thread_join_timeout = 10
+
+    attempt_counter = 0
+
+    # TODO: ... therefore, the following block is a complete duplication of code in method Executable.run().
+    # TODO: Requires re-engineering of the Executable class.
+
+    while attempt_counter < executable.maximum_attempts:
+
+        child_process = subprocess.Popen(
+            args=executable.command_list(),
+            bufsize=4096,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=False,
+            close_fds='posix' in sys.builtin_module_names)
+
+        # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
+        # should make sure that buffers are not filling up.
+
+        thread_lock = Lock()
+
+        thread_out = Thread(
+            target=check_state_stdout,
+            kwargs=dict(
+                stdout_handle=child_process.stdout,
+                thread_lock=thread_lock,
+                process_slurm_adaptor=process_slurm_adaptor,
+                stdout_path=executable.stdout_path,
+                debug=debug))
+        thread_out.daemon = True  # Thread dies with the program.
+        thread_out.start()
+
+        thread_err = Thread(
+            target=Executable.process_stderr,
+            kwargs=dict(
+                stderr_handle=child_process.stderr,
+                thread_lock=thread_lock,
+                stderr_path=executable.stderr_path,  # The Executable.stderr_path is None, thus printing to STDOUT.
+                debug=debug))
+        thread_err.daemon = True  # Thread dies with the program.
+        thread_err.start()
+
+        # Wait for the child process to finish.
+
+        child_return_code = child_process.wait()
+
+        thread_join_counter = 0
+
+        while thread_out.is_alive() and thread_join_counter < max_thread_joins:
+            thread_lock.acquire(True)
+            if debug > 0:
+                print '[{}] Waiting for STDOUT processor to finish.'. \
+                    format(datetime.datetime.now().isoformat())
+            thread_lock.release()
+
+            thread_out.join(timeout=thread_join_timeout)
+            thread_join_counter += 1
+
+        thread_join_counter = 0
+
+        while thread_err.is_alive() and thread_join_counter < max_thread_joins:
+            thread_lock.acquire(True)
+            if debug > 0:
+                print '[{}] Waiting for STDERR processor to finish.'. \
+                    format(datetime.datetime.now().isoformat())
+            thread_lock.release()
+
+            thread_err.join(timeout=thread_join_timeout)
+            thread_join_counter += 1
+
+        if child_return_code > 0:
+            if debug > 0:
+                print '[{}] Child process {!r} failed with exit code {}'. \
+                    format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
+            attempt_counter += 1
+        elif child_return_code < 0:
+            if debug > 0:
+                print '[{}] Child process {!r} received signal {}.'. \
+                    format(datetime.datetime.now().isoformat(), executable.name, -child_return_code)
+        else:
+            if debug > 0:
+                print '[{}] Child process {!r} completed successfully {}.'. \
+                    format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
+            break

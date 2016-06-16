@@ -29,9 +29,12 @@ A package of methods supporting the GNU Bourne-Again Shell (Bash).
 
 import os
 
+from bsf.process import Executable
+
 
 def submit(drms, debug=0):
-    """Submit C{Executable} objects by writing a GNU Bourne-Again Shell (BASH) script into the C{DRMS.work_directory}.
+    """Submit each C{Executable} object of a C{DRMS} object
+    by writing a GNU Bourne-Again Shell (BASH) script into the C{DRMS.work_directory}.
 
     @param drms: Distributed Resource Management System (C{DRMS})
     @type drms: DRMS
@@ -48,6 +51,7 @@ def submit(drms, debug=0):
         output += "\n"
 
     for executable in drms.executables:
+        assert isinstance(executable, Executable)
         if not executable.submit:
             output += '# '
         output += executable.command_str()
@@ -62,3 +66,22 @@ def submit(drms, debug=0):
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()
+
+
+def check_state(drms, debug=0):
+    """Check the state of each C{Executable} object in the
+    Distributed Resource Management System (C{DRMS}).
+
+    @param drms: Distributed Resource Management System (C{DRMS})
+    @type drms: DRMS
+    @param debug: Debug level
+    @type debug: int
+    """
+
+    if drms:
+        pass
+
+    if debug:
+        pass
+
+    return
