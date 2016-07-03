@@ -1366,8 +1366,8 @@ class BamIndexDecoder(Analysis):
                     'Project Name': row_dict['library_name'],
                     'Project Size': row_dict['library_size'],
                     'Sample Name': row_dict['sample_name'],
-                    'PairedReads Barcode1': row_dict['barcode_sequence_1'],
-                    'PairedReads Barcode2': row_dict['barcode_sequence_2'],
+                    'PairedReads Index 1': row_dict['barcode_sequence_1'],
+                    'PairedReads Index 2': row_dict['barcode_sequence_2'],
                     # TODO: It would be good to add a RunnableStep to populate the ReadGroup.
                     'PairedReads ReadGroup': '',
                     'Reads1 Name': '_'.join((self.project_name, key, row_dict['sample_name'])),
