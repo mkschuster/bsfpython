@@ -1396,7 +1396,7 @@ class ChIPSeq(Analysis):
         output += '<body>\n'
         output += '\n'
 
-        output += '<h1>{} ChIP-Seq Analysis</h1>\n'.format(self.project_name)
+        output += '<h1 id="chip_seq_analysis">{} ChIP-Seq Analysis</h1>\n'.format(self.project_name)
         output += '\n'
 
         output += '<p>\n'
@@ -1415,7 +1415,7 @@ class ChIPSeq(Analysis):
         options_dict['hubUrl'] = '{}/{}/chipseq_hub.txt'. \
             format(Default.url_absolute_projects(), link_name)
 
-        output += '<p>\n'
+        output += '<p id="ucsc_track_hub">\n'
         output += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
         output += 'in their genomic context via the project-specific\n'
         output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'. \
@@ -1424,7 +1424,7 @@ class ChIPSeq(Analysis):
         output += '</p>\n'
         output += '\n'
 
-        output += '<table>\n'
+        output += '<table id="peak_calling_table">\n'
         output += '\n'
 
         output += '<tr>\n'
@@ -1493,7 +1493,7 @@ class ChIPSeq(Analysis):
                                     track_output += 'longLabel {} ChIP-Seq read counts for {} of {} versus {}\n'. \
                                         format(scaling.capitalize(), state, t_replicate_key, c_replicate_key)
                                     track_output += 'bigDataUrl '
-                                    track_output += './{}__{}_MACS_wiggle/{}/{}__{}_{}_afterfiting_all.bw\n'. \
+                                    track_output += '{}__{}_MACS_wiggle/{}/{}__{}_{}_afterfiting_all.bw\n'. \
                                         format(t_replicate_key, c_replicate_key, state,
                                                t_replicate_key, c_replicate_key, state)
                                     if treatment and not absolute:
@@ -1532,7 +1532,7 @@ class ChIPSeq(Analysis):
                                 format(t_replicate_key, c_replicate_key)
                             track_output += 'longLabel ChIP-Seq peaks for {} versus {}\n'. \
                                 format(t_replicate_key, c_replicate_key)
-                            track_output += 'bigDataUrl ./{}__{}_peaks.bb\n'. \
+                            track_output += 'bigDataUrl {}__{}_peaks.bb\n'. \
                                 format(t_replicate_key, c_replicate_key)
                             track_output += 'visibility pack\n'
                             # 'html' is missing from the common settings.
@@ -1552,17 +1552,17 @@ class ChIPSeq(Analysis):
                             # if not treatment and absolute:
                             # output += '<td><strong>{}</strong></td>\n'.format(c_replicate_key)
 
-                            output += '<td><a href="./{}__{}_peaks.xls">Peaks {} versus {}</a></td>\n'. \
+                            output += '<td><a href="{}__{}_peaks.xls">Peaks {} versus {}</a></td>\n'. \
                                 format(t_replicate_key, c_replicate_key,
                                        t_replicate_key, c_replicate_key)
 
                             output += '<td>'
-                            output += '<a href="./{}__{}_negative_peaks.xls">Negative peaks {} versus {}</a>'. \
+                            output += '<a href="{}__{}_negative_peaks.xls">Negative peaks {} versus {}</a>'. \
                                 format(t_replicate_key, c_replicate_key,
                                        t_replicate_key, c_replicate_key)
                             output += '</td>\n'
 
-                            output += '<td><a href="./{}__{}_model.r">R model</a></td>\n'. \
+                            output += '<td><a href="{}__{}_model.r">R model</a></td>\n'. \
                                 format(t_replicate_key, c_replicate_key,
                                        t_replicate_key, c_replicate_key)
 
@@ -1599,7 +1599,7 @@ class ChIPSeq(Analysis):
                 track_output += 'shortLabel Alignment_{}\n'.format(replicate_key)
                 track_output += 'longLabel Bowtie2 alignment of {}\n'. \
                     format(replicate_key)
-                track_output += 'bigDataUrl ./{}.aligned.sorted.bam\n'. \
+                track_output += 'bigDataUrl {}.aligned.sorted.bam\n'. \
                     format(replicate_key)
                 track_output += 'visibility hide\n'
                 # TODO: The 'html' option is missing.
@@ -1657,7 +1657,7 @@ class ChIPSeq(Analysis):
         output += '<body>\n'
         output += '\n'
 
-        output += '<h1>{} ChIP-Seq Analysis</h1>\n'.format(self.project_name)
+        output += '<h1 id="chip_seq_analysis">{} ChIP-Seq Analysis</h1>\n'.format(self.project_name)
         output += '\n'
 
         output += '<p>\n'
@@ -1675,7 +1675,7 @@ class ChIPSeq(Analysis):
         options_dict['hubUrl'] = '{}/{}/chipseq_hub.txt'. \
             format(Default.url_absolute_projects(), link_name)
 
-        output += '<p>\n'
+        output += '<p id="ucsc_track_hub">\n'
         output += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
         output += 'in their genomic context via the project-specific\n'
         output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'. \
@@ -1684,7 +1684,7 @@ class ChIPSeq(Analysis):
         output += '</p>\n'
         output += '\n'
 
-        output += '<table>\n'
+        output += '<table id="peak_calling_table">\n'
         output += '\n'
 
         output += '<tr>\n'
@@ -1815,7 +1815,7 @@ class ChIPSeq(Analysis):
                                 format(t_replicate_key, c_replicate_key)
                             track_output += 'longLabel ChIP background signal {} versus {}\n'. \
                                 format(t_replicate_key, c_replicate_key)
-                            track_output += 'bigDataUrl ./{}/{}_control_lambda.bw\n'. \
+                            track_output += 'bigDataUrl {}/{}_control_lambda.bw\n'. \
                                 format(prefix, prefix)
                             track_output += 'visibility dense\n'
                             # track_output += 'html {}\n'.format()
@@ -1876,7 +1876,7 @@ class ChIPSeq(Analysis):
                                 format(t_replicate_key, c_replicate_key)
                             track_output += 'longLabel ChIP enrichment signal {} versus {}\n'. \
                                 format(t_replicate_key, c_replicate_key)
-                            track_output += 'bigDataUrl ./{}/{}_treat_pileup.bw\n'. \
+                            track_output += 'bigDataUrl {}/{}_treat_pileup.bw\n'. \
                                 format(prefix, prefix)
                             track_output += 'visibility dense\n'
                             # track_output += 'html {}\n'.format()
@@ -1937,7 +1937,7 @@ class ChIPSeq(Analysis):
                                 format(t_replicate_key, c_replicate_key)
                             track_output += 'longLabel ChIP intensity {} versus {}\n'. \
                                 format(t_replicate_key, c_replicate_key)
-                            track_output += 'bigDataUrl ./{}/{}_bdgcmp.bw\n'. \
+                            track_output += 'bigDataUrl {}/{}_bdgcmp.bw\n'. \
                                 format(prefix, prefix)
                             track_output += 'visibility full\n'
                             # track_output += 'html {}\n'.format()
@@ -1982,7 +1982,7 @@ class ChIPSeq(Analysis):
                                 format(t_replicate_key, c_replicate_key)
                             track_output += 'longLabel ChIP peaks {} versus {}\n'. \
                                 format(t_replicate_key, c_replicate_key)
-                            track_output += 'bigDataUrl ./{}/{}_peaks.bb\n'. \
+                            track_output += 'bigDataUrl {}/{}_peaks.bb\n'. \
                                 format(prefix, prefix)
                             track_output += 'visibility pack\n'
                             # track_output += 'html {}\n'.format()
@@ -2012,7 +2012,7 @@ class ChIPSeq(Analysis):
                                 format(t_replicate_key, c_replicate_key)
                             track_output += 'longLabel ChIP summits {} versus {}\n'. \
                                 format(t_replicate_key, c_replicate_key)
-                            track_output += 'bigDataUrl ./{}/{}_summits.bb\n'. \
+                            track_output += 'bigDataUrl {}/{}_summits.bb\n'. \
                                 format(prefix, prefix)
                             track_output += 'visibility pack\n'
                             # track_output += 'html {}\n'.format()
@@ -2033,10 +2033,10 @@ class ChIPSeq(Analysis):
 
                             output += '<tr>\n'
 
-                            output += '<td><a href="./{}/{}_peaks.xls">Peaks {} versus {}</a></td>\n'. \
+                            output += '<td><a href="{}/{}_peaks.xls">Peaks {} versus {}</a></td>\n'. \
                                 format(prefix, prefix, t_replicate_key, c_replicate_key)
 
-                            output += '<td><a href="./{}/{}_model.r">R model</a></td>\n'. \
+                            output += '<td><a href="{}/{}_model.r">R model</a></td>\n'. \
                                 format(prefix, prefix)
 
                             output += '</tr>\n'
@@ -2074,7 +2074,7 @@ class ChIPSeq(Analysis):
                 track_output += 'shortLabel {}_alignment\n'.format(replicate_key)
                 track_output += 'longLabel {} ChIP read alignment\n'. \
                     format(replicate_key)
-                track_output += 'bigDataUrl ./chipseq_bowtie2_{}/{}.aligned.sorted.bam\n'. \
+                track_output += 'bigDataUrl chipseq_bowtie2_{}/{}.aligned.sorted.bam\n'. \
                     format(replicate_key, replicate_key)
                 track_output += 'visibility hide\n'
                 # track_output += 'html {}\n'.format()
@@ -2092,10 +2092,10 @@ class ChIPSeq(Analysis):
 
         # Differential binding analysis.
 
-        output += '<h2>Differential Binding Analysis</h2>\n'
+        output += '<h2 id="differential_binding">Differential Binding Analysis</h2>\n'
         output += '\n'
 
-        output += '<table>\n'
+        output += '<table id="differential_binding_table">\n'
         output += '\n'
 
         output += '<tr>\n'
@@ -2126,10 +2126,10 @@ class ChIPSeq(Analysis):
             # Correlation heat map of peak caller scores.
 
             output += '<td>'
-            output += '<a href="./{}/{}_correlation_peak_caller_score.png">'. \
+            output += '<a href="{}/{}_correlation_peak_caller_score.png">'. \
                 format(prefix, prefix)
             output += '<img alt="DiffBind correlation analysis for factor {}" ' \
-                      'src="./{}/{}_correlation_peak_caller_score.png" height="80" width="80">'. \
+                      'src="{}/{}_correlation_peak_caller_score.png" height="80" width="80">'. \
                 format(key, prefix, prefix)
             output += '</a>'
             output += '</td>\n'
@@ -2137,10 +2137,10 @@ class ChIPSeq(Analysis):
             # Correlation heat map of counts.
 
             output += '<td>'
-            output += '<a href="./{}/{}_correlation_read_counts.png">'. \
+            output += '<a href="{}/{}_correlation_read_counts.png">'. \
                 format(prefix, prefix)
             output += '<img alt="DiffBind correlation analysis for factor {}" ' \
-                      'src="./{}/{}_correlation_read_counts.png" height="80" width="80">'. \
+                      'src="{}/{}_correlation_read_counts.png" height="80" width="80">'. \
                 format(key, prefix, prefix)
             output += '</a>'
             output += '</td>\n'
@@ -2148,10 +2148,10 @@ class ChIPSeq(Analysis):
             # Correlation heat map of differential binding analysis.
 
             output += '<td>'
-            output += '<a href="./{}/{}_correlation_analysis.png">'. \
+            output += '<a href="{}/{}_correlation_analysis.png">'. \
                 format(prefix, prefix)
             output += '<img alt="DiffBind correlation analysis for factor {}" ' \
-                      'src="./{}/{}_correlation_analysis.png" height="80" width="80">'. \
+                      'src="{}/{}_correlation_analysis.png" height="80" width="80">'. \
                 format(key, prefix, prefix)
             output += '</a>'
             output += '</td>\n'
@@ -2189,9 +2189,9 @@ class ChIPSeq(Analysis):
                 # MA Plot
 
                 output += '<td>'
-                output += '<a href="./{}/{}_ma_plot_{}.png">'.format(prefix, prefix, suffix)
+                output += '<a href="{}/{}_ma_plot_{}.png">'.format(prefix, prefix, suffix)
                 output += '<img alt="DiffBind MA plot for factor {}" ' \
-                          'src="./{}/{}_ma_plot_{}.png" height="80" width="80">'. \
+                          'src="{}/{}_ma_plot_{}.png" height="80" width="80">'. \
                     format(key, prefix, prefix, suffix)
                 output += '</a>'
                 output += '</td>\n'
@@ -2199,9 +2199,9 @@ class ChIPSeq(Analysis):
                 # Scatter Plot
 
                 output += '<td>'
-                output += '<a href="./{}/{}_scatter_plot_{}.png">'.format(prefix, prefix, suffix)
+                output += '<a href="{}/{}_scatter_plot_{}.png">'.format(prefix, prefix, suffix)
                 output += '<img alt="DiffBind scatter plot for factor {}" ' \
-                          'src="./{}/{}_scatter_plot_{}.png" height="80" width="80">'. \
+                          'src="{}/{}_scatter_plot_{}.png" height="80" width="80">'. \
                     format(key, prefix, prefix, suffix)
                 output += '</a>'
                 output += '</td>\n'
@@ -2209,9 +2209,9 @@ class ChIPSeq(Analysis):
                 # Principal Component Analysis Plot
 
                 output += '<td>'
-                output += '<a href="./{}/{}_pca_plot_{}.png">'.format(prefix, prefix, suffix)
+                output += '<a href="{}/{}_pca_plot_{}.png">'.format(prefix, prefix, suffix)
                 output += '<img alt="DiffBind PCA plot for factor {}" ' \
-                          'src="./{}/{}_pca_plot_{}.png" height="80" width="80">'. \
+                          'src="{}/{}_pca_plot_{}.png" height="80" width="80">'. \
                     format(key, prefix, prefix, suffix)
                 output += '</a>'
                 output += '</td>\n'
@@ -2219,16 +2219,16 @@ class ChIPSeq(Analysis):
                 # Box Plot
 
                 output += '<td>'
-                output += '<a href="./{}/{}_box_plot_{}.png">'.format(prefix, prefix, suffix)
+                output += '<a href="{}/{}_box_plot_{}.png">'.format(prefix, prefix, suffix)
                 output += '<img alt="DiffBind Box plot for factor {}" ' \
-                          'src="./{}/{}_box_plot_{}.png" height="80" width="80">'. \
+                          'src="{}/{}_box_plot_{}.png" height="80" width="80">'. \
                     format(key, prefix, prefix, suffix)
                 output += '</a>'
                 output += '</td>\n'
 
                 # DiffBind report
 
-                output += '<td><a href="./{}/DBA_{}_report_{}.csv">DBA_{}_report_{}</a></td>\n'. \
+                output += '<td><a href="{}/DBA_{}_report_{}.csv">DBA_{}_report_{}</a></td>\n'. \
                     format(prefix, key, suffix, key, suffix)
 
                 output += '</tr>\n'
