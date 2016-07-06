@@ -60,8 +60,6 @@ declare -x TMPDIR="${temporary_directory}";
 
 # https://gist.github.com/taoliu/2469050
 
-# TODO: Activate the deletion of the rather big *.bdg files after debugging ...
-
 # NAME_control_lambda.bdg
 
 if [ -f "./${prefix}/${prefix}_control_lambda.bdg" ]; then
@@ -83,8 +81,8 @@ if [ -f "./${prefix}/${prefix}_control_lambda.bdg" ]; then
         || exit 1
 
     rm "./${prefix}/${prefix}_clipped.bdg" || exit 1
-    mv "${prefix}/${prefix}_control_lambda.bdg" "${prefix}/${prefix}_control_lambda.bdg.bak" || exit 1
-#   rm "${prefix}/${prefix}_control_lambda.bdg" || exit 1
+#   mv "${prefix}/${prefix}_control_lambda.bdg" "${prefix}/${prefix}_control_lambda.bdg.bak" || exit 1
+    rm "${prefix}/${prefix}_control_lambda.bdg" || exit 1
 
 fi
 
