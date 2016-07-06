@@ -52,7 +52,7 @@ samtools view -b -S -u "${prefix}.sam" | \
 
 # Index the aligned and sorted BAM file.
 
-samtools index "${prefix}.bam" "${prefix}.bai" || exit 1
+samtools index -b "${prefix}.bam" "${prefix}.bam.bai" || exit 1
 
 rm "${prefix}.sam" || exit 1
 
