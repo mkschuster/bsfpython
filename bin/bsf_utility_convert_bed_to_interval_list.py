@@ -55,7 +55,7 @@ argument_parser.add_argument(
     '--output-path',
     dest='output_path',
     help='Picard-style intervals file path',
-    required=True)
+    required=False)
 
 argument_parser.add_argument(
     '--dictionary',
@@ -70,7 +70,18 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-output_file = open(name_space.output_path, 'wb')
+if name_space.output_path is None or not name_space.output_path:
+    # If the output-path option is missing, construct the output path from the BED input path.
+    output_path = name_space.input_path
+    assert isinstance(output_path, basestring)
+    if output_path.endswith('.bed'):
+        output_path = output_path[:-3] + 'interval_list'
+    else:
+        raise Exception('The input-path option does not specify a *.bed file and the output-path opption is missing.')
+else:
+    output_path = name_space.output_path
+
+output_file = open(output_path, 'wb')
 
 # Read the SAM header dictionary and copy it to the output file.
 
