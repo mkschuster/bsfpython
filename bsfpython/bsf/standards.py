@@ -209,8 +209,14 @@ class Default(object):
     @type drms_parallel_environment: str
     @ivar drms_queue: DRMS queue
     @type drms_queue: str
+    @ivar operator_contact: Contact e-mail address
+    @type operator_contact: str
     @ivar operator_e_mail: Operator e-mail
     @type operator_e_mail: str
+    @ivar operator_institution: Institution name
+    @type operator_institution: str
+    @ivar operator_sequencing_centre: BAM sequencing centre code
+    @type operator_sequencing_centre: str
     @ivar ucsc_host_name: UCSC Genome Browser host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
     @type ucsc_host_name: str
     @ivar url_protocol: URL protocol (i.e. HTTP)
@@ -310,19 +316,41 @@ class Default(object):
 
         return default
 
-    def __init__(self, classpath_gatk=None, classpath_illumina2bam=None, classpath_picard=None, classpath_snpeff=None,
-                 directory_cache=None, directory_home=None, directory_runs_illumina=None, directory_sequences=None,
-                 directory_samples=None,
-                 directory_projects=None, directory_public_html=None, directory_genomes=None,
-                 directory_annotations=None, directory_gatk_bundle=None, directory_intervals=None,
-                 directory_snpeff_data=None,
-                 indices=None, drms_implementation=None,
-                 drms_maximum_threads=None, drms_memory_limit_hard=None, drms_memory_limit_soft=None,
-                 drms_time_limit=None, drms_parallel_environment=None, drms_queue=None,
-                 operator_e_mail=None, operator_sequencing_centre=None,
-                 genome_aliases_ucsc_dict=None,
-                 ucsc_host_name=None, url_protocol=None,
-                 url_host_name=None, url_relative_projects=None):
+    def __init__(
+            self,
+            classpath_gatk=None,
+            classpath_illumina2bam=None,
+            classpath_picard=None,
+            classpath_snpeff=None,
+            directory_cache=None,
+            directory_home=None,
+            directory_runs_illumina=None,
+            directory_sequences=None,
+            directory_samples=None,
+            directory_projects=None,
+            directory_public_html=None,
+            directory_genomes=None,
+            directory_annotations=None,
+            directory_gatk_bundle=None,
+            directory_intervals=None,
+            directory_snpeff_data=None,
+            indices=None,
+            drms_implementation=None,
+            drms_maximum_threads=None,
+            drms_memory_limit_hard=None,
+            drms_memory_limit_soft=None,
+            drms_time_limit=None,
+            drms_parallel_environment=None,
+            drms_queue=None,
+            operator_contact=None,
+            operator_e_mail=None,
+            operator_institution=None,
+            operator_sequencing_centre=None,
+            genome_aliases_ucsc_dict=None,
+            ucsc_host_name=None,
+            url_protocol=None,
+            url_host_name=None,
+            url_relative_projects=None):
         """Initialise a Default object.
 
         @param classpath_gatk: Genome Analysis Toolkit Java Archive (JAR) class path directory
@@ -373,8 +401,12 @@ class Default(object):
         @type drms_parallel_environment: str
         @param drms_queue: DRMS queue
         @type drms_queue: str
+        @param operator_contact: Contact e-mail address
+        @type operator_contact: str
         @param operator_e_mail: Operator e-mail
         @type operator_e_mail: str
+        @param operator_institution: Institution name
+        @type operator_institution: str
         @param operator_sequencing_centre: BAM sequencing centre code
         @type operator_sequencing_centre: str
         @param genome_aliases_ucsc_dict: Alias of genome assembly names for the UCSC Genome Browser
@@ -523,10 +555,20 @@ class Default(object):
 
         # Set operator information.
 
+        if operator_contact is None:
+            self.operator_contact = str()
+        else:
+            self.operator_contact = operator_contact
+
         if operator_e_mail is None:
             self.operator_e_mail = str()
         else:
             self.operator_e_mail = operator_e_mail
+
+        if operator_institution is None:
+            self.operator_institution = str()
+        else:
+            self.operator_institution = operator_institution
 
         if operator_sequencing_centre is None:
             self.operator_sequencing_centre = str()
@@ -625,7 +667,9 @@ class Default(object):
 
         section = 'operator'
 
+        self.operator_contact = cp.get(section=section, option='contact')
         self.operator_e_mail = cp.get(section=section, option='e_mail')
+        self.operator_institution = cp.get(section=section, option='institution')
         self.operator_sequencing_centre = cp.get(section=section, option='sequencing_centre')
 
         section = 'genome_aliases_ucsc'
