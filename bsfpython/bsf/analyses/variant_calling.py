@@ -183,6 +183,8 @@ class VariantCallingGATK(Analysis):
     @type drms_name_summary: str
     @cvar drms_name_somatic: C{DRMS.name} for the somatic C{Analysis} stage
     @type drms_name_somatic: str
+    @cvar report_name: HTML Analysis report name that should be overridden by sub-classes
+    @type report_name: str
     @ivar replicate_grouping: Group individual C{PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool
     @ivar comparison_path: Comparison file
@@ -256,6 +258,7 @@ class VariantCallingGATK(Analysis):
     drms_name_split_cohort = 'variant_calling_split_cohort'
     drms_name_summary = 'variant_calling_summary'
     drms_name_somatic = 'variant_calling_somatic'
+    report_name = "Variant Calling Analysis"
 
     def __init__(
             self,
@@ -2165,6 +2168,8 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='out', value=file_path_dict_diagnosis['callable_bed'])
             runnable_step.add_gatk_option(key='summary', value=file_path_dict_diagnosis['callable_txt'])
 
+            # Run the bsfR bsf_variant_calling_coverage.R script.
+
             runnable_step = runnable_diagnose_sample.add_runnable_step(
                 runnable_step=RunnableStep(
                     name='diagnose_sample_coverage',
@@ -3158,11 +3163,8 @@ class VariantCallingGATK(Analysis):
 
         output = str()
 
-        output += defaults.web.html_header(title='{} Variant Calling Analysis'.format(self.project_name))
-        output += '<body>\n'
-        output += '\n'
-
-        output += '<h1 id="variant_calling_analysis">{} Variant Calling Analysis</h1>\n'.format(self.project_name)
+        output += self.report_html_header(strict=True)
+        output += '<h1 id="variant_calling_analysis">{} {}</h1>\n'.format(self.project_name, self.report_name)
         output += '\n'
 
         output += '<h2 id="genome_browsing">Genome Browsing</h2>\n'
@@ -3184,7 +3186,7 @@ class VariantCallingGATK(Analysis):
         # TODO: Method defaults.web.ucsc_track_url() should be moved to Analysis.get_ucsc_track_url().
         # The above code for resolving a UCSC Genome Browser genome assembly alias could be centralised in Analysis.
         output += '<p id="ucsc_track_hub">'
-        output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.'.format(
+        output += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.'.format(
             defaults.web.ucsc_track_url(
                 options_dict=options_dict,
                 host_name=default.ucsc_host_name),
@@ -3572,8 +3574,7 @@ class VariantCallingGATK(Analysis):
         output += '</tbody>\n'
         output += '</table>\n'
         output += '\n'
-        output += '</body>\n'
-        output += defaults.web.html_footer()
+        output += self.report_html_footer()
 
         file_path = os.path.join(self.genome_directory, 'variant_calling_report.html')
 

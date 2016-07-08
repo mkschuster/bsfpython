@@ -65,8 +65,18 @@ class ChIPSeqComparison(object):
     @type: bool
     """
 
-    def __init__(self, c_name, t_name, c_samples, t_samples,
-                 factor, tissue=None, condition=None, treatment=None, replicate=None, diff_bind=None):
+    def __init__(
+            self,
+            c_name,
+            t_name,
+            c_samples,
+            t_samples,
+            factor,
+            tissue=None,
+            condition=None,
+            treatment=None,
+            replicate=None,
+            diff_bind=None):
         """Initialise a C{ChIPSeqComparison} object.
 
         @param c_name: Control name
@@ -155,6 +165,8 @@ class ChIPSeq(Analysis):
     """The C{ChIPSeq} class represents the logic to run a ChIP-Seq-specific C{Analysis}.
 
     Attributes:
+    @cvar report_name: HTML Analysis report name that should be overridden by sub-classes
+    @type report_name: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
     @ivar cmp_file: Comparison file
@@ -166,6 +178,8 @@ class ChIPSeq(Analysis):
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
     @type classpath_picard: str | unicode
     """
+
+    report_name = "ChIP-seq Analysis"
 
     def __init__(
             self,
@@ -1392,11 +1406,8 @@ class ChIPSeq(Analysis):
 
         output = str()
 
-        output += defaults.web.html_header(title='{} ChIP-Seq Analysis'.format(self.project_name))
-        output += '<body>\n'
-        output += '\n'
-
-        output += '<h1 id="chip_seq_analysis">{} ChIP-Seq Analysis</h1>\n'.format(self.project_name)
+        output += self.report_html_header(strict=True)
+        output += '<h1 id="chip_seq_analysis">{} {}</h1>\n'.format(self.project_name, self.report_name)
         output += '\n'
 
         output += '<p>\n'
@@ -1418,7 +1429,7 @@ class ChIPSeq(Analysis):
         output += '<p id="ucsc_track_hub">\n'
         output += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
         output += 'in their genomic context via the project-specific\n'
-        output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'. \
+        output += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'. \
             format(defaults.web.ucsc_track_url(options_dict=options_dict, host_name=default.ucsc_host_name),
                    self.project_name)
         output += '</p>\n'
@@ -1617,7 +1628,7 @@ class ChIPSeq(Analysis):
                 # format(t_replicate_key, c_replicate_key)
 
         output += '</body>\n'
-        output += defaults.web.html_footer()
+        output += self.report_html_footer()
 
         file_path = os.path.join(self.genome_directory, 'chipseq_report.html')
 
@@ -1653,11 +1664,8 @@ class ChIPSeq(Analysis):
 
         output = str()
 
-        output += defaults.web.html_header(title='{} ChIP-Seq Analysis'.format(self.project_name))
-        output += '<body>\n'
-        output += '\n'
-
-        output += '<h1 id="chip_seq_analysis">{} ChIP-Seq Analysis</h1>\n'.format(self.project_name)
+        output += self.report_html_header(strict=True)
+        output += '<h1 id="chip_seq_analysis">{} {}</h1>\n'.format(self.project_name, self.report_name)
         output += '\n'
 
         output += '<p>\n'
@@ -1678,7 +1686,7 @@ class ChIPSeq(Analysis):
         output += '<p id="ucsc_track_hub">\n'
         output += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
         output += 'in their genomic context via the project-specific\n'
-        output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'. \
+        output += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'. \
             format(defaults.web.ucsc_track_url(options_dict=options_dict, host_name=default.ucsc_host_name),
                    self.project_name)
         output += '</p>\n'
@@ -2236,9 +2244,7 @@ class ChIPSeq(Analysis):
         output += '\n'
         output += '</table>\n'
         output += '\n'
-
-        output += '</body>\n'
-        output += defaults.web.html_footer()
+        output += self.report_html_footer()
 
         file_path = os.path.join(self.genome_directory, 'chipseq_report.html')
 

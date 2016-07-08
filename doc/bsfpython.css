@@ -1,0 +1,19 @@
+/* Central BSF Python stylesheet for analysis reports. */
+
+body {
+    font-family: sans-serif;
+}
+
+h1 {
+    color: #40B9D4;
+}
+
+a {
+    color: #40B9D4;
+    text-decoration: none;
+}
+
+a:hover, a:focus {
+    color: #2a6496;
+    text-decoration: underline;
+}

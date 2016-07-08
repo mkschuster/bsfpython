@@ -259,6 +259,8 @@ class ChIPSeq(Analysis):
     """The C{ChIPSeq} class represents the logic to run a ChIP-Seq-specific C{Analysis}.
 
     Attributes:
+    @cvar report_name: HTML Analysis report name that should be overridden by sub-classes
+    @type report_name: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
     @ivar cmp_file: Comparison file
@@ -268,6 +270,8 @@ class ChIPSeq(Analysis):
     @ivar genome_sizes_path: Reference genome (chromosome) sizes file path
     @type genome_sizes_path: str | unicode
     """
+
+    report_name = "ChIP-seq Analysis"
 
     def __init__(
             self,
@@ -1295,11 +1299,8 @@ class ChIPSeq(Analysis):
 
         output = str()
 
-        output += defaults.web.html_header(title='{} ChIP-Seq Analysis'.format(self.project_name))
-        output += '<body>\n'
-        output += '\n'
-
-        output += '<h1 id="chip_seq_analysis">{} ChIP-Seq Analysis</h1>\n'.format(self.project_name)
+        output += self.report_html_header(strict=True)
+        output += '<h1 id="chip_seq_analysis">{} {}</h1>\n'.format(self.project_name, self.report_name)
         output += '\n'
 
         output += '<p>\n'
@@ -1321,7 +1322,7 @@ class ChIPSeq(Analysis):
         output += '<p id="ucsc_track_hub">\n'
         output += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
         output += 'in their genomic context via the project-specific\n'
-        output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'. \
+        output += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'. \
             format(defaults.web.ucsc_track_url(options_dict=options_dict, host_name=default.ucsc_host_name),
                    self.project_name)
         output += '</p>\n'
@@ -1519,8 +1520,7 @@ class ChIPSeq(Analysis):
                 # output += '{}__{}_fastqc/fastqc_report.html'. \
                 # format(t_replicate_key, c_replicate_key)
 
-        output += '</body>\n'
-        output += defaults.web.html_footer()
+        output += self.report_html_footer()
 
         file_path = os.path.join(self.genome_directory, 'chipseq_report.html')
 
@@ -1555,11 +1555,8 @@ class ChIPSeq(Analysis):
 
         output = str()
 
-        output += defaults.web.html_header(title='{} ChIP-Seq Analysis'.format(self.project_name))
-        output += '<body>\n'
-        output += '\n'
-
-        output += '<h1 id="chip_seq_analysis">{} ChIP-Seq Analysis</h1>\n'.format(self.project_name)
+        output += self.report_html_header(strict=True)
+        output += '<h1 id="chip_seq_analysis">{} {}</h1>\n'.format(self.project_name, self.report_name)
         output += '\n'
 
         output += '<p>\n'
@@ -1580,7 +1577,7 @@ class ChIPSeq(Analysis):
         output += '<p id="ucsc_track_hub">\n'
         output += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
         output += 'in their genomic context via the project-specific\n'
-        output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'. \
+        output += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'. \
             format(defaults.web.ucsc_track_url(options_dict=options_dict, host_name=default.ucsc_host_name),
                    self.project_name)
         output += '</p>\n'
@@ -2138,9 +2135,7 @@ class ChIPSeq(Analysis):
         output += '\n'
         output += '</table>\n'
         output += '\n'
-
-        output += '</body>\n'
-        output += defaults.web.html_footer()
+        output += self.report_html_footer()
 
         file_path = os.path.join(self.genome_directory, 'chipseq_report.html')
 
@@ -2161,9 +2156,13 @@ class RunFastQC(Analysis):
     """BSF FastQC-specific Quality Assessment Analysis sub-class.
 
     Attributes:
+    @cvar report_name: HTML Analysis report name that should be overridden by sub-classes
+    @type report_name: str
     @ivar cmp_file: Comparison file
     @type cmp_file: str | unicode
     """
+
+    report_name = "FastQC Analysis"
 
     def __init__(self, configuration=None,
                  project_name=None, genome_version=None,
@@ -2451,11 +2450,8 @@ class RunFastQC(Analysis):
 
         output = str()
 
-        output += defaults.web.html_header(title='{} FastQC Analysis'.format(self.project_name))
-        output += '<body>\n'
-        output += '\n'
-
-        output += '<h1 id="fastqc_analysis">{} FastQC Analysis</h1>\n'.format(self.project_name)
+        output += self.report_html_header()
+        output += '<h1 id="fastqc_analysis">{} {}</h1>\n'.format(self.project_name, self.report_name)
         output += '\n'
 
         output += '<p>\n'
@@ -2503,9 +2499,7 @@ class RunFastQC(Analysis):
 
         output += '</table>\n'
         output += '\n'
-
-        output += '</body>\n'
-        output += defaults.web.html_footer()
+        output += self.report_html_footer()
 
         file_path = os.path.join(self.project_directory, 'fastqc_report.html')
 

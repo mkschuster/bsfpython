@@ -60,6 +60,8 @@ class Tuxedo(Analysis):
     @type drms_name_run_cuffdiff: str
     @cvar drms_name_process_cuffdiff: C{DRMS.name} for the process Cuffdiff C{Analysis} stage
     @type drms_name_process_cuffdiff: str
+    @cvar report_name: HTML Analysis report name that should be overridden by sub-classes
+    @type report_name: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
     @ivar cmp_file: Comparison file
@@ -93,6 +95,8 @@ class Tuxedo(Analysis):
     drms_name_run_cuffnorm = 'rnaseq_cuffnorm'
     drms_name_run_cuffdiff = 'rnaseq_cuffdiff'
     drms_name_process_cuffdiff = 'rnaseq_process_cuffdiff'
+
+    report_name = "RNA-seq Analysis"
 
     @classmethod
     def get_prefix_rnaseq_run_tophat(cls, replicate_key):
@@ -1403,11 +1407,8 @@ class Tuxedo(Analysis):
 
         output = str()
 
-        output += defaults.web.html_header(title='{} RNA-Seq Analysis'.format(self.project_name))
-        output += '<body>\n'
-        output += '\n'
-
-        output += '<h1 id="rna_seq_analysis">{} RNA-Seq Analysis</h1>\n'.format(self.project_name)
+        output += self.report_html_header(strict=True)
+        output += '<h1 id="rna_seq_analysis">{} {}</h1>\n'.format(self.project_name, self.report_name)
         output += '\n'
 
         # TopHat and Cufflinks table.
@@ -1438,7 +1439,7 @@ class Tuxedo(Analysis):
         output += '<p id="track_hub">\n'
         output += 'View TopHat <strong>read alignments</strong> tracks for each sample\n'
         output += 'in their genomic context via the project-specific\n'
-        output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'.format(
+        output += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'.format(
             defaults.web.ucsc_track_url(
                 options_dict=options_dict,
                 host_name=default.ucsc_host_name),
@@ -1463,7 +1464,7 @@ class Tuxedo(Analysis):
         output += '<p>\n'
         output += 'View the corresponding TopHat tracks for junctions, deletions and insertions\n'
         output += 'for each sample in their genomic context via the project-specific\n'
-        output += 'UCSC Genome Browser Track Hub <a href="{}" target="UCSC">{}</a>.\n'.format(
+        output += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'.format(
             defaults.web.ucsc_track_url(
                 options_dict=options_dict,
                 host_name=default.ucsc_host_name),
@@ -1824,7 +1825,7 @@ class Tuxedo(Analysis):
 
         output += '<h3 id="all_genes">All Genes</h3>\n'
 
-        output += '<table id="gene_expression_table">\n'
+        output += '<table id="differential_expression_table">\n'
         output += '<thead>\n'
         output += '<tr>\n'
         output += '<th>Comparison</th>\n'
@@ -2179,9 +2180,8 @@ class Tuxedo(Analysis):
 
         output += '</tbody>\n'
         output += '</table>\n'
-
-        output += '</body>\n'
-        output += defaults.web.html_footer()
+        output += '\n'
+        output += self.report_html_footer()
 
         file_path = os.path.join(self.genome_directory, 'rnaseq_report.html')
 
