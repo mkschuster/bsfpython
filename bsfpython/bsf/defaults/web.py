@@ -27,10 +27,6 @@ A package to centralise web configuration information.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import cgi
-import urllib
-
-
 # Christoph Bock's ChIP-Seq default track colours.
 # All ChIP-Seq factors are indexed in upper case.
 
@@ -114,42 +110,3 @@ def get_chipseq_colour(factor=None):
         return chipseq_colours[factor_upper]
     else:
         return chipseq_colours[chipseq_default_factor]
-
-
-def ucsc_track_url(options_dict, browser_dict=None, track_dict=None, host_name=None):
-    """Return a UCSC Genome Browser track URL.
-
-    @param options_dict: Python C{dict} of Python C{str} URL option key value pairs
-    @type options_dict: dict
-    @param browser_dict: Python C{dict} of Python C{str} browser line key value pairs
-    @type browser_dict: dict
-    @param track_dict: Python C{dict} of Python C{str} track line (hgct_customText) key value pairs
-    @type track_dict: dict
-    @param host_name: UCSC Genome Browser host name
-    @type host_name: str
-    @return: A URL to attach a track to the UCSC Genome Browser
-    @rtype: str
-    """
-
-    if browser_dict:
-        pass
-
-    if track_dict:
-
-        options_dict['hgct_customText'] = 'track'
-
-        keys = track_dict.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
-
-        for key in keys:
-            options_dict['hgct_customText'] += ' {}={}'.format(key, track_dict[key])
-
-    if host_name:
-        ucsc_name = host_name
-    else:
-        ucsc_name = 'genome.ucsc.edu'
-
-    primary_url = 'http://{}/cgi-bin/hgTracks?{}'.\
-        format(ucsc_name, urllib.urlencode(options_dict))
-
-    return cgi.escape(s=primary_url, quote=True)

@@ -30,7 +30,7 @@ import os.path
 from pickle import Pickler, HIGHEST_PROTOCOL
 import re
 
-from bsf import Analysis, defaults, DRMS, Runnable
+from bsf import Analysis, DRMS, Runnable
 from bsf.annotation import AnnotationSheet, TuxedoSamplePairSheet
 from bsf.data import PairedReads, Sample
 from bsf.executables import TopHat
@@ -42,6 +42,10 @@ class Tuxedo(Analysis):
     """Tuxedo RNASeq Analysis sub-class.
 
     Attributes:
+    @cvar name: Analysis name that should be overridden by sub-classes
+    @type name: str
+    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @type prefix: str
     @cvar drms_name_run_tophat: C{DRMS.name} for the run Tophat C{Analysis} stage
     @type drms_name_run_tophat: str
     @cvar drms_name_process_tophat: C{DRMS.name} for the process Tophat C{Analysis} stage
@@ -60,8 +64,6 @@ class Tuxedo(Analysis):
     @type drms_name_run_cuffdiff: str
     @cvar drms_name_process_cuffdiff: C{DRMS.name} for the process Cuffdiff C{Analysis} stage
     @type drms_name_process_cuffdiff: str
-    @cvar report_name: HTML Analysis report name that should be overridden by sub-classes
-    @type report_name: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
     @ivar cmp_file: Comparison file
@@ -83,20 +85,21 @@ class Tuxedo(Analysis):
     @type no_length_correction: bool
     """
 
+    name = 'RNA-seq Analysis'
+    prefix = 'rnaseq'
+
     # Replicate stage
-    drms_name_run_tophat = 'rnaseq_run_tophat'
-    drms_name_process_tophat = 'rnaseq_process_tophat'
-    drms_name_run_cufflinks = 'rnaseq_run_cufflinks'
-    drms_name_process_cufflinks = 'rnaseq_process_cufflinks'
+    drms_name_run_tophat = '_'.join((prefix, 'run_tophat'))
+    drms_name_process_tophat = '_'.join((prefix, 'process_tophat'))
+    drms_name_run_cufflinks = '_'.join((prefix, 'run_cufflinks'))
+    drms_name_process_cufflinks = '_'.join((prefix, 'process_cufflinks'))
 
     # Comparison stage
-    drms_name_run_cuffmerge = 'rnaseq_cuffmerge'
-    drms_name_run_cuffquant = 'rnaseq_cuffquant'
-    drms_name_run_cuffnorm = 'rnaseq_cuffnorm'
-    drms_name_run_cuffdiff = 'rnaseq_cuffdiff'
-    drms_name_process_cuffdiff = 'rnaseq_process_cuffdiff'
-
-    report_name = "RNA-seq Analysis"
+    drms_name_run_cuffmerge = '_'.join((prefix, 'cuffmerge'))
+    drms_name_run_cuffquant = '_'.join((prefix, 'cuffquant'))
+    drms_name_run_cuffnorm = '_'.join((prefix, 'cuffnorm'))
+    drms_name_run_cuffdiff = '_'.join((prefix, 'cuffdiff'))
+    drms_name_process_cuffdiff = '_'.join((prefix, 'process_cuffdiff'))
 
     @classmethod
     def get_prefix_rnaseq_run_tophat(cls, replicate_key):
@@ -481,7 +484,7 @@ class Tuxedo(Analysis):
                     for sample in group_samples:
                         assert isinstance(sample, Sample)
                         if self.debug > 1:
-                            print '  {} Sample name: {!r} file_path:{!r}'.format(prefix, sample.name, sample.file_path)
+                            print '  {} Sample name: {!r} file_path: {!r}'.format(prefix, sample.name, sample.file_path)
                             # print sample.trace(1)
                         self.add_sample(sample=sample)
                 elif i < 1:
@@ -1401,33 +1404,34 @@ class Tuxedo(Analysis):
 
         # This code only needs the public URL.
 
-        track_output = str()
+        output_hub = str()
 
         # Write a HTML document.
 
-        output = str()
+        output_html = str()
 
-        output += self.report_html_header(strict=True)
-        output += '<h1 id="rna_seq_analysis">{} {}</h1>\n'.format(self.project_name, self.report_name)
-        output += '\n'
+        output_html += '<h1 id="rna_seq_analysis">{} {}</h1>\n'.format(self.project_name, self.name)
+        output_html += '\n'
 
         # TopHat and Cufflinks table.
 
-        output += '<h2 id="transcriptome_browsing">Transcriptome Browsing</h2>\n'
-        output += '\n'
+        output_html += '<h2 id="transcriptome_browsing">Transcriptome Browsing</h2>\n'
+        output_html += '\n'
 
-        output += '<h3 id="read_alignments">Read Alignments</h3>\n'
-        output += '\n'
+        output_html += '<h3 id="read_alignments">Read Alignments</h3>\n'
+        output_html += '\n'
 
-        output += '<p id ="tophat">\n'
+        output_html += '<p id ="tophat">\n'
         # http://tophat.cbcb.umd.edu/manual.html
-        output += '<strong><a href="http://ccb.jhu.edu/software/tophat/index.shtml">TopHat</a></strong> '
-        output += 'aligns RNA-Seq reads to a genome in order to identify '
-        output += 'exon-exon splice junctions. It is built on the ultra fast\n'
-        output += 'short read mapping program\n'
-        output += '<strong><a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie 2</a></strong>.\n'
-        output += '</p>\n'
-        output += '\n'
+        output_html += '<strong><a href="http://ccb.jhu.edu/software/tophat/index.shtml">TopHat</a></strong> '
+        output_html += 'aligns RNA-Seq reads to a genome in order to identify '
+        output_html += 'exon-exon splice junctions. It is built on the ultra fast\n'
+        output_html += 'short read mapping program\n'
+        output_html += '<strong>'
+        output_html += '<a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie 2</a>'
+        output_html += '</strong>.\n'
+        output_html += '</p>\n'
+        output_html += '\n'
 
         # Construct an automatic UCSC Track Hub link.
 
@@ -1436,41 +1440,37 @@ class Tuxedo(Analysis):
         options_dict['hubUrl'] = '{}/{}/rnaseq_hub.txt'. \
             format(Default.url_absolute_projects(), link_name)
 
-        output += '<p id="track_hub">\n'
-        output += 'View TopHat <strong>read alignments</strong> tracks for each sample\n'
-        output += 'in their genomic context via the project-specific\n'
-        output += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'.format(
-            defaults.web.ucsc_track_url(
-                options_dict=options_dict,
-                host_name=default.ucsc_host_name),
+        output_html += '<p id="track_hub">\n'
+        output_html += 'View TopHat <strong>read alignments</strong> tracks for each sample\n'
+        output_html += 'in their genomic context via the project-specific\n'
+        output_html += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'.format(
+            self.ucsc_track_url(options_dict=options_dict),
             self.project_name)
-        output += '</p>\n'
-        output += '\n'
+        output_html += '</p>\n'
+        output_html += '\n'
 
-        output += '<h3 id="alignment_events">Splice Junctions, Insertions and Deletions</h3>\n'
-        output += '\n'
+        output_html += '<h3 id="alignment_events">Splice Junctions, Insertions and Deletions</h3>\n'
+        output_html += '\n'
 
-        output += '<p>\n'
-        output += 'TopHat reports <strong>splice junctions</strong> on the basis of RNA-Seq\n'
-        output += 'read alignments in UCSC BED track format.\n'
-        output += 'Each junction consists of two connected BED blocks,\n'
-        output += 'where each block is as long as the maximal overhang\n'
-        output += 'of any read spanning the junction. The score is\n'
-        output += 'the number of alignments spanning the junction.\n'
-        output += 'UCSC BED tracks of <strong>insertions</strong> and\n'
-        output += '<strong>deletions</strong> are also reported by TopHat.\n'
-        output += '</p>\n'
+        output_html += '<p>\n'
+        output_html += 'TopHat reports <strong>splice junctions</strong> on the basis of RNA-Seq\n'
+        output_html += 'read alignments in UCSC BED track format.\n'
+        output_html += 'Each junction consists of two connected BED blocks,\n'
+        output_html += 'where each block is as long as the maximal overhang\n'
+        output_html += 'of any read spanning the junction. The score is\n'
+        output_html += 'the number of alignments spanning the junction.\n'
+        output_html += 'UCSC BED tracks of <strong>insertions</strong> and\n'
+        output_html += '<strong>deletions</strong> are also reported by TopHat.\n'
+        output_html += '</p>\n'
 
-        output += '<p>\n'
-        output += 'View the corresponding TopHat tracks for junctions, deletions and insertions\n'
-        output += 'for each sample in their genomic context via the project-specific\n'
-        output += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'.format(
-            defaults.web.ucsc_track_url(
-                options_dict=options_dict,
-                host_name=default.ucsc_host_name),
+        output_html += '<p>\n'
+        output_html += 'View the corresponding TopHat tracks for junctions, deletions and insertions\n'
+        output_html += 'for each sample in their genomic context via the project-specific\n'
+        output_html += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'.format(
+            self.ucsc_track_url(options_dict=options_dict),
             self.project_name)
-        output += '</p>\n'
-        output += '\n'
+        output_html += '</p>\n'
+        output_html += '\n'
 
         # output += '<p>\n'
         # output += 'Follow the links below to attach\n'
@@ -1479,99 +1479,100 @@ class Tuxedo(Analysis):
         # output += 'the UCSC site, subsequent pages will take some time to load.\n'
         # output += '</p>\n'
 
-        output += '<h2 id="gene_expression_profiles">Gene Expression Profiles</h2>\n'
-        output += '\n'
+        output_html += '<h2 id="gene_expression_profiles">Gene Expression Profiles</h2>\n'
+        output_html += '\n'
 
-        output += '<p id="cufflinks">\n'
+        output_html += '<p id="cufflinks">\n'
         # http://cufflinks.cbcb.umd.edu/howitworks.html
-        output += '<strong><a href="http://cole-trapnell-lab.github.io/cufflinks/">Cufflinks</a></strong>\n'
-        output += 'assembles aligned RNA-Seq reads into transcripts,\n'
-        output += 'estimates their abundances, and tests for differential\n'
-        output += 'expression and regulation transcriptome-wide.\n'
-        output += 'It accepts aligned RNA-Seq reads and assembles the alignments into a parsimonious set of\n'
-        output += 'transcripts. Cufflinks then estimates the relative abundances of these transcripts based\n'
-        output += 'on how many reads support each one, taking into account biases in library preparation protocols.\n'
-        output += '</p>\n'
+        output_html += '<strong><a href="http://cole-trapnell-lab.github.io/cufflinks/">Cufflinks</a></strong>\n'
+        output_html += 'assembles aligned RNA-Seq reads into transcripts,\n'
+        output_html += 'estimates their abundances, and tests for differential\n'
+        output_html += 'expression and regulation transcriptome-wide.\n'
+        output_html += 'It accepts aligned RNA-Seq reads and assembles the alignments into a parsimonious set of\n'
+        output_html += 'transcripts. Cufflinks then estimates the relative abundances of these transcripts based\n'
+        output_html += 'on how many reads support each one, taking into account biases in library preparation '
+        output_html += 'protocols.\n'
+        output_html += '</p>\n'
 
-        output += '<p>\n'
-        output += 'The Cufflinks <strong>assembled transcripts</strong> can be attached to the \n'
-        output += 'UCSC Genome Browser, by following the "Transcript Assembly" links\n'
-        output += 'below.\n'
-        output += 'The isoforms.fpkm_tracking and genes.fpkm_tracking files\n'
-        output += 'contain the estimated isoform or gene expression values in the generic\n'
+        output_html += '<p>\n'
+        output_html += 'The Cufflinks <strong>assembled transcripts</strong> can be attached to the \n'
+        output_html += 'UCSC Genome Browser, by following the "Transcript Assembly" links\n'
+        output_html += 'below.\n'
+        output_html += 'The isoforms.fpkm_tracking and genes.fpkm_tracking files\n'
+        output_html += 'contain the estimated isoform or gene expression values in the generic\n'
         # http://cufflinks.cbcb.umd.edu/manual.html#fpkm_tracking_format
-        output += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
-                  'fpkm-tracking-format">FPKM Tracking format</a>.\n'
-        output += 'The isofroms.count_tracking and genes.count_tracking files\n'
-        output += 'contain the scaled isofrom or gene count values in the generic\n'
-        output += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
-                  'count-tracking-format">Count Tracking format</a>.\n'
-        output += '</p>\n'
+        output_html += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
+                       'fpkm-tracking-format">FPKM Tracking format</a>.\n'
+        output_html += 'The isofroms.count_tracking and genes.count_tracking files\n'
+        output_html += 'contain the scaled isofrom or gene count values in the generic\n'
+        output_html += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
+                       'count-tracking-format">Count Tracking format</a>.\n'
+        output_html += '</p>\n'
 
-        output += '<p>\n'
-        output += 'Please see a more detailed description of\n'
+        output_html += '<p>\n'
+        output_html += 'Please see a more detailed description of\n'
         # http://cufflinks.cbcb.umd.edu/manual.html#cufflinks_output
-        output += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
-                  'output-formats-used-in-the-cufflinks-suite">Cufflinks output</a>.\n'
-        output += '</p>\n'
+        output_html += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
+                       'output-formats-used-in-the-cufflinks-suite">Cufflinks output</a>.\n'
+        output_html += '</p>\n'
 
-        output += '<table id="gene_expression_table">\n'
-        output += '<thead>\n'
-        output += '<tr>\n'
-        output += '<th>Sample</th>\n'
-        output += '<th>Assembled Transcripts</th>\n'
-        output += '<th>Gene FPKM</th>\n'
-        output += '<th>Transcript FPKM</th>\n'
-        output += '<th>Genes (Symbols)</th>\n'
-        output += '<th>Isoforms (Symbols)</th>\n'
-        output += '<th>Aligned BAM file</th>\n'
-        output += '<th>Aligned BAI file</th>\n'
-        output += '<th>Unaligned BAM file</th>\n'
-        output += '</tr>\n'
-        output += '</thead>\n'
-        output += '<tbody>\n'
+        output_html += '<table id="gene_expression_table">\n'
+        output_html += '<thead>\n'
+        output_html += '<tr>\n'
+        output_html += '<th>Sample</th>\n'
+        output_html += '<th>Assembled Transcripts</th>\n'
+        output_html += '<th>Gene FPKM</th>\n'
+        output_html += '<th>Transcript FPKM</th>\n'
+        output_html += '<th>Genes (Symbols)</th>\n'
+        output_html += '<th>Isoforms (Symbols)</th>\n'
+        output_html += '<th>Aligned BAM file</th>\n'
+        output_html += '<th>Aligned BAI file</th>\n'
+        output_html += '<th>Unaligned BAM file</th>\n'
+        output_html += '</tr>\n'
+        output_html += '</thead>\n'
+        output_html += '<tbody>\n'
 
         # Group via UCSC super tracks.
 
-        track_output += 'track Alignments\n'
-        track_output += 'shortLabel Alignments\n'
-        track_output += 'longLabel TopHat RNA-Seq read alignments\n'
-        track_output += 'visibility hide\n'
-        track_output += 'superTrack on\n'
-        track_output += 'group alignments\n'
-        track_output += '\n'
+        output_hub += 'track Alignments\n'
+        output_hub += 'shortLabel Alignments\n'
+        output_hub += 'longLabel TopHat RNA-Seq read alignments\n'
+        output_hub += 'visibility hide\n'
+        output_hub += 'superTrack on\n'
+        output_hub += 'group alignments\n'
+        output_hub += '\n'
 
-        track_output += 'track Coverage\n'
-        track_output += 'shortLabel Coverage\n'
-        track_output += 'longLabel TopHat RNA-Seq alignment coverage\n'
-        track_output += 'visibility full\n'
-        track_output += 'superTrack on\n'
-        track_output += 'group coverage\n'
-        track_output += '\n'
+        output_hub += 'track Coverage\n'
+        output_hub += 'shortLabel Coverage\n'
+        output_hub += 'longLabel TopHat RNA-Seq alignment coverage\n'
+        output_hub += 'visibility full\n'
+        output_hub += 'superTrack on\n'
+        output_hub += 'group coverage\n'
+        output_hub += '\n'
 
-        track_output += 'track Deletions\n'
-        track_output += 'shortLabel Deletions\n'
-        track_output += 'longLabel TopHat RNA-Seq deletions\n'
-        track_output += 'visibility hide\n'
-        track_output += 'superTrack on\n'
-        track_output += 'group alignments\n'
-        track_output += '\n'
+        output_hub += 'track Deletions\n'
+        output_hub += 'shortLabel Deletions\n'
+        output_hub += 'longLabel TopHat RNA-Seq deletions\n'
+        output_hub += 'visibility hide\n'
+        output_hub += 'superTrack on\n'
+        output_hub += 'group alignments\n'
+        output_hub += '\n'
 
-        track_output += 'track Insertions\n'
-        track_output += 'shortLabel Insertions\n'
-        track_output += 'longLabel TopHat RNA-Seq insertions\n'
-        track_output += 'visibility hide\n'
-        track_output += 'superTrack on\n'
-        track_output += 'group alignments\n'
-        track_output += '\n'
+        output_hub += 'track Insertions\n'
+        output_hub += 'shortLabel Insertions\n'
+        output_hub += 'longLabel TopHat RNA-Seq insertions\n'
+        output_hub += 'visibility hide\n'
+        output_hub += 'superTrack on\n'
+        output_hub += 'group alignments\n'
+        output_hub += '\n'
 
-        track_output += 'track Junctions\n'
-        track_output += 'shortLabel Junctions\n'
-        track_output += 'longLabel TopHat RNA-Seq splice junctions\n'
-        track_output += 'visibility show\n'
-        track_output += 'superTrack on\n'
-        track_output += 'group alignments\n'
-        track_output += '\n'
+        output_hub += 'track Junctions\n'
+        output_hub += 'shortLabel Junctions\n'
+        output_hub += 'longLabel TopHat RNA-Seq splice junctions\n'
+        output_hub += 'visibility show\n'
+        output_hub += 'superTrack on\n'
+        output_hub += 'group alignments\n'
+        output_hub += '\n'
 
         for sample in self.samples:
             assert isinstance(sample, Sample)
@@ -1602,21 +1603,21 @@ class Tuxedo(Analysis):
 
                 # Common trackDb settings.
 
-                track_output += 'track {}_alignments\n'. \
+                output_hub += 'track {}_alignments\n'. \
                     format(replicate_key)
-                track_output += 'type bam\n'
-                track_output += 'shortLabel {}_alignments\n'. \
+                output_hub += 'type bam\n'
+                output_hub += 'shortLabel {}_alignments\n'. \
                     format(replicate_key)
-                track_output += 'longLabel {} TopHat RNA-Seq read alignments\n'. \
+                output_hub += 'longLabel {} TopHat RNA-Seq read alignments\n'. \
                     format(replicate_key)
-                track_output += 'bigDataUrl rnaseq_tophat_{}/accepted_hits.bam\n'. \
+                output_hub += 'bigDataUrl rnaseq_tophat_{}/accepted_hits.bam\n'. \
                     format(replicate_key)
-                track_output += 'visibility dense\n'
+                output_hub += 'visibility dense\n'
                 # track_output += 'html {}\n'.format()
 
                 # Common optional settings.
 
-                track_output += 'color {}\n'. \
+                output_hub += 'color {}\n'. \
                     format('0,0,0')
 
                 # Compressed Sequence Alignment track settings.
@@ -1625,8 +1626,8 @@ class Tuxedo(Analysis):
 
                 # Composite track settings.
 
-                track_output += 'parent Alignments\n'
-                track_output += '\n'
+                output_hub += 'parent Alignments\n'
+                output_hub += '\n'
 
                 #
                 # Add a trackDB entry for each accepted_hits.bw file.
@@ -1634,31 +1635,31 @@ class Tuxedo(Analysis):
 
                 # Common trackDB settings.
 
-                track_output += 'track {}_coverage\n'. \
+                output_hub += 'track {}_coverage\n'. \
                     format(replicate_key)
                 # TODO: The bigWig type must declare the expected signal range.
                 # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
-                track_output += 'type bigWig\n'
-                track_output += 'shortLabel {}_coverage\n'. \
+                output_hub += 'type bigWig\n'
+                output_hub += 'shortLabel {}_coverage\n'. \
                     format(replicate_key)
-                track_output += 'longLabel {} TopHat RNA-Seq alignment coverage\n'. \
+                output_hub += 'longLabel {} TopHat RNA-Seq alignment coverage\n'. \
                     format(replicate_key)
-                track_output += 'bigDataUrl rnaseq_tophat_{}/accepted_hits.bw\n'. \
+                output_hub += 'bigDataUrl rnaseq_tophat_{}/accepted_hits.bw\n'. \
                     format(replicate_key)
-                track_output += 'visibility full\n'
+                output_hub += 'visibility full\n'
                 # track_output += 'html {}\n'.format()
 
                 # Common optional settings.
 
-                track_output += 'color {}\n'. \
+                output_hub += 'color {}\n'. \
                     format('0,0,0')
 
                 # bigWig - Signal graphing track settings.
 
-                track_output += 'alwaysZero on\n'
-                track_output += 'autoScale on\n'
-                track_output += 'graphTypeDefault bar\n'
-                track_output += 'maxHeightPixels 100:60:20\n'
+                output_hub += 'alwaysZero on\n'
+                output_hub += 'autoScale on\n'
+                output_hub += 'graphTypeDefault bar\n'
+                output_hub += 'maxHeightPixels 100:60:20\n'
                 # track_output += 'maxWindowToQuery 10000000\n'
                 # track_output += 'smoothingWindow 5\n'
                 # track_output += 'transformFunc NONE\n'
@@ -1671,83 +1672,83 @@ class Tuxedo(Analysis):
 
                 # Composite track settings.
 
-                track_output += 'parent Coverage\n'
-                track_output += 'centerLabelsDense off\n'
-                track_output += '\n'
+                output_hub += 'parent Coverage\n'
+                output_hub += 'centerLabelsDense off\n'
+                output_hub += '\n'
 
                 #
                 # Add a trackDB entry for each deletions.bb file.
                 #
 
-                track_output += 'track {}_deletions\n'. \
+                output_hub += 'track {}_deletions\n'. \
                     format(replicate_key)
-                track_output += 'type bigBed\n'
-                track_output += 'shortLabel {}_deletions\n'. \
+                output_hub += 'type bigBed\n'
+                output_hub += 'shortLabel {}_deletions\n'. \
                     format(replicate_key)
-                track_output += 'longLabel {} TopHat RNA-Seq deletions\n'. \
+                output_hub += 'longLabel {} TopHat RNA-Seq deletions\n'. \
                     format(replicate_key)
-                track_output += 'bigDataUrl rnaseq_tophat_{}/deletions.bb\n'. \
+                output_hub += 'bigDataUrl rnaseq_tophat_{}/deletions.bb\n'. \
                     format(replicate_key)
-                track_output += 'visibility hide\n'
+                output_hub += 'visibility hide\n'
                 # 'html' is missing from the common settings.
 
                 # Common optional settings.
 
-                track_output += 'color {}\n'. \
+                output_hub += 'color {}\n'. \
                     format('0,0,0')
 
                 # Composite track settings.
 
-                track_output += 'parent Deletions\n'
-                track_output += '\n'
+                output_hub += 'parent Deletions\n'
+                output_hub += '\n'
 
                 # Insertions
 
-                track_output += 'track insertions_{}\n'. \
+                output_hub += 'track insertions_{}\n'. \
                     format(replicate_key)
-                track_output += 'type bigBed\n'
-                track_output += 'shortLabel {}_insertions\n'. \
+                output_hub += 'type bigBed\n'
+                output_hub += 'shortLabel {}_insertions\n'. \
                     format(replicate_key)
-                track_output += 'longLabel {} TopHat RNA-Seq insertions\n'. \
+                output_hub += 'longLabel {} TopHat RNA-Seq insertions\n'. \
                     format(replicate_key)
-                track_output += 'bigDataUrl rnaseq_tophat_{}/insertions.bb\n'. \
+                output_hub += 'bigDataUrl rnaseq_tophat_{}/insertions.bb\n'. \
                     format(replicate_key)
-                track_output += 'visibility hide\n'
+                output_hub += 'visibility hide\n'
                 # 'html' is missing from the common settings.
 
                 # Common optional settings.
 
-                track_output += 'color {}\n'. \
+                output_hub += 'color {}\n'. \
                     format('0,0,0')
 
                 # Composite track settings.
 
-                track_output += 'parent Insertions\n'
-                track_output += '\n'
+                output_hub += 'parent Insertions\n'
+                output_hub += '\n'
 
                 # Junctions
 
-                track_output += 'track {}_junctions\n'. \
+                output_hub += 'track {}_junctions\n'. \
                     format(replicate_key)
-                track_output += 'type bigBed\n'
-                track_output += 'shortLabel {}_junctions\n'. \
+                output_hub += 'type bigBed\n'
+                output_hub += 'shortLabel {}_junctions\n'. \
                     format(replicate_key)
-                track_output += 'longLabel {} TopHat RNA-Seq splice junctions\n'. \
+                output_hub += 'longLabel {} TopHat RNA-Seq splice junctions\n'. \
                     format(replicate_key)
-                track_output += 'bigDataUrl rnaseq_tophat_{}/junctions.bb\n'. \
+                output_hub += 'bigDataUrl rnaseq_tophat_{}/junctions.bb\n'. \
                     format(replicate_key)
-                track_output += 'visibility pack\n'
+                output_hub += 'visibility pack\n'
                 # 'html' is missing from the common settings.
 
                 # Common optional settings.
 
-                track_output += 'color {}\n'. \
+                output_hub += 'color {}\n'. \
                     format('0,0,0')
 
                 # Composite track settings.
 
-                track_output += 'parent Junctions\n'
-                track_output += '\n'
+                output_hub += 'parent Junctions\n'
+                output_hub += '\n'
 
                 # Cufflinks produces genes.fpkm_tracking, isoforms.fpkm_tracking,
                 # skipped.gtf and transcripts.gtf.
@@ -1775,37 +1776,30 @@ class Tuxedo(Analysis):
 
                 prefix = 'rnaseq_cufflinks_{}'.format(replicate_key)
 
-                output += '<tr>\n'
-                output += '<td>{}</td>\n'.format(replicate_key)
-                output += '<td><a href="{}">Transcript Assembly</a></td>\n'.format(
-                    defaults.web.ucsc_track_url(
-                        options_dict=options_dict,
-                        # It does not seem as if a GTF file could be attached via a track line.
-                        # The URL has to be supplied via the hgt.customText option.
-                        # To get around this problem the GTF file would have to be converted into BigBED format,
-                        # yet convincing tools to do this do not seem to be available.
-                        # track_dict=track_dict,
-                        host_name=default.ucsc_host_name))
-                output += '<td><a href="{}/genes.fpkm_tracking">Genes FPKM</a></td>\n'. \
+                output_html += '<tr>\n'
+                output_html += '<td>{}</td>\n'.format(replicate_key)
+                output_html += '<td><a href="{}">Transcript Assembly</a></td>\n'.format(
+                    self.ucsc_track_url(options_dict=options_dict))
+                output_html += '<td><a href="{}/genes.fpkm_tracking">Genes FPKM</a></td>\n'. \
                     format(prefix)
-                output += '<td><a href="{}/isoforms.fpkm_tracking">Isoforms FPKM</a></td>\n'. \
+                output_html += '<td><a href="{}/isoforms.fpkm_tracking">Isoforms FPKM</a></td>\n'. \
                     format(prefix)
                 # Add files from bsf_process_cufflinks.R
-                output += '<td><a href="{}/{}_genes_fpkm_tracking.tsv">Genes (Symbols)</a></td>\n'. \
+                output_html += '<td><a href="{}/{}_genes_fpkm_tracking.tsv">Genes (Symbols)</a></td>\n'. \
                     format(prefix, prefix)
-                output += '<td><a href="{}/{}_isoforms_fpkm_tracking.tsv">Isoforms (Symbols)</a></td>\n'. \
+                output_html += '<td><a href="{}/{}_isoforms_fpkm_tracking.tsv">Isoforms (Symbols)</a></td>\n'. \
                     format(prefix, prefix)
-                output += '<td><a href="{}/rnaseq_tophat_{}_accepted_hits.bam">Aligned BAM</a></td>\n'. \
+                output_html += '<td><a href="{}/rnaseq_tophat_{}_accepted_hits.bam">Aligned BAM</a></td>\n'. \
                     format(prefix, replicate_key)
-                output += '<td><a href="{}/rnaseq_tophat_{}_accepted_hits.bam.bai">Aligned BAI</a></td>\n'. \
+                output_html += '<td><a href="{}/rnaseq_tophat_{}_accepted_hits.bam.bai">Aligned BAI</a></td>\n'. \
                     format(prefix, replicate_key)
-                output += '<td><a href="{}/rnaseq_tophat_{}_unaligned.bam">Unaligned BAM</a></td>\n'. \
+                output_html += '<td><a href="{}/rnaseq_tophat_{}_unaligned.bam">Unaligned BAM</a></td>\n'. \
                     format(prefix, replicate_key)
-                output += '</tr>\n'
+                output_html += '</tr>\n'
 
-        output += '</tbody>\n'
-        output += '</table>\n'
-        output += '\n'
+        output_html += '</tbody>\n'
+        output_html += '</table>\n'
+        output_html += '\n'
 
         # Cuffmerge produces merged.gtf.
         # GTF files would need converting into BED and bigBed to be compatible with UCSC Track Hubs.
@@ -1813,37 +1807,37 @@ class Tuxedo(Analysis):
         # Cuffdiff produces cds_exp.diff, gene_exp.diff, isoform_exp.diff
         # promoters.diff, splicing.diff and tss_group_exp.diff amongst many others.
 
-        output += '<h2 id="differential_expression">Differential Expression</h2>\n'
-        output += '\n'
+        output_html += '<h2 id="differential_expression">Differential Expression</h2>\n'
+        output_html += '\n'
 
-        output += '<p id="cuffdiff">\n'
-        output += '<strong><a href="http://cufflinks.cbcb.umd.edu/howitworks.html#diff">Cuffdiff</a></strong>\n'
-        output += 'finds significant changes in transcript\n'
-        output += 'expression, splicing, and promoter use.'
-        output += '</p>\n'
-        output += '\n'
+        output_html += '<p id="cuffdiff">\n'
+        output_html += '<strong><a href="http://cufflinks.cbcb.umd.edu/howitworks.html#diff">Cuffdiff</a></strong>\n'
+        output_html += 'finds significant changes in transcript\n'
+        output_html += 'expression, splicing, and promoter use.'
+        output_html += '</p>\n'
+        output_html += '\n'
 
-        output += '<h3 id="all_genes">All Genes</h3>\n'
+        output_html += '<h3 id="all_genes">All Genes</h3>\n'
 
-        output += '<table id="differential_expression_table">\n'
-        output += '<thead>\n'
-        output += '<tr>\n'
-        output += '<th>Comparison</th>\n'
-        output += '<th>Samples</th>\n'
-        output += '<th>Replicates</th>\n'
-        output += '<th>Coding Sequences</th>\n'
-        output += '<th>Genes</th>\n'
-        output += '<th>Isoforms</th>\n'
-        output += '<th>Promoters</th>\n'
-        output += '<th>Splicing</th>\n'
-        output += '<th>Transcription Start Sites</th>\n'
-        output += '<th>Gene FPKM Replicates</th>\n'
-        output += '<th>Gene Count Replicates</th>\n'
-        output += '<th>Isoform FPKM Replicates</th>\n'
-        output += '<th>Isoform Count Replicates</th>\n'
-        output += '</tr>\n'
-        output += '</thead>\n'
-        output += '<tbody>\n'
+        output_html += '<table id="differential_expression_table">\n'
+        output_html += '<thead>\n'
+        output_html += '<tr>\n'
+        output_html += '<th>Comparison</th>\n'
+        output_html += '<th>Samples</th>\n'
+        output_html += '<th>Replicates</th>\n'
+        output_html += '<th>Coding Sequences</th>\n'
+        output_html += '<th>Genes</th>\n'
+        output_html += '<th>Isoforms</th>\n'
+        output_html += '<th>Promoters</th>\n'
+        output_html += '<th>Splicing</th>\n'
+        output_html += '<th>Transcription Start Sites</th>\n'
+        output_html += '<th>Gene FPKM Replicates</th>\n'
+        output_html += '<th>Gene Count Replicates</th>\n'
+        output_html += '<th>Isoform FPKM Replicates</th>\n'
+        output_html += '<th>Isoform Count Replicates</th>\n'
+        output_html += '</tr>\n'
+        output_html += '</thead>\n'
+        output_html += '<tbody>\n'
 
         comparison_keys = self.comparisons.keys()
         comparison_keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -1852,38 +1846,38 @@ class Tuxedo(Analysis):
             assert isinstance(comparison_key, str)
             prefix = 'rnaseq_process_cuffdiff_{}'.format(comparison_key)
 
-            output += '<tr>\n'
-            output += '<td>{}</td>\n'. \
+            output_html += '<tr>\n'
+            output_html += '<td>{}</td>\n'. \
                 format(comparison_key)
 
             # Link to comparison-specific symbolic links in the directory after cummeRbund processing.
 
-            output += '<td><a href="{}/{}_samples.tsv">Samples</a></td>'. \
+            output_html += '<td><a href="{}/{}_samples.tsv">Samples</a></td>'. \
                 format(prefix, prefix)
-            output += '<td><a href="{}/{}_replicates.tsv">Replicates</a></td>\n'. \
+            output_html += '<td><a href="{}/{}_replicates.tsv">Replicates</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="{}/{}_cds_exp_diff.tsv">Coding Sequences</a></td>\n'. \
+            output_html += '<td><a href="{}/{}_cds_exp_diff.tsv">Coding Sequences</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="{}/{}_genes_exp_diff.tsv"><strong>Genes</strong></a></td>\n'. \
+            output_html += '<td><a href="{}/{}_genes_exp_diff.tsv"><strong>Genes</strong></a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="{}/{}_isoforms_exp_diff.tsv">Isoforms</a></td>\n'. \
+            output_html += '<td><a href="{}/{}_isoforms_exp_diff.tsv">Isoforms</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="{}/{}_promoters_diff.tsv">Promoters</a></td>\n'. \
+            output_html += '<td><a href="{}/{}_promoters_diff.tsv">Promoters</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="{}/{}_splicing_diff.tsv">Splicing</a></td>\n'. \
+            output_html += '<td><a href="{}/{}_splicing_diff.tsv">Splicing</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="{}/{}_tss_group_exp_diff.tsv">Transcription Start Sites</a></td>\n'. \
+            output_html += '<td><a href="{}/{}_tss_group_exp_diff.tsv">Transcription Start Sites</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="{}/{}_genes_fpkm_replicates.tsv">Gene FPKM Replicates</a></td>\n'. \
+            output_html += '<td><a href="{}/{}_genes_fpkm_replicates.tsv">Gene FPKM Replicates</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="{}/{}_genes_counts_replicates.tsv">Gene Count Replicates</a></td>\n'. \
+            output_html += '<td><a href="{}/{}_genes_counts_replicates.tsv">Gene Count Replicates</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="{}/{}_isoforms_fpkm_replicates.tsv">Isoform FPKM Replicates</a></td>\n'. \
+            output_html += '<td><a href="{}/{}_isoforms_fpkm_replicates.tsv">Isoform FPKM Replicates</a></td>\n'. \
                 format(prefix, prefix)
-            output += '<td><a href="{}/{}_isoforms_counts_replicates.tsv">Isoform Count Replicates</a></td>\n'. \
+            output_html += '<td><a href="{}/{}_isoforms_counts_replicates.tsv">Isoform Count Replicates</a></td>\n'. \
                 format(prefix, prefix)
 
-            output += '</tr>\n'
+            output_html += '</tr>\n'
 
             # Read sample pair information if available.
 
@@ -1898,242 +1892,242 @@ class Tuxedo(Analysis):
 
                 for row_dict in sample_pair_sheet.row_dicts:
                     assert isinstance(row_dict, dict)
-                    output += '<tr>\n'
-                    output += '<td></td>'  # Comparison
-                    output += '<td colspan="3"><strong>{}</strong> versus <strong>{}</strong></td>\n'. \
+                    output_html += '<tr>\n'
+                    output_html += '<td></td>'  # Comparison
+                    output_html += '<td colspan="3"><strong>{}</strong> versus <strong>{}</strong></td>\n'. \
                         format(row_dict['V1'], row_dict['V2'])  # Sample
-                    output += '<td><a href="{}/{}_{}_{}_genes_diff.tsv"><strong>Genes</strong></a></td>\n'. \
+                    output_html += '<td><a href="{}/{}_{}_{}_genes_diff.tsv"><strong>Genes</strong></a></td>\n'. \
                         format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output += '<td><a href="{}/{}_{}_{}_isoforms_diff.tsv">Isoforms</a></td>\n'. \
+                    output_html += '<td><a href="{}/{}_{}_{}_isoforms_diff.tsv">Isoforms</a></td>\n'. \
                         format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output += '<td colspan="5"></td>'
-                    output += '</tr>\n'
+                    output_html += '<td colspan="5"></td>'
+                    output_html += '</tr>\n'
 
-        output += '</tbody>\n'
-        output += '</table>\n'
-        output += '\n'
+        output_html += '</tbody>\n'
+        output_html += '</table>\n'
+        output_html += '\n'
 
-        output += '<h3 id="significant_genes">Significant Genes</h3>\n'
+        output_html += '<h3 id="significant_genes">Significant Genes</h3>\n'
 
-        output += '<table id="significant_genes_table">\n'
-        output += '<thead>\n'
-        output += '<tr>\n'
-        output += '<th>Comparison</th>\n'
-        output += '<th>Genes</th>\n'
-        output += '<th>Isoforms</th>\n'
-        output += '</tr>\n'
-        output += '</thead>\n'
-        output += '<tbody>\n'
+        output_html += '<table id="significant_genes_table">\n'
+        output_html += '<thead>\n'
+        output_html += '<tr>\n'
+        output_html += '<th>Comparison</th>\n'
+        output_html += '<th>Genes</th>\n'
+        output_html += '<th>Isoforms</th>\n'
+        output_html += '</tr>\n'
+        output_html += '</thead>\n'
+        output_html += '<tbody>\n'
 
         for comparison_key in comparison_keys:
             assert isinstance(comparison_key, str)
             prefix = 'rnaseq_process_cuffdiff_{}'.format(comparison_key)
 
-            output += '<tr>\n'
-            output += '<td>{}</td>\n'.format(comparison_key)
+            output_html += '<tr>\n'
+            output_html += '<td>{}</td>\n'.format(comparison_key)
 
-            output += '<td><a href="{}/{}_genes_significance_matrix.pdf">'.format(prefix, prefix)
-            output += '<img alt="Significance Matrix Plot - Genes - {}" ' \
-                      'src="{}/{}_genes_significance_matrix.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_genes_significance_matrix.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Significance Matrix Plot - Genes - {}" ' \
+                           'src="{}/{}_genes_significance_matrix.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
-            output += '<td><a href="{}/{}_isoforms_significance_matrix.pdf">'.format(prefix, prefix)
-            output += '<img alt="Significance Matrix Plot - Isoforms - {}" ' \
-                      'src="{}/{}_isoforms_significance_matrix.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_isoforms_significance_matrix.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Significance Matrix Plot - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_significance_matrix.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
-            output += '</tr>\n'
+            output_html += '</tr>\n'
 
-        output += '</tbody>\n'
-        output += '</table>\n'
+        output_html += '</tbody>\n'
+        output_html += '</table>\n'
 
         # Show cummeRbund quality plots.
 
-        output += '<h2 id="quality_plots">Quality Plots</h2>\n'
-        output += '\n'
+        output_html += '<h2 id="quality_plots">Quality Plots</h2>\n'
+        output_html += '\n'
 
-        output += '<p>\n'
-        output += '</p>\n'
-        output += '\n'
+        output_html += '<p>\n'
+        output_html += '</p>\n'
+        output_html += '\n'
 
-        output += '<table id="quality_plots_table">\n'
-        output += '<thead>\n'
-        output += '<tr>\n'
-        output += '<th>Comparison</th>\n'
-        output += '<th>Dispersion Plot - Genes</th>\n'
-        output += '<th>Dispersion Plot - Isoforms</th>\n'
-        output += '<th>Squared Coefficient of Variation - Genes</th>\n'
-        output += '<th>Squared Coefficient of Variation - Isoforms</th>\n'
-        output += '<th>Density Plot without Replicates - Genes</th>\n'
-        output += '<th>Density Plot with Replicates - Genes</th>\n'
-        output += '<th>Density Plot without Replicates - Isoforms</th>\n'
-        output += '<th>Density Plot with Replicates - Isoforms</th>\n'
-        output += '<th>Box Plot without Replicates - Genes</th>\n'
-        output += '<th>Box Plot with Replicates - Genes</th>\n'
-        output += '<th>Box Plot without Replicates - Isoforms</th>\n'
-        output += '<th>Box Plot with Replicates - Isoforms</th>\n'
-        output += '<th>Scatter Matrix Plot - Genes</th>\n'
-        output += '<th>Scatter Matrix Plot - Isoforms</th>\n'
-        output += '<th>Dendrogram Plot</th>\n'
-        output += '<th>Volcano Matrix Plot - Genes</th>\n'
-        output += '<th>Multidimensional Scaling Plot - Genes</th>\n'
-        output += '<th>Principal Component Analysis Plot - Genes</th>\n'
-        output += '</tr>\n'
-        output += '</thead>\n'
-        output += '<tbody>\n'
+        output_html += '<table id="quality_plots_table">\n'
+        output_html += '<thead>\n'
+        output_html += '<tr>\n'
+        output_html += '<th>Comparison</th>\n'
+        output_html += '<th>Dispersion Plot - Genes</th>\n'
+        output_html += '<th>Dispersion Plot - Isoforms</th>\n'
+        output_html += '<th>Squared Coefficient of Variation - Genes</th>\n'
+        output_html += '<th>Squared Coefficient of Variation - Isoforms</th>\n'
+        output_html += '<th>Density Plot without Replicates - Genes</th>\n'
+        output_html += '<th>Density Plot with Replicates - Genes</th>\n'
+        output_html += '<th>Density Plot without Replicates - Isoforms</th>\n'
+        output_html += '<th>Density Plot with Replicates - Isoforms</th>\n'
+        output_html += '<th>Box Plot without Replicates - Genes</th>\n'
+        output_html += '<th>Box Plot with Replicates - Genes</th>\n'
+        output_html += '<th>Box Plot without Replicates - Isoforms</th>\n'
+        output_html += '<th>Box Plot with Replicates - Isoforms</th>\n'
+        output_html += '<th>Scatter Matrix Plot - Genes</th>\n'
+        output_html += '<th>Scatter Matrix Plot - Isoforms</th>\n'
+        output_html += '<th>Dendrogram Plot</th>\n'
+        output_html += '<th>Volcano Matrix Plot - Genes</th>\n'
+        output_html += '<th>Multidimensional Scaling Plot - Genes</th>\n'
+        output_html += '<th>Principal Component Analysis Plot - Genes</th>\n'
+        output_html += '</tr>\n'
+        output_html += '</thead>\n'
+        output_html += '<tbody>\n'
 
         for comparison_key in comparison_keys:
             assert isinstance(comparison_key, str)
             prefix = 'rnaseq_process_cuffdiff_{}'.format(comparison_key)
 
-            output += '<tr>\n'
-            output += '<td>{}</td>\n'.format(comparison_key)
+            output_html += '<tr>\n'
+            output_html += '<td>{}</td>\n'.format(comparison_key)
 
             # Dispersion Plots for Genes and Isoforms
 
-            output += '<td><a href="{}/{}_genes_dispersion.pdf">'.format(prefix, prefix)
-            output += '<img alt="Dispersion Plot - Genes - {}" ' \
-                      'src="{}/{}_genes_dispersion.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_genes_dispersion.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Dispersion Plot - Genes - {}" ' \
+                           'src="{}/{}_genes_dispersion.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
-            output += '<td><a href="{}/{}_isoforms_dispersion.pdf">'.format(prefix, prefix)
-            output += '<img alt="Dispersion Plot - Isoforms - {}" ' \
-                      'src="{}/{}_isoforms_dispersion.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_isoforms_dispersion.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Dispersion Plot - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_dispersion.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
             # Squared Coefficient of Variation (SCV) Plots for Genes and Isoforms
 
             if os.path.exists(
                     path=os.path.join(self.genome_directory, '{}/{}_genes_scv.png'.format(prefix, prefix))):
-                output += '<td><a href="{}/{}_genes_scv.pdf">'.format(prefix, prefix)
-                output += '<img alt="Squared Coefficient of Variation (SCV) - Genes - {}" ' \
-                          'src="{}/{}_genes_scv.png" height="80" width="80" />'. \
+                output_html += '<td><a href="{}/{}_genes_scv.pdf">'.format(prefix, prefix)
+                output_html += '<img alt="Squared Coefficient of Variation (SCV) - Genes - {}" ' \
+                               'src="{}/{}_genes_scv.png" height="80" width="80" />'. \
                     format(comparison_key, prefix, prefix)
-                output += '</a></td>\n'
+                output_html += '</a></td>\n'
             else:
-                output += '<td></td>\n'
+                output_html += '<td></td>\n'
 
             if os.path.exists(
                     path=os.path.join(self.genome_directory, '{}/{}_isoforms_scv.png'.format(prefix, prefix))):
-                output += '<td><a href="{}/{}_isoforms_scv.pdf">'.format(prefix, prefix)
-                output += '<img alt="Squared Coefficient of Variation (SCV) - Isoforms - {}" ' \
-                          'src="{}/{}_isoforms_scv.png" height="80" width="80" />'. \
+                output_html += '<td><a href="{}/{}_isoforms_scv.pdf">'.format(prefix, prefix)
+                output_html += '<img alt="Squared Coefficient of Variation (SCV) - Isoforms - {}" ' \
+                               'src="{}/{}_isoforms_scv.png" height="80" width="80" />'. \
                     format(comparison_key, prefix, prefix)
-                output += '</a></td>\n'
+                output_html += '</a></td>\n'
             else:
-                output += '<td></td>\n'
+                output_html += '<td></td>\n'
 
             # Density Plots for Genes without and with Replicates
 
-            output += '<td><a href="{}/{}_genes_density_wo_replicates.pdf">'.format(prefix, prefix)
-            output += '<img alt="Density Plot without Replicates - Genes- {}" ' \
-                      'src="{}/{}_genes_density_wo_replicates.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_genes_density_wo_replicates.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Density Plot without Replicates - Genes- {}" ' \
+                           'src="{}/{}_genes_density_wo_replicates.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
-            output += '<td><a href="{}/{}_genes_density_w_replicates.pdf">'.format(prefix, prefix)
-            output += '<img alt="Density Plot with Replicates - Genes - {}" ' \
-                      'src="{}/{}_genes_density_w_replicates.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_genes_density_w_replicates.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Density Plot with Replicates - Genes - {}" ' \
+                           'src="{}/{}_genes_density_w_replicates.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
             # Density Plots for Isoforms without and with Replicates
 
-            output += '<td><a href="{}/{}_isoforms_density_wo_replicates.pdf">'.format(prefix, prefix)
-            output += '<img alt="Density Plot without Replicates - Isoforms - {}" ' \
-                      'src="{}/{}_isoforms_density_wo_replicates.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_isoforms_density_wo_replicates.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Density Plot without Replicates - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_density_wo_replicates.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
-            output += '<td><a href="{}/{}_isoforms_density_w_replicates.pdf">'.format(prefix, prefix)
-            output += '<img alt="Density Plot with Replicates - Isoforms - {}" ' \
-                      'src="{}/{}_isoforms_density_w_replicates.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_isoforms_density_w_replicates.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Density Plot with Replicates - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_density_w_replicates.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
             # Box Plots for Genes without and with Replicates
 
-            output += '<td><a href="{}/{}_genes_box_wo_replicates.pdf">'.format(prefix, prefix)
-            output += '<img alt="Box Plot without Replicates - Genes - {}" ' \
-                      'src="{}/{}_genes_box_wo_replicates.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_genes_box_wo_replicates.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Box Plot without Replicates - Genes - {}" ' \
+                           'src="{}/{}_genes_box_wo_replicates.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
-            output += '<td><a href="{}/{}_genes_box_w_replicates.pdf">'.format(prefix, prefix)
-            output += '<img alt="Box Plot with Replicates - Genes - {}" ' \
-                      'src="{}/{}_genes_box_w_replicates.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_genes_box_w_replicates.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Box Plot with Replicates - Genes - {}" ' \
+                           'src="{}/{}_genes_box_w_replicates.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
             # Box Plots for Isoforms with and without Replicates
 
-            output += '<td><a href="{}/{}_isoforms_box_wo_replicates.pdf">'.format(prefix, prefix)
-            output += '<img alt="Box Plot without Replicates - Isoforms - {}" ' \
-                      'src="{}/{}_isoforms_box_wo_replicates.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_isoforms_box_wo_replicates.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Box Plot without Replicates - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_box_wo_replicates.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
-            output += '<td><a href="{}/{}_isoforms_box_w_replicates.pdf">'.format(prefix, prefix)
-            output += '<img alt="Box Plot with Replicates - Isoforms - {}" ' \
-                      'src="{}/{}_isoforms_box_w_replicates.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_isoforms_box_w_replicates.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Box Plot with Replicates - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_box_w_replicates.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
             # Scatter Matrix Plot for Genes and Isoforms
 
-            output += '<td><a href="{}/{}_genes_scatter_matrix.pdf">'.format(prefix, prefix)
-            output += '<img alt="Scatter Matrix Plot - Genes - {}" ' \
-                      'src="{}/{}_genes_scatter_matrix.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_genes_scatter_matrix.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Scatter Matrix Plot - Genes - {}" ' \
+                           'src="{}/{}_genes_scatter_matrix.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
-            output += '<td><a href="{}/{}_isoforms_scatter_matrix.pdf">'.format(prefix, prefix)
-            output += '<img alt="Scatter Matrix Plot - Isoforms - {}" ' \
-                      'src="{}/{}_isoforms_scatter_matrix.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_isoforms_scatter_matrix.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Scatter Matrix Plot - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_scatter_matrix.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
             # Dendrogram Plot for Genes
 
-            output += '<td><a href="{}/{}_genes_dendrogram.pdf">'.format(prefix, prefix)
-            output += '<img alt="Dendrogram Plot - Genes - {}" ' \
-                      'src="{}/{}_genes_dendrogram.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_genes_dendrogram.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Dendrogram Plot - Genes - {}" ' \
+                           'src="{}/{}_genes_dendrogram.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
             # Volcano Matrix Plot for Genes
 
-            output += '<td><a href="{}/{}_genes_volcano_matrix.pdf">'.format(prefix, prefix)
-            output += '<img alt="Volcano Matrix Plot - Genes - {}" ' \
-                      'src="{}/{}_genes_volcano_matrix.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_genes_volcano_matrix.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Volcano Matrix Plot - Genes - {}" ' \
+                           'src="{}/{}_genes_volcano_matrix.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
             # Multidimensional Scaling Plot for Genes
 
             if os.path.exists(
                     path=os.path.join(self.genome_directory, '{}/{}_genes_mds.png'.format(prefix, prefix))):
-                output += '<td><a href="{}/{}_genes_mds.pdf">'.format(prefix, prefix)
-                output += '<img alt="Multidimensional Scaling Plot - Genes - {}" ' \
-                          'src="{}/{}_genes_mds.png" height="80" width="80" />'. \
+                output_html += '<td><a href="{}/{}_genes_mds.pdf">'.format(prefix, prefix)
+                output_html += '<img alt="Multidimensional Scaling Plot - Genes - {}" ' \
+                               'src="{}/{}_genes_mds.png" height="80" width="80" />'. \
                     format(comparison_key, prefix, prefix)
-                output += '</a></td>\n'
+                output_html += '</a></td>\n'
             else:
-                output += '<td></td>\n'
+                output_html += '<td></td>\n'
 
             # Principal Component Analysis Plot for Genes
 
-            output += '<td><a href="{}/{}_genes_pca.pdf">'.format(prefix, prefix)
-            output += '<img alt="Principal Component Analysis Plot - Genes - {}" ' \
-                      'src="{}/{}_genes_pca.png" height="80" width="80" />'. \
+            output_html += '<td><a href="{}/{}_genes_pca.pdf">'.format(prefix, prefix)
+            output_html += '<img alt="Principal Component Analysis Plot - Genes - {}" ' \
+                           'src="{}/{}_genes_pca.png" height="80" width="80" />'. \
                 format(comparison_key, prefix, prefix)
-            output += '</a></td>\n'
+            output_html += '</a></td>\n'
 
-            output += '</tr>\n'
+            output_html += '</tr>\n'
 
             # Read sample pair information if available.
 
@@ -2145,54 +2139,44 @@ class Tuxedo(Analysis):
 
                 for row_dict in sample_pair_sheet.row_dicts:
                     assert isinstance(row_dict, dict)
-                    output += '<tr>\n'
+                    output_html += '<tr>\n'
 
-                    output += '<td></td>\n'
-                    output += '<td colspan="10"><strong>{}</strong> versus <strong>{}</strong></td>\n'. \
+                    output_html += '<td></td>\n'
+                    output_html += '<td colspan="10"><strong>{}</strong> versus <strong>{}</strong></td>\n'. \
                         format(row_dict['V1'], row_dict['V2'])
 
-                    output += '<td><a href="{}/{}_{}_{}_genes_scatter.pdf">'. \
+                    output_html += '<td><a href="{}/{}_{}_{}_genes_scatter.pdf">'. \
                         format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output += '<img alt="Scatter Plot on genes {} versus {}" ' \
-                              'src="{}/{}_{}_{}_genes_scatter.png" height="80" width="80" />'. \
+                    output_html += '<img alt="Scatter Plot on genes {} versus {}" ' \
+                                   'src="{}/{}_{}_{}_genes_scatter.png" height="80" width="80" />'. \
                         format(row_dict['V1'], row_dict['V2'], prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output += '</a></td>\n'
+                    output_html += '</a></td>\n'
 
-                    output += '<td></td>\n'
+                    output_html += '<td></td>\n'
 
-                    output += '<td><a href="{}/{}_{}_{}_maplot.pdf">'. \
+                    output_html += '<td><a href="{}/{}_{}_{}_maplot.pdf">'. \
                         format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output += '<img alt="M vs A Plot on genes {} versus {}" ' \
-                              'src="{}/{}_{}_{}_maplot.png" height="80" width="80" />'. \
+                    output_html += '<img alt="M vs A Plot on genes {} versus {}" ' \
+                                   'src="{}/{}_{}_{}_maplot.png" height="80" width="80" />'. \
                         format(row_dict['V1'], row_dict['V2'], prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output += '</a></td>\n'
+                    output_html += '</a></td>\n'
 
-                    output += '<td><a href="{}/{}_{}_{}_genes_volcano.pdf">'. \
+                    output_html += '<td><a href="{}/{}_{}_{}_genes_volcano.pdf">'. \
                         format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output += '<img alt="Volcano Plot on genes {} versus {}" ' \
-                              'src="{}/{}_{}_{}_genes_volcano.png" height="80" width="80" />'. \
+                    output_html += '<img alt="Volcano Plot on genes {} versus {}" ' \
+                                   'src="{}/{}_{}_{}_genes_volcano.png" height="80" width="80" />'. \
                         format(row_dict['V1'], row_dict['V2'], prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output += '</a></td>\n'
+                    output_html += '</a></td>\n'
 
-                    output += '<td colspan="2"></td>\n'
+                    output_html += '<td colspan="2"></td>\n'
 
-                    output += '</tr>\n'
+                    output_html += '</tr>\n'
 
-        output += '</tbody>\n'
-        output += '</table>\n'
-        output += '\n'
-        output += self.report_html_footer()
+        output_html += '</tbody>\n'
+        output_html += '</table>\n'
+        output_html += '\n'
 
-        file_path = os.path.join(self.genome_directory, 'rnaseq_report.html')
-
-        file_handle = open(name=file_path, mode='w')
-        file_handle.write(output)
-        file_handle.close()
-
-        # Create the UCSC Genome Browser Track Hub.
-
-        self.ucsc_hub_write_hub(prefix='rnaseq')
-        self.ucsc_hub_write_genomes(prefix='rnaseq')
-        self.ucsc_hub_write_tracks(output=track_output, prefix='rnaseq')
+        self.report_to_file(content=output_html, prefix='rnaseq')
+        self.ucsc_hub_to_file(content=output_hub, prefix='rnaseq')
 
         return

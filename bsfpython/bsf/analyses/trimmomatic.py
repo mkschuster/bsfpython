@@ -40,11 +40,18 @@ class Trimmomatic(Analysis):
 
     Attributes:
 
+    @cvar name: Analysis name that should be overridden by sub-classes
+    @type name: str
+    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @type prefix: str
     @ivar adapter_path: Adapter file path
     @type adapter_path: str | unicode
     @ivar classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
     @type classpath_trimmomatic: str | unicode
     """
+
+    name = 'Trimmomatic Analysis'
+    prefix = 'trimmomatic'
 
     def __init__(
             self,

@@ -381,6 +381,10 @@ class IlluminaToBam(Analysis):
     """The C{IlluminaToBam} class represents the logic to convert Illumina BCL to a BAM or SAM files.
 
     Attributes:
+    @cvar name: Analysis name that should be overridden by sub-classes
+    @type name: str
+    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @type prefix: str
     @cvar drms_name_illumina_to_bam: C{DRMS.name} for the C{IlluminaToBam} C{Analysis} stage
     @type drms_name_illumina_to_bam: str
     @ivar run_directory: File path to an I{Illumina Run Folder}
@@ -410,7 +414,10 @@ class IlluminaToBam(Analysis):
     @type force: bool
     """
 
-    drms_name_illumina_to_bam = 'illumina_to_bam'
+    name = 'Illumina To Bam Analysis'
+    prefix = 'illumina_to_bam'
+
+    drms_name_illumina_to_bam = prefix
 
     @classmethod
     def get_prefix_illumina_to_bam(cls, project_name, lane):
@@ -982,6 +989,10 @@ class BamIndexDecoder(Analysis):
     sample-specific BAM files.
 
     Attributes:
+    @cvar name: Analysis name that should be overridden by sub-classes
+    @type name: str
+    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @type prefix: str
     @cvar drms_name_bam_index_decoder: C{DRMS.name} for the C{BamIndexDecoder} C{Analysis} stage
     @type drms_name_bam_index_decoder: str
     @ivar library_path: Library annotation file path
@@ -1002,7 +1013,10 @@ class BamIndexDecoder(Analysis):
     @type force: bool
     """
 
-    drms_name_bam_index_decoder = 'bam_index_decoder'
+    name = 'Bam Index Decoder Analysis'
+    prefix = 'bam_index_decoder'
+
+    drms_name_bam_index_decoder = prefix
 
     @classmethod
     def get_prefix_bam_index_decoder(cls, project_name, lane):

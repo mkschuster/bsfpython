@@ -375,11 +375,18 @@ class SamToFastq(Analysis):
 
     Attributes:
 
+    @cvar name: Analysis name that should be overridden by sub-classes
+    @type name: str
+    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @type prefix: str
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
     @type classpath_picard: str | unicode
     @ivar include_non_pf_reads: Include non-pass filer reads
     @type include_non_pf_reads: bool
     """
+
+    name = 'Picard SamToFastq Analysis'
+    prefix = 'picard_sam_to_fastq'
 
     def __init__(
             self,

@@ -31,7 +31,7 @@ from pickle import Pickler, HIGHEST_PROTOCOL
 import re
 import warnings
 
-from bsf import Analysis, defaults, DRMS, Runnable
+from bsf import Analysis, DRMS, Runnable
 from bsf.annotation import AnnotationSheet
 from bsf.data import PairedReads
 from bsf.executables import BWA
@@ -167,6 +167,10 @@ class VariantCallingGATK(Analysis):
     """The C{VariantCallingGATK} class represents the logic to run the Genome Analysis Toolkit (GATK).
 
     Attributes:
+    @cvar name: Analysis name that should be overridden by sub-classes
+    @type name: str
+    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @type prefix: str
     @cvar drms_name_align_lane: C{DRMS.name} for the lane alignment C{Analysis} stage
     @type drms_name_align_lane: str
     @cvar drms_name_process_lane: C{DRMS.name} for the lane processing C{Analysis} stage
@@ -183,8 +187,6 @@ class VariantCallingGATK(Analysis):
     @type drms_name_summary: str
     @cvar drms_name_somatic: C{DRMS.name} for the somatic C{Analysis} stage
     @type drms_name_somatic: str
-    @cvar report_name: HTML Analysis report name that should be overridden by sub-classes
-    @type report_name: str
     @ivar replicate_grouping: Group individual C{PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool
     @ivar comparison_path: Comparison file
@@ -249,16 +251,18 @@ class VariantCallingGATK(Analysis):
     @type classpath_snpeff: str | unicode
     """
 
-    drms_name_align_lane = 'variant_calling_align_lane'
-    drms_name_process_lane = 'variant_calling_process_lane'
-    drms_name_process_sample = 'variant_calling_process_sample'
-    drms_name_diagnose_sample = 'variant_calling_diagnose_sample'
-    drms_name_merge_cohort = 'variant_calling_merge_cohort'
-    drms_name_process_cohort = 'variant_calling_process_cohort'
-    drms_name_split_cohort = 'variant_calling_split_cohort'
-    drms_name_summary = 'variant_calling_summary'
-    drms_name_somatic = 'variant_calling_somatic'
-    report_name = "Variant Calling Analysis"
+    name = 'Variant Calling Analysis'
+    prefix = 'variant_calling'
+
+    drms_name_align_lane = '_'.join((prefix, 'align_lane'))
+    drms_name_process_lane = '_'.join((prefix, 'process_lane'))
+    drms_name_process_sample = '_'.join((prefix, 'process_sample'))
+    drms_name_diagnose_sample = '_'.join((prefix, 'diagnose_sample'))
+    drms_name_merge_cohort = '_'.join((prefix, 'merge_cohort'))
+    drms_name_process_cohort = '_'.join((prefix, 'process_cohort'))
+    drms_name_split_cohort = '_'.join((prefix, 'split_cohort'))
+    drms_name_summary = '_'.join((prefix, 'summary'))
+    drms_name_somatic = '_'.join((prefix, 'somatic'))
 
     def __init__(
             self,
@@ -903,7 +907,7 @@ class VariantCallingGATK(Analysis):
                         # that this Analysis needs considering.
                         for sample in group_samples:
                             if self.debug > 1:
-                                print '  {} Sample name: {!r} file_path:{!r}'. \
+                                print '  {} Sample name: {!r} file_path: {!r}'. \
                                     format(prefix, sample.name, sample.file_path)
                                 # print sample.trace(1)
                                 # self.add_sample(sample=sample)
@@ -3157,23 +3161,21 @@ class VariantCallingGATK(Analysis):
 
         # This code only needs the public URL.
 
-        track_output = str()
+        output_hub = str()
 
         # Write a HTML document.
 
-        output = str()
+        output_html = str()
 
-        output += self.report_html_header(strict=True)
-        output += '<h1 id="variant_calling_analysis">{} {}</h1>\n'.format(self.project_name, self.report_name)
-        output += '\n'
+        output_html += '<h1 id="variant_calling_analysis">{} {}</h1>\n'.format(self.project_name, self.name)
+        output_html += '\n'
 
-        output += '<h2 id="genome_browsing">Genome Browsing</h2>\n'
-        output += '\n'
+        output_html += '<h2 id="genome_browsing">Genome Browsing</h2>\n'
+        output_html += '\n'
 
         # Resolve an eventual alias for the UCSC genome assembly name.
 
-        if default.genome_aliases_ucsc_dict is not None and \
-                self.genome_version in default.genome_aliases_ucsc_dict:
+        if default.genome_aliases_ucsc_dict is not None and self.genome_version in default.genome_aliases_ucsc_dict:
             ucsc_genome_version = default.genome_aliases_ucsc_dict[self.genome_version]
         else:
             ucsc_genome_version = self.genome_version
@@ -3185,49 +3187,47 @@ class VariantCallingGATK(Analysis):
 
         # TODO: Method defaults.web.ucsc_track_url() should be moved to Analysis.get_ucsc_track_url().
         # The above code for resolving a UCSC Genome Browser genome assembly alias could be centralised in Analysis.
-        output += '<p id="ucsc_track_hub">'
-        output += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.'.format(
-            defaults.web.ucsc_track_url(
-                options_dict=options_dict,
-                host_name=default.ucsc_host_name),
+        output_html += '<p id="ucsc_track_hub">'
+        output_html += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.'.format(
+            self.ucsc_track_url(options_dict=options_dict),
             self.project_name)
-        output += '</p>\n'
-        output += '\n'
+        output_html += '</p>\n'
+        output_html += '\n'
 
-        output += '<h2 id="aliquot_and_sample_level">Aliquot and Sample Level</h2>\n'
-        output += '\n'
-        output += '<table id="aliquot_and_sample_table">\n'
-        output += '<thead>\n'
-        output += '<tr>\n'
-        output += '<th>Sample</th>\n'
-        output += '<th>Variants VCF file</th>\n'
-        output += '<th>Variants TSV file</th>\n'
-        output += '<th>Aligned BAM file</th>\n'
-        output += '<th>Aligned BAI file</th>\n'
-        output += '<th>Aliquot</th>\n'
-        output += '<th>Duplicate Metrics</th>\n'
-        output += '<th>Alignment Summary Metrics</th>\n'
-        output += '<th>Hybrid Selection Metrics</th>\n'
-        output += '<th>Non-Callable Loci</th>\n'
-        output += '</tr>\n'
-        output += '</thead>\n'
-        output += '<tbody>\n'
+        output_html += '<h2 id="aliquot_and_sample_level">Aliquot and Sample Level</h2>\n'
+        output_html += '\n'
+        output_html += '<table id="aliquot_and_sample_table">\n'
+        output_html += '<thead>\n'
+        output_html += '<tr>\n'
+        output_html += '<th>Sample</th>\n'
+        output_html += '<th>Variants VCF file</th>\n'
+        output_html += '<th>Variants TSV file</th>\n'
+        output_html += '<th>Aligned BAM file</th>\n'
+        output_html += '<th>Aligned BAI file</th>\n'
+        output_html += '<th>Aliquot</th>\n'
+        output_html += '<th>Duplicate Metrics</th>\n'
+        output_html += '<th>Alignment Summary Metrics</th>\n'
+        output_html += '<th>Hybrid Selection Metrics</th>\n'
+        output_html += '<th>Non-Callable Loci</th>\n'
+        output_html += '</tr>\n'
+        output_html += '</thead>\n'
+        output_html += '<tbody>\n'
 
         # Group via UCSC super tracks.
 
-        track_output += 'track Alignments\n'
-        track_output += 'shortLabel Alignments\n'
-        track_output += 'longLabel BWA NGS read alignments\n'
-        track_output += 'superTrack on show\n'
-        track_output += 'group alignments\n'
-        track_output += '\n'
+        output_hub += 'track Alignments\n'
+        output_hub += 'shortLabel Alignments\n'
+        output_hub += 'longLabel BWA NGS read alignments\n'
+        output_hub += 'superTrack on show\n'
+        output_hub += 'group alignments\n'
+        output_hub += '\n'
 
-        track_output += 'track Variants\n'
-        track_output += 'shortLabel Variants\n'
-        track_output += 'longLabel Variant calls\n'
-        track_output += 'superTrack on show\n'
-        track_output += 'group variants\n'
-        track_output += '\n'
+        output_hub += 'track Variants\n'
+        output_hub += 'shortLabel Variants\n'
+        output_hub += 'longLabel Variant calls\n'
+        output_hub += 'superTrack on show\n'
+        output_hub += 'group variants\n'
+        output_hub += '\n'
 
         for sample in self.samples:
 
@@ -3260,21 +3260,21 @@ class VariantCallingGATK(Analysis):
             # Alignment track
             # Common settings
 
-            track_output += 'track {}_alignments\n'. \
+            output_hub += 'track {}_alignments\n'. \
                 format(sample.name)
-            track_output += 'type bam\n'
-            track_output += 'shortLabel {}_alignments\n'. \
+            output_hub += 'type bam\n'
+            output_hub += 'shortLabel {}_alignments\n'. \
                 format(sample.name)
-            track_output += 'longLabel {} BWA NGS read alignments\n'. \
+            output_hub += 'longLabel {} BWA NGS read alignments\n'. \
                 format(sample.name)
-            track_output += 'bigDataUrl {}\n'. \
+            output_hub += 'bigDataUrl {}\n'. \
                 format(runnable_process_sample.file_path_dict['realigned_bam'])
             # track_output += 'html {}\n'.format()
-            track_output += 'visibility squish\n'
+            output_hub += 'visibility squish\n'
 
             # Common optional settings.
 
-            track_output += 'color {}\n'. \
+            output_hub += 'color {}\n'. \
                 format('0,0,0')
 
             # Compressed Sequence Alignment track settings.
@@ -3283,18 +3283,18 @@ class VariantCallingGATK(Analysis):
 
             # Composite track settings.
 
-            track_output += 'parent Alignments\n'
-            track_output += '\n'
+            output_hub += 'parent Alignments\n'
+            output_hub += '\n'
 
             # Variant track
 
-            track_output += 'track {}_variants\n'.format(sample.name)
-            track_output += 'type vcfTabix\n'
-            track_output += 'shortLabel {}_variants\n'.format(sample.name)
-            track_output += 'longLabel {} variant calls\n'.format(sample.name)
-            track_output += 'bigDataUrl {}\n'.format(runnable_split_cohort.file_path_dict['sample_vcf'])
+            output_hub += 'track {}_variants\n'.format(sample.name)
+            output_hub += 'type vcfTabix\n'
+            output_hub += 'shortLabel {}_variants\n'.format(sample.name)
+            output_hub += 'longLabel {} variant calls\n'.format(sample.name)
+            output_hub += 'bigDataUrl {}\n'.format(runnable_split_cohort.file_path_dict['sample_vcf'])
             # track_output += 'html {}\n'.format()
-            track_output += 'visibility dense\n'
+            output_hub += 'visibility dense\n'
 
             # vcfTabix specific settings
 
@@ -3302,109 +3302,109 @@ class VariantCallingGATK(Analysis):
 
             # Composite track settings.
 
-            track_output += 'parent Variants\n'
-            track_output += '\n'
+            output_hub += 'parent Variants\n'
+            output_hub += '\n'
 
-            output += '<tr>\n'
-            output += '<td>{}</td>\n'. \
+            output_html += '<tr>\n'
+            output_html += '<td>{}</td>\n'. \
                 format(sample.name)
-            output += '<td><a href="{}">VCF</a></td>\n'. \
+            output_html += '<td><a href="{}">VCF</a></td>\n'. \
                 format(runnable_split_cohort.file_path_dict['sample_vcf'])
-            output += '<td><a href="{}">TSV</a></td>\n'. \
+            output_html += '<td><a href="{}">TSV</a></td>\n'. \
                 format(runnable_split_cohort.file_path_dict['sample_tsv'])
-            output += '<td><a href="{}">BAM</a></td>\n'. \
+            output_html += '<td><a href="{}">BAM</a></td>\n'. \
                 format(runnable_process_sample.file_path_dict['realigned_bam'])
-            output += '<td><a href="{}">BAI</a></td>\n'. \
+            output_html += '<td><a href="{}">BAI</a></td>\n'. \
                 format(runnable_process_sample.file_path_dict['realigned_bai'])
-            output += '<td></td>\n'  # Aliquot
-            output += '<td><a href="{}">TSV</a></td>\n'. \
+            output_html += '<td></td>\n'  # Aliquot
+            output_html += '<td><a href="{}">TSV</a></td>\n'. \
                 format(runnable_process_sample.file_path_dict['duplicate_metrics'])
-            output += '<td><a href="{}">TSV</a></td>\n'. \
+            output_html += '<td><a href="{}">TSV</a></td>\n'. \
                 format(runnable_process_sample.file_path_dict['alignment_summary_metrics'])
             if os.path.isfile(
                     os.path.join(
                         self.genome_directory,
                         runnable_diagnose_sample.file_path_dict['hybrid_selection_metrics'])):
-                output += '<td><a href="{}">TSV</a></td>\n'. \
+                output_html += '<td><a href="{}">TSV</a></td>\n'. \
                     format(runnable_diagnose_sample.file_path_dict['hybrid_selection_metrics'])
             else:
-                output += '<td></td>\n'
+                output_html += '<td></td>\n'
             if os.path.isfile(
                     os.path.join(
                         self.genome_directory,
                         runnable_diagnose_sample.file_path_dict['non_callable_tsv'])):
-                output += '<td><a href="{}">TSV</a></td>\n'. \
+                output_html += '<td><a href="{}">TSV</a></td>\n'. \
                     format(runnable_diagnose_sample.file_path_dict['non_callable_tsv'])
             else:
-                output += '<td></td>\n'
-            output += '</tr>\n'
+                output_html += '<td></td>\n'
+            output_html += '</tr>\n'
 
             for replicate_key in replicate_keys:
                 runnable_process_lane = self.runnable_dict[
                     '_'.join((self.drms_name_process_lane, replicate_key))]
                 assert isinstance(runnable_process_lane, Runnable)
-                output += '<tr>\n'
-                output += '<td></td>\n'  # Sample
-                output += '<td></td>\n'  # Variants VCF
-                output += '<td></td>\n'  # Variants TSV
-                output += '<td></td>\n'  # Aligned BAM
-                output += '<td></td>\n'  # Aligned BAI
-                output += '<td>{}</td>\n'.format(replicate_key)
-                output += '<td><a href="{}">TSV</a></td>\n'. \
+                output_html += '<tr>\n'
+                output_html += '<td></td>\n'  # Sample
+                output_html += '<td></td>\n'  # Variants VCF
+                output_html += '<td></td>\n'  # Variants TSV
+                output_html += '<td></td>\n'  # Aligned BAM
+                output_html += '<td></td>\n'  # Aligned BAI
+                output_html += '<td>{}</td>\n'.format(replicate_key)
+                output_html += '<td><a href="{}">TSV</a></td>\n'. \
                     format(runnable_process_lane.file_path_dict['duplicate_metrics'])
-                output += '<td><a href="{}">TSV</a></td>\n'. \
+                output_html += '<td><a href="{}">TSV</a></td>\n'. \
                     format(runnable_process_lane.file_path_dict['alignment_summary_metrics'])
-                output += '<td></td>\n'  # Hybrid Selection Metrics
-                output += '<td></td>\n'  # Non-Callable Loci
-                output += '</tr>\n'
+                output_html += '<td></td>\n'  # Hybrid Selection Metrics
+                output_html += '<td></td>\n'  # Non-Callable Loci
+                output_html += '</tr>\n'
 
-        output += '</tbody>\n'
-        output += '</table>\n'
-        output += '\n'
+        output_html += '</tbody>\n'
+        output_html += '</table>\n'
+        output_html += '\n'
 
-        output += '<h2 id="cohort_level">Cohort Level</h2>\n'
-        output += '\n'
-        output += '<table id="cohort_table">\n'
-        output += '<thead>\n'
-        output += '<tr>\n'
-        output += '<th>Cohort</th>\n'
-        output += '<th>Information</th>\n'
-        output += '<th>Comment</th>\n'
-        output += '</tr>\n'
-        output += '</thead>\n'
-        output += '<tbody>\n'
+        output_html += '<h2 id="cohort_level">Cohort Level</h2>\n'
+        output_html += '\n'
+        output_html += '<table id="cohort_table">\n'
+        output_html += '<thead>\n'
+        output_html += '<tr>\n'
+        output_html += '<th>Cohort</th>\n'
+        output_html += '<th>Information</th>\n'
+        output_html += '<th>Comment</th>\n'
+        output_html += '</tr>\n'
+        output_html += '</thead>\n'
+        output_html += '<tbody>\n'
 
         runnable_process_cohort = self.runnable_dict[
             '_'.join((self.drms_name_process_cohort, self.cohort_name))]
         assert isinstance(runnable_process_cohort, Runnable)
 
-        output += '<tr>\n'
-        output += '<td>{}</td>\n'. \
+        output_html += '<tr>\n'
+        output_html += '<td>{}</td>\n'. \
             format(self.cohort_name)
-        output += '<td><a href="{}">snpEff Summary Statistics</a></td>\n'. \
+        output_html += '<td><a href="{}">snpEff Summary Statistics</a></td>\n'. \
             format(runnable_process_cohort.file_path_dict['snpeff_stats'])
-        output += '<td></td>\n'
-        output += '</tr>\n'
+        output_html += '<td></td>\n'
+        output_html += '</tr>\n'
 
-        output += '<tr>\n'
-        output += '<td>{}</td>\n'. \
+        output_html += '<tr>\n'
+        output_html += '<td>{}</td>\n'. \
             format(self.cohort_name)
-        output += '<td>snpEff-annotated multi-sample <a href="{}">VCF</a></td>\n'. \
+        output_html += '<td>snpEff-annotated multi-sample <a href="{}">VCF</a></td>\n'. \
             format(runnable_process_cohort.file_path_dict['snpeff_vcf'])
-        output += '<td>Functional annotation of all splice variants</td>\n'
-        output += '</tr>\n'
+        output_html += '<td>Functional annotation of all splice variants</td>\n'
+        output_html += '</tr>\n'
 
-        output += '<tr>\n'
-        output += '<td>{}</td>\n'. \
+        output_html += '<tr>\n'
+        output_html += '<td>{}</td>\n'. \
             format(self.cohort_name)
-        output += '<td>GATK-annotated multi-sample <a href="{}">VCF</a></td>\n'. \
+        output_html += '<td>GATK-annotated multi-sample <a href="{}">VCF</a></td>\n'. \
             format(runnable_process_cohort.file_path_dict['annotated_vcf'])
-        output += '<td>Functional annotation of only the most severely affected splice variant</td>\n'
-        output += '</tr>\n'
+        output_html += '<td>Functional annotation of only the most severely affected splice variant</td>\n'
+        output_html += '</tr>\n'
 
-        output += '</tbody>\n'
-        output += '</table>\n'
-        output += '\n'
+        output_html += '</tbody>\n'
+        output_html += '</table>\n'
+        output_html += '\n'
 
         # Somatic variant calling.
 
@@ -3412,19 +3412,19 @@ class VariantCallingGATK(Analysis):
         key_list.sort(cmp=lambda x, y: cmp(x, y))
 
         if len(key_list):
-            output += '<h2 id="somatic_variants">Somatic Variants</h2>\n'
-            output += '\n'
-            output += '<table id="somatic_variants_table">\n'
-            output += '<thead>\n'
-            output += '<tr>\n'
-            output += '<th>Comparison</th>\n'
-            output += '<th>Annotated VCF</th>\n'
-            output += '<th>Annotated TSV</th>\n'
-            output += '<th>snpEff Summary Statistics</th>\n'
-            output += '<th>snpEff Genes</th>\n'
-            output += '</tr>\n'
-            output += '</thead>\n'
-            output += '<tbody>\n'
+            output_html += '<h2 id="somatic_variants">Somatic Variants</h2>\n'
+            output_html += '\n'
+            output_html += '<table id="somatic_variants_table">\n'
+            output_html += '<thead>\n'
+            output_html += '<tr>\n'
+            output_html += '<th>Comparison</th>\n'
+            output_html += '<th>Annotated VCF</th>\n'
+            output_html += '<th>Annotated TSV</th>\n'
+            output_html += '<th>snpEff Summary Statistics</th>\n'
+            output_html += '<th>snpEff Genes</th>\n'
+            output_html += '</tr>\n'
+            output_html += '</thead>\n'
+            output_html += '<tbody>\n'
 
             for key in key_list:
                 # The list of samples must contain exactly one normal and one tumor sample.
@@ -3433,159 +3433,152 @@ class VariantCallingGATK(Analysis):
 
                 runnable_somatic = self.runnable_dict['_'.join((self.drms_name_somatic, key))]
                 assert isinstance(runnable_somatic, Runnable)
-                output += '<tr>\n'
-                output += '<td>{}</td>\n'.format(key)
-                output += '<td><a href="{}">VCF</a></td>\n'.format(runnable_somatic.file_path_dict['annotated_vcf'])
-                output += '<td><a href="{}">TSV</a></td>\n'.format(runnable_somatic.file_path_dict['annotated_tsv'])
-                output += '<td><a href="{}">HTML</a></td>\n'.format(runnable_somatic.file_path_dict['snpeff_stats'])
-                output += '<td><a href="{}">TXT</a></td>\n'.format(runnable_somatic.file_path_dict['snpeff_genes'])
-                output += '</tr>\n'
+                output_html += '<tr>\n'
+                output_html += '<td>{}</td>\n'.format(key)
+                output_html += '<td><a href="{}">VCF</a></td>\n'.format(
+                    runnable_somatic.file_path_dict['annotated_vcf'])
+                output_html += '<td><a href="{}">TSV</a></td>\n'.format(
+                    runnable_somatic.file_path_dict['annotated_tsv'])
+                output_html += '<td><a href="{}">HTML</a></td>\n'.format(
+                    runnable_somatic.file_path_dict['snpeff_stats'])
+                output_html += '<td><a href="{}">TXT</a></td>\n'.format(runnable_somatic.file_path_dict['snpeff_genes'])
+                output_html += '</tr>\n'
 
-            output += '</tbody>\n'
-            output += '</table>\n'
-            output += '\n'
+            output_html += '</tbody>\n'
+            output_html += '</table>\n'
+            output_html += '\n'
 
-        output += '<h2 id="qc_plots">QC Plots</h2>\n'
-        output += '\n'
-        output += '<table id="qc_table">\n'
-        output += '<thead>\n'
-        output += '<tr><th>Sample</th><th>Aliquot</th><th>Metrics</th></tr>\n'
-        output += '</thead>\n'
-        output += '<tbody>\n'
+        output_html += '<h2 id="qc_plots">QC Plots</h2>\n'
+        output_html += '\n'
+        output_html += '<table id="qc_table">\n'
+        output_html += '<thead>\n'
+        output_html += '<tr><th>Sample</th><th>Aliquot</th><th>Metrics</th></tr>\n'
+        output_html += '</thead>\n'
+        output_html += '<tbody>\n'
 
         # Alignment Summary - Percent Aligned
         if os.path.exists(os.path.join(
                 self.genome_directory, 'variant_calling_summary_alignment_percentage_sample.png')):
-            output += '<tr>\n'
-            output += '<td>'
-            output += '<a href="variant_calling_summary_alignment_percentage_sample.pdf">'
-            output += '<img alt="Alignment Summary - Percent Aligned per Sample" ' \
-                      'src="variant_calling_summary_alignment_percentage_sample.png" ' \
-                      'height="100" width="100" />'
-            output += '</a>'
-            output += '</td>\n'
-            output += '<td>'
-            output += '<a href="variant_calling_summary_alignment_percentage_read_group.pdf">'
-            output += '<img alt="Alignment Summary - Percent Aligned per Aliquot" ' \
-                      'src="variant_calling_summary_alignment_percentage_read_group.png" ' \
-                      'height="100" width="100" />'
-            output += '</a>'
-            output += '</td>\n'
-            output += '<td>Alignment Summary - Percent Aligned</td>\n'
-            output += '</tr>\n'
+            output_html += '<tr>\n'
+            output_html += '<td>'
+            output_html += '<a href="variant_calling_summary_alignment_percentage_sample.pdf">'
+            output_html += '<img alt="Alignment Summary - Percent Aligned per Sample" ' \
+                           'src="variant_calling_summary_alignment_percentage_sample.png" ' \
+                           'height="100" width="100" />'
+            output_html += '</a>'
+            output_html += '</td>\n'
+            output_html += '<td>'
+            output_html += '<a href="variant_calling_summary_alignment_percentage_read_group.pdf">'
+            output_html += '<img alt="Alignment Summary - Percent Aligned per Aliquot" ' \
+                           'src="variant_calling_summary_alignment_percentage_read_group.png" ' \
+                           'height="100" width="100" />'
+            output_html += '</a>'
+            output_html += '</td>\n'
+            output_html += '<td>Alignment Summary - Percent Aligned</td>\n'
+            output_html += '</tr>\n'
 
         # Alignment Summary - Reads Aligned
         if os.path.exists(os.path.join(
                 self.genome_directory, 'variant_calling_summary_alignment_reads_sample.png')):
-            output += '<tr>\n'
-            output += '<td>'
-            output += '<a href="variant_calling_summary_alignment_reads_sample.pdf">'
-            output += '<img alt="Alignment Summary - Reads Aligned per Sample" ' \
-                      'src="variant_calling_summary_alignment_reads_sample.png" ' \
-                      'height="100" width="100" />'
-            output += '</a>'
-            output += '</td>\n'
-            output += '<td>'
-            output += '<a href="variant_calling_summary_alignment_reads_read_group.pdf">'
-            output += '<img alt="Alignment Summary - Reads Aligned per Aliquot" ' \
-                      'src="variant_calling_summary_alignment_reads_read_group.png" ' \
-                      'height="100" width="100" />'
-            output += '</a>'
-            output += '</td>\n'
-            output += '<td>Alignment Summary - Reads Aligned</td>\n'
-            output += '</tr>\n'
+            output_html += '<tr>\n'
+            output_html += '<td>'
+            output_html += '<a href="variant_calling_summary_alignment_reads_sample.pdf">'
+            output_html += '<img alt="Alignment Summary - Reads Aligned per Sample" ' \
+                           'src="variant_calling_summary_alignment_reads_sample.png" ' \
+                           'height="100" width="100" />'
+            output_html += '</a>'
+            output_html += '</td>\n'
+            output_html += '<td>'
+            output_html += '<a href="variant_calling_summary_alignment_reads_read_group.pdf">'
+            output_html += '<img alt="Alignment Summary - Reads Aligned per Aliquot" ' \
+                           'src="variant_calling_summary_alignment_reads_read_group.png" ' \
+                           'height="100" width="100" />'
+            output_html += '</a>'
+            output_html += '</td>\n'
+            output_html += '<td>Alignment Summary - Reads Aligned</td>\n'
+            output_html += '</tr>\n'
 
         # Hybrid Selection - Mean Target Coverage
         if os.path.exists(os.path.join(
                 self.genome_directory, 'variant_calling_summary_hybrid_target_coverage_sample.png')):
-            output += '<tr>\n'
-            output += '<td>'
-            output += '<a href="variant_calling_summary_hybrid_target_coverage_sample.pdf">'
-            output += '<img alt="Hybrid Selection - Mean Target Coverage per Sample" ' \
-                      'src="variant_calling_summary_hybrid_target_coverage_sample.png" ' \
-                      'height="100" width="100" />'
-            output += '</a>'
-            output += '</td>\n'
-            output += '<td>'
-            output += '<a href="variant_calling_summary_hybrid_target_coverage_read_group.pdf">'
-            output += '<img alt="Hybrid Selection - Mean Target Coverage per Aliquot" ' \
-                      'src="variant_calling_summary_hybrid_target_coverage_read_group.png" ' \
-                      'height="100" width="100" />'
-            output += '</a>'
-            output += '</td>\n'
-            output += '<td>Hybrid Selection - Mean Target Coverage</td>\n'
-            output += '</tr>\n'
+            output_html += '<tr>\n'
+            output_html += '<td>'
+            output_html += '<a href="variant_calling_summary_hybrid_target_coverage_sample.pdf">'
+            output_html += '<img alt="Hybrid Selection - Mean Target Coverage per Sample" ' \
+                           'src="variant_calling_summary_hybrid_target_coverage_sample.png" ' \
+                           'height="100" width="100" />'
+            output_html += '</a>'
+            output_html += '</td>\n'
+            output_html += '<td>'
+            output_html += '<a href="variant_calling_summary_hybrid_target_coverage_read_group.pdf">'
+            output_html += '<img alt="Hybrid Selection - Mean Target Coverage per Aliquot" ' \
+                           'src="variant_calling_summary_hybrid_target_coverage_read_group.png" ' \
+                           'height="100" width="100" />'
+            output_html += '</a>'
+            output_html += '</td>\n'
+            output_html += '<td>Hybrid Selection - Mean Target Coverage</td>\n'
+            output_html += '</tr>\n'
 
         # Hybrid Selection - Percent Unique Reads
         if os.path.exists(os.path.join(
                 self.genome_directory, 'variant_calling_summary_hybrid_unique_percentage_sample.png')):
-            output += '<tr>\n'
-            output += '<td>'
-            output += '<a href="variant_calling_summary_hybrid_unique_percentage_sample.pdf">'
-            output += '<img alt="Hybrid Selection - Percent Unique Reads per Sample" ' \
-                      'src="variant_calling_summary_hybrid_unique_percentage_sample.png" ' \
-                      'height="100" width="100" />'
-            output += '</a>'
-            output += '</td>\n'
-            output += '<td>'
-            output += '<a href="variant_calling_summary_hybrid_unique_percentage_read_group.pdf">'
-            output += '<img alt="Hybrid Selection - Percent Unique Reads per Aliquot" ' \
-                      'src="variant_calling_summary_hybrid_unique_percentage_read_group.png" ' \
-                      'height="100" width="100" />'
-            output += '</a>'
-            output += '</td>\n'
-            output += '<td>Hybrid Selection - Percent Unique Reads</td>\n'
-            output += '</tr>\n'
+            output_html += '<tr>\n'
+            output_html += '<td>'
+            output_html += '<a href="variant_calling_summary_hybrid_unique_percentage_sample.pdf">'
+            output_html += '<img alt="Hybrid Selection - Percent Unique Reads per Sample" ' \
+                           'src="variant_calling_summary_hybrid_unique_percentage_sample.png" ' \
+                           'height="100" width="100" />'
+            output_html += '</a>'
+            output_html += '</td>\n'
+            output_html += '<td>'
+            output_html += '<a href="variant_calling_summary_hybrid_unique_percentage_read_group.pdf">'
+            output_html += '<img alt="Hybrid Selection - Percent Unique Reads per Aliquot" ' \
+                           'src="variant_calling_summary_hybrid_unique_percentage_read_group.png" ' \
+                           'height="100" width="100" />'
+            output_html += '</a>'
+            output_html += '</td>\n'
+            output_html += '<td>Hybrid Selection - Percent Unique Reads</td>\n'
+            output_html += '</tr>\n'
 
         # Non-Callable Loci - Fraction
         if os.path.exists(os.path.join(
                 self.genome_directory, 'variant_calling_summary_non_callable_percentage.png')):
-            output += '<tr>\n'
-            output += '<td>'
-            output += '<a href="variant_calling_summary_non_callable_percentage.pdf">'
-            output += '<img alt="Non-Callable Loci - Fraction" ' \
-                      'src="variant_calling_summary_non_callable_percentage.png" ' \
-                      'height="100" width="100" />'
-            output += '</a>'
-            output += '</td>\n'
-            output += '<td>'
-            output += '<p></p>\n'
-            output += '</td>\n'
-            output += '<td>Non-Callable Loci - Fraction</td>\n'
-            output += '</tr>\n'
+            output_html += '<tr>\n'
+            output_html += '<td>'
+            output_html += '<a href="variant_calling_summary_non_callable_percentage.pdf">'
+            output_html += '<img alt="Non-Callable Loci - Fraction" ' \
+                           'src="variant_calling_summary_non_callable_percentage.png" ' \
+                           'height="100" width="100" />'
+            output_html += '</a>'
+            output_html += '</td>\n'
+            output_html += '<td>'
+            output_html += '<p></p>\n'
+            output_html += '</td>\n'
+            output_html += '<td>Non-Callable Loci - Fraction</td>\n'
+            output_html += '</tr>\n'
 
         # Non-Callable Loci - Number
         if os.path.exists(os.path.join(
                 self.genome_directory, 'variant_calling_summary_non_callable_number.png')):
-            output += '<tr>\n'
-            output += '<td>'
-            output += '<a href="variant_calling_summary_non_callable_number.pdf">'
-            output += '<img alt="Non-Callable Loci - Number" ' \
-                      'src="variant_calling_summary_non_callable_number.png" ' \
-                      'height="100" width="100" />'
-            output += '</a>'
-            output += '</td>\n'
-            output += '<td>'
-            output += '<p></p>\n'
-            output += '</td>\n'
-            output += '<td>Non-Callable Loci - Number</td>\n'
-            output += '</tr>\n'
+            output_html += '<tr>\n'
+            output_html += '<td>'
+            output_html += '<a href="variant_calling_summary_non_callable_number.pdf">'
+            output_html += '<img alt="Non-Callable Loci - Number" ' \
+                           'src="variant_calling_summary_non_callable_number.png" ' \
+                           'height="100" width="100" />'
+            output_html += '</a>'
+            output_html += '</td>\n'
+            output_html += '<td>'
+            output_html += '<p></p>\n'
+            output_html += '</td>\n'
+            output_html += '<td>Non-Callable Loci - Number</td>\n'
+            output_html += '</tr>\n'
 
-        output += '</tbody>\n'
-        output += '</table>\n'
-        output += '\n'
-        output += self.report_html_footer()
+        output_html += '</tbody>\n'
+        output_html += '</table>\n'
+        output_html += '\n'
 
-        file_path = os.path.join(self.genome_directory, 'variant_calling_report.html')
-
-        file_handle = open(name=file_path, mode='w')
-        file_handle.write(output)
-        file_handle.close()
-
-        # Create the UCSC Genome Browser Track Hub.
-
-        self.ucsc_hub_write_hub(prefix='variant_calling')
-        self.ucsc_hub_write_genomes(prefix='variant_calling')
-        self.ucsc_hub_write_tracks(output=track_output, prefix='variant_calling')
+        self.report_to_file(content=output_html, prefix='variant_calling')
+        self.ucsc_hub_to_file(content=output_hub, prefix='variant_calling')
 
         return
