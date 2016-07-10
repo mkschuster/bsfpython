@@ -217,7 +217,9 @@ class Default(object):
     @type operator_institution: str
     @ivar operator_sequencing_centre: BAM sequencing centre code
     @type operator_sequencing_centre: str
-    @ivar ucsc_host_name: UCSC Genome Browser host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
+    @ivar ucsc_protocol: UCSC Genome Browser URL protocol (i.e. http, https, ...)
+    @type ucsc_protocol: str
+    @ivar ucsc_host_name: UCSC Genome Browser URL host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
     @type ucsc_host_name: str
     @ivar url_protocol: URL protocol (i.e. HTTP)
     @type url_protocol: str
@@ -347,9 +349,11 @@ class Default(object):
             operator_institution=None,
             operator_sequencing_centre=None,
             genome_aliases_ucsc_dict=None,
+            ucsc_protocol=None,
             ucsc_host_name=None,
             url_protocol=None,
             url_host_name=None,
+            url_relative_dna=None,
             url_relative_projects=None):
         """Initialise a Default object.
 
@@ -411,12 +415,16 @@ class Default(object):
         @type operator_sequencing_centre: str
         @param genome_aliases_ucsc_dict: Alias of genome assembly names for the UCSC Genome Browser
         @type genome_aliases_ucsc_dict: dict[str, str]
-        @param ucsc_host_name: UCSC Genome Browser host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
+        @param ucsc_protocol: UCSC Genome Browser URL protocol (i.e. http, https, ...)
+        @type ucsc_protocol: str
+        @param ucsc_host_name: UCSC Genome Browser URL host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
         @type ucsc_host_name: str
         @param url_protocol: URL protocol (i.e. HTTP)
         @type url_protocol: str
         @param url_host_name: URL host name
         @type url_host_name:str
+        @param url_relative_dna: Sub-directory for DNA sequences
+        @type url_relative_dna: str
         @param url_relative_projects: Sub-directory for analysis projects
         @type url_relative_projects: str
         @return:
@@ -584,6 +592,11 @@ class Default(object):
 
         # Set UCSC Genome Browser information.
 
+        if ucsc_protocol is None:
+            self.ucsc_protocol = str()
+        else:
+            self.ucsc_protocol = ucsc_protocol
+
         if ucsc_host_name is None:
             self.ucsc_host_name = str()
         else:
@@ -600,6 +613,11 @@ class Default(object):
             self.url_host_name = str()
         else:
             self.url_host_name = url_host_name
+
+        if url_relative_dna is None:
+            self.url_relative_dna = str()
+        else:
+            self.url_relative_dna = url_relative_dna
 
         if url_relative_projects is None:
             self.url_relative_projects = str()
@@ -680,12 +698,14 @@ class Default(object):
 
         section = 'ucsc'
 
-        self.ucsc_host_name = cp.get(section=section, option='ucsc_host_name')
+        self.ucsc_protocol = cp.get(section=section, option='protocol')
+        self.ucsc_host_name = cp.get(section=section, option='host_name')
 
         section = 'url'
 
         self.url_protocol = cp.get(section=section, option='protocol')
         self.url_host_name = cp.get(section=section, option='host_name')
+        self.url_relative_dna = cp.get(section=section, option='relative_dna')
         self.url_relative_projects = cp.get(section=section, option='relative_projects')
 
         return
@@ -894,10 +914,20 @@ class Default(object):
 
         default = Default.get_global_default()
 
-        if default.url_protocol:
-            return '{}://{}'.format(default.url_protocol, default.url_host_name)
-        else:
-            return '//{}'.format(default.url_host_name)
+        # Strip leading colons to support protocol-independent URLs.
+        return '{}://{}'.format(default.url_protocol, default.url_host_name).lstrip(':')
+
+    @staticmethod
+    def url_absolute_dna():
+        """Return the absolute URL to the DNA directory.
+
+        @return: URL string
+        @rtype: str
+        """
+
+        default = Default.get_global_default()
+
+        return '/'.join((default.url_absolute_base(), default.url_relative_dna))
 
     @staticmethod
     def url_absolute_projects():
