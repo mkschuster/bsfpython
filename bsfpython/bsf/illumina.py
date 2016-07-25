@@ -1395,8 +1395,8 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta in '2.7.3':
-            # HCS 3.3.52 (HiSeq 3000/4000) no longer has this directory.
+        if rta in ('2.7.3', '2.7.6'):
+            # RTA 2.7.3 (HiSeq 3000/4000) does no longer have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             return
 
         matrix_name = 'Matrix'
@@ -1413,7 +1413,7 @@ class RunFolder(object):
             print "Processing 'IRF/Data/Intensities/BaseCalls/{}/'".format(matrix_name)
 
         if rta in '2.5.2':
-            # For HCS 3.3.20 (HiSeq 3000/4000) process IRF/Data/Intensities/BaseCalls/Matrix/L00[1-8] directories.
+            # For RTA 2.5.2 (HiSeq 3000/4000) process IRF/Data/Intensities/BaseCalls/Matrix/L00[1-8] directories.
             for lane in range(1, fcl.lane_count + 1):
                 lane_name = 'L{:03d}'.format(lane)
                 if lane_name in matrix_dict:
@@ -1522,8 +1522,8 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta in '2.7.3':
-            # HCS 3.3.52 (HiSeq 3000/4000) does no longer have a IRF/Data/Intensities/BaseCalls/Phasing/ directory.
+        if rta in ('2.7.3', '2.7.6'):
+            # RTA 2.7.3 (HiSeq 3000/4000) does no longer have a IRF/Data/Intensities/BaseCalls/Phasing/ directory.
             return
 
         phasing_name = 'Phasing'
@@ -1603,7 +1603,7 @@ class RunFolder(object):
                                         format(phasing_name, tile_file)
 
         if rta not in '2.5.2':
-            # HCS 3.3.20 (HiSeq 3000/4000) does not have
+            # RTA 2.5.2 (HiSeq 3000/4000) does not have
             # IRF/DataIntensities/BaseCalls/Phasing/s_{lane}_{cycle}_phasing.xml files.
             for lane in range(1, fcl.lane_count + 1):
                 for read_start in self.run_information.get_read_start_list:
@@ -1653,8 +1653,8 @@ class RunFolder(object):
 
         # Process the IRF/Data/Intensities/BaseCalls/config.xml file.
 
-        if rta not in ('2.5.2', '2.7.3'):
-            # HiSeq 3000 does not have the IRF/DataIntensities/BaseCalls/config.xml file.
+        if rta not in ('2.5.2', '2.7.3', '2.7.6'):
+            # HiSeq 3000/4000 does not have the IRF/Data/Intensities/BaseCalls/config.xml file.
             config_name = 'config.xml'
             if config_name in base_calls_dict:
                 del base_calls_dict[config_name]
@@ -1722,7 +1722,7 @@ class RunFolder(object):
                             # Process tile stats files.
                             # s_1_1101.stats
                             # s_1_2316.stats
-                            if rta not in ('2.5.2', '2.7.3'):
+                            if rta not in ('2.5.2', '2.7.3', '2.7.6'):
                                 # HiSeq 3000/4000 does not have stats files.
                                 tile_file = 's_{:1d}_{:1d}{:1d}{:02d}.stats'.format(lane, surface, swath, tile)
                                 if tile_file in cycle_dict:
@@ -1753,7 +1753,7 @@ class RunFolder(object):
                         # Process tile control files.
                         # s_1_1101.control
                         # s_1_2316.control
-                        if rta not in ('2.5.2', '2.7.3'):
+                        if rta not in ('2.5.2', '2.7.3', '2.7.6'):
                             # HiSeq 3000/4000 does not have control files.
                             tile_file = 's_{:1d}_{:1d}{:1d}{:02d}.control'.format(lane, surface, swath, tile)
                             if tile_file in lane_dict:
@@ -1916,7 +1916,7 @@ class RunFolder(object):
             intensities_path=intensities_path,
             debug=debug)
 
-        if rta in ('2.5.2', '2.7.3'):
+        if rta in ('2.5.2', '2.7.3', '2.7.6'):
             # The HiSeq 3000/4000 platform has:
             # s.locs
 
@@ -2200,8 +2200,8 @@ class RunFolder(object):
             data_dict=data_dict,
             debug=debug)
 
-        if rta not in ('2.5.2', '2.7.3'):
-            # Exclude HiSeq 3000/4000.
+        if rta not in ('2.5.2', '2.7.3', '2.7.6'):
+            # Exclude the HiSeq 3000/4000 platform.
             # Check the IRF/Data/ImageSize.dat file.
             file_name = 'ImageSize.dat'
             if file_name in data_dict:
@@ -2292,14 +2292,15 @@ class RunFolder(object):
             # Only on the MiSeq platform.
             file_list.append('IndexMetricsOut.bin')
 
-        if rta in ('2.5.2', '2.7.3'):
-            # HiSeq 3000 platform
+        if rta in ('2.5.2', '2.7.3', '2.7.6'):
+            # HiSeq 3000/4000 platform
             file_list.append('EmpiricalPhasingMetricsOut.bin')
             file_list.append('EventMetricsOut.bin')
             file_list.append('PFGridMetricsOut.bin')
             file_list.append('RegistrationMetricsOut.bin')
 
-        if rta in '2.7.3':
+        if rta in ('2.7.3', '2.7.6'):
+            # HiSeq 3000/4000 platform, excluding RTA 2.5.2 version
             file_list.append('ColorMatrixMetricsOut.bin')
             file_list.append('FWHMGridMetricsOut.bin')
             file_list.append('StaticRunMetricsOut.bin')
@@ -2307,8 +2308,8 @@ class RunFolder(object):
         if rta not in ('1.18.54', '2.5.2'):
             file_list.append('ImageMetricsOut.bin')
 
-        if rta not in ('2.5.2', '2.7.3'):
-            # other platforms
+        if rta not in ('2.5.2', '2.7.3', '2.7.6'):
+            # Other than HiSeq 3000/4000 platforms
             file_list.append('ControlMetricsOut.bin')
 
         self._check_files(
@@ -2402,8 +2403,8 @@ class RunFolder(object):
         else:
             file_list.append(flow_cell_barcode + '.xml')
 
-            if rta not in ('2.5.2', '2.7.3'):
-                # The HiSeq 3000 platform does not have a 'FCID_RunState.xml' file.
+            if rta not in ('2.5.2', '2.7.3', '2.7.6'):
+                # The HiSeq 3000/4000 platform does not have a 'FCID_RunState.xml' file.
                 file_list.append(flow_cell_barcode + '_RunState.xml')
 
         self._check_files(
@@ -2511,8 +2512,8 @@ class RunFolder(object):
                                         format(thumbnail_name, lane_name, cycle_name, swath_file)
 
                                 swath_file += '.zprof'
-                                if rta in ('2.5.2', '2.7.3') and base in ('c', 'g', 't'):
-                                    # The HiSeq 3000 platform does not have swath files for bases c, g and t.
+                                if rta in ('2.5.2', '2.7.3', '2.7.6') and base in ('c', 'g', 't'):
+                                    # The HiSeq 3000/4000 platform does not have swath files for bases c, g and t.
                                     pass
                                 else:
                                     if swath_file in cycle_dict:
@@ -2522,8 +2523,8 @@ class RunFolder(object):
                                             format(thumbnail_name, lane_name, cycle_name, swath_file)
 
                             # Process tile image files.
-                            if rta in ('1.18.54', '2.5.2', '2.7.3'):
-                                # The HiSeq 3000 and MiSeq platforms use lower case bases.
+                            if rta in ('1.18.54', '2.5.2', '2.7.3', '2.7.6'):
+                                # The HiSeq 3000/4000 and MiSeq platforms use lower case bases.
                                 pass
                             else:
                                 # The HiSeq 2000 platform uses upper case bases.
@@ -2586,6 +2587,7 @@ class RunFolder(object):
                 '1.18.64',  # HiSeq Control Software 2.2.58
                 '2.5.2',  # HiSeq Control Software 3.3.20 (HiSeq 3000/4000)
                 '2.7.3',  # HiSeq Control Software 3.3.52 (HiSeq 3000/4000)
+                '2.7.6',  # HiSeq Control Software 3.3.76 (HiSeq 3000/4000)
         ):
             raise Exception("Unsupported RTA version: '{}'".format(rta))
 
@@ -2647,7 +2649,7 @@ class RunFolder(object):
             # The MiSeq platform does not have this file.
             file_list.append('First_Base_Report.htm')
 
-        if rta in ('2.5.2', '2.7.3'):
+        if rta in ('2.5.2', '2.7.3', '2.7.6'):
             # HiSeq 3000/4000 platform.
             file_list.append('RTAConfiguration.xml')
             file_list.append('RTALogs')  # directory
@@ -2655,6 +2657,7 @@ class RunFolder(object):
             for read in range(1, len(self.run_information.reads) + 1):
                 file_list.append('RTARead{:d}Complete.txt'.format(read))
         else:
+            # Other than HiSeq 3000/4000 platforms.
             file_list.append('Basecalling_Netcopy_complete.txt')
             file_list.append('ImageAnalysis_Netcopy_complete.txt')
             for read in range(1, len(self.run_information.reads) + 1):
