@@ -2738,6 +2738,16 @@ class VariantCallingGATK(Analysis):
 
         for sample in self.samples:
 
+            # Get all PairedReads objects solely to exclude samples without any.
+            # Sample.get_all_paired_reads returns a Python dict of
+            # Python str key and Python list of Python list objects
+            # of PairedReads objects.
+
+            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
+            if not len(replicate_dict):
+                # Skip Sample objects, which PairedReads objects have all been excluded.
+                continue
+
             prefix_split = '_'.join((drms_split_cohort.name, sample.name))
 
             file_path_dict_split = dict(
