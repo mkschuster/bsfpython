@@ -655,20 +655,12 @@ class ChIPSeq(Analysis):
 
         # Initialise the Distributed Resource Management System objects for Bowtie2.
 
-        bowtie2_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='bowtie2',
-                working_directory=self.genome_directory,
-                analysis=self))
+        bowtie2_drms = self.get_drms(name='bowtie2')
 
         # Use the bsf_sam2bam.sh script to convert aligned SAM into
         # aligned, sorted, indexed BAM files.
 
-        sam2bam_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='sam2bam',
-                working_directory=self.genome_directory,
-                analysis=self))
+        sam2bam_drms = self.get_drms(name='sam2bam')
 
         for sample in self.samples:
 
@@ -775,17 +767,9 @@ class ChIPSeq(Analysis):
         @rtype:
         """
 
-        macs14_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='macs14',
-                working_directory=self.genome_directory,
-                analysis=self))
+        macs14_drms = self.get_drms(name='macs14')
 
-        process_macs14_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='process_macs14',
-                working_directory=self.genome_directory,
-                analysis=self))
+        process_macs14_drms = self.get_drms(name='process_macs14')
 
         keys = self.comparisons.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -927,23 +911,9 @@ class ChIPSeq(Analysis):
         @rtype:
         """
 
-        macs2_callpeak_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='macs2_callpeak',
-                working_directory=self.genome_directory,
-                analysis=self))
-
-        macs2_bdgcmp_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='macs2_bdgcmp',
-                working_directory=self.genome_directory,
-                analysis=self))
-
-        process_macs2_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='process_macs2',
-                working_directory=self.genome_directory,
-                analysis=self))
+        macs2_callpeak_drms = self.get_drms(name='macs2_callpeak')
+        macs2_bdgcmp_drms = self.get_drms(name='macs2_bdgcmp')
+        process_macs2_drms = self.get_drms(name='process_macs2')
 
         keys = self.comparisons.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -1136,11 +1106,7 @@ class ChIPSeq(Analysis):
         @rtype:
         """
 
-        diffbind_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='diffbind',
-                working_directory=self.genome_directory,
-                analysis=self))
+        diffbind_drms = self.get_drms(name='diffbind')
 
         # Reorganise the comparisons by factor.
 
@@ -2369,11 +2335,7 @@ class RunFastQC(Analysis):
 
             pass
 
-        fastqc_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='fastqc',
-                working_directory=self.project_directory,
-                analysis=self))
+        fastqc_drms = self.get_drms(name='fastqc')
 
         for sample in self.samples:
 
@@ -2615,11 +2577,7 @@ class RunBamToFastq(Analysis):
         # replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
         replicate_grouping = False
 
-        sam_to_fastq_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='sam_to_fastq',
-                working_directory=self.genome_directory,
-                analysis=self))
+        sam_to_fastq_drms = self.get_drms(name='sam_to_fastq')
 
         for sample in self.collection.get_all_samples():
 

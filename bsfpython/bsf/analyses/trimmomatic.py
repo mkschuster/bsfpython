@@ -29,7 +29,7 @@ A package of classes and methods supporting the Trimmomatic tool.
 
 import os
 
-from bsf import Analysis, DRMS, Runnable
+from bsf import Analysis, Runnable
 from bsf.data import Reads, PairedReads, Sample
 from bsf.process import Command, RunnableStepJava, RunnableStepMakeDirectory
 from bsf.standards import Configuration
@@ -196,10 +196,7 @@ class Trimmomatic(Analysis):
 
         # Trimmomatic
 
-        drms_trimmomatic = self.add_drms(drms=DRMS.from_analysis(
-            name='trimmomatic',
-            working_directory=self.project_directory,
-            analysis=self))
+        drms_trimmomatic = self.get_drms(name='trimmomatic')
 
         for sample in self.samples:
             assert isinstance(sample, Sample)

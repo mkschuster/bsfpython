@@ -570,11 +570,7 @@ class ChIPSeq(Analysis):
         bwa_genome_db = os.path.join(Default.absolute_genomes(self.genome_version),
                                      'forBWA_0.7.6a', self.genome_version)
 
-        alignment_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='chipseq_alignment',
-                working_directory=self.genome_directory,
-                analysis=self))
+        alignment_drms = self.get_drms(name='chipseq_alignment')
 
         for sample in self.samples:
 
@@ -725,11 +721,7 @@ class ChIPSeq(Analysis):
         # bowtie2_index = os.path.join(Default.absolute_genomes(self.genome_version),
         #                              'forBowtie2', self.genome_version)
 
-        alignment_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='chipseq_alignment',
-                working_directory=self.genome_directory,
-                analysis=self))
+        alignment_drms = self.get_drms(name='chipseq_alignment')
 
         # Initialise the Distributed Resource Management System objects for Bowtie2.
 
@@ -878,17 +870,8 @@ class ChIPSeq(Analysis):
         @rtype:
         """
 
-        macs14_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='macs14',
-                working_directory=self.genome_directory,
-                analysis=self))
-
-        process_macs14_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='process_macs14',
-                working_directory=self.genome_directory,
-                analysis=self))
+        macs14_drms = self.get_drms(name='macs14')
+        process_macs14_drms = self.get_drms(name='process_macs14')
 
         keys = self.comparisons.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -1030,29 +1013,10 @@ class ChIPSeq(Analysis):
         @rtype:
         """
 
-        peakcalling_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='chipseq_peakcalling',
-                working_directory=self.genome_directory,
-                analysis=self))
-
-        # macs2_callpeak_drms = self.add_drms(
-        #     drms=DRMS.from_analysis(
-        #         name='macs2_callpeak',
-        #         working_directory=self.genome_directory,
-        #         analysis=self))
-        #
-        # macs2_bdgcmp_drms = self.add_drms(
-        #     drms=DRMS.from_analysis(
-        #         name='macs2_bdgcmp',
-        #         working_directory=self.genome_directory,
-        #         analysis=self))
-        #
-        # process_macs2_drms = self.add_drms(
-        #     drms=DRMS.from_analysis(
-        #         name='process_macs2',
-        #         working_directory=self.genome_directory,
-        #         analysis=self))
+        peakcalling_drms = self.get_drms(name='chipseq_peakcalling')
+        # macs2_callpeak_drms = self.get_drms(name='macs2_callpeak')
+        # macs2_bdgcmp_drms = self.get_drms(name='macs2_bdgcmp')
+        # process_macs2_drms = self.get_drms(name='process_macs2')
 
         keys = self.comparisons.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -1258,11 +1222,7 @@ class ChIPSeq(Analysis):
         @rtype:
         """
 
-        diffbind_drms = self.add_drms(
-            drms=DRMS.from_analysis(
-                name='diffbind',
-                working_directory=self.genome_directory,
-                analysis=self))
+        diffbind_drms = self.get_drms(name='diffbind')
 
         # Reorganise the comparisons by factor.
 

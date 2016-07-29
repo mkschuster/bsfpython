@@ -31,7 +31,7 @@ import errno
 import os
 import warnings
 
-from bsf import Analysis, DRMS, Runnable
+from bsf import Analysis, Runnable
 from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
 from bsf.annotation import AnnotationSheet
 from bsf.data import SampleAnnotationSheet
@@ -808,11 +808,7 @@ class IlluminaToBam(Analysis):
 
         super(IlluminaToBam, self).run()
 
-        drms_illumina_to_bam = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_illumina_to_bam,
-                working_directory=self.project_directory,
-                analysis=self))
+        drms_illumina_to_bam = self.get_drms(name=self.drms_name_illumina_to_bam)
 
         for lane in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
 
@@ -1301,11 +1297,7 @@ class BamIndexDecoder(Analysis):
         if not self.classpath_picard:
             self.classpath_picard = default.classpath_picard
 
-        drms_bam_index_decoder = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_bam_index_decoder,
-                working_directory=self.project_directory,
-                analysis=self))
+        drms_bam_index_decoder = self.get_drms(name=self.drms_name_bam_index_decoder)
 
         index_by_lane = dict()
 

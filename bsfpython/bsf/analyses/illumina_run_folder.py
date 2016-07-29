@@ -30,7 +30,7 @@ A package of classes and methods supporting analyses to archive and restore Illu
 import errno
 import os
 
-from bsf import Analysis, DRMS, Runnable
+from bsf import Analysis, Runnable
 from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.process import Command, RunnableStep, RunnableStepSleep
 from bsf.standards import Configuration, Default
@@ -393,25 +393,10 @@ class IlluminaRunFolderArchive(Analysis):
 
         super(IlluminaRunFolderArchive, self).run()
 
-        drms_pre_process_folder = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_pre_process,
-            working_directory=self.project_directory,
-            analysis=self))
-
-        drms_compress_base_calls = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_base_calls,
-            working_directory=self.project_directory,
-            analysis=self))
-
-        drms_archive_intensities = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_intensities,
-            working_directory=self.project_directory,
-            analysis=self))
-
-        drms_archive_folder = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_archive_folder,
-            working_directory=self.project_directory,
-            analysis=self))
+        drms_pre_process_folder = self.get_drms(name=self.drms_name_pre_process)
+        drms_compress_base_calls = self.get_drms(name=self.drms_name_base_calls)
+        drms_archive_intensities = self.get_drms(name=self.drms_name_intensities)
+        drms_archive_folder = self.get_drms(name=self.drms_name_archive_folder)
 
         # Pre-process on folder level.
 
@@ -1011,19 +996,9 @@ class IlluminaRunFolderRestore(Analysis):
 
         super(IlluminaRunFolderRestore, self).run()
 
-        drms_extract_archive = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_extract_archive,
-            working_directory=self.project_directory, analysis=self))
-
-        drms_compress_base_calls = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_compress_base_calls,
-            working_directory=self.project_directory,
-            analysis=self))
-
-        drms_compress_logs = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_compress_logs,
-            working_directory=self.project_directory,
-            analysis=self))
+        drms_extract_archive = self.get_drms(name=self.drms_name_extract_archive)
+        drms_compress_base_calls = self.get_drms(name=self.drms_name_compress_base_calls)
+        drms_compress_logs = self.get_drms(name=self.drms_name_compress_logs)
 
         # Extract the IRF_Folder.tar file.
 

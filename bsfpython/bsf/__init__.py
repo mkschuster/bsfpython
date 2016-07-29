@@ -381,6 +381,62 @@ class Analysis(object):
 
         return
 
+    def get_drms(self, name):
+        """Get a C{DRMS} object form an C{Analysis}.
+        If the C{DRMS} object does not exist, it is created and initialised it via the
+        C{Configuration} object in C{Analysis.configuration}.
+        Reads from configuration file sections
+            I{[bsf.DRMS]}
+            I{[bsf.Analysis.DRMS]} or I{[bsf.analyses.*.DRMS]}
+            I{[bsf.Analysis.DRMS.name]} or I{[bsf.analyses.*.DRMS.name]}
+        @param name: Name
+        @type name: str
+        @return: C{DRMS} object
+        @rtype: DRMS
+        """
+        # Check if a DRMS object with this the name already exists and if so, return it.
+        for drms in self.drms_list:
+            if drms.name == name:
+                return drms
+
+        # Initialise a new DRMS object and add it to the Python list of DRMS objects.
+
+        drms = DRMS(name=name, working_directory=self.genome_directory)
+        self.drms_list.append(drms)
+
+        # TODO: Remove calling drms.set_default().
+        # Calling this method is no longer required, once the default before the project configuration gets read in.
+        # Set a minimal set of global defaults.
+        drms.set_default(default=Default.get_global_default())
+
+        # A "bsf.DRMS" section specifies defaults for all DRMS objects of an Analysis.
+
+        section = Configuration.section_from_instance(instance=drms)
+        drms.set_configuration(configuration=self.configuration, section=section)
+
+        if self.debug > 1:
+            print 'DRMS configuration section: {!r}.'.format(section)
+
+        # A "bsf.Analysis.DRMS" or "bsf.analyses.*.DRMS" pseudo-class section specifies
+        # Analysis-specific or sub-class-specific options for the DRMS, respectively.
+
+        section = '.'.join((Configuration.section_from_instance(instance=self), 'DRMS'))
+        drms.set_configuration(configuration=self.configuration, section=section)
+
+        if self.debug > 1:
+            print 'DRMS configuration section: {!r}.'.format(section)
+
+        # A "bsf.Analysis.DRMS.name" or "bsf.analyses.*.DRMS.name" section specifies defaults
+        # for a particular DRMS object of an Analysis or sub-class, respectively.
+
+        section = '.'.join((Configuration.section_from_instance(instance=self), 'DRMS', drms.name))
+        drms.set_configuration(configuration=self.configuration, section=section)
+
+        if self.debug > 1:
+            print 'DRMS configuration section: {!r}.'.format(section)
+
+        return drms
+
     def set_configuration(self, configuration, section):
         """Set instance variables of an C{Analysis} object via a section of a C{Configuration} object.
 
@@ -1291,56 +1347,6 @@ class DRMS(object):
     """
 
     @classmethod
-    def from_analysis(cls, name, working_directory, analysis):
-        """Create a C{DRMS} object from an C{Analysis} object.
-
-        @param name: Name
-        @type name: str
-        @param working_directory: Working directory
-        @type working_directory: str
-        @param analysis: C{Analysis}
-        @type analysis: Analysis
-        @return: C{DRMS} object
-        @rtype: DRMS
-        """
-
-        assert isinstance(analysis, Analysis)
-
-        drms = cls(name=name, working_directory=working_directory)
-
-        # Set a minimal set of global defaults.
-
-        drms.set_default(default=Default.get_global_default())
-
-        # A "bsf.DRMS" section specifies defaults for all DRMS objects of an Analysis.
-
-        section = Configuration.section_from_instance(instance=drms)
-        drms.set_configuration(configuration=analysis.configuration, section=section)
-
-        if analysis.debug > 1:
-            print 'DRMS configuration section: {!r}.'.format(section)
-
-        # A "bsf.Analysis.DRMS" or "bsf.analyses.*.DRMS" pseudo-class section specifies
-        # Analysis-specific or sub-class-specific options for the DRMS, respectively.
-
-        section = '.'.join((Configuration.section_from_instance(instance=analysis), 'DRMS'))
-        drms.set_configuration(configuration=analysis.configuration, section=section)
-
-        if analysis.debug > 1:
-            print 'DRMS configuration section: {!r}.'.format(section)
-
-        # A "bsf.Analysis.DRMS.name" or "bsf.analyses.*.DRMS.name" section specifies defaults
-        # for a particular DRMS object of an Analysis or sub-class, respectively.
-
-        section = '.'.join((Configuration.section_from_instance(instance=analysis), 'DRMS', drms.name))
-        drms.set_configuration(configuration=analysis.configuration, section=section)
-
-        if analysis.debug > 1:
-            print 'DRMS configuration section: {!r}.'.format(section)
-
-        return drms
-
-    @classmethod
     def from_configuration(cls, name, work_directory, configuration, section):
         """Create a C{DRMS} object from a C{Configuration} object.
 
@@ -1646,7 +1652,7 @@ class DRMS(object):
         @return:
         @rtype:
         """
-
+        # TODO: Remove this method once the default gets read before the project configuration file.
         assert isinstance(default, Default)
 
         self.implementation = default.drms_implementation

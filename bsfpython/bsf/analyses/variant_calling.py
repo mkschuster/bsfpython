@@ -1157,86 +1157,16 @@ class VariantCallingGATK(Analysis):
 
         self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
-        # Initialise a Distributed Resource Management System (DRMS) object for the
-        # bsf_run_bwa.py script.
-
-        drms_align_lane = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_align_lane,
-                working_directory=self.genome_directory,
-                analysis=self))
-
-        # Initialise a Distributed Resource Management System (DRMS) object for the
-        # variant_calling_process_lane Runnable.
-
-        drms_process_lane = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_process_lane,
-                working_directory=self.genome_directory,
-                analysis=self))
-
-        # Initialise a Distributed Resource Management System (DRMS) object for the
-        # variant_calling_process_sample Runnable.
-
-        drms_process_sample = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_process_sample,
-                working_directory=self.genome_directory,
-                analysis=self))
-
-        # Initialise a Distributed Resource Management System (DRMS) object for the
-        # variant_calling_diagnose_sample Runnable.
-
-        drms_diagnose_sample = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_diagnose_sample,
-                working_directory=self.genome_directory,
-                analysis=self))
-
-        # Initialise a Distributed Resource Management System (DRMS) object for the
-        # variant_calling_merge_cohort Runnable.
-
-        drms_merge_cohort = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_merge_cohort,
-                working_directory=self.genome_directory,
-                analysis=self))
-
-        # Initialise a Distributed Resource Management System (DRMS) object for the
-        # variant_calling_process_cohort Runnable.
-
-        drms_process_cohort = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_process_cohort,
-                working_directory=self.genome_directory,
-                analysis=self))
-
-        # Initialise a Distributed Resource Management System (DRMS) object for the
-        # variant_calling_split_cohort Runnable.
-
-        drms_split_cohort = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_split_cohort,
-                working_directory=self.genome_directory,
-                analysis=self))
-
-        # Initialise a Distributed Resource Management System (DRMS) object for the
-        # variant_calling_summary Runnable.
-
-        drms_summary = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_summary,
-                working_directory=self.genome_directory,
-                analysis=self))
-
-        # Initialise a Distributed Resource Management System (DRMS) object for the
-        # variant_calling_somatic Runnable.
-
-        drms_somatic = self.add_drms(
-            drms=DRMS.from_analysis(
-                name=self.drms_name_somatic,
-                working_directory=self.genome_directory,
-                analysis=self))
+        # Initialise Distributed Resource Management System (DRMS) objects.
+        drms_align_lane = self.get_drms(name=self.drms_name_align_lane)
+        drms_process_lane = self.get_drms(name=self.drms_name_process_lane)
+        drms_process_sample = self.get_drms(name=self.drms_name_process_sample)
+        drms_diagnose_sample = self.get_drms(name=self.drms_name_diagnose_sample)
+        drms_merge_cohort = self.get_drms(name=self.drms_name_merge_cohort)
+        drms_process_cohort = self.get_drms(name=self.drms_name_process_cohort)
+        drms_split_cohort = self.get_drms(name=self.drms_name_split_cohort)
+        drms_summary = self.get_drms(name=self.drms_name_summary)
+        drms_somatic = self.get_drms(name=self.drms_name_somatic)
 
         vc_merge_cohort_dependency_dict = dict()
         vc_merge_cohort_sample_dict = dict()

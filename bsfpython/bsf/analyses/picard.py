@@ -33,7 +33,7 @@ import os.path
 import warnings
 import weakref
 
-from bsf import Analysis, DRMS, Runnable
+from bsf import Analysis, Runnable
 from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
 from bsf.data import Reads, PairedReads, Sample
 from bsf.illumina import RunFolder
@@ -152,19 +152,11 @@ def extract_illumina_barcodes(config_path):
 
     # Create a DRMS for the Picard ExtractIlluminaBarcodes stage.
 
-    drms_picard_eib = analysis.add_drms(
-        drms=DRMS.from_analysis(
-            name='picard_extract_illumina_barcodes',
-            working_directory=analysis.genome_directory,
-            analysis=analysis))
+    drms_picard_eib = analysis.get_drms(name='picard_extract_illumina_barcodes')
 
-    # Create a DRMS fro the Picard IlluminaBasecallsToSam stage.
+    # Create a DRMS for the Picard IlluminaBasecallsToSam stage.
 
-    drms_picard_ibs = analysis.add_drms(
-        drms=DRMS.from_analysis(
-            name='picard_illumina_basecalls_to_sam',
-            working_directory=analysis.genome_directory,
-            analysis=analysis))
+    drms_picard_ibs = analysis.get_drms(name='picard_illumina_basecalls_to_sam')
 
     # For each lane in the barcode_dict ...
 
@@ -252,6 +244,7 @@ def extract_illumina_barcodes(config_path):
         csv_writer = csv.DictWriter(f=barcodes_file, fieldnames=field_names, dialect=csv.excel_tab)
         csv_writer.writeheader()
         for lane_dict in lane_list:
+            assert isinstance(lane_dict, dict)
             # Create a new row dict to adjust column names to the ones required by ExtractIlluminaBarcodes.
             row_dict = dict()
             row_dict['barcode_sequence_1'] = lane_dict['barcode_sequence_1']
@@ -267,6 +260,7 @@ def extract_illumina_barcodes(config_path):
         csv_writer = csv.DictWriter(f=library_file, fieldnames=field_names, dialect=csv.excel_tab)
         csv_writer.writeheader()
         for lane_dict in lane_list:
+            assert isinstance(lane_dict, dict)
             # Create a new row_dict to adjust column names to the ones required by IlluminaBasecallsToSam.
             row_dict = dict()
             row_dict['OUTPUT'] = '{}_{}_L{:03d}_unmapped.bam'.format(lane_dict['sample_name'], irf.flow_cell, int(key))
@@ -528,10 +522,7 @@ class SamToFastq(Analysis):
 
         # Picard SamToFastq
 
-        drms_picard_stf = self.add_drms(drms=DRMS.from_analysis(
-            name='picard_sam_to_fastq',
-            working_directory=self.project_directory,
-            analysis=self))
+        drms_picard_stf = self.get_drms(name='picard_sam_to_fastq')
 
         for sample in self.samples:
             assert isinstance(sample, Sample)

@@ -30,7 +30,7 @@ import os.path
 from pickle import Pickler, HIGHEST_PROTOCOL
 import re
 
-from bsf import Analysis, DRMS, Runnable
+from bsf import Analysis, Runnable
 from bsf.annotation import AnnotationSheet, TuxedoSamplePairSheet
 from bsf.data import PairedReads, Sample
 from bsf.executables import TopHat
@@ -650,25 +650,10 @@ class Tuxedo(Analysis):
         # Initialise the Distributed Resource Management System (DRMS) objects for
         # TopHat and Cufflinks Executable objects.
 
-        drms_run_tophat = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_run_tophat,
-            working_directory=self.genome_directory,
-            analysis=self))
-
-        drms_process_tophat = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_process_tophat,
-            working_directory=self.genome_directory,
-            analysis=self))
-
-        drms_run_cufflinks = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_run_cufflinks,
-            working_directory=self.genome_directory,
-            analysis=self))
-
-        drms_process_cufflinks = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_process_cufflinks,
-            working_directory=self.genome_directory,
-            analysis=self))
+        drms_run_tophat = self.get_drms(name=self.drms_name_run_tophat)
+        drms_process_tophat = self.get_drms(name=self.drms_name_process_tophat)
+        drms_run_cufflinks = self.get_drms(name=self.drms_name_run_cufflinks)
+        drms_process_cufflinks = self.get_drms(name=self.drms_name_process_cufflinks)
 
         process_cufflinks_dependencies = list()
 
@@ -978,30 +963,11 @@ class Tuxedo(Analysis):
         # Initialise the Distributed Resource Management System (DRMS) objects for
         # Cuffmerge and Cuffdiff Executable objects.
 
-        drms_run_cuffmerge = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_run_cuffmerge,
-            working_directory=self.genome_directory,
-            analysis=self))
-
-        drms_run_cuffquant = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_run_cuffquant,
-            working_directory=self.genome_directory,
-            analysis=self))
-
-        drms_run_cuffnorm = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_run_cuffnorm,
-            working_directory=self.genome_directory,
-            analysis=self))
-
-        drms_run_cuffdiff = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_run_cuffdiff,
-            working_directory=self.genome_directory,
-            analysis=self))
-
-        drms_process_cuffdiff = self.add_drms(drms=DRMS.from_analysis(
-            name=self.drms_name_process_cuffdiff,
-            working_directory=self.genome_directory,
-            analysis=self))
+        drms_run_cuffmerge = self.get_drms(name=self.drms_name_run_cuffmerge)
+        drms_run_cuffquant = self.get_drms(name=self.drms_name_run_cuffquant)
+        drms_run_cuffnorm = self.get_drms(name=self.drms_name_run_cuffnorm)
+        drms_run_cuffdiff = self.get_drms(name=self.drms_name_run_cuffdiff)
+        drms_process_cuffdiff = self.get_drms(name=self.drms_name_process_cuffdiff)
 
         # The Cuffmerge process generates temporary files in the working directory that
         # have the same name for each comparison. If more than one Cuffmerge process runs at the same time,
