@@ -345,7 +345,7 @@ class Command(object):
 
         if not configuration.config_parser.has_section(section=section):
             warnings.warn(
-                'Section {!r} not defined in Configuration file {!r}.'.format(section, configuration.config_path),
+                'Section {!r} not defined in Configuration files: {!r}'.format(section, configuration.file_path_list),
                 UserWarning)
 
             return

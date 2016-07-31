@@ -32,14 +32,16 @@ from ConfigParser import SafeConfigParser
 
 
 class Configuration(object):
-    """The C{Configuration} class represents a UNIX-style initialisation (*.ini) file and
+    """The C{Configuration} class represents one or more UNIX-style initialisation (*.ini) files and
     an associated Python C{SafeConfigParser} object to parse the file.
 
     Attributes:
-    @ivar config_path: C{Configuration} file path
-    @type config_path: str | unicode
+    @ivar file_path_list: C{Configuration} file path
+    @type file_path_list: list[str | unicode]
     @ivar config_parser: Python C{SafeConfigParser}
     @type config_parser: SafeConfigParser
+    @ivar _config_path_list: C{Configuration} file path
+    @type _config_path_list: list[str | unicode]
     """
 
     @staticmethod
@@ -62,20 +64,26 @@ class Configuration(object):
             return '.'.join((instance.__module__, instance.__class__.__name__))
 
     @classmethod
-    def from_config_path(cls, config_path):
-        """Create a new C{Configuration} object based on a configuration file path.
+    def from_file_path_list(cls, file_path_list):
+        """Create a C{Configuration} object based on a Python C{list} of Python C{str} configuration file path objects.
 
-        Both, user and variable expansion gets applied to the file path.
-        @param config_path: Configuration file path
-        @type config_path: str | unicode
+        Both, user and variable expansion gets applied to each file path.
+        @param file_path_list: Python C{list} of Python C{str} or C{unicode} configuration file path objects
+        @type file_path_list: list[str | unicode]
         @return: C{Configuration}
         @rtype: Configuration
         @raise Exception: Configuration file path does not exist
         """
-        assert isinstance(config_path, (str, unicode))
+        assert isinstance(file_path_list, list)
 
-        config_path = os.path.expanduser(path=config_path)
-        config_path = os.path.expandvars(path=config_path)
+        # Expand each file_path for user and variable names.
+        expanded_list = list()
+        for file_path in file_path_list:
+            assert isinstance(file_path, (str, unicode))
+            file_path = os.path.expanduser(path=file_path)
+            file_path = os.path.expandvars(path=file_path)
+            file_path = os.path.normpath(path=file_path)
+            expanded_list.append(file_path)
 
         # Since ConfigParser options are used as command line options,
         # they have to be case sensitive.
@@ -84,21 +92,21 @@ class Configuration(object):
         config_parser = SafeConfigParser()
         config_parser.optionxform = str
 
-        configuration = cls(config_path=config_path, config_parser=config_parser)
+        configuration = cls(file_path_list=expanded_list, config_parser=config_parser)
 
-        files = configuration.config_parser.read(configuration.config_path)
+        configuration._config_path_list = configuration.config_parser.read(filenames=configuration.file_path_list)
 
-        if len(files) == 0:
+        if len(configuration._config_path_list) == 0:
             raise Exception(
-                'Configuration file {!r} does not exist.'.format(configuration.config_path))
+                'None of the configuration files exists: {!r}'.format(configuration.file_path_list))
 
         return configuration
 
-    def __init__(self, config_path=None, config_parser=None):
+    def __init__(self, file_path_list=None, config_parser=None):
         """Initialise a C{Configuration} object.
 
-        @param config_path: Configuration file path
-        @type config_path: str | unicode
+        @param file_path_list: Python list of Python C{str} or C{unicode} configuration file path objects
+        @type file_path_list: list[str | unicode]
         @param config_parser: Python C{SafeConfigParser}
         @type config_parser: SafeConfigParser
         @return:
@@ -107,16 +115,19 @@ class Configuration(object):
 
         super(Configuration, self).__init__()
 
-        if config_path is None:
-            self.config_path = str()
+        if file_path_list is None:
+            self.file_path_list = list()
         else:
-            self.config_path = config_path
+            assert isinstance(file_path_list, list)
+            self.file_path_list = file_path_list
 
         if config_parser is None:
             self.config_parser = SafeConfigParser()
         else:
             assert isinstance(config_parser, SafeConfigParser)
             self.config_parser = config_parser
+
+        self._config_path_list = None
 
         return
 
@@ -132,8 +143,8 @@ class Configuration(object):
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
-        output += '{}  config_path:   {!r}\n'.format(indent, self.config_path)
-        output += '{}  config_parser: {!r}\n'.format(indent, self.config_parser)
+        output += '{}  file_path_list: {!r}\n'.format(indent, self.file_path_list)
+        output += '{}  config_parser:  {!r}\n'.format(indent, self.config_parser)
 
         return output
 
@@ -153,6 +164,7 @@ class Configuration(object):
         directory = self.config_parser.get(config_section, config_option)
         directory = os.path.expanduser(path=directory)
         directory = os.path.expandvars(path=directory)
+        directory = os.path.normpath(path=directory)
 
         return directory
 
@@ -195,20 +207,6 @@ class Default(object):
     @type directory_snpeff_data: str | unicode
     @ivar indices: Python C{dict} of program name key and index directory name value data
     @type indices: dict[str, str]
-    @ivar drms_implementation: DRMS implementation (e.g. Bash, SGE)
-    @type drms_implementation: str
-    @ivar drms_maximum_threads: DRMS maximum threads
-    @type drms_maximum_threads: str
-    @ivar drms_memory_limit_hard: DRMS memory limit hard
-    @type drms_memory_limit_hard: str
-    @ivar drms_memory_limit_soft: DRMS memory limit soft
-    @type drms_memory_limit_soft: str
-    @ivar drms_time_limit: DRMS time limit
-    @type drms_time_limit: str
-    @ivar drms_parallel_environment: DRMS parallel environment
-    @type drms_parallel_environment: str
-    @ivar drms_queue: DRMS queue
-    @type drms_queue: str
     @ivar operator_contact: Contact e-mail address
     @type operator_contact: str
     @ivar operator_e_mail: Operator e-mail
@@ -234,6 +232,7 @@ class Default(object):
     global_file_path = '~/.bsfpython.ini'
     global_file_path = os.path.expanduser(path=global_file_path)
     global_file_path = os.path.expandvars(path=global_file_path)
+    global_file_path = os.path.normpath(path=global_file_path)
 
     @staticmethod
     def get_absolute_path(file_path, default_path=None):
@@ -298,7 +297,7 @@ class Default(object):
         @rtype: Default
         """
 
-        return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
+        return cls.from_configuration(configuration=Configuration.from_file_path_list(file_path_list=[config_path]))
 
     @classmethod
     def from_configuration(cls, configuration):
@@ -337,13 +336,6 @@ class Default(object):
             directory_intervals=None,
             directory_snpeff_data=None,
             indices=None,
-            drms_implementation=None,
-            drms_maximum_threads=None,
-            drms_memory_limit_hard=None,
-            drms_memory_limit_soft=None,
-            drms_time_limit=None,
-            drms_parallel_environment=None,
-            drms_queue=None,
             operator_contact=None,
             operator_e_mail=None,
             operator_institution=None,
@@ -391,20 +383,6 @@ class Default(object):
         @type directory_snpeff_data: str | unicode
         @param indices: Python C{dict} of program name key and index directory name value data
         @type indices: dict[str, str]
-        @param drms_implementation: DRMS implementation (e.g. Bash, SGE)
-        @type drms_implementation: str
-        @param drms_maximum_threads: DRMS maximum threads
-        @type drms_maximum_threads: str
-        @param drms_memory_limit_hard: DRMS memory limit hard
-        @type drms_memory_limit_hard: str
-        @param drms_memory_limit_soft: DRMS memory limit soft
-        @type drms_memory_limit_soft: str
-        @param drms_time_limit: DRMS time limit
-        @type drms_time_limit: str
-        @param drms_parallel_environment: DRMS parallel environment
-        @type drms_parallel_environment: str
-        @param drms_queue: DRMS queue
-        @type drms_queue: str
         @param operator_contact: Contact e-mail address
         @type operator_contact: str
         @param operator_e_mail: Operator e-mail
@@ -524,43 +502,6 @@ class Default(object):
         else:
             self.indices = indices
 
-        # Set DRMS information.
-
-        if drms_implementation is None:
-            self.drms_implementation = str()
-        else:
-            self.drms_implementation = drms_implementation
-
-        if drms_maximum_threads is None:
-            self.drms_maximum_threads = str()
-        else:
-            self.drms_maximum_threads = drms_maximum_threads
-
-        if drms_memory_limit_hard is None:
-            self.drms_memory_limit_hard = str()
-        else:
-            self.drms_memory_limit_hard = drms_memory_limit_hard
-
-        if drms_memory_limit_soft is None:
-            self.drms_memory_limit_soft = str()
-        else:
-            self.drms_memory_limit_soft = drms_memory_limit_soft
-
-        if drms_time_limit is None:
-            self.drms_time_limit = str()
-        else:
-            self.drms_time_limit = drms_time_limit
-
-        if drms_parallel_environment is None:
-            self.drms_parallel_environment = str()
-        else:
-            self.drms_parallel_environment = drms_parallel_environment
-
-        if drms_queue is None:
-            self.drms_queue = str()
-        else:
-            self.drms_queue = drms_queue
-
         # Set operator information.
 
         if operator_contact is None:
@@ -669,19 +610,6 @@ class Default(object):
 
         for option in cp.options(section=section):
             self.indices[option] = cp.get(section=section, option=option)
-
-        section = 'drms'
-
-        self.drms_implementation = cp.get(section=section, option='implementation')
-        self.drms_maximum_threads = cp.get(section=section, option='maximum_threads')
-        self.drms_memory_limit_hard = cp.get(section=section, option='memory_limit_hard')
-        self.drms_memory_limit_soft = cp.get(section=section, option='memory_limit_soft')
-        # self.drms_memory_free_mem = cp.get(section=section, option='memory_free_mem')
-        # self.drms_memory_free_swap = cp.get(section=section, option='memory_free_swap')
-        # self.drms_memory_free_virtual = cp.get(section=section, option='memory_free_virtual')
-        self.drms_time_limit = cp.get(section=section, option='time_limit')
-        self.drms_parallel_environment = cp.get(section=section, option='parallel_environment')
-        self.drms_queue = cp.get(section=section, option='queue')
 
         section = 'operator'
 

@@ -643,8 +643,11 @@ class VariantCallingGATK(Analysis):
 
         option = 'accessory_cohort_gvcfs'
         if configuration.config_parser.has_option(section=section, option=option):
-            for file_path in configuration.config_parser.get(section=section, option=option).split(','):
-                self.accessory_cohort_gvcfs.append(file_path.strip())  # Strip white space around commas.
+            self.accessory_cohort_gvcfs = filter(
+                lambda x: x != '',
+                map(
+                    lambda x: x.strip(),
+                    configuration.config_parser.get(section=section, option=option).split(',')))
 
         # Get the skip mark duplicates option.
 
@@ -680,15 +683,21 @@ class VariantCallingGATK(Analysis):
 
         option = 'vqsr_annotations_indel'
         if configuration.config_parser.has_option(section=section, option=option):
-            for annotation in configuration.config_parser.get(section=section, option=option).split(','):
-                self.vqsr_annotations_indel_list.append(annotation.strip())  # Strip white space around commas.
+            self.vqsr_annotations_indel_list = filter(
+                lambda x: x != '',
+                map(
+                    lambda x: x.strip(),
+                    configuration.config_parser.get(section=section, option=option).split(',')))
 
         # Get the list of annotations for the Variant Quality Score Recalibration (VQSR) for SNPs.
 
         option = 'vqsr_annotations_snp'
         if configuration.config_parser.has_option(section=section, option=option):
-            for annotation in configuration.config_parser.get(section=section, option=option).split(','):
-                self.vqsr_annotations_snp_list.append(annotation.strip())  # Strip white space around commas.
+            self.vqsr_annotations_snp_list = filter(
+                lambda x: x != '',
+                map(
+                    lambda x: x.strip(),
+                    configuration.config_parser.get(section=section, option=option).split(',')))
 
         # Get the bad LOD cutoff for the negative training set for INDELs.
 
@@ -768,42 +777,53 @@ class VariantCallingGATK(Analysis):
 
         option = 'known_sites_realignment'
         if configuration.config_parser.has_option(section=section, option=option):
-            for file_path in configuration.config_parser.get(section=section, option=option).split(','):
-                self.known_sites_realignment.append(file_path.strip())  # Strip white space around commas.
+            self.known_sites_realignment = filter(
+                lambda x: x != '',
+                map(
+                    lambda x: x.strip(),
+                    configuration.config_parser.get(section=section, option=option).split(',')))
 
         # Comma-separated list of VCF files with known variant sites for the
         # GATK BaseRecalibrator and PrintReads steps.
 
         option = 'known_sites_recalibration'
         if configuration.config_parser.has_option(section=section, option=option):
-            for file_path in configuration.config_parser.get(section=section, option=option).split(','):
-                self.known_sites_recalibration.append(file_path.strip())  # Strip white space around commas.
+            self.known_sites_recalibration = filter(
+                lambda x: x != '',
+                map(
+                    lambda x: x.strip(),
+                    configuration.config_parser.get(section=section, option=option).split(',')))
 
         # Comma-separated list of VCF files with known somatic variant sites for the
         # GATK MuTect2 steps.
 
         option = 'known_somatic_discovery'
         if configuration.config_parser.has_option(section=section, option=option):
-            for file_path in configuration.config_parser.get(section=section, option=option).split(','):
-                self.known_somatic_discovery.append(file_path.strip())  # Strip white space around commas.
+            self.known_somatic_discovery = filter(
+                lambda x: x != '',
+                map(
+                    lambda x: x.strip(),
+                    configuration.config_parser.get(section=section, option=option).split(',')))
 
         # Get the list of intervals to exclude.
 
         option = 'exclude_intervals'
         if configuration.config_parser.has_option(section=section, option=option):
-            exclude_intervals = configuration.config_parser.get(section=section, option=option)
-            # For comma-separated interval lists split into components on commas, strip white space
-            # and push them onto the list individually.
-            self.exclude_intervals_list.extend(map(lambda x: x.strip(), exclude_intervals.split(',')))
+            self.exclude_intervals_list = filter(
+                lambda x: x != '',
+                map(
+                    lambda x: x.strip(),
+                    configuration.config_parser.get(section=section, option=option).split(',')))
 
         # Get the list of intervals to include.
 
         option = 'include_intervals'
         if configuration.config_parser.has_option(section=section, option=option):
-            include_intervals = configuration.config_parser.get(section=section, option=option)
-            # For comma-separated interval lists split into components on commas, strip white space and
-            # push them onto the list individually.
-            self.include_intervals_list.extend(map(lambda x: x.strip(), include_intervals.split(',')))
+            self.include_intervals_list = filter(
+                lambda x: x != '',
+                map(
+                    lambda x: x.strip(),
+                    configuration.config_parser.get(section=section, option=option).split(',')))
 
         # Get the interval padding.
 

@@ -48,6 +48,10 @@ from bsf.process import Command, Executable, RunnableStep
 from bsf.standards import Configuration, Default
 
 
+def _comma_separated_to_list(value_string):
+    return filter(lambda x: x != '', map(lambda x: x.strip(), value_string.split(',')))
+
+
 class Analysis(object):
     """The C{Analysis} class represents a high-level analysis that may run one or more
     C{Executable} objects (programs).
@@ -92,13 +96,20 @@ class Analysis(object):
     def from_config_file_path(cls, config_path):
         """Create a new C{Analysis} object from a UNIX-style configuration file path via the C{Configuration} class.
 
+        The configuration file on C{Default.global_file_path} is read as default,
+        the project-specific one gets read, if it is not the same file.
         @param config_path: UNIX-style configuration file path
         @type config_path: str | unicode
         @return: C{Analysis}
         @rtype: Analysis
         """
 
-        return cls.from_configuration(configuration=Configuration.from_config_path(config_path=config_path))
+        file_path_list = list()
+        file_path_list.append(Default.global_file_path)
+        if not os.path.samefile(Default.global_file_path, config_path):
+            file_path_list.append(config_path)
+        return cls.from_configuration(
+            configuration=Configuration.from_file_path_list(file_path_list=file_path_list))
 
     @classmethod
     def from_configuration(cls, configuration):
@@ -404,11 +415,6 @@ class Analysis(object):
         drms = DRMS(name=name, working_directory=self.genome_directory)
         self.drms_list.append(drms)
 
-        # TODO: Remove calling drms.set_default().
-        # Calling this method is no longer required, once the default before the project configuration gets read in.
-        # Set a minimal set of global defaults.
-        drms.set_default(default=Default.get_global_default())
-
         # A "bsf.DRMS" section specifies defaults for all DRMS objects of an Analysis.
 
         section = Configuration.section_from_instance(instance=drms)
@@ -454,9 +460,9 @@ class Analysis(object):
 
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
-                'Section {!r} not defined in Configuration file {!r}.'.format(
+                'Section {!r} not defined in Configuration files: {!r}'.format(
                     section,
-                    configuration.config_path))
+                    configuration.file_path_list))
 
         # The configuration section is available.
 
@@ -1346,33 +1352,6 @@ class DRMS(object):
     @type executables: list[Executable]
     """
 
-    @classmethod
-    def from_configuration(cls, name, work_directory, configuration, section):
-        """Create a C{DRMS} object from a C{Configuration} object.
-
-        @param name: Name
-        @type name: str
-        @param work_directory: Work directory
-        @type work_directory: str
-        @param configuration: C{Configuration} object
-        @type configuration: bsf.standards.Configuration
-        @param section: Configuration section string
-        @type section: str
-        @return: C{DRMS} object
-        @rtype: DRMS
-        """
-
-        assert isinstance(configuration, Configuration)
-
-        drms = cls(name=name, work_directory=work_directory)
-
-        # Set a minimal set of global defaults before setting the Configuration.
-
-        drms.set_default(default=Default.get_global_default())
-        drms.set_configuration(configuration=configuration, section=section)
-
-        return drms
-
     def __init__(
             self,
             name,
@@ -1578,9 +1557,9 @@ class DRMS(object):
 
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
-                'Section {!r} not defined in Configuration file {!r}.'.format(
+                'Section {!r} not defined in Configuration files: {!r}'.format(
                     section,
-                    configuration.config_path))
+                    configuration.file_path_list))
 
         # The configuration section is available.
 
@@ -1618,13 +1597,19 @@ class DRMS(object):
 
         option = 'node_list_exclude'
         if configuration.config_parser.has_option(section=section, option=option):
-            for host_name in configuration.config_parser.get(section=section, option=option).split(','):
-                self.node_list_exclude.append(host_name.strip())
+            self.node_list_exclude = filter(
+                lambda x: x != '',
+                map(
+                    lambda x: x.strip(),
+                    configuration.config_parser.get(section=section, option=option).split(',')))
 
         option = 'node_list_include'
         if configuration.config_parser.has_option(section=section, option=option):
-            for host_name in configuration.config_parser.get(section=section, option=option).split(','):
-                self.node_list_include.append(host_name.strip())
+            self.node_list_include = filter(
+                lambda x: x != '',
+                map(
+                    lambda x: x.strip(),
+                    configuration.config_parser.get(section=section, option=option).split(',')))
 
         option = 'time_limit'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -1641,31 +1626,6 @@ class DRMS(object):
         option = 'threads'
         if configuration.config_parser.has_option(section=section, option=option):
             self.threads = configuration.config_parser.get(section=section, option=option)
-
-        return
-
-    def set_default(self, default):
-        """Set instance variables of a C{DRMS} object via a C{Default} object.
-
-        @param default: C{Default} object
-        @type default: bsf.standards.Default
-        @return:
-        @rtype:
-        """
-        # TODO: Remove this method once the default gets read before the project configuration file.
-        assert isinstance(default, Default)
-
-        self.implementation = default.drms_implementation
-        # is_script
-        # memory_free_mem
-        # memory_free_swap
-        # memory_free_virtual
-        self.memory_limit_hard = default.drms_memory_limit_hard
-        self.memory_limit_soft = default.drms_memory_limit_soft
-        self.time_limit = default.drms_time_limit
-        self.parallel_environment = default.drms_parallel_environment
-        self.queue = default.drms_queue
-        # threads
 
         return
 
