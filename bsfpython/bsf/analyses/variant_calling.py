@@ -614,117 +614,135 @@ class VariantCallingGATK(Analysis):
         @rtype:
         """
 
+        assert isinstance(configuration, Configuration)
+        assert isinstance(section, str)
+
         super(VariantCallingGATK, self).set_configuration(configuration=configuration, section=section)
 
+        config_parser = configuration.config_parser
+
         option = 'replicate_grouping'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.replicate_grouping = configuration.config_parser.getboolean(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.replicate_grouping = config_parser.getboolean(section=section, option=option)
 
         # Get the genome database.
 
         option = 'bwa_genome_db'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.bwa_genome_db = configuration.config_parser.get(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.bwa_genome_db = config_parser.get(section=section, option=option)
 
         # Read a comparison file.
 
         option = 'cmp_file'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.comparison_path = configuration.config_parser.get(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.comparison_path = config_parser.get(section=section, option=option)
 
         # Get the cohort name.
 
         option = 'cohort_name'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.cohort_name = configuration.config_parser.get(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.cohort_name = config_parser.get(section=section, option=option)
 
         # Comma-separated list of GVCF files from accessory cohorts
         # that should be used in the recalibration procedure.
 
         option = 'accessory_cohort_gvcfs'
-        if configuration.config_parser.has_option(section=section, option=option):
+        if config_parser.has_option(section=section, option=option):
             self.accessory_cohort_gvcfs = filter(
                 lambda x: x != '',
                 map(
                     lambda x: x.strip(),
-                    configuration.config_parser.get(section=section, option=option).split(',')))
+                    config_parser.get(section=section, option=option).split(',')))
 
         # Get the skip mark duplicates option.
 
         option = 'skip_mark_duplicates'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.skip_mark_duplicates = configuration.config_parser.getboolean(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.skip_mark_duplicates = config_parser.getboolean(section=section, option=option)
 
         # Get the truth sensitivity filter level for INDELs.
 
         option = 'truth_sensitivity_filter_level_indel'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.truth_sensitivity_filter_level_indel = configuration.config_parser.get(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.truth_sensitivity_filter_level_indel = config_parser.get(section=section, option=option)
 
         # Get the truth sensitivity filter level for SNPs.
 
         option = 'truth_sensitivity_filter_level_snp'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.truth_sensitivity_filter_level_snp = configuration.config_parser.get(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.truth_sensitivity_filter_level_snp = config_parser.get(section=section, option=option)
 
         # Get the flag for skipping the Variant Quality Score Recalibration (VQSR) for INDELs.
 
         option = 'vqsr_skip_indel'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.vqsr_skip_indel = configuration.config_parser.getboolean(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.vqsr_skip_indel = config_parser.getboolean(section=section, option=option)
 
         # Get the flag for skipping the Variant Quality Score Recalibration (VQSR) for SNPs.
 
         option = 'vqsr_skip_snp'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.vqsr_skip_snp = configuration.config_parser.getboolean(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.vqsr_skip_snp = config_parser.getboolean(section=section, option=option)
 
         # Get the list of annotations for the Variant Quality Score Recalibration (VQSR) for INDELs.
 
         option = 'vqsr_annotations_indel'
-        if configuration.config_parser.has_option(section=section, option=option):
+        if config_parser.has_option(section=section, option=option):
             self.vqsr_annotations_indel_list = filter(
                 lambda x: x != '',
                 map(
                     lambda x: x.strip(),
-                    configuration.config_parser.get(section=section, option=option).split(',')))
+                    config_parser.get(section=section, option=option).split(',')))
 
         # Get the list of annotations for the Variant Quality Score Recalibration (VQSR) for SNPs.
 
         option = 'vqsr_annotations_snp'
-        if configuration.config_parser.has_option(section=section, option=option):
+        if config_parser.has_option(section=section, option=option):
             self.vqsr_annotations_snp_list = filter(
                 lambda x: x != '',
                 map(
                     lambda x: x.strip(),
-                    configuration.config_parser.get(section=section, option=option).split(',')))
+                    config_parser.get(section=section, option=option).split(',')))
 
         # Get the bad LOD cutoff for the negative training set for INDELs.
 
         option = 'vqsr_bad_lod_cutoff_indel'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.vqsr_bad_lod_cutoff_indel = configuration.config_parser.getfloat(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.vqsr_bad_lod_cutoff_indel = config_parser.getfloat(section=section, option=option)
 
         # Get the bad LOD cutoff for the negative training set for SNPs.
 
         option = 'vqsr_bad_lod_cutoff_snp'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.vqsr_bad_lod_cutoff_snp = configuration.config_parser.getfloat(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.vqsr_bad_lod_cutoff_snp = config_parser.getfloat(section=section, option=option)
 
         # Get the maximum number of Gaussians in the positive training for INDELs.
 
         option = 'vqsr_max_gaussians_pos_indel'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.vqsr_max_gaussians_pos_indel = configuration.config_parser.getint(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.vqsr_max_gaussians_pos_indel = config_parser.getint(section=section, option=option)
 
         # Get the maximum number of Gaussians in the positive training for SNPs.
 
         option = 'vqsr_max_gaussians_pos_snp'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.vqsr_max_gaussians_pos_snp = configuration.config_parser.getint(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.vqsr_max_gaussians_pos_snp = config_parser.getint(section=section, option=option)
 
-        self._read_vqsr_configuration(vqsr_resources_dict=self.vqsr_resources_indel_dict, variation_type='indel')
-        self._read_vqsr_configuration(vqsr_resources_dict=self.vqsr_resources_snp_dict, variation_type='snp')
+        # Read VQSR resources and corresponding configuration sections for INDELs.
+
+        self._read_vqsr_configuration(
+            configuration=configuration,
+            section=section,
+            vqsr_resources_dict=self.vqsr_resources_indel_dict,
+            variation_type='indel')
+
+        # Read VQSR resources and corresponding configuration sections for SNPs.
+
+        self._read_vqsr_configuration(
+            configuration=configuration,
+            section=section,
+            vqsr_resources_dict=self.vqsr_resources_snp_dict,
+            variation_type='snp')
 
         # Read additionally requested annotation resources for the GATK AnnotateVariants step.
 
@@ -733,145 +751,155 @@ class VariantCallingGATK(Analysis):
         # Python str (file path) and Python list of Python str (annotation) value data.
 
         option = 'annotation_resources'
-        if configuration.config_parser.has_option(section=section, option=option):
-            for annotation_resource in configuration.config_parser.get(section=section, option=option).split(','):
-                annotation_resource = annotation_resource.strip()  # Strip white space around commas.
-                resource_section = '_'.join((annotation_resource, 'resource'))
-                if configuration.config_parser.has_section(section=resource_section):
-                    annotation_list = list()
-                    if configuration.config_parser.has_option(section=resource_section, option='file_path'):
-                        file_path = configuration.config_parser.get(section=resource_section, option='file_path')
+        if config_parser.has_option(section=section, option=option):
+            # Split the resource list on a comma, split white space characters and remove remaining empty strings.
+            for resource in filter(
+                    lambda x: x != '',
+                    map(
+                        lambda x: x.strip(),
+                        config_parser.get(section=section, option=option).split(','))):
+                # The annotation resource section consists of section.annotation_resource.
+                resource_section = '.'.join((section, '_'.join(('annotation', resource))))
+                if config_parser.has_section(section=resource_section):
+                    resource_option = 'file_path'
+                    if config_parser.has_option(section=resource_section, option=resource_option):
+                        file_path = config_parser.get(section=resource_section, option=resource_option)
                     else:
                         raise Exception(
-                            "Missing configuration option 'file_path' in configuration section {!r}.".format(
+                            "Missing configuration option {!r} in configuration section {!r}.".format(
+                                resource_option,
                                 resource_section))
-                    if configuration.config_parser.has_option(
-                            section=resource_section,
-                            option='annotations'):
-                        for annotation in configuration.config_parser.get(
-                                section=resource_section,
-                                option='annotations').split(','):
-                            annotation_list.append(annotation.strip())  # Strip white space around commas.
+                    resource_option = 'annotations'
+                    if config_parser.has_option(section=resource_section, option=resource_option):
+                        # Split the annotation list on a comma, split white space characters and
+                        # remove remaining empty strings.
+                        annotation_list = filter(
+                            lambda x: x != '',
+                            map(
+                                lambda x: x.strip(), config_parser.get(
+                                    section=resource_section,
+                                    option=resource_option).split(',')))
                     else:
                         raise Exception(
-                            "Missing configuration option 'annotations' in configuration section {!r}.".format(
+                            "Missing configuration option {!r} in configuration section {!r}.".format(
+                                resource_option,
                                 resource_section))
                     # Create a dict key and a tuple of a Python str and Python list.
-                    if annotation_resource not in self.annotation_resources_dict:
-                        self.annotation_resources_dict[annotation_resource] = file_path, annotation_list
+                    self.annotation_resources_dict[resource] = file_path, annotation_list
                 else:
                     raise Exception(
-                        'Missing configuration section {!r} declared in option annotation_resources {!r}.'.format(
+                        'Missing configuration section {!r} declared in option {!r} {!r}.'.format(
                             resource_section,
-                            configuration.config_parser.get(section=section, option='annotation_resources')))
+                            option,
+                            config_parser.get(section=section, option=option)))
 
         # Single VCF file of known sites for the
         # GATK HaplotypeCaller and GenotypeGVCFs steps.
 
         option = 'known_sites_discovery'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.known_sites_discovery = configuration.config_parser.get(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.known_sites_discovery = config_parser.get(section=section, option=option)
 
         # Comma-separated list of VCF files with known variant sites for the
         # GATK RealignerTargetCreator and IndelRealigner steps.
 
         option = 'known_sites_realignment'
-        if configuration.config_parser.has_option(section=section, option=option):
+        if config_parser.has_option(section=section, option=option):
             self.known_sites_realignment = filter(
                 lambda x: x != '',
                 map(
                     lambda x: x.strip(),
-                    configuration.config_parser.get(section=section, option=option).split(',')))
+                    config_parser.get(section=section, option=option).split(',')))
 
         # Comma-separated list of VCF files with known variant sites for the
         # GATK BaseRecalibrator and PrintReads steps.
 
         option = 'known_sites_recalibration'
-        if configuration.config_parser.has_option(section=section, option=option):
+        if config_parser.has_option(section=section, option=option):
             self.known_sites_recalibration = filter(
                 lambda x: x != '',
                 map(
                     lambda x: x.strip(),
-                    configuration.config_parser.get(section=section, option=option).split(',')))
+                    config_parser.get(section=section, option=option).split(',')))
 
         # Comma-separated list of VCF files with known somatic variant sites for the
         # GATK MuTect2 steps.
 
         option = 'known_somatic_discovery'
-        if configuration.config_parser.has_option(section=section, option=option):
+        if config_parser.has_option(section=section, option=option):
             self.known_somatic_discovery = filter(
                 lambda x: x != '',
                 map(
                     lambda x: x.strip(),
-                    configuration.config_parser.get(section=section, option=option).split(',')))
+                    config_parser.get(section=section, option=option).split(',')))
 
         # Get the list of intervals to exclude.
 
         option = 'exclude_intervals'
-        if configuration.config_parser.has_option(section=section, option=option):
+        if config_parser.has_option(section=section, option=option):
             self.exclude_intervals_list = filter(
                 lambda x: x != '',
                 map(
                     lambda x: x.strip(),
-                    configuration.config_parser.get(section=section, option=option).split(',')))
+                    config_parser.get(section=section, option=option).split(',')))
 
         # Get the list of intervals to include.
 
         option = 'include_intervals'
-        if configuration.config_parser.has_option(section=section, option=option):
+        if config_parser.has_option(section=section, option=option):
             self.include_intervals_list = filter(
                 lambda x: x != '',
                 map(
                     lambda x: x.strip(),
-                    configuration.config_parser.get(section=section, option=option).split(',')))
+                    config_parser.get(section=section, option=option).split(',')))
 
         # Get the interval padding.
 
         option = 'interval_padding'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.interval_padding = configuration.config_parser.getint(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.interval_padding = config_parser.getint(section=section, option=option)
 
         # Get the down-sample to fraction information.
 
         option = 'downsample_to_fraction'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.downsample_to_fraction = configuration.config_parser.get(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.downsample_to_fraction = config_parser.get(section=section, option=option)
 
         # Get the GATK bundle version.
 
         option = 'gatk_bundle_version'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.gatk_bundle_version = configuration.config_parser.get(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.gatk_bundle_version = config_parser.get(section=section, option=option)
 
         # Get the snpEff genome version.
 
         option = 'snpeff_genome_version'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.snpeff_genome_version = configuration.config_parser.get(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.snpeff_genome_version = config_parser.get(section=section, option=option)
 
         # Get the genome annotation Gene Transfer Format (GTF) file path.
 
         option = 'genome_annotation_gtf'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.genome_annotation_gtf = configuration.config_parser.get(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.genome_annotation_gtf = config_parser.get(section=section, option=option)
 
         # Get the Genome Analysis Tool Kit (GATK) Java Archive (JAR) class path directory.
 
         option = 'classpath_gatk'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_gatk = configuration.config_parser.get(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.classpath_gatk = config_parser.get(section=section, option=option)
 
         # Get the Picard tools Java Archive (JAR) class path directory.
 
         option = 'classpath_picard'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_picard = configuration.config_parser.get(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.classpath_picard = config_parser.get(section=section, option=option)
 
         # Get the snpEff tool Java Archive (JAR) class path directory.
 
         option = 'classpath_snpeff'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_snpeff = configuration.config_parser.get(section=section, option=option)
+        if config_parser.has_option(section=section, option=option):
+            self.classpath_snpeff = config_parser.get(section=section, option=option)
 
         return
 
@@ -937,9 +965,18 @@ class VariantCallingGATK(Analysis):
 
         return
 
-    def _read_vqsr_configuration(self, vqsr_resources_dict, variation_type=None):
+    @staticmethod
+    def _read_vqsr_configuration(configuration, section, vqsr_resources_dict, variation_type):
         """Private method to read variant quality score recalibration (VQSR) configuration information.
 
+        Configuration options I{vqsr_resources_indel} and I{vqsr_resources_snp} provide a comma-separated list of
+        resources that are to be used in the VQSR procedure. Each option needs to correspond to a sub-section of the
+        C{SafeConfigParser} object in C{Configuration.config_parser}. Each sub-section needs options
+        'known', 'training', 'truth', 'prior' and 'file_path'.
+        @param configuration: C{Configuration}
+        @type configuration: Configuration
+        @param section: Configuration file section
+        @type section: str
         @param vqsr_resources_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
         @type vqsr_resources_dict: dict[str, dict[str, str | unicode]]
         @param variation_type: Variation type I{indel} or I{snp}
@@ -948,17 +985,27 @@ class VariantCallingGATK(Analysis):
         @rtype:
         """
 
+        assert isinstance(configuration, Configuration)
+        assert isinstance(section, str)
+        assert isinstance(vqsr_resources_dict, dict)
+        assert isinstance(variation_type, str)
+
         if variation_type not in ('indel', 'snp'):
             raise Exception("Variation type has to be 'indel' or 'snp', not {!r}.".format(variation_type))
 
-        config_parser = self.configuration.config_parser
-        config_section = self.configuration.section_from_instance(self)
-
-        resource_option = '_'.join(('vqsr_resources', variation_type))
-        if config_parser.has_option(section=config_section, option=resource_option):
-            for resource in config_parser.get(section=config_section, option=resource_option).split(','):
-                resource = resource.strip()
-                resource_section = '_'.join(('vqsr', variation_type, resource))
+        config_parser = configuration.config_parser
+        # The vqsr_resources_indel|snp options of the current configuration section hold a comma-separated list
+        # of resources that should correspond to a sub-section in the configuration file.
+        option = '_'.join(('vqsr_resources', variation_type))
+        if config_parser.has_option(section=section, option=option):
+            # Split the resource list on a comma, split white space characters and remove remaining empty strings.
+            for resource in filter(
+                    lambda x: x != '',
+                    map(
+                        lambda x: x.strip(),
+                        config_parser.get(section=section, option=option).split(','))):
+                # The VQSR resource section consists of section.vqsr_indel|snp_resource.
+                resource_section = '.'.join((section, '_'.join(('vqsr', variation_type, resource))))
                 if config_parser.has_section(section=resource_section):
                     if resource in vqsr_resources_dict:
                         resource_dict = vqsr_resources_dict[resource]
@@ -966,22 +1013,22 @@ class VariantCallingGATK(Analysis):
                     else:
                         resource_dict = dict()
                         vqsr_resources_dict[resource] = resource_dict
-                    if config_parser.has_option(section=resource_section, option='known'):
-                        resource_dict['known'] = config_parser.get(section=resource_section, option='known')
-                    if config_parser.has_option(section=resource_section, option='training'):
-                        resource_dict['training'] = config_parser.get(section=resource_section, option='training')
-                    if config_parser.has_option(section=resource_section, option='truth'):
-                        resource_dict['truth'] = config_parser.get(section=resource_section, option='truth')
-                    if config_parser.has_option(section=resource_section, option='prior'):
-                        resource_dict['prior'] = config_parser.get(section=resource_section, option='prior')
-                    if config_parser.has_option(section=resource_section, option='file_path'):
-                        resource_dict['file_path'] = config_parser.get(section=resource_section, option='file_path')
+                    for resource_option in ('known', 'training', 'truth', 'prior', 'file_path'):
+                        if config_parser.has_option(section=resource_section, option=resource_option):
+                            resource_dict[resource_option] = config_parser.get(
+                                section=resource_section,
+                                option=resource_option)
+                        else:
+                            raise Exception(
+                                'Missing configuration option {!r} in section {!r}'.format(
+                                    resource_option,
+                                    resource_section))
                 else:
                     raise Exception(
                         'Missing configuration section {!r} declared in option {!r} {!r}.'.format(
                             resource_section,
-                            resource_option,
-                            config_parser.get(section=config_section, option=resource_option)))
+                            option,
+                            config_parser.get(section=section, option=option)))
 
         return
 
