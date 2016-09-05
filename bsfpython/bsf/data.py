@@ -98,9 +98,16 @@ class Reads(object):
 
         return reads
 
-    def __init__(self, file_path=None, file_type=None, name=None,
-                 barcode=None, lane=None, read=None, chunk=None,
-                 weak_reference_paired_reads=None):
+    def __init__(
+            self,
+            file_path=None,
+            file_type=None,
+            name=None,
+            barcode=None,
+            lane=None,
+            read=None,
+            chunk=None,
+            weak_reference_paired_reads=None):
         """Initialise a C{Reads} object.
 
         @param file_path: File path
@@ -294,8 +301,16 @@ class PairedReads(object):
     @type weak_reference_sample: weakref.ReferenceType
     """
 
-    def __init__(self, reads1=None, reads2=None, annotation=None, exclude=None, index_1=None, index_2=None,
-                 read_group=None, weak_reference_sample=None):
+    def __init__(
+            self,
+            reads1=None,
+            reads2=None,
+            annotation=None,
+            exclude=None,
+            index_1=None,
+            index_2=None,
+            read_group=None,
+            weak_reference_sample=None):
         """Initialise a C{PairedReads} object.
 
         For the C{Reads.file_type} I{CASAVA} the reads object will be
@@ -655,8 +670,14 @@ class Sample(object):
 
         return sample
 
-    def __init__(self, file_path=None, file_type=None, name=None,
-                 annotation=None, paired_reads_list=None, weak_reference_project=None):
+    def __init__(
+            self,
+            file_path=None,
+            file_type=None,
+            name=None,
+            annotation=None,
+            paired_reads_list=None,
+            weak_reference_project=None):
         """Initialise a C{Sample} object.
 
         @param file_path: File path
@@ -979,8 +1000,14 @@ class Project(object):
 
         return project
 
-    def __init__(self, file_path=None, file_type=None, name=None,
-                 annotation=None, samples=None, weak_reference_prf=None):
+    def __init__(
+            self,
+            file_path=None,
+            file_type=None,
+            name=None,
+            annotation=None,
+            samples=None,
+            weak_reference_prf=None):
         """Initialise a C{Project} object.
 
         For a I{file_type} I{CASAVA} the name is automatically populated,
@@ -1260,9 +1287,17 @@ class ProcessedRunFolder(object):
 
         return prf
 
-    def __init__(self, file_path=None, file_type=None, name=None,
-                 prefix=None, flow_cell=None, version=None,
-                 annotation=None, projects=None, weak_reference_collection=None):
+    def __init__(
+            self,
+            file_path=None,
+            file_type=None,
+            name=None,
+            prefix=None,
+            flow_cell=None,
+            version=None,
+            annotation=None,
+            projects=None,
+            weak_reference_collection=None):
         """Initialise a C{ProcessedRunFolder} object.
 
         @param file_path: File path
@@ -1642,8 +1677,14 @@ class Collection(object):
 
         return collection
 
-    def __init__(self, file_path=None, file_type=None, name=None,
-                 annotation=None, processed_run_folders=None, sample_groups=None):
+    def __init__(
+            self,
+            file_path=None,
+            file_type=None,
+            name=None,
+            annotation=None,
+            processed_run_folders=None,
+            sample_groups=None):
         """Initialise a C{Collection} object.
 
         @param file_path: File path
@@ -2417,7 +2458,12 @@ class Collection(object):
                             sas.row_dicts.append({sample_annotation_field: annotation})
                     for paired_reads in sample.paired_reads_list:
                         assert isinstance(paired_reads, PairedReads)
-                        row_dict = {'PairedReads ReadGroup': paired_reads.read_group}
+                        row_dict = {
+                            'PairedReads Exclude': '{}'.format(paired_reads.exclude).lower(),
+                            'PairedReads Index 1': paired_reads.index_1,
+                            'PairedReads Index 2': paired_reads.index_2,
+                            'PairedReads ReadGroup': paired_reads.read_group,
+                        }
                         if paired_reads.reads1 is not None:
                             row_dict['Reads1 Name'] = paired_reads.reads1.name
                             row_dict['Reads1 File'] = paired_reads.reads1.file_path
@@ -2468,7 +2514,10 @@ class SampleGroup(object):
     # (i.e. flow cells) could bear the same name, leading to problems with SGE job names.
     # This would need further re-thinking.
 
-    def __init__(self, name=None, samples=None):
+    def __init__(
+            self,
+            name=None,
+            samples=None):
         """Initialise a C{SampleGroup} object.
 
         @param name: Name
@@ -2565,6 +2614,7 @@ class SampleAnnotationSheet(AnnotationSheet):
         'Project Name',
         'Project Size',
         'Sample Name',
+        'PairedReads Exclude',
         'PairedReads Index 1',
         'PairedReads Index 2',
         'PairedReads ReadGroup',
