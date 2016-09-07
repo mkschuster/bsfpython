@@ -29,9 +29,9 @@ A package of classes and methods supporting the Trimmomatic tool.
 
 import os
 
-from bsf import Analysis, Runnable
+from bsf import Analysis, Default, Runnable
 from bsf.data import Reads, PairedReads, Sample
-from bsf.process import Command, RunnableStepJava, RunnableStepMakeDirectory
+from bsf.process import Command, RunnableStep, RunnableStepJava, RunnableStepMakeDirectory
 from bsf.standards import Configuration
 
 
@@ -44,6 +44,8 @@ class Trimmomatic(Analysis):
     @type name: str
     @cvar prefix: Analysis prefix that should be overridden by sub-classes
     @type prefix: str
+    @cvar drms_name_trimmomatic: C{DRMS.name} for the Trimmomatic C{Analysis} stage
+    @type drms_name_trimmomatic: str
     @ivar adapter_path: Adapter file path
     @type adapter_path: str | unicode
     @ivar classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
@@ -52,6 +54,9 @@ class Trimmomatic(Analysis):
 
     name = 'Trimmomatic Analysis'
     prefix = 'trimmomatic'
+
+    # drms_name_trimmomatic = '_'.join((prefix, 'trimmomatic'))
+    drms_name_trimmomatic = prefix
 
     def __init__(
             self,
@@ -196,7 +201,7 @@ class Trimmomatic(Analysis):
 
         # Trimmomatic
 
-        drms_trimmomatic = self.get_drms(name='trimmomatic')
+        drms_trimmomatic = self.get_drms(name=self.drms_name_trimmomatic)
 
         for sample in self.samples:
             assert isinstance(sample, Sample)
@@ -209,14 +214,15 @@ class Trimmomatic(Analysis):
             # Python str key and Python list of Python list objects
             # of bsf.data.PairedReads objects.
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=False)
+            # The Trimmomatic analysis does not obey excluded PairedReads objects,
+            # more high-level analyses generally do.
+            replicate_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=False)
 
             replicate_keys = replicate_dict.keys()
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
             for replicate_key in replicate_keys:
                 assert isinstance(replicate_key, str)
-
                 for paired_reads in replicate_dict[replicate_key]:
                     assert isinstance(paired_reads, PairedReads)
 
@@ -238,6 +244,7 @@ class Trimmomatic(Analysis):
                     file_path_dict_trimmomatic = dict(
                         temporary_directory='_'.join((prefix_trimmomatic, 'temporary')),
                         output_directory=os.path.join(self.project_directory, prefix_trimmomatic),
+                        # Automatic GNU Zip-compression of trimlog files does not work.
                         trim_log='_'.join((prefix_trimmomatic, 'trim_log.tsv')),
                     )
 
@@ -281,7 +288,7 @@ class Trimmomatic(Analysis):
                     if paired_reads.reads2 is None:
                         file_path_1u = os.path.join(
                             file_path_dict_trimmomatic['output_directory'],
-                            paired_reads.reads1.name + 'U.fastq')
+                            paired_reads.reads1.name + 'U.fastq.gz')
 
                         sub_command.arguments.append(paired_reads.reads1.file_path)
                         sub_command.arguments.append(file_path_1u)
@@ -293,16 +300,16 @@ class Trimmomatic(Analysis):
                     else:
                         file_path_1p = os.path.join(
                             file_path_dict_trimmomatic['output_directory'],
-                            paired_reads.reads1.name + 'P.fastq')
+                            paired_reads.reads1.name + 'P.fastq.gz')
                         file_path_1u = os.path.join(
                             file_path_dict_trimmomatic['output_directory'],
-                            paired_reads.reads1.name + 'U.fastq')
+                            paired_reads.reads1.name + 'U.fastq.gz')
                         file_path_2p = os.path.join(
                             file_path_dict_trimmomatic['output_directory'],
-                            paired_reads.reads2.name + 'P.fastq')
+                            paired_reads.reads2.name + 'P.fastq.gz')
                         file_path_2u = os.path.join(
                             file_path_dict_trimmomatic['output_directory'],
-                            paired_reads.reads2.name + 'U.fastq')
+                            paired_reads.reads2.name + 'U.fastq.gz')
 
                         sub_command.arguments.append(paired_reads.reads1.file_path)
                         sub_command.arguments.append(paired_reads.reads2.file_path)
@@ -326,6 +333,8 @@ class Trimmomatic(Analysis):
                                 reads1=Reads(file_path=file_path_1u, name=paired_reads.reads1.name[:-1] + 'U'),
                                 annotation=paired_reads.annotation,
                                 exclude=paired_reads.exclude,
+                                index_1=paired_reads.index_1,
+                                index_2=paired_reads.index_2,
                                 read_group=paired_reads.read_group))
 
                         sample.add_paired_reads(
@@ -333,6 +342,8 @@ class Trimmomatic(Analysis):
                                 reads1=Reads(file_path=file_path_2u, name=paired_reads.reads2.name[:-1] + 'U'),
                                 annotation=paired_reads.annotation,
                                 exclude=paired_reads.exclude,
+                                index_1=paired_reads.index_1,
+                                index_2=paired_reads.index_2,
                                 read_group=paired_reads.read_group))
 
                     # Append trimming steps.
@@ -343,6 +354,21 @@ class Trimmomatic(Analysis):
                     #     '/scratch/lab_bsf/projects/BSA_0000_Test/PolyA-SE.fa'))
                     sub_command.arguments.append('SLIDINGWINDOW:4:15')
                     sub_command.arguments.append('MINLEN:20')
+
+                    # Create a new RunnableStep to aggregate the trim log file.
+
+                    runnable_step_trimmomatic_summary = runnable_trimmomatic.add_runnable_step(
+                        runnable_step=RunnableStep(
+                            name='trimmomatic_summary',
+                            program='bsf_trimmomatic_summary.R',
+                            obsolete_file_path_list=[
+                                # TODO: Activate once the R code works robustly.
+                                # file_path_dict_trimmomatic['trim_log'],
+                            ]))
+
+                    runnable_step_trimmomatic_summary.add_option_long(
+                        key='file_path',
+                        value=file_path_dict_trimmomatic['trim_log'])
 
         # Convert the (modified) Collection object into a SampleAnnotationSheet object and write it to disk.
 
@@ -355,3 +381,115 @@ class Trimmomatic(Analysis):
         annotation_sheet.to_file_path()
 
         return annotation_sheet
+
+    def report(self):
+
+        # Create a symbolic link containing the project name and a UUID.
+        default = Default.get_global_default()
+        link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
+        link_name = os.path.basename(link_path.rstrip('/'))
+
+        if link_name:
+            pass  # Just make link_name used.
+
+        # Write a HTML document.
+
+        output_html = str()
+
+        output_html += '<h1 id="trimmomatic_analysis">{} {}</h1>\n'.format(self.project_name, self.name)
+        output_html += '\n'
+
+        output_html += '<h2 id="aliquot_and_sample_level">Aliquot and Sample Level</h2>\n'
+        output_html += '\n'
+        output_html += '<table id="aliquot_and_sample_table">\n'
+        output_html += '<thead>\n'
+        output_html += '<tr>\n'
+        output_html += '<th>Sample</th>\n'
+        output_html += '<th>Aliquot</th>\n'
+        output_html += '<th>Coverage</th>\n'
+        output_html += '<th>Frequency</th>\n'
+        output_html += '<th>Summary</th>\n'
+        output_html += '</tr>\n'
+        output_html += '</thead>\n'
+        output_html += '<tbody>\n'
+
+        for sample in self.samples:
+
+            if self.debug > 0:
+                print '{!r} Sample name: {}'.format(self, sample.name)
+                print sample.trace(1)
+
+            # bsf.data.Sample.get_all_paired_reads returns a Python dict of
+            # Python str key and Python list of Python list objects
+            # of bsf.data.PairedReads objects.
+
+            # The Trimmomatic analysis does not obey excluded PairedReads objects,
+            # more high-level analyses generally do.
+            replicate_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=False)
+
+            replicate_keys = replicate_dict.keys()
+            if not len(replicate_keys):
+                # Skip Sample objects, which PairedReads objects have all been excluded.
+                continue
+            # replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+
+            # This analysis is special in that replicate names carry 'P' or 'U' suffices and samples carry additional
+            # replicates after trimming that do no longer correspond to the initial Runnable objects. Sigh.
+            replicate_keys = dict(map(lambda x: (x[:-1], True), replicate_keys)).keys()
+            replicate_keys.sort()
+
+            output_html += '<tr>\n'
+            output_html += '<td>'
+            output_html += sample.name
+            output_html += '</td>\n'
+            output_html += '<td></td>\n'  # Aliquot
+            output_html += '<td></td>\n'  # Coverage PNG
+            output_html += '<td></td>\n'  # Frequency PNG
+            output_html += '<td></td>\n'  # Summary TSV
+            output_html += '</tr>\n'
+
+            for replicate_key in replicate_keys:
+                # The second read may still not be there.
+                if '_'.join((self.drms_name_trimmomatic, replicate_key)) not in self.runnable_dict:
+                    continue
+
+                runnable_trimmomatic = self.runnable_dict[
+                    '_'.join((self.drms_name_trimmomatic, replicate_key))]
+                assert isinstance(runnable_trimmomatic, Runnable)
+
+                output_html += '<tr>\n'
+                output_html += '<td></td>\n'  # Sample
+                output_html += '<td>{}</td>\n'.format(replicate_key)  # Aliquot
+                output_html += '<td>'  # Coverage
+                output_html += '<a href="{}_coverage.png">'.format(runnable_trimmomatic.name)
+                output_html += '<img ' \
+                               'alt="Coverage {}" ' \
+                               'src="{}_coverage.png" ' \
+                               'height="100" ' \
+                               'width="100" ' \
+                               '/>'.format(runnable_trimmomatic.name, runnable_trimmomatic.name)
+                output_html += '</a>'
+                output_html += '</td>\n'
+                output_html += '<td>'  # Frequency
+                output_html += '<a href="{}_frequency.png">'.format(runnable_trimmomatic.name)
+                # The frequency plots provide little information that does not necessarily justify
+                # adding another set of images onto the HTML report.
+                # output_html += '<img ' \
+                #                'alt="Frequency {}" ' \
+                #                'src="{}_frequency.png" ' \
+                #                'height="100" ' \
+                #                'width="100" ' \
+                #                '/>'.format(runnable_trimmomatic.name, runnable_trimmomatic.name)
+                output_html += 'PNG'
+                output_html += '</a>'
+                output_html += '</td>\n'
+                output_html += '<td><a href="{}_summary.tsv">TSV</a></td>\n'.format(runnable_trimmomatic.name)
+                output_html += '</tr>\n'
+
+        output_html += '</tbody>\n'
+        output_html += '</table>\n'
+        output_html += '\n'
+
+        self.report_to_file(content=output_html, prefix=self.prefix)
+
+        return
