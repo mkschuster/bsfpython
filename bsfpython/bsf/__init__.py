@@ -905,7 +905,7 @@ class Analysis(object):
         XHTML footer C{Analysis.get_html_footer} before writing the file.
         @param content: XHTML 1.0 content
         @type content: str
-        @param prefix: A file name prefix (e.g. chipseq, rnaseq, ...)
+        @param prefix: A file name prefix (e.g. chipseq, rnaseq, ...), defaults to C{Analysis.prefix}
         @type prefix: str
         @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional Document Type Declaration,
             defaults to XHTML 1.0 Strict
@@ -1138,7 +1138,7 @@ class Analysis(object):
         return cgi.escape(s=primary_url, quote=True)
 
     def ucsc_hub_write_hub(self, prefix=None):
-        """Write a UCSC Track Hub I{hub.txt} file into the C{Analysis.project_directory},
+        """Write a UCSC Track Hub I{prefix_hub.txt} file into the C{Analysis.project_directory},
         above the C{Analysis.genome_directory}.
 
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
@@ -1174,7 +1174,7 @@ class Analysis(object):
         return
 
     def ucsc_hub_write_genomes(self, prefix=None):
-        """Write a UCSC Track Hub I{genomes.txt} file into the C{Analysis.project_directory},
+        """Write a UCSC Track Hub I{prefix_genomes.txt} file into the C{Analysis.project_directory},
         above the C{Analysis.genome_directory}.
 
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
@@ -1212,7 +1212,7 @@ class Analysis(object):
         return
 
     def ucsc_hub_write_tracks(self, output, prefix=None):
-        """Write a UCSC Track Hub I{trackDB.txt} file into the C{Analysis.genome_directory}.
+        """Write a UCSC Track Hub I{prefix_trackDB.txt} file into the C{Analysis.genome_directory}.
 
         @param output: Content
         @type output: str
@@ -1239,16 +1239,19 @@ class Analysis(object):
     def ucsc_hub_to_file(self, content, prefix=None):
         """Write UCSC Genome Browser Track Hub files to disk.
 
-        The method writes a I{prefix_hub.txt} and a I{prefixgenomes.txt} file into the
+        The method writes a I{prefix_hub.txt} and a I{prefix_genomes.txt} file into the
         C{Analysis.project_directory}, above the C{Analysis.genome_directory}, as well as a
         I{prefix_trackDB.txt} file into the C{Analysis.genome_directory}.
         @param content: Content of the track database file
         @type content: str
-        @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
+        @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...), defaults to C{Analysis.prefix}
         @type prefix: str
         @return:
         @rtype:
         """
+        if prefix is None or not prefix:
+            prefix = self.prefix
+
         self.ucsc_hub_write_hub(prefix=prefix)
         self.ucsc_hub_write_genomes(prefix=prefix)
         self.ucsc_hub_write_tracks(output=content, prefix=prefix)

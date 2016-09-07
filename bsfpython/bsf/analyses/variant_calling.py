@@ -3585,7 +3585,7 @@ class VariantCallingGATK(Analysis):
         output_html += '</table>\n'
         output_html += '\n'
 
-        self.report_to_file(content=output_html, prefix='variant_calling')
-        self.ucsc_hub_to_file(content=output_hub, prefix='variant_calling')
+        self.report_to_file(content=output_html)
+        self.ucsc_hub_to_file(content=output_hub)
 
         return

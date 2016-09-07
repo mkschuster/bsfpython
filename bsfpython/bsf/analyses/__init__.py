@@ -1488,8 +1488,8 @@ class ChIPSeq(Analysis):
                 # output += '{}__{}_fastqc/fastqc_report.html'. \
                 # format(t_replicate_key, c_replicate_key)
 
-        self.report_to_file(content=output_html, prefix='chipseq')
-        self.ucsc_hub_to_file(content=output_hub, prefix='chipseq')
+        self.report_to_file(content=output_html)
+        self.ucsc_hub_to_file(content=output_hub)
 
         return
 
@@ -2093,8 +2093,8 @@ class ChIPSeq(Analysis):
         output_html += '</table>\n'
         output_html += '\n'
 
-        self.report_to_file(content=output_html, prefix='chipseq')
-        self.ucsc_hub_to_file(content=output_hub, prefix='chipseq')
+        self.report_to_file(content=output_html)
+        self.ucsc_hub_to_file(content=output_hub)
 
         return
 
@@ -2454,7 +2454,7 @@ class RunFastQC(Analysis):
         output_html += '</table>\n'
         output_html += '\n'
 
-        self.report_to_file(content=output_html, prefix='fastqc')
+        self.report_to_file(content=output_html)
 
 
 class RunBamToFastq(Analysis):

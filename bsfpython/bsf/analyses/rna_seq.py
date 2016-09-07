@@ -2142,7 +2142,7 @@ class Tuxedo(Analysis):
         output_html += '</table>\n'
         output_html += '\n'
 
-        self.report_to_file(content=output_html, prefix='rnaseq')
-        self.ucsc_hub_to_file(content=output_hub, prefix='rnaseq')
+        self.report_to_file(content=output_html)
+        self.ucsc_hub_to_file(content=output_hub)
 
         return

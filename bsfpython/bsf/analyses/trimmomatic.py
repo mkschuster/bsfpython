@@ -490,6 +490,6 @@ class Trimmomatic(Analysis):
         output_html += '</table>\n'
         output_html += '\n'
 
-        self.report_to_file(content=output_html, prefix=self.prefix)
+        self.report_to_file(content=output_html)
 
         return
