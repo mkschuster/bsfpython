@@ -31,7 +31,7 @@ import csv
 import datetime
 import errno
 import math
-import os.path
+import os
 import re
 import subprocess
 import sys
@@ -41,6 +41,7 @@ import warnings
 from bsf.database import DatabaseConnection, \
     JobSubmission, JobSubmissionAdaptor, DatabaseAdaptor
 from bsf.process import Executable
+
 
 output_directory_name = 'bsfpython_slurm_output'
 database_file_name = 'bsfpython_slurm_jobs.db'

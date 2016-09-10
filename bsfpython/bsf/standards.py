@@ -27,8 +27,8 @@ A package of classes and methods modelling configuration and default information
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import os
 from ConfigParser import SafeConfigParser
+import os
 
 
 class Configuration(object):

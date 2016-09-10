@@ -27,12 +27,13 @@
 
 import argparse
 import errno
-import os.path
+import os
 from pickle import Unpickler
 import shutil
 
 from bsf.process import Command, Executable
 from bsf.standards import Default
+
 
 # Set the environment consistently.
 
@@ -266,6 +267,7 @@ if len(sam_header_pg) or len(sam_header_rg):
         if line[:3] == '@PG':
             # Insert all @PG lines before this one, then clear the list so that no further insertion is possible.
             for line_pg in sam_header_pg:
+                assert isinstance(line_pg, str)
                 sam_header_handle.write(line_pg + "\n")
             sam_header_pg = list()
         sam_header_handle.write(line)
@@ -273,6 +275,7 @@ if len(sam_header_pg) or len(sam_header_rg):
     # Add remaining @PG lines it they were not present in the cleaned SAM file.
 
     for line_pg in sam_header_pg:
+        assert isinstance(line_pg, str)
         sam_header_handle.write(line_pg + "\n")
     sam_header_pg = list()
 

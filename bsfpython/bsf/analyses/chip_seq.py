@@ -26,6 +26,7 @@ A package of classes and methods supporting ChIP-Seq analyses.
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+
 import errno
 import os
 from pickle import Pickler, HIGHEST_PROTOCOL

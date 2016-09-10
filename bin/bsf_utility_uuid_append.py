@@ -33,6 +33,7 @@ just a bit more private.
 from argparse import ArgumentParser
 import uuid
 
+
 argument_parser = ArgumentParser(
     description='Append a UUID to a string.')
 

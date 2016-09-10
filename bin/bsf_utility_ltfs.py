@@ -25,10 +25,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-
 from argparse import ArgumentParser
 import os
 import xml.etree.ElementTree
+
 
 cartridge_dict = {
     'LTO5': int(1391601152 * 1024)

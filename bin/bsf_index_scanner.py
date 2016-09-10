@@ -29,8 +29,8 @@
 import argparse
 from collections import OrderedDict
 import datetime
-import platform
 import os
+import platform
 from subprocess import PIPE, Popen
 import sys
 from threading import Lock, Thread
@@ -306,6 +306,7 @@ illumina_adapters = [
 # outfile = open("unmatched_barcode_report.illumina.csv", "w")
 
 for adapter in illumina_adapters:
+    assert isinstance(adapter, str)
     count = 0
     if adapter in barcode_dict:
         count = barcode_dict[adapter]

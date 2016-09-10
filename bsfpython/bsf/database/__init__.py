@@ -26,6 +26,7 @@ A package that centralises (SQLite) Database access.
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+
 import sqlite3
 
 

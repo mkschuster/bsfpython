@@ -31,6 +31,7 @@ from bsf.database import DatabaseConnection
 from bsf.drms.slurm import ProcessSLURM, ProcessSLURMAdaptor
 from bsf.process import Executable
 
+
 sacct = Executable(name='sacct', program='sacct', stdout_path='sacct_mschuster.csv', stderr_path='sacct_mschuster.err')
 sacct.add_option_long(key='user', value='mschuster')
 sacct.add_option_long(key='starttime', value='2014-04-19')

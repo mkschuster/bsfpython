@@ -27,11 +27,11 @@
 
 import argparse
 import inspect
-import os.path
+import os
 import re
 from stat import *
 
-import bsf.defaults.web as web
+from bsf import Analysis
 from bsf.standards import Default
 
 
@@ -136,8 +136,10 @@ if re.search(pattern=r'^[0-9a-f]{32,32}$', string=components[-1]):
 
 output = str()
 
-output += web.html_header(title='Project {} Overview'.format(project_name),
-                          source=inspect.getfile(inspect.currentframe()))
+# TODO: Functionality of this script needs integrating into the Analysis class.
+output += Analysis.get_html_header(
+    title='Project {} Overview'.format(project_name),
+    source=inspect.getfile(inspect.currentframe()))
 
 keys = report_dict.keys()
 keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -157,6 +159,7 @@ for key in keys:
 
     output += '</ul>\n'
 
-output += web.html_footer()
+# TODO: Functionality of this script needs integrating into the Analysis class.
+output += Analysis.get_html_footer()
 
 print output

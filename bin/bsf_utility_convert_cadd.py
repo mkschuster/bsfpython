@@ -35,6 +35,7 @@ from threading import Lock, Thread
 
 from bsf.process import Command, Executable
 
+
 on_posix = 'posix' in sys.builtin_module_names
 max_thread_joins = 10
 thread_join_timeout = 10

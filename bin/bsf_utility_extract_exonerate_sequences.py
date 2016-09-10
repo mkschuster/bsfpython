@@ -25,13 +25,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-import numpy
 import re
+
+import bsf.exonerate
 
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
-
-import bsf.exonerate
+import numpy
 
 
 vulgar_pattern = re.compile(pattern='^vulgar: (.*)')

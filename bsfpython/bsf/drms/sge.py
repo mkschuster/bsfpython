@@ -28,12 +28,13 @@ A package of methods supporting the Son of Grid Engine (SGE) system.
 
 
 import errno
-import os.path
+import os
 import re
 import subprocess
 
 from bsf.database import DatabaseAdaptor
 from bsf.process import Executable
+
 
 output_directory_name = 'bsfpython_sge_output'
 

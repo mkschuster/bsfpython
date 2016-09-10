@@ -29,7 +29,7 @@ A package of classes and methods modelling Picard analyses data files and data d
 
 import csv
 import errno
-import os.path
+import os
 import warnings
 import weakref
 

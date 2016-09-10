@@ -27,7 +27,7 @@
 
 import argparse
 import datetime
-import os.path
+import os
 
 from bsf.illumina import RunFolder
 from bsf.standards import Default

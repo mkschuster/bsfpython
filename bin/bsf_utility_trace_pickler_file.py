@@ -32,6 +32,7 @@ from argparse import ArgumentParser
 from bsf import Runnable
 from bsf.process import RunnableStep
 
+
 argument_parser = ArgumentParser(
     description='Trace a pickled BSF Runnable.')
 
