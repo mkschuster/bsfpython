@@ -1416,6 +1416,17 @@ class Tuxedo(Analysis):
         output_html += '</p>\n'
         output_html += '\n'
 
+        output_html += '<p>\n'
+        output_html += '<a href="rnaseq_tophat_alignment_summary.pdf"><img ' \
+                       'alt="TopHat Alignment Summary" id="tophat_alignment_summary_img"' \
+                       'src="rnaseq_tophat_alignment_summary.png" ' \
+                       'height="80" ' \
+                       'width="80" ' \
+                       '/>' \
+                       '</a>\n'
+        output_html += 'Alignment summary statistics <a href="rnaseq_tophat_alignment_summary.tsv">TSV</a>\n'
+        output_html += '</p>\n'
+
         output_html += '<h3 id="alignment_events">Splice Junctions, Insertions and Deletions</h3>\n'
         output_html += '\n'
 
@@ -1744,24 +1755,33 @@ class Tuxedo(Analysis):
                 prefix = 'rnaseq_cufflinks_{}'.format(replicate_key)
 
                 output_html += '<tr>\n'
-                output_html += '<td>{}</td>\n'.format(replicate_key)
-                output_html += '<td><a href="{}">Transcript Assembly</a></td>\n'.format(
-                    self.ucsc_track_url(options_dict=options_dict))
-                output_html += '<td><a href="{}/genes.fpkm_tracking">Genes FPKM</a></td>\n'. \
-                    format(prefix)
-                output_html += '<td><a href="{}/isoforms.fpkm_tracking">Isoforms FPKM</a></td>\n'. \
-                    format(prefix)
-                # Add files from bsf_process_cufflinks.R
-                output_html += '<td><a href="{}/{}_genes_fpkm_tracking.tsv">Genes (Symbols)</a></td>\n'. \
-                    format(prefix, prefix)
-                output_html += '<td><a href="{}/{}_isoforms_fpkm_tracking.tsv">Isoforms (Symbols)</a></td>\n'. \
-                    format(prefix, prefix)
-                output_html += '<td><a href="{}/rnaseq_tophat_{}_accepted_hits.bam">Aligned BAM</a></td>\n'. \
-                    format(prefix, replicate_key)
-                output_html += '<td><a href="{}/rnaseq_tophat_{}_accepted_hits.bam.bai">Aligned BAI</a></td>\n'. \
-                    format(prefix, replicate_key)
-                output_html += '<td><a href="{}/rnaseq_tophat_{}_unaligned.bam">Unaligned BAM</a></td>\n'. \
-                    format(prefix, replicate_key)
+                output_html += '<td class="left">' \
+                               '{}' \
+                               '</td>\n'.format(replicate_key)
+                output_html += '<td class="center">' \
+                               '<a href="{}">Transcript Assembly</a>' \
+                               '</td>\n'.format(self.ucsc_track_url(options_dict=options_dict))
+                output_html += '<td class="center">' \
+                               '<a href="{}/genes.fpkm_tracking">Genes FPKM</a>' \
+                               '</td>\n'.format(prefix)
+                output_html += '<td class="center">' \
+                               '<a href="{}/isoforms.fpkm_tracking">Isoforms FPKM</a>' \
+                               '</td>\n'.format(prefix)
+                output_html += '<td class="center">' \
+                               '<a href="{}/{}_genes_fpkm_tracking.tsv">Genes (Symbols)</a>' \
+                               '</td>\n'.format(prefix, prefix)
+                output_html += '<td class="center">' \
+                               '<a href="{}/{}_isoforms_fpkm_tracking.tsv">Isoforms (Symbols)</a>' \
+                               '</td>\n'.format(prefix, prefix)
+                output_html += '<td class="center">' \
+                               '<a href="{}/rnaseq_tophat_{}_accepted_hits.bam">Aligned BAM</a>' \
+                               '</td>\n'.format(prefix, replicate_key)
+                output_html += '<td class="center">' \
+                               '<a href="{}/rnaseq_tophat_{}_accepted_hits.bam.bai">Aligned BAI</a>' \
+                               '</td>\n'.format(prefix, replicate_key)
+                output_html += '<td class="center">' \
+                               '<a href="{}/rnaseq_tophat_{}_unaligned.bam">Unaligned BAM</a>' \
+                               '</td>\n'.format(prefix, replicate_key)
                 output_html += '</tr>\n'
 
         output_html += '</tbody>\n'
@@ -1813,37 +1833,48 @@ class Tuxedo(Analysis):
             assert isinstance(comparison_key, str)
             prefix = 'rnaseq_process_cuffdiff_{}'.format(comparison_key)
 
-            output_html += '<tr>\n'
-            output_html += '<td>{}</td>\n'. \
-                format(comparison_key)
-
             # Link to comparison-specific symbolic links in the directory after cummeRbund processing.
 
-            output_html += '<td><a href="{}/{}_samples.tsv">Samples</a></td>'. \
-                format(prefix, prefix)
-            output_html += '<td><a href="{}/{}_replicates.tsv">Replicates</a></td>\n'. \
-                format(prefix, prefix)
-            output_html += '<td><a href="{}/{}_cds_exp_diff.tsv">Coding Sequences</a></td>\n'. \
-                format(prefix, prefix)
-            output_html += '<td><a href="{}/{}_genes_exp_diff.tsv"><strong>Genes</strong></a></td>\n'. \
-                format(prefix, prefix)
-            output_html += '<td><a href="{}/{}_isoforms_exp_diff.tsv">Isoforms</a></td>\n'. \
-                format(prefix, prefix)
-            output_html += '<td><a href="{}/{}_promoters_diff.tsv">Promoters</a></td>\n'. \
-                format(prefix, prefix)
-            output_html += '<td><a href="{}/{}_splicing_diff.tsv">Splicing</a></td>\n'. \
-                format(prefix, prefix)
-            output_html += '<td><a href="{}/{}_tss_group_exp_diff.tsv">Transcription Start Sites</a></td>\n'. \
-                format(prefix, prefix)
-            output_html += '<td><a href="{}/{}_genes_fpkm_replicates.tsv">Gene FPKM Replicates</a></td>\n'. \
-                format(prefix, prefix)
-            output_html += '<td><a href="{}/{}_genes_counts_replicates.tsv">Gene Count Replicates</a></td>\n'. \
-                format(prefix, prefix)
-            output_html += '<td><a href="{}/{}_isoforms_fpkm_replicates.tsv">Isoform FPKM Replicates</a></td>\n'. \
-                format(prefix, prefix)
-            output_html += '<td><a href="{}/{}_isoforms_counts_replicates.tsv">Isoform Count Replicates</a></td>\n'. \
-                format(prefix, prefix)
-
+            output_html += '<tr>\n'
+            output_html += '<td class="left">' \
+                           '{}' \
+                           '</td>\n'.format(comparison_key)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_samples.tsv">Samples</a>' \
+                           '</td>\n'.format(prefix, prefix)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_replicates.tsv">Replicates</a>' \
+                           '</td>\n'.format(prefix, prefix)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_cds_exp_diff.tsv">Coding Sequences</a>' \
+                           '</td>\n'.format(prefix, prefix)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_genes_exp_diff.tsv"><strong>Genes</strong></a>' \
+                           '</td>\n'.format(prefix, prefix)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_isoforms_exp_diff.tsv">Isoforms</a>' \
+                           '</td>\n'.format(prefix, prefix)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_promoters_diff.tsv">Promoters</a>' \
+                           '</td>\n'.format(prefix, prefix)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_splicing_diff.tsv">Splicing</a>' \
+                           '</td>\n'.format(prefix, prefix)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_tss_group_exp_diff.tsv">Transcription Start Sites</a>' \
+                           '</td>\n'.format(prefix, prefix)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_genes_fpkm_replicates.tsv">Gene FPKM Replicates</a>' \
+                           '</td>\n'.format(prefix, prefix)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_genes_counts_replicates.tsv">Gene Count Replicates</a>' \
+                           '</td>\n'.format(prefix, prefix)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_isoforms_fpkm_replicates.tsv">Isoform FPKM Replicates</a>' \
+                           '</td>\n'.format(prefix, prefix)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_isoforms_counts_replicates.tsv">Isoform Count Replicates</a>' \
+                           '</td>\n'.format(prefix, prefix)
             output_html += '</tr>\n'
 
             # Read sample pair information if available.
@@ -1860,14 +1891,21 @@ class Tuxedo(Analysis):
                 for row_dict in sample_pair_sheet.row_dicts:
                     assert isinstance(row_dict, dict)
                     output_html += '<tr>\n'
-                    output_html += '<td></td>'  # Comparison
-                    output_html += '<td colspan="3"><strong>{}</strong> versus <strong>{}</strong></td>\n'. \
-                        format(row_dict['V1'], row_dict['V2'])  # Sample
-                    output_html += '<td><a href="{}/{}_{}_{}_genes_diff.tsv"><strong>Genes</strong></a></td>\n'. \
-                        format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '<td><a href="{}/{}_{}_{}_isoforms_diff.tsv">Isoforms</a></td>\n'. \
-                        format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '<td colspan="5"></td>'
+                    output_html += '<td>' \
+                                   '' \
+                                   '</td>\n'  # Comparison
+                    output_html += '<td class="left" colspan="3">' \
+                                   '<strong>{}</strong> versus <strong>{}</strong>' \
+                                   '</td>\n'.format(row_dict['V1'], row_dict['V2'])  # Sample
+                    output_html += '<td class="center">' \
+                                   '<a href="{}/{}_{}_{}_genes_diff.tsv"><strong>Genes</strong></a>' \
+                                   '</td>\n'.format(prefix, prefix, row_dict['V1'], row_dict['V2'])
+                    output_html += '<td class="center">' \
+                                   '<a href="{}/{}_{}_{}_isoforms_diff.tsv">Isoforms</a>' \
+                                   '</td>\n'.format(prefix, prefix, row_dict['V1'], row_dict['V2'])
+                    output_html += '<td class="left" colspan="5">' \
+                                   '' \
+                                   '</td>\n'
                     output_html += '</tr>\n'
 
         output_html += '</tbody>\n'
@@ -1891,20 +1929,29 @@ class Tuxedo(Analysis):
             prefix = 'rnaseq_process_cuffdiff_{}'.format(comparison_key)
 
             output_html += '<tr>\n'
-            output_html += '<td>{}</td>\n'.format(comparison_key)
-
-            output_html += '<td><a href="{}/{}_genes_significance_matrix.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Significance Matrix Plot - Genes - {}" ' \
-                           'src="{}/{}_genes_significance_matrix.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
-
-            output_html += '<td><a href="{}/{}_isoforms_significance_matrix.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Significance Matrix Plot - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_significance_matrix.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
-
+            output_html += '<td class="left">' \
+                           '{}' \
+                           '</td>\n'.format(comparison_key)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_genes_significance_matrix.pdf">' \
+                           '<img ' \
+                           'alt="Significance Matrix Plot - Genes - {}" ' \
+                           'src="{}/{}_genes_significance_matrix.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_isoforms_significance_matrix.pdf">' \
+                           '<img ' \
+                           'alt="Significance Matrix Plot - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_significance_matrix.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
             output_html += '</tr>\n'
 
         output_html += '</tbody>\n'
@@ -1950,149 +1997,238 @@ class Tuxedo(Analysis):
             prefix = 'rnaseq_process_cuffdiff_{}'.format(comparison_key)
 
             output_html += '<tr>\n'
-            output_html += '<td>{}</td>\n'.format(comparison_key)
+            output_html += '<td class="left">{}</td>\n'.format(comparison_key)
 
             # Dispersion Plots for Genes and Isoforms
 
-            output_html += '<td><a href="{}/{}_genes_dispersion.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Dispersion Plot - Genes - {}" ' \
-                           'src="{}/{}_genes_dispersion.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
-
-            output_html += '<td><a href="{}/{}_isoforms_dispersion.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Dispersion Plot - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_dispersion.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_genes_dispersion.pdf">' \
+                           '<img ' \
+                           'alt="Dispersion Plot - Genes - {}" ' \
+                           'src="{}/{}_genes_dispersion.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_isoforms_dispersion.pdf">' \
+                           '<img ' \
+                           'alt="Dispersion Plot - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_dispersion.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
             # Squared Coefficient of Variation (SCV) Plots for Genes and Isoforms
 
             if os.path.exists(
                     path=os.path.join(self.genome_directory, '{}/{}_genes_scv.png'.format(prefix, prefix))):
-                output_html += '<td><a href="{}/{}_genes_scv.pdf">'.format(prefix, prefix)
-                output_html += '<img alt="Squared Coefficient of Variation (SCV) - Genes - {}" ' \
-                               'src="{}/{}_genes_scv.png" height="80" width="80" />'. \
-                    format(comparison_key, prefix, prefix)
-                output_html += '</a></td>\n'
+                output_html += '<td class="center">' \
+                               '<a href="{}/{}_genes_scv.pdf">' \
+                               '<img ' \
+                               'alt="Squared Coefficient of Variation (SCV) - Genes - {}" ' \
+                               'src="{}/{}_genes_scv.png" ' \
+                               'height="80" ' \
+                               'width="80" ' \
+                               '/>' \
+                               '</a>' \
+                               '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
             else:
-                output_html += '<td></td>\n'
+                output_html += '<td class="center"></td>\n'
 
             if os.path.exists(
                     path=os.path.join(self.genome_directory, '{}/{}_isoforms_scv.png'.format(prefix, prefix))):
-                output_html += '<td><a href="{}/{}_isoforms_scv.pdf">'.format(prefix, prefix)
-                output_html += '<img alt="Squared Coefficient of Variation (SCV) - Isoforms - {}" ' \
-                               'src="{}/{}_isoforms_scv.png" height="80" width="80" />'. \
-                    format(comparison_key, prefix, prefix)
-                output_html += '</a></td>\n'
+                output_html += '<td class="center">' \
+                               '<a href="{}/{}_isoforms_scv.pdf">' \
+                               '<img ' \
+                               'alt="Squared Coefficient of Variation (SCV) - Isoforms - {}" ' \
+                               'src="{}/{}_isoforms_scv.png" ' \
+                               'height="80" ' \
+                               'width="80" ' \
+                               '/>' \
+                               '</a>' \
+                               '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
             else:
-                output_html += '<td></td>\n'
+                output_html += '<td class="center"></td>\n'
 
             # Density Plots for Genes without and with Replicates
 
-            output_html += '<td><a href="{}/{}_genes_density_wo_replicates.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Density Plot without Replicates - Genes- {}" ' \
-                           'src="{}/{}_genes_density_wo_replicates.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_genes_density_wo_replicates.pdf">' \
+                           '<img ' \
+                           'alt="Density Plot without Replicates - Genes- {}" ' \
+                           'src="{}/{}_genes_density_wo_replicates.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
-            output_html += '<td><a href="{}/{}_genes_density_w_replicates.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Density Plot with Replicates - Genes - {}" ' \
-                           'src="{}/{}_genes_density_w_replicates.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_genes_density_w_replicates.pdf">' \
+                           '<img ' \
+                           'alt="Density Plot with Replicates - Genes - {}" ' \
+                           'src="{}/{}_genes_density_w_replicates.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
             # Density Plots for Isoforms without and with Replicates
 
-            output_html += '<td><a href="{}/{}_isoforms_density_wo_replicates.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Density Plot without Replicates - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_density_wo_replicates.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_isoforms_density_wo_replicates.pdf">' \
+                           '<img ' \
+                           'alt="Density Plot without Replicates - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_density_wo_replicates.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
-            output_html += '<td><a href="{}/{}_isoforms_density_w_replicates.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Density Plot with Replicates - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_density_w_replicates.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_isoforms_density_w_replicates.pdf">' \
+                           '<img ' \
+                           'alt="Density Plot with Replicates - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_density_w_replicates.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
             # Box Plots for Genes without and with Replicates
 
-            output_html += '<td><a href="{}/{}_genes_box_wo_replicates.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Box Plot without Replicates - Genes - {}" ' \
-                           'src="{}/{}_genes_box_wo_replicates.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_genes_box_wo_replicates.pdf">' \
+                           '<img ' \
+                           'alt="Box Plot without Replicates - Genes - {}" ' \
+                           'src="{}/{}_genes_box_wo_replicates.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
-            output_html += '<td><a href="{}/{}_genes_box_w_replicates.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Box Plot with Replicates - Genes - {}" ' \
-                           'src="{}/{}_genes_box_w_replicates.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_genes_box_w_replicates.pdf">' \
+                           '<img ' \
+                           'alt="Box Plot with Replicates - Genes - {}" ' \
+                           'src="{}/{}_genes_box_w_replicates.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
             # Box Plots for Isoforms with and without Replicates
 
-            output_html += '<td><a href="{}/{}_isoforms_box_wo_replicates.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Box Plot without Replicates - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_box_wo_replicates.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_isoforms_box_wo_replicates.pdf">' \
+                           '<img ' \
+                           'alt="Box Plot without Replicates - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_box_wo_replicates.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
-            output_html += '<td><a href="{}/{}_isoforms_box_w_replicates.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Box Plot with Replicates - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_box_w_replicates.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_isoforms_box_w_replicates.pdf">' \
+                           '<img ' \
+                           'alt="Box Plot with Replicates - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_box_w_replicates.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
             # Scatter Matrix Plot for Genes and Isoforms
 
-            output_html += '<td><a href="{}/{}_genes_scatter_matrix.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Scatter Matrix Plot - Genes - {}" ' \
-                           'src="{}/{}_genes_scatter_matrix.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_genes_scatter_matrix.pdf">' \
+                           '<img ' \
+                           'alt="Scatter Matrix Plot - Genes - {}" ' \
+                           'src="{}/{}_genes_scatter_matrix.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
-            output_html += '<td><a href="{}/{}_isoforms_scatter_matrix.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Scatter Matrix Plot - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_scatter_matrix.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_isoforms_scatter_matrix.pdf">' \
+                           '<img ' \
+                           'alt="Scatter Matrix Plot - Isoforms - {}" ' \
+                           'src="{}/{}_isoforms_scatter_matrix.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
             # Dendrogram Plot for Genes
 
-            output_html += '<td><a href="{}/{}_genes_dendrogram.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Dendrogram Plot - Genes - {}" ' \
-                           'src="{}/{}_genes_dendrogram.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_genes_dendrogram.pdf">' \
+                           '<img ' \
+                           'alt="Dendrogram Plot - Genes - {}" ' \
+                           'src="{}/{}_genes_dendrogram.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
             # Volcano Matrix Plot for Genes
 
-            output_html += '<td><a href="{}/{}_genes_volcano_matrix.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Volcano Matrix Plot - Genes - {}" ' \
-                           'src="{}/{}_genes_volcano_matrix.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_genes_volcano_matrix.pdf">' \
+                           '<img ' \
+                           'alt="Volcano Matrix Plot - Genes - {}" ' \
+                           'src="{}/{}_genes_volcano_matrix.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
             # Multidimensional Scaling Plot for Genes
 
             if os.path.exists(
                     path=os.path.join(self.genome_directory, '{}/{}_genes_mds.png'.format(prefix, prefix))):
-                output_html += '<td><a href="{}/{}_genes_mds.pdf">'.format(prefix, prefix)
-                output_html += '<img alt="Multidimensional Scaling Plot - Genes - {}" ' \
-                               'src="{}/{}_genes_mds.png" height="80" width="80" />'. \
-                    format(comparison_key, prefix, prefix)
-                output_html += '</a></td>\n'
+                output_html += '<td class="center">' \
+                               '<a href="{}/{}_genes_mds.pdf">' \
+                               '<img ' \
+                               'alt="Multidimensional Scaling Plot - Genes - {}" ' \
+                               'src="{}/{}_genes_mds.png" ' \
+                               'height="80" ' \
+                               'width="80" ' \
+                               '/>' \
+                               '</a>' \
+                               '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
             else:
                 output_html += '<td></td>\n'
 
             # Principal Component Analysis Plot for Genes
 
-            output_html += '<td><a href="{}/{}_genes_pca.pdf">'.format(prefix, prefix)
-            output_html += '<img alt="Principal Component Analysis Plot - Genes - {}" ' \
-                           'src="{}/{}_genes_pca.png" height="80" width="80" />'. \
-                format(comparison_key, prefix, prefix)
-            output_html += '</a></td>\n'
+            output_html += '<td class="center">' \
+                           '<a href="{}/{}_genes_pca.pdf">' \
+                           '<img ' \
+                           'alt="Principal Component Analysis Plot - Genes - {}" ' \
+                           'src="{}/{}_genes_pca.png" ' \
+                           'height="80" ' \
+                           'width="80" ' \
+                           '/>' \
+                           '</a>' \
+                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
 
             output_html += '</tr>\n'
 
@@ -2108,34 +2244,53 @@ class Tuxedo(Analysis):
                     assert isinstance(row_dict, dict)
                     output_html += '<tr>\n'
 
-                    output_html += '<td></td>\n'
-                    output_html += '<td colspan="10"><strong>{}</strong> versus <strong>{}</strong></td>\n'. \
-                        format(row_dict['V1'], row_dict['V2'])
+                    output_html += '<td class="left"></td>\n'
+                    output_html += '<td  class="left" colspan="10">' \
+                                   '<strong>{}</strong> versus <strong>{}</strong>' \
+                                   '</td>\n'.format(row_dict['V1'], row_dict['V2'])
 
-                    output_html += '<td><a href="{}/{}_{}_{}_genes_scatter.pdf">'. \
+                    output_html += '<td class="center">'
+                    output_html += '<a href="{}/{}_{}_{}_genes_scatter.pdf">'. \
                         format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '<img alt="Scatter Plot on genes {} versus {}" ' \
-                                   'src="{}/{}_{}_{}_genes_scatter.png" height="80" width="80" />'. \
+                    output_html += '<img ' \
+                                   'alt="Scatter Plot on genes {} versus {}" ' \
+                                   'src="{}/{}_{}_{}_genes_scatter.png" ' \
+                                   'height="80" ' \
+                                   'width="80" ' \
+                                   '/>'. \
                         format(row_dict['V1'], row_dict['V2'], prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '</a></td>\n'
+                    output_html += '</a>'
+                    output_html += '</td>\n'
 
-                    output_html += '<td></td>\n'
+                    output_html += '<td class="center"></td>\n'
 
-                    output_html += '<td><a href="{}/{}_{}_{}_maplot.pdf">'. \
+                    output_html += '<td class="center">'
+                    output_html += '<a href="{}/{}_{}_{}_maplot.pdf">'. \
                         format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '<img alt="M vs A Plot on genes {} versus {}" ' \
-                                   'src="{}/{}_{}_{}_maplot.png" height="80" width="80" />'. \
+                    output_html += '<img ' \
+                                   'alt="M vs A Plot on genes {} versus {}" ' \
+                                   'src="{}/{}_{}_{}_maplot.png" ' \
+                                   'height="80" ' \
+                                   'width="80" ' \
+                                   '/>'. \
                         format(row_dict['V1'], row_dict['V2'], prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '</a></td>\n'
+                    output_html += '</a>'
+                    output_html += '</td>\n'
 
-                    output_html += '<td><a href="{}/{}_{}_{}_genes_volcano.pdf">'. \
+                    output_html += '<td class="center">'
+                    output_html += '<a href="{}/{}_{}_{}_genes_volcano.pdf">'. \
                         format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '<img alt="Volcano Plot on genes {} versus {}" ' \
-                                   'src="{}/{}_{}_{}_genes_volcano.png" height="80" width="80" />'. \
+                    output_html += '<img ' \
+                                   'alt="Volcano Plot on genes {} versus {}" ' \
+                                   'src="{}/{}_{}_{}_genes_volcano.png" ' \
+                                   'height="80" ' \
+                                   'width="80" ' \
+                                   '/>'. \
                         format(row_dict['V1'], row_dict['V2'], prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '</a></td>\n'
+                    output_html += '</a>'
+                    output_html += '</td>\n'
 
-                    output_html += '<td colspan="2"></td>\n'
+                    output_html += '<td  class="center"colspan="4"></td>\n'
 
                     output_html += '</tr>\n'
 

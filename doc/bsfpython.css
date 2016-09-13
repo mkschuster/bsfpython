@@ -1,5 +1,12 @@
 /* Central BSF Python stylesheet for analysis reports. */
 
+.left    { text-align: left; }
+.right   { text-align: right; }
+.center  { text-align: center; }
+.justify { text-align: justify; }
+.start   { text-align: start; }
+.end     { text-align: end; }
+
 body {
     font-family: sans-serif;
 }

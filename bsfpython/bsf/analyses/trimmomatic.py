@@ -439,13 +439,11 @@ class Trimmomatic(Analysis):
             replicate_keys.sort()
 
             output_html += '<tr>\n'
-            output_html += '<td>'
-            output_html += sample.name
-            output_html += '</td>\n'
-            output_html += '<td></td>\n'  # Aliquot
-            output_html += '<td></td>\n'  # Coverage PNG
-            output_html += '<td></td>\n'  # Frequency PNG
-            output_html += '<td></td>\n'  # Summary TSV
+            output_html += '<td class="left">{}</td>\n'.format(sample.name)
+            output_html += '<td class="left"></td>\n'  # Aliquot
+            output_html += '<td class="center"></td>\n'  # Coverage PNG
+            output_html += '<td class="center"></td>\n'  # Frequency PNG
+            output_html += '<td class="center"></td>\n'  # Summary TSV
             output_html += '</tr>\n'
 
             for replicate_key in replicate_keys:
@@ -458,32 +456,25 @@ class Trimmomatic(Analysis):
                 assert isinstance(runnable_trimmomatic, Runnable)
 
                 output_html += '<tr>\n'
-                output_html += '<td></td>\n'  # Sample
-                output_html += '<td>{}</td>\n'.format(replicate_key)  # Aliquot
-                output_html += '<td>'  # Coverage
-                output_html += '<a href="{}_coverage.png">'.format(runnable_trimmomatic.name)
-                output_html += '<img ' \
-                               'alt="Coverage {}" ' \
-                               'src="{}_coverage.png" ' \
-                               'height="100" ' \
-                               'width="100" ' \
-                               '/>'.format(runnable_trimmomatic.name, runnable_trimmomatic.name)
-                output_html += '</a>'
-                output_html += '</td>\n'
-                output_html += '<td>'  # Frequency
-                output_html += '<a href="{}_frequency.png">'.format(runnable_trimmomatic.name)
+                # Sample
+                output_html += '<td class="left"></td>\n'
+                # Aliquot
+                output_html += '<td class="left">{}</td>\n'.format(replicate_key)
+                # Coverage
+                output_html += '<td class="center">' \
+                               '<a href="{}_coverage.png">' \
+                               '<img alt="Coverage {}" src="{}_coverage.png" height="100" width="100" />' \
+                               '</a>' \
+                               '</td>\n'.format(runnable_trimmomatic.name,
+                                                runnable_trimmomatic.name,
+                                                runnable_trimmomatic.name)
+                # Frequency
+                output_html += '<td class="center"><a href="{}_frequency.png">PNG</a></td>\n'.format(
+                    runnable_trimmomatic.name)
                 # The frequency plots provide little information that does not necessarily justify
                 # adding another set of images onto the HTML report.
-                # output_html += '<img ' \
-                #                'alt="Frequency {}" ' \
-                #                'src="{}_frequency.png" ' \
-                #                'height="100" ' \
-                #                'width="100" ' \
-                #                '/>'.format(runnable_trimmomatic.name, runnable_trimmomatic.name)
-                output_html += 'PNG'
-                output_html += '</a>'
-                output_html += '</td>\n'
-                output_html += '<td><a href="{}_summary.tsv">TSV</a></td>\n'.format(runnable_trimmomatic.name)
+                output_html += '<td class="center"><a href="{}_summary.tsv">TSV</a></td>\n'.format(
+                    runnable_trimmomatic.name)
                 output_html += '</tr>\n'
 
         output_html += '</tbody>\n'
