@@ -38,91 +38,6 @@ from bsf import Runnable
 from bsf.process import RunnableStep
 
 
-def _runnable_step_remove_obsolete_file_paths(runnable_step):
-    """Remove the list of file path objects that the RunnableStep declared to be obsolete.
-
-    @param runnable_step: C{RunnableStep}
-    @type runnable_step: RunnableStep
-    @return: Nothing
-    @rtype: None
-    """
-    if runnable_step is None:
-        return
-
-    for file_path in runnable_step.obsolete_file_path_list:
-        assert isinstance(file_path, (str, unicode))
-        if os.path.exists(file_path):
-            os.remove(file_path)
-
-    return
-
-
-def _runnable_step_status_file_path(runnable, runnable_step, success=True):
-    """Get the status file path for a C{RunnableStep} of a C{Runnable}.
-
-    @param runnable: C{Runnable}
-    @type runnable: Runnable
-    @param runnable_step: C{RunnableStep}
-    @type runnable_step: RunnableStep
-    @param success: Successful completion
-    @type success: bool
-    @return: Status file path
-    @rtype: str
-    """
-    if success:
-        return '_'.join((runnable.name, runnable_step.name, 'completed.txt'))
-    else:
-        return '_'.join((runnable.name, runnable_step.name, 'failed.txt'))
-
-
-def _runnable_step_status_file_create(runnable, runnable_step, success=True):
-    """Create an empty status file for a C{RunnableStep} of a C{Runnable}.
-
-    @param runnable: C{Runnable}
-    @type runnable: Runnable
-    @param runnable_step: C{RunnableStep}
-    @type runnable_step: RunnableStep
-    @param success: Successful completion
-    @type success: bool
-    @return: Nothing
-    @rtype: None
-    """
-    if runnable_step is None:
-        return
-
-    status_path = _runnable_step_status_file_path(runnable=runnable, runnable_step=runnable_step, success=success)
-    open(status_path, 'w').close()
-
-    return
-
-
-def _runnable_step_status_file_remove(runnable, runnable_step):
-    """Remove the status file for a C{RunnableStep} of a C{Runnable}.
-
-    @param runnable: C{Runnable}
-    @type runnable: Runnable
-    @param runnable_step: C{RunnableStep}
-    @type runnable_step: RunnableStep
-    @return: Nothing
-    @rtype: None
-    """
-
-    if runnable_step is None:
-        return
-
-    # Automatically remove both status files, successful or not.
-
-    status_path = _runnable_step_status_file_path(runnable=runnable, runnable_step=runnable_step, success=True)
-    if os.path.exists(status_path):
-        os.remove(status_path)
-
-    status_path = _runnable_step_status_file_path(runnable=runnable, runnable_step=runnable_step, success=False)
-    if os.path.exists(status_path):
-        os.remove(status_path)
-
-    return
-
-
 def run(runnable):
     """Run the the C{Runnable}.
 
@@ -196,7 +111,7 @@ def run(runnable):
     for runnable_step in reversed(runnable.runnable_step_list):
         assert isinstance(runnable_step, RunnableStep)
         runnable_step_list.append(runnable_step)
-        if os.path.exists(path=_runnable_step_status_file_path(runnable=runnable, runnable_step=runnable_step)):
+        if os.path.exists(path=runnable.runnable_step_status_file_path(runnable_step=runnable_step)):
             break
     runnable_step_list.reverse()
 
@@ -210,8 +125,9 @@ def run(runnable):
         assert isinstance(runnable_step_current, RunnableStep)
 
         # Check for a RunnableStep-specific status file.
-        status_path = _runnable_step_status_file_path(
-            runnable=runnable, runnable_step=runnable_step_current, success=True)
+        status_path = runnable.runnable_step_status_file_path(
+            runnable_step=runnable_step_current,
+            success=True)
         if os.path.exists(path=status_path):
             # If a status file exists, this RunnableStep is complete.
             # Set it as the previous RunnableStep and continue with the next RunnableStep.
@@ -229,15 +145,16 @@ def run(runnable):
 
         # Delete the list of file paths that the current RunnableStep declared to be obsolete now.
 
-        _runnable_step_remove_obsolete_file_paths(runnable_step=runnable_step_current)
+        runnable_step_current.remove_obsolete_file_paths()
 
         # Create an empty status file upon success.
 
-        _runnable_step_status_file_create(runnable=runnable, runnable_step=runnable_step_current, success=True)
+        runnable.runnable_step_status_file_create(runnable_step=runnable_step_current, success=True)
 
-        # Remove the status file of the previous RunnableStep.
+        # Remove the status file of the previous RunnableStep, if it has been defined at this stage.
 
-        _runnable_step_status_file_remove(runnable=runnable, runnable_step=runnable_step_previous)
+        if runnable_step_previous is not None:
+            runnable.runnable_step_status_file_remove(runnable_step=runnable_step_previous)
 
         # Finally, make the current RunnableStep the previous RunnableStep.
 
@@ -260,15 +177,17 @@ def run(runnable):
 
         open(runnable.get_relative_status_path, 'w').close()
 
-        # Remove the status file of the previous RunnableStep.
+        # Remove the status file of the previous RunnableStep, if it has been defined at this stage.
 
-        _runnable_step_status_file_remove(runnable=runnable, runnable_step=runnable_step_previous)
+        if runnable_step_previous is not None:
+            runnable.runnable_step_status_file_remove(runnable_step=runnable_step_previous)
 
         # Job done.
 
         return
     else:
-        _runnable_step_status_file_create(runnable=runnable, runnable_step=runnable_step_current, success=False)
+        if runnable_step_current is not None:
+            runnable.runnable_step_status_file_create(runnable_step=runnable_step_current, success=False)
 
         # Upon failure, create a RunnableStep-specific status file showing failure and raise an Exception.
 

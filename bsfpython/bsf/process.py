@@ -31,6 +31,7 @@ import datetime
 import errno
 import os
 import shutil
+import stat
 import sys
 import time
 import warnings
@@ -1006,6 +1007,206 @@ class RunnableStep(Executable):
         output += super(RunnableStep, self).trace(level=level + 1)
 
         return output
+
+    def remove_obsolete_file_paths(self):
+        """Remove file path objects that the C{RunnableStep.obsolete_file_path_list} declared to be obsolete.
+        This method is mainly used by C{bsf.runnable.generic} and related modules.
+
+        @return: Nothing
+        @rtype: None
+        """
+        if self is None:
+            return
+
+        for file_path in self.obsolete_file_path_list:
+            assert isinstance(file_path, (str, unicode))
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+        return
+
+
+class RunnableStepChangeMode(RunnableStep):
+    """The C{RunnableSepChangeMode} class represents a C{RunnableStep} changing file access modes.
+
+    Attributes:
+    @ivar file_path: File path
+    @type file_path: str | unicode
+    @ivar mode_directory: Directory access mode according to C{stat}
+    @type mode_directory: str
+    @ivar mode_file: File access mode for files according to C{stat}
+    @type mode_file: str
+    """
+
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdout_path=None,
+            stderr_path=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            obsolete_file_path_list=None,
+            file_path=None,
+            mode_directory=None,
+            mode_file=None):
+        """Create a C{RunnableStep} for a Java program.
+
+        @param name: Name
+        @type name: str
+        @param program: Program
+        @type program: str
+        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
+            C{Argument} objects
+        @type options: dict[Argument.key, list[Argument]]
+        @param arguments: Python C{list} of program arguments
+        @type arguments: list[str | unicode]
+        @param sub_command: Subordinate Command
+        @type sub_command: bsf.process.Command
+        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
+        @type stdout_path: str | unicode
+        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
+        @type stderr_path: str | unicode
+        @param dependencies: Python C{list} of C{Executable.name}
+            properties in the context of C{DRMS} dependencies
+        @type dependencies: list[Executable.name]
+        @param hold: Hold on job scheduling
+        @type hold: str
+        @param submit: Submit the C{Executable} into the C{DRMS}
+        @type submit: bool
+        @param process_identifier: Process identifier
+        @type process_identifier: str
+        @param process_name: Process name
+        @type process_name: str
+        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
+            after successfully completing this C{RunnableStep}
+        @type obsolete_file_path_list: list[str | unicode]
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param mode_directory: Directory access mode according to C{stat}
+        @type mode_directory: str
+        @param mode_file: File access mode for files according to C{stat}
+        @type mode_file: str
+        """
+
+        super(RunnableStepChangeMode, self).__init__(
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            obsolete_file_path_list=obsolete_file_path_list)
+
+        if file_path is None:
+            self.file_path = str()
+        else:
+            self.file_path = file_path
+
+        # Can be None.
+        assert isinstance(mode_directory, (str, None))
+        self.mode_directory = mode_directory
+
+        # Can Be None.
+        assert isinstance(mode_file, (str, None))
+        self.mode_file = mode_file
+
+        return
+
+    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+        """Run a C{RunnableStepChangeMode} object.
+
+        @param max_thread_joins: Maximum number of attempts to join the output threads
+        @type max_thread_joins: int
+        @param thread_join_timeout: Timeout for each attempt to join the output threads
+        @type thread_join_timeout: int
+        @param debug: Debug level
+        @type debug: int
+        @return: Return value of the child in the Python subprocess,
+            negative values indicate that the child received a signal
+        @rtype: int
+        """
+
+        # Use a dictionary to map stringl literals to integers defined in teh stat module rather than
+        # evaluating code directly, which can be rather dangerous.
+
+        permission_dict = dict(
+            S_ISUID=stat.S_ISUID,
+            S_ISGID=stat.S_ISGID,
+            # System V file locking enforcement.
+            S_ENFMT=stat.S_ENFMT,
+            # Sticky bit.
+            S_ISVTX=stat.S_ISVTX,
+            # UNIX V7 synonyms.
+            S_IREAD=stat.S_IREAD,
+            S_IWRITE=stat.S_IWRITE,
+            S_IEXEC=stat.S_IEXEC,
+            # User permissions.
+            S_IRWXU=stat.S_IRWXU,
+            S_IRUSR=stat.S_IRUSR,
+            S_IWUSR=stat.S_IWUSR,
+            S_IXUSR=stat.S_IXUSR,
+            # Group permissions.
+            S_IRWXG=stat.S_IRWXG,
+            S_IRGRP=stat.S_IRGRP,
+            S_IWGRP=stat.S_IWGRP,
+            S_IXGRP=stat.S_IXGRP,
+            # Other permissions.
+            S_IRWXO=stat.S_IRWXO,
+            S_IROTH=stat.S_IROTH,
+            S_IWOTH=stat.S_IWOTH,
+            S_IXOTH=stat.S_IXOTH,
+        )
+
+        # Convert comma-separated directory permission constants to an integer.
+        if self.mode_directory is None:
+            int_mode_directory = None
+        else:
+            int_mode_directory = int(0)
+            for permission_bit in filter(
+                    lambda x: x != '',
+                    map(
+                        lambda x: x.strip(),
+                        self.mode_directory.split(','))):
+                if permission_bit.upper() in permission_dict:
+                    int_mode_directory |= permission_dict[permission_bit.upper()]
+
+        # Convert comma-separated file permission constants to an integer.
+        if self.mode_file is None:
+            int_mode_file = None
+        else:
+            int_mode_file = int(0)
+            for permission_bit in filter(
+                    lambda x: x != '',
+                    map(
+                        lambda x: x.strip(),
+                        self.mode_file.split(','))):
+                if permission_bit.upper() in permission_dict:
+                    int_mode_file |= permission_dict[permission_bit.upper()]
+
+        # Change the mode of directories and files simultaneously, but only if the mode is not None.
+
+        for file_path, directory_names, file_names in os.walk(top=self.file_path, topdown=True):
+            if int_mode_file is not None:
+                for name in file_names:
+                    os.chmod(os.path.join(file_path, name), int_mode_file)
+            if int_mode_directory is not None:
+                for name in directory_names:
+                    os.chmod(os.path.join(file_path, name), int_mode_directory)
+
+        return 0
 
 
 class RunnableStepJava(RunnableStep):

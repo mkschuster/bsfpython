@@ -35,81 +35,6 @@ from bsf.data import Collection, ProcessedRunFolder, Project, Sample, PairedRead
 from bsf.process import RunnableStep
 
 
-# TODO: The following methods are a copied from the bsf.runnables.generic module.
-# _runnable_step_remove_obsolete_file_paths
-# _runnable_step_status_file_path
-# _runnable_step_status_file_create
-# _runnable_step_status_file_remove
-# It would be good to define them as methods of the Runnable or RunnableStep method.
-
-
-def _runnable_step_remove_obsolete_file_paths(runnable_step):
-    """Remove the list of file path objects that the RunnableStep declared to be obsolete.
-
-    @param runnable_step: C{RunnableStep}
-    @type runnable_step: RunnableStep
-    @return: Nothing
-    @rtype: None
-    """
-    if runnable_step is None:
-        return
-
-    for file_path in runnable_step.obsolete_file_path_list:
-        assert isinstance(file_path, (str, unicode))
-        if os.path.exists(file_path):
-            os.remove(file_path)
-
-
-def _runnable_step_status_file_path(runnable, runnable_step):
-    """Get the status file path for a C{RunnableStep} of a C{Runnable}.
-
-    @param runnable: C{Runnable}
-    @type runnable: Runnable
-    @param runnable_step: C{RunnableStep}
-    @type runnable_step: RunnableStep
-    @return: Status file path
-    @rtype: str
-    """
-
-    return '_'.join((runnable.name, runnable_step.name, 'completed.txt'))
-
-
-def _runnable_step_status_file_create(runnable, runnable_step):
-    """Create an empty status file for a C{RunnableStep} of a C{Runnable}.
-
-    @param runnable: C{Runnable}
-    @type runnable: Runnable
-    @param runnable_step: C{RunnableStep}
-    @type runnable_step: RunnableStep
-    @return: Nothing
-    @rtype: None
-    """
-    if runnable_step is None:
-        return
-
-    status_path = _runnable_step_status_file_path(runnable=runnable, runnable_step=runnable_step)
-    open(status_path, 'w').close()
-
-
-def _runnable_step_status_file_remove(runnable, runnable_step):
-    """Remove the status file for a C{RunnableStep} of a C{Runnable}.
-
-    @param runnable: C{Runnable}
-    @type runnable: Runnable
-    @param runnable_step: C{RunnableStep}
-    @type runnable_step: RunnableStep
-    @return: Nothing
-    @rtype: None
-    """
-
-    if runnable_step is None:
-        return
-
-    status_path = _runnable_step_status_file_path(runnable=runnable, runnable_step=runnable_step)
-    if os.path.exists(status_path):
-        os.remove(status_path)
-
-
 def run(runnable):
     """Run the the C{Runnable}.
 
@@ -174,5 +99,7 @@ def run(runnable):
                 # The PairedReads objects may no longer have the correct weakref to their Sample.
 
     collection.to_sas_path(name='picard_sam_to_fastq', file_path=new_file_path)
+
+    runnable_step.remove_obsolete_file_paths()
 
     return

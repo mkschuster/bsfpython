@@ -1972,3 +1972,64 @@ class Runnable(object):
         """
 
         return os.path.join(self.working_directory, self.get_relative_temporary_directory_path)
+
+    def runnable_step_status_file_path(self, runnable_step, success=True):
+        """Get the status file path for a C{RunnableStep} of a C{Runnable}.
+
+        @param runnable_step: C{RunnableStep}
+        @type runnable_step: RunnableStep
+        @param success: Successful completion
+        @type success: bool
+        @return: Status file path
+        @rtype: str
+        """
+        assert isinstance(runnable_step, RunnableStep)
+
+        if success:
+            return '_'.join((self.name, runnable_step.name, 'completed.txt'))
+        else:
+            return '_'.join((self.name, runnable_step.name, 'failed.txt'))
+
+    def runnable_step_status_file_create(self, runnable_step, success=True):
+        """Create an empty status file for a C{RunnableStep} of a C{Runnable}.
+        This method is mainly used by C{bsf.runnable.generic} and related modules.
+
+        @param runnable_step: C{RunnableStep}
+        @type runnable_step: RunnableStep
+        @param success: Successful completion
+        @type success: bool
+        @return: Nothing
+        @rtype: None
+        """
+        assert isinstance(runnable_step, RunnableStep)
+
+        status_path = self.runnable_step_status_file_path(runnable_step=runnable_step, success=success)
+        open(status_path, 'w').close()
+
+        return
+
+    def runnable_step_status_file_remove(self, runnable_step):
+        """Remove the status file for a C{RunnableStep} of a C{Runnable}.
+        This method is mainly used by C{bsf.runnable.generic} and related modules.
+
+        @param runnable_step: C{RunnableStep}
+        @type runnable_step: RunnableStep
+        @return: Nothing
+        @rtype: None
+        """
+        assert isinstance(runnable_step, RunnableStep)
+
+        if runnable_step is None:
+            return
+
+        # Automatically remove both status files, successful or not.
+
+        status_path = self.runnable_step_status_file_path(runnable_step=runnable_step, success=True)
+        if os.path.exists(status_path):
+            os.remove(status_path)
+
+        status_path = self.runnable_step_status_file_path(runnable_step=runnable_step, success=False)
+        if os.path.exists(status_path):
+            os.remove(status_path)
+
+        return
