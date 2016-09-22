@@ -198,6 +198,8 @@ class VariantCallingGATK(Analysis):
     @type accessory_cohort_gvcfs: list[str | unicode]
     @ivar skip_mark_duplicates: Skip the Picard MarkDuplicates step
     @type skip_mark_duplicates: bool
+    @ivar skip_indel_realignment: Skip the GATK RealignerTargetCreator and GATK IndelRealigner steps
+    @type skip_indel_realignment: bool
     @ivar known_sites_discovery: VCF file path for variant discovery via The Haplotype Caller or Unified Genotyper
     @type known_sites_discovery: str | unicode
     @ivar known_sites_realignment: Python C{list} of Python C{str} or C{unicode} (VCF file paths)
@@ -286,6 +288,7 @@ class VariantCallingGATK(Analysis):
             cohort_name=None,
             accessory_cohort_gvcfs=None,
             skip_mark_duplicates=False,
+            skip_indel_realignment=False,
             known_sites_discovery=None,
             known_sites_realignment=None,
             known_sites_recalibration=None,
@@ -355,6 +358,8 @@ class VariantCallingGATK(Analysis):
         @type accessory_cohort_gvcfs: list[str | unicode]
         @param skip_mark_duplicates: Skip the Picard MarkDuplicates step
         @type skip_mark_duplicates: bool
+        @param skip_indel_realignment: Skip the GATK RealignerTargetCreator and GATK IndelRealigner steps
+        @type skip_indel_realignment: bool
         @param known_sites_discovery: VCF file path for variant discovery via The Haplotype Caller or Unified Genotyper
         @type known_sites_discovery: str | unicode
         @param known_sites_realignment: Python C{list} of Python C{str} or C{unicode} (VCF file paths)
@@ -465,6 +470,12 @@ class VariantCallingGATK(Analysis):
         else:
             assert isinstance(skip_mark_duplicates, bool)
             self.skip_mark_duplicates = skip_mark_duplicates
+
+        if skip_indel_realignment is None:
+            self.skip_indel_realignment = False
+        else:
+            assert isinstance(skip_indel_realignment, bool)
+            self.skip_indel_realignment = skip_indel_realignment
 
         if known_sites_discovery is None:
             self.known_sites_discovery = str()
@@ -660,6 +671,12 @@ class VariantCallingGATK(Analysis):
         option = 'skip_mark_duplicates'
         if config_parser.has_option(section=section, option=option):
             self.skip_mark_duplicates = config_parser.getboolean(section=section, option=option)
+
+        # Get the skip INDEL realignment option.
+
+        option = 'skip_indel_realignment'
+        if config_parser.has_option(section=section, option=option):
+            self.skip_indel_realignment = config_parser.getboolean(section=section, option=option)
 
         # Get the truth sensitivity filter level for INDELs.
 
@@ -1410,11 +1427,13 @@ class VariantCallingGATK(Analysis):
                     realigner_targets=prefix_lane + '_realigner.interval_list',
                     realigned_bam=prefix_lane + '_realigned.bam',
                     realigned_bai=prefix_lane + '_realigned.bai',
+                    realigned_md5=prefix_lane + '_realigned.bam.md5',
                     recalibration_table_pre=prefix_lane + '_recalibration_pre.table',
                     recalibration_table_post=prefix_lane + '_recalibration_post.table',
                     recalibration_plot=prefix_lane + '_recalibration_report.pdf',
                     recalibrated_bam=prefix_lane + '_recalibrated.bam',
                     recalibrated_bai=prefix_lane + '_recalibrated.bai',
+                    recalibrated_md5=prefix_lane + '_recalibrated.bam.md5',
                     alignment_summary_metrics=prefix_lane + '_alignment_summary_metrics.tsv')
 
                 # Create a Runnable and Executable for processing each lane.
@@ -1442,6 +1461,8 @@ class VariantCallingGATK(Analysis):
                     file_path_dict_lane['duplicates_marked_bai'] = file_path_dict_lane['aligned_bai']
                     file_path_dict_lane['duplicates_marked_md5'] = file_path_dict_lane['aligned_md5']
                 else:
+                    # Run the Picard MarkDuplicates analysis.
+
                     runnable_step = runnable_process_lane.add_runnable_step(
                         runnable_step=RunnableStepPicard(
                             name='process_lane_picard_mark_duplicates',
@@ -1483,61 +1504,71 @@ class VariantCallingGATK(Analysis):
                     runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
                     # OPTIONS_FILE
 
-                # Run the GATK RealignerTargetCreator analysis as the first-pass walker
-                # for the GATK IndelRealigner analysis.
+                # Run the GATK RealignerTargetCreator and GATK IndelRealigner analyses, unless configured to skip them.
 
-                runnable_step = runnable_process_lane.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='process_lane_gatk_realigner_target_creator',
-                        java_temporary_path=file_path_dict_lane['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk))
-                assert isinstance(runnable_step, RunnableStepGATK)
-                runnable_step.add_gatk_option(key='analysis_type', value='RealignerTargetCreator')
-                runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_lane)
-                if self.downsample_to_fraction:
-                    runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                for interval in self.include_intervals_list:
-                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                if self.interval_padding:
-                    runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-                for file_path in self.known_sites_realignment:
-                    runnable_step.add_gatk_option(key='known', value=file_path, override=True)
-                runnable_step.add_gatk_option(key='input_file', value=file_path_dict_lane['duplicates_marked_bam'])
-                runnable_step.add_gatk_option(key='out', value=file_path_dict_lane['realigner_targets'])
+                if self.skip_indel_realignment:
+                    file_path_dict_lane['realigned_bam'] = file_path_dict_lane['duplicates_marked_bam']
+                    file_path_dict_lane['realigned_bai'] = file_path_dict_lane['duplicates_marked_bai']
+                    file_path_dict_lane['realigned_md5'] = file_path_dict_lane['duplicates_marked_md5']
+                else:
+                    # Run the GATK RealignerTargetCreator analysis as the first-pass walker
+                    # for the GATK IndelRealigner analysis.
 
-                # Run the GATK IndelRealigner analysis as a second-pass walker after the
-                # GATK RealignerTargetCreator analysis.
+                    runnable_step = runnable_process_lane.add_runnable_step(
+                        runnable_step=RunnableStepGATK(
+                            name='process_lane_gatk_realigner_target_creator',
+                            java_temporary_path=file_path_dict_lane['temporary_directory'],
+                            java_heap_maximum='Xmx6G',
+                            gatk_classpath=self.classpath_gatk))
+                    assert isinstance(runnable_step, RunnableStepGATK)
+                    runnable_step.add_gatk_option(key='analysis_type', value='RealignerTargetCreator')
+                    runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_lane)
+                    if self.downsample_to_fraction:
+                        runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
+                    for interval in self.exclude_intervals_list:
+                        runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                    for interval in self.include_intervals_list:
+                        runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                    if self.interval_padding:
+                        runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                    for file_path in self.known_sites_realignment:
+                        runnable_step.add_gatk_option(key='known', value=file_path, override=True)
+                    runnable_step.add_gatk_option(key='input_file', value=file_path_dict_lane['duplicates_marked_bam'])
+                    runnable_step.add_gatk_option(key='out', value=file_path_dict_lane['realigner_targets'])
 
-                runnable_step = runnable_process_lane.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='process_lane_gatk_indel_realigner',
-                        obsolete_file_path_list=[
-                            file_path_dict_lane['duplicates_marked_bam'],
-                            file_path_dict_lane['duplicates_marked_bai'],
-                            file_path_dict_lane['duplicates_marked_md5'],
-                        ],
-                        java_temporary_path=file_path_dict_lane['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk))
-                assert isinstance(runnable_step, RunnableStepGATK)
-                runnable_step.add_gatk_option(key='analysis_type', value='IndelRealigner')
-                runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_lane)
-                if self.downsample_to_fraction:
-                    runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                for interval in self.include_intervals_list:
-                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                if self.interval_padding:
-                    runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-                for file_path in self.known_sites_realignment:
-                    runnable_step.add_gatk_option(key='knownAlleles', value=file_path, override=True)
-                runnable_step.add_gatk_option(key='input_file', value=file_path_dict_lane['duplicates_marked_bam'])
-                runnable_step.add_gatk_option(key='targetIntervals', value=file_path_dict_lane['realigner_targets'])
-                runnable_step.add_gatk_option(key='out', value=file_path_dict_lane['realigned_bam'])
+                    # Run the GATK IndelRealigner analysis as a second-pass walker after the
+                    # GATK RealignerTargetCreator analysis.
+
+                    runnable_step = runnable_process_lane.add_runnable_step(
+                        runnable_step=RunnableStepGATK(
+                            name='process_lane_gatk_indel_realigner',
+                            obsolete_file_path_list=[
+                                file_path_dict_lane['duplicates_marked_bam'],
+                                file_path_dict_lane['duplicates_marked_bai'],
+                                file_path_dict_lane['duplicates_marked_md5'],
+                            ],
+                            java_temporary_path=file_path_dict_lane['temporary_directory'],
+                            java_heap_maximum='Xmx6G',
+                            gatk_classpath=self.classpath_gatk))
+                    assert isinstance(runnable_step, RunnableStepGATK)
+                    runnable_step.add_gatk_option(key='analysis_type', value='IndelRealigner')
+                    runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_lane)
+                    if self.downsample_to_fraction:
+                        runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
+                    for interval in self.exclude_intervals_list:
+                        runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                    for interval in self.include_intervals_list:
+                        runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                    if self.interval_padding:
+                        runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                    runnable_step.add_gatk_switch(key='keep_program_records')
+                    runnable_step.add_gatk_switch(key='generate_md5')
+                    runnable_step.add_gatk_option(key='bam_compression', value='9')
+                    for file_path in self.known_sites_realignment:
+                        runnable_step.add_gatk_option(key='knownAlleles', value=file_path, override=True)
+                    runnable_step.add_gatk_option(key='input_file', value=file_path_dict_lane['duplicates_marked_bam'])
+                    runnable_step.add_gatk_option(key='targetIntervals', value=file_path_dict_lane['realigner_targets'])
+                    runnable_step.add_gatk_option(key='out', value=file_path_dict_lane['realigned_bam'])
 
                 # Run the GATK BaseRecalibrator analysis as a first-pass walker
                 # for the GATK PrintReads analysis.
@@ -1627,6 +1658,7 @@ class VariantCallingGATK(Analysis):
                         obsolete_file_path_list=[
                             file_path_dict_lane['realigned_bam'],
                             file_path_dict_lane['realigned_bai'],
+                            file_path_dict_lane['realigned_md5'],
                         ],
                         java_temporary_path=file_path_dict_lane['temporary_directory'],
                         java_heap_maximum='Xmx6G',
@@ -1642,6 +1674,9 @@ class VariantCallingGATK(Analysis):
                     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
                 if self.interval_padding:
                     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                runnable_step.add_gatk_switch(key='keep_program_records')
+                runnable_step.add_gatk_switch(key='generate_md5')
+                runnable_step.add_gatk_option(key='bam_compression', value='9')
                 runnable_step.add_gatk_option(key='input_file', value=file_path_dict_lane['realigned_bam'])
                 runnable_step.add_gatk_option(key='BQSR', value=file_path_dict_lane['recalibration_table_pre'])
                 runnable_step.add_gatk_option(key='out', value=file_path_dict_lane['recalibrated_bam'])
@@ -1676,12 +1711,8 @@ class VariantCallingGATK(Analysis):
 
                 # Set dependencies for the next stage.
                 vc_process_sample_dependencies.append(executable_process_lane.name)
-                # Add the result of the variant_calling_process_lane Runnable.
-                vc_process_sample_replicates.append((
-                    file_path_dict_lane['recalibrated_bam'],
-                    file_path_dict_lane['recalibrated_bai'],
-                    file_path_dict_lane['alignment_summary_metrics'],
-                    file_path_dict_lane['duplicate_metrics']))
+                # Add the file path dict of the variant_calling_process_lane Runnable.
+                vc_process_sample_replicates.append(file_path_dict_lane)
 
             ###############################
             # Step 3: Process per sample. #
@@ -1709,6 +1740,7 @@ class VariantCallingGATK(Analysis):
                 realigner_targets=prefix_sample + '_realigner.intervals',
                 realigned_bam=prefix_sample + '_realigned.bam',
                 realigned_bai=prefix_sample + '_realigned.bai',
+                realigned_md5=prefix_sample + '_realigned_bam.md5',
                 realigned_bam_bai=prefix_sample + '_realigned.bam.bai',
                 alignment_summary_metrics=prefix_sample + '_alignment_summary_metrics.tsv',
                 raw_variants_gvcf_vcf=prefix_sample + '_raw_variants.g.vcf.gz',
@@ -1734,32 +1766,45 @@ class VariantCallingGATK(Analysis):
                 file_path=self.bwa_genome_db)
 
             if len(vc_process_sample_replicates) == 1:
-                # If there is only one replicate, just rename the BAM and BAI files.
+                # If there is only one replicate, sample-level read processing can be skipped.
+                # Rename files on the basis of the first and only list component.
+                file_path_dict_lane = vc_process_sample_replicates[0]
+                assert isinstance(file_path_dict_lane, dict)
+
+                # Rename the BAM file.
                 runnable_process_sample.add_runnable_step(
                     runnable_step=RunnableStepMove(
                         name='process_sample_move_recalibrated_bam',
-                        source_path=vc_process_sample_replicates[0][0],
+                        source_path=file_path_dict_lane['recalibrated_bam'],
                         target_path=file_path_dict_sample['realigned_bam']))
 
+                # Rename the BAI file.
                 runnable_process_sample.add_runnable_step(
                     runnable_step=RunnableStepMove(
                         name='process_sample_move_recalibrated_bai',
-                        source_path=vc_process_sample_replicates[0][1],
+                        source_path=file_path_dict_lane['recalibrated_bai'],
                         target_path=file_path_dict_sample['realigned_bai']))
+
+                # Rename the MD5 file.
+                runnable_process_sample.add_runnable_step(
+                    runnable_step=RunnableStepMove(
+                        name='process_sample_move_recalibrated_md5',
+                        source_path=file_path_dict_lane['recalibrated_md5'],
+                        target_path=file_path_dict_sample['realigned_md5']))
 
                 # Link the Picard Alignment Summary Metrics.
                 runnable_process_sample.add_runnable_step(
                     runnable_step=RunnableStepLink(
                         name='process_sample_link_alignment_metrics',
-                        source_path=vc_process_sample_replicates[0][2],
+                        source_path=file_path_dict_lane['alignment_summary_metrics'],
                         target_path=file_path_dict_sample['alignment_summary_metrics']))
 
+                # Link the Picard Duplicate Metrics if it has been created.
                 if not self.skip_mark_duplicates:
-                    # Link the Picard Duplicate Metrics.
                     runnable_process_sample.add_runnable_step(
                         runnable_step=RunnableStepLink(
                             name='process_sample_link_duplicate_metrics',
-                            source_path=vc_process_sample_replicates[0][3],
+                            source_path=file_path_dict_lane['duplicate_metrics'],
                             target_path=file_path_dict_sample['duplicate_metrics']))
             else:
                 # Run the Picard MergeSamFiles analysis.
@@ -1772,15 +1817,24 @@ class VariantCallingGATK(Analysis):
                         picard_classpath=self.classpath_picard,
                         picard_command='MergeSamFiles'))
                 assert isinstance(runnable_step, RunnableStepPicard)
-                for file_path_tuple in vc_process_sample_replicates:
-                    runnable_step.add_picard_option(key='INPUT', value=file_path_tuple[0], override=True)
-                    runnable_step.obsolete_file_path_list.append(file_path_tuple[0])
-                    runnable_step.obsolete_file_path_list.append(file_path_tuple[1])
+                for file_path_dict_lane in vc_process_sample_replicates:
+                    assert isinstance(file_path_dict_lane, dict)
+                    runnable_step.add_picard_option(
+                        key='INPUT',
+                        value=file_path_dict_lane['recalibrated_bam'],
+                        override=True)
+                    runnable_step.obsolete_file_path_list.append(file_path_dict_lane['recalibrated_bam'])
+                    runnable_step.obsolete_file_path_list.append(file_path_dict_lane['recalibrated_bai'])
+                    runnable_step.obsolete_file_path_list.append(file_path_dict_lane['recalibrated_md5'])
                 runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_sample['merged_bam'])
                 runnable_step.add_picard_option(key='USE_THREADING', value='true')
                 runnable_step.add_picard_option(key='COMMENT', value='Merged from the following files:')
-                for file_path_tuple in vc_process_sample_replicates:
-                    runnable_step.add_picard_option(key='COMMENT', value=file_path_tuple[0], override=True)
+                for file_path_dict_lane in vc_process_sample_replicates:
+                    assert isinstance(file_path_dict_lane, dict)
+                    runnable_step.add_picard_option(
+                        key='COMMENT',
+                        value=file_path_dict_lane['recalibrated_bam'],
+                        override=True)
                 runnable_step.add_picard_option(key='TMP_DIR', value=file_path_dict_sample['temporary_directory'])
                 # VERBOSITY defaults to 'INFO'.
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
@@ -1797,13 +1851,28 @@ class VariantCallingGATK(Analysis):
                 # OPTIONS_FILE
 
                 # Run the Picard MarkDuplicates analysis, unless configured to skip it.
-                # Optical duplicates should already have been flagged in the lane-specific processing step.
 
                 if self.skip_mark_duplicates:
-                    file_path_dict_sample['duplicates_marked_bam'] = file_path_dict_sample['merged_bam']
-                    file_path_dict_sample['duplicates_marked_bai'] = file_path_dict_sample['merged_bai']
-                    file_path_dict_sample['duplicates_marked_md5'] = file_path_dict_sample['merged_md5']
+                    # Rename the files after Picard MergeSamFiles to files after Picard MarkDuplicates.
+                    runnable_process_sample.add_runnable_step(
+                        runnable_step=RunnableStepMove(
+                            name='process_sample_move_merged_bam',
+                            source_path=file_path_dict_sample['merged_bam'],
+                            target_path=file_path_dict_sample['duplicates_marked_bam']))
+                    runnable_process_sample.add_runnable_step(
+                        runnable_step=RunnableStepMove(
+                            name='process_sample_move_merged_bai',
+                            source_path=file_path_dict_sample['merged_bai'],
+                            target_path=file_path_dict_sample['duplicates_marked_bai']))
+                    runnable_process_sample.add_runnable_step(
+                        runnable_step=RunnableStepMove(
+                            name='process_sample_move_merged_md5',
+                            source_path=file_path_dict_sample['merged_md5'],
+                            target_path=file_path_dict_sample['duplicates_marked_md5']))
                 else:
+                    # Run the Picard MarkDuplicates analysis.
+                    # Optical duplicates should already have been flagged in the lane-specific processing step.
+
                     runnable_step = runnable_process_sample.add_runnable_step(
                         runnable_step=RunnableStepPicard(
                             name='process_sample_picard_mark_duplicates',
@@ -1847,63 +1916,94 @@ class VariantCallingGATK(Analysis):
                     runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
                     # OPTIONS_FILE
 
-                # Run the GATK RealignerTargetCreator analysis as the first-pass walker
-                # for the GATK IndelRealigner analysis.
+                # Run the GATK RealignerTargetCreator and GATK IndelRealigner analyses, unless configured to skip them.
 
-                runnable_step = runnable_process_sample.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='process_sample_gatk_realigner_target_creator',
-                        java_temporary_path=file_path_dict_sample['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk))
-                assert isinstance(runnable_step, RunnableStepGATK)
-                runnable_step.add_gatk_option(key='analysis_type', value='RealignerTargetCreator')
-                runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_sample)
-                if self.downsample_to_fraction:
-                    runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                for interval in self.include_intervals_list:
-                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                if self.interval_padding:
-                    runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-                for file_path in self.known_sites_realignment:
-                    runnable_step.add_gatk_option(key='known', value=file_path, override=True)
-                runnable_step.add_gatk_option(key='input_file', value=file_path_dict_sample['duplicates_marked_bam'])
-                runnable_step.add_gatk_option(key='out', value=file_path_dict_sample['realigner_targets'])
+                if self.skip_indel_realignment:
+                    # Rename files after Picard MarkDuplicates to files after GATK IndelRealigner.
+                    runnable_process_sample.add_runnable_step(
+                        runnable_step=RunnableStepMove(
+                            name='process_sample_move_duplicates_marked_bam',
+                            source_path=file_path_dict_sample['duplicates_marked_bam'],
+                            target_path=file_path_dict_sample['realigned_bam']))
+                    runnable_process_sample.add_runnable_step(
+                        runnable_step=RunnableStepMove(
+                            name='process_sample_move_duplicates_marked_bai',
+                            source_path=file_path_dict_sample['duplicates_marked_bai'],
+                            target_path=file_path_dict_sample['realigned_bai']))
+                    runnable_process_sample.add_runnable_step(
+                        runnable_step=RunnableStepMove(
+                            name='process_sample_move_duplicates_marked_md5',
+                            source_path=file_path_dict_sample['duplicates_marked_md5'],
+                            target_path=file_path_dict_sample['realigned_md5']))
+                else:
+                    # Run the GATK RealignerTargetCreator analysis as the first-pass walker
+                    # for the GATK IndelRealigner analysis.
 
-                # Run the GATK IndelRealigner analysis as a second-pass walker
-                # after the GATK RealignerTargetCreator analysis.
+                    runnable_step = runnable_process_sample.add_runnable_step(
+                        runnable_step=RunnableStepGATK(
+                            name='process_sample_gatk_realigner_target_creator',
+                            java_temporary_path=file_path_dict_sample['temporary_directory'],
+                            java_heap_maximum='Xmx6G',
+                            gatk_classpath=self.classpath_gatk))
+                    assert isinstance(runnable_step, RunnableStepGATK)
+                    runnable_step.add_gatk_option(key='analysis_type', value='RealignerTargetCreator')
+                    runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_sample)
+                    if self.downsample_to_fraction:
+                        runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
+                    for interval in self.exclude_intervals_list:
+                        runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                    for interval in self.include_intervals_list:
+                        runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                    if self.interval_padding:
+                        runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                    for file_path in self.known_sites_realignment:
+                        runnable_step.add_gatk_option(key='known', value=file_path, override=True)
+                    runnable_step.add_gatk_option(
+                        key='input_file',
+                        value=file_path_dict_sample['duplicates_marked_bam'])
+                    runnable_step.add_gatk_option(key='out', value=file_path_dict_sample['realigner_targets'])
 
-                runnable_step = runnable_process_sample.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='process_sample_gatk_indel_realigner',
-                        obsolete_file_path_list=[
-                            file_path_dict_sample['duplicates_marked_bam'],
-                            file_path_dict_sample['duplicates_marked_bai'],
-                            file_path_dict_sample['duplicates_marked_md5']
-                        ],
-                        java_temporary_path=file_path_dict_sample['temporary_directory'],
-                        java_heap_maximum='Xmx6G',
-                        gatk_classpath=self.classpath_gatk))
-                assert isinstance(runnable_step, RunnableStepGATK)
-                runnable_step.add_gatk_option(key='analysis_type', value='IndelRealigner')
-                runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_sample)
-                if self.downsample_to_fraction:
-                    runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                for interval in self.include_intervals_list:
-                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                if self.interval_padding:
-                    runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-                for file_path in self.known_sites_realignment:
-                    runnable_step.add_gatk_option(key='knownAlleles', value=file_path, override=True)
-                runnable_step.add_gatk_option(key='input_file', value=file_path_dict_sample['duplicates_marked_bam'])
-                runnable_step.add_gatk_option(key='targetIntervals', value=file_path_dict_sample['realigner_targets'])
-                runnable_step.add_gatk_option(key='out', value=file_path_dict_sample['realigned_bam'])
-                # For debugging only.
-                # runnable_step.add_gatk_option(key='logging_level', value='DEBUG')
+                    # Run the GATK IndelRealigner analysis as a second-pass walker
+                    # after the GATK RealignerTargetCreator analysis.
+
+                    runnable_step = runnable_process_sample.add_runnable_step(
+                        runnable_step=RunnableStepGATK(
+                            name='process_sample_gatk_indel_realigner',
+                            obsolete_file_path_list=[
+                                file_path_dict_sample['duplicates_marked_bam'],
+                                file_path_dict_sample['duplicates_marked_bai'],
+                                file_path_dict_sample['duplicates_marked_md5']
+                            ],
+                            java_temporary_path=file_path_dict_sample['temporary_directory'],
+                            java_heap_maximum='Xmx6G',
+                            gatk_classpath=self.classpath_gatk))
+                    assert isinstance(runnable_step, RunnableStepGATK)
+                    runnable_step.add_gatk_option(key='analysis_type', value='IndelRealigner')
+                    runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_sample)
+                    if self.downsample_to_fraction:
+                        runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
+                    for interval in self.exclude_intervals_list:
+                        runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                    for interval in self.include_intervals_list:
+                        runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                    if self.interval_padding:
+                        runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                    runnable_step.add_gatk_switch(key='keep_program_records')
+                    runnable_step.add_gatk_switch(key='generate_md5')
+                    runnable_step.add_gatk_option(key='bam_compression', value='9')
+                    for file_path in self.known_sites_realignment:
+                        runnable_step.add_gatk_option(key='knownAlleles', value=file_path, override=True)
+                    runnable_step.add_gatk_option(
+                        key='input_file',
+                        value=file_path_dict_sample['duplicates_marked_bam'])
+                    runnable_step.add_gatk_option(
+                        key='targetIntervals',
+                        value=file_path_dict_sample['realigner_targets'])
+                    runnable_step.add_gatk_option(
+                        key='out',
+                        value=file_path_dict_sample['realigned_bam'])
+                    # For debugging only.
+                    # runnable_step.add_gatk_option(key='logging_level', value='DEBUG')
 
             # Set a symbolic link to a samtools-style (*.bam.bai) index file.
             # The UCSC Genome Browser suddenly requires it for its track hubs.
@@ -1963,18 +2063,18 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
             # The number of threads should be configurable, but multi-threading seems to cause the occasional problem.
             # runnable_step.add_gatk_option(key='num_cpu_threads_per_data_thread', value='1')
-            runnable_step.add_gatk_option(key='pair_hmm_implementation', value='VECTOR_LOGLESS_CACHING')
+            # runnable_step.add_gatk_option(key='pair_hmm_implementation', value='VECTOR_LOGLESS_CACHING')
             runnable_step.add_gatk_option(key='genotyping_mode', value='DISCOVERY')
-            runnable_step.add_gatk_option(key='standard_min_confidence_threshold_for_emitting', value='10')
-            runnable_step.add_gatk_option(key='standard_min_confidence_threshold_for_calling', value='30')
+            # runnable_step.add_gatk_option(key='standard_min_confidence_threshold_for_emitting', value='10')
+            # runnable_step.add_gatk_option(key='standard_min_confidence_threshold_for_calling', value='30')
             runnable_step.add_gatk_option(key='emitRefConfidence', value='GVCF')
             if self.known_sites_discovery:
                 runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
             runnable_step.add_gatk_option(key='input_file', value=file_path_dict_sample['realigned_bam'])
             runnable_step.add_gatk_option(key='out', value=file_path_dict_sample['raw_variants_gvcf_vcf'])
             # Parameter to pass to the VCF/BCF IndexCreator
-            runnable_step.add_gatk_option(key='variant_index_type', value='LINEAR')
-            runnable_step.add_gatk_option(key='variant_index_parameter', value='128000')
+            # runnable_step.add_gatk_option(key='variant_index_type', value='LINEAR')
+            # runnable_step.add_gatk_option(key='variant_index_parameter', value='128000')
 
             # Finally, record GVCF files and dependencies for the merge cohort stage.
             # Check if the Sample has annotation for a 'Cohort Name', if not use the cohort name defined for this
