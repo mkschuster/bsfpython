@@ -2122,8 +2122,8 @@ class VariantCallingGATK(Analysis):
                 missing_report=prefix_diagnosis + '_missing.gatkreport',
                 callable_bed=prefix_diagnosis + '_callable_loci.bed',
                 callable_txt=prefix_diagnosis + '_callable_loci.txt',
-                non_callable_tsv=prefix_diagnosis + '_non_callable_loci.tsv',  # Defined in the R script.
-                non_callable_summary=prefix_diagnosis + '_non_callable_summary.tsv',  # Defined in the R script.
+                non_callable_loci_tsv=prefix_diagnosis + '_non_callable_loci.tsv',  # Defined in the R script.
+                non_callable_summary_tsv=prefix_diagnosis + '_non_callable_summary.tsv',  # Defined in the R script.
                 hybrid_selection_metrics=prefix_diagnosis + '_hybrid_selection_metrics.tsv',
             )
 
@@ -2966,7 +2966,7 @@ class VariantCallingGATK(Analysis):
 
         prefix_summary = '_'.join((drms_summary.name, self.cohort_name))
 
-        file_path_dict_cohort = dict(
+        file_path_dict_summary = dict(
             temporary_directory=prefix_summary + '_temporary',
             alignment_aliquot_tsv=prefix_summary + '_alignment_aliquot.tsv',
             alignment_sample_tsv=prefix_summary + '_alignment_sample.tsv',
@@ -2981,8 +2981,8 @@ class VariantCallingGATK(Analysis):
             duplication_tsv=prefix_summary + '_duplication.tsv',
             duplication_sample_png=prefix_summary + '_duplication_sample.png',
             duplication_sample_pdf=prefix_summary + '_duplication_sample.pdf',
-            hybrid_aliquot=prefix_summary + '_hybrid_aliquot.tsv',
-            hybrid_sample=prefix_summary + '_hybrid_sample.tsv',
+            hybrid_aliquot_tsv=prefix_summary + '_hybrid_aliquot.tsv',
+            hybrid_sample_tsv=prefix_summary + '_hybrid_sample.tsv',
             hybrid_unique_percentage_sample_pdf=prefix_summary + '_hybrid_unique_percentage_sample.pdf',
             hybrid_unique_percentage_sample_png=prefix_summary + '_hybrid_unique_percentage_sample.png',
             hybrid_unique_percentage_aliquot_pdf=prefix_summary + '_hybrid_unique_percentage_read_group.pdf',
@@ -2991,7 +2991,11 @@ class VariantCallingGATK(Analysis):
             hybrid_coverage_sample_png=prefix_summary + '_hybrid_target_coverage_sample.png',
             hybrid_coverage_read_group_pdf=prefix_summary + '_hybrid_target_coverage_read_group.pdf',
             hybrid_coverage_read_group_png=prefix_summary + '_hybrid_target_coverage_read_group.png',
-            non_callable=prefix_summary + '_non_callable.tsv',
+            hybrid_coverage_levels_sample_pdf=prefix_summary + '_hybrid_target_coverage_levels_sample.pdf',
+            hybrid_coverage_levels_sample_png=prefix_summary + '_hybrid_target_coverage_levels_sample.png',
+            hybrid_coverage_levels_aliquot_pdf=prefix_summary + '_hybrid_target_coverage_levels_aliquot.pdf',
+            hybrid_coverage_levels_aliquot_png=prefix_summary + '_hybrid_target_coverage_levels_aliquot.png',
+            non_callable_tsv=prefix_summary + '_non_callable.tsv',
             non_callable_number_pdf=prefix_summary + '_non_callable_number.pdf',
             non_callable_number_png=prefix_summary + '_non_callable_number.png',
             non_callable_percentage_pdf=prefix_summary + '_non_callable_percentage.pdf',
@@ -3007,7 +3011,7 @@ class VariantCallingGATK(Analysis):
                 working_directory=self.genome_directory,
                 cache_directory=self.cache_directory,
                 cache_path_dict=cache_path_dict,
-                file_path_dict=file_path_dict_cohort,
+                file_path_dict=file_path_dict_summary,
                 debug=self.debug))
         executable_summary = self.set_drms_runnable(
             drms=drms_summary,
@@ -3017,12 +3021,11 @@ class VariantCallingGATK(Analysis):
 
         # Run the bsfR script to summarise the variant calling procedure.
 
-        runnable_summary.add_runnable_step(
+        runnable_step = runnable_summary.add_runnable_step(
             runnable_step=RunnableStep(
                 name='summary',
                 program='bsf_variant_calling_summary.R'))
-
-        # No options required.
+        runnable_step.add_option_long(key='prefix', value=prefix_summary)
 
         ####################################
         # Step 9: Somatic variant calling. #
@@ -3074,9 +3077,9 @@ class VariantCallingGATK(Analysis):
                 drms=drms_somatic,
                 runnable=runnable_somatic)
             executable_somatic.dependencies.append(
-                'variant_calling_process_sample_' + self.comparisons[key][0][1][0].name)
+                '_'.join((drms_process_sample.name, self.comparisons[key][0][1][0].name)))
             executable_somatic.dependencies.append(
-                'variant_calling_process_sample_' + self.comparisons[key][-1][1][0].name)
+                '_'.join((drms_process_sample.name, self.comparisons[key][-1][1][0].name)))
 
             reference_somatic = runnable_somatic.get_absolute_cache_file_path(
                 file_path=self.bwa_genome_db)
@@ -3104,11 +3107,10 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='cosmic', value=file_path, override=True)
             runnable_step.add_gatk_option(
                 key='input_file:normal',
-                value='variant_calling_process_sample_{}_realigned.bam'.format(self.comparisons[key][0][1][0].name))
+                value='_'.join((drms_process_sample.name, self.comparisons[key][0][1][0].name, 'realigned.bam')))
             runnable_step.add_gatk_option(
                 key='input_file:tumor',
-                value='variant_calling_process_sample_{}_realigned.bam'.format(
-                    self.comparisons[key][-1][1][0].name))
+                value='_'.join((drms_process_sample.name, self.comparisons[key][-1][1][0].name, 'realigned.bam')))
             runnable_step.add_gatk_option(key='out', value=file_path_dict_somatic['somatic_vcf'])
 
             # Run the snpEff tool for functional variant annotation.
@@ -3275,7 +3277,7 @@ class VariantCallingGATK(Analysis):
 
         output_html = str()
 
-        output_html += '<h1 id="variant_calling_analysis">{} {}</h1>\n'.format(self.project_name, self.name)
+        output_html += '<h1 id="{}_analysis">{} {}</h1>\n'.format(self.prefix, self.project_name, self.name)
         output_html += '\n'
 
         output_html += '<h2 id="genome_browsing">Genome Browsing</h2>\n'
@@ -3317,6 +3319,7 @@ class VariantCallingGATK(Analysis):
         output_html += '<th>Alignment Summary Metrics</th>\n'
         output_html += '<th>Hybrid Selection Metrics</th>\n'
         output_html += '<th>Non-Callable Loci</th>\n'
+        output_html += '<th>Non-Callable Summary</th>\n'
         output_html += '</tr>\n'
         output_html += '</thead>\n'
         output_html += '<tbody>\n'
@@ -3440,9 +3443,17 @@ class VariantCallingGATK(Analysis):
             if os.path.isfile(
                     os.path.join(
                         self.genome_directory,
-                        runnable_diagnose_sample.file_path_dict['non_callable_tsv'])):
+                        runnable_diagnose_sample.file_path_dict['non_callable_loci_tsv'])):
                 output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \
-                    format(runnable_diagnose_sample.file_path_dict['non_callable_tsv'])
+                    format(runnable_diagnose_sample.file_path_dict['non_callable_loci_tsv'])
+            else:
+                output_html += '<td class="center"></td>\n'
+            if os.path.isfile(
+                    os.path.join(
+                        self.genome_directory,
+                        runnable_diagnose_sample.file_path_dict['non_callable_summary_tsv'])):
+                output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \
+                    format(runnable_diagnose_sample.file_path_dict['non_callable_summary_tsv'])
             else:
                 output_html += '<td class="center"></td>\n'
             output_html += '</tr>\n'
@@ -3464,6 +3475,7 @@ class VariantCallingGATK(Analysis):
                     format(runnable_process_lane.file_path_dict['alignment_summary_metrics'])
                 output_html += '<td class="center"></td>\n'  # Hybrid Selection Metrics
                 output_html += '<td class="center"></td>\n'  # Non-Callable Loci
+                output_html += '<td class="center"></td>\n'  # Non-Callable Summary
                 output_html += '</tr>\n'
 
         output_html += '</tbody>\n'
@@ -3569,186 +3581,219 @@ class VariantCallingGATK(Analysis):
         output_html += '</thead>\n'
         output_html += '<tbody>\n'
 
+        runnable_summary = self.runnable_dict['_'.join((self.drms_name_summary, self.cohort_name))]
+        assert isinstance(runnable_summary, Runnable)
+        file_path_dict_summary = runnable_summary.file_path_dict
+
         # Alignment Summary - TSV
-        if os.path.exists(os.path.join(self.genome_directory, 'variant_calling_summary_alignment_sample.tsv')):
+        if os.path.exists(os.path.join(
+                self.genome_directory,
+                file_path_dict_summary['alignment_sample_tsv'])):
             output_html += '<tr>\n'
-            output_html += '<td class="center"><a href="variant_calling_summary_alignment_sample.tsv">TSV</a></td>\n'
-            output_html += '<td class="center"><a href="variant_calling_summary_alignment_aliquot.tsv">TSV</a></td>\n'
+            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
+                file_path_dict_summary['alignment_sample_tsv'])
+            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
+                file_path_dict_summary['alignment_aliquot_tsv'])
             output_html += '<td class="left">Alignment Summary</td>\n'
             output_html += '</tr>\n'
 
         # Alignment Summary - Percent Aligned
         if os.path.exists(os.path.join(
-                self.genome_directory, 'variant_calling_summary_alignment_percentage_sample.png')):
+                self.genome_directory,
+                file_path_dict_summary['alignment_percentage_sample_png'])):
             output_html += '<tr>\n'
             output_html += '<td class="center">' \
-                           '<a href="variant_calling_summary_alignment_percentage_sample.pdf">' \
+                           '<a href="{}">' \
                            '<img ' \
                            'alt="Alignment Summary - Percent Aligned per Sample" ' \
-                           'src="variant_calling_summary_alignment_percentage_sample.png" ' \
+                           'src="{}" ' \
                            'height="100" ' \
                            'width="100" />' \
                            '</a>' \
-                           '</td>\n'
+                           '</td>\n'.format(file_path_dict_summary['alignment_percentage_sample_pdf'],
+                                            file_path_dict_summary['alignment_percentage_sample_png'])
             output_html += '<td class="center">' \
-                           '<a href="variant_calling_summary_alignment_percentage_read_group.pdf">' \
+                           '<a href="{}">' \
                            '<img ' \
                            'alt="Alignment Summary - Percent Aligned per Aliquot" ' \
-                           'src="variant_calling_summary_alignment_percentage_read_group.png" ' \
+                           'src="{}" ' \
                            'height="100" ' \
                            'width="100" />' \
                            '</a>' \
-                           '</td>\n'
+                           '</td>\n'.format(file_path_dict_summary['alignment_percentage_read_group_pdf'],
+                                            file_path_dict_summary['alignment_percentage_read_group_png'])
             output_html += '<td class="left">Alignment Summary - Percent Aligned</td>\n'
             output_html += '</tr>\n'
 
         # Alignment Summary - Reads Aligned
         if os.path.exists(os.path.join(
-                self.genome_directory, 'variant_calling_summary_alignment_reads_sample.png')):
+                self.genome_directory,
+                file_path_dict_summary['alignment_reads_sample_png'])):
             output_html += '<tr>\n'
             output_html += '<td class="center">' \
-                           '<a href="variant_calling_summary_alignment_reads_sample.pdf">' \
+                           '<a href="{}">' \
                            '<img ' \
                            'alt="Alignment Summary - Reads Aligned per Sample" ' \
-                           'src="variant_calling_summary_alignment_reads_sample.png" ' \
+                           'src="{}" ' \
                            'height="100" ' \
                            'width="100" />' \
                            '</a>' \
-                           '</td>\n'
+                           '</td>\n'.format(file_path_dict_summary['alignment_reads_sample_pdf'],
+                                            file_path_dict_summary['alignment_reads_sample_png'])
             output_html += '<td class="center">' \
-                           '<a href="variant_calling_summary_alignment_reads_read_group.pdf">' \
+                           '<a href="{}">' \
                            '<img ' \
                            'alt="Alignment Summary - Reads Aligned per Aliquot" ' \
-                           'src="variant_calling_summary_alignment_reads_read_group.png" ' \
+                           'src="{}" ' \
                            'height="100" ' \
                            'width="100" />' \
                            '</a>' \
-                           '</td>\n'
+                           '</td>\n'.format(file_path_dict_summary['alignment_reads_read_group_pdf'],
+                                            file_path_dict_summary['alignment_reads_read_group_png'])
             output_html += '<td class="left">Alignment Summary - Reads Aligned</td>\n'
             output_html += '</tr>\n'
 
         # Hybrid Selection - TSV
-        if os.path.exists(os.path.join(self.genome_directory, 'variant_calling_summary_hybrid_sample.tsv')):
+        if os.path.exists(os.path.join(
+                self.genome_directory,
+                file_path_dict_summary['hybrid_sample_tsv'])):
             output_html += '<tr>\n'
-            output_html += '<td class="center"><a href="variant_calling_summary_hybrid_sample.tsv">TSV</a></td>\n'
-            output_html += '<td class="center"><a href="variant_calling_summary_hybrid_aliquot.tsv">TSV</a></td>\n'
+            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
+                file_path_dict_summary['hybrid_sample_tsv'])
+            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
+                file_path_dict_summary['hybrid_aliquot_tsv'])
             output_html += '<td class="left">Hybrid Selection</td>\n'
             output_html += '</tr>\n'
 
         if os.path.exists(
                 os.path.join(
                     self.genome_directory,
-                    'variant_calling_summary_hybrid_target_coverage_levels_sample.png')):
+                    file_path_dict_summary['hybrid_coverage_levels_sample_png'])):
             output_html += '<tr>\n'
             output_html += '<td class="center">' \
-                           '<a href="variant_calling_summary_hybrid_target_coverage_levels_sample.pdf">' \
+                           '<a href="{}">' \
                            '<img ' \
                            'alt="Hybrid Selection - Mean Target Coverage Levels per Sample" ' \
-                           'src="variant_calling_summary_hybrid_target_coverage_levels_sample.png" ' \
+                           'src="{}" ' \
                            'height="100" ' \
                            'width="100" />' \
                            '</a>' \
-                           '</td>\n'
+                           '</td>\n'.format(file_path_dict_summary['hybrid_coverage_levels_sample_pdf'],
+                                            file_path_dict_summary['hybrid_coverage_levels_sample_png'])
             output_html += '<td class="center">' \
-                           '<a href="variant_calling_summary_hybrid_target_coverage_levels_aliquot.pdf">' \
+                           '<a href="{}">' \
                            '<img ' \
                            'alt="Hybrid Selection - Mean Target Coverage Levels per Aliquot" ' \
-                           'src="variant_calling_summary_hybrid_target_coverage_levels_aliquot.png" ' \
+                           'src="{}" ' \
                            'height="100" ' \
                            'width="100" />' \
                            '</a>' \
-                           '</td>\n'
+                           '</td>\n'.format(file_path_dict_summary['hybrid_coverage_levels_aliquot_pdf'],
+                                            file_path_dict_summary['hybrid_coverage_levels_aliquot_png'])
             output_html += '<td class="left">Hybrid Selection - Mean Target Coverage Levels</td>\n'
             output_html += '</tr>\n'
 
         # Hybrid Selection - Mean Target Coverage
         if os.path.exists(os.path.join(
-                self.genome_directory, 'variant_calling_summary_hybrid_target_coverage_sample.png')):
+                self.genome_directory,
+                file_path_dict_summary['hybrid_coverage_sample_png'])):
             output_html += '<tr>\n'
             output_html += '<td class="center">' \
-                           '<a href="variant_calling_summary_hybrid_target_coverage_sample.pdf">' \
+                           '<a href="{}">' \
                            '<img ' \
                            'alt="Hybrid Selection - Mean Target Coverage per Sample" ' \
-                           'src="variant_calling_summary_hybrid_target_coverage_sample.png" ' \
+                           'src="{}" ' \
                            'height="100" ' \
                            'width="100" />' \
                            '</a>' \
-                           '</td>\n'
+                           '</td>\n'.format(file_path_dict_summary['hybrid_coverage_sample_pdf'],
+                                            file_path_dict_summary['hybrid_coverage_sample_png'])
             output_html += '<td class="center">' \
-                           '<a href="variant_calling_summary_hybrid_target_coverage_read_group.pdf">' \
+                           '<a href="{}">' \
                            '<img ' \
                            'alt="Hybrid Selection - Mean Target Coverage per Aliquot" ' \
-                           'src="variant_calling_summary_hybrid_target_coverage_read_group.png" ' \
+                           'src="{}" ' \
                            'height="100" ' \
                            'width="100" />' \
                            '</a>' \
-                           '</td>\n'
+                           '</td>\n'.format(file_path_dict_summary['hybrid_coverage_read_group_pdf'],
+                                            file_path_dict_summary['hybrid_coverage_read_group_png'])
             output_html += '<td class="left">Hybrid Selection - Mean Target Coverage</td>\n'
             output_html += '</tr>\n'
 
         # Hybrid Selection - Percent Unique Reads
         if os.path.exists(os.path.join(
-                self.genome_directory, 'variant_calling_summary_hybrid_unique_percentage_sample.png')):
+                self.genome_directory,
+                file_path_dict_summary['hybrid_unique_percentage_sample_png'])):
             output_html += '<tr>\n'
             output_html += '<td class="center">' \
-                           '<a href="variant_calling_summary_hybrid_unique_percentage_sample.pdf">' \
+                           '<a href="{}">' \
                            '<img ' \
                            'alt="Hybrid Selection - Percent Unique Reads per Sample" ' \
-                           'src="variant_calling_summary_hybrid_unique_percentage_sample.png" ' \
+                           'src="{}" ' \
                            'height="100" ' \
                            'width="100" />' \
                            '</a>' \
-                           '</td>\n'
+                           '</td>\n'.format(file_path_dict_summary['hybrid_unique_percentage_sample_pdf'],
+                                            file_path_dict_summary['hybrid_unique_percentage_sample_png'])
             output_html += '<td class="center">' \
-                           '<a href="variant_calling_summary_hybrid_unique_percentage_read_group.pdf">' \
+                           '<a href="{}">' \
                            '<img ' \
                            'alt="Hybrid Selection - Percent Unique Reads per Aliquot" ' \
-                           'src="variant_calling_summary_hybrid_unique_percentage_read_group.png" ' \
+                           'src="{}" ' \
                            'height="100" ' \
                            'width="100" />' \
                            '</a>' \
-                           '</td>\n'
+                           '</td>\n'.format(file_path_dict_summary['hybrid_unique_percentage_aliquot_pdf'],
+                                            file_path_dict_summary['hybrid_unique_percentage_aliquot_png'])
             output_html += '<td class="left">Hybrid Selection - Percent Unique Reads</td>\n'
             output_html += '</tr>\n'
 
         # Non-Callable Loci - TSV
-        if os.path.exists(os.path.join(self.genome_directory, 'variant_calling_summary_hybrid_sample.tsv')):
+        if os.path.exists(os.path.join(
+                self.genome_directory,
+                file_path_dict_summary['non_callable_tsv'])):
             output_html += '<tr>\n'
-            output_html += '<td class="center"><a href="variant_calling_summary_non_callable.tsv">TSV</a></td>\n'
+            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
+                file_path_dict_summary['non_callable_tsv'])
             output_html += '<td class="center"></td>\n'
             output_html += '<td class="left">Non-Callable Loci</td>\n'
             output_html += '</tr>\n'
 
         # Non-Callable Loci - Fraction
         if os.path.exists(os.path.join(
-                self.genome_directory, 'variant_calling_summary_non_callable_percentage.png')):
+                self.genome_directory,
+                file_path_dict_summary['non_callable_percentage_png'])):
             output_html += '<tr>\n'
             output_html += '<td class="center">' \
-                           '<a href="variant_calling_summary_non_callable_percentage.pdf">' \
+                           '<a href="{}">' \
                            '<img ' \
                            'alt="Non-Callable Loci - Fraction" ' \
-                           'src="variant_calling_summary_non_callable_percentage.png" ' \
+                           'src="{}" ' \
                            'height="100" ' \
                            'width="100" />' \
                            '</a>' \
-                           '</td>\n'
+                           '</td>\n'.format(file_path_dict_summary['non_callable_percentage_pdf'],
+                                            file_path_dict_summary['non_callable_percentage_png'])
             output_html += '<td class="center"></td>\n'
             output_html += '<td class="left">Non-Callable Loci - Fraction</td>\n'
             output_html += '</tr>\n'
 
         # Non-Callable Loci - Number
         if os.path.exists(os.path.join(
-                self.genome_directory, 'variant_calling_summary_non_callable_number.png')):
+                self.genome_directory,
+                file_path_dict_summary['non_callable_number_png'])):
             output_html += '<tr>\n'
             output_html += '<td class="center">' \
-                           '<a href="variant_calling_summary_non_callable_number.pdf">' \
+                           '<a href="{}">' \
                            '<img ' \
                            'alt="Non-Callable Loci - Number" ' \
-                           'src="variant_calling_summary_non_callable_number.png" ' \
+                           'src="{}" ' \
                            'height="100" ' \
                            'width="100" />' \
                            '</a>' \
-                           '</td>\n'
+                           '</td>\n'.format(file_path_dict_summary['non_callable_number_pdf'],
+                                            file_path_dict_summary['non_callable_number_png'])
             output_html += '<td class="center"></td>\n'
             output_html += '<td class="left">Non-Callable Loci - Number</td>\n'
             output_html += '</tr>\n'
