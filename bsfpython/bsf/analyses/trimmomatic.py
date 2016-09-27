@@ -244,8 +244,12 @@ class Trimmomatic(Analysis):
                     file_path_dict_trimmomatic = dict(
                         temporary_directory='_'.join((prefix_trimmomatic, 'temporary')),
                         output_directory=os.path.join(self.project_directory, prefix_trimmomatic),
-                        # Automatic GNU Zip-compression of trimlog files does not work.
-                        trim_log='_'.join((prefix_trimmomatic, 'trim_log.tsv')),
+                        # Automatic GNU Zip-compression of trim log files does not work.
+                        trim_log_tsv='_'.join((prefix_trimmomatic, 'trim_log.tsv')),
+                        summary_tsv='_'.join((prefix_trimmomatic, 'summary.tsv')),  # Defined by the R script.
+                        coverage_png='_'.join((prefix_trimmomatic, 'coverage.png')),  # Defined by the R script.
+                        frequency_png='_'.join((prefix_trimmomatic, 'frequency.png')),  # Defined by the R script.
+                        surviving_png='_'.join((prefix_trimmomatic, 'surviving.png')),  # Defined by the R script.
                     )
 
                     # Create a Runnable and an Executable for running the Trimmomatic analysis.
@@ -281,9 +285,7 @@ class Trimmomatic(Analysis):
 
                     # Add options to the sub command.
                     sub_command = runnable_step_trimmomatic.sub_command.sub_command
-
-                    # For the moment collect a trim log file that would require further processing.
-                    sub_command.add_option_short(key='trimlog', value=file_path_dict_trimmomatic['trim_log'])
+                    sub_command.add_option_short(key='trimlog', value=file_path_dict_trimmomatic['trim_log_tsv'])
 
                     if paired_reads.reads2 is None:
                         file_path_1u = os.path.join(
@@ -362,13 +364,12 @@ class Trimmomatic(Analysis):
                             name='trimmomatic_summary',
                             program='bsf_trimmomatic_summary.R',
                             obsolete_file_path_list=[
-                                # TODO: Activate once the R code works robustly.
-                                # file_path_dict_trimmomatic['trim_log'],
+                                file_path_dict_trimmomatic['trim_log_tsv'],
                             ]))
 
                     runnable_step_trimmomatic_summary.add_option_long(
                         key='file_path',
-                        value=file_path_dict_trimmomatic['trim_log'])
+                        value=file_path_dict_trimmomatic['trim_log_tsv'])
 
         # Convert the (modified) Collection object into a SampleAnnotationSheet object and write it to disk.
 
@@ -396,7 +397,7 @@ class Trimmomatic(Analysis):
 
         output_html = str()
 
-        output_html += '<h1 id="trimmomatic_analysis">{} {}</h1>\n'.format(self.project_name, self.name)
+        output_html += '<h1 id="{}_analysis">{} {}</h1>\n'.format(self.prefix, self.project_name, self.name)
         output_html += '\n'
 
         output_html += '<h2 id="aliquot_and_sample_level">Aliquot and Sample Level</h2>\n'
@@ -454,6 +455,7 @@ class Trimmomatic(Analysis):
                 runnable_trimmomatic = self.runnable_dict[
                     '_'.join((self.drms_name_trimmomatic, replicate_key))]
                 assert isinstance(runnable_trimmomatic, Runnable)
+                file_path_dict_trimmomatic = runnable_trimmomatic.file_path_dict
 
                 output_html += '<tr>\n'
                 # Sample
@@ -462,19 +464,19 @@ class Trimmomatic(Analysis):
                 output_html += '<td class="left">{}</td>\n'.format(replicate_key)
                 # Coverage
                 output_html += '<td class="center">' \
-                               '<a href="{}_coverage.png">' \
-                               '<img alt="Coverage {}" src="{}_coverage.png" height="100" width="100" />' \
+                               '<a href="{}">' \
+                               '<img alt="Coverage {}" src="{}" height="100" width="100" />' \
                                '</a>' \
-                               '</td>\n'.format(runnable_trimmomatic.name,
+                               '</td>\n'.format(file_path_dict_trimmomatic['coverage_png'],
                                                 runnable_trimmomatic.name,
-                                                runnable_trimmomatic.name)
+                                                file_path_dict_trimmomatic['coverage_png'])
                 # Frequency
-                output_html += '<td class="center"><a href="{}_frequency.png">PNG</a></td>\n'.format(
-                    runnable_trimmomatic.name)
+                output_html += '<td class="center"><a href="{}">PNG</a></td>\n'.format(
+                    file_path_dict_trimmomatic['frequency_png'])
                 # The frequency plots provide little information that does not necessarily justify
                 # adding another set of images onto the HTML report.
-                output_html += '<td class="center"><a href="{}_summary.tsv">TSV</a></td>\n'.format(
-                    runnable_trimmomatic.name)
+                output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
+                    file_path_dict_trimmomatic['summary_tsv'])
                 output_html += '</tr>\n'
 
         output_html += '</tbody>\n'
