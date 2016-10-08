@@ -397,9 +397,9 @@ class Analysis(object):
         If the C{DRMS} object does not exist, it is created and initialised it via the
         C{Configuration} object in C{Analysis.configuration}.
         Reads from configuration file sections
-            I{[bsf.DRMS]}
-            I{[bsf.Analysis.DRMS]} or I{[bsf.analyses.*.DRMS]}
-            I{[bsf.Analysis.DRMS.name]} or I{[bsf.analyses.*.DRMS.name]}
+        I{[bsf.DRMS]}
+        I{[bsf.Analysis.DRMS]} or I{[bsf.analyses.*.DRMS]}
+        I{[bsf.Analysis.DRMS.name]} or I{[bsf.analyses.*.DRMS.name]}
         @param name: Name
         @type name: str
         @return: C{DRMS} object
@@ -1192,18 +1192,53 @@ class Analysis(object):
         else:
             ucsc_genome_version = self.genome_version
 
-        output = str()
-
-        output += 'genome {}\n'.format(ucsc_genome_version)
         if prefix is None or not prefix:
             file_name = 'genomes.txt'
-            output += 'trackDb {}/trackDB.txt\n'.format(self.genome_version)
         else:
-            file_name = '{}_genomes.txt'.format(prefix)
-            output += 'trackDb {}/{}_trackDB.txt\n'.format(self.genome_version, prefix)
+            file_name = '_'.join((prefix, 'genomes.txt'))
 
         # The [prefix_]genomes.txt goes into the project directory above the genome directory.
         file_path = os.path.join(self.project_directory, file_name)
+
+        # If the file exists, read it first to retain any other genome assembly entries.
+        genome_version_dict = dict()
+        if os.path.exists(file_path):
+            genome_version = None
+            file_handle = open(name=file_path, mode='r')
+            for line in file_handle:
+                line = line.strip()
+                if not line:
+                    continue
+                line_list = line.split()
+                if len(line_list) != 2:
+                    warnings.warn('Malformed line {!r} in UCSC genomes file {!r}\n'
+                                  'Expected exactly two components after line splitting.'.format(line, file_name))
+                if line_list[0] == 'genome':
+                    if genome_version is not None:
+                        warnings.warn('Malformed line {!r} in UCSC genomes file {!r}'
+                                      'Got more than one genomes lines in succession.'.format(line, file_name))
+                    genome_version = line_list[1]
+                if line_list[0] == 'trackDb':
+                    if genome_version is None:
+                        warnings.warn('Malformed line {!r} in UCSC genomes file {!r}'
+                                      'Got a trackDb line without a preceding genomes line.'.format(line, file_name))
+                    else:
+                        genome_version_dict[genome_version] = line_list[1]
+                        genome_version = None
+            file_handle.close()
+
+        if prefix is None or not prefix:
+            genome_version_dict[ucsc_genome_version] = '{}/trackDB.txt'.format(self.genome_version)
+        else:
+            genome_version_dict[ucsc_genome_version] = '{}/{}_trackDB.txt'.format(self.genome_version, prefix)
+
+        output = str()
+        keys = genome_version_dict.keys()
+        keys.sort(cmp=lambda x, y: cmp(x, y))
+        for key in keys:
+            output += 'genome {}\n'.format(key)
+            output += 'trackDb {}\n'.format(genome_version_dict[key])
+            output += '\n'
 
         file_handle = open(name=file_path, mode='w')
         file_handle.write(output)
@@ -1225,7 +1260,7 @@ class Analysis(object):
         if prefix is None or not prefix:
             file_name = 'trackDB.txt'
         else:
-            file_name = '{}_trackDB.txt'.format(prefix)
+            file_name = '_'.join((prefix, 'trackDB.txt'))
 
         # The [prefix_]trackDB.txt goes into the genome directory under the project directory.
         file_path = os.path.join(self.genome_directory, file_name)
@@ -1737,7 +1772,7 @@ class Runnable(object):
         @type cache_path_dict: dict[str, str|unicode]
         @param file_path_dict: Python C{dict} of Python C{str} (name) key data and
             Python C{str} (file_path) value data
-        @type file_path_dict: dict[bsf.process.Executable.name, bsf.process.Executable]
+        @type file_path_dict: dict[bsf.process.Executable.name, str | unicode]
         @param runnable_step_list: Python C{list} of C{RunnableStep} objects
         @type runnable_step_list: list[bsf.process.RunnableStep]
         @param debug: Integer debugging level
@@ -1823,7 +1858,7 @@ class Runnable(object):
         return output
 
     def add_runnable_step(self, runnable_step=None):
-        """Convenience method to facilitate initialising, adding and retuning a C{RunnableStep}.
+        """Convenience method to facilitate initialising, adding and returning a C{RunnableStep}.
 
         @param runnable_step: C{RunnableStep}
         @type runnable_step: bsf.process.RunnableStep
@@ -1998,8 +2033,8 @@ class Runnable(object):
         @type runnable_step: RunnableStep
         @param success: Successful completion
         @type success: bool
-        @return: Nothing
-        @rtype: None
+        @return:
+        @rtype:
         """
         assert isinstance(runnable_step, RunnableStep)
 
@@ -2014,8 +2049,8 @@ class Runnable(object):
 
         @param runnable_step: C{RunnableStep}
         @type runnable_step: RunnableStep
-        @return: Nothing
-        @rtype: None
+        @return:
+        @rtype:
         """
         assert isinstance(runnable_step, RunnableStep)
 
