@@ -821,21 +821,23 @@ class Executable(Command):
 
             thread_out = Thread(
                 target=Executable.process_stdout,
-                kwargs=dict(
-                    stdout_handle=child_process.stdout,
-                    thread_lock=thread_lock,
-                    stdout_path=self.stdout_path,
-                    debug=debug))
+                kwargs={
+                    'stdout_handle': child_process.stdout,
+                    'thread_lock': thread_lock,
+                    'stdout_path': self.stdout_path,
+                    'debug': debug,
+                })
             thread_out.daemon = True  # Thread dies with the program.
             thread_out.start()
 
             thread_err = Thread(
                 target=Executable.process_stderr,
-                kwargs=dict(
-                    stderr_handle=child_process.stderr,
-                    thread_lock=thread_lock,
-                    stderr_path=self.stderr_path,
-                    debug=debug))
+                kwargs={
+                    'stderr_handle': child_process.stderr,
+                    'thread_lock': thread_lock,
+                    'stderr_path': self.stderr_path,
+                    'debug': debug,
+                })
             thread_err.daemon = True  # Thread dies with the program.
             thread_err.start()
 
@@ -1012,8 +1014,8 @@ class RunnableStep(Executable):
         """Remove file path objects that the C{RunnableStep.obsolete_file_path_list} declared to be obsolete.
         This method is mainly used by C{bsf.runnable.generic} and related modules.
 
-        @return: Nothing
-        @rtype: None
+        @return:
+        @rtype:
         """
         if self is None:
             return
@@ -1093,6 +1095,8 @@ class RunnableStepChangeMode(RunnableStep):
         @type mode_directory: str
         @param mode_file: File access mode for files according to C{stat}
         @type mode_file: str
+        @return:
+        @rtype:
         """
 
         super(RunnableStepChangeMode, self).__init__(
@@ -1116,11 +1120,9 @@ class RunnableStepChangeMode(RunnableStep):
             self.file_path = file_path
 
         # Can be None.
-        assert isinstance(mode_directory, (str, None))
         self.mode_directory = mode_directory
 
         # Can Be None.
-        assert isinstance(mode_file, (str, None))
         self.mode_file = mode_file
 
         return
@@ -1142,33 +1144,33 @@ class RunnableStepChangeMode(RunnableStep):
         # Use a dictionary to map stringl literals to integers defined in teh stat module rather than
         # evaluating code directly, which can be rather dangerous.
 
-        permission_dict = dict(
-            S_ISUID=stat.S_ISUID,
-            S_ISGID=stat.S_ISGID,
+        permission_dict = {
+            'S_ISUID': stat.S_ISUID,
+            'S_ISGID': stat.S_ISGID,
             # System V file locking enforcement.
-            S_ENFMT=stat.S_ENFMT,
+            'S_ENFMT': stat.S_ENFMT,
             # Sticky bit.
-            S_ISVTX=stat.S_ISVTX,
+            'S_ISVTX': stat.S_ISVTX,
+            'S_IREAD': stat.S_IREAD,
+            'S_IWRITE': stat.S_IWRITE,
             # UNIX V7 synonyms.
-            S_IREAD=stat.S_IREAD,
-            S_IWRITE=stat.S_IWRITE,
-            S_IEXEC=stat.S_IEXEC,
+            'S_IEXEC': stat.S_IEXEC,
+            'S_IRWXU': stat.S_IRWXU,
             # User permissions.
-            S_IRWXU=stat.S_IRWXU,
-            S_IRUSR=stat.S_IRUSR,
-            S_IWUSR=stat.S_IWUSR,
-            S_IXUSR=stat.S_IXUSR,
+            'S_IRUSR': stat.S_IRUSR,
+            'S_IWUSR': stat.S_IWUSR,
+            'S_IXUSR': stat.S_IXUSR,
+            'S_IRWXG': stat.S_IRWXG,
             # Group permissions.
-            S_IRWXG=stat.S_IRWXG,
-            S_IRGRP=stat.S_IRGRP,
-            S_IWGRP=stat.S_IWGRP,
-            S_IXGRP=stat.S_IXGRP,
+            'S_IRGRP': stat.S_IRGRP,
+            'S_IWGRP': stat.S_IWGRP,
+            'S_IXGRP': stat.S_IXGRP,
+            'S_IRWXO': stat.S_IRWXO,
             # Other permissions.
-            S_IRWXO=stat.S_IRWXO,
-            S_IROTH=stat.S_IROTH,
-            S_IWOTH=stat.S_IWOTH,
-            S_IXOTH=stat.S_IXOTH,
-        )
+            'S_IROTH': stat.S_IROTH,
+            'S_IWOTH': stat.S_IWOTH,
+            'S_IXOTH': stat.S_IXOTH,
+        }
 
         # Convert comma-separated directory permission constants to an integer.
         if self.mode_directory is None:
@@ -1198,13 +1200,19 @@ class RunnableStepChangeMode(RunnableStep):
 
         # Change the mode of directories and files simultaneously, but only if the mode is not None.
 
-        for file_path, directory_names, file_names in os.walk(top=self.file_path, topdown=True):
-            if int_mode_file is not None:
-                for name in file_names:
-                    os.chmod(os.path.join(file_path, name), int_mode_file)
+        for file_path, directory_name_list, file_name_list in os.walk(top=self.file_path, topdown=True):
+            # Change the mode of the file_path.
             if int_mode_directory is not None:
-                for name in directory_names:
-                    os.chmod(os.path.join(file_path, name), int_mode_directory)
+                os.chmod(file_path, int_mode_directory)
+            # Change the mode of each directory name.
+            # This is redundant, because each sub-directory will also appear as a file_path once.
+            # if int_mode_directory is not None:
+            #     for directory_name in directory_name_list:
+            #         os.chmod(os.path.join(file_path, directory_name), int_mode_directory)
+            # Change the mode of each file name.
+            if int_mode_file is not None:
+                for file_name in file_name_list:
+                    os.chmod(os.path.join(file_path, file_name), int_mode_file)
 
         return 0
 
