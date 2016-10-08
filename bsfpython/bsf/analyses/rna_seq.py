@@ -503,11 +503,10 @@ class Tuxedo(Analysis):
                         format(row_dict)
                 continue
 
-            if 'Comparison Name' in row_dict:
+            if 'Comparison Name' in row_dict and row_dict['Comparison Name']:
                 # For ridiculously large comparisons involving loads of groups or samples a comparison name can be
                 # explicitly specified. Any non-word characters get replaced by underscore characters.
-                key = str(row_dict['Comparison Name'])
-                key = re.sub(pattern=regular_expression, repl='_', string=key)
+                key = re.sub(pattern=regular_expression, repl='_', string=row_dict['Comparison Name'])
             else:
                 # Truncate the last '__' separator off the key string.
                 key = key.rstrip('_')
@@ -685,13 +684,13 @@ class Tuxedo(Analysis):
 
                 # prefix_run_tophat = '_'.join((drms_run_tophat.name, replicate_key))
 
-                file_path_dict_tophat = dict(
+                file_path_dict_tophat = {
                     # The output directory deviates from the prefix_run_tophat that itself is based on
                     # drms_run_tophat.name. Both rnaseq_run_tophat and rnaseq_process_tophat processes should
                     # use the same rnaseq_tophat directory.
                     # output_directory=prefix_run_tophat,
-                    output_directory='_'.join(('rnaseq_tophat', replicate_key))
-                )
+                    'output_directory': '_'.join(('rnaseq_tophat', replicate_key)),
+                }
 
                 # runnable_run_tophat = self.add_runnable(
                 #         runnable=Runnable(
@@ -780,10 +779,11 @@ class Tuxedo(Analysis):
                 # TODO: The following code block is required as long as the bsf_run_rnaseq_tophat.py script
                 # has not been retired.
 
-                pickler_dict_run_tophat = dict()
-                pickler_dict_run_tophat['prefix'] = drms_run_tophat.name
-                pickler_dict_run_tophat['replicate_key'] = replicate_key
-                pickler_dict_run_tophat['tophat_executable'] = tophat
+                pickler_dict_run_tophat = {
+                    'prefix': drms_run_tophat.name,
+                    'replicate_key': replicate_key,
+                    'tophat_executable': tophat,
+                }
 
                 pickler_path = os.path.join(
                     self.genome_directory,
@@ -829,9 +829,9 @@ class Tuxedo(Analysis):
 
                 # Create a process_tophat Runnable.
 
-                # file_path_dict_process_tophat = dict(
+                # file_path_dict_process_tophat = {
                 #
-                # )
+                # }
                 #
                 # runnable_process_tophat = self.add_runnable(runnable=Runnable(
                 #     name='rnaseq_process_tophat',
@@ -844,15 +844,16 @@ class Tuxedo(Analysis):
 
                 prefix_run_cufflinks = '_'.join((drms_run_cufflinks.name, replicate_key))
 
-                file_path_dict_cufflinks = dict(
+                file_path_dict_cufflinks = {
                     # The output directory deviates from the prefix_run_cufflinks that itself is based on
                     # drms_run_cufflinks.name. Both rnaseq_run_cufflinks and rnaseq_process_cufflinks processes
                     # should use the same rnaseq_cufflinks directory.
                     # output_directory=prefix_run_cufflinks,
-                    output_directory='_'.join(('rnaseq_cufflinks', replicate_key)),
-                    tophat_accepted_hits=os.path.join(file_path_dict_tophat['output_directory'],
-                                                      'accepted_hits.bam')
-                )
+                    'output_directory': '_'.join(('rnaseq_cufflinks', replicate_key)),
+                    'tophat_accepted_hits': os.path.join(
+                        file_path_dict_tophat['output_directory'],
+                        'accepted_hits.bam'),
+                }
 
                 runnable_run_cufflinks = self.add_runnable(
                     runnable=Runnable(
@@ -987,10 +988,11 @@ class Tuxedo(Analysis):
             # TODO: Should the comparison prefix also include the project name or number?
             prefix_cuffmerge = self.get_prefix_rnaseq_run_cuffmerge(comparison_key=comparison_key)
 
-            file_path_dict_cuffmerge = dict(
-                output_directory=prefix_cuffmerge,
-                merged_gtf=os.path.join(prefix_cuffmerge, 'merged.gtf'),
-                assembly_txt='_'.join((prefix_cuffmerge, 'assembly.txt')))
+            file_path_dict_cuffmerge = {
+                'output_directory': prefix_cuffmerge,
+                'merged_gtf': os.path.join(prefix_cuffmerge, 'merged.gtf'),
+                'assembly_txt': '_'.join((prefix_cuffmerge, 'assembly.txt')),
+            }
 
             runnable_run_cuffmerge = self.add_runnable(
                 runnable=Runnable(
@@ -1093,14 +1095,15 @@ class Tuxedo(Analysis):
 
                         prefix_cuffquant = '_'.join((drms_run_cuffquant.name, comparison_key, replicate_key))
 
-                        file_path_dict_cuffquant = dict(
-                            output_directory=prefix_cuffquant,
-                            abundances=os.path.join(prefix_cuffquant, 'abundances.cxb'),
-                            merged_gtf=file_path_dict_cuffmerge['merged_gtf'],
-                            tophat_directory='_'.join(('rnaseq_tophat', replicate_key)),
-                            tophat_accepted_hits=os.path.join(
+                        file_path_dict_cuffquant = {
+                            'output_directory': prefix_cuffquant,
+                            'abundances': os.path.join(prefix_cuffquant, 'abundances.cxb'),
+                            'merged_gtf': file_path_dict_cuffmerge['merged_gtf'],
+                            'tophat_directory': '_'.join(('rnaseq_tophat', replicate_key)),
+                            'tophat_accepted_hits': os.path.join(
                                 '_'.join(('rnaseq_tophat', replicate_key)),
-                                'accepted_hits.bam'))
+                                'accepted_hits.bam'),
+                        }
 
                         runnable_run_cuffquant = self.add_runnable(
                             runnable=Runnable(
@@ -1186,9 +1189,10 @@ class Tuxedo(Analysis):
 
             prefix_cuffnorm = '_'.join((drms_run_cuffnorm.name, comparison_key))
 
-            file_path_dict_cuffnorm = dict(
-                output_directory=prefix_cuffnorm,
-                merged_gtf=file_path_dict_cuffmerge['merged_gtf'])
+            file_path_dict_cuffnorm = {
+                'output_directory': prefix_cuffnorm,
+                'merged_gtf': file_path_dict_cuffmerge['merged_gtf'],
+            }
 
             runnable_run_cuffnorm = self.add_runnable(
                 runnable=Runnable(
@@ -1242,9 +1246,10 @@ class Tuxedo(Analysis):
 
             prefix_cuffdiff = '_'.join((drms_run_cuffdiff.name, comparison_key))
 
-            file_path_dict_cuffdiff = dict(
-                output_directory=prefix_cuffdiff,
-                merged_gtf=file_path_dict_cuffmerge['merged_gtf'])
+            file_path_dict_cuffdiff = {
+                'output_directory': prefix_cuffdiff,
+                'merged_gtf': file_path_dict_cuffmerge['merged_gtf'],
+            }
 
             runnable_run_cuffdiff = self.add_runnable(
                 runnable=Runnable(
@@ -1377,7 +1382,7 @@ class Tuxedo(Analysis):
 
         output_html = str()
 
-        output_html += '<h1 id="rna_seq_analysis">{} {}</h1>\n'.format(self.project_name, self.name)
+        output_html += '<h1 id="{}_analysis">{} {}</h1>\n'.format(self.prefix, self.project_name, self.name)
         output_html += '\n'
 
         # TopHat and Cufflinks table.
@@ -1402,10 +1407,10 @@ class Tuxedo(Analysis):
 
         # Construct an automatic UCSC Track Hub link.
 
-        options_dict = dict()
-        options_dict['db'] = self.genome_version
-        options_dict['hubUrl'] = '{}/{}/rnaseq_hub.txt'. \
-            format(Default.url_absolute_projects(), link_name)
+        options_dict = {
+            'db': self.genome_version,
+            'hubUrl': '{}/{}/rnaseq_hub.txt'.format(Default.url_absolute_projects(), link_name),
+        }
 
         output_html += '<p id="track_hub">\n'
         output_html += 'View TopHat <strong>read alignments</strong> tracks for each sample\n'
@@ -1733,24 +1738,27 @@ class Tuxedo(Analysis):
 
                 # UCSC options dictionary.
 
-                options_dict = dict()
-                options_dict['db'] = self.genome_version
-                options_dict['hgt.customText'] = '{}/{}/{}/rnaseq_cufflinks_{}/transcripts.gtf'.format(
-                    Default.url_absolute_projects(), link_name, self.genome_version, replicate_key)
+                options_dict = {
+                    'db': self.genome_version,
+                    'hgt.customText': '{}/{}/{}/rnaseq_cufflinks_{}/transcripts.gtf'.format(
+                        Default.url_absolute_projects(),
+                        link_name,
+                        self.genome_version,
+                        replicate_key),
+                }
                 if ucsc_location:
                     options_dict['position'] = ucsc_location
 
                 # UCSC track dictionary.
 
-                track_dict = dict()
-                track_dict['name'] = '{}_transcripts'. \
-                    format(replicate_key)
-                track_dict['description'] = '"{} Cufflinks RNA-Seq transcript assembly"'. \
-                    format(replicate_key)
-                track_dict['track_type'] = 'gtf'
-                track_dict['visibility'] = 'squish'
-                track_dict['color'] = '0,0,0'
-                track_dict['db'] = self.genome_version
+                # track_dict = {
+                #     'name': '{}_transcripts'.format(replicate_key),
+                #     'description': '"{} Cufflinks RNA-Seq transcript assembly"'.format(replicate_key),
+                #     'track_type': 'gtf',
+                #     'visibility': 'squish',
+                #     'color': '0,0,0',
+                #     'db': self.genome_version,
+                # }
 
                 prefix = 'rnaseq_cufflinks_{}'.format(replicate_key)
 
