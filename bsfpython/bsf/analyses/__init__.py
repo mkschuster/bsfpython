@@ -63,7 +63,7 @@ class ChIPSeqComparison(object):
     @ivar replicate: replicate number
     @type replicate: int
     @ivar diff_bind: Run the DiffBind analysis
-    @type: bool
+    @type diff_bind: bool
     """
 
     def __init__(
@@ -99,7 +99,7 @@ class ChIPSeqComparison(object):
         @param replicate: replicate number
         @type replicate: int
         @param diff_bind: Run the DiffBind analysis
-        @type: bool
+        @type diff_bind: bool
         @return:
         @rtype:
         """
@@ -196,35 +196,35 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         'PeakFormat',
     ]
 
-    _test_methods = dict(
-        SampleID=[
+    _test_methods = {
+        'SampleID': [
             AnnotationSheet.check_alphanumeric,
         ],
-        Tissue=[
+        'Tissue': [
             AnnotationSheet.check_alphanumeric,
         ],
-        Factor=[
+        'Factor': [
             AnnotationSheet.check_alphanumeric,
         ],
-        Condition=[
+        'Condition': [
             AnnotationSheet.check_alphanumeric,
         ],
-        Treatment=[
+        'Treatment': [
             AnnotationSheet.check_alphanumeric,
         ],
-        Replicate=[
+        'Replicate': [
             AnnotationSheet.check_numeric,
         ],
-        ControlID=[
+        'ControlID': [
             AnnotationSheet.check_alphanumeric,
         ],
-        PeakCaller=[
+        'PeakCaller': [
             AnnotationSheet.check_alphanumeric,
         ],
-        PeakFormat=[
+        'PeakFormat': [
             AnnotationSheet.check_alphanumeric,
         ],
-    )
+    }
 
     def sort(self):
         """Sort by columns I{Tissue}, I{Factor}, I{Condition}, I{Treatment} and I{Replicate}.
@@ -1116,26 +1116,18 @@ class ChIPSeq(Analysis):
         # keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
-
             chipseq_comparison = self.comparisons[key]
             assert isinstance(chipseq_comparison, ChIPSeqComparison)
-
             if not chipseq_comparison.diff_bind:
                 continue
-
-            if chipseq_comparison.factor in self._factor_dict:
-                factor_list = self._factor_dict[chipseq_comparison.factor]
-            else:
-                factor_list = list()
-                self._factor_dict[chipseq_comparison.factor] = factor_list
-
-            factor_list.append(chipseq_comparison)
+            if chipseq_comparison.factor not in self._factor_dict:
+                self._factor_dict[chipseq_comparison.factor] = list()
+            self._factor_dict[chipseq_comparison.factor].append(chipseq_comparison)
 
         keys = self._factor_dict.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
-
             factor_list = self._factor_dict[key]
             factor_list.sort(cmp=lambda x, y: cmp(x, y))
 
@@ -2515,8 +2507,8 @@ class RunBamToFastq(Analysis):
         @type comparisons: dict
         @param samples: Python list of BSF Sample objects
         @type samples: list
-        @return: Nothing
-        @rtype: None
+        @return:
+        @rtype:
         """
 
         super(RunBamToFastq, self).__init__(
@@ -2553,8 +2545,8 @@ class RunBamToFastq(Analysis):
     def run(self):
         """Run this BSF RunBamToFastq analysis.
 
-        @return: Nothing
-        @rtype: None
+        @return:
+        @rtype:
         """
 
         super(RunBamToFastq, self).run()
@@ -2564,8 +2556,8 @@ class RunBamToFastq(Analysis):
     def _convert_bam_to_fastq(self):
         """Private method to convert all Reads objects in BAM or SAM format into FASTQ format.
 
-        @return: Nothing
-        @rtype: None
+        @return:
+        @rtype:
         """
 
         # config_parser = self.configuration.config_parser

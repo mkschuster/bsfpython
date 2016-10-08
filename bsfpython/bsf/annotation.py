@@ -815,35 +815,35 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         'PeakFormat',
     ]
 
-    _test_methods = dict(
-        SampleID=[
+    _test_methods = {
+        'SampleID': [
             AnnotationSheet.check_alphanumeric,
         ],
-        Tissue=[
+        'Tissue': [
             AnnotationSheet.check_alphanumeric,
         ],
-        Factor=[
+        'Factor': [
             AnnotationSheet.check_alphanumeric,
         ],
-        Condition=[
+        'Condition': [
             AnnotationSheet.check_alphanumeric,
         ],
-        Treatment=[
+        'Treatment': [
             AnnotationSheet.check_alphanumeric,
         ],
-        Replicate=[
+        'Replicate': [
             AnnotationSheet.check_numeric,
         ],
-        ControlID=[
+        'ControlID': [
             AnnotationSheet.check_alphanumeric,
         ],
-        PeakCaller=[
+        'PeakCaller': [
             AnnotationSheet.check_alphanumeric,
         ],
-        PeakFormat=[
+        'PeakFormat': [
             AnnotationSheet.check_alphanumeric,
         ],
-    )
+    }
 
     def sort(self):
         """Sort by I{Tissue}, I{Factor}, I{Condition}, I{Treatment} and I{Replicate} columns.

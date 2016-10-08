@@ -74,10 +74,10 @@ def parse_sam_format(sam_file_handle):
     This function identifies the column with the barcode based on its suffix BC:Z:
     and increments the respective count in a Python dict.
 
-    :param sam_file_handle: File handle
-    :type sam_file_handle: FileIO
-    :return: Python dict of barcode key and count value data
-    :rtype: dict
+    @param sam_file_handle: File handle
+    @type sam_file_handle: FileIO
+    @return: Python dict of barcode key and count value data
+    @rtype: dict
     """
 
     for line in sam_file_handle:
@@ -100,10 +100,11 @@ def parse_sam_format(sam_file_handle):
 def parse_sam_file(input_filename):
     """
     Parse a SAM file, processing barcodes in the 12th column.
-    :param input_filename: File path
-    :type input_filename: str | unicode
-    :return: Python dict of barcode key and count value data
-    :rtype: dict
+
+    @param input_filename: File path
+    @type input_filename: str | unicode
+    @return: Python dict of barcode key and count value data
+    @rtype: dict
     """
 
     # TODO: breaks if barcode not in 12th column or tag has different name (expecting BC:Z:....)
@@ -139,14 +140,14 @@ def parse_sam_file(input_filename):
 
 # converts a BAM file to SAM, runs parse_sam_file on the temporary SAM file
 def parse_bam_file(input_filename):
-
     """
     Parse a BAM file.
-    Internally converts a BA;M file to a SAM file and subsequently runs parse_sam_file over it.
-    :param input_filename: File path
-    :type input_filename: str | unicode
-    :return: Python dict of barcode key and count value data
-    :rtype: dict
+    Internally converts a BAM file to a SAM file and subsequently runs parse_sam_file over it.
+
+    @param input_filename: File path
+    @type input_filename: str | unicode
+    @return: Python dict of barcode key and count value data
+    @rtype: dict
     """
 
     if platform.system() == "Windows":
@@ -225,18 +226,18 @@ elif file_type == ".bam":
 
     thread_out = Thread(
         target=parse_sam_format,
-        kwargs=dict(
-            sam_file_handle=child_process.stdout))
+        kwargs={'sam_file_handle': child_process.stdout})
     thread_out.daemon = True  # Thread dies with the program.
     thread_out.start()
 
     thread_err = Thread(
         target=Executable.process_stderr,
-        kwargs=dict(
-            stderr_handle=child_process.stderr,
-            thread_lock=thread_lock,
-            stderr_path=executable.stderr_path,
-            debug=0))
+        kwargs={
+            'stderr_handle': child_process.stderr,
+            'thread_lock': thread_lock,
+            'stderr_path': executable.stderr_path,
+            'debug': 0,
+        })
     thread_err.daemon = True  # Thread dies with the program.
     thread_err.start()
 

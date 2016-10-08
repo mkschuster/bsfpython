@@ -106,13 +106,11 @@ for file_name in file_name_list:
         raise
 
     root_node = irf.run_parameters.element_tree.getroot()
-    row_dict = dict(
-        run_identifier=irf.run_parameters.get_run_identifier,
-        application_name=irf.run_parameters.get_application_name,
-        application_version=irf.run_parameters.get_application_version,
-        rta_version=irf.run_parameters.get_real_time_analysis_version,
-    )
-
-    annotation_sheet.row_dicts.append(row_dict)
+    annotation_sheet.row_dicts.append({
+        'run_identifier': irf.run_parameters.get_run_identifier,
+        'application_name': irf.run_parameters.get_application_name,
+        'application_version': irf.run_parameters.get_application_version,
+        'rta_version': irf.run_parameters.get_real_time_analysis_version,
+    })
 
 annotation_sheet.to_file_path()

@@ -190,6 +190,8 @@ class VariantCallingGATK(Analysis):
     @type drms_name_somatic: str
     @ivar replicate_grouping: Group individual C{PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool
+    @ivar bwa_genome_db: Genome sequence file path with BWA index
+    @type bwa_genome_db: str | unicode
     @ivar comparison_path: Comparison file
     @type comparison_path: str | unicode
     @ivar cohort_name: Cohort name
@@ -943,7 +945,7 @@ class VariantCallingGATK(Analysis):
         @rtype:
         """
 
-        assert isinstance(comparison_path, (str, unicode, None))
+        assert isinstance(comparison_path, basestring)
 
         # For variant calling, all samples need adding to the Analysis object regardless.
         for sample in self.collection.get_all_samples():
@@ -1111,10 +1113,10 @@ class VariantCallingGATK(Analysis):
 
         # GATK does a lot of read requests from the reference FASTA file.
         # Place it and the accompanying *.fasta.fai and *.dict files in the cache directory.
-        cache_path_dict = dict(
-            reference_fasta=self.bwa_genome_db,
-            reference_fai=self.bwa_genome_db + '.fai',
-        )
+        cache_path_dict = {
+            'reference_fasta': self.bwa_genome_db,
+            'reference_fai': self.bwa_genome_db + '.fai',
+        }
         if self.bwa_genome_db.endswith('.fa'):
             cache_path_dict['reference_dict'] = self.bwa_genome_db[:-2] + 'dict'
         elif self.bwa_genome_db.endswith('.fasta'):
@@ -1133,7 +1135,7 @@ class VariantCallingGATK(Analysis):
         for key in self.annotation_resources_dict.keys():
             assert isinstance(key, str)
             file_path, annotation_list = self.annotation_resources_dict[key]
-            assert isinstance(file_path, (str, unicode))
+            assert isinstance(file_path, basestring)
             assert isinstance(annotation_list, list)
             file_path = Default.get_absolute_path(file_path=file_path, default_path=self.get_gatk_bundle_path)
             if os.path.exists(file_path):
@@ -1152,7 +1154,7 @@ class VariantCallingGATK(Analysis):
 
         temporary_list = list()
         for file_path in self.known_sites_realignment:
-            assert isinstance(file_path, (str, unicode))
+            assert isinstance(file_path, basestring)
             file_path = Default.get_absolute_path(file_path=file_path, default_path=self.get_gatk_bundle_path)
             if os.path.exists(file_path):
                 temporary_list.append(file_path)
@@ -1163,7 +1165,7 @@ class VariantCallingGATK(Analysis):
 
         temporary_list = list()
         for file_path in self.known_sites_recalibration:
-            assert isinstance(file_path, (str, unicode))
+            assert isinstance(file_path, basestring)
             file_path = Default.get_absolute_path(file_path=file_path, default_path=self.get_gatk_bundle_path)
             if os.path.exists(file_path):
                 temporary_list.append(file_path)
@@ -1346,23 +1348,25 @@ class VariantCallingGATK(Analysis):
                 else:
                     warnings.warn('No reads have been defined.')
 
-                file_path_align_lane = dict(
+                file_path_align_lane = {
                     # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
                     # It is currently based on the drms_align_lane.name and replicate_key.
                     # The script should also be changed to pre-set all file names beforehand.
-                    aligned_bam='{}_{}.bam'.format(drms_align_lane.name, replicate_key),
-                    aligned_bai='{}_{}.bai'.format(drms_align_lane.name, replicate_key),
-                    aligned_md5='{}_{}.bam.md5'.format(drms_align_lane.name, replicate_key))
+                    'aligned_bam': '{}_{}.bam'.format(drms_align_lane.name, replicate_key),
+                    'aligned_bai': '{}_{}.bai'.format(drms_align_lane.name, replicate_key),
+                    'aligned_md5': '{}_{}.bam.md5'.format(drms_align_lane.name, replicate_key),
+                }
 
                 # Normally, the bwa object would be pushed onto the drms list.
                 # Experimentally, use Pickler to serialize the Executable object into a file.
 
-                pickler_dict_align_lane = dict()
-                pickler_dict_align_lane['prefix'] = drms_align_lane.name
-                pickler_dict_align_lane['replicate_key'] = replicate_key
-                pickler_dict_align_lane['classpath_gatk'] = self.classpath_gatk
-                pickler_dict_align_lane['classpath_picard'] = self.classpath_picard
-                pickler_dict_align_lane['bwa_executable'] = bwa
+                pickler_dict_align_lane = {
+                    'prefix': drms_align_lane.name,
+                    'replicate_key': replicate_key,
+                    'classpath_gatk': self.classpath_gatk,
+                    'classpath_picard': self.classpath_picard,
+                    'bwa_executable': bwa,
+                }
 
                 pickler_path = os.path.join(
                     self.genome_directory,
@@ -1412,29 +1416,30 @@ class VariantCallingGATK(Analysis):
 
                 # Lane-specific file paths
 
-                file_path_dict_lane = dict(
-                    temporary_directory=prefix_lane + '_temporary',
+                file_path_dict_lane = {
+                    'temporary_directory': prefix_lane + '_temporary',
                     # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
                     # It is currently based on the drms_align_lane.name and replicate_key.
                     # The script should also be changed to pre-set all file names beforehand.
-                    aligned_bam='{}_{}.bam'.format(drms_align_lane.name, replicate_key),
-                    aligned_bai='{}_{}.bai'.format(drms_align_lane.name, replicate_key),
-                    aligned_md5='{}_{}.bam.md5'.format(drms_align_lane.name, replicate_key),
-                    duplicates_marked_bam=prefix_lane + '_duplicates_marked.bam',
-                    duplicates_marked_bai=prefix_lane + '_duplicates_marked.bai',
-                    duplicates_marked_md5=prefix_lane + '_duplicates_marked.bam.md5',
-                    duplicate_metrics=prefix_lane + '_duplicate_metrics.tsv',
-                    realigner_targets=prefix_lane + '_realigner.interval_list',
-                    realigned_bam=prefix_lane + '_realigned.bam',
-                    realigned_bai=prefix_lane + '_realigned.bai',
-                    realigned_md5=prefix_lane + '_realigned.bam.md5',
-                    recalibration_table_pre=prefix_lane + '_recalibration_pre.table',
-                    recalibration_table_post=prefix_lane + '_recalibration_post.table',
-                    recalibration_plot=prefix_lane + '_recalibration_report.pdf',
-                    recalibrated_bam=prefix_lane + '_recalibrated.bam',
-                    recalibrated_bai=prefix_lane + '_recalibrated.bai',
-                    recalibrated_md5=prefix_lane + '_recalibrated.bam.md5',
-                    alignment_summary_metrics=prefix_lane + '_alignment_summary_metrics.tsv')
+                    'aligned_bam': '{}_{}.bam'.format(drms_align_lane.name, replicate_key),
+                    'aligned_bai': '{}_{}.bai'.format(drms_align_lane.name, replicate_key),
+                    'aligned_md5': '{}_{}.bam.md5'.format(drms_align_lane.name, replicate_key),
+                    'duplicates_marked_bam': prefix_lane + '_duplicates_marked.bam',
+                    'duplicates_marked_bai': prefix_lane + '_duplicates_marked.bai',
+                    'duplicates_marked_md5': prefix_lane + '_duplicates_marked.bam.md5',
+                    'duplicate_metrics': prefix_lane + '_duplicate_metrics.tsv',
+                    'realigner_targets': prefix_lane + '_realigner.interval_list',
+                    'realigned_bam': prefix_lane + '_realigned.bam',
+                    'realigned_bai': prefix_lane + '_realigned.bai',
+                    'realigned_md5': prefix_lane + '_realigned.bam.md5',
+                    'recalibration_table_pre': prefix_lane + '_recalibration_pre.table',
+                    'recalibration_table_post': prefix_lane + '_recalibration_post.table',
+                    'recalibration_plot': prefix_lane + '_recalibration_report.pdf',
+                    'recalibrated_bam': prefix_lane + '_recalibrated.bam',
+                    'recalibrated_bai': prefix_lane + '_recalibrated.bai',
+                    'recalibrated_md5': prefix_lane + '_recalibrated.bam.md5',
+                    'alignment_summary_metrics': prefix_lane + '_alignment_summary_metrics.tsv',
+                }
 
                 # Create a Runnable and Executable for processing each lane.
 
@@ -1728,23 +1733,24 @@ class VariantCallingGATK(Analysis):
 
             prefix_sample = '_'.join((drms_process_sample.name, sample.name))
 
-            file_path_dict_sample = dict(
-                temporary_directory=prefix_sample + '_temporary',
-                merged_bam=prefix_sample + '_merged.bam',
-                merged_bai=prefix_sample + '_merged.bai',
-                merged_md5=prefix_sample + '_merged.bam.md5',
-                duplicates_marked_bam=prefix_sample + '_duplicates_marked.bam',
-                duplicates_marked_bai=prefix_sample + '_duplicates_marked.bai',
-                duplicates_marked_md5=prefix_sample + '_duplicates_marked.bam.md5',
-                duplicate_metrics=prefix_sample + '_duplicate_metrics.tsv',
-                realigner_targets=prefix_sample + '_realigner.intervals',
-                realigned_bam=prefix_sample + '_realigned.bam',
-                realigned_bai=prefix_sample + '_realigned.bai',
-                realigned_md5=prefix_sample + '_realigned_bam.md5',
-                realigned_bam_bai=prefix_sample + '_realigned.bam.bai',
-                alignment_summary_metrics=prefix_sample + '_alignment_summary_metrics.tsv',
-                raw_variants_gvcf_vcf=prefix_sample + '_raw_variants.g.vcf.gz',
-                raw_variants_gvcf_idx=prefix_sample + '_raw_variants.g.vcf.gz.tbi')
+            file_path_dict_sample = {
+                'temporary_directory': prefix_sample + '_temporary',
+                'merged_bam': prefix_sample + '_merged.bam',
+                'merged_bai': prefix_sample + '_merged.bai',
+                'merged_md5': prefix_sample + '_merged.bam.md5',
+                'duplicates_marked_bam': prefix_sample + '_duplicates_marked.bam',
+                'duplicates_marked_bai': prefix_sample + '_duplicates_marked.bai',
+                'duplicates_marked_md5': prefix_sample + '_duplicates_marked.bam.md5',
+                'duplicate_metrics': prefix_sample + '_duplicate_metrics.tsv',
+                'realigner_targets': prefix_sample + '_realigner.intervals',
+                'realigned_bam': prefix_sample + '_realigned.bam',
+                'realigned_bai': prefix_sample + '_realigned.bai',
+                'realigned_md5': prefix_sample + '_realigned_bam.md5',
+                'realigned_bam_bai': prefix_sample + '_realigned.bam.bai',
+                'alignment_summary_metrics': prefix_sample + '_alignment_summary_metrics.tsv',
+                'raw_variants_gvcf_vcf': prefix_sample + '_raw_variants.g.vcf.gz',
+                'raw_variants_gvcf_idx': prefix_sample + '_raw_variants.g.vcf.gz.tbi',
+            }
 
             # Create a Runnable and Executable for processing each Sample object.
 
@@ -2112,20 +2118,20 @@ class VariantCallingGATK(Analysis):
 
             prefix_diagnosis = '_'.join((drms_diagnose_sample.name, sample.name))
 
-            file_path_dict_diagnosis = dict(
-                temporary_directory=prefix_diagnosis + '_temporary',
-                realigned_bam=file_path_dict_sample['realigned_bam'],
-                realigned_bai=file_path_dict_sample['realigned_bai'],
-                diagnose_targets_vcf=prefix_diagnosis + '_diagnose_targets.vcf.gz',
-                diagnose_targets_idx=prefix_diagnosis + '_diagnose_targets.vcf.gz.tbi',
-                missing_intervals=prefix_diagnosis + '_missing.intervals',
-                missing_report=prefix_diagnosis + '_missing.gatkreport',
-                callable_bed=prefix_diagnosis + '_callable_loci.bed',
-                callable_txt=prefix_diagnosis + '_callable_loci.txt',
-                non_callable_loci_tsv=prefix_diagnosis + '_non_callable_loci.tsv',  # Defined in the R script.
-                non_callable_summary_tsv=prefix_diagnosis + '_non_callable_summary.tsv',  # Defined in the R script.
-                hybrid_selection_metrics=prefix_diagnosis + '_hybrid_selection_metrics.tsv',
-            )
+            file_path_dict_diagnosis = {
+                'temporary_directory': prefix_diagnosis + '_temporary',
+                'realigned_bam': file_path_dict_sample['realigned_bam'],
+                'realigned_bai': file_path_dict_sample['realigned_bai'],
+                'diagnose_targets_vcf': prefix_diagnosis + '_diagnose_targets.vcf.gz',
+                'diagnose_targets_idx': prefix_diagnosis + '_diagnose_targets.vcf.gz.tbi',
+                'missing_intervals': prefix_diagnosis + '_missing.intervals',
+                'missing_report': prefix_diagnosis + '_missing.gatkreport',
+                'callable_bed': prefix_diagnosis + '_callable_loci.bed',
+                'callable_txt': prefix_diagnosis + '_callable_loci.txt',
+                'non_callable_loci_tsv': prefix_diagnosis + '_non_callable_loci.tsv',  # Defined in the R script.
+                'non_callable_summary_tsv': prefix_diagnosis + '_non_callable_summary.tsv',  # Defined in the R script.
+                'hybrid_selection_metrics': prefix_diagnosis + '_hybrid_selection_metrics.tsv',
+            }
 
             target_interval_name = str()
             target_interval_path = str()
@@ -2351,11 +2357,11 @@ class VariantCallingGATK(Analysis):
 
             vc_merge_cohort_prefix_list.append(prefix_merge)
 
-            file_path_dict_merge = dict(
-                temporary_directory=prefix_merge + '_temporary',
-                combined_gvcf_vcf=prefix_merge + '_combined.g.vcf.gz',
-                combined_gvcf_tbi=prefix_merge + '_combined.g.vcf.gz.tbi',
-            )
+            file_path_dict_merge = {
+                'temporary_directory': prefix_merge + '_temporary',
+                'combined_gvcf_vcf': prefix_merge + '_combined.g.vcf.gz',
+                'combined_gvcf_tbi': prefix_merge + '_combined.g.vcf.gz.tbi',
+            }
 
             # Create a Runnable and Executable for merging each sub-cohort from its Sample objects.
 
@@ -2406,11 +2412,11 @@ class VariantCallingGATK(Analysis):
 
             vc_merge_cohort_prefix_list.append(prefix_merge)
 
-            file_path_dict_merge = dict(
-                temporary_directory=prefix_merge + '_temporary',
-                combined_gvcf_vcf=prefix_merge + '_combined.g.vcf.gz',
-                combined_gvcf_tbi=prefix_merge + '_combined.g.vcf.gz.tbi',
-            )
+            file_path_dict_merge = {
+                'temporary_directory': prefix_merge + '_temporary',
+                'combined_gvcf_vcf': prefix_merge + '_combined.g.vcf.gz',
+                'combined_gvcf_tbi': prefix_merge + '_combined.g.vcf.gz.tbi',
+            }
 
             # Create a Runnable and Executable for merging the final cohort from its sub-cohorts.
 
@@ -2470,34 +2476,35 @@ class VariantCallingGATK(Analysis):
 
         prefix_cohort = '_'.join((drms_process_cohort.name, self.cohort_name))
 
-        file_path_dict_cohort = dict(
-            temporary_directory=prefix_cohort + '_temporary',
+        file_path_dict_cohort = {
+            'temporary_directory': prefix_cohort + '_temporary',
             # Combined GVCF file for the cohort defined in this project.
-            combined_gvcf_vcf=vc_merge_cohort_prefix_list[-1] + '_combined.g.vcf.gz',
-            combined_gvcf_idx=vc_merge_cohort_prefix_list[-1] + '_combined.g.vcf.gz.tbi',
+            'combined_gvcf_vcf': vc_merge_cohort_prefix_list[-1] + '_combined.g.vcf.gz',
+            'combined_gvcf_idx': vc_merge_cohort_prefix_list[-1] + '_combined.g.vcf.gz.tbi',
             # Temporary GVCF file with other cohorts merged in to facilitate recalibration.
-            temporary_gvcf_vcf=prefix_cohort + '_temporary.g.vcf.gz',
-            temporary_gvcf_idx=prefix_cohort + '_temporary.g.vcf.gz.tbi',
-            genotyped_raw_vcf=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.gz',
-            genotyped_raw_idx=prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.gz.tbi',
-            recalibrated_snp_raw_indel_vcf=prefix_cohort + '_recalibrated_snp_raw_indel.vcf.gz',
-            recalibrated_snp_raw_indel_idx=prefix_cohort + '_recalibrated_snp_raw_indel.vcf.gz.tbi',
-            recalibrated_snp_recalibrated_indel_vcf=prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.gz',
-            recalibrated_snp_recalibrated_indel_idx=(
-                prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.gz.tbi'),
-            multi_sample_vcf=prefix_cohort + '_multi_sample.vcf.gz',
-            multi_sample_idx=prefix_cohort + '_multi_sample.vcf.gz.tbi',
-            snpeff_vcf=prefix_cohort + '_snpeff.vcf',
-            snpeff_idx=prefix_cohort + '_snpeff.vcf.idx',
-            snpeff_stats=prefix_cohort + '_snpeff_summary.html',
-            annotated_vcf=prefix_cohort + '_annotated.vcf.gz',
-            annotated_idx=prefix_cohort + '_annotated.vcf.gz.tbi',
-            recalibration_indel=prefix_cohort + '_recalibration_indel.recal',
-            recalibration_snp=prefix_cohort + '_recalibration_snp.recal',
-            tranches_indel=prefix_cohort + '_recalibration_indel.tranches',
-            tranches_snp=prefix_cohort + '_recalibration_snp.tranches',
-            plots_indel=prefix_cohort + '_recalibration_indel.R',
-            plots_snp=prefix_cohort + '_recalibration_snp.R')
+            'temporary_gvcf_vcf': prefix_cohort + '_temporary.g.vcf.gz',
+            'temporary_gvcf_idx': prefix_cohort + '_temporary.g.vcf.gz.tbi',
+            'genotyped_raw_vcf': prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.gz',
+            'genotyped_raw_idx': prefix_cohort + '_genotyped_raw_snp_raw_indel.vcf.gz.tbi',
+            'recalibrated_snp_raw_indel_vcf': prefix_cohort + '_recalibrated_snp_raw_indel.vcf.gz',
+            'recalibrated_snp_raw_indel_idx': prefix_cohort + '_recalibrated_snp_raw_indel.vcf.gz.tbi',
+            'recalibrated_snp_recalibrated_indel_vcf': prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.gz',
+            'recalibrated_snp_recalibrated_indel_idx':
+                prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.gz.tbi',
+            'multi_sample_vcf': prefix_cohort + '_multi_sample.vcf.gz',
+            'multi_sample_idx': prefix_cohort + '_multi_sample.vcf.gz.tbi',
+            'snpeff_vcf': prefix_cohort + '_snpeff.vcf',
+            'snpeff_idx': prefix_cohort + '_snpeff.vcf.idx',
+            'snpeff_stats': prefix_cohort + '_snpeff_summary.html',
+            'annotated_vcf': prefix_cohort + '_annotated.vcf.gz',
+            'annotated_idx': prefix_cohort + '_annotated.vcf.gz.tbi',
+            'recalibration_indel': prefix_cohort + '_recalibration_indel.recal',
+            'recalibration_snp': prefix_cohort + '_recalibration_snp.recal',
+            'tranches_indel': prefix_cohort + '_recalibration_indel.tranches',
+            'tranches_snp': prefix_cohort + '_recalibration_snp.tranches',
+            'plots_indel': prefix_cohort + '_recalibration_indel.R',
+            'plots_snp': prefix_cohort + '_recalibration_snp.R',
+        }
 
         # Create a Runnable and Executable for processing the cohort.
 
@@ -2848,11 +2855,11 @@ class VariantCallingGATK(Analysis):
 
             prefix_split = '_'.join((drms_split_cohort.name, sample.name))
 
-            file_path_dict_split = dict(
-                temporary_directory=prefix_split + '_temporary',
-                sample_vcf=prefix_split + '.vcf.gz',
-                sample_idx=prefix_split + '.vcf.gz.tbi',
-                sample_tsv=prefix_split + '.tsv')
+            file_path_dict_split = {
+                'temporary_directory': prefix_split + '_temporary',
+                'sample_vcf': prefix_split + '.vcf.gz', 'sample_idx': prefix_split + '.vcf.gz.tbi',
+                'sample_tsv': prefix_split + '.tsv',
+            }
 
             runnable_split_cohort = self.add_runnable(
                 runnable=Runnable(
@@ -2966,41 +2973,41 @@ class VariantCallingGATK(Analysis):
 
         prefix_summary = '_'.join((drms_summary.name, self.cohort_name))
 
-        file_path_dict_summary = dict(
-            temporary_directory=prefix_summary + '_temporary',
-            alignment_aliquot_tsv=prefix_summary + '_alignment_aliquot.tsv',
-            alignment_sample_tsv=prefix_summary + '_alignment_sample.tsv',
-            alignment_reads_sample_pdf=prefix_summary + '_alignment_reads_sample.pdf',
-            alignment_reads_sample_png=prefix_summary + '_alignment_reads_sample.png',
-            alignment_reads_read_group_pdf=prefix_summary + '_alignment_reads_read_group.pdf',
-            alignment_reads_read_group_png=prefix_summary + '_alignment_reads_read_group.png',
-            alignment_percentage_sample_pdf=prefix_summary + '_alignment_percentage_sample.pdf',
-            alignment_percentage_sample_png=prefix_summary + '_alignment_percentage_sample.png',
-            alignment_percentage_read_group_pdf=prefix_summary + '_alignment_percentage_read_group.pdf',
-            alignment_percentage_read_group_png=prefix_summary + '_alignment_percentage_read_group.png',
-            duplication_tsv=prefix_summary + '_duplication.tsv',
-            duplication_sample_png=prefix_summary + '_duplication_sample.png',
-            duplication_sample_pdf=prefix_summary + '_duplication_sample.pdf',
-            hybrid_aliquot_tsv=prefix_summary + '_hybrid_aliquot.tsv',
-            hybrid_sample_tsv=prefix_summary + '_hybrid_sample.tsv',
-            hybrid_unique_percentage_sample_pdf=prefix_summary + '_hybrid_unique_percentage_sample.pdf',
-            hybrid_unique_percentage_sample_png=prefix_summary + '_hybrid_unique_percentage_sample.png',
-            hybrid_unique_percentage_aliquot_pdf=prefix_summary + '_hybrid_unique_percentage_read_group.pdf',
-            hybrid_unique_percentage_aliquot_png=prefix_summary + '_hybrid_unique_percentage_read_group.png',
-            hybrid_coverage_sample_pdf=prefix_summary + '_hybrid_target_coverage_sample.pdf',
-            hybrid_coverage_sample_png=prefix_summary + '_hybrid_target_coverage_sample.png',
-            hybrid_coverage_read_group_pdf=prefix_summary + '_hybrid_target_coverage_read_group.pdf',
-            hybrid_coverage_read_group_png=prefix_summary + '_hybrid_target_coverage_read_group.png',
-            hybrid_coverage_levels_sample_pdf=prefix_summary + '_hybrid_target_coverage_levels_sample.pdf',
-            hybrid_coverage_levels_sample_png=prefix_summary + '_hybrid_target_coverage_levels_sample.png',
-            hybrid_coverage_levels_aliquot_pdf=prefix_summary + '_hybrid_target_coverage_levels_aliquot.pdf',
-            hybrid_coverage_levels_aliquot_png=prefix_summary + '_hybrid_target_coverage_levels_aliquot.png',
-            non_callable_tsv=prefix_summary + '_non_callable.tsv',
-            non_callable_number_pdf=prefix_summary + '_non_callable_number.pdf',
-            non_callable_number_png=prefix_summary + '_non_callable_number.png',
-            non_callable_percentage_pdf=prefix_summary + '_non_callable_percentage.pdf',
-            non_callable_percentage_png=prefix_summary + '_non_callable_percentage.png',
-        )
+        file_path_dict_summary = {
+            'temporary_directory': prefix_summary + '_temporary',
+            'alignment_aliquot_tsv': prefix_summary + '_alignment_aliquot.tsv',
+            'alignment_sample_tsv': prefix_summary + '_alignment_sample.tsv',
+            'alignment_reads_sample_pdf': prefix_summary + '_alignment_reads_sample.pdf',
+            'alignment_reads_sample_png': prefix_summary + '_alignment_reads_sample.png',
+            'alignment_reads_read_group_pdf': prefix_summary + '_alignment_reads_read_group.pdf',
+            'alignment_reads_read_group_png': prefix_summary + '_alignment_reads_read_group.png',
+            'alignment_percentage_sample_pdf': prefix_summary + '_alignment_percentage_sample.pdf',
+            'alignment_percentage_sample_png': prefix_summary + '_alignment_percentage_sample.png',
+            'alignment_percentage_read_group_pdf': prefix_summary + '_alignment_percentage_read_group.pdf',
+            'alignment_percentage_read_group_png': prefix_summary + '_alignment_percentage_read_group.png',
+            'duplication_tsv': prefix_summary + '_duplication.tsv',
+            'duplication_sample_png': prefix_summary + '_duplication_sample.png',
+            'duplication_sample_pdf': prefix_summary + '_duplication_sample.pdf',
+            'hybrid_aliquot_tsv': prefix_summary + '_hybrid_aliquot.tsv',
+            'hybrid_sample_tsv': prefix_summary + '_hybrid_sample.tsv',
+            'hybrid_unique_percentage_sample_pdf': prefix_summary + '_hybrid_unique_percentage_sample.pdf',
+            'hybrid_unique_percentage_sample_png': prefix_summary + '_hybrid_unique_percentage_sample.png',
+            'hybrid_unique_percentage_aliquot_pdf': prefix_summary + '_hybrid_unique_percentage_read_group.pdf',
+            'hybrid_unique_percentage_aliquot_png': prefix_summary + '_hybrid_unique_percentage_read_group.png',
+            'hybrid_coverage_sample_pdf': prefix_summary + '_hybrid_target_coverage_sample.pdf',
+            'hybrid_coverage_sample_png': prefix_summary + '_hybrid_target_coverage_sample.png',
+            'hybrid_coverage_read_group_pdf': prefix_summary + '_hybrid_target_coverage_read_group.pdf',
+            'hybrid_coverage_read_group_png': prefix_summary + '_hybrid_target_coverage_read_group.png',
+            'hybrid_coverage_levels_sample_pdf': prefix_summary + '_hybrid_target_coverage_levels_sample.pdf',
+            'hybrid_coverage_levels_sample_png': prefix_summary + '_hybrid_target_coverage_levels_sample.png',
+            'hybrid_coverage_levels_aliquot_pdf': prefix_summary + '_hybrid_target_coverage_levels_aliquot.pdf',
+            'hybrid_coverage_levels_aliquot_png': prefix_summary + '_hybrid_target_coverage_levels_aliquot.png',
+            'non_callable_tsv': prefix_summary + '_non_callable.tsv',
+            'non_callable_number_pdf': prefix_summary + '_non_callable_number.pdf',
+            'non_callable_number_png': prefix_summary + '_non_callable_number.png',
+            'non_callable_percentage_pdf': prefix_summary + '_non_callable_percentage.pdf',
+            'non_callable_percentage_png': prefix_summary + '_non_callable_percentage.png',
+        }
 
         # Create a Runnable and Executable for summarising the cohort.
 
@@ -3052,17 +3059,18 @@ class VariantCallingGATK(Analysis):
 
             # Somatic variant calling-specific file paths
 
-            file_path_dict_somatic = dict(
-                temporary_directory=prefix_somatic + '_temporary',
-                somatic_vcf=prefix_somatic + '_somatic.vcf.gz',
-                somatic_idx=prefix_somatic + '_somatic.vcf.gz.tbi',
-                snpeff_vcf=prefix_somatic + '_snpeff.vcf',
-                snpeff_idx=prefix_somatic + '_snpeff.vcf.idx',
-                snpeff_stats=prefix_somatic + '_snpeff_summary.html',
-                snpeff_genes=prefix_somatic + '_snpeff_summary.genes.txt',
-                annotated_vcf=prefix_somatic + '_annotated.vcf.gz',
-                annotated_idx=prefix_somatic + '_annotated.vcf.gz.tbi',
-                annotated_tsv=prefix_somatic + '_annotated.tsv')
+            file_path_dict_somatic = {
+                'temporary_directory': prefix_somatic + '_temporary',
+                'somatic_vcf': prefix_somatic + '_somatic.vcf.gz',
+                'somatic_idx': prefix_somatic + '_somatic.vcf.gz.tbi',
+                'snpeff_vcf': prefix_somatic + '_snpeff.vcf',
+                'snpeff_idx': prefix_somatic + '_snpeff.vcf.idx',
+                'snpeff_stats': prefix_somatic + '_snpeff_summary.html',
+                'snpeff_genes': prefix_somatic + '_snpeff_summary.genes.txt',
+                'annotated_vcf': prefix_somatic + '_annotated.vcf.gz',
+                'annotated_idx': prefix_somatic + '_annotated.vcf.gz.tbi',
+                'annotated_tsv': prefix_somatic + '_annotated.tsv',
+            }
 
             runnable_somatic = self.add_runnable(
                 runnable=Runnable(
@@ -3290,10 +3298,10 @@ class VariantCallingGATK(Analysis):
         else:
             ucsc_genome_version = self.genome_version
 
-        options_dict = dict()
-        options_dict['db'] = ucsc_genome_version
-        options_dict['hubUrl'] = '{}/{}/variant_calling_hub.txt'. \
-            format(Default.url_absolute_projects(), link_name)
+        options_dict = {
+            'db': ucsc_genome_version,
+            'hubUrl': '{}/{}/variant_calling_hub.txt'.format(Default.url_absolute_projects(), link_name),
+        }
 
         # TODO: Method defaults.web.ucsc_track_url() should be moved to Analysis.get_ucsc_track_url().
         # The above code for resolving a UCSC Genome Browser genome assembly alias could be centralised in Analysis.

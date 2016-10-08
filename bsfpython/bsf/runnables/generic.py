@@ -43,8 +43,8 @@ def run(runnable):
 
     @param runnable: C{Runnable}
     @type runnable: Runnable
-    @return: Nothing
-    @rtype: None
+    @return:
+    @rtype:
     """
 
     # If the Runnable status file exists, there is nothing to do and

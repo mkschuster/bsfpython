@@ -84,7 +84,7 @@ for project_name in project_names:
         sample = project.samples[sample_name]
         assert isinstance(sample, Sample)
 
-        row_dict = dict(ProcessedRunFolder=prf.name, Project=project.name, Sample=sample.name)
+        row_dict = {'ProcessedRunFolder': prf.name, 'Project': project.name, 'Sample': sample.name}
 
         if args.full:
             for paired_reads in sample.paired_reads_list:

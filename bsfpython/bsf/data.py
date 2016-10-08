@@ -2569,23 +2569,23 @@ class SampleGroup(object):
         @rtype: dict[str, list[PairedReads]]
         """
 
-        groups = dict()
+        group_dict = dict()
 
         for sample in self.samples:
             replicate_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping)
             for replicate_key in replicate_dict.keys():
-                if replicate_key not in groups:
-                    groups[replicate_key] = list()
+                if replicate_key not in group_dict:
+                    group_dict[replicate_key] = list()
 
-                # groups[replicate_key].extend(replicate_dict[replicate_key])
+                # group_dict[replicate_key].extend(replicate_dict[replicate_key])
 
                 # Add PairedReads objects one-by-one and check if they are not already there.
 
                 for paired_reads in replicate_dict[replicate_key]:
-                    if paired_reads not in groups[replicate_key]:
-                        groups[replicate_key].append(paired_reads)
+                    if paired_reads not in group_dict[replicate_key]:
+                        group_dict[replicate_key].append(paired_reads)
 
-        return groups
+        return group_dict
 
 
 class SampleAnnotationSheet(AnnotationSheet):
@@ -2624,7 +2624,7 @@ class SampleAnnotationSheet(AnnotationSheet):
         'Reads2 File',
     ]
 
-    _test_methods = dict({
+    _test_methods = {
         # File Type
         'ProcessedRunFolder Name': [
             AnnotationSheet.check_alphanumeric,
@@ -2653,4 +2653,4 @@ class SampleAnnotationSheet(AnnotationSheet):
             AnnotationSheet.check_alphanumeric,
         ],
         # Reads2 File
-    })
+    }

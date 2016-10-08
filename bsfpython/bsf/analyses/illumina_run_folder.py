@@ -971,9 +971,10 @@ class IlluminaRunFolderRestore(Analysis):
             raise Exception('The Illumina Run Folder directory {!r} exists already.'.
                             format(self.get_run_directory_path))
 
-        archive_name = dict(
-            folder='_'.join((self.get_run_directory_name, 'Folder.tar')),
-            intensities='_'.join((self.get_run_directory_name, 'Intensities.tar')))
+        archive_name = {
+            'folder': '_'.join((self.get_run_directory_name, 'Folder.tar')),
+            'intensities': '_'.join((self.get_run_directory_name, 'Intensities.tar')),
+        }
 
         for lane in range(0 + 1, self.maximum_lane_number + 1):
             archive_name['L{:03d}'.format(lane)] = '_'.join((self.get_run_directory_name, 'L{:03d}.tar'.format(lane)))

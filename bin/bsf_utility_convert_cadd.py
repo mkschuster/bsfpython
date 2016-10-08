@@ -191,21 +191,23 @@ input_thread_lock = Lock()
 
 input_thread_out = Thread(
     target=process_stdout,
-    kwargs=dict(
-        input_file_handle=input_process.stdout,
-        thread_lock=input_thread_lock,
-        output_file_path=name_space.output_path,
-        debug=name_space.debug))
+    kwargs={
+        'input_file_handle': input_process.stdout,
+        'thread_lock': input_thread_lock,
+        'output_file_path': name_space.output_path,
+        'debug': name_space.debug,
+    })
 input_thread_out.daemon = True  # Thread dies with the program.
 input_thread_out.start()
 
 input_thread_err = Thread(
     target=Executable.process_stderr,
-    kwargs=dict(
-        stderr_handle=input_process.stderr,
-        thread_lock=input_thread_lock,
-        stderr_path=None,
-        debug=name_space.debug))
+    kwargs={
+        'stderr_handle': input_process.stderr,
+        'thread_lock': input_thread_lock,
+        'stderr_path': None,
+        'debug': name_space.debug,
+    })
 input_thread_err.daemon = True  # Thread dies with the program.
 input_thread_err.start()
 

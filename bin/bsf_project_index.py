@@ -36,18 +36,18 @@ from bsf.standards import Default
 
 
 def scan_directory(report_dict_local, directory_root, directory_path=None):
-
     """
     Scan a directory recursively for *_report.html files and add them to a Python dict of
     directory_path key data and Python list of report_type value data.
-    :param report_dict_local: Python dict of directory_path key data and Python list of report_type value data
-    :type report_dict_local: dict
-    :param directory_root: Directory root
-    :type directory_root: str | unicode
-    :param directory_path: Directory path
-    :type directory_path: str | unicode
-    :return: Nothing
-    :rtype: None
+
+    @param report_dict_local: Python dict of directory_path key data and Python list of report_type value data
+    @type report_dict_local: dict
+    @param directory_root: Directory root
+    @type directory_root: str | unicode
+    @param directory_path: Directory path
+    @type directory_path: str | unicode
+    @return:
+    @rtype:
     """
 
     if not directory_path:
@@ -72,12 +72,12 @@ def scan_directory(report_dict_local, directory_root, directory_path=None):
 
 
 def scan_projects(project_name_local):
-
     """
     Scan a public_html project directory for full project directory names to match the given prefix.
     Resolve something like BSA_0001 to BSA_0001_ASP14_40d0aa70bf854ac99599caf5a52a9aa3
-    :param project_name_local: Project name or prefix
-    :type project_name_local: str | unicode
+
+    @param project_name_local: Project name or prefix
+    @type project_name_local: str | unicode
     """
 
     directory_path = os.path.join(Default.absolute_public_html(), 'projects')

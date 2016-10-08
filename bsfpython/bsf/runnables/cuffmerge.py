@@ -38,12 +38,12 @@ executable = 'cuffmerge'  # TODO: This is only needed until a better solution ha
 def process_stdout(stdout_handle, lock):
     """BSF Runner function to process STDOUT from the child process.
 
-    :param stdout_handle: The STDOUT file handle
-    :type stdout_handle: file
-    :param lock: A Python threading.Lock object
-    :type lock: Lock
-    :return: Nothing
-    :rtype: None
+    @param stdout_handle: The STDOUT file handle
+    @type stdout_handle: file
+    @param lock: A Python threading.Lock object
+    @type lock: Lock
+    @return:
+    @rtype:
     """
 
     lock.acquire(True)
@@ -64,12 +64,12 @@ def process_stdout(stdout_handle, lock):
 def process_stderr(stderr_handle, lock):
     """BSF Runner function to process STDERR from the child process.
 
-    :param stderr_handle: The STDERR file handle
-    :type stderr_handle: file
-    :param lock: A Python threading.Lock object
-    :type lock: Lock
-    :return: Nothing
-    :rtype: None
+    @param stderr_handle: The STDERR file handle
+    @type stderr_handle: file
+    @param lock: A Python threading.Lock object
+    @type lock: Lock
+    @return:
+    @rtype:
     """
 
     lock.acquire(True)

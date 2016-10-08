@@ -241,16 +241,16 @@ class Trimmomatic(Analysis):
                     if self.debug > 0:
                         print 'Trimmomatic Prefix: {}'.format(prefix_trimmomatic)
 
-                    file_path_dict_trimmomatic = dict(
-                        temporary_directory='_'.join((prefix_trimmomatic, 'temporary')),
-                        output_directory=os.path.join(self.project_directory, prefix_trimmomatic),
+                    file_path_dict_trimmomatic = {
+                        'temporary_directory': '_'.join((prefix_trimmomatic, 'temporary')),
+                        'output_directory': os.path.join(self.project_directory, prefix_trimmomatic),
                         # Automatic GNU Zip-compression of trim log files does not work.
-                        trim_log_tsv='_'.join((prefix_trimmomatic, 'trim_log.tsv')),
-                        summary_tsv='_'.join((prefix_trimmomatic, 'summary.tsv')),  # Defined by the R script.
-                        coverage_png='_'.join((prefix_trimmomatic, 'coverage.png')),  # Defined by the R script.
-                        frequency_png='_'.join((prefix_trimmomatic, 'frequency.png')),  # Defined by the R script.
-                        surviving_png='_'.join((prefix_trimmomatic, 'surviving.png')),  # Defined by the R script.
-                    )
+                        'trim_log_tsv': '_'.join((prefix_trimmomatic, 'trim_log.tsv')),
+                        'summary_tsv': '_'.join((prefix_trimmomatic, 'summary.tsv')),  # Defined by the R script.
+                        'coverage_png': '_'.join((prefix_trimmomatic, 'coverage.png')),  # Defined by the R script.
+                        'frequency_png': '_'.join((prefix_trimmomatic, 'frequency.png')),  # Defined by the R script.
+                        'surviving_png': '_'.join((prefix_trimmomatic, 'surviving.png')),  # Defined by the R script.
+                    }
 
                     # Create a Runnable and an Executable for running the Trimmomatic analysis.
 

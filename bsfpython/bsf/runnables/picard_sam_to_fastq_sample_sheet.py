@@ -40,8 +40,8 @@ def run(runnable):
 
     @param runnable: C{Runnable}
     @type runnable: Runnable
-    @return: Nothing
-    @rtype: None
+    @return:
+    @rtype:
     """
 
     # Do the work.

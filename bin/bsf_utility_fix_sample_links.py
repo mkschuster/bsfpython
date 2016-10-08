@@ -41,8 +41,8 @@ def scan_directory(directory_path, debug=0):
     @type directory_path: str | unicode
     @param debug: Debug level
     @type debug: int
-    @return: Nothing
-    @rtype: None
+    @return:
+    @rtype:
     """
     for file_name in os.listdir(directory_path):
         file_path = os.path.join(directory_path, file_name)

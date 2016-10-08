@@ -559,10 +559,10 @@ class SamToFastq(Analysis):
                         bam_file_path = reads.file_path
                         prefix_picard_stf = '_'.join((drms_picard_stf.name, replicate_key))
 
-                        file_path_dict_picard_stf = dict(
-                            temporary_directory='_'.join((prefix_picard_stf, 'temporary')),
-                            output_directory=os.path.join(self.project_directory, prefix_picard_stf),
-                        )
+                        file_path_dict_picard_stf = {
+                            'temporary_directory': '_'.join((prefix_picard_stf, 'temporary')),
+                            'output_directory': os.path.join(self.project_directory, prefix_picard_stf),
+                        }
 
                         # Get the SAM header of a BAM file to extract the read group (@RG), amongst other things.
 
@@ -706,10 +706,10 @@ class SamToFastq(Analysis):
 
         prefix_prune_sas = '_'.join((drms_picard_stf.name, self.project_name))
 
-        file_path_dict_prune_sas = dict(
-            temporary_directory='_'.join((prefix_prune_sas, 'temporary')),
-            output_directory=prefix_prune_sas,
-        )
+        file_path_dict_prune_sas = {
+            'temporary_directory': '_'.join((prefix_prune_sas, 'temporary')),
+            'output_directory': prefix_prune_sas,
+        }
 
         runnable_prune_sas = self.add_runnable(
             runnable=Runnable(

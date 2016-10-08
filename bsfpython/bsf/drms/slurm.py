@@ -933,22 +933,24 @@ def check_state(drms, debug=0):
 
         thread_out = Thread(
             target=check_state_stdout,
-            kwargs=dict(
-                stdout_handle=child_process.stdout,
-                thread_lock=thread_lock,
-                process_slurm_adaptor=process_slurm_adaptor,
-                stdout_path=executable.stdout_path,
-                debug=debug))
+            kwargs={
+                'stdout_handle': child_process.stdout,
+                'thread_lock': thread_lock,
+                'process_slurm_adaptor': process_slurm_adaptor,
+                'stdout_path': executable.stdout_path,
+                'debug': debug,
+            })
         thread_out.daemon = True  # Thread dies with the program.
         thread_out.start()
 
         thread_err = Thread(
             target=Executable.process_stderr,
-            kwargs=dict(
-                stderr_handle=child_process.stderr,
-                thread_lock=thread_lock,
-                stderr_path=executable.stderr_path,  # The Executable.stderr_path is None, thus printing to STDOUT.
-                debug=debug))
+            kwargs={
+                'stderr_handle': child_process.stderr,
+                'thread_lock': thread_lock,
+                'stderr_path': executable.stderr_path,
+                'debug': debug,
+            })
         thread_err.daemon = True  # Thread dies with the program.
         thread_err.start()
 

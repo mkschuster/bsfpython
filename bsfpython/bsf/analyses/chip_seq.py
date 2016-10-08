@@ -63,7 +63,7 @@ class ChIPSeqComparison(object):
     @ivar replicate: replicate number
     @type replicate: int
     @ivar diff_bind: Run the DiffBind analysis
-    @type: bool
+    @type diff_bind: bool
     """
 
     def __init__(
@@ -99,7 +99,7 @@ class ChIPSeqComparison(object):
         @param replicate: replicate number
         @type replicate: int
         @param diff_bind: Run the DiffBind analysis
-        @type: bool
+        @type diff_bind: bool
         @return:
         @rtype:
         """
@@ -592,12 +592,13 @@ class ChIPSeq(Analysis):
 
                 prefix = '_'.join((alignment_drms.name, replicate_key))
 
-                file_path_dict = dict(
-                    temporary_directory='_'.join((prefix, 'temporary')),
-                    replicate_directory=prefix,
-                    aligned_sam=os.path.join(prefix, '_'.join((prefix, 'aligned.sam'))),
-                    cleaned_sam=os.path.join(prefix, '_'.join((prefix, 'cleaned.sam'))),
-                    sorted_bam=os.path.join(prefix, '_'.join((prefix, 'sorted.bam'))))
+                file_path_dict = {
+                    'temporary_directory': '_'.join((prefix, 'temporary')),
+                    'replicate_directory': prefix,
+                    'aligned_sam': os.path.join(prefix, '_'.join((prefix, 'aligned.sam'))),
+                    'cleaned_sam': os.path.join(prefix, '_'.join((prefix, 'cleaned.sam'))),
+                    'sorted_bam': os.path.join(prefix, '_'.join((prefix, 'sorted.bam'))),
+                }
 
                 self.add_runnable(
                     runnable=Runnable(
@@ -656,22 +657,24 @@ class ChIPSeq(Analysis):
                 if len(reads2):
                     warnings.warn('Only second reads, but no first reads have been defined.')
 
-                file_path_chipseq_alignment = dict(
+                file_path_chipseq_alignment = {
                     # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
                     # It is currently based on the alignment_drms.name and replicate_key.
                     # The script should also be changed to pre-set all file names beforehand.
-                    aligned_bam='{}_{}.bam'.format(alignment_drms.name, replicate_key),
-                    aligned_bai='{}_{}.bai'.format(alignment_drms.name, replicate_key),
-                    aligned_md5='{}_{}.bam.md5'.format(alignment_drms.name, replicate_key))
+                    'aligned_bam': '{}_{}.bam'.format(alignment_drms.name, replicate_key),
+                    'aligned_bai': '{}_{}.bai'.format(alignment_drms.name, replicate_key),
+                    'aligned_md5': '{}_{}.bam.md5'.format(alignment_drms.name, replicate_key),
+                }
 
                 # Normally, the bwa object would be pushed onto the drms list.
                 # Experimentally, use Pickler to serialize the Executable object into a file.
 
-                pickler_dict_align_lane = dict()
-                pickler_dict_align_lane['prefix'] = alignment_drms.name
-                pickler_dict_align_lane['replicate_key'] = replicate_key
-                pickler_dict_align_lane['classpath_picard'] = self.classpath_picard
-                pickler_dict_align_lane['bwa_executable'] = bwa
+                pickler_dict_align_lane = {
+                    'prefix': alignment_drms.name,
+                    'replicate_key': replicate_key,
+                    'classpath_picard': self.classpath_picard,
+                    'bwa_executable': bwa,
+                }
 
                 pickler_path = os.path.join(
                     self.genome_directory,
@@ -760,12 +763,13 @@ class ChIPSeq(Analysis):
 
                 prefix = '_'.join((alignment_drms.name, replicate_key))
 
-                file_path_dict = dict(
-                    temporary_directory='_'.join((prefix, 'temporary')),
-                    replicate_directory=prefix,
-                    aligned_sam=os.path.join(prefix, '_'.join((prefix, 'aligned.sam'))),
-                    cleaned_sam=os.path.join(prefix, '_'.join((prefix, 'cleaned.sam'))),
-                    sorted_bam=os.path.join(prefix, '_'.join((prefix, '.bam'))))
+                file_path_dict = {
+                    'temporary_directory': '_'.join((prefix, 'temporary')),
+                    'replicate_directory': prefix,
+                    'aligned_sam': os.path.join(prefix, '_'.join((prefix, 'aligned.sam'))),
+                    'cleaned_sam': os.path.join(prefix, '_'.join((prefix, 'cleaned.sam'))),
+                    'sorted_bam': os.path.join(prefix, '_'.join((prefix, '.bam'))),
+                }
 
                 runnable_alignment = self.add_runnable(
                     runnable=Runnable(
@@ -1053,10 +1057,10 @@ class ChIPSeq(Analysis):
 
                             prefix = '{}_{}__{}'.format(peakcalling_drms.name, t_replicate_key, c_replicate_key)
 
-                            file_path_dict = dict(
-                                temporary_directory='_'.join((prefix, 'temporary')),
-                                replicate_directory=prefix,
-                            )
+                            file_path_dict = {
+                                'temporary_directory': '_'.join((prefix, 'temporary')),
+                                'replicate_directory': prefix,
+                            }
 
                             runnable = self.add_runnable(
                                 runnable=Runnable(
@@ -1233,22 +1237,25 @@ class ChIPSeq(Analysis):
         # keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
-
             chipseq_comparison = self.comparisons[key]
             assert isinstance(chipseq_comparison, ChIPSeqComparison)
-
-            if chipseq_comparison.factor in self._factor_dict:
-                factor_list = self._factor_dict[chipseq_comparison.factor]
-            else:
-                factor_list = list()
-                self._factor_dict[chipseq_comparison.factor] = factor_list
-
-            factor_list.append(chipseq_comparison)
+            if not chipseq_comparison.diff_bind:
+                continue
+            if chipseq_comparison.factor not in self._factor_dict:
+                self._factor_dict[chipseq_comparison.factor] = list()
+            self._factor_dict[chipseq_comparison.factor].append(chipseq_comparison)
 
         keys = self._factor_dict.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
+            factor_list = self._factor_dict[key]
+            factor_list.sort(cmp=lambda x, y: cmp(x, y))
+
+            # No comparison for less than two items.
+
+            if len(factor_list) < 2:
+                continue
 
             # Create a directory per factor.
 
@@ -1271,9 +1278,6 @@ class ChIPSeq(Analysis):
             file_path = os.path.join(factor_directory, 'chipseq_diffbind_{}_samples.csv'.format(key))
 
             dbs = ChIPSeqDiffBindSheet(file_path=file_path)
-
-            factor_list = self._factor_dict[key]
-            factor_list.sort(cmp=lambda x, y: cmp(x, y))
 
             for chipseq_comparison in factor_list:
 
