@@ -194,7 +194,7 @@ if run_bwa.sub_command.program == 'mem' and run_bwa.sub_command.arguments[1][-4:
             "BAM file {!r} contains more than one read group line, which is not supported, yet.\n"
             "RGs: {!r}".format(run_bwa.sub_command.arguments[1], sam_header_rg))
 
-    run_bwa.sub_command.add_option_short(key='R', value=str(sam_header_rg[0]).rstrip().replace("\t", "\\t"))
+    run_bwa.sub_command.add_option_short(key='R', value=sam_header_rg[0].rstrip().replace("\t", "\\t"))
 
     # After the SamToFastq conversion, the second and third arguments in the BWA sub-command need replacing.
 

@@ -38,7 +38,7 @@ from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
 from bsf.data import Reads, PairedReads, Sample
 from bsf.illumina import RunFolder
 from bsf.process import RunnableStep, RunnableStepPicard, RunnableStepMakeDirectory
-from bsf.standards import Configuration, Default
+from bsf.standards import Default
 
 import pysam
 
@@ -46,10 +46,11 @@ import pysam
 def _process_row_dict(barcode_dict, row_dict, prefix=None):
     """Private function to read fields from a Python row_dict object, index by the 'lane' field in the barcode_dict.
 
-    @param barcode_dict: A Python dict of 'lane' key data and Python list objects of lane_dict value data
-    @type barcode_dict: dict
+    @param barcode_dict: A Python C{dict} of Python C{str} (lane) key data and Python C{list} objects of
+        lane_dict value data
+    @type barcode_dict: dict[str, str]
     @param row_dict: Python row_dict object
-    @type row_dict: dict
+    @type row_dict: dict[str, str]
     @param prefix: Optional prefix
         (e.g. '[Control] lane', ...)
     @type prefix: str
@@ -365,13 +366,13 @@ def extract_illumina_barcodes(config_path):
 
 
 class SamToFastq(Analysis):
-    """The C{SamToFastq} class represents the logic to run the Picard SamToFastq analysis.
+    """The C{bsf.analyses.picard.SamToFastq} class represents the logic to run the Picard SamToFastq analysis.
 
     Attributes:
 
-    @cvar name: Analysis name that should be overridden by sub-classes
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
     @type classpath_picard: str | unicode
@@ -399,36 +400,36 @@ class SamToFastq(Analysis):
             samples=None,
             classpath_picard=None,
             include_non_pf_reads=False):
-        """Initialise a C{SamToFastq} object.
+        """Initialise a C{bsf.analyses.picard.SamToFastq} object.
 
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{Analysis}-wide input directory
+        @param input_directory: C{bsf.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{Analysis}-wide output directory
+        @param output_directory: C{bsf.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{Analysis}-wide project directory,
-            normally under the C{Analysis}-wide output directory
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{Analysis}-wide genome directory,
-            normally under the C{Analysis}-wide project directory
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
         @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list
-        @param collection: C{Collection}
-        @type collection: Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{Sample} objects
-        @type comparisons: dict
-        @param samples: Python C{list} of C{Sample} objects
-        @type samples: list
+        @type drms_list: list[DRMS]
+        @param collection: C{bsf.data.Collection}
+        @type collection: bsf.data.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.data.Sample]]
+        @param samples: Python C{list} of C{bsf.data.Sample} objects
+        @type samples: list[bsf.data.Sample]
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: str | unicode
         @param include_non_pf_reads: Include non-pass filer reads
@@ -466,11 +467,12 @@ class SamToFastq(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{SamToFastq} object via a section of a C{Configuration} object.
+        """Set instance variables of a C{bsf.analyses.picard.SamToFastq} object via a section of a
+        C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
         @return:
@@ -500,9 +502,10 @@ class SamToFastq(Analysis):
         return
 
     def run(self):
-        """Run the C{SamToFastq} C{Analysis} to convert a I{BAM} or I{SAM} file into I{FASTQ} files.
+        """Run the C{bsf.analyses.picard.SamToFastq} C{bsf.Analysis} to convert a
+        I{BAM} or I{SAM} file into I{FASTQ} files.
 
-        This method changes the C{Collection} object of this C{Analysis} to update with FASTQ file paths.
+        This method changes the C{bsf.data.Collection} object of this C{bsf.Analysis} to update with FASTQ file paths.
         @return:
         @rtype:
         """
@@ -531,7 +534,7 @@ class SamToFastq(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(level=1)
 
-            # bsf.data.Sample.get_all_paired_reads returns a Python dict of
+            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
             # Python str key and Python list of Python list objects
             # of bsf.data.PairedReads objects.
 

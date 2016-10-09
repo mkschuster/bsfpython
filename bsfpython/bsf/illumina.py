@@ -36,7 +36,7 @@ from bsf.annotation import AnnotationSheet
 
 
 class Adaptors(object):
-    """The C{Adaptors} class models Illumina Sequencing Adaptor index sequences.
+    """The C{bsf.illumina.Adaptors} class models Illumina Sequencing Adaptor index sequences.
 
     Attributes:
     @cvar default_class: Default class
@@ -50,7 +50,7 @@ class Adaptors(object):
     default_type = 'Default'
 
     def __init__(self, adaptor_dict=None):
-        """Initialise an C{Adaptors} object.
+        """Initialise a C{bsf.illumina.Adaptors} object.
 
         @param adaptor_dict: Adaptor Python C{dict}
         @type adaptor_dict: dict[str, dict[str, dict[str, str]]]
@@ -64,14 +64,16 @@ class Adaptors(object):
         else:
             self.adaptor_dict = adaptor_dict
 
+        return
+
     @classmethod
     def from_file_path(cls, file_path):
-        """Instantiate an C{Adaptors} object from a file path.
+        """Instantiate a C{bsf.illumina.Adaptors} object from a file path.
 
         @param file_path: File path
         @type file_path: str | unicode
-        @return: C{Adaptors}
-        @rtype: Adaptors
+        @return: C{bsf.illumina.Adaptors}
+        @rtype: bsf.illumina.Adaptors
         """
         annotation_sheet = AnnotationSheet.from_file_path(
             file_path=file_path,
@@ -144,7 +146,7 @@ class Adaptors(object):
 
 
 class RunInformationFlowcellLayout(object):
-    """The C{RunInformationFlowcellLayout} class models
+    """The C{bsf.illumina.RunInformationFlowcellLayout} class models
     one I{<FlowcellLayout>} XML element in an I{Illumina Run Information} (RunInfo.xml) document.
 
     Attributes:
@@ -159,7 +161,7 @@ class RunInformationFlowcellLayout(object):
     """
 
     def __init__(self, lane_count=0, surface_count=0, swath_count=0, tile_count=0):
-        """Initialise a C{RunInformationFlowcellLayout} object.
+        """Initialise a C{bsf.illumina.RunInformationFlowcellLayout} object.
 
         @param lane_count: Number of lanes
         @type lane_count: int
@@ -180,9 +182,11 @@ class RunInformationFlowcellLayout(object):
         self.swath_count = swath_count
         self.tile_count = tile_count
 
+        return
+
 
 class RunInformationRead(object):
-    """The C{RunInformationRead} class models
+    """The C{bsf.illumina.RunInformationRead} class models
     one <Read> XML element in an Illumina Run Information (RunInfo.xml) document.
 
     Attributes:
@@ -195,7 +199,7 @@ class RunInformationRead(object):
     """
 
     def __init__(self, number=0, cycles=0, index=False):
-        """Initialise a C{RunInformationRead} object.
+        """Initialise a C{bsf.illumina.RunInformationRead} object.
 
         @param number: Read number
         @type number: int
@@ -213,9 +217,11 @@ class RunInformationRead(object):
         self.cycles = cycles
         self.index = index
 
+        return
+
 
 class RunInformation(object):
-    """The C{RunInformation} class represents an Illumina
+    """The C{bsf.illumina.RunInformation} class represents an Illumina
     run information XML (RunInfo.xml) document.
 
     Attributes:
@@ -237,13 +243,13 @@ class RunInformation(object):
     @type instrument: str
     @ivar date: Date in YYMMDD format e.g. 130724
     @type date: str
-    @ivar reads: Python C{list} of C{RunInformationRead} objects
-    @type reads: list
+    @ivar reads: Python C{list} of C{bsf.illumina.RunInformationRead} objects
+    @type reads: list[bsf.illumina.RunInformationRead]
     """
 
     @staticmethod
     def parse_run_identifier(run_identifier):
-        """Split an I{Illumina Run Identifier} into its components.
+        """Split an I{bsf.illumina.Illumina Run Identifier} into its components.
 
         Splits the Illumina Run Identifier into <Date>_<Instrument>_<Number>_<FCPosition><Flowcell>.
         This method is particularly useful for older version of RunInfo.xml files, that lack
@@ -251,7 +257,7 @@ class RunInformation(object):
         @param run_identifier: Illumina Run Identifier (e.g. 130724_SN815_0089_BC26JBACXX)
         @type run_identifier: str
         @return: Python C{list} of Python C{str} objects
-        @rtype: list
+        @rtype: list[str]
         """
 
         # Split into <Date>_<Instrument>_<Number>_<FCPosition><Flowcell>
@@ -270,12 +276,12 @@ class RunInformation(object):
 
     @classmethod
     def from_file_path(cls, file_path):
-        """Create a C{RunInformation} object from a file path.
+        """Create a C{bsf.illumina.RunInformation} object from a file path.
 
         @param file_path: File path
         @type file_path: str | unicode
-        @return: C{RunInformation}
-        @rtype: RunInformation
+        @return: C{bsf.illumina.RunInformation}
+        @rtype: bsf.illumina.RunInformation
         """
 
         file_path = os.path.normpath(file_path)
@@ -414,7 +420,7 @@ class RunInformation(object):
             date=None,
             reads=None,
             flow_cell_layout=None):
-        """Initialise a C{RunInformation} object.
+        """Initialise a C{bsf.illumina.RunInformation} object.
 
         @param file_path: File path
         @type file_path: str | unicode
@@ -432,10 +438,10 @@ class RunInformation(object):
         @type instrument: str
         @param date: Date in YYMMDD format
         @type date: str
-        @param reads: Python C{list} of C{RunInformationRead} objects
-        @type reads: list
-        @param flow_cell_layout: C{RunInformationFlowcellLayout}
-        @type flow_cell_layout: RunInformationFlowcellLayout
+        @param reads: Python C{list} of C{bsf.illumina.RunInformationRead} objects
+        @type reads: list[bsf.illumina.RunInformationRead]
+        @param flow_cell_layout: C{bsf.illumina.RunInformationFlowcellLayout}
+        @type flow_cell_layout: bsf.illumina.RunInformationFlowcellLayout
         @return:
         @rtype:
         """
@@ -492,6 +498,8 @@ class RunInformation(object):
         else:
             self.flow_cell_layout = RunInformationFlowcellLayout()
 
+        return
+
     @property
     def get_cycle_number(self):
         """Get the total number of cycles.
@@ -522,8 +530,8 @@ class RunInformation(object):
     def get_read_start_list(self):
         """Get a Python C{list} of cycle numbers at the start of each read.
 
-        @return: Python C{list} of starting cycle for each read
-        @rtype: list
+        @return: Python C{list} of Python C{int} (starting cycle) for each read
+        @rtype: list[int]
         """
 
         cycle_number = 0
@@ -587,36 +595,36 @@ class RunInformation(object):
 
 
 class RunParameters(object):
-    """The C{RunParameters} class models the contents of runParameters.xml
+    """The C{bsf.illumina.RunParameters} class models the contents of runParameters.xml
     files inside an Illumina Run Folder.
 
     Attributes:
     @ivar file_path: File path
     @type file_path: str | unicode
-    @ivar element_tree: C{xml.etree.ElementTree}
-    @type element_tree: ElementTree
+    @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
+    @type element_tree: xml.etree.ElementTree.ElementTree
     """
 
     @classmethod
     def from_file_path(cls, file_path):
-        """Create a C{RunParameters} object from a file path.
+        """Create a C{bsf.illumina.RunParameters} object from a file path.
 
         @param file_path: File path
         @type file_path: str | unicode
-        @return: C{RunParameters} object
-        @rtype: RunParameters
+        @return: C{bsf.illumina.RunParameters} object
+        @rtype: bsf.illumina.RunParameters
         """
 
         file_path = os.path.normpath(file_path)
         return cls(file_path=file_path, element_tree=ElementTree(file=file_path))
 
     def __init__(self, file_path=None, element_tree=None):
-        """Initialise a C{RunParameters} object.
+        """Initialise a C{bsf.illumina.RunParameters} object.
 
         @param file_path: File path
         @type file_path: str | unicode
-        @param element_tree: XML Element Tree
-        @type element_tree: ElementTree
+        @param element_tree: C{xml.etree.ElementTree.ElementTree}
+        @type element_tree: xml.etree.ElementTree.ElementTree
         @return:
         @rtype:
         """
@@ -635,9 +643,11 @@ class RunParameters(object):
 
         self._run_parameters_version = None
 
+        return
+
     @property
     def get_run_parameters_version(self):
-        """Get the run parameters version of a C{RunParameters} object.
+        """Get the run parameters version of a C{bsf.illumina.RunParameters} object.
 
         Returns an empty string for I{HiSeq Control Software} or the text representation of the
         I{<RunParameters>/<RunParametersVersion>} element for I{MiSeq Control Software}.
@@ -656,7 +666,7 @@ class RunParameters(object):
 
     @property
     def get_experiment_name(self):
-        """Get the experiment name of a C{RunParameters} object.
+        """Get the experiment name of a C{bsf.illumina.RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<ExperimentName>} element for
         I{HiSeq Control Software} or the I{<RunParameters>/<ExperimentName>} element for
@@ -674,7 +684,7 @@ class RunParameters(object):
 
     @property
     def get_flow_cell_barcode(self):
-        """Get the flow cell barcode of a C{RunParameters} object.
+        """Get the flow cell barcode of a C{bsf.illumina.RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<Barcode>} element for
         I{HiSeq Control Software} or the I{<RunParameters>/<Barcode>} element for
@@ -692,7 +702,7 @@ class RunParameters(object):
 
     @property
     def get_flow_cell_type(self):
-        """Get the flow cell chemistry type of a C{RunParameters} object.
+        """Get the flow cell chemistry type of a C{bsf.illumina.RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<Flowcell>} element for
         I{HiSeq Control Software} or the I{<RunParameters>/<ReagentKitVersion>} element for
@@ -711,7 +721,7 @@ class RunParameters(object):
 
     @property
     def get_index_type(self):
-        """Get the index chemistry type of a C{RunParameters} object.
+        """Get the index chemistry type of a C{bsf.illumina.RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<Index>} element for
         I{HiSeq Control Software} or an empty string for
@@ -730,7 +740,7 @@ class RunParameters(object):
 
     @property
     def get_pe_type(self):
-        """Get the paired-end chemistry type of a C{RunParameters} object.
+        """Get the paired-end chemistry type of a C{bsf.illumina.RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<Pe>} element for
         I{HiSeq Control Software} or an empty string for
@@ -749,7 +759,7 @@ class RunParameters(object):
 
     @property
     def get_sbs_type(self):
-        """Get the sequencing-by-synthesis chemistry type of a C{RunParameters} object.
+        """Get the sequencing-by-synthesis chemistry type of a C{bsf.illumina.RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<Sbs>} element for
         I{HiSeq Control Software} or an empty string for
@@ -768,7 +778,7 @@ class RunParameters(object):
 
     @property
     def get_position(self):
-        """Get the flow cell position of a C{RunParameters} object.
+        """Get the flow cell position of a C{bsf.illumina.RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<FCPosition>} element for
         I{HiSeq Control Software} or an empty string for
@@ -792,7 +802,7 @@ class RunParameters(object):
 
     @property
     def get_run_identifier(self):
-        """Get the run identifier of a C{RunParameters} object.
+        """Get the run identifier of a C{bsf.illumina.RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<RunID>} element for
         I{HiSeq Control Software} or the I{<RunParameters>/<RunID>} element for
@@ -810,7 +820,7 @@ class RunParameters(object):
 
     @property
     def get_read1(self):
-        """Get the read 1 cycle number of a C{RunParameters} object.
+        """Get the read 1 cycle number of a C{bsf.illumina.RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<Read1>} element for
         I{HiSeq Control Software} or an empty string for
@@ -818,7 +828,7 @@ class RunParameters(object):
         @return: Number of cycles in read 1
         @rtype: str
         @deprecated: The more scalable option is getting read information via the
-            C{RunInformation.reads} instance variable.
+            C{bsf.illumina.RunInformation.reads} instance variable.
         """
 
         if self.get_run_parameters_version == 'MiSeq_1_1':
@@ -834,7 +844,7 @@ class RunParameters(object):
 
     @property
     def get_read2(self):
-        """Get the read 2 cycle number of a C{RunParameters} object.
+        """Get the read 2 cycle number of a C{bsf.illumina.RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<Read2>} element for
         I{HiSeq Control Software} or an empty string for
@@ -843,7 +853,7 @@ class RunParameters(object):
         @return: Number of cycles in read 2
         @rtype: str
         @deprecated: The more scalable option is getting read information via the
-            C{RunInformation.reads} instance variable.
+            C{bsf.illumina.RunInformation.reads} instance variable.
         """
 
         if self.get_run_parameters_version == 'MiSeq_1_1':
@@ -859,7 +869,7 @@ class RunParameters(object):
 
     @property
     def get_index_read1(self):
-        """Get the index read 1 cycle number of a C{RunParameters} object.
+        """Get the index read 1 cycle number of a C{bsf.illumina.RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<IndexRead1>} element for
         I{HiSeq Control Software} or an empty string for
@@ -869,7 +879,7 @@ class RunParameters(object):
         @return: Number of cycles in index read 1
         @rtype: str
         @deprecated: The more scalable option is getting read information via the
-            C{RunInformation.reads} instance variable.
+            C{bsf.illumina.RunInformation.reads} instance variable.
         """
 
         if self.get_run_parameters_version == 'MiSeq_1_1':
@@ -889,7 +899,7 @@ class RunParameters(object):
 
     @property
     def get_index_read2(self):
-        """Get the index read 2 cycle number of a C{RunParameters} object.
+        """Get the index read 2 cycle number of a C{bsf.illumina.RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<IndexRead2>} element for
         I{HiSeq Control Software} or an empty string for
@@ -899,7 +909,7 @@ class RunParameters(object):
         @return: Number of cycles in index read 2
         @rtype: str
         @deprecated: The more scalable option is getting read information via the
-            C{RunInformation.reads} instance variable.
+            C{bsf.illumina.RunInformation.reads} instance variable.
         """
 
         if self.get_run_parameters_version == 'MiSeq_1_1':
@@ -915,7 +925,7 @@ class RunParameters(object):
 
     @property
     def get_real_time_analysis_version(self):
-        """Get the Real-Time Analysis (RTA) Version of a C{RunParameters} object.
+        """Get the Real-Time Analysis (RTA) Version of a C{bsf.illumina.RunParameters} object.
 
         Returns the text representation of the I{<RunParameters>/<Setup>/<RTAVersion>} element for
         I{HiSeq Control Software} or the I{<RunParameters>/<RTAVersion>} element for
@@ -955,26 +965,26 @@ class RunParameters(object):
 
 
 class XMLConfiguration(object):
-    """The C{XMLConfiguration} class models the contents of XML configuration
+    """The C{bsf.illumina.XMLConfiguration} class models the contents of XML configuration
     files inside an Illumina Run Folder.
 
     Attributes:
     @ivar file_path: File path
     @type file_path: str | unicode
-    @ivar element_tree: C{xml.etree.ElementTree}
-    @type element_tree: ElementTree
+    @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
+    @type element_tree: xml.etree.ElementTree.ElementTree
     """
 
     @classmethod
     def from_file_path(cls, file_path):
-        """Create a C{XMLConfiguration} object from a file path.
-        In case the file path does not exist a C{XMLConfiguration} object
-        with an empty C{ElementTree} will be returned.
+        """Create a C{bsf.illumina.XMLConfiguration} object from a file path.
+        In case the file path does not exist a C{bsf.illumina.XMLConfiguration} object
+        with an empty C{xml.etree.ElementTree.ElementTree} will be returned.
 
         @param file_path: File path
         @type file_path: str | unicode
-        @return: C{XMLConfiguration} object
-        @rtype: XMLConfiguration
+        @return: C{bsf.illumina.XMLConfiguration} object
+        @rtype: bsf.illumina.XMLConfiguration
         """
         file_path = os.path.normpath(file_path)
         if not os.path.isfile(file_path):
@@ -982,12 +992,12 @@ class XMLConfiguration(object):
         return cls(file_path=file_path, element_tree=ElementTree(file=file_path))
 
     def __init__(self, file_path=None, element_tree=None):
-        """Initialise a C{XMLConfiguration} object.
+        """Initialise a C{bsf.illumina.XMLConfiguration} object.
 
         @param file_path: File path
         @type file_path: str | unicode
-        @param element_tree: XML Element Tree
-        @type element_tree: ElementTree
+        @param element_tree: C{xml.etree.ElementTree.ElementTree}
+        @type element_tree: xml.etree.ElementTree.ElementTree
         @return:
         @rtype:
         """
@@ -1004,27 +1014,29 @@ class XMLConfiguration(object):
         else:
             self.element_tree = ElementTree()
 
+        return
+
 
 class AnalysisConfiguration(XMLConfiguration):
-    """The C{AnalysisConfiguration} class models Image and Base Call analysis
+    """The C{bsf.illumina.AnalysisConfiguration} class models Image and Base Call analysis
     XML configuration files inside and Illumina Run Folder.
 
     Attributes:
     @ivar file_path: File path
     @type file_path: str | unicode
-    @ivar element_tree: C{xml.etree.ElementTree}
-    @type element_tree: ElementTree
+    @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
+    @type element_tree: xml.etree.ElementTree.ElementTree
     """
 
     def __init__(self, file_path=None, element_tree=None):
-        """Initialise an C{AnalysisConfiguration} object.
+        """Initialise a C{bsf.illumina.AnalysisConfiguration} object.
         Read all I{<Tile>} elements from the I{<Run>/<TileSelection>} element from the XML configuration file
         to initialise an internal Python C{dict} of valid tiles.
 
         @param file_path: File path
         @type file_path: str | unicode
-        @param element_tree: XML Element Tree
-        @type element_tree: ElementTree
+        @param element_tree: C{xml.etree.ElementTree.ElementTree}
+        @type element_tree: xml.etree.ElementTree.ElementTree
         @return:
         @rtype:
         """
@@ -1047,8 +1059,10 @@ class AnalysisConfiguration(XMLConfiguration):
                 assert isinstance(tile_element, Element)
                 lane_dict[tile_element.text] = True
 
+        return
+
     def has_lane(self, lane):
-        """Check if a particular lane is defined in an C{AnalysisConfiguration} object.
+        """Check if a particular lane is defined in a C{bsf.illumina.AnalysisConfiguration} object.
 
         @param lane: Lane index
         @type lane: str
@@ -1058,7 +1072,7 @@ class AnalysisConfiguration(XMLConfiguration):
         return lane in self._lane_tile_dict
 
     def has_lane_tile(self, lane, tile):
-        """Check if a particular tile is defined in a lane of an C{AnalysisConfiguration} object.
+        """Check if a particular tile is defined in a lane of a C{bsf.illumina.AnalysisConfiguration} object.
 
         @param lane: Lane index
         @type lane: str
@@ -1075,8 +1089,8 @@ class AnalysisConfiguration(XMLConfiguration):
 
 
 class ImageAnalysis(AnalysisConfiguration):
-    """The C{ImageAnalysis} class models the contents of the I{IRF/Data/Intensities/config.xml}
-    XML configuration file inside an Illumina Run Folder.
+    """The C{bsf.illumina.ImageAnalysis} class models the contents of the
+    I{IRF/Data/Intensities/config.xml} XML configuration file inside an Illumina Run Folder.
 
     Attributes:
     """
@@ -1085,8 +1099,8 @@ class ImageAnalysis(AnalysisConfiguration):
 
 
 class BaseCallAnalysis(AnalysisConfiguration):
-    """The C{BaseCallAnalysis} class models the contents of the I{IRF/Data/Intensities/BaseCalls/config.xml}
-    XML configuration file inside an Illumina Run Folder.
+    """The C{bsf.illumina.BaseCallAnalysis} class models the contents of the
+    I{IRF/Data/Intensities/BaseCalls/config.xml} XML configuration file inside an Illumina Run Folder.
 
     Attributes:
     """
@@ -1099,7 +1113,7 @@ class RunFolderNotComplete(Exception):
 
 
 class RunFolder(object):
-    """The C{RunFolder} class represents an Illumina
+    """The C{bsf.illumina.RunFolder} class represents an Illumina
     Run Folder copied off the instrument.
 
     Attributes:
@@ -1119,18 +1133,18 @@ class RunFolder(object):
     @type run: str
     @ivar flow_cell: Flow cell identifier
     @type flow_cell: str
-    @ivar run_information: C{RunInformation} object
-    @type run_information: RunInformation
+    @ivar run_information: C{bsf.illumina.RunInformation} object
+    @type run_information: bsf.illumina.RunInformation
     """
 
     @classmethod
     def from_file_path(cls, file_path):
-        """Construct a C{RunFolder} object from a file path.
+        """Construct a C{bsf.illumina.RunFolder} object from a file path.
 
         @param file_path: File path
         @type file_path: str | unicode
-        @return: C{RunFolder} object
-        @rtype: RunFolder
+        @return: C{bsf.illumina.RunFolder}
+        @rtype: bsf.illumina.RunFolder
         """
 
         file_path = os.path.normpath(file_path)
@@ -1170,7 +1184,7 @@ class RunFolder(object):
             run_parameters=None,
             image_analysis=None,
             base_call_analysis=None):
-        """Initialise a C{RunFolder} object.
+        """Initialise a C{bsf.illumina.RunFolder} object.
 
         @param file_path: File path
         @type file_path: str | unicode
@@ -1186,12 +1200,12 @@ class RunFolder(object):
         @type run: str
         @param flow_cell: The position and flow cell identifier
         @type flow_cell: str
-        @param run_information: C{RunInformation}
-        @type run_information: RunInformation
-        @param image_analysis: C{ImageAnalysis}
-        @type image_analysis: ImageAnalysis
-        @param base_call_analysis: C{BaseCallAnalysis}
-        @type base_call_analysis: BaseCallAnalysis
+        @param run_information: C{bsf.illumina.RunInformation}
+        @type run_information: bsf.illumina.RunInformation
+        @param image_analysis: C{bsf.illumina.ImageAnalysis}
+        @type image_analysis: bsf.illumina.ImageAnalysis
+        @param base_call_analysis: C{bsf.illumina.BaseCallAnalysis}
+        @type base_call_analysis: bsf.illumina.BaseCallAnalysis
         @return:
         @rtype:
         """
@@ -1256,6 +1270,8 @@ class RunFolder(object):
         self._missing_base_call_tiles = dict()
         self._missing_image_analysis_tiles = dict()
 
+        return
+
     @property
     def get_base_calls_directory(self):
         """Get the base-calls directory in the I{IRF/Data/Intensities/BaseCalls} hierarchy.
@@ -1291,6 +1307,8 @@ class RunFolder(object):
                                 print "Missing BaseCallAnalysis lane '{:1d}' tile '{}'.". \
                                     format(lane, tile)
 
+        return
+
     def _check_tiles_image_analysis(self):
         """Check for missing I{<Tile>} elements in the I{IRF/Data/Intensities/config.xml}
         configuration file. This method also builds up a Python C{dict} required for method
@@ -1315,6 +1333,8 @@ class RunFolder(object):
                                 lane_dict[tile] = True
                                 print "Missing ImageAnalysis lane '{:1d}' tile '{}'.". \
                                     format(lane, tile)
+
+        return
 
     def _is_missing_base_call_tile(self, lane, tile):
         """Confirm that a particular I{<Tile>} element is missing from the
@@ -1378,6 +1398,8 @@ class RunFolder(object):
                 del directory_dict[file_name]
             else:
                 print "Missing file '{}' in directory path '{}'".format(file_name, directory_path)
+
+        return
 
     def _check_data_intensities_base_calls_matrix(self, base_calls_dict, base_calls_path, debug=0):
         """Check the I{IRF/Data/Intensities/BaseCalls/Matrix/} directory.
@@ -1506,6 +1528,8 @@ class RunFolder(object):
             entry_names.sort(cmp=lambda x, y: cmp(x, y))
             print '  Remaining entries: {!r}'.format(entry_names)
 
+        return
+
     def _check_data_intensities_base_calls_phasing(self, base_calls_dict, base_calls_path, debug=0):
         """Check the I{IRF/Data/Intensities/BaseCalls/Phasing/} directory.
 
@@ -1621,6 +1645,8 @@ class RunFolder(object):
             entry_names = phasing_dict.keys()
             entry_names.sort(cmp=lambda x, y: cmp(x, y))
             print '  Remaining entries: {!r}'.format(entry_names)
+
+        return
 
     def _check_data_intensities_base_calls(self, intensities_dict, intensities_path, debug=0):
         """Check the I{IRF/Data/Intensities/BaseCalls/} directory.
@@ -1814,6 +1840,8 @@ class RunFolder(object):
             entry_names.sort(cmp=lambda x, y: cmp(x, y))
             print '  Remaining entries: {!r}'.format(entry_names)
 
+        return
+
     @staticmethod
     def _check_data_intensities_offsets(intensities_dict, intensities_path, debug=0):
         """Check the I{IRF/Data/Intensities/Offsets/} directory.
@@ -1865,6 +1893,8 @@ class RunFolder(object):
             entry_names = directory_dict.keys()
             entry_names.sort(cmp=lambda x, y: cmp(x, y))
             print '  Remaining entries: {!r}'.format(entry_names)
+
+        return
 
     def _check_data_intensities(self, data_dict, data_path, debug=0):
         """Check the I{IRF/Data/Intensities/} directory.
@@ -2105,6 +2135,8 @@ class RunFolder(object):
             entry_names.sort(cmp=lambda x, y: cmp(x, y))
             print '  Remaining entries: {!r}'.format(entry_names)
 
+        return
+
     def _check_data_tile_status(self, data_dict, data_path, debug=0):
         """Check the I{IRF/Data/TileStatus/} directory.
 
@@ -2164,6 +2196,8 @@ class RunFolder(object):
             entry_names = directory_dict.keys()
             entry_names.sort(cmp=lambda x, y: cmp(x, y))
             print '  Remaining entries: {!r}'.format(entry_names)
+
+        return
 
     def _check_data(self, folder_dict, folder_path, debug=0):
         """Check the IRF/Data/ directory.
@@ -2255,6 +2289,8 @@ class RunFolder(object):
             entry_names.sort(cmp=lambda x, y: cmp(x, y))
             print '  Remaining entries: {!r}'.format(entry_names)
 
+        return
+
     def _check_inter_op(self, folder_dict, folder_path, debug=0):
         """Check the I{IRF/InterOp/} directory.
 
@@ -2326,6 +2362,8 @@ class RunFolder(object):
             entry_names.sort(cmp=lambda x, y: cmp(x, y))
             print '  Remaining entries: {!r}'.format(entry_names)
 
+        return
+
     def _check_periodic_save_rates(self, folder_dict, folder_path, debug=0):
         """Check the I{IRF/PeriodicSaveRates/} directory.
 
@@ -2366,6 +2404,8 @@ class RunFolder(object):
             entry_names = directory_dict.keys()
             entry_names.sort(cmp=lambda x, y: cmp(x, y))
             print '  Remaining entries: {!r}'.format(entry_names)
+
+        return
 
     def _check_recipe(self, folder_dict, folder_path, debug=0):
         """Check the I{IRF/Recipe/} directory.
@@ -2420,6 +2460,8 @@ class RunFolder(object):
             entry_names = directory_dict.keys()
             entry_names.sort(cmp=lambda x, y: cmp(x, y))
             print '  Remaining entries: {!r}'.format(entry_names)
+
+        return
 
     def _check_thumbnail_images(self, folder_dict, folder_path, debug=0):
         """Check the I{IRF/Thumbnail_Images/} directory.
@@ -2565,6 +2607,8 @@ class RunFolder(object):
             entry_names.sort(cmp=lambda x, y: cmp(x, y))
             print '  Remaining entries: {!r}'.format(entry_names)
 
+        return
+
     def check(self, debug=0):
         """Check an Illumina Run Folder regarding its internal directory and file structure and report both,
         missing and additional files.
@@ -2673,3 +2717,5 @@ class RunFolder(object):
             entry_names = folder_dict.keys()
             entry_names.sort(cmp=lambda x, y: cmp(x, y))
             print '  Remaining entries: {!r}'.format(entry_names)
+
+        return

@@ -40,7 +40,7 @@ output_directory_name = 'bsfpython_sge_output'
 
 
 class ProcessSGE(object):
-    """The C{ProcessSGE} class models one process in the Son of Grid Engine (SGE)
+    """The C{bsf.drms.sge.ProcessSGE} class models one process in the Son of Grid Engine (SGE)
     Distributed Resource Management System.
 
     The instance variable names result from the SGE accounting file. See man 5 accounting.
@@ -139,7 +139,7 @@ class ProcessSGE(object):
             pe_taskid=None,
             maxvmem=None,
             arid=None):
-        """Initialise a C{ProcessSGE} object.
+        """Initialise a C{bsf.drms.sge.ProcessSGE} object.
 
         @param process_sge_id: Primary key
         @type process_sge_id: int
@@ -204,6 +204,8 @@ class ProcessSGE(object):
         @type maxvmem: str
         @param arid: Advance reservation identifier
         @type arid: str
+        @return:
+        @rtype:
         """
 
         super(ProcessSGE, self).__init__()
@@ -241,16 +243,18 @@ class ProcessSGE(object):
 
 
 class ProcessSGEAdaptor(DatabaseAdaptor):
-    """C{ProcessSGEAdaptor} class providing database access for the C{ProcessSLURM} class.
+    """C{bsf.drms.sge.ProcessSGEAdaptor} class providing database access for the C{bsf.drms.sge.ProcessSGE} class.
 
     The SQL column names result from the SGE accounting file. See man 5 accounting.
     """
 
     def __init__(self, database_connection):
-        """Initialise a C{ProcessSGEAdaptor} object.
+        """Initialise a C{bsf.drms.sge.ProcessSGEAdaptor} object.
 
-        @param database_connection: C{DatabaseConnection}
-        @type database_connection: DatabaseConnection
+        @param database_connection: C{bsf.database.DatabaseConnection}
+        @type database_connection: bsf.database.DatabaseConnection
+        @return:
+        @rtype:
         """
 
         super(ProcessSGEAdaptor, self).__init__(
@@ -422,7 +426,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
 
 
 def submit(drms, debug=0):
-    """Submit each C{Executable} object of a C{DRMS} object into the
+    """Submit each C{bsf.process.Executable} object of a C{DRMS} object into the
     Son of Grid Engine (SGE)
     Distributed Resource Management System (DRMS).
 
@@ -430,6 +434,8 @@ def submit(drms, debug=0):
     @type drms: DRMS
     @param debug: Debug level
     @type debug: int
+    @return:
+    @rtype:
     """
 
     output = str()
@@ -628,15 +634,19 @@ def submit(drms, debug=0):
     script_file.write(output)
     script_file.close()
 
+    return
+
 
 def check_state(drms, debug=0):
-    """Check the state of each C{Executable} object in the
+    """Check the state of each C{bsf.process.Executable} object in the
     Distributed Resource Management System (C{DRMS}).
 
     @param drms: Distributed Resource Management System (C{DRMS})
     @type drms: DRMS
     @param debug: Debug level
     @type debug: int
+    @return:
+    @rtype:
     """
 
     if drms:

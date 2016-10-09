@@ -32,7 +32,7 @@ from pickle import Pickler, HIGHEST_PROTOCOL
 import re
 import warnings
 
-from bsf import Analysis, DRMS, Runnable
+from bsf import Analysis, Runnable
 from bsf.annotation import AnnotationSheet
 from bsf.data import PairedReads
 from bsf.executables import BWA
@@ -44,7 +44,8 @@ import pysam
 
 
 class RunnableStepGATK(RunnableStepJava):
-    """The C{RunnableStepGATK} class represents a C{RunnableStepJava} specific to the Genome Analysis Toolkit (GATK).
+    """The C{bsf.analyses.variant_calling.RunnableStepGATK} class represents a C{bsf.process.RunnableStepJava}
+    specific to the Genome Analysis Toolkit (GATK).
 
     Attributes:
     """
@@ -68,36 +69,36 @@ class RunnableStepGATK(RunnableStepJava):
             java_heap_maximum=None,
             java_jar_path=None,
             gatk_classpath=None):
-        """Create a C{RunnableStep} for a GATK algorithm.
+        """Initialise a C{bsf.analyses.variant_calling.RunnableStepGATK} object.
 
         @param name: Name
         @type name: str
         @param program: Program
         @type program: str
-        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
-            C{Argument} objects
-        @type options: dict[Argument.key, list[Argument]]
+        @param options:  Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
+            Python C{list} value objects of C{bsf.argument.Argument} objects
+        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]]
         @param arguments: Python C{list} of program arguments
         @type arguments: list[str | unicode]
-        @param sub_command: Subordinate Command
-        @type sub_command: Command
+        @param sub_command: Subordinate C{bsf.process.Command}
+        @type sub_command: bsf.process.Command
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
         @type stdout_path: str | unicode
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
-        @param dependencies: Python C{list} of C{Executable.name}
+        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{DRMS} dependencies
-        @type dependencies: list[Executable.name]
+        @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the C{Executable} into the C{DRMS}
+        @param submit: Submit the C{bsf.process.Executable} into the C{DRMS}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
         @param process_name: Process name
         @type process_name: str
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{RunnableStep}
+            after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode]
         @param java_temporary_path: Temporary directory path for the Java Virtual Machine
         @type java_temporary_path: str | unicode
@@ -105,8 +106,8 @@ class RunnableStepGATK(RunnableStepJava):
         @type java_heap_maximum: str
         @param java_jar_path: Java archive file path
         @type java_jar_path: str | unicode
-        @return: C{RunnableStep}
-        @rtype: RunnableStep
+        @return:
+        @rtype:
         """
 
         super(RunnableStepGATK, self).__init__(
@@ -138,13 +139,13 @@ class RunnableStepGATK(RunnableStepJava):
         return
 
     def add_gatk_option(self, key, value, override=False):
-        """Add an option to the GATK command.
+        """Add a C{bsf.argument.OptionPair} to a C{bsf.analyses.variant_calling.RunnableStepGATK}.
 
         @param key: Option key
         @type key: str
         @param value: Option value
         @type value: str
-        @param override: Override existing C{Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
         @rtype:
@@ -153,7 +154,7 @@ class RunnableStepGATK(RunnableStepJava):
         return self.sub_command.sub_command.add_option_long(key=key, value=value, override=override)
 
     def add_gatk_switch(self, key):
-        """Add a switch to the GATK command.
+        """Add a C{bsf.argument.SwitchLong} to a C{bsf.analyses.variant_calling.RunnableStepGATK}.
 
         @param key: Option key
         @type key: str
@@ -165,30 +166,31 @@ class RunnableStepGATK(RunnableStepJava):
 
 
 class VariantCallingGATK(Analysis):
-    """The C{VariantCallingGATK} class represents the logic to run the Genome Analysis Toolkit (GATK).
+    """The C{bsf.analyses.variant_calling.VariantCallingGATK} class represents the logic to run the
+    Genome Analysis Toolkit (GATK).
 
     Attributes:
-    @cvar name: Analysis name that should be overridden by sub-classes
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_align_lane: C{DRMS.name} for the lane alignment C{Analysis} stage
+    @cvar drms_name_align_lane: C{bsf.DRMS.name} for the lane alignment C{bsf.Analysis} stage
     @type drms_name_align_lane: str
-    @cvar drms_name_process_lane: C{DRMS.name} for the lane processing C{Analysis} stage
+    @cvar drms_name_process_lane: C{bsf.DRMS.name} for the lane processing C{bsf.Analysis} stage
     @type drms_name_process_lane: str
-    @cvar drms_name_process_sample: C{DRMS.name} for the sample processing C{Analysis} stage
+    @cvar drms_name_process_sample: C{bsf.DRMS.name} for the sample processing C{bsf.Analysis} stage
     @type drms_name_process_sample: str
-    @cvar drms_name_diagnose_sample: C{DRMS.name} for the sample diagnosis C{Analysis} stage
+    @cvar drms_name_diagnose_sample: C{bsf.DRMS.name} for the sample diagnosis C{bsf.Analysis} stage
     @type drms_name_diagnose_sample: str
-    @cvar drms_name_process_cohort: C{DRMS.name} for the cohort processing C{Analysis} stage
+    @cvar drms_name_process_cohort: C{bsf.DRMS.name} for the cohort processing C{bsf.Analysis} stage
     @type drms_name_process_cohort: str
-    @cvar drms_name_split_cohort: C{DRMS.name} for the cohort splitting C{Analysis} stage
+    @cvar drms_name_split_cohort: C{bsf.DRMS.name} for the cohort splitting C{bsf.Analysis} stage
     @type drms_name_split_cohort: str
-    @cvar drms_name_summary: C{DRMS.name} for the summary C{Analysis} stage
+    @cvar drms_name_summary: C{bsf.DRMS.name} for the summary C{bsf.Analysis} stage
     @type drms_name_summary: str
-    @cvar drms_name_somatic: C{DRMS.name} for the somatic C{Analysis} stage
+    @cvar drms_name_somatic: C{bsf.DRMS.name} for the somatic C{bsf.Analysis} stage
     @type drms_name_somatic: str
-    @ivar replicate_grouping: Group individual C{PairedReads} objects for processing or run them separately
+    @ivar replicate_grouping: Group individual C{bsf.data.PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool
     @ivar bwa_genome_db: Genome sequence file path with BWA index
     @type bwa_genome_db: str | unicode
@@ -318,37 +320,39 @@ class VariantCallingGATK(Analysis):
             classpath_gatk=None,
             classpath_picard=None,
             classpath_snpeff=None):
-        """Initialise a C{VariantCallingGATK} object.
+        """Initialise a C{bsf.analyses.variant_calling.VariantCallingGATK} object.
 
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{Analysis}-wide input directory
+        @param input_directory: C{bsf.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{Analysis}-wide output directory
+        @param output_directory: C{bsf.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{Analysis}-wide project directory,
-            normally under the C{Analysis}-wide output directory
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{Analysis}-wide genome directory,
-            normally under the C{Analysis}-wide project directory
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{DRMS} objects
+        @param drms_list: Python C{list} of C{bsf.DRMS} objects
         @type drms_list: list[DRMS]
-        @param collection: C{Collection}
-        @type collection: Collection
-        @param comparisons: Python C{dict} of Python C{str} key and Python C{list} objects of C{Sample} objects
-        @type comparisons: dict[str, list[Sample]]
-        @param samples: Python C{list} of C{Sample} objects
-        @type samples: list[Sample]
-        @param replicate_grouping: Group individual C{PairedReads} objects for processing or run them separately
+        @param collection: C{bsf.data.Collection}
+        @type collection: bsf.data.Collection
+        @param comparisons: Python C{dict} of Python C{str} key and Python C{list} objects of
+            C{bsf.data.Sample} objects
+        @type comparisons: dict[str, list[bsf.data.Sample]]
+        @param samples: Python C{list} of C{bsf.data.Sample} objects
+        @type samples: list[bsf.data.Sample]
+        @param replicate_grouping: Group individual C{bsf.data.PairedReads} objects
+            for processing or run them separately
         @type replicate_grouping: bool
         @param bwa_genome_db: Genome sequence file path with BWA index
         @type bwa_genome_db: str | unicode
@@ -606,8 +610,9 @@ class VariantCallingGATK(Analysis):
 
     @property
     def get_gatk_bundle_path(self):
-        """Get the absolute GATK bundle directory C{Default.absolute_gatk_bundle} for the set
-        C{VariantCallingGATK.gatk_bundle_version} and C{VariantCallingGATK.genome_version}.
+        """Get the absolute GATK bundle directory C{bsf.standards.Default.absolute_gatk_bundle} for the set
+        C{bsf.analyses.variant_calling.VariantCallingGATK.gatk_bundle_version} and
+        C{bsf.analyses.variant_calling.VariantCallingGATK.genome_version}.
 
         @return: Absolute GATK bundle directory
         @rtype: str | unicode
@@ -617,11 +622,12 @@ class VariantCallingGATK(Analysis):
             genome_version=self.genome_version)
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{VariantCallingGATK} object via a section of a C{Configuration} object.
+        """Set instance variables of a C{bsf.analyses.variant_calling.VariantCallingGATK} object via a section of a
+        C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
         @return:
@@ -924,15 +930,15 @@ class VariantCallingGATK(Analysis):
         return
 
     def _read_comparisons(self, comparison_path):
-        """Read a C{AnnotationSheet} CSV file from disk.
+        """Read a C{bsf.annotation.AnnotationSheet} CSV file from disk.
 
             - Column headers for CASAVA folders:
                 - Treatment/Control ProcessedRunFolder:
                     - CASAVA processed run folder name or
-                    - C{Analysis.input_directory} by default
+                    - C{bsf.Analysis.input_directory} by default
                 - Treatment/Control Project:
                     - CASAVA Project name or
-                    - C{Analysis.project_name} by default
+                    - C{bsf.Analysis.project_name} by default
                 - Treatment/Control Sample:
                     - CASAVA Sample name, no default
             - Column headers for independent samples:
@@ -991,10 +997,10 @@ class VariantCallingGATK(Analysis):
 
         Configuration options I{vqsr_resources_indel} and I{vqsr_resources_snp} provide a comma-separated list of
         resources that are to be used in the VQSR procedure. Each option needs to correspond to a sub-section of the
-        C{SafeConfigParser} object in C{Configuration.config_parser}. Each sub-section needs options
-        'known', 'training', 'truth', 'prior' and 'file_path'.
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        C{ConfigParser.SafeConfigParser} object in C{bsf.standards.Configuration.config_parser}. Each sub-section needs
+        options 'known', 'training', 'truth', 'prior' and 'file_path'.
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
         @param vqsr_resources_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
@@ -1066,7 +1072,8 @@ class VariantCallingGATK(Analysis):
                     self._sequence_list.append(sq_entry['ID'])
 
     def run(self):
-        """Run this C{VariantCallingGATK} analysis.
+        """Run this C{bsf.analyses.variant_calling.VariantCallingGATK} analysis.
+
         @return:
         @rtype:
         """
@@ -1266,7 +1273,7 @@ class VariantCallingGATK(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # Sample.get_all_paired_reads returns a Python dict of
+            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
             # Python str key and Python list of Python list objects
             # of PairedReads objects.
 
@@ -2844,7 +2851,7 @@ class VariantCallingGATK(Analysis):
         for sample in self.samples:
 
             # Get all PairedReads objects solely to exclude samples without any.
-            # Sample.get_all_paired_reads returns a Python dict of
+            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
             # Python str key and Python list of Python list objects
             # of PairedReads objects.
 
@@ -3266,7 +3273,8 @@ class VariantCallingGATK(Analysis):
         return
 
     def report(self):
-        """Create a C{VariantCallingGATK} report in HTML format and a UCSC Genome Browser Track Hub.
+        """Create a C{bsf.analyses.variant_calling.VariantCallingGATK} report in HTML format and a
+        UCSC Genome Browser Track Hub.
 
         @return:
         @rtype:
@@ -3354,7 +3362,7 @@ class VariantCallingGATK(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads returns a Python dict of
+            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
             # Python str key and Python list of Python list objects
             # of bsf.data.PairedReads objects.
 

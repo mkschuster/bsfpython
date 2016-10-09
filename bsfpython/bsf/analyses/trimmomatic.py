@@ -36,15 +36,15 @@ from bsf.standards import Configuration
 
 
 class Trimmomatic(Analysis):
-    """The C{Trimmomatic} class represents the logic to run the Trimmomatic analysis.
+    """The C{bsf.analyses.trimmomatic.Trimmomatic} class represents the logic to run the Trimmomatic analysis.
 
     Attributes:
 
-    @cvar name: Analysis name that should be overridden by sub-classes
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_trimmomatic: C{DRMS.name} for the Trimmomatic C{Analysis} stage
+    @cvar drms_name_trimmomatic: C{DRMS.name} for the Trimmomatic C{bsf.Analysis} stage
     @type drms_name_trimmomatic: str
     @ivar adapter_path: Adapter file path
     @type adapter_path: str | unicode
@@ -75,36 +75,36 @@ class Trimmomatic(Analysis):
             samples=None,
             adapter_path=None,
             classpath_trimmomatic=None):
-        """Initialise a C{Trimmomatic} object.
+        """Initialise a C{bsf.analyses.trimmomatic.Trimmomatic} object.
 
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{Analysis}-wide input directory
+        @param input_directory: C{bsf.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{Analysis}-wide output directory
+        @param output_directory: C{bsf.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{Analysis}-wide project directory,
-            normally under the C{Analysis}-wide output directory
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{Analysis}-wide genome directory,
-            normally under the C{Analysis}-wide project directory
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
         @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list
-        @param collection: C{Collection}
-        @type collection: Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{Sample} objects
-        @type comparisons: dict
-        @param samples: Python C{list} of C{Sample} objects
-        @type samples: list
+        @type drms_list: list[DRMS]
+        @param collection: C{bsf.data.Collection}
+        @type collection: bsf.data.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.data.Sample]]
+        @param samples: Python C{list} of C{bsf.data.Sample} objects
+        @type samples: list[bsf.data.Sample]
         @param adapter_path: Adapter file path
         @type adapter_path: str | unicode
         @param classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
@@ -141,11 +141,12 @@ class Trimmomatic(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{Trimmomatic} object via a section of a C{Configuration} object.
+        """Set instance variables of a C{bsf.analyses.trimmomatic.Trimmomatic} object via a section of a
+        C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
         @return:
@@ -175,9 +176,9 @@ class Trimmomatic(Analysis):
         return
 
     def run(self):
-        """Run the C{SamToFastq} C{Analysis} to convert a I{BAM} or I{SAM} file into I{FASTQ} files.
+        """Run the C{bsf.analyses.trimmomatic.Trimmomatic} C{bsf.Analysis}.
 
-        This method changes the C{Collection} object of this C{Analysis} to update with FASTQ file paths.
+        This method changes the C{bsf.data.Collection} object of this C{bsf.Analysis} to update with FASTQ file paths.
         @return:
         @rtype:
         """
@@ -210,7 +211,7 @@ class Trimmomatic(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(level=1)
 
-            # bsf.data.Sample.get_all_paired_reads returns a Python dict of
+            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
             # Python str key and Python list of Python list objects
             # of bsf.data.PairedReads objects.
 
@@ -384,6 +385,12 @@ class Trimmomatic(Analysis):
         return annotation_sheet
 
     def report(self):
+        """Create a C{bsf.analyses.trimmomatic.Trimmomatic} report in HTML format and a
+        UCSC Genome Browser Track Hub.
+
+        @return:
+        @rtype:
+        """
 
         # Create a symbolic link containing the project name and a UUID.
         default = Default.get_global_default()
@@ -420,7 +427,7 @@ class Trimmomatic(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads returns a Python dict of
+            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
             # Python str key and Python list of Python list objects
             # of bsf.data.PairedReads objects.
 

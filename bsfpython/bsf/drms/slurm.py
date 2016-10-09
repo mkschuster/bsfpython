@@ -48,7 +48,8 @@ database_file_name = 'bsfpython_slurm_jobs.db'
 
 
 class ProcessSLURM(object):
-    """The C{ProcessSLURM} class models one process in the Simple Linux Utility for Resource Management (SLURM)
+    """The C{bsf.drms.slurm.ProcessSLURM} class models one process in the
+    Simple Linux Utility for Resource Management (SLURM)
     Distributed Resource Management System (DRMS).
 
     The instance variable names result from the SLURM command C{sacct --parsable --long}
@@ -169,7 +170,7 @@ class ProcessSLURM(object):
             max_disk_write_node=None,
             max_disk_write_task=None,
             average_disk_write=None):
-        """Initialise a C{ProcessSLURM} object.
+        """Initialise a C{bsf.drms.slurm.ProcessSLURM} object.
 
         @param process_slurm_id:
         @type process_slurm_id: int
@@ -247,6 +248,8 @@ class ProcessSLURM(object):
         @type max_disk_write_task: str
         @param average_disk_write: Average number of bytes written by all tasks in job
         @type average_disk_write: str
+        @return:
+        @rtype:
         """
         super(ProcessSLURM, self).__init__()
         self.process_slurm_id = process_slurm_id
@@ -287,9 +290,12 @@ class ProcessSLURM(object):
         self.max_disk_write_task = max_disk_write_task
         self.average_disk_write = average_disk_write
 
+        return
+
 
 class ProcessSLURMAdaptor(DatabaseAdaptor):
-    """C{ProcessSLURMAdaptor} class providing database access for the C{ProcessSLURM} class.
+    """C{bsf.drms.slurm.ProcessSLURMAdaptor} class providing database access for the
+    C{bsf.drms.slurm.ProcessSLURM} class.
 
     The SQL column names result from SLURM command sacct --parsable --long
     """
@@ -297,10 +303,12 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
     def __init__(
             self,
             database_connection):
-        """Initialise a C{ProcessSLURMAdaptor} object.
+        """Initialise a C{bsf.drms.slurm.ProcessSLURMAdaptor} object.
 
-        @param database_connection: C{DatabaseConnection}
-        @type database_connection: DatabaseConnection
+        @param database_connection: C{bsf.database.DatabaseConnection}
+        @type database_connection: bsf.database.DatabaseConnection
+        @return:
+        @rtype:
         """
 
         super(ProcessSLURMAdaptor, self).__init__(
@@ -424,14 +432,16 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 ['average_disk_write', 'TEXT'],
             ])
 
-    def select_all_by_job_name(self, name):
-        """Select all C{ProcessSLURM} objects by I{job_name}.
+        return
 
-        The same C{Executable} can be submitted more than once into the C{DRMS}.
+    def select_all_by_job_name(self, name):
+        """Select all C{bsf.drms.slurm.ProcessSLURM} objects by I{job_name}.
+
+        The same C{bsf.process.Executable} can be submitted more than once into the C{DRMS}.
         @param name: Job name
         @type name: str
-        @return: Python C{list} of C{ProcessSLURM} objects
-        @rtype: list[ProcessSLURM]
+        @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
+        @rtype: list[bsf.drms.slurm.ProcessSLURM]
         """
         statement = self.statement_select(where_clause='job_name = ?')
         parameters = list()
@@ -440,12 +450,12 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         return self.select(statement=statement, parameters=parameters)
 
     def select_all_by_state(self, state=None):
-        """Select all C{ProcessSLURM} objects by I{state}.
+        """Select all C{bsf.drms.slurm.ProcessSLURM} objects by I{state}.
 
         @param state: State
         @type state: str | None
-        @return: Python C{list} of C{ProcessSLURM} objects
-        @rtype: list[ProcessSLURM]
+        @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
+        @rtype: list[bsf.drms.slurm.ProcessSLURM]
         """
         parameters = list()
         if state is None:
@@ -457,12 +467,12 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         return self.select(statement=statement, parameters=parameters)
 
     def select_by_job_id(self, job_id):
-        """Select one C{ProcessSLURM} object by job_id.
+        """Select one C{bsf.drms.slurm.ProcessSLURM} object by job_id.
 
         @param job_id: Job identifier
         @type job_id: str
-        @return: Python C{list} of C{ProcessSLURM} objects
-        @rtype: ProcessSLURM
+        @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
+        @rtype: bsf.drms.slurm.ProcessSLURM
         """
         statement = self.statement_select(where_clause='job_id = ?')
         parameters = list()
@@ -538,7 +548,7 @@ def _recalculate_memory(memory):
 
 
 def submit(drms, debug=0):
-    """Submit each C{Executable} object of a C{DRMS} object into the
+    """Submit each C{bsf.process.Executable} object of a C{DRMS} object into the
     Simple Linux Utility for Resource Management (SLURM)
     Distributed Resource Management System (DRMS).
 
@@ -546,6 +556,8 @@ def submit(drms, debug=0):
     @type drms: DRMS
     @param debug: Debug level
     @type debug: int
+    @return:
+    @rtype:
     """
 
     # Open or create a database.
@@ -665,7 +677,7 @@ def submit(drms, debug=0):
         # A particular feature of SLURM is its inability to set process dependencies on process names.
         # Rather, dependencies need setting on the process identifier, which is only obtained after
         # submitting the process. Isn't that exactly what we have a scheduler for? Sigh.
-        # Consequently, SLURM process identifiers need to be tracked here, by means of an SQLite database.
+        # Consequently, SLURM process identifiers need to be tracked here, by means of a SQLite database.
 
         process_identifier_list = list()
         for executable_name in executable.dependencies:
@@ -767,6 +779,8 @@ def submit(drms, debug=0):
     script_file.write(output)
     script_file.close()
 
+    return
+
 
 def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout_path=None, debug=0):
     """Process the standard output (I{STDOUT}) stream from the C{Popen} child process as a separate thread.
@@ -774,9 +788,9 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
     @param stdout_handle: The I{STDOUT} or I{STDERR} file handle
     @type stdout_handle: file
     @param thread_lock: A Python C{threading.Lock} object
-    @type thread_lock: thread.lock
-    @param process_slurm_adaptor: C{ProcessSLURMAdaptor}
-    @type process_slurm_adaptor: ProcessSLURMAdaptor
+    @type thread_lock: threading.Lock
+    @param process_slurm_adaptor: C{bsf.drms.slurm.ProcessSLURMAdaptor}
+    @type process_slurm_adaptor: bsf.drms.slurm.ProcessSLURMAdaptor
     @param stdout_path: I{STDOUT} file path
     @type stdout_path: str | unicode
     @param debug: Debug level
@@ -874,13 +888,15 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
 
 
 def check_state(drms, debug=0):
-    """Check the state of each C{Executable} object in the
+    """Check the state of each C{bsf.process.Executable} object in the
     Distributed Resource Management System (C{DRMS}).
 
     @param drms: Distributed Resource Management System (C{DRMS})
     @type drms: DRMS
     @param debug: Debug level
     @type debug: int
+    @return:
+    @rtype:
     """
 
     # Open or create a database.
@@ -996,3 +1012,5 @@ def check_state(drms, debug=0):
                 print '[{}] Child process {!r} completed successfully {}.'. \
                     format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
             break
+
+    return

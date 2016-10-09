@@ -37,11 +37,11 @@ from bsf.standards import Default
 
 def scan_directory(report_dict_local, directory_root, directory_path=None):
     """
-    Scan a directory recursively for *_report.html files and add them to a Python dict of
-    directory_path key data and Python list of report_type value data.
+    Scan a directory recursively for *_report.html files and add them to a Python C{dict} of
+    directory_path key data and Python C{list} of report_type value data.
 
-    @param report_dict_local: Python dict of directory_path key data and Python list of report_type value data
-    @type report_dict_local: dict
+    @param report_dict_local: Python C{dict} of directory_path key data and Python C{list} of report_type value data
+    @type report_dict_local: dict[str | unicode, list[str]]
     @param directory_root: Directory root
     @type directory_root: str | unicode
     @param directory_path: Directory path
@@ -94,8 +94,10 @@ argument_parser.add_argument('--project', required=True, help='Project identifie
 
 name_space = argument_parser.parse_args()
 
-project_name = str(name_space.project)
-project_directory = str(name_space.project)
+project_name = name_space.project
+assert isinstance(project_name, basestring)
+project_directory = name_space.project
+assert isinstance(project_directory, basestring)
 
 if not os.path.isabs(project_directory):
 

@@ -32,15 +32,15 @@ import os
 
 
 class Configuration(object):
-    """The C{Configuration} class represents one or more UNIX-style initialisation (*.ini) files and
-    an associated Python C{SafeConfigParser} object to parse the file.
+    """The C{bsf.standards.Configuration} class represents one or more UNIX-style initialisation (*.ini) files and
+    an associated Python C{ConfigParser.SafeConfigParser} object to parse the file.
 
     Attributes:
-    @ivar file_path_list: C{Configuration} file path
+    @ivar file_path_list: C{bsf.standards.Configuration} file path
     @type file_path_list: list[str | unicode]
-    @ivar config_parser: Python C{SafeConfigParser}
-    @type config_parser: SafeConfigParser
-    @ivar _config_path_list: C{Configuration} file path
+    @ivar config_parser: Python C{ConfigParser.SafeConfigParser}
+    @type config_parser: ConfigParser.SafeConfigParser
+    @ivar _config_path_list: C{bsf.standards.Configuration} file path
     @type _config_path_list: list[str | unicode]
     """
 
@@ -51,7 +51,7 @@ class Configuration(object):
 
         @param instance: A Python instance (i.e. object)
         @type instance: object
-        @return: Configuration section string
+        @return: Configuration file section string
         @rtype: str
         """
 
@@ -65,13 +65,14 @@ class Configuration(object):
 
     @classmethod
     def from_file_path_list(cls, file_path_list):
-        """Create a C{Configuration} object based on a Python C{list} of Python C{str} configuration file path objects.
+        """Create a C{bsf.standards.Configuration} object based on a
+        Python C{list} of Python C{str} configuration file path objects.
 
         Both, user and variable expansion gets applied to each file path.
         @param file_path_list: Python C{list} of Python C{str} or C{unicode} configuration file path objects
         @type file_path_list: list[str | unicode]
-        @return: C{Configuration}
-        @rtype: Configuration
+        @return: C{bsf.standards.Configuration}
+        @rtype: bsf.standards.Configuration
         @raise Exception: Configuration file path does not exist
         """
         assert isinstance(file_path_list, list)
@@ -79,7 +80,7 @@ class Configuration(object):
         # Expand each file_path for user and variable names.
         expanded_list = list()
         for file_path in file_path_list:
-            assert isinstance(file_path, (str, unicode))
+            assert isinstance(file_path, basestring)
             file_path = os.path.expanduser(path=file_path)
             file_path = os.path.expandvars(path=file_path)
             file_path = os.path.normpath(path=file_path)
@@ -103,12 +104,12 @@ class Configuration(object):
         return configuration
 
     def __init__(self, file_path_list=None, config_parser=None):
-        """Initialise a C{Configuration} object.
+        """Initialise a C{bsf.standards.Configuration} object.
 
-        @param file_path_list: Python list of Python C{str} or C{unicode} configuration file path objects
+        @param file_path_list: Python C{list} of Python C{str} or C{unicode} configuration file path objects
         @type file_path_list: list[str | unicode]
-        @param config_parser: Python C{SafeConfigParser}
-        @type config_parser: SafeConfigParser
+        @param config_parser: Python C{ConfigParser.SafeConfigParser}
+        @type config_parser: ConfigParser.SafeConfigParser
         @return:
         @rtype:
         """
@@ -132,7 +133,7 @@ class Configuration(object):
         return
 
     def trace(self, level):
-        """Trace a C{Configuration} object.
+        """Trace a C{bsf.standards.Configuration} object.
 
         @param level: Indentation level
         @type level: int
@@ -153,9 +154,9 @@ class Configuration(object):
 
         The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
         any environment variables i.e. on UNIX ${NAME} or $NAME.
-        @param config_section: Configuration section string
+        @param config_section: Configuration file section string
         @type config_section: str
-        @param config_option: Configuration option string
+        @param config_option: Configuration file option string
         @type config_option: str
         @return: Expanded directory
         @rtype: str
@@ -170,11 +171,11 @@ class Configuration(object):
 
 
 class Default(object):
-    """The C{Default} class specifies the application or library default configuration.
+    """The C{bsf.standards.Default} class specifies the application or library default configuration.
 
     Attributes:
-    @cvar global_default: Global Default
-    @type global_default: Default
+    @cvar global_default: Global C{bsf.standards.Default}
+    @type global_default: bsf.standards.Default
     @cvar global_file_path: Global configuration file
     @type global_file_path: str | unicode
     @ivar classpath_picard: Picard Java Archive (JAR) class path directory
@@ -265,10 +266,10 @@ class Default(object):
 
     @staticmethod
     def get_global_default():
-        """Get the global Default configuration and initialise it, if not already done so.
+        """Get the global C{bsf.standards.Default} configuration and initialise it, if not already done so.
 
-        @return: Default
-        @rtype: Default
+        @return: C{bsf.standards.Default}
+        @rtype: bsf.standards.Default
         """
 
         if Default.global_default is None:
@@ -278,35 +279,35 @@ class Default(object):
 
     @classmethod
     def from_global_file_path(cls):
-        """Create a new Default object from the global default configuration file.
+        """Create a new C{bsf.standards.Default} object from the global default configuration file.
 
         The default configuration is based on the file $HOME/.bsfpython.ini in the user's home directory.
-        @return: Default
-        @rtype: Default
+        @return: C{bsf.standards.Default}
+        @rtype: bsf.standards.Default
         """
 
         return cls.from_config_path(config_path=Default.global_file_path)
 
     @classmethod
     def from_config_path(cls, config_path):
-        """Create a new Default object from a UNIX-style configuration file.
+        """Create a new C{bsf.standards.Default} object from a UNIX-style configuration file.
 
         @param config_path: UNIX-style configuration file path
         @type config_path: str | unicode
-        @return: Default
-        @rtype: Default
+        @return: C{bsf.standards.Default}
+        @rtype: bsf.standards.Default
         """
 
         return cls.from_configuration(configuration=Configuration.from_file_path_list(file_path_list=[config_path]))
 
     @classmethod
     def from_configuration(cls, configuration):
-        """Create a new Default objects from a Configuration object.
+        """Create a new C{bsf.standards.Default} object from a C{bsf.standards.Configuration} object.
 
-        @param configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
-        @return: Default
-        @rtype: Default
+        @return: C{bsf.standards.Default}
+        @rtype: bsf.standards.Default
         """
 
         assert isinstance(configuration, Configuration)
@@ -347,7 +348,7 @@ class Default(object):
             url_host_name=None,
             url_relative_dna=None,
             url_relative_projects=None):
-        """Initialise a Default object.
+        """Initialise a C{bsf.standards.Default} object.
 
         @param classpath_gatk: Genome Analysis Toolkit Java Archive (JAR) class path directory
         @type classpath_gatk: str | unicode
@@ -568,10 +569,11 @@ class Default(object):
         return
 
     def set_configuration(self, configuration):
-        """Set instance variables of a Default object via a section of a Configuration object.
+        """Set instance variables of a C{bsf.standards.Default} object via a section of a
+        C{bsf.standards.Configuration} object.
 
         For each instance variable a configuration option has to be present.
-        @param configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @return:
         @rtype:
@@ -753,7 +755,7 @@ class Default(object):
 
         default = Default.get_global_default()
 
-        file_path = str(default.directory_gatk_bundle)
+        file_path = default.directory_gatk_bundle
 
         if gatk_bundle_version:
             file_path = os.path.join(file_path, gatk_bundle_version)
@@ -828,9 +830,10 @@ class Default(object):
             raise Exception(
                 'Unknown genome index name {!r}.'.format(genome_index))
 
-        return os.path.join(Default.absolute_genomes(genome_version),
-                            default.indices[genome_index],
-                            genome_version + '.fa')
+        return os.path.join(
+            Default.absolute_genomes(genome_version),
+            default.indices[genome_index],
+            genome_version + '.fa')
 
     @staticmethod
     def url_absolute_base():

@@ -53,15 +53,15 @@ def _comma_separated_to_list(value_string):
 
 
 class Analysis(object):
-    """The C{Analysis} class represents a high-level analysis that may run one or more
-    C{Executable} objects (programs).
+    """The C{bsf.Analysis} class represents a high-level analysis that may run one or more
+    C{bsf.process.Executable} objects (programs).
 
     Attributes:
-    @cvar name: Analysis name that should be overridden by sub-classes
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @ivar configuration: C{Configuration}
+    @ivar configuration: C{bsf.standards.Configuration}
     @type configuration: bsf.standards.Configuration
     @ivar debug: Debug level
     @type debug: int
@@ -79,14 +79,14 @@ class Analysis(object):
     @type genome_directory: str | unicode
     @ivar drms_list: Python C{list} of C{DRMS} objects
     @type drms_list: list[DRMS]
-    @ivar runnable_dict: Python C{dict} of Python C{str} (C{Runnable.name}) key data and C{Runnable} value data
-    @type runnable_dict: dict[Runnable.name, Runnable]
-    @ivar collection: C{Collection}
-    @type collection: Collection
+    @ivar runnable_dict: Python C{dict} of Python C{str} (C{bsf.Runnable.name}) key data and C{bsf.Runnable} value data
+    @type runnable_dict: dict[bsf.Runnable.name, bsf.Runnable]
+    @ivar collection: C{bsf.data.Collection}
+    @type collection: bsf.data.Collection
     @ivar comparisons: Python C{dict} of comparisons
-    @type comparisons: dict[str, any]
-    @ivar samples: Python C{list} of C{Sample} objects
-    @type samples: list[Sample]
+    @type comparisons: dict[str, Any]
+    @ivar samples: Python C{list} of C{bsf.data.Sample} objects
+    @type samples: list[bsf.data.Sample]
     """
 
     name = 'Analysis'
@@ -94,14 +94,15 @@ class Analysis(object):
 
     @classmethod
     def from_config_file_path(cls, config_path):
-        """Create a new C{Analysis} object from a UNIX-style configuration file path via the C{Configuration} class.
+        """Create a new C{bsf.Analysis} object from a UNIX-style configuration file path via the
+        C{bsf.standards.Configuration} class.
 
-        The configuration file on C{Default.global_file_path} is read as default,
+        The configuration file on C{bsf.standards.Default.global_file_path} is read as default,
         the project-specific one gets read, if it is not the same file.
         @param config_path: UNIX-style configuration file path
         @type config_path: str | unicode
-        @return: C{Analysis}
-        @rtype: Analysis
+        @return: C{bsf.Analysis}
+        @rtype: bsf.Analysis
         """
 
         file_path_list = list()
@@ -113,12 +114,12 @@ class Analysis(object):
 
     @classmethod
     def from_configuration(cls, configuration):
-        """Create a new C{Analysis} object from a C{Configuration} object.
+        """Create a new C{bsf.Analysis} object from a C{bsf.standards.Configuration} object.
 
-        @param configuration: C{Configuration}
+        @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
-        @return: C{Analysis}
-        @rtype: Analysis
+        @return: C{bsf.Analysis}
+        @rtype: bsf.Analysis
         """
 
         assert isinstance(configuration, Configuration)
@@ -157,25 +158,25 @@ class Analysis(object):
             collection=None,
             comparisons=None,
             samples=None):
-        """Initialise an C{Analysis} object.
+        """Initialise a C{bsf.Analysis} object.
 
-        @param configuration: C{Configuration}
+        @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param cache_directory: C{Analysis}-wide cache directory
+        @param cache_directory: C{bsf.Analysis}-wide cache directory
         @type cache_directory: str
-        @param input_directory: C{Analysis}-wide input directory
+        @param input_directory: C{bsf.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{Analysis}-wide output directory
+        @param output_directory: C{bsf.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{Analysis}-wide project directory,
-            normally under the C{Analysis}-wide output directory
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{Analysis}-wide genome directory,
-            normally under the C{Analysis}-wide project directory
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
         @type genome_directory: str
         @param sas_file: Sample Annotation Sheet (SAS) file path
         @type sas_file: str | unicode
@@ -188,15 +189,15 @@ class Analysis(object):
         @type debug: int
         @param drms_list: Python C{list} of C{DRMS} objects
         @type drms_list: list[DRMS]
-        @param runnable_dict: Python C{dict} of Python C{str} (C{Runnable.name}) and C{Runnable} value data
-        @type runnable_dict: dict[Runnable.name, Runnable]
-        @param collection: C{Collection}
-        @type collection: Collection
-        @param comparisons: Python C{dict} of Analysis-specific objects
+        @param runnable_dict: Python C{dict} of Python C{str} (C{bsf.Runnable.name}) and C{bsf.Runnable} value data
+        @type runnable_dict: dict[bsf.Runnable.name, bsf.Runnable]
+        @param collection: C{bsf.data.Collection}
+        @type collection: bsf.data.Collection
+        @param comparisons: Python C{dict} of C{bsf.Analysis}-specific objects
             (i.e. Python tuple for RNA-Seq and ChIPSeqComparison for ChIPSeq)
         @type comparisons: dict[str, Any]
-        @param samples: Python C{list} of C{Sample} objects
-        @type samples: list[Sample]
+        @param samples: Python C{list} of C{bsf.data.Sample} objects
+        @type samples: list[bsf.data.Sample]
         @return:
         @rtype:
         """
@@ -294,7 +295,7 @@ class Analysis(object):
         return
 
     def trace(self, level):
-        """Trace an C{Analysis} object.
+        """Trace a C{bsf.Analysis} object.
 
         @param level: Indentation level
         @type level: int
@@ -342,11 +343,11 @@ class Analysis(object):
         return output
 
     def add_drms(self, drms):
-        """Convenience method to facilitate initialising, adding and returning a C{DRMS} object.
+        """Convenience method to facilitate initialising, adding and returning a C{bsf.DRMS} object.
 
-        @param drms: C{DRMS}
+        @param drms: C{bsf.DRMS}
         @type drms: DRMS
-        @return: C{DRMS}
+        @return: C{bsf.DRMS}
         @rtype: DRMS
         """
         assert isinstance(drms, DRMS)
@@ -357,13 +358,13 @@ class Analysis(object):
         return drms
 
     def add_runnable(self, runnable):
-        """Convenience method to facilitate initialising, adding and returning a C{Runnable}.
+        """Convenience method to facilitate initialising, adding and returning a C{bsf.Runnable}.
 
-        @param runnable: C{Runnable}
-        @type runnable: Runnable
-        @return: C{Runnable}
-        @rtype: Runnable
-        @raise Exception: The C{Runnable.name} already exists in the C{Analysis}
+        @param runnable: C{bsf.Runnable}
+        @type runnable: bsf.Runnable
+        @return: C{bsf.Runnable}
+        @rtype: bsf.Runnable
+        @raise Exception: The C{bsf.Runnable.name} already exists in the C{bsf.Analysis}
         """
         assert isinstance(runnable, Runnable)
 
@@ -376,12 +377,13 @@ class Analysis(object):
         return runnable
 
     def add_sample(self, sample):
-        """Add a C{Sample} object to the Python C{list} of C{Sample} objects if it does not already exist.
+        """Add a C{bsf.data.Sample} object to the Python C{list} of C{bsf.data.Sample} objects,
+        if it does not already exist.
 
         The check is based on the Python 'in' comparison operator and in lack of a specific
         __cmp__ method, relies on object identity (i.e. address).
-        @param sample: C{Sample}
-        @type sample: Sample
+        @param sample: C{bsf.data.Sample}
+        @type sample: bsf.data.Sample
         @return:
         @rtype:
         """
@@ -393,16 +395,16 @@ class Analysis(object):
         return
 
     def get_drms(self, name):
-        """Get a C{DRMS} object form an C{Analysis}.
-        If the C{DRMS} object does not exist, it is created and initialised it via the
-        C{Configuration} object in C{Analysis.configuration}.
+        """Get a C{bsf.DRMS} object form a C{bsf.Analysis}.
+        If the C{bsf.DRMS} object does not exist, it is created and initialised it via the
+        C{bsf.standards.Configuration} object in C{bsf.Analysis.configuration}.
         Reads from configuration file sections
         I{[bsf.DRMS]}
         I{[bsf.Analysis.DRMS]} or I{[bsf.analyses.*.DRMS]}
         I{[bsf.Analysis.DRMS.name]} or I{[bsf.analyses.*.DRMS.name]}
         @param name: Name
         @type name: str
-        @return: C{DRMS} object
+        @return: C{bsf.DRMS} object
         @rtype: DRMS
         """
         # Check if a DRMS object with this the name already exists and if so, return it.
@@ -444,10 +446,11 @@ class Analysis(object):
         return drms
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of an C{Analysis} object via a section of a C{Configuration} object.
+        """Set instance variables of a C{bsf.Analysis} object via a section of a
+        C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
@@ -505,10 +508,13 @@ class Analysis(object):
         return
 
     def set_command_configuration(self, command):
-        """Set default C{Arguments} for a C{Command} or sub-class object in the context of this C{Analysis} object.
+        """Set default C{bsf.argument.Argument} objects for a C{bsf.process.Command} or sub-class object
+        in the context of this C{bsf.Analysis} object.
 
-        @param command: C{Command}
+        @param command: C{bsf.process.Command}
         @type command: bsf.process.Command
+        @return:
+        @rtype:
         """
         assert isinstance(command, Command)
 
@@ -526,17 +532,20 @@ class Analysis(object):
 
         command.set_configuration(configuration=self.configuration, section=section)
 
-    def set_drms_runnable(self, drms, runnable):
-        """Create an C{Executable} to submit a C{Runnable} into a C{DRMS}.
+        return
 
-        In case C{Runnable.get_relative_status_path} exists already, C{Executable.submit} will be set to C{False}.
+    def set_drms_runnable(self, drms, runnable):
+        """Create a C{bsf.process.Executable} to submit a C{bsf.Runnable} into a C{DRMS}.
+
+        In case C{bsf.Runnable.get_relative_status_path} exists already,
+        C{bsf.process.Executable.submit} will be set to C{False}.
         @param drms: C{DRMS}
         @type drms: DRMS
-        @param runnable: C{Runnable}
-        @type runnable: Runnable
-        @return: C{Executable}
+        @param runnable: C{bsf.Runnable}
+        @type runnable: bsf.Runnable
+        @return: C{bsf.process.Executable}
         @rtype: bsf.process.Executable
-        @raise Exception: A C{Runnable.name} does not exist in C{Analysis}
+        @raise Exception: A C{bsf.Runnable.name} does not exist in C{bsf.Analysis}
         """
         assert isinstance(drms, DRMS)
         assert isinstance(runnable, Runnable)
@@ -566,9 +575,9 @@ class Analysis(object):
         return executable
 
     def run(self):
-        """Run the C{Analysis}.
+        """Run the C{bsf.Analysis}.
 
-        @raise Exception: An C{Analysis.project_name} has not been defined
+        @raise Exception: An C{bsf.Analysis.project_name} has not been defined
         @return:
         @rtype:
         """
@@ -647,7 +656,7 @@ class Analysis(object):
         return
 
     def report(self):
-        """Create an C{Analysis} report.
+        """Create a C{bsf.Analysis} report.
 
         The method must be implemented in a sub-class.
         @return:
@@ -690,7 +699,7 @@ class Analysis(object):
             creator=None,
             source=None,
             title=None):
-        """Get the header section of an XHTML 1.0 document.
+        """Get the header section of a XHTML 1.0 document.
 
         @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional Document Type Declaration,
             defaults to XHTML 1.0 Strict
@@ -702,7 +711,7 @@ class Analysis(object):
             defaults to the Python script file path
         @type source: str
         @param title: Title element value,
-            defaults to a concatenation of C{Analysis.project_name} and C{Analysis.report_name}
+            defaults to a concatenation of C{bsf.Analysis.project_name} and C{bsf.Analysis.report_name}
         @type title: str
         @return: XHTML 1.0 header section as multi-line string
         @rtype: str
@@ -761,19 +770,19 @@ class Analysis(object):
         """Get the footer section of a XHTML 1.0 document.
 
         @param contact: Institution contact e-mail address,
-            defaults to C{Default.operator_contact}
+            defaults to C{bsf.standards.Default.operator_contact}
         @type contact: str
         @param institution: Institution name to be inserted into 'This report was generated by ...',
-            defaults to C{Default.operator_institution}
+            defaults to C{bsf.standards.Default.operator_institution}
         @type institution: str
         @param url_protocol: The protocol section of the institution URL (i.e. http, https, ...),
-            defaults to C{Default.url_protocol}
+            defaults to C{bsf.standards.Default.url_protocol}
         @type url_protocol: str
         @param url_host_name: The host name section of the institution URL (e.g. biomedical-sequencing.at),
-            defaults to C{Default.url_host_name}
+            defaults to C{bsf.standards.Default.url_host_name}
         @type url_host_name: str
         @param title: Title element value,
-            defaults to a concatenation of C{Analysis.project_name} and C{Analysis.report_name}
+            defaults to a concatenation of C{bsf.Analysis.project_name} and C{bsf.Analysis.report_name}
         @type title: str
         @return: XHTML 1.0 footer section as multi-line string
         @rtype: str
@@ -802,7 +811,7 @@ class Analysis(object):
         output += '<p class="footer">\n'
         output += 'This report was generated by {}\n'.format(cgi.escape(s=institution, quote=True))
 
-        # Method Default.url_absolute_base() would also return the default URL.
+        # Method bsf.standards.Default.url_absolute_base() would also return the default URL.
         if url_protocol:
             output += '<a href="{}://{}/">{}</a>.\n'.format(
                 url_protocol,
@@ -840,8 +849,8 @@ class Analysis(object):
             url_host_name=None):
         """Get a report as a XHTML 1.0 document.
 
-        The method automatically concatenates the XHTML header C{Analysis.get_html_header}, the XHTML content and the
-        XHTML footer C{Analysis.get_html_footer} before returning the report.
+        The method automatically concatenates the XHTML header C{bsf.Analysis.get_html_header}, the XHTML content and
+        the XHTML footer C{bsf.Analysis.get_html_footer} before returning the report.
         @param content: XHTML 1.0 content
         @type content: str
         @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional Document Type Declaration,
@@ -854,19 +863,19 @@ class Analysis(object):
             defaults to the Python script file path
         @type source: str
         @param title: Title element value,
-            defaults to a concatenation of C{Analysis.project_name} and C{Analysis.report_name}
+            defaults to a concatenation of C{bsf.Analysis.project_name} and C{bsf.Analysis.report_name}
         @type title: str
         @param contact: Institution contact e-mail address,
-            defaults to C{Default.operator_contact}
+            defaults to C{bsf.standards.Default.operator_contact}
         @type contact: str
         @param institution: Institution name to be inserted into 'This report was generated by ...',
-            defaults to C{Default.operator_institution}
+            defaults to C{bsf.standards.Default.operator_institution}
         @type institution: str
         @param url_protocol: The protocol section of the institution URL (i.e. http, https, ...),
-            defaults to C{Default.url_protocol}
+            defaults to C{bsf.standards.Default.url_protocol}
         @type url_protocol: str
         @param url_host_name: The host name section of the institution URL (e.g. biomedical-sequencing.at),
-            defaults to C{Default.url_host_name}
+            defaults to C{bsf.standards.Default.url_host_name}
         @type url_host_name: str
         @return: XHTML 1.0 report as multi-line string
         @rtype: str
@@ -900,12 +909,12 @@ class Analysis(object):
             institution=None,
             url_protocol=None,
             url_host_name=None):
-        """Write a XHTML 1.0 report I{prefix_report.html} file into the C{Analysis.genome_directory}.
-        The method automatically concatenates the XHTML header C{Analysis.get_html_header}, the XHTML content and the
-        XHTML footer C{Analysis.get_html_footer} before writing the file.
+        """Write a XHTML 1.0 report I{prefix_report.html} file into the C{bsf.Analysis.genome_directory}.
+        The method automatically concatenates the XHTML header C{bsf.Analysis.get_html_header}, the XHTML content and
+        the XHTML footer C{bsf.Analysis.get_html_footer} before writing the file.
         @param content: XHTML 1.0 content
         @type content: str
-        @param prefix: A file name prefix (e.g. chipseq, rnaseq, ...), defaults to C{Analysis.prefix}
+        @param prefix: A file name prefix (e.g. chipseq, rnaseq, ...), defaults to C{bsf.Analysis.prefix}
         @type prefix: str
         @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional Document Type Declaration,
             defaults to XHTML 1.0 Strict
@@ -917,19 +926,19 @@ class Analysis(object):
             defaults to the Python script file path
         @type source: str
         @param title: Title element value,
-            defaults to a concatenation of C{Analysis.project_name} and C{Analysis.report_name}
+            defaults to a concatenation of C{bsf.Analysis.project_name} and C{bsf.Analysis.report_name}
         @type title: str
         @param contact: Institution contact e-mail address,
-            defaults to C{Default.operator_contact}
+            defaults to C{bsf.standards.Default.operator_contact}
         @type contact: str
         @param institution: Institution name to be inserted into 'This report was generated by ...',
-            defaults to C{Default.operator_institution}
+            defaults to C{bsf.standards.Default.operator_institution}
         @type institution: str
         @param url_protocol: The protocol section of the institution URL (i.e. http, https, ...),
-            defaults to C{Default.url_protocol}
+            defaults to C{bsf.standards.Default.url_protocol}
         @type url_protocol: str
         @param url_host_name: The host name section of the institution URL (e.g. biomedical-sequencing.at),
-            defaults to C{Default.url_host_name}
+            defaults to C{bsf.standards.Default.url_host_name}
         @type url_host_name: str
         @return:
         @rtype:
@@ -958,7 +967,7 @@ class Analysis(object):
         return
 
     def create_project_genome_directory(self):
-        """Check and create an C{Analysis.project_directory} or C{Analysis.genome_directory} if necessary.
+        """Check and create a C{bsf.Analysis.project_directory} or C{bsf.Analysis.genome_directory} if necessary.
 
         @return:
         @rtype:
@@ -989,7 +998,7 @@ class Analysis(object):
 
         The link will be placed in the sub directory and contain
         the project name followed by a 128 bit hexadecimal UUID string.
-        @param sub_directory: C{Analysis}-specific directory
+        @param sub_directory: C{bsf.Analysis}-specific directory
         @type sub_directory: str
         @return: Symbolic link to the project directory
         @rtype: str
@@ -1094,15 +1103,15 @@ class Analysis(object):
         """Return a UCSC Genome Browser track URL.
 
         @param options_dict: Python C{dict} of Python C{str} URL option key value pairs
-        @type options_dict: dict
+        @type options_dict: dict[str, str]
         @param browser_dict: Python C{dict} of Python C{str} browser line key value pairs
-        @type browser_dict: dict
+        @type browser_dict: dict[str, str]
         @param track_dict: Python C{dict} of Python C{str} track line (hgct_customText) key value pairs
-        @type track_dict: dict
+        @type track_dict: dict[str, str]
         @param ucsc_protocol: UCSC Genome Browser URL protocol (i.e. http, https, ...)
         @type ucsc_protocol: str
         @param ucsc_host_name: UCSC Genome Browser URL host name,
-            defaults to C{Default.ucsc_host_name}
+            defaults to C{bsf.standards.Default.ucsc_host_name}
         @type ucsc_host_name: str
         @return: A URL to attach a track to the UCSC Genome Browser
         @rtype: str
@@ -1138,8 +1147,8 @@ class Analysis(object):
         return cgi.escape(s=primary_url, quote=True)
 
     def ucsc_hub_write_hub(self, prefix=None):
-        """Write a UCSC Track Hub I{prefix_hub.txt} file into the C{Analysis.project_directory},
-        above the C{Analysis.genome_directory}.
+        """Write a UCSC Track Hub I{prefix_hub.txt} file into the C{bsf.Analysis.project_directory},
+        above the C{bsf.Analysis.genome_directory}.
 
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
@@ -1174,8 +1183,8 @@ class Analysis(object):
         return
 
     def ucsc_hub_write_genomes(self, prefix=None):
-        """Write a UCSC Track Hub I{prefix_genomes.txt} file into the C{Analysis.project_directory},
-        above the C{Analysis.genome_directory}.
+        """Write a UCSC Track Hub I{prefix_genomes.txt} file into the C{bsf.Analysis.project_directory},
+        above the C{bsf.Analysis.genome_directory}.
 
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
@@ -1247,7 +1256,7 @@ class Analysis(object):
         return
 
     def ucsc_hub_write_tracks(self, output, prefix=None):
-        """Write a UCSC Track Hub I{prefix_trackDB.txt} file into the C{Analysis.genome_directory}.
+        """Write a UCSC Track Hub I{prefix_trackDB.txt} file into the C{bsf.Analysis.genome_directory}.
 
         @param output: Content
         @type output: str
@@ -1275,11 +1284,11 @@ class Analysis(object):
         """Write UCSC Genome Browser Track Hub files to disk.
 
         The method writes a I{prefix_hub.txt} and a I{prefix_genomes.txt} file into the
-        C{Analysis.project_directory}, above the C{Analysis.genome_directory}, as well as a
-        I{prefix_trackDB.txt} file into the C{Analysis.genome_directory}.
+        C{bsf.Analysis.project_directory}, above the C{bsf.Analysis.genome_directory}, as well as a
+        I{prefix_trackDB.txt} file into the C{bsf.Analysis.genome_directory}.
         @param content: Content of the track database file
         @type content: str
-        @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...), defaults to C{Analysis.prefix}
+        @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...), defaults to C{bsf.Analysis.prefix}
         @type prefix: str
         @return:
         @rtype:
@@ -1306,9 +1315,9 @@ class Analysis(object):
         return
 
     def submit(self, drms_name=None):
-        """Submit each C{DRMS} object and pickle each C{Runnable} object.
+        """Submit each C{DRMS} object and pickle each C{bsf.Runnable} object.
 
-        @param drms_name: Only submit C{Executable} objects linked to C{DRMS.name}
+        @param drms_name: Only submit C{bsf.process.Executable} objects linked to C{DRMS.name}
         @type drms_name: str
         @return:
         @rtype:
@@ -1383,11 +1392,11 @@ class DRMS(object):
     @type threads: int
     @ivar hold: Hold on job scheduling
     @type hold: str
-    @ivar is_script: C{Executable} objects represent shell scripts,
+    @ivar is_script: C{bsf.process.Executable} objects represent shell scripts,
         or alternatively binary programs
     @type is_script: bool
-    @ivar executables: Python C{list} of C{Executable} objects
-    @type executables: list[Executable]
+    @ivar executables: Python C{list} of C{bsf.process.Executable} objects
+    @type executables: list[bsf.process.Executable]
     """
 
     def __init__(
@@ -1441,11 +1450,11 @@ class DRMS(object):
         @type threads: int
         @param hold: Hold on job scheduling
         @type hold: str
-        @param is_script: C{Executable} objects represent shell scripts,
+        @param is_script: C{bsf.process.Executable} objects represent shell scripts,
             or alternatively binary programs
         @type is_script: bool
-        @param executables: Python C{list} of C{Executable} objects
-        @type executables: list[Executable]
+        @param executables: Python C{list} of C{bsf.process.Executable} objects
+        @type executables: list[bsf.process.Executable]
         @return:
         @rtype:
         """
@@ -1579,10 +1588,10 @@ class DRMS(object):
         return output
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{DRMS} object via a section of a C{Configuration} object.
+        """Set instance variables of a C{DRMS} object via a section of a C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{Configuration}
+        @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
@@ -1668,11 +1677,11 @@ class DRMS(object):
         return
 
     def add_executable(self, executable):
-        """Convenience method to facilitate initialising, adding and returning an C{Executable}.
+        """Convenience method to facilitate initialising, adding and returning a C{bsf.process.Executable}.
 
-        @param executable: C{Executable}
+        @param executable: C{bsf.process.Executable}
         @type executable: bsf.process.Executable
-        @return: C{Executable}
+        @return: C{bsf.process.Executable}
         @rtype: bsf.process.Executable
         """
 
@@ -1683,7 +1692,7 @@ class DRMS(object):
         return executable
 
     def check_state(self, debug=0):
-        """Check the state for each C{Executable} object.
+        """Check the state for each C{bsf.process.Executable} object.
 
         @param debug: Debug level
         @type debug: int
@@ -1700,7 +1709,7 @@ class DRMS(object):
         return
 
     def submit(self, debug=0):
-        """Submit a command line for each C{Executable} object.
+        """Submit a command line for each C{bsf.process.Executable} object.
 
         @param debug: Debug level
         @type debug: int
@@ -1718,7 +1727,7 @@ class DRMS(object):
 
 
 class Runnable(object):
-    """The C{Runnable} class holds all information to run one or more C{Executable} objects through the
+    """The C{bsf.Runnable} class holds all information to run one or more C{bsf.process.Executable} objects through the
     I{Runner} script. It can be thought of a script that executes runnable steps.
 
     Attributes:
@@ -1727,16 +1736,16 @@ class Runnable(object):
     @ivar name: Name
     @type name: str
     @ivar code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
-        C{Executable} objects via the I{Runner} script.
+        C{bsf.process.Executable} objects via the I{Runner} script.
     @type code_module: str
     @ivar cache_directory: Cache directory
     @type cache_directory: str | unicode
     @ivar cache_path_dict: Python C{dict} of Python C{str} (name) key and
-        Python C{str} (file_path) value data of files that will be copied into the C{Runnable.cache_directory}
-    @type cache_path_dict: dict[str, str|unicode]
+        Python C{str} (file_path) value data of files that will be copied into the C{bsf.Runnable.cache_directory}
+    @type cache_path_dict: dict[str, str | unicode]
     @ivar file_path_dict: Python C{dict} of Python C{str} (name) key data and Python C{str} (file_path) value data
     @type file_path_dict: dict[str, str | unicode]
-    @ivar runnable_step_list: Python C{list} of C{RunnableStep} objects
+    @ivar runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
     @type runnable_step_list: list[bsf.process.RunnableStep]
     @ivar working_directory: Working directory to write C{pickle.Pickler} files
     @type working_directory: str | unicode
@@ -1756,24 +1765,24 @@ class Runnable(object):
             file_path_dict=None,
             runnable_step_list=None,
             debug=0):
-        """Initialise a C{Runnable} object.
+        """Initialise a C{bsf.Runnable} object.
 
         @param name: Name
         @type name: str
         @param code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
-            C{Executable} objects via the I{Runner} script
+            C{bsf.process.Executable} objects via the I{Runner} script
         @type code_module: str
         @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
         @type working_directory: str | unicode
         @param cache_directory: Cache directory
         @type cache_directory: str | unicode
         @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
-            Python C{str} (file_path) value data of files that will be copied into the C{Runnable.cache_directory}
-        @type cache_path_dict: dict[str, str|unicode]
+            Python C{str} (file_path) value data of files that will be copied into the C{bsf.Runnable.cache_directory}
+        @type cache_path_dict: dict[str, str | unicode]
         @param file_path_dict: Python C{dict} of Python C{str} (name) key data and
             Python C{str} (file_path) value data
         @type file_path_dict: dict[bsf.process.Executable.name, str | unicode]
-        @param runnable_step_list: Python C{list} of C{RunnableStep} objects
+        @param runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
         @type runnable_step_list: list[bsf.process.RunnableStep]
         @param debug: Integer debugging level
         @type debug: int
@@ -1816,7 +1825,7 @@ class Runnable(object):
         return
 
     def trace(self, level=1):
-        """Trace a C{Runnable} object.
+        """Trace a C{bsf.Runnable} object.
 
         @param level: Indentation level
         @type level: int
@@ -1858,11 +1867,11 @@ class Runnable(object):
         return output
 
     def add_runnable_step(self, runnable_step=None):
-        """Convenience method to facilitate initialising, adding and returning a C{RunnableStep}.
+        """Convenience method to facilitate initialising, adding and returning a C{bsf.process.RunnableStep}.
 
-        @param runnable_step: C{RunnableStep}
+        @param runnable_step: C{bsf.process.RunnableStep}
         @type runnable_step: bsf.process.RunnableStep
-        @return: C{RunnableStep}
+        @return: C{bsf.process.RunnableStep}
         @rtype: bsf.process.RunnableStep
         """
 
@@ -1886,7 +1895,8 @@ class Runnable(object):
         return os.path.join(self.working_directory, '.'.join((self.name, 'pkl')))
 
     def to_pickler_path(self):
-        """Write this C{Runnable} object as a Python C{pickle.Pickler} file into the working directory.
+        """Write this C{bsf.Runnable} object as a Python C{pickle.Pickler} file into the working directory.
+
         @return:
         @rtype:
         """
@@ -1900,12 +1910,12 @@ class Runnable(object):
 
     @classmethod
     def from_pickler_path(cls, file_path):
-        """Create a C{Runnable} object from a Python C{pickle.Pickler} file via Python C{pickle.Unpickler}.
+        """Create a C{bsf.Runnable} object from a Python C{pickle.Pickler} file via Python C{pickle.Unpickler}.
 
         @param file_path: File path to a Python C{pickle.Pickler} file
         @type file_path: str | unicode
-        @return: C{Runnable}
-        @rtype: Runnable
+        @return: C{bsf.Runnable}
+        @rtype: bsf.Runnable
         """
 
         pickler_file = open(file_path, 'rb')
@@ -1919,8 +1929,8 @@ class Runnable(object):
 
     @property
     def get_relative_cache_directory_path(self):
-        """Get the relative cache directory path for this C{Runnable}.
-        (i.e. C{Runnable.name}_cache)
+        """Get the relative cache directory path for this C{bsf.Runnable}.
+        (i.e. C{bsf.Runnable.name}_cache)
 
         @return: Relative cache directory path
         @rtype: str
@@ -1930,8 +1940,8 @@ class Runnable(object):
 
     @property
     def get_relative_status_path(self):
-        """Get the relative status file path indicating successful completion of this C{Runnable}.
-        (i.e. C{Runnable.name}_completed.txt)
+        """Get the relative status file path indicating successful completion of this
+        C{bsf.Runnable}. (i.e. C{bsf.Runnable.name}_completed.txt)
 
         @return: Relative status file path
         @rtype: str
@@ -1941,8 +1951,8 @@ class Runnable(object):
 
     @property
     def get_relative_temporary_directory_path(self):
-        """Get the relative temporary directory path for this C{Runnable}.
-        (i.e. C{Runnable.name}_temporary)
+        """Get the relative temporary directory path for this C{bsf.Runnable}.
+        (i.e. C{bsf.Runnable.name}_temporary)
 
         @return: Relative temporary directory path
         @rtype: str
@@ -1952,12 +1962,12 @@ class Runnable(object):
 
     @property
     def get_absolute_cache_directory_path(self):
-        """Get the absolute cache directory path including the C{Runnable.cache_directory}.
-        If C{Runnable.cache_directory} is not defined, C{Runnable.working_directory} will be prepended.
-        Since the relative cache directory path includes the C{Runnable.name},
-        the directory is C{Runnable}-specific.
-        (i.e. C{Runnable.cache_directory}/C{Runnable.name}_cache or
-        C{Runnable.working_directory}/C{Runnable.name}_cache)
+        """Get the absolute cache directory path including the C{bsf.Runnable.cache_directory}.
+        If C{bsf.Runnable.cache_directory} is not defined, C{bsf.Runnable.working_directory} will be prepended.
+        Since the relative cache directory path includes the C{bsf.Runnable.name},
+        the directory is C{bsf.Runnable}-specific.
+        (i.e. C{bsf.Runnable.cache_directory}/C{bsf.Runnable.name}_cache or
+        C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_cache)
 
         @return: Absolute cache directory path
         @rtype: str
@@ -1988,8 +1998,8 @@ class Runnable(object):
 
     @property
     def get_absolute_status_path(self):
-        """Get the absolute status file path including the C{Runnable.working_directory}.
-        (i.e. C{Runnable.working_directory}/C{Runnable.name}_completed.txt)
+        """Get the absolute status file path including the C{bsf.Runnable.working_directory}.
+        (i.e. C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_completed.txt)
 
         @return: Absolute status file path
         @rtype: str
@@ -1999,8 +2009,8 @@ class Runnable(object):
 
     @property
     def get_absolute_temporary_directory_path(self):
-        """Get the absolute temporary directory path including the C{Runnable.working_directory}.
-        (i.e. C{Runnable.working_directory}/C{Runnable.name}_temporary)
+        """Get the absolute temporary directory path including the C{bsf.Runnable.working_directory}.
+        (i.e. C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_temporary)
 
         @return: Absolute temporary directory path
         @rtype: str
@@ -2009,10 +2019,10 @@ class Runnable(object):
         return os.path.join(self.working_directory, self.get_relative_temporary_directory_path)
 
     def runnable_step_status_file_path(self, runnable_step, success=True):
-        """Get the status file path for a C{RunnableStep} of a C{Runnable}.
+        """Get the status file path for a C{bsf.process.RunnableStep} of a C{bsf.Runnable}.
 
-        @param runnable_step: C{RunnableStep}
-        @type runnable_step: RunnableStep
+        @param runnable_step: C{bsf.process.RunnableStep}
+        @type runnable_step: bsf.process.RunnableStep
         @param success: Successful completion
         @type success: bool
         @return: Status file path
@@ -2026,11 +2036,11 @@ class Runnable(object):
             return '_'.join((self.name, runnable_step.name, 'failed.txt'))
 
     def runnable_step_status_file_create(self, runnable_step, success=True):
-        """Create an empty status file for a C{RunnableStep} of a C{Runnable}.
+        """Create an empty status file for a C{bsf.process.RunnableStep} of a C{bsf.Runnable}.
         This method is mainly used by C{bsf.runnable.generic} and related modules.
 
-        @param runnable_step: C{RunnableStep}
-        @type runnable_step: RunnableStep
+        @param runnable_step: C{bsf.process.RunnableStep}
+        @type runnable_step: bsf.process.RunnableStep
         @param success: Successful completion
         @type success: bool
         @return:
@@ -2044,11 +2054,11 @@ class Runnable(object):
         return
 
     def runnable_step_status_file_remove(self, runnable_step):
-        """Remove the status file for a C{RunnableStep} of a C{Runnable}.
+        """Remove the status file for a C{bsf.process.RunnableStep} of a C{bsf.Runnable}.
         This method is mainly used by C{bsf.runnable.generic} and related modules.
 
-        @param runnable_step: C{RunnableStep}
-        @type runnable_step: RunnableStep
+        @param runnable_step: C{bsf.process.RunnableStep}
+        @type runnable_step: bsf.process.RunnableStep
         @return:
         @rtype:
         """

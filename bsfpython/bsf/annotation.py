@@ -33,12 +33,13 @@ import warnings
 
 
 class AnnotationSheet(object):
-    """The C{AnnotationSheet} class represents comma-separated value (CSV) files.
+    """The C{bsf.annotation.AnnotationSheet} class represents comma-separated value (CSV) files.
 
     This class is a bit unusual in that values of instance variables around the
     C{csv.DictReader} and C{csv.DictWriter} classes can be initialised from a corresponding set of class variables.
     Therefore, sub-classes with fixed defaults can be defined, while generic objects can be initialised directly
-    via the C{AnnotationSheet.__init__} method without the need to create an C{AnnotationSheet} sub-class in code.
+    via the C{bsf.annotation.AnnotationSheet.__init__} method without the need to create a
+    C{bsf.annotation.AnnotationSheet} sub-class in code.
 
     Attributes:
     @cvar _regular_expression_non_alpha: Regular expression for non-alphanumeric characters
@@ -71,6 +72,14 @@ class AnnotationSheet(object):
     @type test_methods: dict[str, list[function]]
     @ivar row_dicts: Python C{list} of Python C{dict} objects
     @type row_dicts: list[dict[str, str | unicode]]
+    @ivar _csv_reader_file: CSV Reader file handle
+    @type _csv_reader_file: file
+    @ivar _csv_reader_object: CSV Dict Reader
+    @type _csv_reader_object: csv.DictReader
+    @ivar _csv_writer_file: CSV Writer file handle
+    @type _csv_writer_file: file
+    @ivar _csv_writer_object: CSV Dict Writer
+    @type _csv_writer_object: csv.DictWriter
     """
 
     _regular_expression_non_alpha = re.compile(pattern='\W')
@@ -511,19 +520,20 @@ class AnnotationSheet(object):
 
     @classmethod
     def from_file_path(cls, file_path=None, file_type=None, name=None):
-        """Construct an C{AnnotationSheet} from a comma-separated value (CSV) file.
+        """Construct a C{bsf.annotation.AnnotationSheet} from a comma-separated value (CSV) file.
 
         This method reads the whole CSV file at once and stores a Python C{list} of Python C{dict} objects
-        representing each row. For large files, the C{AnnotationSheet.csv_reader_open},
-        C{AnnotationSheet.csv_reader_next} and C{AnnotationSheet.csv_reader_close} methods should be called explicitly.
+        representing each row. For large files, the C{bsf.annotation.AnnotationSheet.csv_reader_open},
+        C{bsf.annotation.AnnotationSheet.csv_reader_next} and
+        C{bsf.annotation.AnnotationSheet.csv_reader_close} methods should be called explicitly.
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type (i.e. I{excel} or I{excel_tab} defined in the C{csv.Dialect} class)
         @type file_type: str
         @param name: Name
         @type name: str
-        @return: C{AnnotationSheet}
-        @rtype: AnnotationSheet
+        @return: C{bsf.annotation.AnnotationSheet}
+        @rtype: bsf.annotation.AnnotationSheet
         """
 
         annotation_sheet = cls(file_path=file_path, file_type=file_type, name=name)
@@ -546,7 +556,7 @@ class AnnotationSheet(object):
             field_names=None,
             test_methods=None,
             row_dicts=None):
-        """Initialise an C{AnnotationSheet} object.
+        """Initialise a C{bsf.annotation.AnnotationSheet} object.
 
         @param file_path: File path
         @type file_path: str | unicode
@@ -560,9 +570,9 @@ class AnnotationSheet(object):
         @type field_names: list[str]
         @param test_methods: Python C{dict} of Python C{str} (field name) key data and
             Python C{list} of Python C{function} value data
-        @type test_methods: dict[str, function]
+        @type test_methods: dict[str, list[function]]
         @param row_dicts: Python C{list} of Python C{dict} objects
-        @type row_dicts: list[dict[str | unicode]]
+        @type row_dicts: list[dict[str, str | unicode]]
         @return:
         @rtype:
         """
@@ -617,7 +627,7 @@ class AnnotationSheet(object):
         return
 
     def trace(self, level=1):
-        """Trace a C{SampleAnnotationSheet} object.
+        """Trace a C{bsf.annotation.SampleAnnotationSheet} object.
 
         @param level: Indentation level
         @type level: int
@@ -643,7 +653,7 @@ class AnnotationSheet(object):
         return output
 
     def csv_reader_open(self):
-        """Open a Comma-Separated Value (CSV) file linked to an C{AnnotationSheet} object for reading
+        """Open a Comma-Separated Value (CSV) file linked to a C{bsf.annotation.AnnotationSheet} object for reading
         and initialise a Python C{csv.DictReader} object.
         @return:
         @rtype:
@@ -679,7 +689,7 @@ class AnnotationSheet(object):
         return
 
     def csv_reader_next(self):
-        """Read the next line of a CSV file linked to an C{AnnotationSheet} object.
+        """Read the next line of a CSV file linked to a C{bsf.annotation.AnnotationSheet} object.
 
         @return: Python C{dict} of column key and row value data
         @rtype: dict[str, str | unicode]
@@ -688,16 +698,24 @@ class AnnotationSheet(object):
         return self._csv_reader_object.next()
 
     def csv_reader_close(self):
-        """Close a Comma-Separated Value (CSV) file linked to an C{AnnotationSheet} object for reading.
+        """Close a Comma-Separated Value (CSV) file linked to a C{bsf.annotation.AnnotationSheet} object for reading.
+
+        @return:
+        @rtype:
         """
 
         self._csv_reader_object = None
         self._csv_reader_file.close()
         self._csv_reader_file = None
 
+        return
+
     def csv_writer_open(self):
-        """Open a Comma-Separated Value (CSV) file linked to an C{AnnotationSheet} object for writing,
+        """Open a Comma-Separated Value (CSV) file linked to a C{bsf.annotation.AnnotationSheet} object for writing,
         initialise a Python C{csv.DictWriter} object and write the header line if one has been defined.
+
+        @return:
+        @rtype:
         """
 
         if not self.field_names:
@@ -717,36 +735,52 @@ class AnnotationSheet(object):
         if self.header:
             self._csv_writer_object.writeheader()
 
+        return
+
     def csv_writer_next(self, row_dict):
-        """Write the next line of a CSV file linked to an C{AnnotationSheet} object.
+        """Write the next line of a CSV file linked to a C{bsf.annotation.AnnotationSheet} object.
 
         @param row_dict: Row Python C{dict}
         @type row_dict: dict[str, str | unicode]
+        @return:
+        @rtype:
         """
 
         self._csv_writer_object.writerow(rowdict=row_dict)
 
+        return
+
     def csv_writer_close(self):
-        """Close a Comma-Separated Value (CSV) file linked to an C{AnnotationSheet} object for writing.
+        """Close a Comma-Separated Value (CSV) file linked to a C{bsf.annotation.AnnotationSheet} object for writing.
+
+        @return:
+        @rtype:
         """
 
         self._csv_writer_object = None
         self._csv_writer_file.close()
         self._csv_writer_file = None
 
+        return
+
     def sort(self):
-        """Sort an C{AnnotationSheet}.
+        """Sort a C{bsf.annotation.AnnotationSheet}.
 
         This method has to implemented in the sub-class,
         as it requires information about field-specific sorting.
+
+        @return:
+        @rtype:
         """
 
         warnings.warn(
             'Sorting of AnnotationSheet objects has to implemented in the sub-class.',
             UserWarning)
 
+        return
+
     def validate(self):
-        """Validate an C{AnnotationSheet}.
+        """Validate a C{bsf.annotation.AnnotationSheet}.
 
         @return: Warning messages
         @rtype: str
@@ -770,7 +804,10 @@ class AnnotationSheet(object):
         return messages
 
     def to_file_path(self):
-        """Write an C{AnnotationSheet} to a file path.
+        """Write a C{bsf.annotation.AnnotationSheet} to a file path.
+
+        @return:
+        @rtype:
         """
 
         self.csv_writer_open()
@@ -780,9 +817,11 @@ class AnnotationSheet(object):
 
         self.csv_writer_close()
 
+        return
+
 
 class ChIPSeqDiffBindSheet(AnnotationSheet):
-    """ChIP-Seq Bioconductor DiffBind annotation sheet class.
+    """The C{bsf.annotation.ChIPSeqDiffBindSheet} class represents a ChIP-Seq Bioconductor DiffBind annotation sheet.
 
     Attributes:
     @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
@@ -846,7 +885,11 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     }
 
     def sort(self):
-        """Sort by I{Tissue}, I{Factor}, I{Condition}, I{Treatment} and I{Replicate} columns.
+        """Sort a C{bsf.annotation.ChIPSeqDiffBindSheet} by
+        I{Tissue}, I{Factor}, I{Condition}, I{Treatment} and I{Replicate} columns.
+
+        @return:
+        @rtype:
         """
 
         self.row_dicts.sort(
@@ -857,8 +900,13 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
             cmp(x['Treatment'], y['Treatment']) or
             cmp(int(x['Replicate']), int(y['Replicate'])))
 
+        return
+
     def to_file_path(self):
-        """Write a C{ChIPSeqDiffBindSheet} to a file.
+        """Write a C{bsf.annotation.ChIPSeqDiffBindSheet} to a file.
+
+        @return:
+        @rtype:
         """
 
         # Override the method from the super-class to automatically sort before writing to a file.
@@ -866,9 +914,11 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         self.sort()
         super(ChIPSeqDiffBindSheet, self).to_file_path()
 
+        return
+
 
 class TuxedoSamplePairSheet(AnnotationSheet):
-    """The C{TuxedoSamplePairSheet} class represents C{Sample} pairs defined by
+    """The C{bsf.annotation.TuxedoSamplePairSheet} class represents C{bsf.data.Sample} pairs defined by
     the C{bsf_rnaseq_process_cuffdiff.R} script.
 
     Attributes:

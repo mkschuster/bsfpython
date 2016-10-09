@@ -1,6 +1,6 @@
 """bsf.runnables
 
-A package of classes and methods supporting the BSF C{Runnable} class.
+A package of classes and methods supporting the BSF C{bsf.Runnable} class.
 """
 
 #

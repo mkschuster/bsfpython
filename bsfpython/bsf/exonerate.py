@@ -34,7 +34,7 @@ vulgar_pattern = re.compile(pattern='^vulgar: (.*)')
 
 
 class VULGAR(object):
-    """This class models the Verbose Useful Labelled Gapped Alignment Report (VULGAR) as defined by
+    """This class models the Verbose Useful Labelled Gapped Alignment Report (C{bsf.exonerate.VULGAR}) as defined by
     Guy Slater's Exonerate generic alignment tool.
     https://www.ebi.ac.uk/~guy/exonerate/
 
@@ -58,17 +58,18 @@ class VULGAR(object):
     @ivar score: Score
     @type score: str
     @ivar triplet_list: List of (I{operation}, I{query_length}, I{target_length}) tuples
-    @type triplet_list: list[tuple]
+    @type triplet_list: list[tuple[str, str, str]]
     """
 
     @classmethod
     def from_vulgar_str(cls, vulgar_str=None):
-        """Create a new Verbose Useful Labelled Gapped Alignment Report (VULGAR) object from a Python (VULGAR) str.
+        """Create a new Verbose Useful Labelled Gapped Alignment Report (C{bsf.exonerate.VULGAR}) object
+        from a Python C{str} (VULGAR) object.
 
         @param vulgar_str: VULGAR string
         @type vulgar_str: str
-        @return: VULGAR object
-        @rtype: VULGAR
+        @return: C{bsf.exonerate.VULGAR} object
+        @rtype: bsf.exonerate.VULGAR
         """
 
         self = cls()
@@ -88,7 +89,7 @@ class VULGAR(object):
             q_name=None, q_start=None, q_end=None, q_strand=None,
             t_name=None, t_start=None, t_end=None, t_strand=None,
             score=None, triplet_list=None):
-        """Initialise a new C{VULGAR} object.
+        """Initialise a new C{bsf.exonerate.VULGAR} object.
 
         @param q_name: Query name
         @type q_name: str
@@ -109,7 +110,9 @@ class VULGAR(object):
         @param score: Score
         @type score: str
         @param triplet_list: List of (I{operation}, I{query_length}, I{target_length}) tuples
-        @type triplet_list: list[tuple]
+        @type triplet_list: list[tuple[str, str, str]]
+        @return:
+        @rtype:
         """
 
         super(VULGAR, self).__init__()
@@ -124,6 +127,8 @@ class VULGAR(object):
         self.t_strand = t_strand
         self.score = score
         self.triplet_list = triplet_list
+
+        return
 
     def t_start_natural(self):
         if self.t_strand == '+':
@@ -149,8 +154,8 @@ def parse_alignment_file(file_path):
 
     @param file_path: Alignment file path
     @type file_path: str | unicode
-    @return: Python list of VULGAR objects
-    @rtype: list[VULGAR]
+    @return: Python C{list} of C{bsf.exonerate.VULGAR} objects
+    @rtype: list[bsf.exonerate.VULGAR]
     """
 
     vulgar_list = list()

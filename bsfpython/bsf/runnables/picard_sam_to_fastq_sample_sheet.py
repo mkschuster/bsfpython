@@ -29,17 +29,16 @@ A package of classes and methods to clean a sample sheet for the Picard SamToFas
 
 import os
 
-from bsf import Runnable
 from bsf.argument import OptionLong
 from bsf.data import Collection, ProcessedRunFolder, Project, Sample, PairedReads
 from bsf.process import RunnableStep
 
 
 def run(runnable):
-    """Run the the C{Runnable}.
+    """Run the the C{bsf.Runnable}.
 
-    @param runnable: C{Runnable}
-    @type runnable: Runnable
+    @param runnable: C{bsf.Runnable}
+    @type runnable: bsf.Runnable
     @return:
     @rtype:
     """

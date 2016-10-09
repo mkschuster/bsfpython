@@ -1,9 +1,10 @@
 """bsf.argument
 
-A package of classes and methods to model Command arguments,
-i.e. SwitchLong (--key), SwitchShort (-k),
-OptionLong (--key value), OptionShort (-k value), OptionPair (key=value),
-SubCommand (key) and Argument (key).
+A package of classes and methods to model C{bsf.process.Command} arguments,
+i.e. C{bsf.argument.SwitchLong} (--key), C{bsf.argument.SwitchShort} (-k),
+C{bsf.argument.OptionLong} (--key value), C{bsf.argument.OptionShort} (-k value),
+C{bsf.argument.OptionPair} (key=value), C{bsf.argument.SubCommand} (key) and
+C{bsf.argument.Argument} (key).
 """
 
 #
@@ -31,7 +32,7 @@ SubCommand (key) and Argument (key).
 
 
 class Argument(object):
-    """The C{Argument} class represents an argument obeying a C{key} schema.
+    """The C{bsf.argument.Argument} class represents an argument obeying a C{key} schema.
 
     Attributes:
     @ivar key: Key
@@ -40,50 +41,45 @@ class Argument(object):
 
     @classmethod
     def from_key_value(cls, key, value):
-        """Create an C{Argument} or sub-class object from a key and value argument pair.
+        """Create a C{bsf.argument.Argument} or sub-class object from a key and value argument pair.
 
         If the key starts with one or two hyphen and has no value associated, create a
-        C{SwitchShort} or C{SwitchLong} object, respectively. If the key is additionally associated
-        with a value, create an C{OptionShort} or C{OptionLong} object, respectively.
+        C{bsf.argument.SwitchShort} or C{bsf.argument.SwitchLong} object, respectively.
+        If the key is additionally associated with a value, create a C{bsf.argument.OptionShort} or
+        a C{bsf.argument.OptionLong} object, respectively.
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str | unicode
-        @return: C{Argument} object or a sub-class thereof
-        @rtype: Argument
+        @return: C{bsf.argument.Argument} object or a sub-class thereof
+        @rtype: bsf.argument.Argument
         """
 
         if key.startswith('--'):
-
             # Long option or switch ...
-
             if value:
-                argument = OptionLong(key=key.lstrip('-'), value=str(value))
+                argument = OptionLong(key=key.lstrip('-'), value=value)
             else:
                 argument = SwitchLong(key=key.lstrip('-'))
-
         elif key.startswith('-'):
-
             # Short option or switch ...
-
             if value:
-                argument = OptionShort(key=key.lstrip('-'), value=str(value))
+                argument = OptionShort(key=key.lstrip('-'), value=value)
             else:
                 argument = SwitchShort(key=key.lstrip('-'))
-
         else:
-
             # Must be an option pair ...
-
-            argument = OptionPair(key=str(key), value=str(value))
+            argument = OptionPair(key=key, value=value)
 
         return argument
 
     def __init__(self, key):
-        """Initialise an C{Argument} object.
+        """Initialise a C{bsf.argument.Argument} object.
 
         @param key: Key
         @type key: str
+        @return:
+        @rtype:
         """
 
         assert isinstance(key, basestring)
@@ -95,8 +91,10 @@ class Argument(object):
 
         self.key = key
 
+        return
+
     def trace(self, level):
-        """Trace an C{Argument} object.
+        """Trace a C{bsf.argument.Argument} object.
 
         @param level: Indentation level
         @type level: int
@@ -113,7 +111,7 @@ class Argument(object):
 
 
 class Switch(Argument):
-    """The C{Switch} class represents an argument obeying a C{--key} or C{-k} schema.
+    """The C{bsf.argument.Switch} class represents an argument obeying a C{--key} or C{-k} schema.
 
     Attributes:
     @ivar is_long: GNU-style long switch (C{--key})
@@ -121,12 +119,14 @@ class Switch(Argument):
     """
 
     def __init__(self, key, is_long=False):
-        """Initialise a C{Switch} object.
+        """Initialise a C{bsf.argument.Switch} object.
 
         @param key: Key
         @type key: str
         @param is_long: GNU-style long switch (C{--key})
         @type is_long: bool
+        @return:
+        @rtype:
         """
 
         assert isinstance(is_long, bool)
@@ -135,8 +135,10 @@ class Switch(Argument):
 
         self.is_long = is_long
 
+        return
+
     def trace(self, level):
-        """Trace a C{Switch} object.
+        """Trace a C{bsf.argument.Switch} object.
 
         @param level: Indentation level
         @type level: int
@@ -155,22 +157,26 @@ class Switch(Argument):
 
 
 class SwitchLong(Switch):
-    """The C{SwitchLong} class represents an argument obeying a C{--key} schema.
+    """The C{bsf.argument.SwitchLong} class represents an argument obeying a C{--key} schema.
 
     Attributes:
     """
 
     def __init__(self, key):
-        """Initialise a C{SwitchLong} object.
+        """Initialise a C{bsf.argument.SwitchLong} object.
 
         @param key: Key
         @type key: str
+        @return:
+        @rtype:
         """
 
         super(SwitchLong, self).__init__(key=key, is_long=True)
 
+        return
+
     def trace(self, level):
-        """Trace a C{SwitchLong} object.
+        """Trace a C{bsf.argument.SwitchLong} object.
 
         @param level: Indentation level
         @type level: int
@@ -188,22 +194,26 @@ class SwitchLong(Switch):
 
 
 class SwitchShort(Switch):
-    """The C{SwitchShort} class represents an argument obeying a C{-k} schema.
+    """The C{bsf.argument.SwitchShort} class represents an argument obeying a C{-k} schema.
 
     Attributes:
     """
 
     def __init__(self, key):
-        """Initialise a C{SwitchShort} object.
+        """Initialise a C{bsf.argument.SwitchShort} object.
 
         @param key: Key
         @type key: str
+        @return:
+        @rtype:
         """
 
         super(SwitchShort, self).__init__(key=key, is_long=False)
 
+        return
+
     def trace(self, level):
-        """Trace a C{SwitchShort} object.
+        """Trace a C{bsf.argument.SwitchShort} object.
 
         @param level: Indentation level
         @type level: int
@@ -221,17 +231,17 @@ class SwitchShort(Switch):
 
 
 class Option(Switch):
-    """The C{Option} class represents arguments obeying a C{--key value} or C{-k value} schema.
+    """The C{bsf.argument.Option} class represents arguments obeying a C{--key value} or C{-k value} schema.
 
     Attributes:
-    @ivar is_pair: A C{KEY=VALUE} pair
+    @ivar is_pair: A I{KEY=VALUE} pair
     @type is_pair: bool
     @ivar value: Value
     @type value: str | unicode
     """
 
     def __init__(self, key, value, is_long=False, is_pair=False):
-        """Initialise an C{Option} object.
+        """Initialise a C{bsf.argument.Option} object.
 
         @param key: Key
         @type key: str
@@ -239,8 +249,10 @@ class Option(Switch):
         @type value: str | unicode | None
         @param is_long: GNU-style long option (C{--key value})
         @type is_long: bool
-        @param is_pair: A C{KEY=VALUE} pair
+        @param is_pair: A I{KEY=VALUE} pair
         @type is_pair: bool
+        @return:
+        @rtype:
         """
 
         assert isinstance(value, basestring)
@@ -254,8 +266,10 @@ class Option(Switch):
         self.value = value
         self.is_pair = is_pair
 
+        return
+
     def trace(self, level):
-        """Trace an C{Option} object.
+        """Trace a C{bsf.argument.Option} object.
 
         @param level: Indentation level
         @type level: int
@@ -275,24 +289,28 @@ class Option(Switch):
 
 
 class OptionLong(Option):
-    """The C{OptionLong} class represents an argument obeying a C{--key value} schema.
+    """The C{bsf.argument.OptionLong} class represents an argument obeying a C{--key value} schema.
 
     Attributes:
     """
 
     def __init__(self, key, value):
-        """Initialise an C{OptionLong} object.
+        """Initialise a C{bsf.argument.OptionLong} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str | unicode
+        @return:
+        @rtype:
         """
 
         super(OptionLong, self).__init__(key=key, value=value, is_long=True)
 
+        return
+
     def trace(self, level):
-        """Trace an C{OptionLong} object.
+        """Trace a C{bsf.argument.OptionLong} object.
 
         @param level: Indentation level
         @type level: int
@@ -310,24 +328,28 @@ class OptionLong(Option):
 
 
 class OptionShort(Option):
-    """The C{OptionShort} class represents an argument obeying a C{-k value} schema.
+    """The C{bsf.argument.OptionShort} class represents an argument obeying a C{-k value} schema.
 
     Attributes:
     """
 
     def __init__(self, key, value):
-        """Initialise an C{OptionShort} object.
+        """Initialise a C{bsf.argument.OptionShort} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str | unicode
+        @return:
+        @rtype:
         """
 
         super(OptionShort, self).__init__(key=key, value=value, is_long=False)
 
+        return
+
     def trace(self, level):
-        """Trace an C{OptionShort} object.
+        """Trace a C{bsf.argument.OptionShort} object.
 
         @param level: Indentation level
         @type level: int
@@ -345,28 +367,32 @@ class OptionShort(Option):
 
 
 class OptionPair(Option):
-    """The C{OptionPair} class represents an argument obeying a C{KEY=VALUE} schema.
+    """The C{bsf.argument.OptionPair} class represents an argument obeying a I{KEY=VALUE} schema.
 
-    Although the C{KEY=VALUE} expressions could be added as simple arguments, the benefit
-    of having a specific sub-class is the tracking of the key in the C{Command.options}
+    Although the I{KEY=VALUE} expressions could be added as simple arguments, the benefit
+    of having a specific sub-class is the tracking of the key in the C{bsf.process.Command.options}
     dictionary.
 
     Attributes:
     """
 
     def __init__(self, key, value):
-        """Initialise an C{OptionPair} object.
+        """Initialise a C{bsf.argument.OptionPair} object.
 
         @param key: Key
         @type key: str
         @param value: Value
         @type value: str | unicode
+        @return:
+        @rtype:
         """
 
         super(OptionPair, self).__init__(key=key, value=value, is_pair=True)
 
+        return
+
     def trace(self, level):
-        """Trace an C{OptionPair} object.
+        """Trace a C{bsf.argument.OptionPair} object.
 
         @param level: Indentation level
         @type level: int

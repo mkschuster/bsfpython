@@ -1,8 +1,8 @@
 """bsf.runnables.generic
 
-A package of classes and methods to run RunnableStep objects of a Runnable.
-Empty status files keep track of completed RunnableStep objects and allow for
-restarting of the Runnable object processing.
+A package of classes and methods to run C{bsf.process.RunnableStep} objects of a C{bsf.Runnable}.
+Empty status files keep track of completed C{bsf.process.RunnableStep} objects and allow for
+restarting of the C{bsf.Runnable} object processing.
 """
 
 #
@@ -34,15 +34,14 @@ import errno
 import os
 import shutil
 
-from bsf import Runnable
 from bsf.process import RunnableStep
 
 
 def run(runnable):
-    """Run the the C{Runnable}.
+    """Run the the C{bsf.Runnable}.
 
-    @param runnable: C{Runnable}
-    @type runnable: Runnable
+    @param runnable: C{bsf.Runnable}
+    @type runnable: bsf.Runnable
     @return:
     @rtype:
     """

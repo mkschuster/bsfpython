@@ -112,10 +112,10 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
 
     platform_unit = str()
     for line in sam_header_rg:
-        assert isinstance(line, (str, unicode))
+        assert isinstance(line, basestring)
         for field in line.rstrip().split():
             if field.startswith('PU:'):
-                platform_unit = str(field[3:])
+                platform_unit = field[3:]
 
         file_name_prefix = re.sub(pattern='[^0-9A-Za-z_-]', repl='_', string=platform_unit)
         file_name_1 = os.path.join(path_temporary, file_name_prefix + '_1.fastq')

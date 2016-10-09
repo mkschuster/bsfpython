@@ -36,34 +36,34 @@ from bsf.annotation import AnnotationSheet, TuxedoSamplePairSheet
 from bsf.data import PairedReads, Sample
 from bsf.executables import TopHat
 from bsf.process import Executable, RunnableStep
-from bsf.standards import Configuration, Default
+from bsf.standards import Default
 
 
 class Tuxedo(Analysis):
-    """Tuxedo RNASeq Analysis sub-class.
+    """Tuxedo RNASeq C{bsf.Analysis} sub-class.
 
     Attributes:
-    @cvar name: Analysis name that should be overridden by sub-classes
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_run_tophat: C{DRMS.name} for the run Tophat C{Analysis} stage
+    @cvar drms_name_run_tophat: C{DRMS.name} for the run Tophat C{bsf.Analysis} stage
     @type drms_name_run_tophat: str
-    @cvar drms_name_process_tophat: C{DRMS.name} for the process Tophat C{Analysis} stage
+    @cvar drms_name_process_tophat: C{DRMS.name} for the process Tophat C{bsf.Analysis} stage
     @type drms_name_process_tophat: str
-    @cvar drms_name_run_cufflinks: C{DRMS.name} for the run Cufflinks C{Analysis} stage
+    @cvar drms_name_run_cufflinks: C{DRMS.name} for the run Cufflinks C{bsf.Analysis} stage
     @type drms_name_run_cufflinks: str
-    @cvar drms_name_process_cufflinks: C{DRMS.name} for the process Cufflinks C{Analysis} stage
+    @cvar drms_name_process_cufflinks: C{DRMS.name} for the process Cufflinks C{bsf.Analysis} stage
     @type drms_name_process_cufflinks: str
-    @cvar drms_name_run_cuffmerge: C{DRMS.name} for the Cuffmerge C{Analysis} stage
+    @cvar drms_name_run_cuffmerge: C{DRMS.name} for the Cuffmerge C{bsf.Analysis} stage
     @type drms_name_run_cuffmerge: str
-    @cvar drms_name_run_cuffquant: C{DRMS.name} for the Cuffquant C{Analysis} stage
+    @cvar drms_name_run_cuffquant: C{DRMS.name} for the Cuffquant C{bsf.Analysis} stage
     @type drms_name_run_cuffquant: str
-    @cvar drms_name_run_cuffnorm: C{DRMS.name} for the Cuffnorm C{Analysis} stage
+    @cvar drms_name_run_cuffnorm: C{DRMS.name} for the Cuffnorm C{bsf.Analysis} stage
     @type drms_name_run_cuffnorm: str
-    @cvar drms_name_run_cuffdiff: C{DRMS.name} for the Cuffdiff C{Analysis} stage
+    @cvar drms_name_run_cuffdiff: C{DRMS.name} for the Cuffdiff C{bsf.Analysis} stage
     @type drms_name_run_cuffdiff: str
-    @cvar drms_name_process_cuffdiff: C{DRMS.name} for the process Cuffdiff C{Analysis} stage
+    @cvar drms_name_process_cuffdiff: C{DRMS.name} for the process Cuffdiff C{bsf.Analysis} stage
     @type drms_name_process_cuffdiff: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
@@ -104,66 +104,66 @@ class Tuxedo(Analysis):
 
     @classmethod
     def get_prefix_rnaseq_run_tophat(cls, replicate_key):
-        """Get a Python C{str} for setting C{Executable.dependencies} in other C{Analysis} objects
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
         @param replicate_key: Replicate key
         @type replicate_key: str
-        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_run_tophat, replicate_key))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffmerge(cls, comparison_key):
-        """Get a Python C{str} for setting C{Executable.dependencies} in other C{Analysis} objects
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
         @param comparison_key: Comparison key
         @type comparison_key: str
-        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_run_cuffmerge, comparison_key))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffquant(cls, comparison_key):
-        """Get a Python C{str} for setting C{Executable.dependencies} in other C{Analysis} objects
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
         @param comparison_key: Comparison key
         @type comparison_key: str
-        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_run_cuffquant, comparison_key))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffnorm(cls, comparison_key):
-        """Get a Python C{str} for setting C{Executable.dependencies} in other C{Analysis} objects
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
         @param comparison_key: Comparison key
         @type comparison_key: str
-        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_run_cuffnorm, comparison_key))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffdiff(cls, comparison_key):
-        """Get a Python C{str} for setting C{Executable.dependencies} in other C{Analysis} objects
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
         @param comparison_key: Comparison key
         @type comparison_key: str
-        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_run_cuffdiff, comparison_key))
 
     @classmethod
     def get_prefix_rnaseq_process_cuffdiff(cls, comparison_key):
-        """Get a Python C{str} for setting C{Executable.dependencies} in other C{Analysis} objects
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
         @param comparison_key: Comparison key
         @type comparison_key: str
-        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_process_cuffdiff, comparison_key))
@@ -192,37 +192,37 @@ class Tuxedo(Analysis):
             multi_read_correction=None,
             library_type=None,
             no_length_correction=False):
-        """Initialise a C{Tuxedo} object.
+        """Initialise a C{bsf.analyses.rna_seq.Tuxedo} object.
 
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{Analysis}-wide input directory
+        @param input_directory: C{bsf.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{Analysis}-wide output directory
+        @param output_directory: C{bsf.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{Analysis}-wide project directory,
-            normally under the C{Analysis}-wide output directory
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{Analysis}-wide genome directory,
-            normally under the C{Analysis}-wide project directory
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
         @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list
-        @param collection: C{Collection}
-        @type collection: Collection
+        @type drms_list: list[DRMS]
+        @param collection: C{bsf.data.Collection}
+        @type collection: bsf.data.Collection
         @param comparisons: Python C{dict} of Python C{str} (comparison name) key objects and
-            Python C{tuple} value objects of C{Sample.name} and Python C{list} of C{Sample} objects
-        @type comparisons: dict[str, (Sample.name, list[Sample])]
-        @param samples: Python C{list} of C{Sample} objects
-        @type samples: list
+            Python C{tuple} value objects of C{bsf.data.Sample.name} and Python C{list} of C{bsf.data.Sample} objects
+        @type comparisons: dict[str, (bsf.data.Sample.name, list[bsf.data.Sample])]
+        @param samples: Python C{list} of C{bsf.data.Sample} objects
+        @type samples: list[bsf.data.Sample]
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
         @type replicate_grouping: bool
         @param cmp_file: Comparison file
@@ -314,11 +314,12 @@ class Tuxedo(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{Tuxedo} object via a section of a C{Configuration} object.
+        """Set instance variables of a C{bsf.analyses.rna_seq.Tuxedo} object via a section of a
+        C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
         @return:
@@ -417,17 +418,18 @@ class Tuxedo(Analysis):
         return
 
     def _read_comparisons(self, cmp_file):
-        """Read an C{AnnotationSheet} CSV file specifying comparisons from disk.
+        """Read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
 
-        All C{Sample} objects referenced in a comparison are added from the C{Collection} to the C{Analysis} object.
+        All C{bsf.data.Sample} objects referenced in a comparison are added from the C{bsf.data.Collection} to the
+        C{bsf.Analysis} object.
 
             - Column headers for CASAVA folders:
                 - Treatment/Control/Point N ProcessedRunFolder:
                     - CASAVA processed run folder name or
-                    - C{Analysis.input_directory} by default
+                    - C{bsf.Analysis.input_directory} by default
                 - Treatment/Control/Point N Project:
                     - CASAVA Project name or
-                    - C{Analysis.project_name} by default
+                    - C{bsf.Analysis.project_name} by default
                 - Treatment/Control/Point N Sample:
                     - CASAVA Sample name, no default
             - Column headers for independent samples:
@@ -480,8 +482,8 @@ class Tuxedo(Analysis):
                     key += group_name
                     key += '__'
                     comparison_groups.append((group_name, group_samples))
-                    # Also expand each Python list of Sample objects to get all those Sample objects
-                    # that this Analysis needs considering.
+                    # Also expand each Python list of bsf.data.Sample objects to get all those bsf.data.Sample objects
+                    # that this bsf.Analysis needs considering.
                     for sample in group_samples:
                         assert isinstance(sample, Sample)
                         if self.debug > 1:
@@ -516,7 +518,7 @@ class Tuxedo(Analysis):
         return
 
     def run(self):
-        """Run this C{Tuxedo} analysis.
+        """Run this C{bsf.analyses.rna_seq.Tuxedo} analysis.
         @return:
         @rtype:
         """
@@ -558,7 +560,7 @@ class Tuxedo(Analysis):
 
         # Experimentally, sort the Python list of Sample objects by the Sample name.
         # This cannot be done in the super-class, because Sample objects are only put into the
-        # Analysis.samples list by the _read_comparisons method.
+        # bsf.Analysis.samples list by the _read_comparisons method.
 
         self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
@@ -663,7 +665,7 @@ class Tuxedo(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads returns a Python dict of
+            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
             # Python str key and Python list of Python list objects
             # of bsf.data.PairedReads objects.
 
@@ -1058,7 +1060,7 @@ class Tuxedo(Analysis):
 
                 for sample in group_samples:
                     assert isinstance(sample, Sample)
-                    # bsf.data.Sample.get_all_paired_reads returns a Python dict of
+                    # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
                     # Python str comparison_key and Python list of Python list objects
                     # of bsf.data.PairedReads objects.
 
@@ -1356,7 +1358,7 @@ class Tuxedo(Analysis):
         return
 
     def report(self):
-        """Create a C{Tuxedo} report in HTML format and a UCSC Genome Browser Track Hub.
+        """Create a C{bsf.analyses.rna_seq.Tuxedo} report in HTML format and a UCSC Genome Browser Track Hub.
         @return:
         @rtype:
         """
@@ -1563,7 +1565,7 @@ class Tuxedo(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads returns a Python dict of
+            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
             # Python str key and Python list of Python list objects
             # of bsf.data.PairedReads objects.
 

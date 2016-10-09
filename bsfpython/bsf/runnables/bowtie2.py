@@ -33,7 +33,7 @@ import re
 import shutil
 
 import bsf
-from bsf import Analysis, Runnable
+from bsf import Analysis
 from bsf.argument import OptionShort
 from bsf.executables import Bowtie2
 from bsf.process import Command, Executable
@@ -41,12 +41,13 @@ from bsf.standards import Default
 
 
 class ReadGroupContainer(object):
+
     def __init__(
             self,
             rg_string=None,
             fastq_1_path=None,
             fastq_2_path=None):
-        """Initialise a C{ReadGroupContainer} object.
+        """Initialise a C{bsf.runnables.bowtie2.ReadGroupContainer} object.
 
         @param rg_string: SAM Read Group (@RG)
         @type rg_string: str
@@ -54,6 +55,8 @@ class ReadGroupContainer(object):
         @type fastq_1_path: str | unicode
         @param fastq_2_path: FASTQ R2 file path
         @type fastq_2_path: str | unicode
+        @return:
+        @rtype:
         """
 
         super(ReadGroupContainer, self).__init__()
@@ -104,10 +107,12 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     """Run Picard SamToFastq on a BAM file and convert into a FASTQ file pair per read group (@RG).
 
     Expand a BAM file into a pair of FASTQ files per SAM read group.
-    @param runnable: Runnable
-    @type runnable: Runnable
+    @param runnable: C{bsf.Runnable}
+    @type runnable: bsf.Runnable
     @param bam_file_path: BAM file path
     @type bam_file_path: str | unicode
+    @return:
+    @rtype:
     """
     default = Default.get_global_default()
 
@@ -197,8 +202,10 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
 def run_bowtie2(runnable):
     """Run Bowtie2.
 
-    @param runnable: C{Runnable}
-    @type runnable: Runnable
+    @param runnable: C{bsf.Runnable}
+    @type runnable: bsf.Runnable
+    @return:
+    @rtype:
     """
 
     # Put all sample-specific information into a sub-directory.
@@ -226,7 +233,7 @@ def run_bowtie2(runnable):
     # TODO: For the moment, convert only files set in the bowtie2 -U option.
     # Pop the original list of -U options off the Bowtie2 Executable object.
     option_list = list(bowtie2.options['U'])
-    # aligned_sam = str(bowtie2.stdout_path)
+    # aligned_sam = bowtie2.stdout_path
 
     rgc_list = list()
     fastq_list = list()
@@ -333,10 +340,12 @@ def run_bowtie2(runnable):
 
 
 def run(runnable):
-    """Run the C{Runnable}.
+    """Run the C{bsf.Runnable}.
 
-    @param runnable: C{Runnable}
-    @type runnable: Runnable
+    @param runnable: C{bsf.Runnable}
+    @type runnable: bsf.Runnable
+    @return:
+    @rtype:
     """
 
     path_temporary = runnable.file_path_dict['temporary_directory']

@@ -32,12 +32,12 @@ import os
 from pickle import Pickler, HIGHEST_PROTOCOL
 import warnings
 
-from bsf import Analysis, defaults, DRMS, Runnable
+from bsf import Analysis, defaults, Runnable
 from bsf.annotation import AnnotationSheet, ChIPSeqDiffBindSheet
-from bsf.data import Collection, Sample
+from bsf.data import Sample
 from bsf.executables import BWA, Macs14
 from bsf.process import Command, Executable, RunnableStep, RunnableStepPicard
-from bsf.standards import Configuration, Default
+from bsf.standards import Default
 
 
 class ChIPSeqComparison(object):
@@ -48,10 +48,10 @@ class ChIPSeqComparison(object):
     @type c_name: str
     @ivar t_name: Treatment name
     @type t_name: str
-    @ivar c_samples: Python C{list} of control C{Sample} objects
-    @type c_samples: list[Sample]
-    @ivar t_samples: Python C{list} of treatment C{Sample} objects
-    @type t_samples: list[Sample]
+    @ivar c_samples: Python C{list} of control C{bsf.data.Sample} objects
+    @type c_samples: list[bsf.data.Sample]
+    @ivar t_samples: Python C{list} of treatment C{bsf.data.Sample} objects
+    @type t_samples: list[bsf.data.Sample]
     @ivar factor: ChIP factor
     @type factor: str
     @ivar tissue: Tissue
@@ -78,16 +78,16 @@ class ChIPSeqComparison(object):
             treatment=None,
             replicate=None,
             diff_bind=None):
-        """Initialise a C{ChIPSeqComparison} object.
+        """Initialise a C{bsf.analyses.chip_seq.ChIPSeqComparison} object.
 
         @param c_name: Control name
         @type c_name: str
         @param t_name: Treatment name
         @type t_name: str
-        @param c_samples: Python C{list} of control C{Sample} objects
-        @type c_samples: list[Sample]
-        @param t_samples: Python C{list} of treatment C{Sample} objects
-        @type t_samples: list[Sample]
+        @param c_samples: Python C{list} of control C{bsf.data.Sample} objects
+        @type c_samples: list[bsf.data.Sample]
+        @param t_samples: Python C{list} of treatment C{bsf.data.Sample} objects
+        @type t_samples: list[bsf.data.Sample]
         @param factor: ChIP factor
         @type factor: str
         @param tissue: Tissue
@@ -163,12 +163,12 @@ class ChIPSeqComparison(object):
 
 
 class ChIPSeq(Analysis):
-    """The C{ChIPSeq} class represents the logic to run a ChIP-Seq-specific C{Analysis}.
+    """The C{bsf.analyses.chip_seq.ChIPSeq} class represents the logic to run a ChIP-Seq-specific C{bsf.Analysis}.
 
     Attributes:
-    @cvar name: Analysis name that should be overridden by sub-classes
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
@@ -205,23 +205,23 @@ class ChIPSeq(Analysis):
             genome_fasta_path=None,
             genome_sizes_path=None,
             classpath_picard=None):
-        """Initialise a C{ChIPSeq} object.
+        """Initialise a C{bsf.analyses.chip_seq.ChIPSeq} object.
 
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{Analysis}-wide input directory
+        @param input_directory: C{bsf.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{Analysis}-wide output directory
+        @param output_directory: C{bsf.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{Analysis}-wide project directory,
-            normally under the C{Analysis}-wide output directory
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{Analysis}-wide genome directory,
-            normally under the C{Analysis}-wide project directory
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
@@ -229,12 +229,12 @@ class ChIPSeq(Analysis):
         @type debug: int
         @param drms_list: Python C{list} of C{DRMS} objects
         @type drms_list: list[DRMS]
-        @param collection: C{Collection}
-        @type collection: Collection
-        @param comparisons: Python C{dict} of Python C{list} objects of C{Sample} objects
-        @type comparisons: dict[str, list[Sample]]
-        @param samples: Python C{list} of C{Sample} objects
-        @type samples: list[Sample]
+        @param collection: C{bsf.data.Collection}
+        @type collection: bsf.data.Collection
+        @param comparisons: Python C{dict} of Python C{list} objects of C{bsf.data.Sample} objects
+        @type comparisons: dict[str, list[bsf.data.Sample]]
+        @param samples: Python C{list} of C{bsf.data.Sample} objects
+        @type samples: list[bsf.data.Sample]
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
         @type replicate_grouping: bool
         @param cmp_file: Comparison file
@@ -295,13 +295,13 @@ class ChIPSeq(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{ChIPSeq} object via a section of a
-        C{Configuration} object.
+        """Set instance variables of a C{bsf.analyses.chip_seq.ChIPSeq} object via a section of a
+        C{bsf.standards.Configuration} object.
 
         Instance variables without a
         configuration option remain unchanged.
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
         @return:
@@ -343,15 +343,15 @@ class ChIPSeq(Analysis):
         '0': False, 'no': False, 'false': False, 'off': False}
 
     def _read_comparisons(self, cmp_file):
-        """Read a C{AnnotationSheet} CSV file from disk.
+        """Read a C{bsf.annotation.AnnotationSheet} CSV file from disk.
 
             - Column headers for CASAVA folders:
                 - Treatment/Control ProcessedRunFolder:
                     - CASAVA processed run folder name or
-                    - C{Analysis.input_directory} by default
+                    - C{bsf.Analysis.input_directory} by default
                 - Treatment/Control Project:
                     - CASAVA Project name or
-                    - C{Analysis.project_name} by default
+                    - C{bsf.Analysis.project_name} by default
                 - Treatment/Control Sample:
                     - CASAVA Sample name, no default
             - Column headers for independent samples:
@@ -504,7 +504,7 @@ class ChIPSeq(Analysis):
         return
 
     def run(self):
-        """Run this C{ChIPSeq} C{Analysis}.
+        """Run this C{bsf.analyses.chip_seq.ChIPSeq} C{bsf.Analysis}.
 
         @return:
         @rtype:
@@ -564,6 +564,11 @@ class ChIPSeq(Analysis):
         return
 
     def _create_bwa_jobs(self):
+        """Create BWA alignment jobs.
+
+        @return:
+        @rtype:
+        """
 
         # Get the BWA index.
 
@@ -579,7 +584,7 @@ class ChIPSeq(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # Sample.get_all_paired_reads() returns a Python dict of
+            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
             # Python str key and Python list of Python list objects
             # of PairedReads objects.
 
@@ -750,7 +755,7 @@ class ChIPSeq(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # Sample.get_all_paired_reads() returns a Python dict of
+            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
             # Python str key and Python list of Python list objects
             # of PairedReads objects.
 
@@ -892,7 +897,7 @@ class ChIPSeq(Analysis):
 
                 t_replicate_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                # Sample.get_all_paired_reads() returns a Python dict of
+                # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
                 # Python str key and Python list of Python list objects
                 # of PairedReads objects.
 
@@ -1037,7 +1042,7 @@ class ChIPSeq(Analysis):
 
                 t_replicate_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                # Sample.get_all_paired_reads() returns a Python dict of
+                # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
                 # Python str key and Python list of Python list objects
                 # of PairedReads objects.
 
@@ -1285,7 +1290,7 @@ class ChIPSeq(Analysis):
 
                     t_replicate_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                    # Sample.get_all_paired_reads() returns a Python dict of
+                    # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
                     # Python str key and Python list of Python list objects
                     # of PairedReads objects.
 
@@ -1357,7 +1362,7 @@ class ChIPSeq(Analysis):
         return
 
     def _report_macs14(self):
-        """Create a C{ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
+        """Create a C{bsf.analyses.chip_seq.ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
 
         @return:
         @rtype:
@@ -1423,7 +1428,7 @@ class ChIPSeq(Analysis):
 
                 t_replicate_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                # Sample.get_all_paired_reads() returns a Python dict of
+                # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
                 # Python str key and Python list of Python list objects
                 # of PairedReads objects.
 
@@ -1558,7 +1563,7 @@ class ChIPSeq(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # Sample.get_all_paired_reads() returns a Python dict of
+            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
             # Python str key and Python list of Python list objects
             # of PairedReads objects.
 
@@ -1600,7 +1605,7 @@ class ChIPSeq(Analysis):
         return
 
     def report(self):
-        """Create a C{ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
+        """Create a C{bsf.analyses.chip_seq.ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
 
         @return:
         @rtype:
@@ -1723,7 +1728,7 @@ class ChIPSeq(Analysis):
 
                 t_replicate_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                # Sample.get_all_paired_reads() returns a Python dict of
+                # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
                 # Python str key and Python list of Python list objects
                 # of PairedReads objects.
 
@@ -2016,7 +2021,7 @@ class ChIPSeq(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # Sample.get_all_paired_reads() returns a Python dict of
+            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
             # Python str key and Python list of Python list objects
             # of PairedReads objects.
 

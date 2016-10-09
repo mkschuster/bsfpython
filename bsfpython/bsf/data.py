@@ -37,7 +37,7 @@ from bsf.annotation import AnnotationSheet
 
 
 class Reads(object):
-    """The C{Reads} class represents a file of Next-Generation Sequencing (NGS) reads,
+    """The C{bsf.data.Reads} class represents a file of Next-Generation Sequencing (NGS) reads,
     such as a FASTQ or unmapped BAM file.
 
     Attributes:
@@ -57,24 +57,24 @@ class Reads(object):
     @type read: str
     @ivar chunk: Chunk number (e.g. I{001}, I{002}, ...)
     @type chunk: str
-    @ivar weak_reference_paired_reads: C{weakref.ReferenceType} pointing at a C{PairedReads} object
+    @ivar weak_reference_paired_reads: C{weakref.ReferenceType} pointing at a C{bsf.data.PairedReads} object
     @type weak_reference_paired_reads: weakref.ReferenceType
     """
 
     @classmethod
     def from_file_path(cls, file_path, file_type):
-        """Construct a C{Reads} object from a file path.
+        """Construct a C{bsf.data.Reads} object from a file path.
 
-        For a I{file_type} I{CASAVA}, C{Reads.file_path} obeys a I{SampleName_Index_Lane_Read_Chunk} schema,
-        so that C{Reads.name}, C{Reads.barcode}, C{Reads.lane}, C{Reads.read} and C{Reads.chunk}
-        can be populated automatically.
+        For a I{file_type} I{CASAVA}, C{bsf.data.Reads.file_path} obeys a I{SampleName_Index_Lane_Read_Chunk} schema,
+        so that C{bsf.data.Reads.name}, C{bsf.data.Reads.barcode}, C{bsf.data.Reads.lane}, C{bsf.data.Reads.read} and
+        C{bsf.data.Reads.chunk} can be populated automatically.
         For I{file_type} I{External}, the attributes need populating manually.
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type
         @type file_type: str
-        @return: C{Reads} object
-        @rtype: Reads
+        @return: C{bsf.data.Reads} object
+        @rtype: bsf.data.Reads
         """
 
         if file_type == 'CASAVA':
@@ -108,7 +108,7 @@ class Reads(object):
             read=None,
             chunk=None,
             weak_reference_paired_reads=None):
-        """Initialise a C{Reads} object.
+        """Initialise a C{bsf.data.Reads} object.
 
         @param file_path: File path
         @type file_path: str | unicode
@@ -124,7 +124,7 @@ class Reads(object):
         @type read: str
         @param chunk: Chunk number (e.g. I{001}, I{002}, ...)
         @type chunk:str
-        @param weak_reference_paired_reads: C{weakref.ReferenceType} pointing at a C{PairedReads} object
+        @param weak_reference_paired_reads: C{weakref.ReferenceType} pointing at a C{bsf.data.PairedReads} object
         @type weak_reference_paired_reads: weakref.ReferenceType
         @return:
         @rtype:
@@ -172,7 +172,7 @@ class Reads(object):
         return
 
     def trace(self, level):
-        """Trace a C{Reads} object.
+        """Trace a C{bsf.data.Reads} object.
 
         @param level: Indentation level
         @type level: int
@@ -195,11 +195,11 @@ class Reads(object):
         return output
 
     def match(self, reads):
-        """Match C{Reads} objects.
+        """Match C{bsf.data.Reads} objects.
 
-        Two C{Reads} objects are identical, if all their instance variables match.
-        @param reads: Second C{Reads} object
-        @type reads: Reads
+        Two C{bsf.data.Reads} objects are identical, if all their instance variables match.
+        @param reads: Second C{bsf.data.Reads} object
+        @type reads: bsf.data.Reads
         @return: True if both objects match, False otherwise
         @rtype: bool
         """
@@ -235,10 +235,10 @@ class Reads(object):
         return True
 
     def match_paired(self, reads):
-        """Match paired C{Reads} objects, by relaxing matching criteria.
+        """Match paired C{bsf.data.Reads} objects, by relaxing matching criteria.
 
-        @param reads: Second C{Reads} object
-        @type reads: Reads
+        @param reads: Second C{bsf.data.Reads} object
+        @type reads: bsf.data.Reads
         @return: C{True} if both objects match, C{False} otherwise
         @rtype: bool
         """
@@ -278,14 +278,14 @@ class Reads(object):
 
 
 class PairedReads(object):
-    """The C{PairedReads} class represents a pair of C{Reads} objects
+    """The C{bsf.data.PairedReads} class represents a pair of C{bsf.data.Reads} objects
     representing a read pair (i.e. I{R1} and I{R2}).
 
     Attributes:
-    @ivar reads1: First C{Reads} object
-    @type reads1: Reads
-    @ivar reads2: Second C{Reads} object
-    @type reads2: Reads
+    @ivar reads1: First C{bsf.data.Reads} object
+    @type reads1: bsf.data.Reads
+    @ivar reads2: Second C{bsf.data.Reads} object
+    @type reads2: bsf.data.Reads
     @ivar index_1: Index sequence 1
     @type index_1: str
     @ivar index_2: Index sequence 2
@@ -297,7 +297,7 @@ class PairedReads(object):
     @type exclude: bool
     @ivar read_group: SAM read group (@RG) information
     @type read_group: str
-    @ivar weak_reference_sample: C{weakref.ReferenceType} to a C{Sample}
+    @ivar weak_reference_sample: C{weakref.ReferenceType} to a C{bsf.data.Sample}
     @type weak_reference_sample: weakref.ReferenceType
     """
 
@@ -311,15 +311,15 @@ class PairedReads(object):
             index_2=None,
             read_group=None,
             weak_reference_sample=None):
-        """Initialise a C{PairedReads} object.
+        """Initialise a C{bsf.data.PairedReads} object.
 
-        For the C{Reads.file_type} I{CASAVA} the reads object will be
-        automatically assigned on the basis of the C{Reads.read}
+        For the C{bsf.data.Reads.file_type} I{CASAVA} the reads object will be
+        automatically assigned on the basis of the C{bsf.data.Reads.read}
         attribute (i.e. I{R1} or I{R2}).
-        @param reads1: First C{Reads} object
-        @type reads1: Reads
-        @param reads2: Second C{Reads} object
-        @type reads2: Reads
+        @param reads1: First C{bsf.data.Reads} object
+        @type reads1: bsf.data.Reads
+        @param reads2: Second C{bsf.data.Reads} object
+        @type reads2: bsf.data.Reads
         @param index_1: Index sequence 1
         @type index_1: str
         @param index_2: Index sequence 2
@@ -331,12 +331,12 @@ class PairedReads(object):
         @type exclude: bool
         @param read_group: SAM read group (@RG) information
         @type read_group: str
-        @param weak_reference_sample: C{weakref.ReferenceType} pointing at a C{Sample}
+        @param weak_reference_sample: C{weakref.ReferenceType} pointing at a C{bsf.data.Sample}
         @type weak_reference_sample: weakref.ReferenceType
         @return:
         @rtype:
-        @raise Exception: For C{Reads.file_type} I{CASAVA}, I{R1} or I{R2} must be set in the
-        C{Reads} object.
+        @raise Exception: For C{bsf.data.Reads.file_type} I{CASAVA}, I{R1} or I{R2} must be set in the
+            C{bsf.dta.Reads} object.
         """
 
         if (reads1 and reads2) and (not reads1.match_paired(reads=reads2)):
@@ -409,7 +409,7 @@ class PairedReads(object):
         return
 
     def trace(self, level):
-        """Trace a C{PairedReads} object.
+        """Trace a C{bsf.data.PairedReads} object.
 
         @param level: Indentation level
         @type level: int
@@ -440,12 +440,12 @@ class PairedReads(object):
         return output
 
     def add_reads(self, reads):
-        """Add a C{Reads} object.
+        """Add a C{bsf.data.Reads} object.
 
-        For a C{Reads.file_type} I{CASAVA} the C{Reads} object can be automatically
-        assigned on the basis of the C{Reads.read} attribute (i.e. I{R1} or I{R2}).
-        @param reads: C{Reads}
-        @type reads: Reads
+        For a C{bsf.data.Reads.file_type} I{CASAVA} the C{bsf.data.Reads} object can be automatically
+        assigned on the basis of the C{bsf.data.Reads.read} attribute (i.e. I{R1} or I{R2}).
+        @param reads: C{bsf.data.Reads}
+        @type reads: bsf.data.Reads
         @return: C{True} upon success, C{False} otherwise
         @rtype: bool
         """
@@ -505,10 +505,10 @@ class PairedReads(object):
         return False
 
     def match(self, paired_reads):
-        """Match C{PairedReads} objects.
+        """Match C{bsf.data.PairedReads} objects.
 
-        @param paired_reads: C{PairedReads}
-        @type paired_reads: PairedReads
+        @param paired_reads: C{bsf.data.PairedReads}
+        @type paired_reads: bsf.data.PairedReads
         @return: C{True} if both objects match, C{False} otherwise
         @rtype: bool
         """
@@ -534,12 +534,13 @@ class PairedReads(object):
         return True
 
     def get_name(self, full=False):
-        """Get the name of a C{PairedReads} object.
+        """Get the name of a C{bsf.data.PairedReads} object.
 
-        For the C{Reads.file_type} I{CASAVA} the name is a concatenation of the
-        C{Reads.name}, C{Reads.barcode} and C{Reads.lane} attributes, preferentially derived from
-        the first C{Reads} object in the C{PairedReads} object.
-        If the I{full} parameter is set, C{Reads.read} and C{Reads.chunk} are also added.
+        For the C{bsf.data.Reads.file_type} I{CASAVA} the name is a concatenation of the
+        C{bsf.data.Reads.name}, C{bsf.data.Reads.barcode} and C{bsf.data.Reads.lane} attributes,
+        preferentially derived from the first C{bsf.data.Reads} object in the
+        C{bsf.data.PairedReads} object.
+        If the I{full} parameter is set, C{bsf.data.Reads.read} and C{bsf.data.Reads.chunk} are also added.
         @param full: Return the full name including read and chunk information
         @type full: bool
         @return: Name
@@ -565,8 +566,8 @@ class PairedReads(object):
 
 
 class Sample(object):
-    """The C{Sample} class represents a Next-Generation Sequencing sample that
-    consists of one or more C{PairedReads} objects as (biological or technical) replicates
+    """The C{bsf.data.Sample} class represents a Next-Generation Sequencing sample that
+    consists of one or more C{bsf.data.PairedReads} objects as (biological or technical) replicates
     that result from the same flow cell.
 
     Attributes:
@@ -582,9 +583,9 @@ class Sample(object):
     @ivar annotation: Python C{dict} for annotation of Python C{str} key and
         Python C{list} of Python C{str} value data
     @type annotation: dict[str, list[str]]
-    @ivar paired_reads_list: Python C{list} of C{PairedReads} objects
-    @type paired_reads_list: list[PairedReads]
-    @ivar weak_reference_project: C{weakref.ReferenceType} pointing at a C{Project} object
+    @ivar paired_reads_list: Python C{list} of C{bsf.data.PairedReads} objects
+    @type paired_reads_list: list[bsf.data.PairedReads]
+    @ivar weak_reference_project: C{weakref.ReferenceType} pointing at a C{bsf.data.Project} object
     @type weak_reference_project: weakref.ReferenceType
     """
 
@@ -592,16 +593,16 @@ class Sample(object):
 
     @classmethod
     def from_file_path(cls, file_path, file_type):
-        """Construct a C{Sample} object from a file path.
+        """Construct a C{bsf.data.Sample} object from a file path.
 
         For a I{file_type} I{CASAVA} the name is automatically populated,
-        while C{PairedReads} objects are automatically discovered.
+        while C{bsf.data.PairedReads} objects are automatically discovered.
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type
         @type file_type: str
-        @return: Sample object
-        @rtype: Sample
+        @return: C{bsf.data.Sample}
+        @rtype: bsf.data.Sample
         """
 
         if file_type == 'CASAVA':
@@ -633,14 +634,14 @@ class Sample(object):
 
     @classmethod
     def from_samples(cls, sample1, sample2):
-        """Create a merged C{Sample} from two C{Sample} objects.
+        """Create a merged C{bsf.data.Sample} from two C{bsf.data.Sample} objects.
 
-        @param sample1: C{Sample}
-        @type sample1: Sample
-        @param sample2: C{Sample}
-        @type sample2: Sample
-        @return: C{Sample}
-        @rtype: Sample
+        @param sample1: C{bsf.data.Sample}
+        @type sample1: bsf.data.Sample
+        @param sample2: C{bsf.data.Sample}
+        @type sample2: bsf.data.Sample
+        @return: C{bsf.data.Sample}
+        @rtype: bsf.data.Sample
         """
 
         assert isinstance(sample1, Sample)
@@ -678,7 +679,7 @@ class Sample(object):
             annotation=None,
             paired_reads_list=None,
             weak_reference_project=None):
-        """Initialise a C{Sample} object.
+        """Initialise a C{bsf.data.Sample} object.
 
         @param file_path: File path
         @type file_path: str | unicode
@@ -689,9 +690,9 @@ class Sample(object):
         @param annotation: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
         @type annotation: dict[str, list[str]]
-        @param paired_reads_list: Python C{list} of C{PairedReads} objects
-        @type paired_reads_list: list[PairedReads]
-        @param weak_reference_project: C{weakref.ReferenceType} pointing at a C{Project} object
+        @param paired_reads_list: Python C{list} of C{bsf.data.PairedReads} objects
+        @type paired_reads_list: list[bsf.data.PairedReads]
+        @param weak_reference_project: C{weakref.ReferenceType} pointing at a C{bsf.data.Project} object
         @type weak_reference_project: weakref.ReferenceType
         @return:
         @rtype:
@@ -733,7 +734,7 @@ class Sample(object):
         return
 
     def trace(self, level):
-        """Trace a C{Sample} object.
+        """Trace a C{bsf.data.Sample} object.
 
         @param level: Indentation level
         @type level: int
@@ -760,10 +761,10 @@ class Sample(object):
         return output
 
     def match(self, sample):
-        """Match C{Sample} objects.
+        """Match C{bsf.data.Sample} objects.
 
-        @param sample: C{Sample}
-        @type sample: Sample
+        @param sample: C{bsf.data.Sample}
+        @type sample: bsf.data.Sample
         @return: C{True} if both objects match, C{False} otherwise
         @rtype: bool
         """
@@ -824,11 +825,12 @@ class Sample(object):
         return
 
     def add_paired_reads(self, paired_reads):
-        """Add a C{PairedReads} object.
+        """Add a C{bsf.data.PairedReads} object.
 
-        This method checks, whether a matching C{PairedReads} object is already present in this C{Sample} object.
-        @param paired_reads: C{PairedReads}
-        @type paired_reads: PairedReads
+        This method checks, whether a matching C{bsf.data.PairedReads} object is already present in this
+        C{bsf.data.Sample} object.
+        @param paired_reads: C{bsf.data.PairedReads}
+        @type paired_reads: bsf.data.PairedReads
         @return:
         @rtype:
         """
@@ -851,10 +853,10 @@ class Sample(object):
         return
 
     def add_reads(self, reads):
-        """Add a C{Reads} object.
+        """Add a C{bsf.data.Reads} object.
 
-        @param reads: C{Reads}
-        @type reads: Reads
+        @param reads: C{bsf.data.Reads}
+        @type reads: bsf.data.Reads
         @return:
         @rtype:
         """
@@ -879,24 +881,24 @@ class Sample(object):
         return
 
     def get_all_paired_reads(self, replicate_grouping, exclude=False, full=False):
-        """Get all C{PairedReads} objects of a C{Sample} grouped or un-grouped.
+        """Get all C{bsf.data.PairedReads} objects of a C{bsf.data.Sample} grouped or un-grouped.
 
-        A C{Sample} object can hold several C{PairedReads} objects (i.e. biological or technical
+        A C{bsf.data.Sample} object can hold several C{bsf.data.PairedReads} objects (i.e. biological or technical
         replicates) that have been sequenced on different lanes of the same flow cell.
-        The C{PairedReads} objects will therefore differ in I{name}, I{barcode} or I{lane} information.
+        The C{bsf.data.PairedReads} objects will therefore differ in I{name}, I{barcode} or I{lane} information.
         Depending on the I{replicate_grouping} parameter they can be returned as a group or separately.
-        C{PairedReads} objects that share the I{name}, I{barcode} and I{lane}, but differ in I{chunk} number
+        C{bsf.data.PairedReads} objects that share the I{name}, I{barcode} and I{lane}, but differ in I{chunk} number
         are always grouped together.
-        @param replicate_grouping: Group all C{PairedReads} objects of a C{Sample} or
+        @param replicate_grouping: Group all C{bsf.data.PairedReads} objects of a C{bsf.data.Sample} or
             list them individually
         @type replicate_grouping: bool
-        @param full: Return the full name including read and chunk information
-        @param exclude: Exclude on the basis of C{PairedReads.exclude}
+        @param exclude: Exclude on the basis of C{bsf.data.PairedReads.exclude}
         @type exclude: bool
+        @param full: Return the full name including read and chunk information
         @type full: bool
         @return: Python C{dict} of Python C{str} (sensible replicate name) key and
-            Python C{list} object of C{PairedReads} objects value data
-        @rtype: dict[str, list[PairedReads]]
+            Python C{list} object of C{bsf.data.PairedReads} objects value data
+        @rtype: dict[str, list[bsf.data.PairedReads]]
         """
 
         groups = dict()
@@ -932,8 +934,8 @@ class Sample(object):
 
 
 class Project(object):
-    """The C{Project} class represents a Next-Generation Sequencing Project
-    consisting of one or more C{Sample} objects.
+    """The C{bsf.data.Project} class represents a Next-Generation Sequencing Project
+    consisting of one or more C{bsf.data.Sample} objects.
 
     Attributes:
 
@@ -950,9 +952,9 @@ class Project(object):
     @ivar annotation: Python C{dict} for annotation of Python C{str} key and
         Python C{list} of Python C{str} value data
     @type annotation: dict[str, list[str]]
-    @ivar samples: Python C{dict} of C{Sample.name} key objects and C{Sample} value objects
-    @type samples: dict[Sample.name, Sample]
-    @ivar weak_reference_prf: C{weakref.ReferenceType} pointing at a C{ProcessedRunFolder} object
+    @ivar samples: Python C{dict} of C{bsf.data.Sample.name} key objects and C{bsf.data.Sample} value objects
+    @type samples: dict[bsf.data.Sample.name, bsf.data.Sample]
+    @ivar weak_reference_prf: C{weakref.ReferenceType} pointing at a C{bsf.data.ProcessedRunFolder} object
     @type weak_reference_prf: weakref.ReferenceType
     """
 
@@ -960,14 +962,14 @@ class Project(object):
 
     @classmethod
     def from_file_path(cls, file_path, file_type):
-        """Construct a C{Project} object from a file path.
+        """Construct a C{bsf.data.Project} object from a file path.
 
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type
         @type file_type: str
-        @return: C{Project}
-        @rtype: Project
+        @return: C{bsf.data.Project}
+        @rtype: bsf.data.Project
         """
 
         if file_type == 'CASAVA':
@@ -1008,10 +1010,10 @@ class Project(object):
             annotation=None,
             samples=None,
             weak_reference_prf=None):
-        """Initialise a C{Project} object.
+        """Initialise a C{bsf.data.Project} object.
 
         For a I{file_type} I{CASAVA} the name is automatically populated,
-        while C{Sample} objects are automatically discovered.
+        while C{bsf.data.Sample} objects are automatically discovered.
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
@@ -1021,11 +1023,11 @@ class Project(object):
         @param annotation: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
         @type annotation: dict[str, list[str]]
-        @param samples: Python C{dict} of C{Sample.name} key objects and C{Sample} value objects
-        @type samples: dict[Sample.name, Sample]
-        @param weak_reference_prf: C{weakref.ReferenceType} pointing at a C{ProcessedRunFolder} object
+        @param samples: Python C{dict} of C{bsf.data.Sample.name} key objects and C{bsf.data.Sample} value objects
+        @type samples: dict[bsf.data.Sample.name, bsf.data.Sample]
+        @param weak_reference_prf: C{weakref.ReferenceType} pointing at a C{bsf.data.ProcessedRunFolder} object
         @type weak_reference_prf: weakref.ReferenceType
-        @raise Exception: If C{Sample.name} values are not unique for I{file_type} I{CASAVA}
+        @raise Exception: If C{bsf.data.Sample.name} values are not unique for I{file_type} I{CASAVA}
         @return:
         @rtype:
         """
@@ -1062,7 +1064,7 @@ class Project(object):
         return
 
     def trace(self, level):
-        """Trace a C{Project} object.
+        """Trace a C{bsf.data.Project} object.
 
         @param level: Indentation level
         @type level: int
@@ -1111,13 +1113,13 @@ class Project(object):
         return
 
     def add_sample(self, sample):
-        """Add a C{Sample} object to a C{Project} object and set
-        a weak reference in to C{Sample} object back to the C{Project} object.
+        """Add a C{bsf.data.Sample} object to a C{bsf.data.Project} object and set
+        a weak reference in to C{bsf.data.Sample} object back to the C{bsf.data.Project} object.
 
-        @param sample: C{Sample}
-        @type sample: Sample
-        @return: C{Sample}
-        @rtype: Sample
+        @param sample: C{bsf.data.Sample}
+        @type sample: bsf.data.Sample
+        @return: C{bsf.data.Sample}
+        @rtype: bsf.data.Sample
         """
 
         assert isinstance(sample, Sample)
@@ -1127,13 +1129,13 @@ class Project(object):
         return sample
 
     def del_sample(self, name):
-        """Delete a C{Sample} object from am C{Project} object and
-        clear the weak reference, if it points back at the C{Project} object.
+        """Delete a C{bsf.data.Sample} object from am C{bsf.data.Project} object and
+        clear the weak reference, if it points back at the C{bsf.data.Project} object.
 
-        @param name: C{Sample.name}
+        @param name: C{bsf.data.Sample.name}
         @type name: str
-        @return: C{Sample}
-        @rtype: Sample
+        @return: C{bsf.data.Sample}
+        @rtype: bsf.data.Sample
         """
 
         if name in self.samples:
@@ -1146,10 +1148,10 @@ class Project(object):
             return
 
     def get_all_samples(self):
-        """Get an ordered Python C{list} of C{Sample} objects.
+        """Get an ordered Python C{list} of C{bsf.data.Sample} objects.
 
-        @return: Python C{list} of C{Sample} objects
-        @rtype: list[Sample]
+        @return: Python C{list} of C{bsf.data.Sample} objects
+        @rtype: list[bsf.data.Sample]
         """
 
         samples = list()
@@ -1164,7 +1166,7 @@ class Project(object):
 
 
 class ProcessedRunFolder(object):
-    """The C{ProcessedRunFolder} class represents an (Illumina)
+    """The C{bsf.data.ProcessedRunFolder} class represents an (Illumina)
     run folder after processing with CASAVA.
 
     Attributes:
@@ -1187,9 +1189,9 @@ class ProcessedRunFolder(object):
     @ivar annotation: Python C{dict} for annotation of Python C{str} key and
         Python C{list} of Python C{str} value data
     @type annotation: dict[str, list[str]]
-    @ivar projects: Python C{dict} of C{Project.name} key objects and C{Project} value objects
-    @type projects: dict[Project.name, Project]
-    @ivar weak_reference_collection: C{weakref.ReferenceType} pointing at a C{Collection} object
+    @ivar projects: Python C{dict} of C{bsf.data.Project.name} key objects and C{bsf.data.Project} value objects
+    @type projects: dict[bsf.data.Project.name, bsf.data.Project]
+    @ivar weak_reference_collection: C{weakref.ReferenceType} pointing at a C{bsf.data.Collection} object
     @type weak_reference_collection: weakref.ReferenceType
     """
 
@@ -1197,9 +1199,9 @@ class ProcessedRunFolder(object):
 
     @staticmethod
     def guess_file_type(file_path):
-        """Guess the I{file_type} of a C{ProcessedRunFolder} on the basis of the I{file_path}.
+        """Guess the I{file_type} of a C{bsf.data.ProcessedRunFolder} on the basis of the I{file_path}.
 
-        CASAVA C{ProcessedRunFolder} objects obey a I{Prefix_FCID_CASAVA182}
+        CASAVA C{bsf.data.ProcessedRunFolder} objects obey a I{Prefix_FCID_CASAVA182}
         schema. The following prefixes are currently in use:
             - BSF_ Biomedical Sequencing Facility
             - NGS_ Kaan Boztug group
@@ -1223,18 +1225,18 @@ class ProcessedRunFolder(object):
 
     @classmethod
     def from_file_path(cls, file_path, file_type):
-        """Construct a C{ProcessedRunFolder} object from a file path.
+        """Construct a C{bsf.data.ProcessedRunFolder} object from a file path.
 
-        For the I{file_type} I{CASAVA}, the C{ProcessedRunFolder.name}, C{ProcessedRunFolder.prefix},
-        C{ProcessedRunFolder.flow_cell} and C{ProcessedRunFolder.version}
+        For the I{file_type} I{CASAVA}, the C{bsf.data.ProcessedRunFolder.name}, C{bsf.data.ProcessedRunFolder.prefix},
+        C{bsf.data.ProcessedRunFolder.flow_cell} and C{bsf.data.ProcessedRunFolder.version}
         attributes can be automatically parsed from the I{file_path}, while
-        C{Project} objects can be automatically discovered.
+        C{bsf.data.Project} objects can be automatically discovered.
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type
         @type file_type: str
-        @return: C{ProcessedRunFolder}
-        @rtype: ProcessedRunFolder
+        @return: C{bsf.data.ProcessedRunFolder}
+        @rtype: bsf.data.ProcessedRunFolder
         """
 
         # Try to determine the file_type if not explicitly specified.
@@ -1298,7 +1300,7 @@ class ProcessedRunFolder(object):
             annotation=None,
             projects=None,
             weak_reference_collection=None):
-        """Initialise a C{ProcessedRunFolder} object.
+        """Initialise a C{bsf.data.ProcessedRunFolder} object.
 
         @param file_path: File path
         @type file_path: str | unicode
@@ -1315,13 +1317,13 @@ class ProcessedRunFolder(object):
         @param annotation: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
         @type annotation: dict[str, list[str]]
-        @param projects: Python C{dict} of C{Project.name} key objects and C{Project} value objects
-        @type projects: dict[Project.name, Project]
-        @param weak_reference_collection: C{weakref.ReferenceType} pointing at a C{Collection} object
+        @param projects: Python C{dict} of C{bsf.data.Project.name} key objects and C{bsf.data.Project} value objects
+        @type projects: dict[bsf.data.Project.name, bsf.data.Project]
+        @param weak_reference_collection: C{weakref.ReferenceType} pointing at a C{bsf.data.Collection} object
         @type weak_reference_collection: weakref.ReferenceType
         @return:
         @rtype:
-        @raise Exception: If C{Project.name} values are not unique for file_type I{CASAVA}
+        @raise Exception: If C{bsf.data.Project.name} values are not unique for file_type I{CASAVA}
         """
 
         super(ProcessedRunFolder, self).__init__()
@@ -1371,7 +1373,7 @@ class ProcessedRunFolder(object):
         return
 
     def trace(self, level):
-        """Trace a C{ProcessedRunFolder} object.
+        """Trace a C{bsf.data.ProcessedRunFolder} object.
 
         @param level: Indentation level
         @type level: int
@@ -1423,13 +1425,13 @@ class ProcessedRunFolder(object):
         return
 
     def add_project(self, project):
-        """Add a C{Project} object to the C{ProcessedRunFolder} object and set
-        a weak reference in the C{Project} object to the C{ProcessedRunFolder} object.
+        """Add a C{bsf.data.Project} object to the C{bsf.data.ProcessedRunFolder} object and set
+        a weak reference in the C{bsf.data.Project} object to the C{bsf.data.ProcessedRunFolder} object.
 
-        @param project: C{Project}
-        @type project: Project
-        @return: C{Project}
-        @rtype: Project
+        @param project: C{bsf.data.Project}
+        @type project: bsf.data.Project
+        @return: C{bsf.data.Project}
+        @rtype: bsf.data.Project
         """
 
         assert isinstance(project, Project)
@@ -1439,13 +1441,13 @@ class ProcessedRunFolder(object):
         return project
 
     def del_project(self, name):
-        """Delete a C{Project} object from am C{ProcessedRunFolder} object and
-        clear the weak reference, if it points back at the C{ProcessedRunFolder} object.
+        """Delete a C{bsf.data.Project} object from am C{bsf.data.ProcessedRunFolder} object and
+        clear the weak reference, if it points back at the C{bsf.data.ProcessedRunFolder} object.
 
-        @param name: C{Project.name}
+        @param name: C{bsf.data.Project.name}
         @type name: str
-        @return: C{Project}
-        @rtype: Project
+        @return: C{bsf.data.Project}
+        @rtype: bsf.data.Project
         """
 
         if name in self.projects:
@@ -1458,10 +1460,10 @@ class ProcessedRunFolder(object):
             return
 
     def get_all_projects(self):
-        """Get an ordered Python C{list} of C{Project} objects.
+        """Get an ordered Python C{list} of C{bsf.data.Project} objects.
 
-        @return: A Python C{list} of C{Project} objects
-        @rtype: list[Project]
+        @return: A Python C{list} of C{bsf.data.Project} objects
+        @rtype: list[bsf.data.Project]
         """
 
         projects = list()
@@ -1476,8 +1478,8 @@ class ProcessedRunFolder(object):
 
 
 class Collection(object):
-    """The C{Collection} class represents a collection of
-    one or more C{ProcessedRunFolder} objects.
+    """The C{bsf.data.Collection} class represents a collection of
+    one or more C{bsf.data.ProcessedRunFolder} objects.
 
     Attributes:
     @cvar default_key: Default key
@@ -1493,18 +1495,18 @@ class Collection(object):
     @ivar annotation: Python C{dict} for annotation of Python C{str} key and
         Python C{list} of Python C{str} value data
     @type annotation: dict[str, list[str]]
-    @ivar processed_run_folders: Python C{dict} of C{ProcessedRunFolder.name} key objects and
-        C{ProcessedRunFolder} value objects
-    @type processed_run_folders: dict[ProcessedRunFolder.name, ProcessedRunFolder]
-    @ivar sample_groups: Python C{dict} of C{Sample} objects
-    @type sample_groups: dict[str, list[Sample]]
+    @ivar processed_run_folders: Python C{dict} of C{bsf.data.ProcessedRunFolder.name} key objects and
+        C{bsf.data.ProcessedRunFolder} value objects
+    @type processed_run_folders: dict[bsf.data.ProcessedRunFolder.name, bsf.data.ProcessedRunFolder]
+    @ivar sample_groups: Python C{dict} of Python C{str} (group) and C{bsf.data.Sample} objects
+    @type sample_groups: dict[str, list[bsf.data.Sample]]
     """
 
     default_key = 'Default'
 
     @classmethod
     def from_sas_path(cls, file_path, file_type, name, sas_path, sas_prefix=None):
-        """Construct a C{Collection} from a C{SampleAnnotationSheet} file path.
+        """Construct a C{bsf.data.Collection} from a C{bsf.data.SampleAnnotationSheet} file path.
 
         @param file_path: File path
         @type file_path: str | unicode
@@ -1512,13 +1514,13 @@ class Collection(object):
         @type file_type: str
         @param name: Name
         @type name: str
-        @param sas_path: C{SampleAnnotationSheet} file path
+        @param sas_path: C{bsf.data.SampleAnnotationSheet} file path
         @type sas_path: str | unicode
         @param sas_prefix: Optional column header prefix
             (e.g. '[Control ]Sample', '[Treatment ]Sample', ...)
         @type sas_prefix: str
-        @return: C{Collection}
-        @rtype: Collection
+        @return: C{bsf.data.Collection}
+        @rtype: bsf.data.Collection
         """
 
         return cls.from_sas(
@@ -1530,26 +1532,26 @@ class Collection(object):
 
     @classmethod
     def from_sas(cls, file_path, file_type, name, sas, sas_prefix=None):
-        """Construct a C{Collection} from a C{SampleAnnotationSheet}.
+        """Construct a C{bsf.data.Collection} from a C{bsf.data.SampleAnnotationSheet}.
 
-        This method creates C{Reads}, C{PairedReads}, C{Sample}, C{Project} and C{ProcessedRunFolder}
-        objects from a C{SampleAnnotationSheet} row Python C{dict} object.
+        This method creates C{bsf.data.Reads}, C{bsf.data.PairedReads}, C{bsf.data.Sample}, C{bsf.data.Project} and
+        C{bsf.data.ProcessedRunFolder} objects from a C{bsf.data.SampleAnnotationSheet} row Python C{dict} object.
         If object-specific keys or their corresponding values are not
         available from the Python row dict, new objects will be created
         with a default key.
         Sample Annotation Sheet format:
             - FileType: Data object I{file_type} (i.e. I{CASAVA} or I{External}), defaults to I{External}.
-                The FileType I{CASAVA} allows for auto-discovery of C{ProcessedRunFolder} objects.
-            - ProcessedRunFolder Name: C{ProcessedRunFolder} file_path, can be automatically registered.
-            - Project Name: C{Project} name
-            - Sample Name: C{Sample} name
-            - Reads1 File: C{Reads.file_name} instance variable.
+                The FileType I{CASAVA} allows for auto-discovery of C{bsf.data.ProcessedRunFolder} objects.
+            - ProcessedRunFolder Name: C{bsf.data.ProcessedRunFolder} file_path, can be automatically registered.
+            - Project Name: C{bsf.data.Project} name
+            - Sample Name: C{bsf.data.Sample} name
+            - Reads1 File: C{bsf.data.Reads.file_name} instance variable.
                 Subjected to C{os.path.expanduser} and C{os.path.expandvars}.
-                If still relative, the C{Collection.file_path} is prepended.
-            - Reads1 Name: C{Reads.name} instance variable
+                If still relative, the C{bsf.data.Collection.file_path} is prepended.
+            - Reads1 Name: C{bsf.data.Reads.name} instance variable
             - Reads2 File: Same as Reads1 File
             - Reads2 Name: Same as Reads1 Name
-            - Group: C{Sample} objects can be grouped for further analysis in
+            - Group: C{bsf.data.Sample} objects can be grouped for further analysis in
                 e.g. RNA-Seq or ChIP-Seq experiments.
         @param file_path: File path
         @type file_path: str | unicode
@@ -1557,13 +1559,13 @@ class Collection(object):
         @type file_type: str
         @param name: Name
         @type name: str
-        @param sas: C{SampleAnnotationSheet}
-        @type sas: SampleAnnotationSheet
+        @param sas: C{bsf.data.SampleAnnotationSheet}
+        @type sas: bsf.data.SampleAnnotationSheet
         @param sas_prefix: Optional column header prefix
             (e.g. '[Control ]Sample', '[Treatment ]Sample', '[Point N ]Sample', ...)
         @type sas_prefix: str
-        @return: C{Collection}
-        @rtype: Collection
+        @return: C{bsf.data.Collection}
+        @rtype: bsf.data.Collection
         """
         assert isinstance(sas, SampleAnnotationSheet)
 
@@ -1685,7 +1687,7 @@ class Collection(object):
             annotation=None,
             processed_run_folders=None,
             sample_groups=None):
-        """Initialise a C{Collection} object.
+        """Initialise a C{bsf.data.Collection} object.
 
         @param file_path: File path
         @type file_path: str | unicode
@@ -1696,12 +1698,13 @@ class Collection(object):
         @param annotation: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
         @type annotation: dict[str, list[str]]
-        @param processed_run_folders: Python C{dict} of C{ProcessedRunFolder.name} key objects and
-            C{ProcessedRunFolder} value objects
-        @type processed_run_folders: dict[ProcessedRunFolder.name, ProcessedRunFolder]
+        @param processed_run_folders: Python C{dict} of C{bsf.data.ProcessedRunFolder.name} key objects and
+            C{bsf.data.ProcessedRunFolder} value objects
+        @type processed_run_folders: dict[bsf.data.ProcessedRunFolder.name, bsf.data.ProcessedRunFolder]
         @param sample_groups: Python C{dict} of Python C{str} (group name) key objects and
-            second-level Python C{dict} value objects of C{Sample.name} key objects and C{Sample} object value objects
-        @type sample_groups: dict[str, dict[Sample.name, Sample]]
+            second-level Python C{dict} value objects of C{bsf.data.Sample.name} key objects and
+            C{bsf.data.Sample} value objects
+        @type sample_groups: dict[str, dict[bsf.data.Sample.name, bsf.data.Sample]]
         @return:
         @rtype:
         """
@@ -1741,7 +1744,7 @@ class Collection(object):
         return
 
     def trace(self, level):
-        """Trace a C{Collection} object.
+        """Trace a C{bsf.data.Collection} object.
 
         @param level: Indentation level
         @type level: int
@@ -1778,13 +1781,13 @@ class Collection(object):
         return output
 
     def add_processed_run_folder(self, prf):
-        """Add a C{ProcessedRunFolder} object to the C{Collection} object and set a weak reference in the
-        C{ProcessedRunFolder} back to the C{Collection}.
+        """Add a C{bsf.data.ProcessedRunFolder} object to the C{bsf.data.Collection} object and
+        set a weak reference in the C{bsf.data.ProcessedRunFolder} back to the C{bsf.data.Collection}.
 
-        @param prf: C{ProcessedRunFolder}
-        @type prf: ProcessedRunFolder
-        @return: C{ProcessedRunFolder}
-        @rtype: ProcessedRunFolder
+        @param prf: C{bsf.data.ProcessedRunFolder}
+        @type prf: bsf.data.ProcessedRunFolder
+        @return: C{bsf.data.ProcessedRunFolder}
+        @rtype: bsf.data.ProcessedRunFolder
         """
 
         assert isinstance(prf, ProcessedRunFolder)
@@ -1794,13 +1797,13 @@ class Collection(object):
         return prf
 
     def del_processed_run_folder(self, name):
-        """Delete a C{ProcessedRunFolder} object from am C{Collection} object and
-        clear the weak reference, if it points back at the C{Collection} object.
+        """Delete a C{bsf.data.ProcessedRunFolder} object from am C{bsf.data.Collection} object and
+        clear the weak reference, if it points back at the C{bsf.data.Collection} object.
 
-        @param name: C{ProcessedRunFolder.name}
+        @param name: C{bsf.data.ProcessedRunFolder.name}
         @type name: str
-        @return: C{ProcessedRunFolder}
-        @rtype: ProcessedRunFolder
+        @return: C{bsf.data.ProcessedRunFolder}
+        @rtype: bsf.data.ProcessedRunFolder
         """
 
         if name in self.processed_run_folders:
@@ -1813,16 +1816,16 @@ class Collection(object):
             return
 
     def get_processed_run_folder(self, file_path, file_type=None):
-        """Get a C{ProcessedRunFolder} by file path.
+        """Get a C{bsf.data.ProcessedRunFolder} by file path.
 
-        If the C{ProcessedRunFolder} does not exist in the C{Collection} object,
+        If the C{bsf.data.ProcessedRunFolder} does not exist in the C{bsf.data.Collection} object,
         it will be automatically discovered and added.
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type
         @type file_type: str
-        @return: C{ProcessedRunFolder}
-        @rtype: ProcessedRunFolder
+        @return: C{bsf.data.ProcessedRunFolder}
+        @rtype: bsf.data.ProcessedRunFolder
         """
 
         file_path = os.path.normpath(file_path)
@@ -1841,10 +1844,10 @@ class Collection(object):
                 prf=ProcessedRunFolder.from_file_path(file_path=file_path, file_type=file_type))
 
     def get_all_processed_run_folders(self):
-        """Get an ordered Python C{list} of C{ProcessedRunFolder} objects.
+        """Get an ordered Python C{list} of C{bsf.data.ProcessedRunFolder} objects.
 
-        @return: Python C{list} of C{ProcessedRunFolder} objects
-        @rtype: list[ProcessedRunFolder]
+        @return: Python C{list} of C{bsf.data.ProcessedRunFolder} objects
+        @rtype: list[bsf.data.ProcessedRunFolder]
         """
 
         processed_run_folders = list()
@@ -1858,10 +1861,10 @@ class Collection(object):
         return processed_run_folders
 
     def get_all_projects(self):
-        """Get an ordered Python C{list} of C{Project} objects.
+        """Get an ordered Python C{list} of C{bsf.data.Project} objects.
 
-        @return: Python C{list} of C{Project} objects
-        @rtype: list[Project]
+        @return: Python C{list} of C{bsf.data.Project} objects
+        @rtype: list[bsf.data.Project]
         """
 
         projects = list()
@@ -1872,10 +1875,10 @@ class Collection(object):
         return projects
 
     def get_all_samples(self):
-        """Get an ordered Python C{list} of C{Sample} objects.
+        """Get an ordered Python C{list} of C{bsf.data.Sample} objects.
 
-        @return: Python C{list} of C{Sample} objects
-        @rtype: list[Sample]
+        @return: Python C{list} of C{bsf.data.Sample} objects
+        @rtype: list[bsf.data.Sample]
         """
 
         samples = list()
@@ -1892,7 +1895,7 @@ class Collection(object):
         A 'I{[Prefix] FileType}' key is optional, its value defaults to I{Automatic}.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str | unicode]
-        @param key_list: A Python list of Python str (key) objects in the row
+        @param key_list: A Python C{list} of Python C{str} (key) objects in the row
         @type key_list: list[str]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] FileType', '[Treatment] FileType', '[Point N]  FileType', ...)
@@ -1915,15 +1918,15 @@ class Collection(object):
         return file_type
 
     def _process_processed_run_folder(self, prf, row_dict, key_list, prefix, file_type):
-        """Get or create a C{ProcessedRunFolder}.
+        """Get or create a C{bsf.data.ProcessedRunFolder}.
 
         A 'I{[Prefix] ProcessedRunFolder Name}' key is optional, its value defaults to I{Default}.
-        @param prf: Current C{ProcessedRunFolder} that may get replaced upon encountering a new
+        @param prf: Current C{bsf.data.ProcessedRunFolder} that may get replaced upon encountering a new
             'I{[Prefix] ProcessedRunFolder Name}' key
-        @type prf: ProcessedRunFolder
+        @type prf: bsf.data.ProcessedRunFolder
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str | unicode]
-        @param key_list: A Python list of Python str (key) objects in the row
+        @param key_list: A Python C{list} of Python C{str} (key) objects in the row
         @type key_list: list[str]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] ProcessedRunFolder', '[Treatment] ProcessedRunFolder',
@@ -1931,8 +1934,8 @@ class Collection(object):
         @type prefix: str
         @param file_type: File type
         @type file_type: str
-        @return: C{ProcessedRunFolder}
-        @rtype: ProcessedRunFolder
+        @return: C{bsf.data.ProcessedRunFolder}
+        @rtype: bsf.data.ProcessedRunFolder
         """
 
         new_prf = None
@@ -1986,25 +1989,25 @@ class Collection(object):
 
     @staticmethod
     def _process_project(project, row_dict, key_list, prefix, file_type, prf):
-        """Get or create a C{Project}.
+        """Get or create a C{bsf.data.Project}.
 
         A 'I{[Prefix] Project Name}' key is optional, its value defaults to I{Default}.
-        @param project: Current C{Project} that may get replaced upon encountering a new
+        @param project: Current C{bsf.data.Project} that may get replaced upon encountering a new
             'I{[Prefix] Project Name}' key
-        @type project: Project
+        @type project: bsf.data.Project
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str | unicode]
-        @param key_list: A Python list of Python str (key) objects in the row
+        @param key_list: A Python C{list} of Python C{str} (key) objects in the row
         @type key_list: list[str]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] Project', '[Treatment] Project', '[Point N] Project', ...)
         @type prefix: str
         @param file_type: File type
         @type file_type: str
-        @param prf: C{ProcessedRunFolder}
-        @type prf: ProcessedRunFolder
-        @return: C{Project}
-        @rtype: Project
+        @param prf: C{bsf.data.ProcessedRunFolder}
+        @type prf: bsf.data.ProcessedRunFolder
+        @return: C{bsf.data.Project}
+        @rtype: bsf.data.Project
         """
 
         new_project = None
@@ -2057,25 +2060,25 @@ class Collection(object):
 
     @staticmethod
     def _process_sample(sample, row_dict, key_list, prefix, file_type, project):
-        """Get or create a C{Sample}.
+        """Get or create a C{bsf.data.Sample}.
 
         A 'I{[Prefix] Sample Name}' key is optional, its value defaults to I{Default}.
-        @param sample: Current C{Sample} that may get replaced upon encountering a new
+        @param sample: Current C{bsf.data.Sample} that may get replaced upon encountering a new
             'I{[Prefix] Sample Name}' key
-        @type sample: Sample
+        @type sample: bsf.data.Sample
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str | unicode]
-        @param key_list: A Python list of Python str (key) objects in the row
+        @param key_list: A Python C{list} of Python C{str} (key) objects in the row
         @type key_list: list[str]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
         @type prefix: str
         @param file_type: File type
         @type file_type: str
-        @param project: C{Project}
-        @type project: Project
-        @return: C{Sample}
-        @rtype: Sample
+        @param project: C{bsf.data.Project}
+        @type project: bsf.data.Project
+        @return: C{bsf.data.Sample}
+        @rtype: bsf.data.Sample
         """
 
         new_sample = None
@@ -2127,13 +2130,13 @@ class Collection(object):
         return new_sample
 
     def _process_reads(self, row_dict, key_list, prefix, file_type, suffix):
-        """Get or create a C{Reads} object.
+        """Get or create a C{bsf.data.Reads} object.
 
         A 'I{[Prefix] Reads{suffix} Name}' key and 'I{[Prefix] Reads{suffix} File}' key are optional,
         in which case the default is a C{None} object.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str | unicode]
-        @param key_list: A Python list of Python str (key) objects in the row
+        @param key_list: A Python C{list} of Python C{str} (key) objects in the row
         @type key_list: list[str]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] ReadsN', '[Treatment] ReadsN', '[Point N] ReadsN', ...)
@@ -2142,8 +2145,8 @@ class Collection(object):
         @type file_type: str
         @param suffix: The read suffix (i.e. I{1} or I{2})
         @type suffix: str
-        @return: C{Reads}
-        @rtype: Reads
+        @return: C{bsf.data.Reads}
+        @rtype: bsf.data.Reads
         """
 
         key_file = '{} Reads{} File'.format(prefix, suffix).lstrip()
@@ -2181,14 +2184,14 @@ class Collection(object):
 
     @staticmethod
     def _process_paired_reads(row_dict, key_list, prefix):
-        """Get or create a C{PairedReads} object.
+        """Get or create a C{bsf.data.PairedReads} object.
 
         The 'I{[Prefix] PairedReads Exclude}' key is optional, in which case the default is Python C{bool} I{False}.
         The 'I{[Prefix] PairedReads Index 1}', 'I{[Prefix] PairedReads Index 2}' and 'I{[Prefix] PairedReads ReadGroup}'
         keys are optional, in which case the default is an empty Python C{str} object.
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str | unicode]
-        @param key_list: A Python list of Python str (key) objects in the row
+        @param key_list: A Python C{list} of Python C{str} (key) objects in the row
         @type key_list: list[str]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] PairedReads ReadGroup',
@@ -2197,7 +2200,7 @@ class Collection(object):
         @type prefix: str
         @return: Python C{tuple} of Python C{bool} (exclude flag), Python C{str} (read group), Python C{str} (index 1)
             and Python C{str} (index 2)
-        @rtype: str
+        @rtype: tuple[bool, str, str, str]
         """
 
         key = '{} PairedReads Exclude'.format(prefix).lstrip()
@@ -2245,20 +2248,20 @@ class Collection(object):
         return exclude, index_1, index_2, read_group
 
     def get_sample_from_row_dict(self, row_dict, prefix=None):
-        """Get a Sample from a C{SampleAnnotationSheet} row Python C{dict}.
+        """Get a Sample from a C{bsf.data.SampleAnnotationSheet} row Python C{dict}.
 
-        Look-up a hierarchy of C{ProcessedRunFolder}, C{Project} and C{Sample} objects
-        based on a C{SampleAnnotationSheet} row dictionary.
-        C{ProcessedRunFolder} objects of file type I{CASAVA} can be
+        Look-up a hierarchy of C{bsf.data.ProcessedRunFolder}, C{bsf.data.Project} and C{bsf.data.Sample} objects
+        based on a C{bsf.data.SampleAnnotationSheet} row dictionary.
+        C{bsf.data.ProcessedRunFolder} objects of file type I{CASAVA} can be
         automatically discovered and registered.
-        Return the corresponding C{Sample}.
-        @param row_dict: C{SampleAnnotationSheet} row Python C{dict}
+        Return the corresponding C{bsf.data.Sample}.
+        @param row_dict: C{bsf.data.SampleAnnotationSheet} row Python C{dict}
         @type row_dict: dict[str, str | unicode]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample')
         @type prefix: str
-        @return: C{Sample}
-        @rtype: Sample
+        @return: C{bsf.data.Sample}
+        @rtype: bsf.data.Sample
         """
 
         # NOTE: For the moment, the row_dict has to include keys for 'ProcessedRunFolder',
@@ -2304,8 +2307,8 @@ class Collection(object):
         return sample
 
     def get_samples_from_row_dict(self, row_dict, prefix=None):
-        """Get a Python C{list} of C{Sample} objects and a Python C{str} of the Group column value as a Python C{tuple}
-        from a C{SampleAnnotationSheet} row Python C{dict}.
+        """Get a Python C{list} of C{bsf.data.Sample} objects and a Python C{str} of the Group column value
+        as a Python C{tuple} from a C{bsf.data.SampleAnnotationSheet} row Python C{dict}.
 
         @param row_dict: Comparison CSV file row Python C{dict}
         @type row_dict: dict[str, str | unicode]
@@ -2313,8 +2316,8 @@ class Collection(object):
             (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
         @type prefix: str
         @return: Python C{tuple} of Python C{str} of '[Prefix] Group' column value and
-            Python C{list} of C{Sample} objects
-        @rtype: (str, list[Sample])
+            Python C{list} of C{bsf.data.Sample} objects
+        @rtype: (str, list[bsf.data.Sample])
         """
 
         samples = list()
@@ -2348,7 +2351,7 @@ class Collection(object):
         return value, samples
 
     def to_sas(self, file_path=None, name=None):
-        """Convert a Collection into a SampleAnnotationSheet object.
+        """Convert a C{bsf.data.Collection} into a SampleAnnotationSheet object.
 
         @param file_path: File path
         @type file_path: str | unicode
@@ -2499,14 +2502,14 @@ class Collection(object):
 
 
 class SampleGroup(object):
-    """The C{SampleGroup} class represents a group of C{Sample} objects.
+    """The C{bsf.data.SampleGroup} class represents a group of C{bsf.data.Sample} objects.
 
     The grouping is usually defined in a sample annotation sheet.
     Attributes:
     @ivar name: Name
     @type name: str
-    @ivar samples: Python C{list} of C{Sample} objects
-    @type samples: list[Sample]
+    @ivar samples: Python C{list} of C{bsf.data.Sample} objects
+    @type samples: list[bsf.data.Sample]
     """
 
     # TODO: The SampleGroup class is currently not in use.
@@ -2518,12 +2521,12 @@ class SampleGroup(object):
             self,
             name=None,
             samples=None):
-        """Initialise a C{SampleGroup} object.
+        """Initialise a C{bsf.data.SampleGroup} object.
 
         @param name: Name
         @type name: str
-        @param samples: Python C{list} of C{Sample} objects
-        @type samples: list[Sample]
+        @param samples: Python C{list} of C{bsf.data.Sample} objects
+        @type samples: list[bsf.data.Sample]
         @return:
         @rtype:
         """
@@ -2543,10 +2546,10 @@ class SampleGroup(object):
         return
 
     def add_sample(self, sample):
-        """Add a C{Sample} object.
+        """Add a C{bsf.data.Sample} object.
 
-        @param sample: C{Sample}
-        @type sample: Sample
+        @param sample: C{bsf.data.Sample}
+        @type sample: bsf.data.Sample
         @return:
         @rtype:
         """
@@ -2558,15 +2561,16 @@ class SampleGroup(object):
         return
 
     def get_all_paired_reads(self, replicate_grouping):
-        """Get all C{PairedReads} objects of a C{SampleGroup}.
+        """Get all C{bsf.data.PairedReads} objects of a C{bsf.data.SampleGroup}.
 
-        For the moment, replicates are C{PairedReads} objects that do not share
+        For the moment, replicates are C{bsf.data.PairedReads} objects that do not share
         anything but the chunk number.
-        @param replicate_grouping: Group all C{PairedReads} objects of a C{Sample} or list them individually
+        @param replicate_grouping: Group all C{bsf.data.PairedReads} objects of a C{bsf.data.Sample} or
+            list them individually
         @type replicate_grouping: bool
         @return: Python C{dict} of Python C{str} (replicate name) key objects and
-            Python C{list} value objects of C{PairedReads} objects value data
-        @rtype: dict[str, list[PairedReads]]
+            Python C{list} value objects of C{bsf.data.PairedReads} objects value data
+        @rtype: dict[str, list[bsf.data.PairedReads]]
         """
 
         group_dict = dict()
@@ -2589,8 +2593,8 @@ class SampleGroup(object):
 
 
 class SampleAnnotationSheet(AnnotationSheet):
-    """The C{SampleAnnotationSheet} class represents a Comma-Separated Value (CSV) table of sample information
-    after running the C{IlluminaToBamTools.BamIndexDecoder} C{Analysis}.
+    """The C{bsf.data.SampleAnnotationSheet} class represents a Comma-Separated Value (CSV) table of sample information
+    after running the C{bsf.analyses.illumina_to_bam_tools.IlluminaToBamTools.BamIndexDecoder} C{bsf.Analysis}.
 
     Attributes:
     @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)

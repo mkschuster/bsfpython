@@ -38,12 +38,14 @@ class Bowtie1(Executable):
     """
 
     def __init__(self, name, analysis):
-        """Initialise a C{Bowtie1} object.
+        """Initialise a C{bsf.executables.Bowtie1} object.
 
         @param name: Name
         @type name: str
-        @param analysis: C{Analysis}
-        @type analysis: Analysis
+        @param analysis: C{bsf.Analysis}
+        @type analysis: bsf.Analysis
+        @return:
+        @rtype:
         """
 
         assert isinstance(analysis, Analysis)
@@ -60,12 +62,14 @@ class Bowtie2(Executable):
     """Bowtie2 short read aligner class."""
 
     def __init__(self, name, analysis):
-        """Initialise a C{Bowtie2} object.
+        """Initialise a C{bsf.executables.Bowtie2} object.
 
         @param name: Name
         @type name: str
-        @param analysis: C{Analysis}
-        @type analysis: Analysis
+        @param analysis: C{bsf.Analysis}
+        @type analysis: bsf.Analysis
+        @return:
+        @rtype:
         """
 
         assert isinstance(analysis, Analysis)
@@ -81,19 +85,21 @@ class Bowtie2(Executable):
 
 
 class BWA(Executable):
-    """Burrows-Wheeler Aligner version class.
+    """Burrows-Wheeler Aligner (C{bsf.executables.BWA}) class.
 
     Reference: http://bio-bwa.sourceforge.net/
     Usage: bwa mem db_prefix reads.fq [mates.fq]
     """
 
     def __init__(self, name, analysis):
-        """Initialise a C{BWA} object.
+        """Initialise a C{bsf.executables.BWA} object.
 
         @param name: Name
         @type name: str
-        @param analysis: C{Analysis}
-        @type analysis: Analysis
+        @param analysis: C{bsf.Analysis}
+        @type analysis: bsf.Analysis
+        @return:
+        @rtype:
         """
 
         assert isinstance(analysis, Analysis)
@@ -110,7 +116,7 @@ class BWA(Executable):
 
 
 class TopHat(Executable):
-    """TopHat RNA-Seq aligner class.
+    """C{bsf.executables.TopHat} RNA-Seq aligner class.
 
     Reference: http://tophat.cbcb.umd.edu/manual.html
     Usage: tophat [options]* <index_base> <reads1_1[,...,readsN_1]> [reads1_2,...readsN_2]
@@ -121,12 +127,14 @@ class TopHat(Executable):
     """
 
     def __init__(self, name, analysis):
-        """Initialise a C{TopHat} object.
+        """Initialise a C{bsf.executables.TopHat} object.
 
         @param name: Name
         @type name: str
-        @param analysis: C{Analysis}
-        @type analysis: Analysis
+        @param analysis: C{bsf.Analysis}
+        @type analysis: bsf.Analysis
+        @return:
+        @rtype:
         """
 
         assert isinstance(analysis, Analysis)
@@ -142,18 +150,20 @@ class TopHat(Executable):
 
 
 class Macs14(Executable):
-    """Model-based Analysis for ChIP-Seq (MACS) version 1.4 peak-caller class.
+    """Model-based Analysis for ChIP-Seq (MACS) version 1.4 peak-caller class (C{bsf.executables.Macs14}).
 
     Reference: http://liulab.dfci.harvard.edu/MACS/
     """
 
     def __init__(self, name, analysis):
-        """Initialise a C{Macs14} (MACS 1.4) object.
+        """Initialise a C{bsf.executables.Macs14} (MACS 1.4) object.
 
         @param name: Name
         @type name: str
-        @param analysis: C{Analysis}
-        @type analysis: Analysis
+        @param analysis: C{bsf.Analysis}
+        @type analysis: bsf.Analysis
+        @return:
+        @rtype:
         """
 
         assert isinstance(analysis, Analysis)
@@ -171,18 +181,20 @@ class Macs14(Executable):
 
 
 class Macs2Bdgcmp(Executable):
-    """Model-based Analysis for ChIP-Seq (MACS) version 2 bedGraph comparison class.
+    """Model-based Analysis for ChIP-Seq (MACS) version 2 bedGraph comparison class (C{bsf.executables.Macs2Bdgcmp}).
 
     Reference: http://liulab.dfci.harvard.edu/MACS/
     """
 
     def __init__(self, name, analysis):
-        """Initialise a C{Macs2Bdgcmp} (MACS2 BedGraph Comparison) object.
+        """Initialise a C{bsf.executables.Macs2Bdgcmp} (MACS2 BedGraph Comparison) object.
 
         @param name: Name
         @type name: str
-        @param analysis: C{Analysis}
-        @type analysis: Analysis
+        @param analysis: C{bsf.Analysis}
+        @type analysis: bsf.Analysis
+        @return:
+        @rtype:
         """
 
         assert isinstance(analysis, Analysis)
@@ -202,18 +214,20 @@ class Macs2Bdgcmp(Executable):
 
 
 class Macs2Callpeak(Executable):
-    """Model-based Analysis for ChIP-Seq (MACS) version 2 peak-caller class.
+    """Model-based Analysis for ChIP-Seq (MACS) version 2 peak-caller class (C{bsf.executables.Macs2Callpeak}).
 
     Reference: http://liulab.dfci.harvard.edu/MACS/
     """
 
     def __init__(self, name, analysis):
-        """Initialise a C{Macs2Callpeak} (MACS 2.0 peak caller) object.
+        """Initialise a C{bsf.executables.Macs2Callpeak} (MACS 2.0 peak caller) object.
 
         @param name: Name
         @type name: str
-        @param analysis: C{Analysis}
-        @type analysis: Analysis
+        @param analysis: C{bsf.Analysis}
+        @type analysis: bsf.Analysis
+        @return:
+        @rtype:
         """
 
         assert isinstance(analysis, Analysis)
@@ -235,18 +249,20 @@ class Macs2Callpeak(Executable):
 
 
 class FastQC(Executable):
-    """FastQC quality checker class.
+    """FastQC quality checker class (C{bsf.executables.FastQC}).
 
     Reference: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
     """
 
     def __init__(self, name, analysis):
-        """Initialise a C{FastQC} object.
+        """Initialise a C{bsf.executables.FastQC} object.
 
         @param name: Name
         @type name: str
-        @param analysis: C{Analysis}
-        @type analysis: Analysis
+        @param analysis: C{bsf.Analysis}
+        @type analysis: bsf.Analysis
+        @return:
+        @rtype:
         """
 
         assert isinstance(analysis, Analysis)

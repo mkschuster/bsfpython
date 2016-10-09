@@ -72,11 +72,11 @@ barcode_dict = dict()
 def parse_sam_format(sam_file_handle):
     """Parses SAM format columns.
     This function identifies the column with the barcode based on its suffix BC:Z:
-    and increments the respective count in a Python dict.
+    and increments the respective count in a Python C{dict}.
 
     @param sam_file_handle: File handle
     @type sam_file_handle: FileIO
-    @return: Python dict of barcode key and count value data
+    @return: Python C{dict} of barcode key and count value data
     @rtype: dict
     """
 
@@ -103,7 +103,7 @@ def parse_sam_file(input_filename):
 
     @param input_filename: File path
     @type input_filename: str | unicode
-    @return: Python dict of barcode key and count value data
+    @return: Python C{dict} of barcode key and count value data
     @rtype: dict
     """
 
@@ -146,7 +146,7 @@ def parse_bam_file(input_filename):
 
     @param input_filename: File path
     @type input_filename: str | unicode
-    @return: Python dict of barcode key and count value data
+    @return: Python C{dict} of barcode key and count value data
     @rtype: dict
     """
 

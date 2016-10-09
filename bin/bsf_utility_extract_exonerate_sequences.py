@@ -52,7 +52,7 @@ seqio_dict = dict()
 
 # TODO: To analyse these pairwise alignments it would be good to create a profile from all pairwise alignments.
 # First run: Establish the maximum target (reference) region that appears in the alignments.
-# Create an two-dimensional array (reference position vs base or gap) and use the minimum target position to
+# Create a two-dimensional array (reference position vs base or gap) and use the minimum target position to
 # scale the array to 0.
 # Second run: Parse each individual position in the alignment, compare to reference and fill in matrix.
 # Evaluate the matrix and ideally visualise the results.

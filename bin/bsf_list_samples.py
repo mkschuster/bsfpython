@@ -93,8 +93,7 @@ for project_name in project_names:
                     row_dict['File1'] = paired_reads.reads1.file_path
                     # row_dict['Reads1'] = paired_reads.reads1.name
                     # Deduce the Reads.name from the base name without file extensions.
-                    file_name = str(paired_reads.reads1.file_path)
-                    file_name = os.path.basename(file_name.rstrip('/ '))
+                    file_name = os.path.basename(paired_reads.reads1.file_path.rstrip('/ '))
                     # Remove any file-extensions like .bam, .fastq.gz, ...
                     match = re.search(pattern=r'^([^.]*)', string=file_name)
                     if match:
@@ -107,8 +106,7 @@ for project_name in project_names:
                     row_dict['File2'] = paired_reads.reads2.file_path
                     # row_dict['Reads2'] = paired_reads.reads2.name
                     # Deduce the Reads.name from the base name without file extensions.
-                    file_name = str(paired_reads.reads2.file_path)
-                    file_name = os.path.basename(file_name.rstrip('/ '))
+                    file_name = os.path.basename(paired_reads.reads2.file_path.rstrip('/ '))
                     # Remove any file-extensions like .bam, .fastq.gz, ...
                     match = re.search(pattern=r'^([^.]*)', string=file_name)
                     if match:

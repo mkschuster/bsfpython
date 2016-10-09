@@ -34,7 +34,7 @@ from bsf.process import RunnableStep
 
 
 argument_parser = ArgumentParser(
-    description='Trace a pickled BSF Runnable.')
+    description='Trace a pickled Runnable.')
 
 argument_parser.add_argument(
     'pickler_path',

@@ -33,13 +33,15 @@ from bsf.process import Executable
 
 
 def submit(drms, debug=0):
-    """Submit each C{Executable} object of a C{DRMS} object
+    """Submit each C{bsf.process.Executable} object of a C{DRMS} object
     by writing a GNU Bourne-Again Shell (BASH) script into the C{DRMS.work_directory}.
 
     @param drms: Distributed Resource Management System (C{DRMS})
     @type drms: DRMS
     @param debug: Debug level
     @type debug: int
+    @return:
+    @rtype:
     """
 
     output = str()
@@ -67,15 +69,19 @@ def submit(drms, debug=0):
     script_file.write(output)
     script_file.close()
 
+    return
+
 
 def check_state(drms, debug=0):
-    """Check the state of each C{Executable} object in the
+    """Check the state of each C{bsf.process.Executable} object in the
     Distributed Resource Management System (C{DRMS}).
 
     @param drms: Distributed Resource Management System (C{DRMS})
     @type drms: DRMS
     @param debug: Debug level
     @type debug: int
+    @return:
+    @rtype:
     """
 
     if drms:

@@ -49,7 +49,12 @@ class LinearTapeFileSystemDirectory(object):
     @type source_file_path_list: list[str | unicode]
     """
 
-    def __init__(self, source_path=None, target_path=None, source_specification=None, source_file_path_list=None):
+    def __init__(
+            self,
+            source_path=None,
+            target_path=None,
+            source_specification=None,
+            source_file_path_list=None):
         """Initialise a C{LinearTapeFileSystemDirectory} object.
 
         @param source_path: Source directory path
@@ -96,14 +101,13 @@ class LinearTapeFileSystemDirectory(object):
         @return:
         @rtype:
         """
-
-        assert isinstance(source_file_path, (str, unicode, None))
-
         if source_file_path is None:
             return
-        else:
-            if source_file_path not in self.source_file_path_list:
-                self.source_file_path_list.append(source_file_path)
+
+        assert isinstance(source_file_path, basestring)
+
+        if source_file_path not in self.source_file_path_list:
+            self.source_file_path_list.append(source_file_path)
 
         return
 
@@ -126,7 +130,7 @@ class LinearTapeFileSystemCopy(object):
     @type default_target_path: str | unicode
     @ivar ltfs_directory_dict: Python C{dict} of Python C{str} directory path and
         C{LinearTapeFileSystemDirectory} objects
-    @type ltfs_directory_dict: dict[str | unicode => LinearTapeFileSystemDirectory]
+    @type ltfs_directory_dict: dict[str | unicode, LinearTapeFileSystemDirectory]
 
     XML batch file format
     http://www-01.ibm.com/support/knowledgecenter/STZMZN/com.ibm.storage.hollywood.doc/ltfs_reference_lcp_cli.html
@@ -151,8 +155,15 @@ class LinearTapeFileSystemCopy(object):
     </ltfscpspec>
     """
 
-    def __init__(self, total_buffer_size=None, buffer_size=None, log_level=None, recursive=None, sparse=None,
-                 default_target_path=None, ltfs_directory_dict=None):
+    def __init__(
+            self,
+            total_buffer_size=None,
+            buffer_size=None,
+            log_level=None,
+            recursive=None,
+            sparse=None,
+            default_target_path=None,
+            ltfs_directory_dict=None):
         """Initialise a C{LinearTapeFileSystemCopy} object.
 
         @param total_buffer_size: Total buffer size
@@ -167,9 +178,9 @@ class LinearTapeFileSystemCopy(object):
         @type sparse: bool
         @param default_target_path: Default target path for all C{LinearTapeFileSystemDirectory} objects
         @type default_target_path: str | unicode
-        @param ltfs_directory_dict: Python C{dict} of Python C{str} directory path and
+        @param ltfs_directory_dict: Python C{dict} of Python C{str} or C{unicode} directory path and
             C{LinearTapeFileSystemDirectory} objects
-        @type ltfs_directory_dict: dict[str | unicode => LinearTapeFileSystemDirectory]
+        @type ltfs_directory_dict: dict[str | unicode, LinearTapeFileSystemDirectory]
         @return:
         @rtype:
         """
@@ -223,10 +234,10 @@ class LinearTapeFileSystemCopy(object):
         @rtype: LinearTapeFileSystemDirectory
         """
 
-        assert isinstance(ltfs_directory, (LinearTapeFileSystemDirectory, None))
-
         if ltfs_directory is None:
             return
+
+        assert isinstance(ltfs_directory, LinearTapeFileSystemDirectory)
 
         if ltfs_directory.source_path in self.ltfs_directory_dict:
             return self.ltfs_directory_dict[ltfs_directory.source_path]
@@ -256,7 +267,7 @@ class LinearTapeFileSystemCopy(object):
             return ltfs_directory
 
     def add_source_file_path(self, source_path):
-        """Add a source file path to an C{LinearTapeFileSystemCopy} object.
+        """Add a source file path to a C{LinearTapeFileSystemCopy} object.
 
         @param source_path: Source file path
         @type source_path: str | unicode
@@ -344,7 +355,7 @@ class LinearTapeFileSystemCopy(object):
             ltfs_directory.source_file_path_list.sort(lambda x, y: cmp(x, y))
 
             for source_file_path in ltfs_directory.source_file_path_list:
-                assert isinstance(source_file_path, (str, unicode))
+                assert isinstance(source_file_path, basestring)
                 ltfs_source_file = xml.etree.ElementTree.Element(tag='sf')
                 ltfs_source_file.text = source_file_path
                 ltfs_file.append(element=ltfs_source_file)

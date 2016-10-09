@@ -37,21 +37,21 @@ from bsf.standards import Configuration, Default
 
 
 class IlluminaRunFolderArchive(Analysis):
-    """The C{IlluminaRunFolderArchive} class represents the logic to archive an Illumina Run Folder in a format
-    suitable for magnetic tape libraries.
+    """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} class represents the logic to archive
+    an Illumina Run Folder in a format suitable for magnetic tape libraries.
 
     Attributes:
-    @cvar name: Analysis name that should be overridden by sub-classes
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_pre_process: C{DRMS.name} for the C{IlluminaRunFolderArchive} C{Analysis} stage
+    @cvar drms_name_pre_process: C{DRMS.name} for the pre-process stage
     @type drms_name_pre_process: str
-    @type drms_name_base_calls: C{DRMS.name} for the C{IlluminaRunFolderArchive} C{Analysis} stage
-    @cvar drms_name_base_calls: str
-    @type drms_name_intensities: C{DRMS.name} for the C{IlluminaRunFolderArchive} C{Analysis} stage
-    @cvar drms_name_intensities: str
-    @cvar drms_name_archive_folder: C{DRMS.name} for the C{IlluminaRunFolderArchive} C{Analysis} stage
+    @cvar drms_name_base_calls: C{DRMS.name} for the base calls stage
+    @type drms_name_base_calls: str
+    @cvar drms_name_intensities: C{DRMS.name} for the intensities stage
+    @type drms_name_intensities: str
+    @cvar drms_name_archive_folder: C{DRMS.name} for the archive folder stage
     @type drms_name_archive_folder: str
     @cvar compress_archive_files: Compress archive files with GNU Zip
     @type compress_archive_files: bool
@@ -76,48 +76,52 @@ class IlluminaRunFolderArchive(Analysis):
 
     @classmethod
     def get_prefix_pre_process(cls, project_name):
-        """Get a process-specific prefix for a C{Runnable} or C{Executable} of this C{Analysis}.
+        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf..process.Executable} of this C{bsf.Analysis}.
 
         @param project_name: A project name
         @type project_name: str
-        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
+            C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_pre_process, project_name))
 
     @classmethod
     def get_prefix_base_calls(cls, project_name, lane):
-        """Get a process-specific prefix for a C{Runnable} or C{Executable} of this C{Analysis}.
+        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this C{bsf.Analysis}.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
+            C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_base_calls, project_name, lane))
 
     @classmethod
     def get_prefix_intensities(cls, project_name, lane):
-        """Get a process-specific prefix for a C{Runnable} or C{Executable} of this C{Analysis}.
+        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this C{bsf.Analysis}.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
+            C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_intensities, project_name, lane))
 
     @classmethod
     def get_prefix_archive_folder(cls, project_name):
-        """Get a process-specific prefix for a C{Runnable} or C{Executable} of this C{Analysis}.
+        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this C{bsf.Analysis}.
 
         @param project_name: A project name
         @type project_name: str
-        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
+            C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_archive_folder, project_name))
@@ -141,36 +145,36 @@ class IlluminaRunFolderArchive(Analysis):
             run_directory=None,
             experiment_name=None,
             force=False):
-        """Initialise an C{IlluminaRunFolderArchive} C{Analysis}.
+        """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.Analysis}.
 
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{Analysis}-wide input directory
+        @param input_directory: C{bsf.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{Analysis}-wide output directory
+        @param output_directory: C{bsf.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{Analysis}-wide project directory,
-            normally under the C{Analysis}-wide output directory
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{Analysis}-wide genome directory,
-            normally under the C{Analysis}-wide project directory
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
         @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list
-        @param collection: C{Collection}
-        @type collection: Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{Sample} objects
-        @type comparisons: dict
-        @param samples: Python C{list} of C{Sample} objects
-        @type samples: list
+        @type drms_list: list[DRMS]
+        @param collection: C{bsf.data.Collection}
+        @type collection: bsf.data.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.data.Sample]]
+        @param samples: Python C{list} of C{bsf.data.Sample} objects
+        @type samples: list[bsf.data.Sample]
         @param archive_directory: Archive directory
         @type archive_directory: str | unicode
         @param run_directory: File path to an I{Illumina Run Folder}
@@ -240,12 +244,12 @@ class IlluminaRunFolderArchive(Analysis):
         return self._run_name
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of an C{IlluminaRunFolderArchive} C{Analysis} via a section of a
-        C{Configuration} object.
+        """Set instance variables of a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.Analysis}
+        via a section of a C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
         @return:
@@ -284,7 +288,7 @@ class IlluminaRunFolderArchive(Analysis):
         return
 
     def run(self):
-        """Run this C{IlluminaRunFolderArchive} C{Analysis}.
+        """Run this C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.Analysis}.
 
         Archive an I{Illumina Run Folder} in a format suitable for magnetic tape libraries.
 
@@ -307,7 +311,7 @@ class IlluminaRunFolderArchive(Analysis):
                but exclude compressed cluster locations (*.clocs) files.
             10. Run the GNU Tar utility over the remaining Illumina Run folder,
                 but exclude directories with cluster intensity (*.cif) files.
-            11. Calculate an MD5 checksum.
+            11. Calculate a MD5 checksum.
         @return:
         @rtype:
         """
@@ -502,12 +506,12 @@ class IlluminaRunFolderArchive(Analysis):
         exclude_intensities_patterns = list()
         archive_folder_dependencies = list()
 
-        for lane in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
+        for lane_int in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
             # Process the IRF/Data/Intensities/BaseCalls/ directory.
 
             runnable_base_calls = self.add_runnable(
                 runnable=Runnable(
-                    name=self.get_prefix_base_calls(project_name=self.project_name, lane=str(lane)),
+                    name=self.get_prefix_base_calls(project_name=self.project_name, lane=str(lane_int)),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
 
@@ -527,7 +531,7 @@ class IlluminaRunFolderArchive(Analysis):
                     sub_command=Command(
                         program=os.path.join(
                             self.run_directory, 'Data', 'Intensities', 'BaseCalls',
-                            'L{:03d}'.format(lane)),
+                            'L{:03d}'.format(lane_int)),
                         sub_command=Command(
                             program='-execdir',
                             sub_command=Command(
@@ -544,13 +548,13 @@ class IlluminaRunFolderArchive(Analysis):
             # Record dependencies for the archive run folder analysis stage.
             archive_folder_dependencies.append(executable_base_calls.name)
 
-            if os.path.exists(os.path.join(self.run_directory, 'Data', 'Intensities', 'L{:03d}'.format(lane))):
+            if os.path.exists(os.path.join(self.run_directory, 'Data', 'Intensities', 'L{:03d}'.format(lane_int))):
 
                 # Process IRF/Data/Intensities/L00[1-8]/ directories if they exist.
 
                 runnable_intensities = self.add_runnable(
                     runnable=Runnable(
-                        name=self.get_prefix_intensities(project_name=self.project_name, lane=str(lane)),
+                        name=self.get_prefix_intensities(project_name=self.project_name, lane=str(lane_int)),
                         code_module='bsf.runnables.generic',
                         working_directory=self.project_directory))
                 executable_intensities = self.set_drms_runnable(
@@ -564,7 +568,7 @@ class IlluminaRunFolderArchive(Analysis):
                 # IRF/Data/Intensities/BaseCalls/ directory.
                 # Since *_pos.txt files are in IRF/Data/Intensities/, they do not need excluding.
 
-                archive_file_path = '_'.join((self.get_run_name, 'L{:03d}'.format(lane)))
+                archive_file_path = '_'.join((self.get_run_name, 'L{:03d}'.format(lane_int)))
                 if self.compress_archive_files:
                     archive_file_path = '.'.join((archive_file_path, 'tar', 'gz'))
                 else:
@@ -590,7 +594,7 @@ class IlluminaRunFolderArchive(Analysis):
                         os.path.basename(self.run_directory),
                         'Data',
                         'Intensities',
-                        'L{:03d}'.format(lane)))
+                        'L{:03d}'.format(lane_int)))
 
                 # Record dependencies for the archive run folder analysis stage.
                 # Since cluster intensity files are no longer automatically deleted,
@@ -607,10 +611,10 @@ class IlluminaRunFolderArchive(Analysis):
                         os.path.basename(self.run_directory),
                         'Data',
                         'Intensities',
-                        'L{:03d}'.format(lane),
+                        'L{:03d}'.format(lane_int),
                         'C*'))
 
-                # Calculate an MD5 checksum.
+                # Calculate a MD5 checksum.
 
                 md5_sum = runnable_intensities.add_runnable_step(
                     runnable_step=RunnableStep(
@@ -659,7 +663,7 @@ class IlluminaRunFolderArchive(Analysis):
 
         archive_folder.arguments.append(os.path.basename(self.run_directory))
 
-        # 11. Calculate an MD5 checksum.
+        # 11. Calculate a MD5 checksum.
 
         md5_sum = runnable_archive_folder.add_runnable_step(
             runnable_step=RunnableStep(
@@ -675,19 +679,19 @@ class IlluminaRunFolderArchive(Analysis):
 
 
 class IlluminaRunFolderRestore(Analysis):
-    """The C{IlluminaRunFolderRestore} class represents the logic to restore an Illumina Run Folder from a format
-    suitable for magnetic tape libraries.
+    """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} class represents the logic to restore an
+    Illumina Run Folder from a format suitable for magnetic tape libraries.
 
     Attributes:
-    @cvar name: Analysis name that should be overridden by sub-classes
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_extract_archive: C{DRMS.name} for the C{IlluminaRunFolderRestore} C{Analysis} stage
+    @cvar drms_name_extract_archive: C{DRMS.name} for the extract archive stage
     @type drms_name_extract_archive: str
-    @cvar drms_name_compress_base_calls: C{DRMS.name} for the compress base calls C{Analysis} stage
+    @cvar drms_name_compress_base_calls: C{DRMS.name} for the compress base calls stage
     @type drms_name_compress_base_calls: str
-    @cvar drms_name_compress_logs: C{DRMS.name} for the compress logs C{Analysis} stage
+    @cvar drms_name_compress_logs: C{DRMS.name} for the compress logs stage
     @type drms_name_compress_logs: str
     @cvar maximum_lane_number: Maximum number of lanes
     @type maximum_lane_number: int
@@ -719,37 +723,41 @@ class IlluminaRunFolderRestore(Analysis):
 
     @classmethod
     def get_prefix_extract_archive(cls, project_name, lane):
-        """Get a process-specific prefix for a C{Runnable} or C{Executable} of this C{Analysis}.
+        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this
+        C{bsf.Analysis}.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
+            C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_extract_archive, project_name, lane))
 
     @classmethod
     def get_prefix_compress_base_calls(cls, project_name, lane):
-        """Get a process-specific prefix for a C{Runnable} or C{Executable} of this C{Analysis}.
+        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this C{bsf.Analysis}.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
+            C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_compress_base_calls, project_name, lane))
 
     @classmethod
     def get_prefix_compress_logs(cls, project_name):
-        """Get a process-specific prefix for a C{Runnable} or C{Executable} of this C{Analysis}.
+        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this C{bsf.Analysis}.
 
         @param project_name: A project name
         @type project_name: str
-        @return: The process-specific prefix for an C{Executable} or C{Runnable} of this C{Analysis}
+        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
+            C{bsfAnalysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_compress_logs, project_name))
@@ -774,36 +782,36 @@ class IlluminaRunFolderRestore(Analysis):
             experiment_name=None,
             extract_intensities=False,
             force=False):
-        """Initialise an C{IlluminaRunFolderRestore} C{Analysis}.
+        """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} C{bsf.Analysis}.
 
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{Analysis}-wide input directory
+        @param input_directory: C{bsf.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{Analysis}-wide output directory
+        @param output_directory: C{bsf.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{Analysis}-wide project directory,
-            normally under the C{Analysis}-wide output directory
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{Analysis}-wide genome directory,
-            normally under the C{Analysis}-wide project directory
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
         @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list
-        @param collection: C{Collection}
-        @type collection: Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{Sample} objects
-        @type comparisons: dict
-        @param samples: Python C{list} of C{Sample} objects
-        @type samples: list
+        @type drms_list: list[DRMS]
+        @param collection: C{bsf.data.Collection}
+        @type collection: bsf.data.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
+        @type comparisons: dict[str, bsf.data.Sample]
+        @param samples: Python C{list} of C{bsf.data.Sample} objects
+        @type samples: list[bsf.data.Sample]
         @param archive_directory: File path to an archive directory
         @type archive_directory: str | unicode
         @param illumina_directory: File path to the directory of I{Illumina Run Folder} directories
@@ -897,12 +905,12 @@ class IlluminaRunFolderRestore(Analysis):
         return self._run_directory_path
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of an C{IlluminaRunFolderRestore} C{Analysis} via a section of a
-        C{Configuration} object.
+        """Set instance variables of a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} C{bsf.Analysis}
+        via a section of a C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
         @return:
@@ -945,7 +953,7 @@ class IlluminaRunFolderRestore(Analysis):
         return
 
     def run(self):
-        """Run this C{IlluminaRunFolderRunnable} C{Analysis}.
+        """Run this C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRunnable} C{bsf.Analysis}.
 
         Restore an Illumina Run Folder from a format suitable for magnetic tape libraries.
             1. Extract the IRF_Folder.tar file.
@@ -976,8 +984,9 @@ class IlluminaRunFolderRestore(Analysis):
             'intensities': '_'.join((self.get_run_directory_name, 'Intensities.tar')),
         }
 
-        for lane in range(0 + 1, self.maximum_lane_number + 1):
-            archive_name['L{:03d}'.format(lane)] = '_'.join((self.get_run_directory_name, 'L{:03d}.tar'.format(lane)))
+        for lane_int in range(0 + 1, self.maximum_lane_number + 1):
+            archive_name['L{:03d}'.format(lane_int)] = '_'.join((self.get_run_directory_name,
+                                                                 'L{:03d}.tar'.format(lane_int)))
 
         file_path_dict = dict()
 
@@ -1077,14 +1086,14 @@ class IlluminaRunFolderRestore(Analysis):
 
         # Unpack the IRF_L001.tar to IRF_L008.tar files if they exist.
 
-        for lane in range(0 + 1, self.maximum_lane_number + 1):
+        for lane_int in range(0 + 1, self.maximum_lane_number + 1):
 
             # HiSeq and MiSeq instruments offer various run modes with differing number of lanes.
-            if not os.path.exists(file_path_dict['L{:03d}'.format(lane)]):
+            if not os.path.exists(file_path_dict['L{:03d}'.format(lane_int)]):
                 continue
 
             runnable_extract_lane = self.add_runnable(runnable=Runnable(
-                name=self.get_prefix_extract_archive(project_name=self.project_name, lane=str(lane)),
+                name=self.get_prefix_extract_archive(project_name=self.project_name, lane=str(lane_int)),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
                 file_path_dict=file_path_dict))
@@ -1101,7 +1110,7 @@ class IlluminaRunFolderRestore(Analysis):
 
             extract_lane.add_switch_long(key='extract')
             extract_lane.add_option_long(key='directory', value=self.illumina_directory)
-            extract_lane.add_option_long(key='file', value=file_path_dict['L{:03d}'.format(lane)])
+            extract_lane.add_option_long(key='file', value=file_path_dict['L{:03d}'.format(lane_int)])
 
             if not self.extract_intensities:
                 extract_lane.add_option_long(key='exclude', value='C*.1', override=True)
@@ -1109,7 +1118,7 @@ class IlluminaRunFolderRestore(Analysis):
             # Create one process per lane to compress the base call (*.bcl) files.
 
             runnable_compress_base_calls = self.add_runnable(runnable=Runnable(
-                name=self.get_prefix_compress_base_calls(project_name=self.project_name, lane=str(lane)),
+                name=self.get_prefix_compress_base_calls(project_name=self.project_name, lane=str(lane_int)),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
                 file_path_dict=file_path_dict))
@@ -1127,7 +1136,7 @@ class IlluminaRunFolderRestore(Analysis):
                 sub_command=Command(
                     program=os.path.join(
                         self.get_run_directory_path, 'Data', 'Intensities', 'BaseCalls',
-                        'L{:03d}'.format(lane)),
+                        'L{:03d}'.format(lane_int)),
                     sub_command=Command(
                         program='-execdir',
                         sub_command=Command(

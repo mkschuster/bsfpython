@@ -36,14 +36,15 @@ from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
 from bsf.annotation import AnnotationSheet
 from bsf.data import SampleAnnotationSheet
 from bsf.illumina import RunFolder, RunFolderNotComplete
-from bsf.process import Command, Executable, RunnableStep, RunnableStepChangeMode, RunnableStepJava, \
-    RunnableStepPicard, RunnableStepLink, RunnableStepMakeDirectory, RunnableStepMove
+from bsf.process import Command, RunnableStepChangeMode, RunnableStepJava, RunnableStepPicard, \
+    RunnableStepLink, RunnableStepMakeDirectory, RunnableStepMove
 from bsf.standards import Configuration, Default
 
 
 class BamIndexDecoderSheet(AnnotationSheet):
-    """The C{BamIndexDecoderSheet} class represents a Tab-Separated Value (TSV) table of
-    library information for the C{IlluminaToBamTools.BamIndexDecoder} C{Analysis}.
+    """The C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoderSheet} class represents a
+    Tab-Separated Value (TSV) table of library information for the
+    C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} C{bsf.Analysis}.
 
     Attributes:
     @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
@@ -77,7 +78,7 @@ class BamIndexDecoderSheet(AnnotationSheet):
 
 class LibraryAnnotationSheet(AnnotationSheet):
     """The C{LibraryAnnotationSheet} class represents a Comma-Separated Value (CSV) table of
-    library information for the C{IlluminaToBamTools.BamIndexDecoder} C{Analysis}.
+    library information for the C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} C{bsf.Analysis}.
 
     Attributes:
     @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
@@ -241,12 +242,12 @@ class LibraryAnnotationSheet(AnnotationSheet):
                                row_number,
                                flow_cell_dict[row_dict['lane']]['barcode_start'])
 
-        for lane_number in range(0 + 1, lanes + 1):
-            lane_string = str(lane_number)
+        for lane_int in range(0 + 1, lanes + 1):
+            lane_string = str(lane_int)
 
             # Check that all lanes have annotation.
             if lane_string not in flow_cell_dict:
-                messages += 'No annotation for lane number {!r}.\n'.format(lane_number)
+                messages += 'No annotation for lane number {!r}.\n'.format(lane_int)
                 continue
 
             # Check that all or none of the rows have index sequence 1 or 2 populated.
@@ -259,9 +260,9 @@ class LibraryAnnotationSheet(AnnotationSheet):
                     no_index_2 += 1
 
             if not (no_index_1 == 0 or no_index_1 == len(flow_cell_dict[lane_string]['barcode_dict'])):
-                messages += 'Some empty barcode_sequence_1 fields in lane {}.\n'.format(lane_number)
+                messages += 'Some empty barcode_sequence_1 fields in lane {}.\n'.format(lane_int)
             if not (no_index_2 == 0 or no_index_2 == len(flow_cell_dict[lane_string]['barcode_dict'])):
-                messages += 'Some empty barcode_sequence_2 fields in lane {}.\n'.format(lane_number)
+                messages += 'Some empty barcode_sequence_2 fields in lane {}.\n'.format(lane_int)
 
             # Check that all barcode sequences have the same length.
             # This test also finds cases of missing sequences tested for above.
@@ -269,13 +270,15 @@ class LibraryAnnotationSheet(AnnotationSheet):
             key_length = len(key_list[0])
             for key in key_list[1:]:
                 if len(key) != key_length:
-                    messages += 'Mismatching barcode sequence lengths in lane {}.\n'.format(lane_number)
+                    messages += 'Mismatching barcode sequence lengths in lane {}.\n'.format(lane_int)
 
         return messages
 
 
 class RunnableStepIlluminaToBam(RunnableStepJava):
-    """The C{RunnableStepIlluminaToBam} class represents a C{RunnableStepJava} specific to IlluminaToBam tools.
+    """The C{bsf.analyses.illumina_to_bam_tools.RunnableStepIlluminaToBam} class represents a
+    C{bsf.process.RunnableStepJava} specific to IlluminaToBam tools.
+
     IlluminaToBam tools use the old Picard tools interface where each algorithm is implemented as a separate
     Java Archive (JAR) file
 
@@ -308,36 +311,36 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
             java_jar_path=None,
             itb_classpath=None,
             itb_command=None):
-        """Create a C{RunnableStep} for an IlluminaToBam algorithm.
+        """Initialise a C{bsf.process.RunnableStepIlluminaToBam} object.
 
         @param name: Name
         @type name: str
         @param program: Program
         @type program: str
-        @param options:  Python C{dict} of Python C{str} (C{Argument.key}) key and Python C{list} value objects of
-            C{Argument} objects
-        @type options: dict[Argument.key, list[Argument]]
+        @param options:  Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
+            Python C{list} value objects of C{bsf.argument.Argument} objects
+        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]]
         @param arguments: Python C{list} of program arguments
         @type arguments: list[str | unicode]
-        @param sub_command: Subordinate Command
-        @type sub_command: Command
+        @param sub_command: Subordinate C{bsf.process.Command}
+        @type sub_command: bsf.process.Command
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
         @type stdout_path: str | unicode
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
-        @param dependencies: Python C{list} of C{Executable.name}
-            properties in the context of C{DRMS} dependencies
-        @type dependencies: list[Executable.name]
+        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
+            properties in the context of C{bsf.DRMS} dependencies
+        @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the C{Executable} into the C{DRMS}
+        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.DRMS}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
         @param process_name: Process name
         @type process_name: str
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
-            after successfully completing this C{RunnableStep}
+            after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode]
         @param java_temporary_path: Temporary directory path for the Java Virtual Machine
         @type java_temporary_path: str | unicode
@@ -349,8 +352,8 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
         @type itb_classpath: str | unicode
         @param itb_command: IlluminaToBam command
         @type itb_command: str
-        @return: C{RunnableStep}
-        @rtype: RunnableStep
+        @return:
+        @rtype:
         """
 
         super(RunnableStepIlluminaToBam, self).__init__(
@@ -382,13 +385,13 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
         return
 
     def add_itb_option(self, key, value, override=False):
-        """Add an IlluminaToBam option.
+        """Add a C{bsf.argument.OptionPair} to a C{bsf.analyses.illumina_to_bam_tools.RunnableStepIlluminaToBam}.
 
         @param key: Option key
         @type key: str
         @param value: Option value
         @type value: str
-        @param override: Override existing C{Argument} without warning
+        @param override: Override existing C{bsf.argument.Argument} without warning
         @type override: bool
         @return:
         @rtype:
@@ -398,16 +401,17 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
 
 
 class IlluminaToBam(Analysis):
-    """The C{IlluminaToBam} class represents the logic to convert Illumina BCL to a BAM or SAM files.
+    """The C{bsf.analyses.illumina_to_bam_tools.IlluminaToBam} class represents the logic to
+    convert Illumina BCL to a BAM or SAM files.
 
     Attributes:
-    @cvar name: Analysis name that should be overridden by sub-classes
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_lane: C{DRMS.name} for the C{IlluminaToBam} lane-specific C{Analysis} stage
+    @cvar drms_name_lane: C{DRMS.name} for the lane-specific stage
     @type drms_name_lane: str
-    @cvar drms_name_cell: C{DRMS.name} for the C{IlluminaToBam} flow cell-specific C{Analysis} stage
+    @cvar drms_name_cell: C{DRMS.name} for the flow cell-specific stage
     @type drms_name_cell: str
     @ivar run_directory: File path to an I{Illumina Run Folder}
     @type run_directory: str | unicode
@@ -450,24 +454,24 @@ class IlluminaToBam(Analysis):
 
     @classmethod
     def get_prefix_illumina_to_bam_cell(cls, project_name):
-        """Get a Python C{str} for setting C{Executable.dependencies} in other C{Analysis} objects.
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
 
         @param project_name: A project name
         @type project_name: str
-        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_cell, project_name))
 
     @classmethod
     def get_prefix_illumina_to_bam_lane(cls, project_name, lane):
-        """Get a Python C{str} for setting C{Executable.dependencies} in other C{Analysis} objects.
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_lane, project_name, lane))
@@ -501,36 +505,36 @@ class IlluminaToBam(Analysis):
             classpath_picard=None,
             vendor_quality_filter=None,
             force=False):
-        """Initialise a C{IlluminaToBam} object.
+        """Initialise a C{bsf.analyses.illumina_to_bam_tools.IlluminaToBam} object.
 
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{Analysis}-wide input directory
+        @param input_directory: C{bsf.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{Analysis}-wide output directory
+        @param output_directory: C{bsf.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{Analysis}-wide project directory,
-            normally under the C{Analysis}-wide output directory
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{Analysis}-wide genome directory,
-            normally under the C{Analysis}-wide project directory
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
         @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list
-        @param collection: C{Collection}
-        @type collection: Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{Sample} objects
-        @type comparisons: dict
-        @param samples: Python C{list} of C{Sample} objects
-        @type samples: list
+        @type drms_list: list[DRMS]
+        @param collection: C{bsf.data.Collection}
+        @type collection: bsf.data.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.data.Sample]]
+        @param samples: Python C{list} of C{bsf.data.Sample} objects
+        @type samples: list[bsf.data.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
         @type run_directory: str | unicode
         @param intensity_directory: File path to the I{Intensities} directory,
@@ -653,11 +657,12 @@ class IlluminaToBam(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of an C{IlluminaToBam} object via a section of a C{Configuration} object.
+        """Set instance variables of a C{bsf.analyses.illumina_to_bam_tools.IlluminaToBam} object via a section of a
+        C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
         @return:
@@ -751,7 +756,7 @@ class IlluminaToBam(Analysis):
         return
 
     def run(self):
-        """Run this C{IlluminaToBam} C{Analysis}.
+        """Run this C{bsf.analyses.illumina_to_bam_tools.IlluminaToBam} C{bsf.Analysis}.
 
         Convert an Illumina flow cell into lane-specific archive BAM files.
 
@@ -891,9 +896,9 @@ class IlluminaToBam(Analysis):
         drms_lane = self.get_drms(name=self.drms_name_lane)
         drms_cell = self.get_drms(name=self.drms_name_cell)
 
-        for lane in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
+        for lane_int in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
 
-            lane_str = str(lane)
+            lane_str = str(lane_int)
 
             file_path_dict_lane = {
                 'illumina_directory': self.run_directory,
@@ -903,8 +908,8 @@ class IlluminaToBam(Analysis):
                 'unsorted_md5': '_'.join((self.project_name, lane_str, 'unsorted.bam.md5')),
                 'sorted_bam': '_'.join((self.project_name, lane_str, 'sorted.bam')),
                 'sorted_md5': '_'.join((self.project_name, lane_str, 'sorted.bam.md5')),
-                'lane_bam': '{}_{:d}.bam'.format(self.project_name, lane),
-                'lane_md5': '{}_{:d}.bam.md5'.format(self.project_name, lane)
+                'lane_bam': '{}_{:d}.bam'.format(self.project_name, lane_int),
+                'lane_md5': '{}_{:d}.bam.md5'.format(self.project_name, lane_int)
             }
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
@@ -1112,17 +1117,17 @@ class IlluminaToBam(Analysis):
 
 
 class BamIndexDecoder(Analysis):
-    """The C{BamIndexDecoder} class represents the logic to decode sequence archive BAM files into
-    sample-specific BAM files.
+    """The C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} class represents the logic to
+    decode sequence archive BAM files into sample-specific BAM files.
 
     Attributes:
-    @cvar name: Analysis name that should be overridden by sub-classes
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: Analysis prefix that should be overridden by sub-classes
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_lane: C{DRMS.name} for the lane-specific C{BamIndexDecoder} C{Analysis} stage
+    @cvar drms_name_lane: C{DRMS.name} for the lane-specific stage
     @type drms_name_lane: str
-    @cvar drms_name_cell: C{DRMS.name} for the flow cell-specific C{BamIndexDecoder} C{Analysis} stage
+    @cvar drms_name_cell: C{DRMS.name} for the flow cell-specific stage
     @type drms_name_cell: str
     @ivar hash_algorithm: Use a BSF-specific hashing algorithm for demultiplexing
     @type hash_algorithm: bool
@@ -1156,24 +1161,24 @@ class BamIndexDecoder(Analysis):
 
     @classmethod
     def get_prefix_bam_index_decoder_cell(cls, project_name):
-        """Get a Python C{str} for setting C{Executable.dependencies} in other C{Analysis} objects.
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
 
         @param project_name: A project name
         @type project_name: str
-        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_cell, project_name))
 
     @classmethod
     def get_prefix_bam_index_decoder_lane(cls, project_name, lane):
-        """Get a Python C{str} for setting C{Executable.dependencies} in other C{Analysis} objects.
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The dependency string for an C{Executable} of this C{Analysis}
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
         return '_'.join((cls.drms_name_lane, project_name, lane))
@@ -1206,34 +1211,34 @@ class BamIndexDecoder(Analysis):
             force=False):
         """Initialise a C{BamIndexDecoder} object.
 
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param project_name: Project name
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{Analysis}-wide input directory
+        @param input_directory: C{bsf.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{Analysis}-wide output directory
+        @param output_directory: C{bsf.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{Analysis}-wide project directory,
-            normally under the C{Analysis}-wide output directory
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{Analysis}-wide genome directory,
-            normally under the C{Analysis}-wide project directory
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
         @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list
-        @param collection: C{Collection}
-        @type collection: Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{Sample} objects
-        @type comparisons: dict
-        @param samples: Python C{list} of C{Sample} objects
-        @type samples: list
+        @type drms_list: list[DRMS]
+        @param collection: C{bsf.data.Collection}
+        @type collection: bsf.data.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.data.Sample]]
+        @param samples: Python C{list} of C{bsf.data.Sample} objects
+        @type samples: list[bsf.data.Sample]
         @param hash_algorithm: Use a BSF-specific hashing algorithm for demultiplexing
         @type hash_algorithm: bool
         @param library_path: Library annotation file path
@@ -1333,11 +1338,12 @@ class BamIndexDecoder(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{BamIndexDecoder} object via a section of a C{Configuration} object.
+        """Set instance variables of a C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} object via a section of a
+        C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
-        @param configuration: C{Configuration}
-        @type configuration: Configuration
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
         @type section: str
         @return:
@@ -1410,8 +1416,8 @@ class BamIndexDecoder(Analysis):
         return
 
     def run(self):
-        """Run the C{BamIndexDecoder} analysis to decode an archive BAM file produced with Illumina2Bam tools into
-        sample-specific BAM files.
+        """Run the C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} analysis to
+        decode an archive BAM file produced with Illumina2Bam tools into sample-specific BAM files.
         @return:
         @rtype:
         """
