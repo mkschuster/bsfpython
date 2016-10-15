@@ -52,29 +52,29 @@ if args.debug:
 
 bam2fastq.run()
 
-# Submit all Executable objects of all Distributed Resource Management System objects.
+# Submit all Executable objects of all Stage objects.
 
 submit = 0
 
-for drms in bam2fastq.drms_list:
+for stage in bam2fastq.stage_list:
 
     if args.stage:
-        if args.stage == drms.name:
+        if args.stage == stage.name:
             submit += 1
         else:
             continue
 
-    drms.submit(debug=bam2fastq.debug)
+    stage.submit(debug=bam2fastq.debug)
 
     if bam2fastq.debug:
-        print repr(drms)
-        print drms.trace(1)
+        print repr(stage)
+        print stage.trace(1)
 
 if args.stage:
     if args.stage == 'report':
         pass
     elif not submit:
-        name_list = [drms.name for drms in bam2fastq.drms_list]
+        name_list = [stage.name for stage in bam2fastq.stage_list]
         name_list.append('report')
         print 'Valid Analysis stages are: {!r}'.format(name_list)
 

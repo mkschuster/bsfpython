@@ -32,8 +32,9 @@ import os
 
 
 class Configuration(object):
-    """The C{bsf.standards.Configuration} class represents one or more UNIX-style initialisation (*.ini) files and
-    an associated Python C{ConfigParser.SafeConfigParser} object to parse the file.
+    """The C{bsf.standards.Configuration} class represents one or more UNIX-style initialisation (*.ini) files.
+
+    A C{bsf.standards.Configuration} has an associated Python C{ConfigParser.SafeConfigParser} to parse the file(s).
 
     Attributes:
     @ivar file_path_list: C{bsf.standards.Configuration} file path
@@ -46,8 +47,7 @@ class Configuration(object):
 
     @staticmethod
     def section_from_instance(instance):
-        """Get a configuration section string composed of the Python module and Python class name from a
-        Python instance.
+        """Get a configuration section Python C{str} composed of the Python module and Python class name.
 
         @param instance: A Python instance (i.e. object)
         @type instance: object
@@ -65,10 +65,10 @@ class Configuration(object):
 
     @classmethod
     def from_file_path_list(cls, file_path_list):
-        """Create a C{bsf.standards.Configuration} object based on a
-        Python C{list} of Python C{str} configuration file path objects.
+        """Create a C{bsf.standards.Configuration} object based on a Python C{list} of Python C{str} file paths.
 
         Both, user and variable expansion gets applied to each file path.
+
         @param file_path_list: Python C{list} of Python C{str} or C{unicode} configuration file path objects
         @type file_path_list: list[str | unicode]
         @return: C{bsf.standards.Configuration}
@@ -104,7 +104,7 @@ class Configuration(object):
         return configuration
 
     def __init__(self, file_path_list=None, config_parser=None):
-        """Initialise a C{bsf.standards.Configuration} object.
+        """Initialise a C{bsf.standards.Configuration}.
 
         @param file_path_list: Python C{list} of Python C{str} or C{unicode} configuration file path objects
         @type file_path_list: list[str | unicode]
@@ -133,7 +133,7 @@ class Configuration(object):
         return
 
     def trace(self, level):
-        """Trace a C{bsf.standards.Configuration} object.
+        """Trace a C{bsf.standards.Configuration}.
 
         @param level: Indentation level
         @type level: int
@@ -171,7 +171,7 @@ class Configuration(object):
 
 
 class Default(object):
-    """The C{bsf.standards.Default} class specifies the application or library default configuration.
+    """The C{bsf.standards.Default} class represents the application or library default configuration.
 
     Attributes:
     @cvar global_default: Global C{bsf.standards.Default}
@@ -282,6 +282,7 @@ class Default(object):
         """Create a new C{bsf.standards.Default} object from the global default configuration file.
 
         The default configuration is based on the file $HOME/.bsfpython.ini in the user's home directory.
+
         @return: C{bsf.standards.Default}
         @rtype: bsf.standards.Default
         """
@@ -348,7 +349,7 @@ class Default(object):
             url_host_name=None,
             url_relative_dna=None,
             url_relative_projects=None):
-        """Initialise a C{bsf.standards.Default} object.
+        """Initialise a C{bsf.standards.Default}.
 
         @param classpath_gatk: Genome Analysis Toolkit Java Archive (JAR) class path directory
         @type classpath_gatk: str | unicode
@@ -569,10 +570,10 @@ class Default(object):
         return
 
     def set_configuration(self, configuration):
-        """Set instance variables of a C{bsf.standards.Default} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a C{bsf.standards.Default} object via a C{bsf.standards.Configuration} section.
 
         For each instance variable a configuration option has to be present.
+
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @return:
@@ -743,7 +744,7 @@ class Default(object):
 
     @staticmethod
     def absolute_gatk_bundle(gatk_bundle_version, genome_version):
-        """Get the absolute directory path for the Genome Analysis Toolkit bundle.
+        """Get the absolute directory path for the Genome Analysis Toolkit (GATK) bundle.
 
         @param gatk_bundle_version: The GATK bundle version
         @type gatk_bundle_version: str

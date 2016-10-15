@@ -78,7 +78,7 @@ class ChIPSeqComparison(object):
             treatment=None,
             replicate=None,
             diff_bind=None):
-        """Initialise a C{bsf.analyses.chip_seq.ChIPSeqComparison} object.
+        """Initialise a C{bsf.analyses.chip_seq.ChIPSeqComparison}.
 
         @param c_name: Control name
         @type c_name: str
@@ -196,7 +196,7 @@ class ChIPSeq(Analysis):
             genome_directory=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             collection=None,
             comparisons=None,
             samples=None,
@@ -205,7 +205,7 @@ class ChIPSeq(Analysis):
             genome_fasta_path=None,
             genome_sizes_path=None,
             classpath_picard=None):
-        """Initialise a C{bsf.analyses.chip_seq.ChIPSeq} object.
+        """Initialise a C{bsf.analyses.chip_seq.ChIPSeq}.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -227,8 +227,8 @@ class ChIPSeq(Analysis):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.data.Collection}
         @type collection: bsf.data.Collection
         @param comparisons: Python C{dict} of Python C{list} objects of C{bsf.data.Sample} objects
@@ -259,7 +259,7 @@ class ChIPSeq(Analysis):
             genome_directory=genome_directory,
             e_mail=e_mail,
             debug=debug,
-            drms_list=drms_list,
+            stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
             samples=samples)
@@ -295,11 +295,10 @@ class ChIPSeq(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.chip_seq.ChIPSeq} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a C{bsf.analyses.chip_seq.ChIPSeq} via a C{bsf.standards.Configuration} section.
 
-        Instance variables without a
-        configuration option remain unchanged.
+        Instance variables without a configuration option remain unchanged.
+
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
@@ -504,7 +503,7 @@ class ChIPSeq(Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.chip_seq.ChIPSeq} C{bsf.Analysis}.
+        """Run a C{bsf.analyses.chip_seq.ChIPSeq} C{bsf.Analysis}.
 
         @return:
         @rtype:
@@ -576,7 +575,7 @@ class ChIPSeq(Analysis):
         bwa_genome_db = os.path.join(Default.absolute_genomes(self.genome_version),
                                      'forBWA_0.7.6a', self.genome_version)
 
-        alignment_drms = self.get_drms(name='chipseq_alignment')
+        stage_alignment = self.get_stage(name='chipseq_alignment')
 
         for sample in self.samples:
 
@@ -595,7 +594,7 @@ class ChIPSeq(Analysis):
 
             for replicate_key in replicate_keys:
 
-                prefix = '_'.join((alignment_drms.name, replicate_key))
+                prefix = '_'.join((stage_alignment.name, replicate_key))
 
                 file_path_dict = {
                     'temporary_directory': '_'.join((prefix, 'temporary')),
@@ -621,8 +620,8 @@ class ChIPSeq(Analysis):
 
                 # Set BWA mem options.
 
-                # Allow as many threads as defined in the corresponding DRMS object.
-                bwa_mem.add_option_short(key='t', value=str(alignment_drms.threads))
+                # Allow as many threads as defined in the corresponding Stage object.
+                bwa_mem.add_option_short(key='t', value=str(stage_alignment.threads))
                 # Append FASTA/Q comment to SAM output.
                 bwa_mem.add_switch_short(key='C')
                 # Mark shorter split hits as secondary (for Picard compatibility).
@@ -664,18 +663,18 @@ class ChIPSeq(Analysis):
 
                 file_path_chipseq_alignment = {
                     # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
-                    # It is currently based on the alignment_drms.name and replicate_key.
+                    # It is currently based on the stage_alignment.name and replicate_key.
                     # The script should also be changed to pre-set all file names beforehand.
-                    'aligned_bam': '{}_{}.bam'.format(alignment_drms.name, replicate_key),
-                    'aligned_bai': '{}_{}.bai'.format(alignment_drms.name, replicate_key),
-                    'aligned_md5': '{}_{}.bam.md5'.format(alignment_drms.name, replicate_key),
+                    'aligned_bam': '{}_{}.bam'.format(stage_alignment.name, replicate_key),
+                    'aligned_bai': '{}_{}.bai'.format(stage_alignment.name, replicate_key),
+                    'aligned_md5': '{}_{}.bam.md5'.format(stage_alignment.name, replicate_key),
                 }
 
-                # Normally, the bwa object would be pushed onto the drms list.
+                # Normally, the bwa object would be pushed onto the Stage list.
                 # Experimentally, use Pickler to serialize the Executable object into a file.
 
                 pickler_dict_align_lane = {
-                    'prefix': alignment_drms.name,
+                    'prefix': stage_alignment.name,
                     'replicate_key': replicate_key,
                     'classpath_picard': self.classpath_picard,
                     'bwa_executable': bwa,
@@ -683,7 +682,7 @@ class ChIPSeq(Analysis):
 
                 pickler_path = os.path.join(
                     self.genome_directory,
-                    '{}_{}.pkl'.format(alignment_drms.name, replicate_key))
+                    '{}_{}.pkl'.format(stage_alignment.name, replicate_key))
                 pickler_file = open(pickler_path, 'wb')
                 pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
                 pickler.dump(obj=pickler_dict_align_lane)
@@ -691,9 +690,9 @@ class ChIPSeq(Analysis):
 
                 # Create a bsf_run_bwa.py job to run the pickled object.
 
-                run_bwa = alignment_drms.add_executable(
+                run_bwa = stage_alignment.add_executable(
                     executable=Executable(
-                        name='_'.join((alignment_drms.name, replicate_key)),
+                        name='_'.join((stage_alignment.name, replicate_key)),
                         program='bsf_run_bwa.py'))
 
                 # Only submit this Executable if the final result file does not exist.
@@ -730,12 +729,10 @@ class ChIPSeq(Analysis):
         # bowtie2_index = os.path.join(Default.absolute_genomes(self.genome_version),
         #                              'forBowtie2', self.genome_version)
 
-        alignment_drms = self.get_drms(name='chipseq_alignment')
+        stage_alignment = self.get_stage(name='chipseq_alignment')
 
-        # Initialise the Distributed Resource Management System objects for Bowtie2.
-
-        # bowtie2_drms = self.add_drms(
-        #     drms=DRMS.from_analysis(
+        # stage_bowtie2 = self.add_stage(
+        #     stage=Stage.from_analysis(
         #         name='chipseq_bowtie2',
         #         working_directory=self.genome_directory,
         #         analysis=self))
@@ -743,14 +740,13 @@ class ChIPSeq(Analysis):
         # Use the bsf_sam2bam.sh script to convert aligned SAM into
         # aligned, sorted, indexed BAM files.
 
-        # sam2bam_drms = self.add_drms(
-        #     drms=DRMS.from_analysis(
+        # stage_sam2bam = self.add_stage(
+        #     stage=Stage.from_analysis(
         #         name='sam2bam',
         #         working_directory=self.genome_directory,
         #         analysis=self))
 
         for sample in self.samples:
-
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
@@ -766,7 +762,7 @@ class ChIPSeq(Analysis):
 
             for replicate_key in replicate_keys:
 
-                prefix = '_'.join((alignment_drms.name, replicate_key))
+                prefix = '_'.join((stage_alignment.name, replicate_key))
 
                 file_path_dict = {
                     'temporary_directory': '_'.join((prefix, 'temporary')),
@@ -782,8 +778,8 @@ class ChIPSeq(Analysis):
                         code_module='bsf.runnables.bowtie2',
                         working_directory=self.genome_directory,
                         file_path_dict=file_path_dict))
-                self.set_drms_runnable(
-                    drms=alignment_drms,
+                self.set_stage_runnable(
+                    stage=stage_alignment,
                     runnable=runnable_alignment)
                 # Set dependencies.
 
@@ -795,7 +791,7 @@ class ChIPSeq(Analysis):
                 # Set Bowtie2 options.
 
                 runnable_step.add_option_short(key='x', value=bowtie2_index)
-                runnable_step.add_option_long(key='threads', value=str(alignment_drms.threads))
+                runnable_step.add_option_long(key='threads', value=str(stage_alignment.threads))
 
                 reads1 = list()
                 reads2 = list()
@@ -880,8 +876,8 @@ class ChIPSeq(Analysis):
         @rtype:
         """
 
-        macs14_drms = self.get_drms(name='macs14')
-        process_macs14_drms = self.get_drms(name='process_macs14')
+        stage_macs14 = self.get_stage(name='macs14')
+        stage_process_macs14 = self.get_stage(name='process_macs14')
 
         keys = self.comparisons.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -915,7 +911,7 @@ class ChIPSeq(Analysis):
 
                         for c_replicate_key in c_replicate_keys:
 
-                            macs14 = macs14_drms.add_executable(
+                            macs14 = stage_macs14.add_executable(
                                 executable=Macs14(
                                     name='chipseq_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
                                     analysis=self))
@@ -923,7 +919,7 @@ class ChIPSeq(Analysis):
                             macs14.dependencies.append('chipseq_sam2bam_' + t_replicate_key)
                             macs14.dependencies.append('chipseq_sam2bam_' + c_replicate_key)
 
-                            process_macs14 = process_macs14_drms.add_executable(
+                            process_macs14 = stage_process_macs14.add_executable(
                                 executable=Executable(
                                     name='chipseq_process_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
                                     program='bsf_chipseq_process_macs14.sh'))
@@ -1023,10 +1019,7 @@ class ChIPSeq(Analysis):
         @rtype:
         """
 
-        peakcalling_drms = self.get_drms(name='chipseq_peakcalling')
-        # macs2_callpeak_drms = self.get_drms(name='macs2_callpeak')
-        # macs2_bdgcmp_drms = self.get_drms(name='macs2_bdgcmp')
-        # process_macs2_drms = self.get_drms(name='process_macs2')
+        stage_peak_calling = self.get_stage(name='chipseq_peakcalling')
 
         keys = self.comparisons.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -1060,21 +1053,21 @@ class ChIPSeq(Analysis):
 
                         for c_replicate_key in c_replicate_keys:
 
-                            prefix = '{}_{}__{}'.format(peakcalling_drms.name, t_replicate_key, c_replicate_key)
+                            prefix = '{}_{}__{}'.format(stage_peak_calling.name, t_replicate_key, c_replicate_key)
 
                             file_path_dict = {
                                 'temporary_directory': '_'.join((prefix, 'temporary')),
                                 'replicate_directory': prefix,
                             }
 
-                            runnable = self.add_runnable(
+                            runnable_peak_calling = self.add_runnable(
                                 runnable=Runnable(
                                     name=prefix,
                                     code_module='bsf.runnables.chip_seq_peak_calling',
                                     working_directory=self.genome_directory,
                                     file_path_dict=file_path_dict))
 
-                            macs2_call_peak = runnable.add_runnable_step(
+                            macs2_call_peak = runnable_peak_calling.add_runnable_step(
                                 runnable_step=RunnableStep(
                                     name='macs2_call_peak',
                                     program='macs2',
@@ -1083,7 +1076,7 @@ class ChIPSeq(Analysis):
                             macs2_call_peak.dependencies.append('chipseq_sam2bam_' + t_replicate_key)
                             macs2_call_peak.dependencies.append('chipseq_sam2bam_' + c_replicate_key)
 
-                            macs2_bdg_cmp = runnable.add_runnable_step(
+                            macs2_bdg_cmp = runnable_peak_calling.add_runnable_step(
                                 runnable_step=RunnableStep(
                                     name='chipseq_macs2_bdg_cmp',
                                     program='macs2',
@@ -1093,7 +1086,7 @@ class ChIPSeq(Analysis):
                             # TODO: Handle the dependencies
                             macs2_bdg_cmp.dependencies.append(macs2_call_peak.name)
 
-                            process_macs2 = runnable.add_runnable_step(
+                            process_macs2 = runnable_peak_calling.add_runnable_step(
                                 runnable_step=RunnableStep(
                                     name='chipseq_process_macs2',
                                     program='bsf_chipseq_process_macs2.sh'))
@@ -1232,7 +1225,7 @@ class ChIPSeq(Analysis):
         @rtype:
         """
 
-        diffbind_drms = self.get_drms(name='diffbind')
+        stage_diffbind = self.get_stage(name='diffbind')
 
         # Reorganise the comparisons by factor.
 
@@ -1346,7 +1339,7 @@ class ChIPSeq(Analysis):
 
             # Create the DiffBind job.
 
-            diffbind = diffbind_drms.add_executable(
+            diffbind = stage_diffbind.add_executable(
                 executable=Executable(
                     name='chipseq_diffbind_{}'.format(key),
                     program='bsf_chipseq_diffbind.R'))

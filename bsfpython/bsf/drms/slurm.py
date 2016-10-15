@@ -48,11 +48,10 @@ database_file_name = 'bsfpython_slurm_jobs.db'
 
 
 class ProcessSLURM(object):
-    """The C{bsf.drms.slurm.ProcessSLURM} class models one process in the
-    Simple Linux Utility for Resource Management (SLURM)
-    Distributed Resource Management System (DRMS).
+    """C{bsf.drms.slurm.ProcessSLURM} class representing a Simple Linux Utility for Resource Management (SLURM) process.
 
     The instance variable names result from the SLURM command C{sacct --parsable --long}
+
     @ivar process_slurm_id: Primary key
     @type process_slurm_id: int
     @ivar job_id: The number of the job or job step. It is in the form: job.jobstep
@@ -170,7 +169,7 @@ class ProcessSLURM(object):
             max_disk_write_node=None,
             max_disk_write_task=None,
             average_disk_write=None):
-        """Initialise a C{bsf.drms.slurm.ProcessSLURM} object.
+        """Initialise a C{bsf.drms.slurm.ProcessSLURM}.
 
         @param process_slurm_id:
         @type process_slurm_id: int
@@ -303,7 +302,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
     def __init__(
             self,
             database_connection):
-        """Initialise a C{bsf.drms.slurm.ProcessSLURMAdaptor} object.
+        """Initialise a C{bsf.drms.slurm.ProcessSLURMAdaptor}.
 
         @param database_connection: C{bsf.database.DatabaseConnection}
         @type database_connection: bsf.database.DatabaseConnection
@@ -437,7 +436,8 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
     def select_all_by_job_name(self, name):
         """Select all C{bsf.drms.slurm.ProcessSLURM} objects by I{job_name}.
 
-        The same C{bsf.process.Executable} can be submitted more than once into the C{DRMS}.
+        The same C{bsf.process.Executable} can be submitted more than once into the C{bsf.Stage}.
+
         @param name: Job name
         @type name: str
         @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
@@ -497,6 +497,7 @@ def _recalculate_memory(memory):
     with Sun Grid Engine (SGE) conventions.
     https://en.wikipedia.org/wiki/Binary_prefix
     https://en.wikipedia.org/wiki/Metric_prefix
+
     @param memory: Memory specification string
     @type memory: str
     @return: Memory specification string
@@ -547,13 +548,15 @@ def _recalculate_memory(memory):
     return str(result)
 
 
-def submit(drms, debug=0):
-    """Submit each C{bsf.process.Executable} object of a C{DRMS} object into the
+def submit(stage, debug=0):
+    """Submit each C{bsf.process.Executable} of a C{bsf.Stage}.
+
+    Submits each C{bsf.process.Executable} into the
     Simple Linux Utility for Resource Management (SLURM)
     Distributed Resource Management System (DRMS).
 
-    @param drms: Distributed Resource Management System (C{DRMS})
-    @type drms: DRMS
+    @param stage: C{bsf.Stage}
+    @type stage: bsf.Stage
     @param debug: Debug level
     @type debug: int
     @return:
@@ -562,7 +565,7 @@ def submit(drms, debug=0):
 
     # Open or create a database.
 
-    database_connection = DatabaseConnection(file_path=os.path.join(drms.working_directory, database_file_name))
+    database_connection = DatabaseConnection(file_path=os.path.join(stage.working_directory, database_file_name))
     job_submission_adaptor = JobSubmissionAdaptor(database_connection=database_connection)
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
@@ -574,14 +577,14 @@ def submit(drms, debug=0):
         output += "# BSF-Python debug mode: {}\n".format(debug)
         output += "\n"
 
-    for executable in drms.executables:
+    for executable in stage.executable_list:
         assert isinstance(executable, Executable)
 
         command = list()
 
         command.append('sbatch')
 
-        # Add DRMS-specific options.
+        # Add Stage-specific options.
 
         # Binary or script
 
@@ -589,24 +592,24 @@ def submit(drms, debug=0):
 
         # SLURM-specific sanity checks ...
 
-        if drms.memory_limit_hard:
+        if stage.memory_limit_hard:
             command.append('--mem')
-            command.append(_recalculate_memory(drms.memory_limit_hard))
-        elif drms.memory_limit_soft:
+            command.append(_recalculate_memory(stage.memory_limit_hard))
+        elif stage.memory_limit_soft:
             command.append('--mem')
-            command.append(_recalculate_memory(drms.memory_limit_soft))
+            command.append(_recalculate_memory(stage.memory_limit_soft))
 
-        if len(drms.node_list_exclude):
+        if len(stage.node_list_exclude):
             command.append('--exclude')
-            command.append(','.join(drms.node_list_exclude))
+            command.append(','.join(stage.node_list_exclude))
 
-        if len(drms.node_list_include):
+        if len(stage.node_list_include):
             command.append('--nodelist')
-            command.append(','.join(drms.node_list_include))
+            command.append(','.join(stage.node_list_include))
 
-        if drms.time_limit:
+        if stage.time_limit:
             command.append('--time')
-            command.append(drms.time_limit)
+            command.append(stage.time_limit)
 
         # Propagate none of the environment variables.
 
@@ -620,13 +623,13 @@ def submit(drms, debug=0):
 
         # Parallel environment
 
-        if drms.parallel_environment:
+        if stage.parallel_environment:
             command.append('--distribution')
-            command.append(drms.parallel_environment)
+            command.append(stage.parallel_environment)
             command.append('--ntasks')
             command.append('1')
             command.append('--cpus-per-task')
-            command.append(str(drms.threads))
+            command.append(str(stage.threads))
 
         command.append('--requeue')
 
@@ -635,22 +638,22 @@ def submit(drms, debug=0):
 
         # Queue name
 
-        if drms.queue:
+        if stage.queue:
             command.append('--partition')
-            command.append(drms.queue)
+            command.append(stage.queue)
 
         # Working directory, standard output and standard error streams.
 
-        if drms.working_directory:
+        if stage.working_directory:
             command.append('--workdir')
-            command.append(drms.working_directory)
+            command.append(stage.working_directory)
 
             # Write standard output and standard error streams into an
             # output directory under the working directory.
             # Create the output directory first via its absolute path,
             # then set standard error and standard output relative to it.
 
-            output_directory_path = os.path.join(drms.working_directory, output_directory_name)
+            output_directory_path = os.path.join(stage.working_directory, output_directory_name)
 
             if not os.path.isdir(output_directory_path):
                 # In principle, a race condition could occur as the directory
@@ -763,7 +766,7 @@ def submit(drms, debug=0):
                 command=executable.command_str())
             job_submission_adaptor.insert(object_instance=job_submission)
 
-        # Only store a ProcessSLURM object, if an Executable has been submitted into SLURM.
+        # Only store a ProcessSLURM, if an Executable has been submitted into SLURM.
 
         if executable.process_identifier:
             process_slurm = process_slurm_adaptor.select_by_job_id(job_id=executable.process_identifier)
@@ -774,7 +777,7 @@ def submit(drms, debug=0):
         # The commit statement should affect both insert statements above.
         job_submission_adaptor.commit()
 
-    script_path = os.path.join(drms.working_directory, 'bsfpython_slurm_{}.bash'.format(drms.name))
+    script_path = os.path.join(stage.working_directory, 'bsfpython_slurm_{}.bash'.format(stage.name))
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()
@@ -787,7 +790,7 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
 
     @param stdout_handle: The I{STDOUT} or I{STDERR} file handle
     @type stdout_handle: file
-    @param thread_lock: A Python C{threading.Lock} object
+    @param thread_lock: Python C{threading.Lock}
     @type thread_lock: threading.Lock
     @param process_slurm_adaptor: C{bsf.drms.slurm.ProcessSLURMAdaptor}
     @type process_slurm_adaptor: bsf.drms.slurm.ProcessSLURMAdaptor
@@ -856,7 +859,7 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
         if new_process_slurm.state in ('PENDING', 'RUNNING'):
             continue
 
-        # Check if the ProcessSLURM object already exists.
+        # Check if the ProcessSLURM already exists.
         old_process_slurm = process_slurm_adaptor.select_by_job_id(job_id=new_process_slurm.job_id)
         if old_process_slurm is None:
             # The JobID is not in the database, which is caused by job_id.batch entries.
@@ -887,12 +890,11 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
     return
 
 
-def check_state(drms, debug=0):
-    """Check the state of each C{bsf.process.Executable} object in the
-    Distributed Resource Management System (C{DRMS}).
+def check_state(stage, debug=0):
+    """Check the state of each C{bsf.process.Executable} of a C{bsf.Stage}.
 
-    @param drms: Distributed Resource Management System (C{DRMS})
-    @type drms: DRMS
+    @param stage: C{bsf.Stage}
+    @type stage: bsf.Stage
     @param debug: Debug level
     @type debug: int
     @return:
@@ -901,7 +903,7 @@ def check_state(drms, debug=0):
 
     # Open or create a database.
 
-    database_connection = DatabaseConnection(file_path=os.path.join(drms.working_directory, database_file_name))
+    database_connection = DatabaseConnection(file_path=os.path.join(stage.working_directory, database_file_name))
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
     # Get all Processes from the database that have no state set.

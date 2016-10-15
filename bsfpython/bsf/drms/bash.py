@@ -32,12 +32,14 @@ import os
 from bsf.process import Executable
 
 
-def submit(drms, debug=0):
-    """Submit each C{bsf.process.Executable} object of a C{DRMS} object
-    by writing a GNU Bourne-Again Shell (BASH) script into the C{DRMS.work_directory}.
+def submit(stage, debug=0):
+    """Submit each C{bsf.process.Executable} of a C{bsf.Stage}.
 
-    @param drms: Distributed Resource Management System (C{DRMS})
-    @type drms: DRMS
+    Submits each C{bsf.process.Executable} by writing a GNU Bourne-Again Shell (BASH) script
+    into the C{bsf.Stage.work_directory}.
+
+    @param stage: C{bsf.Stage}
+    @type stage: bsf.Stage
     @param debug: Debug level
     @type debug: int
     @return:
@@ -52,7 +54,7 @@ def submit(drms, debug=0):
         output += "# BSF-Python debug mode: {}\n".format(debug)
         output += "\n"
 
-    for executable in drms.executables:
+    for executable in stage.executable_list:
         assert isinstance(executable, Executable)
         if not executable.submit:
             output += '# '
@@ -64,7 +66,7 @@ def submit(drms, debug=0):
         output += "\n"
         output += "\n"
 
-    script_path = os.path.join(drms.working_directory, 'bsfpython_bash_{}.bash'.format(drms.name))
+    script_path = os.path.join(stage.working_directory, 'bsfpython_bash_{}.bash'.format(stage.name))
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()
@@ -72,19 +74,18 @@ def submit(drms, debug=0):
     return
 
 
-def check_state(drms, debug=0):
-    """Check the state of each C{bsf.process.Executable} object in the
-    Distributed Resource Management System (C{DRMS}).
+def check_state(stage, debug=0):
+    """Check the state of each C{bsf.process.Executable} of a C{bsf.Stage}.
 
-    @param drms: Distributed Resource Management System (C{DRMS})
-    @type drms: DRMS
+    @param stage: C{bsf.Stage}
+    @type stage: bsf.Stage
     @param debug: Debug level
     @type debug: int
     @return:
     @rtype:
     """
 
-    if drms:
+    if stage:
         pass
 
     if debug:

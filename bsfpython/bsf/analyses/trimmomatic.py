@@ -44,8 +44,8 @@ class Trimmomatic(Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_trimmomatic: C{DRMS.name} for the Trimmomatic C{bsf.Analysis} stage
-    @type drms_name_trimmomatic: str
+    @cvar stage_name_trimmomatic: C{bsf.Stage.name} for the Trimmomatic stage
+    @type stage_name_trimmomatic: str
     @ivar adapter_path: Adapter file path
     @type adapter_path: str | unicode
     @ivar classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
@@ -55,8 +55,8 @@ class Trimmomatic(Analysis):
     name = 'Trimmomatic Analysis'
     prefix = 'trimmomatic'
 
-    # drms_name_trimmomatic = '_'.join((prefix, 'trimmomatic'))
-    drms_name_trimmomatic = prefix
+    # stage_name_trimmomatic = '_'.join((prefix, 'trimmomatic'))
+    stage_name_trimmomatic = prefix
 
     def __init__(
             self,
@@ -69,7 +69,7 @@ class Trimmomatic(Analysis):
             genome_directory=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             collection=None,
             comparisons=None,
             samples=None,
@@ -97,8 +97,8 @@ class Trimmomatic(Analysis):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.data.Collection}
         @type collection: bsf.data.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
@@ -123,7 +123,7 @@ class Trimmomatic(Analysis):
             genome_directory=genome_directory,
             e_mail=e_mail,
             debug=debug,
-            drms_list=drms_list,
+            stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
             samples=samples)
@@ -202,7 +202,7 @@ class Trimmomatic(Analysis):
 
         # Trimmomatic
 
-        drms_trimmomatic = self.get_drms(name=self.drms_name_trimmomatic)
+        stage_trimmomatic = self.get_stage(name=self.stage_name_trimmomatic)
 
         for sample in self.samples:
             assert isinstance(sample, Sample)
@@ -237,7 +237,7 @@ class Trimmomatic(Analysis):
                     if paired_reads.reads2 and not paired_reads.reads1:
                         raise Exception('PairedReads object with reads1 but no reads2 object.', UserWarning)
 
-                    prefix_trimmomatic = '_'.join((drms_trimmomatic.name, replicate_key))
+                    prefix_trimmomatic = '_'.join((stage_trimmomatic.name, replicate_key))
 
                     if self.debug > 0:
                         print 'Trimmomatic Prefix: {}'.format(prefix_trimmomatic)
@@ -261,7 +261,7 @@ class Trimmomatic(Analysis):
                             code_module='bsf.runnables.generic',
                             working_directory=self.project_directory,
                             file_path_dict=file_path_dict_trimmomatic))
-                    self.set_drms_runnable(drms=drms_trimmomatic, runnable=runnable_trimmomatic)
+                    self.set_stage_runnable(stage=stage_trimmomatic, runnable=runnable_trimmomatic)
 
                     # Create a new RunnableStepMakeDirectory in preparation of the Trimmomatic program.
 
@@ -456,11 +456,11 @@ class Trimmomatic(Analysis):
 
             for replicate_key in replicate_keys:
                 # The second read may still not be there.
-                if '_'.join((self.drms_name_trimmomatic, replicate_key)) not in self.runnable_dict:
+                if '_'.join((self.stage_name_trimmomatic, replicate_key)) not in self.runnable_dict:
                     continue
 
                 runnable_trimmomatic = self.runnable_dict[
-                    '_'.join((self.drms_name_trimmomatic, replicate_key))]
+                    '_'.join((self.stage_name_trimmomatic, replicate_key))]
                 assert isinstance(runnable_trimmomatic, Runnable)
                 file_path_dict_trimmomatic = runnable_trimmomatic.file_path_dict
 

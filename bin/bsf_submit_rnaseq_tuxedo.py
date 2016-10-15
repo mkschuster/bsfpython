@@ -60,7 +60,7 @@ if name_space.debug:
 
 tuxedo.run()
 tuxedo.check_state()
-tuxedo.submit(drms_name=name_space.stage)
+tuxedo.submit(name=name_space.stage)
 
 print 'RNA-Seq Analysis'
 print 'Project name:      ', tuxedo.project_name

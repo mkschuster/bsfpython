@@ -47,24 +47,24 @@ class Tuxedo(Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_run_tophat: C{DRMS.name} for the run Tophat C{bsf.Analysis} stage
-    @type drms_name_run_tophat: str
-    @cvar drms_name_process_tophat: C{DRMS.name} for the process Tophat C{bsf.Analysis} stage
-    @type drms_name_process_tophat: str
-    @cvar drms_name_run_cufflinks: C{DRMS.name} for the run Cufflinks C{bsf.Analysis} stage
-    @type drms_name_run_cufflinks: str
-    @cvar drms_name_process_cufflinks: C{DRMS.name} for the process Cufflinks C{bsf.Analysis} stage
-    @type drms_name_process_cufflinks: str
-    @cvar drms_name_run_cuffmerge: C{DRMS.name} for the Cuffmerge C{bsf.Analysis} stage
-    @type drms_name_run_cuffmerge: str
-    @cvar drms_name_run_cuffquant: C{DRMS.name} for the Cuffquant C{bsf.Analysis} stage
-    @type drms_name_run_cuffquant: str
-    @cvar drms_name_run_cuffnorm: C{DRMS.name} for the Cuffnorm C{bsf.Analysis} stage
-    @type drms_name_run_cuffnorm: str
-    @cvar drms_name_run_cuffdiff: C{DRMS.name} for the Cuffdiff C{bsf.Analysis} stage
-    @type drms_name_run_cuffdiff: str
-    @cvar drms_name_process_cuffdiff: C{DRMS.name} for the process Cuffdiff C{bsf.Analysis} stage
-    @type drms_name_process_cuffdiff: str
+    @cvar stage_name_run_tophat: C{bsf.Stage.name} for the run Tophat stage
+    @type stage_name_run_tophat: str
+    @cvar stage_name_process_tophat: C{bsf.Stage.name} for the process Tophat stage
+    @type stage_name_process_tophat: str
+    @cvar stage_name_run_cufflinks: C{bsf.Stage.name} for the run Cufflinks stage
+    @type stage_name_run_cufflinks: str
+    @cvar stage_name_process_cufflinks: C{bsf.Stage.name} for the process Cufflinks stage
+    @type stage_name_process_cufflinks: str
+    @cvar stage_name_run_cuffmerge: C{bsf.Stage.name} for the Cuffmerge stage
+    @type stage_name_run_cuffmerge: str
+    @cvar stage_name_run_cuffquant: C{bsf.Stage.name} for the Cuffquant stage
+    @type stage_name_run_cuffquant: str
+    @cvar stage_name_run_cuffnorm: C{bsf.Stage.name} for the Cuffnorm stage
+    @type stage_name_run_cuffnorm: str
+    @cvar stage_name_run_cuffdiff: C{bsf.Stage.name} for the Cuffdiff stage
+    @type stage_name_run_cuffdiff: str
+    @cvar stage_name_process_cuffdiff: C{bsf.Stage.name} for the process Cuffdiff stage
+    @type stage_name_process_cuffdiff: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
     @ivar cmp_file: Comparison file
@@ -90,17 +90,17 @@ class Tuxedo(Analysis):
     prefix = 'rnaseq'
 
     # Replicate stage
-    drms_name_run_tophat = '_'.join((prefix, 'run_tophat'))
-    drms_name_process_tophat = '_'.join((prefix, 'process_tophat'))
-    drms_name_run_cufflinks = '_'.join((prefix, 'run_cufflinks'))
-    drms_name_process_cufflinks = '_'.join((prefix, 'process_cufflinks'))
+    stage_name_run_tophat = '_'.join((prefix, 'run_tophat'))
+    stage_name_process_tophat = '_'.join((prefix, 'process_tophat'))
+    stage_name_run_cufflinks = '_'.join((prefix, 'run_cufflinks'))
+    stage_name_process_cufflinks = '_'.join((prefix, 'process_cufflinks'))
 
     # Comparison stage
-    drms_name_run_cuffmerge = '_'.join((prefix, 'cuffmerge'))
-    drms_name_run_cuffquant = '_'.join((prefix, 'cuffquant'))
-    drms_name_run_cuffnorm = '_'.join((prefix, 'cuffnorm'))
-    drms_name_run_cuffdiff = '_'.join((prefix, 'cuffdiff'))
-    drms_name_process_cuffdiff = '_'.join((prefix, 'process_cuffdiff'))
+    stage_name_run_cuffmerge = '_'.join((prefix, 'cuffmerge'))
+    stage_name_run_cuffquant = '_'.join((prefix, 'cuffquant'))
+    stage_name_run_cuffnorm = '_'.join((prefix, 'cuffnorm'))
+    stage_name_run_cuffdiff = '_'.join((prefix, 'cuffdiff'))
+    stage_name_process_cuffdiff = '_'.join((prefix, 'process_cuffdiff'))
 
     @classmethod
     def get_prefix_rnaseq_run_tophat(cls, replicate_key):
@@ -111,7 +111,7 @@ class Tuxedo(Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_run_tophat, replicate_key))
+        return '_'.join((cls.stage_name_run_tophat, replicate_key))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffmerge(cls, comparison_key):
@@ -122,7 +122,7 @@ class Tuxedo(Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_run_cuffmerge, comparison_key))
+        return '_'.join((cls.stage_name_run_cuffmerge, comparison_key))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffquant(cls, comparison_key):
@@ -133,7 +133,7 @@ class Tuxedo(Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_run_cuffquant, comparison_key))
+        return '_'.join((cls.stage_name_run_cuffquant, comparison_key))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffnorm(cls, comparison_key):
@@ -144,7 +144,7 @@ class Tuxedo(Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_run_cuffnorm, comparison_key))
+        return '_'.join((cls.stage_name_run_cuffnorm, comparison_key))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffdiff(cls, comparison_key):
@@ -155,7 +155,7 @@ class Tuxedo(Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_run_cuffdiff, comparison_key))
+        return '_'.join((cls.stage_name_run_cuffdiff, comparison_key))
 
     @classmethod
     def get_prefix_rnaseq_process_cuffdiff(cls, comparison_key):
@@ -166,7 +166,7 @@ class Tuxedo(Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_process_cuffdiff, comparison_key))
+        return '_'.join((cls.stage_name_process_cuffdiff, comparison_key))
 
     def __init__(
             self,
@@ -179,7 +179,7 @@ class Tuxedo(Analysis):
             genome_directory=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             collection=None,
             comparisons=None,
             samples=None,
@@ -214,8 +214,8 @@ class Tuxedo(Analysis):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.data.Collection}
         @type collection: bsf.data.Collection
         @param comparisons: Python C{dict} of Python C{str} (comparison name) key objects and
@@ -256,7 +256,7 @@ class Tuxedo(Analysis):
             genome_directory=genome_directory,
             e_mail=e_mail,
             debug=debug,
-            drms_list=drms_list,
+            stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
             samples=samples)
@@ -649,13 +649,10 @@ class Tuxedo(Analysis):
         else:
             novel_transcripts = True
 
-        # Initialise the Distributed Resource Management System (DRMS) objects for
-        # TopHat and Cufflinks Executable objects.
-
-        drms_run_tophat = self.get_drms(name=self.drms_name_run_tophat)
-        drms_process_tophat = self.get_drms(name=self.drms_name_process_tophat)
-        drms_run_cufflinks = self.get_drms(name=self.drms_name_run_cufflinks)
-        drms_process_cufflinks = self.get_drms(name=self.drms_name_process_cufflinks)
+        stage_run_tophat = self.get_stage(name=self.stage_name_run_tophat)
+        stage_process_tophat = self.get_stage(name=self.stage_name_process_tophat)
+        stage_run_cufflinks = self.get_stage(name=self.stage_name_run_cufflinks)
+        stage_process_cufflinks = self.get_stage(name=self.stage_name_process_cufflinks)
 
         process_cufflinks_dependencies = list()
 
@@ -684,11 +681,11 @@ class Tuxedo(Analysis):
 
                 # TODO: Activate the new code once the bsf_run_rnaseq_tophat.py script has been retired.
 
-                # prefix_run_tophat = '_'.join((drms_run_tophat.name, replicate_key))
+                # prefix_run_tophat = '_'.join((stage_run_tophat.name, replicate_key))
 
                 file_path_dict_tophat = {
                     # The output directory deviates from the prefix_run_tophat that itself is based on
-                    # drms_run_tophat.name. Both rnaseq_run_tophat and rnaseq_process_tophat processes should
+                    # stage_run_tophat.name. Both rnaseq_run_tophat and rnaseq_process_tophat processes should
                     # use the same rnaseq_tophat directory.
                     # output_directory=prefix_run_tophat,
                     'output_directory': '_'.join(('rnaseq_tophat', replicate_key)),
@@ -701,8 +698,8 @@ class Tuxedo(Analysis):
                 #                 working_directory=self.genome_directory,
                 #                 file_path_dict=file_path_dict_tophat,
                 #                 debug=self.debug))
-                # executable_run_tophat = self.set_drms_runnable(
-                #         drms=drms_run_tophat,
+                # executable_run_tophat = self.set_stage_runnable(
+                #         stage=stage_run_tophat,
                 #         runnable=runnable_run_tophat)
                 #
                 # Create a new Tophat RunnableStep.
@@ -730,7 +727,7 @@ class Tuxedo(Analysis):
                     value=file_path_dict_tophat['output_directory'])
                 tophat.add_option_long(
                     key='num-threads',
-                    value=str(drms_run_tophat.threads))
+                    value=str(stage_run_tophat.threads))
                 # TODO: These really are properties of the Reads, PairedReads or Sample objects rather than an Analysis.
                 # TODO: Move the ConfigParser code.
                 if config_parser.has_option(section=config_section, option='insert_size'):
@@ -782,25 +779,25 @@ class Tuxedo(Analysis):
                 # has not been retired.
 
                 pickler_dict_run_tophat = {
-                    'prefix': drms_run_tophat.name,
+                    'prefix': stage_run_tophat.name,
                     'replicate_key': replicate_key,
                     'tophat_executable': tophat,
                 }
 
                 pickler_path = os.path.join(
                     self.genome_directory,
-                    '{}_{}.pkl'.format(drms_run_tophat.name, replicate_key))
+                    '{}_{}.pkl'.format(stage_run_tophat.name, replicate_key))
                 pickler_file = open(pickler_path, 'wb')
                 pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
                 pickler.dump(obj=pickler_dict_run_tophat)
                 pickler_file.close()
 
-                run_tophat = drms_run_tophat.add_executable(
+                run_tophat = stage_run_tophat.add_executable(
                     executable=Executable(
-                        name='_'.join((drms_run_tophat.name, replicate_key)),
+                        name='_'.join((stage_run_tophat.name, replicate_key)),
                         program='bsf_run_rnaseq_tophat.py'))
 
-                # The rnaseq_run_tophat Executable requires no DRMS.dependencies.
+                # The rnaseq_run_tophat Executable requires no Stage.dependencies.
 
                 # Set rnaseq_run_tophat options.
                 self.set_command_configuration(command=run_tophat)
@@ -811,9 +808,9 @@ class Tuxedo(Analysis):
 
                 # Create a new rnaseq_process_tophat Executable.
 
-                process_tophat = drms_process_tophat.add_executable(
+                process_tophat = stage_process_tophat.add_executable(
                     executable=Executable(
-                        name='_'.join((drms_process_tophat.name, replicate_key)),
+                        name='_'.join((stage_process_tophat.name, replicate_key)),
                         program='bsf_rnaseq_process_tophat2.sh'))
                 process_tophat.dependencies.append(run_tophat.name)
 
@@ -844,11 +841,11 @@ class Tuxedo(Analysis):
 
                 # Create a Cufflinks Runnable per replicate (replicate_key).
 
-                prefix_run_cufflinks = '_'.join((drms_run_cufflinks.name, replicate_key))
+                prefix_run_cufflinks = '_'.join((stage_run_cufflinks.name, replicate_key))
 
                 file_path_dict_cufflinks = {
                     # The output directory deviates from the prefix_run_cufflinks that itself is based on
-                    # drms_run_cufflinks.name. Both rnaseq_run_cufflinks and rnaseq_process_cufflinks processes
+                    # stage_run_cufflinks.name. Both rnaseq_run_cufflinks and rnaseq_process_cufflinks processes
                     # should use the same rnaseq_cufflinks directory.
                     # output_directory=prefix_run_cufflinks,
                     'output_directory': '_'.join(('rnaseq_cufflinks', replicate_key)),
@@ -867,8 +864,8 @@ class Tuxedo(Analysis):
 
                 # Create an Executable for running the Cufflinks Runnable.
 
-                executable_run_cufflinks = self.set_drms_runnable(
-                    drms=drms_run_cufflinks,
+                executable_run_cufflinks = self.set_stage_runnable(
+                    stage=stage_run_cufflinks,
                     runnable=runnable_run_cufflinks)
                 executable_run_cufflinks.dependencies.append(run_tophat.name)
 
@@ -926,7 +923,7 @@ class Tuxedo(Analysis):
 
                 cufflinks.add_option_long(
                     key='num-threads',
-                    value=str(drms_run_cufflinks.threads))
+                    value=str(stage_run_cufflinks.threads))
 
                 cufflinks.add_switch_long(
                     key='quiet')
@@ -944,9 +941,9 @@ class Tuxedo(Analysis):
         # Create one process_cufflinks Executable to process all sub-directories.
 
         if len(process_cufflinks_dependencies):
-            process_cufflinks = drms_process_cufflinks.add_executable(
+            process_cufflinks = stage_process_cufflinks.add_executable(
                 executable=Executable(
-                    name=drms_process_cufflinks.name,
+                    name=stage_process_cufflinks.name,
                     program='bsf_rnaseq_process_cufflinks.R'))
             process_cufflinks.dependencies.extend(process_cufflinks_dependencies)
 
@@ -964,14 +961,11 @@ class Tuxedo(Analysis):
 
         run_cuffquant_before_cuffdiff = False
 
-        # Initialise the Distributed Resource Management System (DRMS) objects for
-        # Cuffmerge and Cuffdiff Executable objects.
-
-        drms_run_cuffmerge = self.get_drms(name=self.drms_name_run_cuffmerge)
-        drms_run_cuffquant = self.get_drms(name=self.drms_name_run_cuffquant)
-        drms_run_cuffnorm = self.get_drms(name=self.drms_name_run_cuffnorm)
-        drms_run_cuffdiff = self.get_drms(name=self.drms_name_run_cuffdiff)
-        drms_process_cuffdiff = self.get_drms(name=self.drms_name_process_cuffdiff)
+        stage_run_cuffmerge = self.get_stage(name=self.stage_name_run_cuffmerge)
+        stage_run_cuffquant = self.get_stage(name=self.stage_name_run_cuffquant)
+        stage_run_cuffnorm = self.get_stage(name=self.stage_name_run_cuffnorm)
+        stage_run_cuffdiff = self.get_stage(name=self.stage_name_run_cuffdiff)
+        stage_process_cuffdiff = self.get_stage(name=self.stage_name_process_cuffdiff)
 
         # The Cuffmerge process generates temporary files in the working directory that
         # have the same name for each comparison. If more than one Cuffmerge process runs at the same time,
@@ -1003,8 +997,8 @@ class Tuxedo(Analysis):
                     working_directory=self.genome_directory,
                     file_path_dict=file_path_dict_cuffmerge,
                     debug=self.debug))
-            executable_run_cuffmerge = self.set_drms_runnable(
-                drms=drms_run_cuffmerge,
+            executable_run_cuffmerge = self.set_stage_runnable(
+                stage=stage_run_cuffmerge,
                 runnable=runnable_run_cuffmerge)
             # Set a dependency on the previous Cuffmerge process to avoid file contention.
             if previous_cuffmerge_name:
@@ -1025,7 +1019,7 @@ class Tuxedo(Analysis):
                 value=file_path_dict_cuffmerge['output_directory'])
             cuffmerge.add_option_long(
                 key='num-threads',
-                value=str(drms_run_cuffmerge.threads))
+                value=str(stage_run_cuffmerge.threads))
             cuffmerge.add_option_long(
                 key='ref-gtf',
                 value=self.transcriptome_gtf_path)
@@ -1090,12 +1084,12 @@ class Tuxedo(Analysis):
                         # Wait for each Cufflinks replicate to finish, before Cuffmerge can run.
 
                         executable_run_cuffmerge.dependencies.append(
-                            '_'.join((self.drms_name_run_cufflinks, replicate_key)))
+                            '_'.join((self.stage_name_run_cufflinks, replicate_key)))
 
                         # Create a Cuffquant Runnable per comparison (comparison_key) and replicate (replicate_key)
                         # on the basis of the Cuffmerge GTF file.
 
-                        prefix_cuffquant = '_'.join((drms_run_cuffquant.name, comparison_key, replicate_key))
+                        prefix_cuffquant = '_'.join((stage_run_cuffquant.name, comparison_key, replicate_key))
 
                         file_path_dict_cuffquant = {
                             'output_directory': prefix_cuffquant,
@@ -1114,8 +1108,8 @@ class Tuxedo(Analysis):
                                 working_directory=self.genome_directory,
                                 file_path_dict=file_path_dict_cuffquant,
                                 debug=self.debug))
-                        executable_run_cuffquant = self.set_drms_runnable(
-                            drms=drms_run_cuffquant,
+                        executable_run_cuffquant = self.set_stage_runnable(
+                            stage=stage_run_cuffquant,
                             runnable=runnable_run_cuffquant)
 
                         # Each Cuffquant process depends on Cuffmerge.
@@ -1136,7 +1130,7 @@ class Tuxedo(Analysis):
                             value=file_path_dict_cuffquant['output_directory'])
                         cuffquant.add_option_long(
                             key='num-threads',
-                            value=str(drms_run_cuffquant.threads))
+                            value=str(stage_run_cuffquant.threads))
                         if self.mask_gtf_path:
                             cuffquant.add_option_long(
                                 key='mask-file',
@@ -1189,7 +1183,7 @@ class Tuxedo(Analysis):
 
             # Create a Cuffnorm Runnable per comparison.
 
-            prefix_cuffnorm = '_'.join((drms_run_cuffnorm.name, comparison_key))
+            prefix_cuffnorm = '_'.join((stage_run_cuffnorm.name, comparison_key))
 
             file_path_dict_cuffnorm = {
                 'output_directory': prefix_cuffnorm,
@@ -1203,8 +1197,8 @@ class Tuxedo(Analysis):
                     working_directory=self.genome_directory,
                     file_path_dict=file_path_dict_cuffnorm,
                     debug=self.debug))
-            executable_run_cuffnorm = self.set_drms_runnable(
-                drms=drms_run_cuffnorm,
+            executable_run_cuffnorm = self.set_stage_runnable(
+                stage=stage_run_cuffnorm,
                 runnable=runnable_run_cuffnorm)
 
             executable_run_cuffnorm.dependencies.extend(cuffdiff_cuffnorm_dependencies)
@@ -1226,7 +1220,7 @@ class Tuxedo(Analysis):
                 value=','.join(cuffdiff_cuffnorm_labels))
             cuffnorm.add_option_long(
                 key='num-threads',
-                value=str(drms_run_cuffnorm.threads))
+                value=str(stage_run_cuffnorm.threads))
             if self.library_type:
                 cuffnorm.add_option_long(
                     key='library-type',
@@ -1246,7 +1240,7 @@ class Tuxedo(Analysis):
 
             # Create a Cuffdiff Runnable per comparison.
 
-            prefix_cuffdiff = '_'.join((drms_run_cuffdiff.name, comparison_key))
+            prefix_cuffdiff = '_'.join((stage_run_cuffdiff.name, comparison_key))
 
             file_path_dict_cuffdiff = {
                 'output_directory': prefix_cuffdiff,
@@ -1260,8 +1254,8 @@ class Tuxedo(Analysis):
                     working_directory=self.genome_directory,
                     file_path_dict=file_path_dict_cuffdiff,
                     debug=self.debug))
-            executable_run_cuffdiff = self.set_drms_runnable(
-                drms=drms_run_cuffdiff,
+            executable_run_cuffdiff = self.set_stage_runnable(
+                stage=stage_run_cuffdiff,
                 runnable=runnable_run_cuffdiff)
 
             if run_cuffquant_before_cuffdiff:
@@ -1288,7 +1282,7 @@ class Tuxedo(Analysis):
                 value=','.join(cuffdiff_cuffnorm_labels))
             cuffdiff.add_option_long(
                 key='num-threads',
-                value=str(drms_run_cuffdiff.threads))
+                value=str(stage_run_cuffdiff.threads))
             if self.mask_gtf_path:
                 cuffdiff.add_option_long(
                     key='mask-file',
@@ -1330,9 +1324,9 @@ class Tuxedo(Analysis):
 
             # Create a new rnaseq_process_cuffdiff Executable.
 
-            process_cuffdiff = drms_process_cuffdiff.add_executable(
+            process_cuffdiff = stage_process_cuffdiff.add_executable(
                 executable=Executable(
-                    name='_'.join((drms_process_cuffdiff.name, comparison_key)),
+                    name='_'.join((stage_process_cuffdiff.name, comparison_key)),
                     program='bsf_rnaseq_process_cuffdiff.R'))
             process_cuffdiff.dependencies.append(executable_run_cuffdiff.name)
 

@@ -40,10 +40,10 @@ output_directory_name = 'bsfpython_sge_output'
 
 
 class ProcessSGE(object):
-    """The C{bsf.drms.sge.ProcessSGE} class models one process in the Son of Grid Engine (SGE)
-    Distributed Resource Management System.
+    """C{bsf.drms.sge.ProcessSGE} class representing one Son of Grid Engine (SGE) process.
 
     The instance variable names result from the SGE accounting file. See man 5 accounting.
+
     @ivar process_sge_id: Primary key
     @type process_sge_id: int
     @ivar qname: Name of the cluster queue in which the job has run
@@ -139,7 +139,7 @@ class ProcessSGE(object):
             pe_taskid=None,
             maxvmem=None,
             arid=None):
-        """Initialise a C{bsf.drms.sge.ProcessSGE} object.
+        """Initialise a C{bsf.drms.sge.ProcessSGE}.
 
         @param process_sge_id: Primary key
         @type process_sge_id: int
@@ -249,7 +249,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
     """
 
     def __init__(self, database_connection):
-        """Initialise a C{bsf.drms.sge.ProcessSGEAdaptor} object.
+        """Initialise a C{bsf.drms.sge.ProcessSGEAdaptor}.
 
         @param database_connection: C{bsf.database.DatabaseConnection}
         @type database_connection: bsf.database.DatabaseConnection
@@ -425,13 +425,15 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
         return
 
 
-def submit(drms, debug=0):
-    """Submit each C{bsf.process.Executable} object of a C{DRMS} object into the
+def submit(stage, debug=0):
+    """Submit each C{bsf.process.Executable} of a C{bsf.Stage}.
+
+    Submits each C{bsf.process.Executable} into the
     Son of Grid Engine (SGE)
     Distributed Resource Management System (DRMS).
 
-    @param drms: Distributed Resource Management System (C{DRMS})
-    @type drms: DRMS
+    @param stage: C{bsf.Stage}
+    @type stage: bsf.Stage
     @param debug: Debug level
     @type debug: int
     @return:
@@ -446,14 +448,14 @@ def submit(drms, debug=0):
         output += "# BSF-Python debug mode: {}\n".format(debug)
         output += "\n"
 
-    for executable in drms.executables:
+    for executable in stage.executable_list:
         assert isinstance(executable, Executable)
 
         command = list()
 
         command.append('qsub')
 
-        # Add DRMS-specific options.
+        # Add Stage-specific options.
 
         # Clear settings inherited from $SGE_ROOT/$SGE_CELL/common/sge_request,
         # which currently specifies the current working directory (-cwd), which is
@@ -470,7 +472,7 @@ def submit(drms, debug=0):
         # Binary or script
 
         command.append('-b')
-        if drms.is_script:
+        if stage.is_script:
             command.append('no')
         else:
             command.append('yes')
@@ -481,34 +483,34 @@ def submit(drms, debug=0):
 
         # If a hard memory limit has been set, use it as the minimum free required.
 
-        if drms.memory_limit_hard:
-            if not drms.memory_free_virtual:
-                drms.memory_free_virtual = drms.memory_limit_hard
+        if stage.memory_limit_hard:
+            if not stage.memory_free_virtual:
+                stage.memory_free_virtual = stage.memory_limit_hard
 
         resource_list = list()
 
         # Require physical memory to be free ...
-        if drms.memory_free_mem:
-            resource_list.append('mem_free={}'.format(drms.memory_free_mem))
+        if stage.memory_free_mem:
+            resource_list.append('mem_free={}'.format(stage.memory_free_mem))
 
         # Require swap memory to be free ...
-        if drms.memory_free_swap:
-            resource_list.append('swap_free={}'.format(drms.memory_free_swap))
+        if stage.memory_free_swap:
+            resource_list.append('swap_free={}'.format(stage.memory_free_swap))
 
         # Require virtual memory to be free ...
-        if drms.memory_free_virtual:
-            resource_list.append('virtual_free={}'.format(drms.memory_free_virtual))
+        if stage.memory_free_virtual:
+            resource_list.append('virtual_free={}'.format(stage.memory_free_virtual))
 
         # Set hard virtual memory limit ...
-        if drms.memory_limit_hard:
-            resource_list.append('h_vmem={}'.format(drms.memory_limit_hard))
+        if stage.memory_limit_hard:
+            resource_list.append('h_vmem={}'.format(stage.memory_limit_hard))
 
         # Set soft virtual memory limit ...
-        if drms.memory_limit_soft:
-            resource_list.append('s_vmem={}'.format(drms.memory_limit_soft))
+        if stage.memory_limit_soft:
+            resource_list.append('s_vmem={}'.format(stage.memory_limit_soft))
 
         # Set the host names ...
-        for node_name in drms.node_list_include:
+        for node_name in stage.node_list_include:
             resource_list.append('hostname={}'.format(node_name))
 
         if len(resource_list):
@@ -517,29 +519,29 @@ def submit(drms, debug=0):
 
         # Parallel environment
 
-        if drms.parallel_environment:
+        if stage.parallel_environment:
             command.append('-pe')
-            command.append(drms.parallel_environment)
-            command.append(str(drms.threads))
+            command.append(stage.parallel_environment)
+            command.append(str(stage.threads))
 
         # Queue name
 
-        if drms.queue:
+        if stage.queue:
             command.append('-q')
-            command.append(drms.queue)
+            command.append(stage.queue)
 
         # Working directory, standard output and standard error streams.
 
-        if drms.working_directory:
+        if stage.working_directory:
             command.append('-wd')
-            command.append(drms.working_directory)
+            command.append(stage.working_directory)
 
             # Write standard output and standard error streams into an
             # output directory under the working directory.
             # Create the output directory first via its absolute path,
             # then set standard error and standard output relative to it.
 
-            output_directory_path = os.path.join(drms.working_directory, output_directory_name)
+            output_directory_path = os.path.join(stage.working_directory, output_directory_name)
 
             if not os.path.isdir(output_directory_path):
                 # In principle, a race condition could occur as the directory
@@ -629,7 +631,7 @@ def submit(drms, debug=0):
         output += ' '.join(command) + "\n"
         output += "\n"
 
-    script_path = os.path.join(drms.working_directory, 'bsfpython_sge_{}.bash'.format(drms.name))
+    script_path = os.path.join(stage.working_directory, 'bsfpython_sge_{}.bash'.format(stage.name))
     script_file = open(name=script_path, mode='w')
     script_file.write(output)
     script_file.close()
@@ -637,19 +639,18 @@ def submit(drms, debug=0):
     return
 
 
-def check_state(drms, debug=0):
-    """Check the state of each C{bsf.process.Executable} object in the
-    Distributed Resource Management System (C{DRMS}).
+def check_state(stage, debug=0):
+    """Check the state of each C{bsf.process.Executable} of a C{bsf.Stage}.
 
-    @param drms: Distributed Resource Management System (C{DRMS})
-    @type drms: DRMS
+    @param stage: C{bsf.Stage}
+    @type stage: bsf.Stage
     @param debug: Debug level
     @type debug: int
     @return:
     @rtype:
     """
 
-    if drms:
+    if stage:
         pass
 
     if debug:

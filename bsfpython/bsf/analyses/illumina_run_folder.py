@@ -45,14 +45,14 @@ class IlluminaRunFolderArchive(Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_pre_process: C{DRMS.name} for the pre-process stage
-    @type drms_name_pre_process: str
-    @cvar drms_name_base_calls: C{DRMS.name} for the base calls stage
-    @type drms_name_base_calls: str
-    @cvar drms_name_intensities: C{DRMS.name} for the intensities stage
-    @type drms_name_intensities: str
-    @cvar drms_name_archive_folder: C{DRMS.name} for the archive folder stage
-    @type drms_name_archive_folder: str
+    @cvar stage_name_pre_process: C{bsf.Stage.name} for the pre-process stage
+    @type stage_name_pre_process: str
+    @cvar stage_name_base_calls: C{bsf.Stage.name} for the base calls stage
+    @type stage_name_base_calls: str
+    @cvar stage_name_intensities: C{bsf.Stage.name} for the intensities stage
+    @type stage_name_intensities: str
+    @cvar stage_name_archive_folder: C{bsf.Stage.name} for the archive folder stage
+    @type stage_name_archive_folder: str
     @cvar compress_archive_files: Compress archive files with GNU Zip
     @type compress_archive_files: bool
     @ivar run_directory: File path to an I{Illumina Run Folder}
@@ -67,16 +67,16 @@ class IlluminaRunFolderArchive(Analysis):
     name = 'Illumina Run Folder Archive Analysis'
     prefix = 'irf_archive'
 
-    drms_name_pre_process = '_'.join((prefix, 'pre_process'))
-    drms_name_base_calls = '_'.join((prefix, 'base_calls'))
-    drms_name_intensities = '_'.join((prefix, 'intensities'))
-    drms_name_archive_folder = '_'.join((prefix, 'folder'))
+    stage_name_pre_process = '_'.join((prefix, 'pre_process'))
+    stage_name_base_calls = '_'.join((prefix, 'base_calls'))
+    stage_name_intensities = '_'.join((prefix, 'intensities'))
+    stage_name_archive_folder = '_'.join((prefix, 'folder'))
 
     compress_archive_files = True
 
     @classmethod
     def get_prefix_pre_process(cls, project_name):
-        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf..process.Executable} of this C{bsf.Analysis}.
+        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this C{bsf.Analysis}.
 
         @param project_name: A project name
         @type project_name: str
@@ -84,7 +84,7 @@ class IlluminaRunFolderArchive(Analysis):
             C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_pre_process, project_name))
+        return '_'.join((cls.stage_name_pre_process, project_name))
 
     @classmethod
     def get_prefix_base_calls(cls, project_name, lane):
@@ -98,7 +98,7 @@ class IlluminaRunFolderArchive(Analysis):
             C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_base_calls, project_name, lane))
+        return '_'.join((cls.stage_name_base_calls, project_name, lane))
 
     @classmethod
     def get_prefix_intensities(cls, project_name, lane):
@@ -112,7 +112,7 @@ class IlluminaRunFolderArchive(Analysis):
             C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_intensities, project_name, lane))
+        return '_'.join((cls.stage_name_intensities, project_name, lane))
 
     @classmethod
     def get_prefix_archive_folder(cls, project_name):
@@ -124,7 +124,7 @@ class IlluminaRunFolderArchive(Analysis):
             C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_archive_folder, project_name))
+        return '_'.join((cls.stage_name_archive_folder, project_name))
 
     def __init__(
             self,
@@ -137,7 +137,7 @@ class IlluminaRunFolderArchive(Analysis):
             genome_directory=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             collection=None,
             comparisons=None,
             samples=None,
@@ -167,8 +167,8 @@ class IlluminaRunFolderArchive(Analysis):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.data.Collection}
         @type collection: bsf.data.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
@@ -198,7 +198,7 @@ class IlluminaRunFolderArchive(Analysis):
             genome_directory=genome_directory,
             e_mail=e_mail,
             debug=debug,
-            drms_list=drms_list,
+            stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
             samples=samples)
@@ -248,6 +248,7 @@ class IlluminaRunFolderArchive(Analysis):
         via a section of a C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
+
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
@@ -288,7 +289,7 @@ class IlluminaRunFolderArchive(Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.Analysis}.
+        """Run a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.Analysis}.
 
         Archive an I{Illumina Run Folder} in a format suitable for magnetic tape libraries.
 
@@ -397,10 +398,10 @@ class IlluminaRunFolderArchive(Analysis):
 
         super(IlluminaRunFolderArchive, self).run()
 
-        drms_pre_process_folder = self.get_drms(name=self.drms_name_pre_process)
-        drms_compress_base_calls = self.get_drms(name=self.drms_name_base_calls)
-        drms_archive_intensities = self.get_drms(name=self.drms_name_intensities)
-        drms_archive_folder = self.get_drms(name=self.drms_name_archive_folder)
+        stage_pre_process_folder = self.get_stage(name=self.stage_name_pre_process)
+        stage_compress_base_calls = self.get_stage(name=self.stage_name_base_calls)
+        stage_archive_intensities = self.get_stage(name=self.stage_name_intensities)
+        stage_archive_folder = self.get_stage(name=self.stage_name_archive_folder)
 
         # Pre-process on folder level.
 
@@ -410,8 +411,8 @@ class IlluminaRunFolderArchive(Analysis):
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
 
-        executable_pre_process_folder = self.set_drms_runnable(
-            drms=drms_pre_process_folder,
+        executable_pre_process_folder = self.set_stage_runnable(
+            stage=stage_pre_process_folder,
             runnable=runnable_pre_process_folder)
 
         # executable_pre_process_folder.dependencies.extend()
@@ -514,9 +515,8 @@ class IlluminaRunFolderArchive(Analysis):
                     name=self.get_prefix_base_calls(project_name=self.project_name, lane=str(lane_int)),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
-
-            executable_base_calls = self.set_drms_runnable(
-                drms=drms_compress_base_calls,
+            executable_base_calls = self.set_stage_runnable(
+                stage=stage_compress_base_calls,
                 runnable=runnable_base_calls)
 
             # Set a dependency on the executable_pre_process_folder
@@ -557,8 +557,8 @@ class IlluminaRunFolderArchive(Analysis):
                         name=self.get_prefix_intensities(project_name=self.project_name, lane=str(lane_int)),
                         code_module='bsf.runnables.generic',
                         working_directory=self.project_directory))
-                executable_intensities = self.set_drms_runnable(
-                    drms=drms_archive_intensities,
+                executable_intensities = self.set_stage_runnable(
+                    stage=stage_archive_intensities,
                     runnable=runnable_intensities)
                 executable_intensities.dependencies.append(executable_pre_process_folder.name)
 
@@ -633,8 +633,8 @@ class IlluminaRunFolderArchive(Analysis):
                 name=self.get_prefix_archive_folder(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
-        executable_archive_folder = self.set_drms_runnable(
-            drms=drms_archive_folder,
+        executable_archive_folder = self.set_stage_runnable(
+            stage=stage_archive_folder,
             runnable=runnable_archive_folder)
         executable_archive_folder.dependencies.extend(archive_folder_dependencies)
 
@@ -687,12 +687,12 @@ class IlluminaRunFolderRestore(Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_extract_archive: C{DRMS.name} for the extract archive stage
-    @type drms_name_extract_archive: str
-    @cvar drms_name_compress_base_calls: C{DRMS.name} for the compress base calls stage
-    @type drms_name_compress_base_calls: str
-    @cvar drms_name_compress_logs: C{DRMS.name} for the compress logs stage
-    @type drms_name_compress_logs: str
+    @cvar stage_name_extract_archive: C{bsf.Stage.name} for the extract archive stage
+    @type stage_name_extract_archive: str
+    @cvar stage_name_compress_base_calls: C{bsf.Stage.name} for the compress base calls stage
+    @type stage_name_compress_base_calls: str
+    @cvar stage_name_compress_logs: C{bsf.Stage.name} for the compress logs stage
+    @type stage_name_compress_logs: str
     @cvar maximum_lane_number: Maximum number of lanes
     @type maximum_lane_number: int
     @ivar archive_directory: File path to an archive directory
@@ -715,9 +715,9 @@ class IlluminaRunFolderRestore(Analysis):
     name = 'Illumina Run Folder Restore Analysis'
     prefix = 'irf_restore'
 
-    drms_name_extract_archive = '_'.join((prefix, 'extract_archive'))
-    drms_name_compress_base_calls = '_'.join((prefix, 'compress_base_calls'))
-    drms_name_compress_logs = '_'.join((prefix, 'compress_logs'))
+    stage_name_extract_archive = '_'.join((prefix, 'extract_archive'))
+    stage_name_compress_base_calls = '_'.join((prefix, 'compress_base_calls'))
+    stage_name_compress_logs = '_'.join((prefix, 'compress_logs'))
 
     maximum_lane_number = 8
 
@@ -734,7 +734,7 @@ class IlluminaRunFolderRestore(Analysis):
             C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_extract_archive, project_name, lane))
+        return '_'.join((cls.stage_name_extract_archive, project_name, lane))
 
     @classmethod
     def get_prefix_compress_base_calls(cls, project_name, lane):
@@ -748,7 +748,7 @@ class IlluminaRunFolderRestore(Analysis):
             C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_compress_base_calls, project_name, lane))
+        return '_'.join((cls.stage_name_compress_base_calls, project_name, lane))
 
     @classmethod
     def get_prefix_compress_logs(cls, project_name):
@@ -760,7 +760,7 @@ class IlluminaRunFolderRestore(Analysis):
             C{bsfAnalysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_compress_logs, project_name))
+        return '_'.join((cls.stage_name_compress_logs, project_name))
 
     def __init__(
             self,
@@ -773,7 +773,7 @@ class IlluminaRunFolderRestore(Analysis):
             genome_directory=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             collection=None,
             comparisons=None,
             samples=None,
@@ -804,8 +804,8 @@ class IlluminaRunFolderRestore(Analysis):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.data.Collection}
         @type collection: bsf.data.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
@@ -837,7 +837,7 @@ class IlluminaRunFolderRestore(Analysis):
             genome_directory=genome_directory,
             e_mail=e_mail,
             debug=debug,
-            drms_list=drms_list,
+            stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
             samples=samples)
@@ -1006,9 +1006,9 @@ class IlluminaRunFolderRestore(Analysis):
 
         super(IlluminaRunFolderRestore, self).run()
 
-        drms_extract_archive = self.get_drms(name=self.drms_name_extract_archive)
-        drms_compress_base_calls = self.get_drms(name=self.drms_name_compress_base_calls)
-        drms_compress_logs = self.get_drms(name=self.drms_name_compress_logs)
+        stage_extract_archive = self.get_stage(name=self.stage_name_extract_archive)
+        stage_compress_base_calls = self.get_stage(name=self.stage_name_compress_base_calls)
+        stage_compress_logs = self.get_stage(name=self.stage_name_compress_logs)
 
         # Extract the IRF_Folder.tar file.
 
@@ -1018,8 +1018,8 @@ class IlluminaRunFolderRestore(Analysis):
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
                 file_path_dict=file_path_dict))
-        executable_extract_folder = self.set_drms_runnable(
-            drms=drms_extract_archive,
+        executable_extract_folder = self.set_stage_runnable(
+            stage=stage_extract_archive,
             runnable=runnable_extract_folder)
 
         extract_folder = runnable_extract_folder.add_runnable_step(
@@ -1039,8 +1039,8 @@ class IlluminaRunFolderRestore(Analysis):
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
                 file_path_dict=file_path_dict))
-        executable_compress_logs = self.set_drms_runnable(
-            drms=drms_compress_logs,
+        executable_compress_logs = self.set_stage_runnable(
+            stage=stage_compress_logs,
             runnable=runnable_compress_logs)
         executable_compress_logs.dependencies.append(executable_extract_folder.name)
 
@@ -1069,8 +1069,8 @@ class IlluminaRunFolderRestore(Analysis):
             code_module='bsf.runnables.generic',
             working_directory=self.project_directory,
             file_path_dict=file_path_dict))
-        executable_extract_intensities = self.set_drms_runnable(
-            drms=drms_extract_archive,
+        executable_extract_intensities = self.set_stage_runnable(
+            stage=stage_extract_archive,
             runnable=runnable_extract_intensities)
 
         # Sleep 60 seconds to allow the first process to create all directories.
@@ -1097,8 +1097,8 @@ class IlluminaRunFolderRestore(Analysis):
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
                 file_path_dict=file_path_dict))
-            self.set_drms_runnable(
-                drms=drms_extract_archive,
+            self.set_stage_runnable(
+                stage=stage_extract_archive,
                 runnable=runnable_extract_lane)
 
             # Sleep 90 seconds to allow the first process to create all directories.
@@ -1122,8 +1122,8 @@ class IlluminaRunFolderRestore(Analysis):
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
                 file_path_dict=file_path_dict))
-            executable_compress_base_calls = self.set_drms_runnable(
-                drms=drms_compress_base_calls,
+            executable_compress_base_calls = self.set_stage_runnable(
+                stage=stage_compress_base_calls,
                 runnable=runnable_compress_base_calls)
             executable_compress_base_calls.dependencies.append(executable_extract_intensities.name)
 

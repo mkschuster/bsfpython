@@ -329,11 +329,11 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.DRMS} dependencies
+            properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.DRMS}
+        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.Stage}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
@@ -409,10 +409,10 @@ class IlluminaToBam(Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_lane: C{DRMS.name} for the lane-specific stage
-    @type drms_name_lane: str
-    @cvar drms_name_cell: C{DRMS.name} for the flow cell-specific stage
-    @type drms_name_cell: str
+    @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
+    @type stage_name_lane: str
+    @cvar stage_name_cell: C{bsf.Stage.name} for the flow cell-specific stage
+    @type stage_name_cell: str
     @ivar run_directory: File path to an I{Illumina Run Folder}
     @type run_directory: str | unicode
     @ivar intensity_directory: File path to the I{Intensities} directory,
@@ -449,8 +449,8 @@ class IlluminaToBam(Analysis):
     name = 'Illumina To Bam Analysis'
     prefix = 'illumina_to_bam'
 
-    drms_name_lane = '_'.join((prefix, 'lane'))
-    drms_name_cell = '_'.join((prefix, 'cell'))
+    stage_name_lane = '_'.join((prefix, 'lane'))
+    stage_name_cell = '_'.join((prefix, 'cell'))
 
     @classmethod
     def get_prefix_illumina_to_bam_cell(cls, project_name):
@@ -461,7 +461,7 @@ class IlluminaToBam(Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_cell, project_name))
+        return '_'.join((cls.stage_name_cell, project_name))
 
     @classmethod
     def get_prefix_illumina_to_bam_lane(cls, project_name, lane):
@@ -474,7 +474,7 @@ class IlluminaToBam(Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_lane, project_name, lane))
+        return '_'.join((cls.stage_name_lane, project_name, lane))
 
     def __init__(
             self,
@@ -487,7 +487,7 @@ class IlluminaToBam(Analysis):
             genome_directory=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             collection=None,
             comparisons=None,
             samples=None,
@@ -527,8 +527,8 @@ class IlluminaToBam(Analysis):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.data.Collection}
         @type collection: bsf.data.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
@@ -580,7 +580,7 @@ class IlluminaToBam(Analysis):
             genome_directory=genome_directory,
             e_mail=e_mail,
             debug=debug,
-            drms_list=drms_list,
+            stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
             samples=samples)
@@ -893,8 +893,8 @@ class IlluminaToBam(Analysis):
 
         cell_dependency_list = list()
 
-        drms_lane = self.get_drms(name=self.drms_name_lane)
-        drms_cell = self.get_drms(name=self.drms_name_cell)
+        stage_lane = self.get_stage(name=self.stage_name_lane)
+        stage_cell = self.get_stage(name=self.stage_name_cell)
 
         for lane_int in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
 
@@ -912,7 +912,7 @@ class IlluminaToBam(Analysis):
                 'lane_md5': '{}_{:d}.bam.md5'.format(self.project_name, lane_int)
             }
 
-            # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
+            # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the Stage.
             runnable_lane = self.add_runnable(
                 runnable=Runnable(
                     name=self.get_prefix_illumina_to_bam_lane(project_name=self.project_name, lane=lane_str),
@@ -922,8 +922,8 @@ class IlluminaToBam(Analysis):
 
             # TODO: The Runnable class could have dependencies just like the Executable class so that they could be
             # passed on upon creation of the Executable from the Runnable via Executable.from_analysis_runnable().
-            executable_lane = self.set_drms_runnable(
-                drms=drms_lane,
+            executable_lane = self.set_stage_runnable(
+                stage=stage_lane,
                 runnable=runnable_lane)
             executable_lane.dependencies.append(
                 IlluminaRunFolderRestore.get_prefix_compress_base_calls(
@@ -1101,8 +1101,8 @@ class IlluminaToBam(Analysis):
                 working_directory=self.project_directory,
                 file_path_dict=file_path_dict_cell))
 
-        executable_cell = self.set_drms_runnable(
-            drms=drms_cell,
+        executable_cell = self.set_stage_runnable(
+            stage=stage_cell,
             runnable=runnable_cell)
         executable_cell.dependencies.extend(cell_dependency_list)
 
@@ -1125,10 +1125,10 @@ class BamIndexDecoder(Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_lane: C{DRMS.name} for the lane-specific stage
-    @type drms_name_lane: str
-    @cvar drms_name_cell: C{DRMS.name} for the flow cell-specific stage
-    @type drms_name_cell: str
+    @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
+    @type stage_name_lane: str
+    @cvar stage_name_cell: C{bsf.Stage.name} for the flow cell-specific stage
+    @type stage_name_cell: str
     @ivar hash_algorithm: Use a BSF-specific hashing algorithm for demultiplexing
     @type hash_algorithm: bool
     @ivar library_path: Library annotation file path
@@ -1156,8 +1156,8 @@ class BamIndexDecoder(Analysis):
     name = 'Bam Index Decoder Analysis'
     prefix = 'bam_index_decoder'
 
-    drms_name_lane = '_'.join((prefix, 'lane'))
-    drms_name_cell = '_'.join((prefix, 'cell'))
+    stage_name_lane = '_'.join((prefix, 'lane'))
+    stage_name_cell = '_'.join((prefix, 'cell'))
 
     @classmethod
     def get_prefix_bam_index_decoder_cell(cls, project_name):
@@ -1168,7 +1168,7 @@ class BamIndexDecoder(Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_cell, project_name))
+        return '_'.join((cls.stage_name_cell, project_name))
 
     @classmethod
     def get_prefix_bam_index_decoder_lane(cls, project_name, lane):
@@ -1181,7 +1181,7 @@ class BamIndexDecoder(Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.drms_name_lane, project_name, lane))
+        return '_'.join((cls.stage_name_lane, project_name, lane))
 
     def __init__(
             self,
@@ -1194,7 +1194,7 @@ class BamIndexDecoder(Analysis):
             genome_directory=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             collection=None,
             comparisons=None,
             samples=None,
@@ -1231,8 +1231,8 @@ class BamIndexDecoder(Analysis):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.data.Collection}
         @type collection: bsf.data.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
@@ -1275,7 +1275,7 @@ class BamIndexDecoder(Analysis):
             genome_directory=genome_directory,
             e_mail=e_mail,
             debug=debug,
-            drms_list=drms_list,
+            stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
             samples=samples)
@@ -1497,8 +1497,8 @@ class BamIndexDecoder(Analysis):
         if not self.classpath_picard:
             self.classpath_picard = default.classpath_picard
 
-        drms_lane = self.get_drms(name=self.drms_name_lane)
-        drms_cell = self.get_drms(name=self.drms_name_cell)
+        stage_lane = self.get_stage(name=self.stage_name_lane)
+        stage_cell = self.get_stage(name=self.stage_name_cell)
 
         flow_cell_dict = dict()
 
@@ -1584,7 +1584,7 @@ class BamIndexDecoder(Analysis):
 
                 sample_annotation_sheet.row_dicts.append(sample_dict)
 
-            # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the DRMS.
+            # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the Stage.
             runnable_lane = self.add_runnable(
                 runnable=Runnable(
                     name=self.get_prefix_bam_index_decoder_lane(project_name=self.project_name, lane=key),
@@ -1593,9 +1593,9 @@ class BamIndexDecoder(Analysis):
                     file_path_dict=file_path_dict_lane))
 
             # TODO: It would be good to extend the Runnable so that it holds dependencies on other Runnable objects
-            # and that it could be submitted to a DRMS so that the Executable gets automatically created and submitted.
-            executable_lane = self.set_drms_runnable(
-                drms=drms_lane,
+            # and that it could be submitted to a Stage so that the Executable gets automatically created and submitted.
+            executable_lane = self.set_stage_runnable(
+                stage=stage_lane,
                 runnable=runnable_lane)
             executable_lane.dependencies.append(
                 IlluminaToBam.get_prefix_illumina_to_bam_lane(
@@ -1814,8 +1814,8 @@ class BamIndexDecoder(Analysis):
                 working_directory=self.project_directory,
                 file_path_dict=file_path_dict_cell))
 
-        executable_cell = self.set_drms_runnable(
-            drms=drms_cell,
+        executable_cell = self.set_stage_runnable(
+            stage=stage_cell,
             runnable=runnable_cell)
         executable_cell.dependencies.extend(cell_dependency_list)
 

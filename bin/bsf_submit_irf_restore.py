@@ -105,7 +105,7 @@ if name_space.force:
 
 irf_restore.run()
 irf_restore.check_state()
-irf_restore.submit(drms_name=name_space.stage)
+irf_restore.submit(name=name_space.stage)
 
 print 'IlluminaRunFolderRestore Analysis'
 print 'Project name:           ', irf_restore.project_name

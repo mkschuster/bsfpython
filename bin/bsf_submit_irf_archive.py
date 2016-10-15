@@ -104,7 +104,7 @@ if name_space.force:
 
 irf_archive.run()
 irf_archive.check_state()
-irf_archive.submit(drms_name=name_space.stage)
+irf_archive.submit(name=name_space.stage)
 
 print 'IlluminaRunFolderArchive Analysis'
 print 'Project name:           ', irf_archive.project_name

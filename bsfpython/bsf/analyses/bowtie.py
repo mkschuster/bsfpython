@@ -39,8 +39,8 @@ class Bowtie1(Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_bowtie1: C{DRMS.name} for the Bowtie1 alignment C{bsf.Analysis} stage
-    @type drms_name_bowtie1: str
+    @cvar stage_name_bowtie1: C{bsf.Stage.name} for the Bowtie1 alignment C{bsf.Analysis} stage
+    @type stage_name_bowtie1: str
     @ivar replicate_grouping: Group individual C{bsf.data.PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool
     @ivar bwa_genome_db: Genome sequence file path with BWA index
@@ -50,7 +50,7 @@ class Bowtie1(Analysis):
     name = 'Variant Calling Analysis'
     prefix = 'variant_calling'
 
-    drms_name_bowtie1 = 'bowtie1'
+    stage_name_bowtie1 = 'bowtie1'
 
     def __init__(
             self,
@@ -63,13 +63,13 @@ class Bowtie1(Analysis):
             genome_directory=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             collection=None,
             comparisons=None,
             samples=None,
             replicate_grouping=False,
             bwa_genome_db=None):
-        """Initialise a C{bsf.analyses.bowtie.Bowtie1} object.
+        """Initialise a C{bsf.analyses.bowtie.Bowtie1}.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -91,8 +91,8 @@ class Bowtie1(Analysis):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{bsf.DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.data.Collection}
         @type collection: bsf.data.Collection
         @param comparisons: Python C{dict} of Python C{str} key and Python C{list} objects of C{bsf.data.Sample} objects
@@ -118,7 +118,7 @@ class Bowtie1(Analysis):
             genome_directory=genome_directory,
             e_mail=e_mail,
             debug=debug,
-            drms_list=drms_list,
+            stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
             samples=samples)
@@ -139,10 +139,10 @@ class Bowtie1(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.bowtie.Bowtie1} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a C{bsf.analyses.bowtie.Bowtie1} via a C{bsf.standards.Configuration} section.
 
         Instance variables without a configuration option remain unchanged.
+
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
@@ -169,7 +169,7 @@ class Bowtie1(Analysis):
             self.bwa_genome_db = config_parser.get(section=section, option=option)
 
     def run(self):
-        """Run this C{VariantCallingGATK} analysis.
+        """Run a C{bsf.analyses.bowtie.Bowtie1} analysis.
 
         @return:
         @rtype:
@@ -181,8 +181,7 @@ class Bowtie1(Analysis):
 
         super(Bowtie1, self).run()
 
-        # Initialise Distributed Resource Management System (DRMS) objects.
-        drms_bowtie1 = self.get_drms(name=self.drms_name_bowtie1)
+        stage_bowtie1 = self.get_stage(name=self.stage_name_bowtie1)
 
         for sample in self.samples:
 
@@ -206,7 +205,7 @@ class Bowtie1(Analysis):
                     # Skip replicate keys, which PairedReads objects have all been excluded.
                     continue
 
-                prefix_bowtie1 = '_'.join((drms_bowtie1.name, replicate_key))
+                prefix_bowtie1 = '_'.join((stage_bowtie1.name, replicate_key))
 
                 # Bowtie1-specific file paths
 
@@ -224,8 +223,8 @@ class Bowtie1(Analysis):
                         cache_directory=self.cache_directory,
                         file_path_dict=file_path_dict_bowtie1,
                         debug=self.debug))
-                executable_bowtie1 = self.set_drms_runnable(
-                    drms=drms_bowtie1,
+                executable_bowtie1 = self.set_stage_runnable(
+                    stage=stage_bowtie1,
                     runnable=runnable_bowtie1)
 
                 runnable_step = runnable_bowtie1.add_runnable_step(

@@ -78,7 +78,7 @@ class ChIPSeqComparison(object):
             treatment=None,
             replicate=None,
             diff_bind=None):
-        """Initialise a C{bsf.analyses.ChIPSeqComparison} object.
+        """Initialise a C{bsf.analyses.ChIPSeqComparison}.
 
         @param c_name: Control name
         @type c_name: str
@@ -289,7 +289,7 @@ class ChIPSeq(Analysis):
             genome_directory=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             collection=None,
             comparisons=None,
             samples=None,
@@ -297,7 +297,7 @@ class ChIPSeq(Analysis):
             cmp_file=None,
             genome_fasta_path=None,
             genome_sizes_path=None):
-        """Initialise a C{bsf.analyses.ChIPSeq} object.
+        """Initialise a C{bsf.analyses.ChIPSeq}.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -319,8 +319,8 @@ class ChIPSeq(Analysis):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.data.Collection}
         @type collection: bsf.data.Collection
         @param comparisons: Python C{dict} of Python C{list} objects of C{bsf.data.Sample} objects
@@ -349,7 +349,7 @@ class ChIPSeq(Analysis):
             genome_directory=genome_directory,
             e_mail=e_mail,
             debug=debug,
-            drms_list=drms_list,
+            stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
             samples=samples)
@@ -380,11 +380,10 @@ class ChIPSeq(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.ChIPSeq} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a C{bsf.analyses.ChIPSeq} via a C{bsf.standards.Configuration} section.
 
-        Instance variables without a
-        configuration option remain unchanged.
+        Instance variables without a configuration option remain unchanged.
+
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
@@ -583,7 +582,7 @@ class ChIPSeq(Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.ChIPSeq} C{bsf.Analysis}.
+        """Run a C{bsf.analyses.ChIPSeq} C{bsf.Analysis}.
 
         @return:
         @rtype:
@@ -655,14 +654,12 @@ class ChIPSeq(Analysis):
         # bowtie2_index = os.path.join(Default.absolute_genomes(self.genome_version),
         #                              'forBowtie2', self.genome_version)
 
-        # Initialise the Distributed Resource Management System objects for Bowtie2.
-
-        bowtie2_drms = self.get_drms(name='bowtie2')
+        stage_bowtie2 = self.get_stage(name='bowtie2')
 
         # Use the bsf_sam2bam.sh script to convert aligned SAM into
         # aligned, sorted, indexed BAM files.
 
-        sam2bam_drms = self.get_drms(name='sam2bam')
+        stage_sam2bam = self.get_stage(name='sam2bam')
 
         for sample in self.samples:
 
@@ -681,12 +678,12 @@ class ChIPSeq(Analysis):
 
             for replicate_key in replicate_keys:
 
-                bowtie2 = bowtie2_drms.add_executable(
+                bowtie2 = stage_bowtie2.add_executable(
                     executable=Bowtie2(
                         name='chipseq_bowtie2_{}'.format(replicate_key),
                         analysis=self))
 
-                sam2bam = sam2bam_drms.add_executable(
+                sam2bam = stage_sam2bam.add_executable(
                     executable=Executable(
                         name='chipseq_sam2bam_{}'.format(replicate_key),
                         program='bsf_sam2bam.sh'))
@@ -727,7 +724,7 @@ class ChIPSeq(Analysis):
                 # See description of option -k in the bowtie2 manual.
                 # TODO: To avoid repeats we may want to set -a?
 
-                bowtie2.add_option_long(key='threads', value=str(bowtie2_drms.threads))
+                bowtie2.add_option_long(key='threads', value=str(stage_bowtie2.threads))
 
                 # Put all sample-specific information into a sub-directory.
 
@@ -769,9 +766,9 @@ class ChIPSeq(Analysis):
         @rtype:
         """
 
-        macs14_drms = self.get_drms(name='macs14')
+        stage_macs14 = self.get_stage(name='macs14')
 
-        process_macs14_drms = self.get_drms(name='process_macs14')
+        stage_process_macs14 = self.get_stage(name='process_macs14')
 
         keys = self.comparisons.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -805,7 +802,7 @@ class ChIPSeq(Analysis):
 
                         for c_replicate_key in c_replicate_keys:
 
-                            macs14 = macs14_drms.add_executable(
+                            macs14 = stage_macs14.add_executable(
                                 executable=Macs14(
                                     name='chipseq_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
                                     analysis=self))
@@ -813,7 +810,7 @@ class ChIPSeq(Analysis):
                             macs14.dependencies.append('chipseq_sam2bam_' + t_replicate_key)
                             macs14.dependencies.append('chipseq_sam2bam_' + c_replicate_key)
 
-                            process_macs14 = process_macs14_drms.add_executable(
+                            process_macs14 = stage_process_macs14.add_executable(
                                 executable=Executable(
                                     name='chipseq_process_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
                                     program='bsf_chipseq_process_macs14.sh'))
@@ -914,9 +911,9 @@ class ChIPSeq(Analysis):
         @rtype:
         """
 
-        macs2_callpeak_drms = self.get_drms(name='macs2_callpeak')
-        macs2_bdgcmp_drms = self.get_drms(name='macs2_bdgcmp')
-        process_macs2_drms = self.get_drms(name='process_macs2')
+        stage_macs2_callpeak = self.get_stage(name='macs2_callpeak')
+        stage_macs2_bdgcmp = self.get_stage(name='macs2_bdgcmp')
+        stage_process_macs2 = self.get_stage(name='process_macs2')
 
         keys = self.comparisons.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -950,7 +947,7 @@ class ChIPSeq(Analysis):
 
                         for c_replicate_key in c_replicate_keys:
 
-                            macs2_callpeak = macs2_callpeak_drms.add_executable(
+                            macs2_callpeak = stage_macs2_callpeak.add_executable(
                                 executable=Macs2Callpeak(
                                     name='chipseq_macs2_callpeak_{}__{}'.format(t_replicate_key, c_replicate_key),
                                     analysis=self))
@@ -958,14 +955,14 @@ class ChIPSeq(Analysis):
                             macs2_callpeak.dependencies.append('chipseq_sam2bam_' + t_replicate_key)
                             macs2_callpeak.dependencies.append('chipseq_sam2bam_' + c_replicate_key)
 
-                            macs2_bdgcmp = macs2_bdgcmp_drms.add_executable(
+                            macs2_bdgcmp = stage_macs2_bdgcmp.add_executable(
                                 executable=Macs2Bdgcmp(
                                     name='chipseq_macs2_bdgcmp_{}__{}'.format(t_replicate_key, c_replicate_key),
                                     analysis=self))
 
                             macs2_bdgcmp.dependencies.append(macs2_callpeak.name)
 
-                            process_macs2 = process_macs2_drms.add_executable(
+                            process_macs2 = stage_process_macs2.add_executable(
                                 executable=Executable(
                                     name='chipseq_process_macs2_{}__{}'.format(t_replicate_key, c_replicate_key),
                                     program='bsf_chipseq_process_macs2.sh'))
@@ -1110,7 +1107,7 @@ class ChIPSeq(Analysis):
         @rtype:
         """
 
-        diffbind_drms = self.get_drms(name='diffbind')
+        stage_diffbind = self.get_stage(name='diffbind')
 
         # Reorganise the comparisons by factor.
 
@@ -1227,7 +1224,7 @@ class ChIPSeq(Analysis):
 
             # Create the DiffBind job.
 
-            diffbind = diffbind_drms.add_executable(
+            diffbind = stage_diffbind.add_executable(
                 executable=Executable(
                     name='chipseq_diffbind_{}'.format(key),
                     program='bsf_chipseq_diffbind.R'))
@@ -2123,12 +2120,12 @@ class RunFastQC(Analysis):
             genome_directory=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             collection=None,
             comparisons=None,
             samples=None,
             cmp_file=None):
-        """Initialise a C{bsf.analyses.RunFastQC} object.
+        """Initialise a C{bsf.analyses.RunFastQC}.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -2150,8 +2147,8 @@ class RunFastQC(Analysis):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of BSF C{DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of BSF C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.data.Collection}
         @type collection: bsf.data.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
@@ -2174,7 +2171,7 @@ class RunFastQC(Analysis):
             genome_directory=genome_directory,
             e_mail=e_mail,
             debug=debug,
-            drms_list=drms_list,
+            stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
             samples=samples)
@@ -2187,10 +2184,10 @@ class RunFastQC(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.RunFastQC} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a C{bsf.analyses.RunFastQC} via a C{bsf.standards.Configuration} section.
 
         Instance variables without a configuration option remain unchanged.
+
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
@@ -2243,7 +2240,7 @@ class RunFastQC(Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.RunFastQC} C{bsf.Analysis}.
+        """Run a C{bsf.analyses.RunFastQC} C{bsf.Analysis}.
 
         @return:
         @rtype:
@@ -2338,7 +2335,7 @@ class RunFastQC(Analysis):
 
             pass
 
-        fastqc_drms = self.get_drms(name='fastqc')
+        stage_fastqc = self.get_stage(name='fastqc')
 
         for sample in self.samples:
 
@@ -2357,7 +2354,7 @@ class RunFastQC(Analysis):
 
             for replicate_key in replicate_keys:
 
-                fastqc = fastqc_drms.add_executable(
+                fastqc = stage_fastqc.add_executable(
                     executable=FastQC(
                         name='fastqc_{}'.format(replicate_key),
                         analysis=self))
@@ -2369,7 +2366,7 @@ class RunFastQC(Analysis):
                 if 'casava' not in fastqc.options and sample.file_type == 'CASAVA':
                     fastqc.add_switch_long(key='casava')
 
-                fastqc.add_option_long(key='threads', value=str(fastqc_drms.threads))
+                fastqc.add_option_long(key='threads', value=str(stage_fastqc.threads))
 
                 # Set FastQC arguments.
 
@@ -2391,7 +2388,7 @@ class RunFastQC(Analysis):
         return
 
     def report(self):
-        """Create C{RunFastQC} report in HTML format.
+        """Create a C{RunFastQC} report in HTML format.
 
         @return:
         @rtype:
@@ -2468,7 +2465,7 @@ class RunFastQC(Analysis):
 
 
 class RunBamToFastq(Analysis):
-    """BSF BAM or SAM to FASTQ converter sub-class.
+    """BAM or SAM to FASTQ converter sub-class.
 
     Attributes:
     @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
@@ -2491,11 +2488,11 @@ class RunBamToFastq(Analysis):
             genome_directory=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             collection=None,
             comparisons=None,
             samples=None):
-        """Initialise a RunBamToFastq object.
+        """Initialise a RunBamToFastq.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -2517,8 +2514,8 @@ class RunBamToFastq(Analysis):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param collection: BSF Collection
         @type collection: Collection
         @param comparisons: Python C{dict} of Python C{list} objects of C{bsf.data.Sample} objects
@@ -2539,7 +2536,7 @@ class RunBamToFastq(Analysis):
             genome_directory=genome_directory,
             e_mail=e_mail,
             debug=debug,
-            drms_list=drms_list,
+            stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
             samples=samples)
@@ -2549,10 +2546,10 @@ class RunBamToFastq(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a BSF RunBamToFastq object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a BSF RunBamToFastq via a C{bsf.standards.Configuration} section.
 
         Instance variables without a configuration option remain unchanged.
+
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
@@ -2568,7 +2565,7 @@ class RunBamToFastq(Analysis):
         return
 
     def run(self):
-        """Run this BSF RunBamToFastq analysis.
+        """Run a RunBamToFastq C{bsf.Analysis}.
 
         @return:
         @rtype:
@@ -2596,7 +2593,7 @@ class RunBamToFastq(Analysis):
         # replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
         replicate_grouping = False
 
-        sam_to_fastq_drms = self.get_drms(name='sam_to_fastq')
+        stage_sam_to_fastq = self.get_stage(name='sam_to_fastq')
 
         for sample in self.collection.get_all_samples():
 
@@ -2631,7 +2628,7 @@ class RunBamToFastq(Analysis):
                         # TODO: The matching part to remove the .bam could be achieved with Bash parameter expansion.
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
-                            sam_to_fastq = sam_to_fastq_drms.add_executable(
+                            sam_to_fastq = stage_sam_to_fastq.add_executable(
                                 executable=Executable(
                                     name='picard_sam_to_fastq_{}_1'.format(replicate_key),
                                     program='bsf_bam2fastq.sh'))
@@ -2647,7 +2644,7 @@ class RunBamToFastq(Analysis):
 
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
-                            sam_to_fastq = sam_to_fastq_drms.add_executable(
+                            sam_to_fastq = stage_sam_to_fastq.add_executable(
                                 executable=Executable(
                                     name='picard_sam_to_fastq_{}_2'.format(replicate_key),
                                     program='bsf_bam2fastq.sh'))

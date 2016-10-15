@@ -65,7 +65,7 @@ if name_space.debug:
 
 chipseq.run()
 chipseq.check_state()
-chipseq.submit(drms_name=name_space.stage)
+chipseq.submit(name=name_space.stage)
 
 print 'ChIPSeq Analysis'
 print 'Project name:      ', chipseq.project_name

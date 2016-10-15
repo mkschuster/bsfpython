@@ -178,7 +178,7 @@ bsf
   - from bsf.argument import * (no further dependency)
 
 bsf.Analysis
-  - from bsf import Analysis, Configuration, Default, Defaults, DRMS, Executable (no further dependency)
+  - from bsf import Analysis, Configuration, Default, Defaults, Stage, Executable (no further dependency)
   - from bsf.data import Collection, ProcessedRunFolder, Sample, SampleAnnotationSheet (no further dependency)
   - from bsf.executables import Bowtie2, Macs14, Macs2Callpeak, Cuffdiff, Cufflinks, Cuffmerge, TopHat, FastQC
 

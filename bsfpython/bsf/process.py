@@ -43,8 +43,9 @@ from bsf.standards import Configuration
 
 
 class Command(object):
-    """C{bsf.process.Command} class representing one program, its options and arguments and possibly
-    another subordinate C{bsf.process.Command}.
+    """The C{bsf.process.Command} class represents one program, its options and arguments.
+
+    A C{bsf.process.Command} can possibly contain another subordinate C{bsf.process.Command}.
 
     Attributes:
     @ivar program: Program
@@ -64,7 +65,7 @@ class Command(object):
             options=None,
             arguments=None,
             sub_command=None):
-        """Initialise a C{bsf.process.Command} object.
+        """Initialise a C{bsf.process.Command}.
 
         @param program: Program
         @type program: str
@@ -73,7 +74,7 @@ class Command(object):
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]]
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str]
-        @param sub_command: Subordinate C{bsf.process.Command} object
+        @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command
         @return:
         @rtype:
@@ -98,7 +99,7 @@ class Command(object):
         return
 
     def trace(self, level):
-        """Trace a C{bsf.process.Command} object.
+        """Trace a C{bsf.process.Command}.
 
         @param level: Indentation level
         @type level: int
@@ -171,7 +172,7 @@ class Command(object):
         return
 
     def add_switch_long(self, key, override=False):
-        """Initialise and add a C{bsf.argument.SwitchLong} object.
+        """Initialise and add a C{bsf.argument.SwitchLong}.
 
         @param key: Key
         @type key: str
@@ -184,7 +185,7 @@ class Command(object):
         return self.add_argument(argument=SwitchLong(key=key), override=override)
 
     def add_switch_short(self, key, override=False):
-        """Initialise and add a C{bsf.argument.SwitchShort} object.
+        """Initialise and add a C{bsf.argument.SwitchShort}.
 
         @param key: Key
         @type key: str
@@ -197,7 +198,7 @@ class Command(object):
         return self.add_argument(argument=SwitchShort(key=key), override=override)
 
     def add_option_long(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionLong} object.
+        """Initialise and add a C{bsf.argument.OptionLong}.
 
         @param key: Key
         @type key: str
@@ -212,7 +213,7 @@ class Command(object):
         return self.add_argument(argument=OptionLong(key=key, value=value), override=override)
 
     def add_option_short(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionShort} object.
+        """Initialise and add a C{bsf.argument.OptionShort}.
 
         @param key: Key
         @type key: str
@@ -227,7 +228,7 @@ class Command(object):
         return self.add_argument(argument=OptionShort(key=key, value=value), override=override)
 
     def add_option_pair(self, key, value, override=False):
-        """Initialise and add a C{bsf.argument.OptionPair} object.
+        """Initialise and add a C{bsf.argument.OptionPair}.
 
         @param key: Key
         @type key: str
@@ -266,7 +267,7 @@ class Command(object):
         return
 
     def set_switch_long(self, key, override=False):
-        """Initialise and set a C{bsf.argument.SwitchLong} object.
+        """Initialise and set a C{bsf.argument.SwitchLong}.
 
         @param key: Key
         @type key: str
@@ -278,7 +279,7 @@ class Command(object):
         return self.set_argument(argument=SwitchLong(key=key), override=override)
 
     def set_switch_short(self, key, override=False):
-        """Initialise and set a C{bsf.argument.SwitchShort} object.
+        """Initialise and set a C{bsf.argument.SwitchShort}.
 
         @param key: Key
         @type key: str
@@ -290,7 +291,7 @@ class Command(object):
         return self.set_argument(argument=SwitchShort(key=key), override=override)
 
     def set_option_long(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionLong} object.
+        """Initialise and set a C{bsf.argument.OptionLong}.
 
         @param key: Key
         @type key: str
@@ -304,7 +305,7 @@ class Command(object):
         return self.set_argument(argument=OptionLong(key=key, value=value), override=override)
 
     def set_option_short(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionShort} object.
+        """Initialise and set a C{bsf.argument.OptionShort}.
 
         @param key: Key
         @type key: str
@@ -318,7 +319,7 @@ class Command(object):
         return self.set_argument(argument=OptionShort(key=key, value=value), override=override)
 
     def set_option_pair(self, key, value, override=False):
-        """Initialise and set a C{bsf.argument.OptionPair} object.
+        """Initialise and set a C{bsf.argument.OptionPair}.
 
         @param key: Key
         @type key: str
@@ -332,8 +333,7 @@ class Command(object):
         return self.set_argument(argument=OptionPair(key=key, value=value), override=override)
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.process.Command} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a C{bsf.process.Command} via a C{bsf.standards.Configuration} section.
 
         Instance variables without a configuration option remain unchanged.
         @param configuration: C{bsf.standards.Configuration}
@@ -477,11 +477,10 @@ class Command(object):
 
 
 class Executable(Command):
-    """The C{bsf.process.Executable} class represents an executable program,
-    its options and arguments.
+    """The C{bsf.process.Executable} class represents one C{bsf.process.Command} as UNIX process.
 
     Attributes:
-    @ivar name: Name in the context of a C{bsf.DRMS} dependency
+    @ivar name: Name in the context of a C{bsf.Stage} dependency
     @type name: str
     @ivar program: Program (executable or full file path)
     @type program: str
@@ -497,11 +496,11 @@ class Executable(Command):
     @ivar stderr_path: Standard error (STDERR) redirection in Bash (2>word)
     @type stderr_path: str | unicode
     @ivar dependencies: Python C{list} of C{bsf.process.Executable.name} properties in the
-        context of C{bsf.DRMS} dependencies
+        context of C{bsf.Stage} dependencies
     @type dependencies: list[bsf.process.Executable.name]
     @ivar hold: Hold on job scheduling
     @type hold: str
-    @ivar submit: Submit the C{bsf.process.Executable} into the C{bsf.DRMS}
+    @ivar submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
     @type submit: bool
     @ivar maximum_attempts: Maximum number of attempts to run this C{bsf.process.Executable}
     @type maximum_attempts: int
@@ -626,7 +625,7 @@ class Executable(Command):
             maximum_attempts=1,
             process_identifier=None,
             process_name=None):
-        """Initialise a C{bsf.process.Executable} object.
+        """Initialise a C{bsf.process.Executable}.
 
         @param name: Name
         @type name: str
@@ -644,11 +643,11 @@ class Executable(Command):
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.DRMS} dependencies
+            properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.DRMS}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param maximum_attempts: Maximum number of attempts to run this C{bsf.process.Executable}
         @type maximum_attempts: int
@@ -712,7 +711,7 @@ class Executable(Command):
         return
 
     def trace(self, level):
-        """Trace a C{bsf.process.Executable} object.
+        """Trace a C{bsf.process.Executable}.
 
         @param level: Indentation level
         @type level: int
@@ -787,7 +786,7 @@ class Executable(Command):
         return command
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.Executable} object via the Python C{subprocess.Popen} class.
+        """Run a C{bsf.process.Executable} via the Python C{subprocess.Popen} class.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
@@ -915,7 +914,7 @@ class Executable(Command):
 
 
 class RunnableStep(Executable):
-    """The C{bsf.process.RunnableStep} represents a step in a C{bsf.Runnable} class.
+    """The C{bsf.process.RunnableStep} represents one C{bsf.process.Executable} in a C{bsf.Runnable}.
 
     Attributes:
     @ivar obsolete_file_path_list: Python C{list} of file paths that can be removed
@@ -938,7 +937,7 @@ class RunnableStep(Executable):
             process_identifier=None,
             process_name=None,
             obsolete_file_path_list=None):
-        """Initialise a C{bsf.process.RunnableStep} object.
+        """Initialise a C{bsf.process.RunnableStep}.
 
         @param name: Name
         @type name: str
@@ -956,11 +955,11 @@ class RunnableStep(Executable):
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.DRMS} dependencies
+            properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.DRMS}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
@@ -995,7 +994,7 @@ class RunnableStep(Executable):
         return
 
     def trace(self, level=1):
-        """Trace a C{bsf.process.RunnableStep} object.
+        """Trace a C{bsf.process.RunnableStep}.
 
         @param level: Indentation level
         @type level: int
@@ -1012,8 +1011,8 @@ class RunnableStep(Executable):
         return output
 
     def remove_obsolete_file_paths(self):
-        """Remove file path objects that the C{bsf.process.RunnableStep.obsolete_file_path_list}
-        declared to be obsolete.
+        """Remove file paths on the C{bsf.process.RunnableStep.obsolete_file_path_list} Python C{list}.
+
         This method is mainly used by C{bsf.runnable.generic} and related modules.
 
         @return:
@@ -1031,8 +1030,7 @@ class RunnableStep(Executable):
 
 
 class RunnableStepChangeMode(RunnableStep):
-    """The C{bsf.process.RunnableStepChangeMode} class represents a C{bsf.process.RunnableStep}
-    changing file access modes.
+    """The C{bsf.process.RunnableStepChangeMode} class represents a step changing file access mode.
 
     Attributes:
     @ivar file_path: File path
@@ -1061,7 +1059,7 @@ class RunnableStepChangeMode(RunnableStep):
             file_path=None,
             mode_directory=None,
             mode_file=None):
-        """Initialise a C{bsf.process.RunnableStepChangeMode} object.
+        """Initialise a C{bsf.process.RunnableStepChangeMode}.
 
         @param name: Name
         @type name: str
@@ -1079,11 +1077,11 @@ class RunnableStepChangeMode(RunnableStep):
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.DRMS} dependencies
+            properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.DRMS}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
@@ -1131,7 +1129,7 @@ class RunnableStepChangeMode(RunnableStep):
         return
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.RunnableStepChangeMode} object.
+        """Run a C{bsf.process.RunnableStepChangeMode}.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
@@ -1221,8 +1219,7 @@ class RunnableStepChangeMode(RunnableStep):
 
 
 class RunnableStepJava(RunnableStep):
-    """The C{bsf.process.RunnableStepJava} class represents a C{bsf.process.RunnableStep}
-    with all peculiarities of Java programs.
+    """The C{bsf.process.RunnableStepJava} class represents peculiarities of a Java program.
 
     Attributes:
     None
@@ -1246,7 +1243,7 @@ class RunnableStepJava(RunnableStep):
             java_temporary_path=None,
             java_heap_maximum=None,
             java_jar_path=None):
-        """Initialise a C{bsf.process.RunnableStepJava} object.
+        """Initialise a C{bsf.process.RunnableStepJava}.
 
         @param name: Name
         @type name: str
@@ -1264,11 +1261,11 @@ class RunnableStepJava(RunnableStep):
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.DRMS} dependencies
+            properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.DRMS}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
@@ -1332,8 +1329,7 @@ class RunnableStepJava(RunnableStep):
 
 
 class RunnableStepPicard(RunnableStepJava):
-    """The C{bsf.process.RunnableStepPicard} class represents a C{bsf.process.RunnableStepJava}
-    specific to Picard tools.
+    """The C{bsf.process.RunnableStepPicard} class represents a Picard tool program.
 
     Attributes:
     None
@@ -1359,7 +1355,7 @@ class RunnableStepPicard(RunnableStepJava):
             java_jar_path=None,
             picard_classpath=None,
             picard_command=None):
-        """Initialise a C{bsf.process.RunnableStepPicard} object.
+        """Initialise a C{bsf.process.RunnableStepPicard}.
 
         @param name: Name
         @type name: str
@@ -1377,11 +1373,11 @@ class RunnableStepPicard(RunnableStepJava):
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.DRMS} dependencies
+            properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.DRMS}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
@@ -1433,7 +1429,7 @@ class RunnableStepPicard(RunnableStepJava):
         return
 
     def add_picard_option(self, key, value, override=False):
-        """Add a C{bsf.argument.OptionPair} to the C{bsf.process.RunnableStepPicard} Picard command.
+        """Add a C{bsf.argument.OptionPair} to a C{bsf.process.RunnableStepPicard}.
 
         @param key: Option key
         @type key: str
@@ -1449,8 +1445,7 @@ class RunnableStepPicard(RunnableStepJava):
 
 
 class RunnableStepLink(RunnableStep):
-    """The C{bsf.process.RunnableStepLink} represents a step in a C{bsf.process.RunnableStep}
-    to add a symbolic link.
+    """The C{bsf.process.RunnableStepLink} represents a step creating a symbolic link.
 
     Attributes:
     @ivar source_path: Source path
@@ -1476,7 +1471,7 @@ class RunnableStepLink(RunnableStep):
             obsolete_file_path_list=None,
             source_path=None,
             target_path=None):
-        """Initialise a C{bsf.process.RunnableStepLink} object.
+        """Initialise a C{bsf.process.RunnableStepLink}.
 
         @param name: Name
         @type name: str
@@ -1494,11 +1489,11 @@ class RunnableStepLink(RunnableStep):
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.DRMS} dependencies
+            properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.DRMS}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
@@ -1543,7 +1538,7 @@ class RunnableStepLink(RunnableStep):
         return
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.RunnableStepLink} object.
+        """Run a C{bsf.process.RunnableStepLink}.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
@@ -1567,8 +1562,7 @@ class RunnableStepLink(RunnableStep):
 
 
 class RunnableStepMakeDirectory(RunnableStep):
-    """The C{bsf.process.RunnableStepMakeDirectory} represents a C{bsf.process.RunnableStep}
-    to create a directory.
+    """The C{bsf.process.RunnableStepMakeDirectory} represents a step creating a directory.
 
     Attributes:
     @ivar directory_path: Directory path
@@ -1591,7 +1585,7 @@ class RunnableStepMakeDirectory(RunnableStep):
             process_name=None,
             obsolete_file_path_list=None,
             directory_path=None):
-        """Initialise a C{bsf.process.RunnableStepMakeDirectory} object.
+        """Initialise a C{bsf.process.RunnableStepMakeDirectory}.
 
         @param name: Name
         @type name: str
@@ -1609,11 +1603,11 @@ class RunnableStepMakeDirectory(RunnableStep):
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.DRMS} dependencies
+            properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.DRMS}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
@@ -1651,7 +1645,7 @@ class RunnableStepMakeDirectory(RunnableStep):
         return
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.RunnableStepMakeDirectory} object.
+        """Run a C{bsf.process.RunnableStepMakeDirectory}.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
@@ -1675,8 +1669,7 @@ class RunnableStepMakeDirectory(RunnableStep):
 
 
 class RunnableStepMove(RunnableStep):
-    """The C{bsf.process.RunnableStepMove} represents a C{bsf.process.RunnableStep}
-    to move a directory or file.
+    """The C{bsf.process.RunnableStepMove} class represents a step moving a directory or file.
 
     Attributes:
     @ivar source_path: Source path
@@ -1702,7 +1695,7 @@ class RunnableStepMove(RunnableStep):
             obsolete_file_path_list=None,
             source_path=None,
             target_path=None):
-        """Initialise a C{bsf.process.RunnableStepMove} object.
+        """Initialise a C{bsf.process.RunnableStepMove}.
 
         @param name: Name
         @type name: str
@@ -1720,11 +1713,11 @@ class RunnableStepMove(RunnableStep):
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.DRMS} dependencies
+            properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.DRMS}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
@@ -1769,7 +1762,7 @@ class RunnableStepMove(RunnableStep):
         return
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.RunnableStepMove} object.
+        """Run a C{bsf.process.RunnableStepMove}.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int
@@ -1790,8 +1783,7 @@ class RunnableStepMove(RunnableStep):
 
 
 class RunnableStepSleep(RunnableStep):
-    """The C{bsf.process.RunnableStepSleep} represents a C{bsf.process.RunnableStep}
-    to sleep the process for a defined period of time.
+    """The C{bsf.process.RunnableStepSleep} class represents a step sleeping the process.
 
     Attributes:
     @ivar sleep_time: Sleep time in seconds
@@ -1814,7 +1806,7 @@ class RunnableStepSleep(RunnableStep):
             process_name=None,
             obsolete_file_path_list=None,
             sleep_time=None):
-        """Initialise a C{bsf.process.RunnableStepSleep} object.
+        """Initialise a C{bsf.process.RunnableStepSleep}.
 
         @param name: Name
         @type name: str
@@ -1832,11 +1824,11 @@ class RunnableStepSleep(RunnableStep):
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.DRMS} dependencies
+            properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.DRMS}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
@@ -1875,7 +1867,7 @@ class RunnableStepSleep(RunnableStep):
         return
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
-        """Run a C{bsf.process.RunnableStepSleep} object.
+        """Run a C{bsf.process.RunnableStepSleep}.
 
         @param max_thread_joins: Maximum number of attempts to join the output threads
         @type max_thread_joins: int

@@ -59,7 +59,7 @@ if name_space.debug:
 
 variant_calling.run()
 variant_calling.check_state()
-variant_calling.submit(drms_name=name_space.stage)
+variant_calling.submit(name=name_space.stage)
 
 print 'Variant Calling Analysis'
 print 'Project name:      ', variant_calling.project_name

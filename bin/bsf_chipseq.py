@@ -53,29 +53,29 @@ if args.debug:
 chipseq.run()
 chipseq.check_state()
 
-# Submit all Executable objects of all Distributed Resource Management System objects.
+# Submit all Executable objects of all Stage objects.
 
 submit = 0
 
-for drms in chipseq.drms_list:
+for stage in chipseq.stage_list:
 
     if args.stage:
-        if args.stage == drms.name:
+        if args.stage == stage.name:
             submit += 1
         else:
             continue
 
-    drms.submit(debug=chipseq.debug)
+    stage.submit(debug=chipseq.debug)
 
     if chipseq.debug:
-        print repr(drms)
-        print drms.trace(1)
+        print repr(stage)
+        print stage.trace(1)
 
 if args.stage:
     if args.stage == 'report':
         chipseq.report()
     elif not submit:
-        name_list = [drms.name for drms in chipseq.drms_list]
+        name_list = [stage.name for stage in chipseq.stage_list]
         name_list.append('report')
         print 'Valid Analysis stages are: {!r}'.format(name_list)
 

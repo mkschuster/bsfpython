@@ -151,13 +151,13 @@ def extract_illumina_barcodes(config_path):
         assert isinstance(row_dict, dict)
         _process_row_dict(row_dict=row_dict, prefix=analysis.sas_prefix, barcode_dict=barcode_dict)
 
-    # Create a DRMS for the Picard ExtractIlluminaBarcodes stage.
+    # Create a Stage for the Picard ExtractIlluminaBarcodes stage.
 
-    drms_picard_eib = analysis.get_drms(name='picard_extract_illumina_barcodes')
+    stage_picard_eib = analysis.get_stage(name='picard_extract_illumina_barcodes')
 
-    # Create a DRMS for the Picard IlluminaBasecallsToSam stage.
+    # Create a Stage for the Picard IlluminaBasecallsToSam stage.
 
-    drms_picard_ibs = analysis.get_drms(name='picard_illumina_basecalls_to_sam')
+    stage_picard_ibs = analysis.get_stage(name='picard_illumina_basecalls_to_sam')
 
     # For each lane in the barcode_dict ...
 
@@ -274,7 +274,7 @@ def extract_illumina_barcodes(config_path):
 
         # Picard ExtractIlluminaBarcodes
 
-        prefix_picard_eib = '_'.join((drms_picard_eib.name, key))
+        prefix_picard_eib = '_'.join((stage_picard_eib.name, key))
 
         file_path_dict_picard_eib = dict()
 
@@ -289,8 +289,8 @@ def extract_illumina_barcodes(config_path):
 
         # Create an Executable for running the Picard ExtractIlluminaBarcodes Runnable.
 
-        executable_picard_eib = analysis.set_drms_runnable(
-            drms=drms_picard_eib,
+        executable_picard_eib = analysis.set_stage_runnable(
+            stage=stage_picard_eib,
             runnable=runnable_picard_eib)
 
         runnable_step = runnable_picard_eib.add_runnable_step(
@@ -317,12 +317,12 @@ def extract_illumina_barcodes(config_path):
             runnable_step.add_picard_option(key='MINIMUM_BASE_QUALITY', value=min_base_quality)
             # MINIMUM_QUALITY
         # COMPRESS_OUTPUTS for s_l_t_barcode.txt files
-        runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(drms_picard_eib.threads))
+        runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_picard_eib.threads))
         runnable_step.add_picard_option(key='COMPRESS_OUTPUTS', value='TRUE')
 
         # Picard IlluminaBasecallsToSam
 
-        prefix_picard_ibs = '_'.join((drms_picard_ibs.name, key))
+        prefix_picard_ibs = '_'.join((stage_picard_ibs.name, key))
 
         file_path_dict_picard_ibs = dict()
 
@@ -337,8 +337,8 @@ def extract_illumina_barcodes(config_path):
 
         # Create an Executable for running the Picard IlluminaBasecallsToSam Runnable.
 
-        executable_picard_ibs = analysis.set_drms_runnable(
-            drms=drms_picard_ibs,
+        executable_picard_ibs = analysis.set_stage_runnable(
+            stage=stage_picard_ibs,
             runnable=runnable_picard_ibs)
         executable_picard_ibs.dependencies.append(executable_picard_eib.name)
 
@@ -360,7 +360,7 @@ def extract_illumina_barcodes(config_path):
         runnable_step.add_picard_option(key='READ_STRUCTURE', value='')  # TODO
         runnable_step.add_picard_option(key='LIBRARY_PARAMS', value=library_path)
         runnable_step.add_picard_option(key='ADAPTERS_TO_CHECK', value='')  # TODO
-        runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(drms_picard_ibs.threads))
+        runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_picard_ibs.threads))
 
     return
 
@@ -394,7 +394,7 @@ class SamToFastq(Analysis):
             genome_directory=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             collection=None,
             comparisons=None,
             samples=None,
@@ -422,8 +422,8 @@ class SamToFastq(Analysis):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.data.Collection}
         @type collection: bsf.data.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
@@ -448,7 +448,7 @@ class SamToFastq(Analysis):
             genome_directory=genome_directory,
             e_mail=e_mail,
             debug=debug,
-            drms_list=drms_list,
+            stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
             samples=samples)
@@ -525,7 +525,7 @@ class SamToFastq(Analysis):
 
         # Picard SamToFastq
 
-        drms_picard_stf = self.get_drms(name='picard_sam_to_fastq')
+        stage_picard_stf = self.get_stage(name='picard_sam_to_fastq')
 
         for sample in self.samples:
             assert isinstance(sample, Sample)
@@ -560,7 +560,7 @@ class SamToFastq(Analysis):
                     reads = paired_reads.reads1
                     if reads.file_path.endswith('.bam'):
                         bam_file_path = reads.file_path
-                        prefix_picard_stf = '_'.join((drms_picard_stf.name, replicate_key))
+                        prefix_picard_stf = '_'.join((stage_picard_stf.name, replicate_key))
 
                         file_path_dict_picard_stf = {
                             'temporary_directory': '_'.join((prefix_picard_stf, 'temporary')),
@@ -639,7 +639,7 @@ class SamToFastq(Analysis):
 
                         # Create an Executable for running the Picard SamToFastq Runnable.
 
-                        self.set_drms_runnable(drms=drms_picard_stf, runnable=runnable_picard_stf)
+                        self.set_stage_runnable(stage=stage_picard_stf, runnable=runnable_picard_stf)
 
                         # Record the Executable.name for the prune_sas dependency.
 
@@ -707,7 +707,7 @@ class SamToFastq(Analysis):
 
         # Create a Runnable for pruning the sample annotation sheet.
 
-        prefix_prune_sas = '_'.join((drms_picard_stf.name, self.project_name))
+        prefix_prune_sas = '_'.join((stage_picard_stf.name, self.project_name))
 
         file_path_dict_prune_sas = {
             'temporary_directory': '_'.join((prefix_prune_sas, 'temporary')),
@@ -723,8 +723,8 @@ class SamToFastq(Analysis):
 
         # Create an Executable for running the Runnable for pruning the sample annotation sheet.
 
-        executable_prune_sas = self.set_drms_runnable(
-            drms=drms_picard_stf,
+        executable_prune_sas = self.set_stage_runnable(
+            stage=stage_picard_stf,
             runnable=runnable_prune_sas)
         executable_prune_sas.dependencies.extend(prune_sas_dependencies)
 

@@ -31,7 +31,7 @@ import sqlite3
 
 
 class DatabaseConnection(object):
-    """The C{bsf.database.DatabaseConnection} class encapsulates the C{sqlite3.Connection} class.
+    """C{bsf.database.DatabaseConnection} class encapsulating the C{sqlite3.Connection} class.
 
     @ivar file_path: File path
     @type file_path: str | unicode
@@ -42,9 +42,11 @@ class DatabaseConnection(object):
     def __init__(
             self,
             file_path=None):
-        """Initialise a C{bsf.database.DatabaseConnection} object.
+        """Initialise a C{bsf.database.DatabaseConnection}.
 
-        The underlying C{sqlite3.Connection} object is instantiated only upon calling C{connect}.
+        The underlying C{sqlite3.Connection} is instantiated only upon calling
+        C{bsf.database.DatabaseConnection.connect}.
+
         @param file_path: File path
         @type file_path: str | unicode
         @return:
@@ -75,9 +77,9 @@ class DatabaseConnection(object):
             return self._connection.close()
 
     def connect(self):
-        """Connect a C{bsf.database.DatabaseConnection} by instantiating the underlying C{sqlite3.Connection} object.
+        """Connect a C{bsf.database.DatabaseConnection} by instantiating the underlying C{sqlite3.Connection}.
 
-        Just returns if the C{sqlite3.Connection} object already exists.
+        Just returns if the C{sqlite3.Connection} already exists.
         @return:
         @rtype:
         """
@@ -88,10 +90,10 @@ class DatabaseConnection(object):
         return
 
     def disconnect(self):
-        """Disconnect a C{bsf.database.DatabaseConnection} by closing the underlying C{sqlite3.Connection} object and
-        replacing it by C{None}.
+        """Disconnect a C{bsf.database.DatabaseConnection} by closing the underlying C{sqlite3.Connection}.
 
-        Just returns if the C{sqlite3.Connection} object does not exist.
+        Just returns if the C{sqlite3.Connection} object does not exist, replaces it with C{None} otherwise.
+
         @return:
         @rtype:
         """
@@ -103,7 +105,7 @@ class DatabaseConnection(object):
         return
 
     def commit(self):
-        """Commit changes to the underlying C{sqlite3.Connection} object.
+        """Commit changes to the underlying C{sqlite3.Connection}.
 
         @return:
         @rtype:
@@ -115,9 +117,10 @@ class DatabaseConnection(object):
             return
 
     def get_cursor(self):
-        """Get a C{sqlite3.Cursor} object of the underlying C{sqlite3.Connection} object.
+        """Get a C{sqlite3.Cursor} of the underlying C{sqlite3.Connection}.
 
-        Creates (connects) the underlying C{sqlite3.Connection} object if it does not exist already.
+        Creates (connects) the underlying C{sqlite3.Connection} if it does not exist already.
+
         @return: C{sqlite3.Cursor}
         @rtype: sqlite3.Cursor
         """
@@ -128,9 +131,10 @@ class DatabaseConnection(object):
 
 
 class DatabaseAdaptor(object):
-    """The C{bsf.database.DatabaseAdaptor} class represents as a super-class for object-specific table adaptors.
+    """C{bsf.database.DatabaseAdaptor} class representing as a super-class of object-specific table adaptors.
 
     Instance variables should be overridden in sub-classes.
+
     @ivar database_connection: C{bsf.database.DatabaseConnection}
     @type database_connection: bsf.database.DatabaseConnection
     @ivar table_name: SQL database table name
@@ -149,7 +153,7 @@ class DatabaseAdaptor(object):
             table_name=None,
             column_definition=None,
             table_constraint=None):
-        """Initialise a C{bsf.database.DatabaseAdaptor} object.
+        """Initialise a C{bsf.database.DatabaseAdaptor}.
 
         @param database_connection: C{bsf.database.DatabaseConnection}
         @type database_connection: bsf.database.DatabaseConnection
@@ -158,7 +162,7 @@ class DatabaseAdaptor(object):
         @param table_name: SQL database table name
         @type table_name: str
         @param column_definition: Python C{list} of Python C{list} objects with
-            Python C{str} (SQL column name) and Python C{str} (SQL column constraint) objects.
+            Python C{str} (SQL column name) and Python C{str} (SQL column constraint) objects
         @type column_definition: list[list[str]]
         @param table_constraint: SQL table constraint expression
         @type table_constraint: list[str]
@@ -211,6 +215,7 @@ class DatabaseAdaptor(object):
 
         This method excludes I{PRIMARY KEY} columns with definition I{AUTOINCREMENT},
         which must not be assigned a value in I{INSERT} or I{UPDATE} statements.
+
         @return: Python C{list} of Python C{str} (SQL column name) objects
         @rtype: list[str]
         """
@@ -221,6 +226,7 @@ class DatabaseAdaptor(object):
         """Get the SQL column name for the primary key.
 
         This method returns the I{PRIMARY KEY} column with definition I{AUTOINCREMENT}.
+
         @return: Column name for primary key
         @rtype: str
         """
@@ -239,6 +245,7 @@ class DatabaseAdaptor(object):
         """Build a SQL expression of column names typically used in I{SELECT} statements.
 
         This method simply lists all column names of the column definition.
+
         @return: Column result expression string
         @rtype: str
         """
@@ -259,6 +266,7 @@ class DatabaseAdaptor(object):
 
         This method excludes C{PRIMARY KEY} columns with definition I{AUTOINCREMENT},
         which must not be assigned a value.
+
         @return: Column definition expression string
         @rtype: str
         """
@@ -275,10 +283,10 @@ class DatabaseAdaptor(object):
         return ', '.join(map(lambda x: '?', self._get_column_name_list_without_primary()))
 
     def _build_column_update_expression(self):
-        """Build a SQL expression of column name and value placeholder pairs
-        typically used in SQL I{UPDATE} statements.
+        """Build a SQL expression of column name and value placeholder pairs typically used in SQL I{UPDATE} statements.
 
         As in I{INSERT} expressions, leave out the I{PRIMARY KEY} columns with definition I{AUTOINCREMENT}.
+
         @return: SQL column name and value placeholder pair expression string
         @rtype: str
         """
@@ -286,10 +294,11 @@ class DatabaseAdaptor(object):
         return ', '.join(map(lambda x: '{} = ?'.format(x), self._get_column_name_list_without_primary()))
 
     def connect(self):
-        """Connect a C{bsf.database.DatabaseAdaptor} via its C{bsf.database.DatabaseConnection}
-        by instantiating the underlying C{sqlite3.Connection} object.
+        """Convenience method to connect a C{bsf.database.DatabaseAdaptor}.
 
+        This method instantiates the underlying C{sqlite3.Connection} via its C{bsf.database.DatabaseConnection}.
         Just returns if the C{sqlite3.Connection} object already exists.
+
         @return:
         @rtype:
         """
@@ -297,7 +306,9 @@ class DatabaseAdaptor(object):
         return self.database_connection.connect()
 
     def disconnect(self):
-        """Explicitly disconnect the underlying C{sqlite3.Connection} via the C{bsf.database.DatabaseConnection}.
+        """Convenience method to explicitly disconnect a C{bsf.database.DatabaseAdaptor}.
+
+        This method disconnects the underlying C{sqlite3.Connection} via the C{bsf.database.DatabaseConnection}.
 
         @return:
         @rtype:
@@ -306,7 +317,9 @@ class DatabaseAdaptor(object):
         return self.database_connection.disconnect()
 
     def commit(self):
-        """Commit changes to the underlying C{sqlite3.Connection} via the C{bsf.database.DatabaseConnection}.
+        """Convenience method to commit changes to a C{bsf.database.DatabaseAdaptor}.
+
+        This method commits to the underlying C{sqlite3.Connection} via the C{bsf.database.DatabaseConnection}.
 
         @return:
         @rtype:
@@ -315,8 +328,10 @@ class DatabaseAdaptor(object):
         return self.database_connection.commit()
 
     def get_cursor(self):
-        """Get the C{sqlite3.Cursor} object of the underlying C{bsf.database.DatabaseConnection} and
-        C{sqlite3.Connection} objects.
+        """Convenience method to get a C{sqlite3.Cursor} of a C{bsf.database.DatabaseAdaptor}.
+
+        This method gets the C{sqlite3.Cursor} from the C{sqlite3.Connection} of the underlying
+        C{bsf.database.DatabaseConnection}.
 
         @return: C{sqlite3.Cursor}
         @rtype: sqlite3.Cursor
@@ -364,12 +379,12 @@ class DatabaseAdaptor(object):
         return statement
 
     def create_table(self):
-        """Execute a SQL I{CREATE TABLE} statement for the canonical table of the
-        C{bsf.database.DatabaseAdaptor} sub-class.
+        """Execute a SQL I{CREATE TABLE} statement for the canonical C{bsf.database.DatabaseAdaptor} table.
 
         Before attempting to execute the SQL I{CREATE TABLE} statement, this method checks in 'sqlite_master',
         whether the table already exists in the SQLite database.
-        After calling, the commit() method has to be called at some stage.
+        After calling, the C{bsf.database.DatabaseAdaptor.commit} method has to be called at some stage.
+
         @return:
         @rtype:
         """
@@ -391,8 +406,7 @@ class DatabaseAdaptor(object):
         return
 
     def select(self, statement, parameters=None):
-        """Execute a SQL I{SELECT} statement and return canonical Python C{object} instances of the
-        C{bsf.database.DatabaseAdaptor} sub-class.
+        """Execute a SQL I{SELECT} statement and return canonical Python C{object} instances.
 
         @param statement: Complete SQL I{SELECT} statement
         @type statement: str
@@ -424,8 +438,7 @@ class DatabaseAdaptor(object):
         return object_list
 
     def select_all(self):
-        """Select all canonical Python C{object} instances corresponding to the
-        C{bsf.database.DatabaseAdaptor} sub-class.
+        """Select all canonical Python C{object} instances.
 
         @return: Python C{list} of Python C{object} objects
         @rtype: list[object]
@@ -436,8 +449,7 @@ class DatabaseAdaptor(object):
         return self.select(statement=statement)
 
     def select_by_identifier(self, identifier=0):
-        """Select one canonical Python C{object} instance corresponding to the
-        C{bsf.database.DatabaseAdaptor} sub-class by its primary key identifier.
+        """Select one canonical Python C{object} instance corresponding to the primary key identifier.
 
         @param identifier: Primary key identifier
         @type identifier: int
@@ -468,8 +480,7 @@ class DatabaseAdaptor(object):
             return
 
     def insert(self, object_instance):
-        """Execute a SQL I{INSERT} statement for a canonical Python C{object} instance corresponding to the
-        C{bsf.database.DatabaseAdaptor} sub-class.
+        """Execute a SQL I{INSERT} statement for a canonical Python C{object} instance.
 
         @param object_instance: Python C{object} object
         @type object_instance: object
@@ -512,8 +523,7 @@ class DatabaseAdaptor(object):
         return
 
     def update(self, object_instance):
-        """Execute a SQL I{UPDATE} statement for a canonical Python C{object} instance corresponding to the
-        C{bsf.database.DatabaseAdaptor} sub-class.
+        """Execute a SQL I{UPDATE} statement for a canonical Python C{object} instance.
 
         @param object_instance: Python C{object} instance
         @type object_instance: object
@@ -550,11 +560,12 @@ class DatabaseAdaptor(object):
 
 
 class JobSubmission(object):
-    """The C{bsf.database.JobSubmission} class representing one process submitted into the
-    Distributed Resource Management System (DRMS).
+    """C{bsf.database.JobSubmission} class representing a Distributed Resource Management System (DRMS) process.
 
     This class is equivalent to the C{bsf.process.Executable} and C{bsf.process.Command} classes, but much less complex.
     Command lines are stored as submitted and not broken down into sub-commands, options and arguments.
+
+    Attributes:
     @ivar executable_id: Primary key
     @type executable_id: int
     @ivar name: C{bsf.process.Executable.name}
@@ -568,7 +579,7 @@ class JobSubmission(object):
             executable_id=0,
             name=None,
             command=None):
-        """Initialise a C{bsf.database.JobSubmission} object.
+        """Initialise a C{bsf.database.JobSubmission}.
 
         @param executable_id: Primary key
         @type executable_id: int
@@ -590,14 +601,15 @@ class JobSubmission(object):
 
 
 class JobSubmissionAdaptor(DatabaseAdaptor):
-    """The C{bsf.database.JobSubmissionAdaptor} class provides database access for the
-    C{bsf.database.JobSubmission} class.
+    """C{bsf.database.JobSubmissionAdaptor} class providing database access for C{bsf.database.JobSubmission}.
+
+    Attributes:
     """
 
     def __init__(
             self,
             database_connection):
-        """Initialise a C{bsf.database.JobSubmissionAdaptor} object.
+        """Initialise a C{bsf.database.JobSubmissionAdaptor}.
 
         @param database_connection: C{bsf.database.DatabaseConnection}
         @type database_connection: bsf.database.DatabaseConnection
@@ -614,7 +626,7 @@ class JobSubmissionAdaptor(DatabaseAdaptor):
                 ['executable_id', 'INTEGER PRIMARY KEY ASC AUTOINCREMENT'],
                 # Name
                 ['name', 'TEXT UNIQUE'],
-                # Command as submitted into the DRMS
+                # Command as submitted into the Stage
                 ['command', 'TEXT'],
             ])
 

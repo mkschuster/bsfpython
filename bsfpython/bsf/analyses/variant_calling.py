@@ -44,8 +44,7 @@ import pysam
 
 
 class RunnableStepGATK(RunnableStepJava):
-    """The C{bsf.analyses.variant_calling.RunnableStepGATK} class represents a C{bsf.process.RunnableStepJava}
-    specific to the Genome Analysis Toolkit (GATK).
+    """C{bsf.analyses.variant_calling.RunnableStepGATK} class representing a Genome Analysis Toolkit (GATK) program.
 
     Attributes:
     """
@@ -69,7 +68,7 @@ class RunnableStepGATK(RunnableStepJava):
             java_heap_maximum=None,
             java_jar_path=None,
             gatk_classpath=None):
-        """Initialise a C{bsf.analyses.variant_calling.RunnableStepGATK} object.
+        """Initialise a C{bsf.analyses.variant_calling.RunnableStepGATK}.
 
         @param name: Name
         @type name: str
@@ -87,11 +86,11 @@ class RunnableStepGATK(RunnableStepJava):
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{DRMS} dependencies
+            properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
         @type hold: str
-        @param submit: Submit the C{bsf.process.Executable} into the C{DRMS}
+        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.Stage}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str
@@ -166,7 +165,7 @@ class RunnableStepGATK(RunnableStepJava):
 
 
 class VariantCallingGATK(Analysis):
-    """The C{bsf.analyses.variant_calling.VariantCallingGATK} class represents the logic to run the
+    """C{bsf.analyses.variant_calling.VariantCallingGATK} class representing the logic to run the
     Genome Analysis Toolkit (GATK).
 
     Attributes:
@@ -174,22 +173,22 @@ class VariantCallingGATK(Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar drms_name_align_lane: C{bsf.DRMS.name} for the lane alignment C{bsf.Analysis} stage
-    @type drms_name_align_lane: str
-    @cvar drms_name_process_lane: C{bsf.DRMS.name} for the lane processing C{bsf.Analysis} stage
-    @type drms_name_process_lane: str
-    @cvar drms_name_process_sample: C{bsf.DRMS.name} for the sample processing C{bsf.Analysis} stage
-    @type drms_name_process_sample: str
-    @cvar drms_name_diagnose_sample: C{bsf.DRMS.name} for the sample diagnosis C{bsf.Analysis} stage
-    @type drms_name_diagnose_sample: str
-    @cvar drms_name_process_cohort: C{bsf.DRMS.name} for the cohort processing C{bsf.Analysis} stage
-    @type drms_name_process_cohort: str
-    @cvar drms_name_split_cohort: C{bsf.DRMS.name} for the cohort splitting C{bsf.Analysis} stage
-    @type drms_name_split_cohort: str
-    @cvar drms_name_summary: C{bsf.DRMS.name} for the summary C{bsf.Analysis} stage
-    @type drms_name_summary: str
-    @cvar drms_name_somatic: C{bsf.DRMS.name} for the somatic C{bsf.Analysis} stage
-    @type drms_name_somatic: str
+    @cvar stage_name_align_lane: C{bsf.Stage.name} for the lane alignment stage
+    @type stage_name_align_lane: str
+    @cvar stage_name_process_lane: C{bsf.Stage.name} for the lane processing stage
+    @type stage_name_process_lane: str
+    @cvar stage_name_process_sample: C{bsf.Stage.name} for the sample processing stage
+    @type stage_name_process_sample: str
+    @cvar stage_name_diagnose_sample: C{bsf.Stage.name} for the sample diagnosis stage
+    @type stage_name_diagnose_sample: str
+    @cvar stage_name_process_cohort: C{bsf.Stage.name} for the cohort processing stage
+    @type stage_name_process_cohort: str
+    @cvar stage_name_split_cohort: C{bsf.Stage.name} for the cohort splitting stage
+    @type stage_name_split_cohort: str
+    @cvar stage_name_summary: C{bsf.Stage.name} for the summary stage
+    @type stage_name_summary: str
+    @cvar stage_name_somatic: C{bsf.Stage.name} for the somatic stage
+    @type stage_name_somatic: str
     @ivar replicate_grouping: Group individual C{bsf.data.PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool
     @ivar bwa_genome_db: Genome sequence file path with BWA index
@@ -261,15 +260,15 @@ class VariantCallingGATK(Analysis):
     name = 'Variant Calling Analysis'
     prefix = 'variant_calling'
 
-    drms_name_align_lane = '_'.join((prefix, 'align_lane'))
-    drms_name_process_lane = '_'.join((prefix, 'process_lane'))
-    drms_name_process_sample = '_'.join((prefix, 'process_sample'))
-    drms_name_diagnose_sample = '_'.join((prefix, 'diagnose_sample'))
-    drms_name_merge_cohort = '_'.join((prefix, 'merge_cohort'))
-    drms_name_process_cohort = '_'.join((prefix, 'process_cohort'))
-    drms_name_split_cohort = '_'.join((prefix, 'split_cohort'))
-    drms_name_summary = '_'.join((prefix, 'summary'))
-    drms_name_somatic = '_'.join((prefix, 'somatic'))
+    stage_name_align_lane = '_'.join((prefix, 'align_lane'))
+    stage_name_process_lane = '_'.join((prefix, 'process_lane'))
+    stage_name_process_sample = '_'.join((prefix, 'process_sample'))
+    stage_name_diagnose_sample = '_'.join((prefix, 'diagnose_sample'))
+    stage_name_merge_cohort = '_'.join((prefix, 'merge_cohort'))
+    stage_name_process_cohort = '_'.join((prefix, 'process_cohort'))
+    stage_name_split_cohort = '_'.join((prefix, 'split_cohort'))
+    stage_name_summary = '_'.join((prefix, 'summary'))
+    stage_name_somatic = '_'.join((prefix, 'somatic'))
 
     def __init__(
             self,
@@ -282,7 +281,7 @@ class VariantCallingGATK(Analysis):
             genome_directory=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             collection=None,
             comparisons=None,
             samples=None,
@@ -320,7 +319,7 @@ class VariantCallingGATK(Analysis):
             classpath_gatk=None,
             classpath_picard=None,
             classpath_snpeff=None):
-        """Initialise a C{bsf.analyses.variant_calling.VariantCallingGATK} object.
+        """Initialise a C{bsf.analyses.variant_calling.VariantCallingGATK}.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -342,11 +341,11 @@ class VariantCallingGATK(Analysis):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{bsf.DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.data.Collection}
         @type collection: bsf.data.Collection
-        @param comparisons: Python C{dict} of Python C{str} key and Python C{list} objects of
+        @param comparisons: Python C{dict} of Python C{str} key and Python C{list} value objects of
             C{bsf.data.Sample} objects
         @type comparisons: dict[str, list[bsf.data.Sample]]
         @param samples: Python C{list} of C{bsf.data.Sample} objects
@@ -438,7 +437,7 @@ class VariantCallingGATK(Analysis):
             genome_directory=genome_directory,
             e_mail=e_mail,
             debug=debug,
-            drms_list=drms_list,
+            stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
             samples=samples)
@@ -622,10 +621,11 @@ class VariantCallingGATK(Analysis):
             genome_version=self.genome_version)
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.variant_calling.VariantCallingGATK} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a C{bsf.analyses.variant_calling.VariantCallingGATK} via a
+        C{bsf.standards.Configuration} section.
 
         Instance variables without a configuration option remain unchanged.
+
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
@@ -953,7 +953,7 @@ class VariantCallingGATK(Analysis):
 
         assert isinstance(comparison_path, basestring)
 
-        # For variant calling, all samples need adding to the Analysis object regardless.
+        # For variant calling, all samples need adding to the Analysis regardless.
         for sample in self.collection.get_all_samples():
             self.add_sample(sample=sample)
 
@@ -997,7 +997,7 @@ class VariantCallingGATK(Analysis):
 
         Configuration options I{vqsr_resources_indel} and I{vqsr_resources_snp} provide a comma-separated list of
         resources that are to be used in the VQSR procedure. Each option needs to correspond to a sub-section of the
-        C{ConfigParser.SafeConfigParser} object in C{bsf.standards.Configuration.config_parser}. Each sub-section needs
+        C{ConfigParser.SafeConfigParser} in C{bsf.standards.Configuration.config_parser}. Each sub-section needs
         options 'known', 'training', 'truth', 'prior' and 'file_path'.
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -1072,7 +1072,7 @@ class VariantCallingGATK(Analysis):
                     self._sequence_list.append(sq_entry['ID'])
 
     def run(self):
-        """Run this C{bsf.analyses.variant_calling.VariantCallingGATK} analysis.
+        """Run a C{bsf.analyses.variant_calling.VariantCallingGATK} analysis.
 
         @return:
         @rtype:
@@ -1251,16 +1251,15 @@ class VariantCallingGATK(Analysis):
 
         self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
-        # Initialise Distributed Resource Management System (DRMS) objects.
-        drms_align_lane = self.get_drms(name=self.drms_name_align_lane)
-        drms_process_lane = self.get_drms(name=self.drms_name_process_lane)
-        drms_process_sample = self.get_drms(name=self.drms_name_process_sample)
-        drms_diagnose_sample = self.get_drms(name=self.drms_name_diagnose_sample)
-        drms_merge_cohort = self.get_drms(name=self.drms_name_merge_cohort)
-        drms_process_cohort = self.get_drms(name=self.drms_name_process_cohort)
-        drms_split_cohort = self.get_drms(name=self.drms_name_split_cohort)
-        drms_summary = self.get_drms(name=self.drms_name_summary)
-        drms_somatic = self.get_drms(name=self.drms_name_somatic)
+        stage_align_lane = self.get_stage(name=self.stage_name_align_lane)
+        stage_process_lane = self.get_stage(name=self.stage_name_process_lane)
+        stage_process_sample = self.get_stage(name=self.stage_name_process_sample)
+        stage_diagnose_sample = self.get_stage(name=self.stage_name_diagnose_sample)
+        stage_merge_cohort = self.get_stage(name=self.stage_name_merge_cohort)
+        stage_process_cohort = self.get_stage(name=self.stage_name_process_cohort)
+        stage_split_cohort = self.get_stage(name=self.stage_name_split_cohort)
+        stage_summary = self.get_stage(name=self.stage_name_summary)
+        stage_somatic = self.get_stage(name=self.stage_name_somatic)
 
         vc_merge_cohort_dependency_dict = dict()
         vc_merge_cohort_sample_dict = dict()
@@ -1301,15 +1300,15 @@ class VariantCallingGATK(Analysis):
                 # - BWA MEM
 
                 bwa = BWA(name='variant_calling_bwa_{}'.format(replicate_key), analysis=self)
-                # Instead of adding the BWA Executable to the DRMS, it gets serialised into the pickler_file.
-                # bwa_drms.add_executable(executable=bwa)
+                # Instead of adding the BWA Executable to the Stage, it gets serialised into the pickler_file.
+                # stage_bwa.add_executable(executable=bwa)
 
                 bwa_mem = bwa.sub_command
 
                 # Set BWA mem options.
 
-                # Allow as many threads as defined in the corresponding DRMS object.
-                bwa_mem.add_option_short(key='t', value=str(drms_align_lane.threads))
+                # Allow as many threads as defined in the corresponding Stage.
+                bwa_mem.add_option_short(key='t', value=str(stage_align_lane.threads))
                 # Append FASTA/Q comment to SAM output.
                 # Illumina-style FASTQ headers obey the following schema, which is not SAM compliant.
                 # @<instrument>:<run number>:<flowcell ID>:<lane>:<tile>:<x-pos>:<y-pos> \
@@ -1357,18 +1356,18 @@ class VariantCallingGATK(Analysis):
 
                 file_path_align_lane = {
                     # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
-                    # It is currently based on the drms_align_lane.name and replicate_key.
+                    # It is currently based on the stage_align_lane.name and replicate_key.
                     # The script should also be changed to pre-set all file names beforehand.
-                    'aligned_bam': '{}_{}.bam'.format(drms_align_lane.name, replicate_key),
-                    'aligned_bai': '{}_{}.bai'.format(drms_align_lane.name, replicate_key),
-                    'aligned_md5': '{}_{}.bam.md5'.format(drms_align_lane.name, replicate_key),
+                    'aligned_bam': '{}_{}.bam'.format(stage_align_lane.name, replicate_key),
+                    'aligned_bai': '{}_{}.bai'.format(stage_align_lane.name, replicate_key),
+                    'aligned_md5': '{}_{}.bam.md5'.format(stage_align_lane.name, replicate_key),
                 }
 
-                # Normally, the bwa object would be pushed onto the drms list.
-                # Experimentally, use Pickler to serialize the Executable object into a file.
+                # Normally, the bwa object would be pushed onto the Stage list.
+                # Experimentally, use Pickler to serialize the Executable into a file.
 
                 pickler_dict_align_lane = {
-                    'prefix': drms_align_lane.name,
+                    'prefix': stage_align_lane.name,
                     'replicate_key': replicate_key,
                     'classpath_gatk': self.classpath_gatk,
                     'classpath_picard': self.classpath_picard,
@@ -1377,7 +1376,7 @@ class VariantCallingGATK(Analysis):
 
                 pickler_path = os.path.join(
                     self.genome_directory,
-                    '{}_{}.pkl'.format(drms_align_lane.name, replicate_key))
+                    '{}_{}.pkl'.format(stage_align_lane.name, replicate_key))
                 pickler_file = open(pickler_path, 'wb')
                 pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
                 pickler.dump(obj=pickler_dict_align_lane)
@@ -1385,9 +1384,9 @@ class VariantCallingGATK(Analysis):
 
                 # Create a bsf_run_bwa.py job to run the pickled object.
 
-                run_bwa = drms_align_lane.add_executable(
+                run_bwa = stage_align_lane.add_executable(
                     executable=Executable(
-                        name='_'.join((drms_align_lane.name, replicate_key)),
+                        name='_'.join((stage_align_lane.name, replicate_key)),
                         program='bsf_run_bwa.py'))
 
                 # Only submit this Executable if the final result file does not exist.
@@ -1396,8 +1395,8 @@ class VariantCallingGATK(Analysis):
                     run_bwa.submit = False
                 # Check also for existence of a new-style Runnable status file.
                 if os.path.exists(os.path.join(
-                        drms_align_lane.working_directory,
-                        '_'.join((drms_align_lane.name, replicate_key, 'completed.txt')))):
+                        stage_align_lane.working_directory,
+                        '_'.join((stage_align_lane.name, replicate_key, 'completed.txt')))):
                     run_bwa.submit = False
 
                     # Set run_bwa options.
@@ -1419,18 +1418,18 @@ class VariantCallingGATK(Analysis):
                 # GATK PrintReads                       (process_lane_gatk_print_reads)
                 # Picard CollectAlignmentSummaryMetrics (process_lane_picard_collect_alignment_summary_metrics)
 
-                prefix_lane = '_'.join((drms_process_lane.name, replicate_key))
+                prefix_lane = '_'.join((stage_process_lane.name, replicate_key))
 
                 # Lane-specific file paths
 
                 file_path_dict_lane = {
                     'temporary_directory': prefix_lane + '_temporary',
                     # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
-                    # It is currently based on the drms_align_lane.name and replicate_key.
+                    # It is currently based on the stage_align_lane.name and replicate_key.
                     # The script should also be changed to pre-set all file names beforehand.
-                    'aligned_bam': '{}_{}.bam'.format(drms_align_lane.name, replicate_key),
-                    'aligned_bai': '{}_{}.bai'.format(drms_align_lane.name, replicate_key),
-                    'aligned_md5': '{}_{}.bam.md5'.format(drms_align_lane.name, replicate_key),
+                    'aligned_bam': '{}_{}.bam'.format(stage_align_lane.name, replicate_key),
+                    'aligned_bai': '{}_{}.bai'.format(stage_align_lane.name, replicate_key),
+                    'aligned_md5': '{}_{}.bam.md5'.format(stage_align_lane.name, replicate_key),
                     'duplicates_marked_bam': prefix_lane + '_duplicates_marked.bam',
                     'duplicates_marked_bai': prefix_lane + '_duplicates_marked.bai',
                     'duplicates_marked_md5': prefix_lane + '_duplicates_marked.bam.md5',
@@ -1459,8 +1458,8 @@ class VariantCallingGATK(Analysis):
                         cache_path_dict=cache_path_dict,
                         file_path_dict=file_path_dict_lane,
                         debug=self.debug))
-                executable_process_lane = self.set_drms_runnable(
-                    drms=drms_process_lane,
+                executable_process_lane = self.set_stage_runnable(
+                    stage=stage_process_lane,
                     runnable=runnable_process_lane)
                 executable_process_lane.dependencies.append(run_bwa.name)
                 reference_process_lane = runnable_process_lane.get_absolute_cache_file_path(
@@ -1738,7 +1737,7 @@ class VariantCallingGATK(Analysis):
             # Picard CollectAlignmentSummaryMetrics     (process_sample_picard_collect_alignment_summary_metrics)
             # GATK HaplotypeCaller                      (process_sample_gatk_haplotype_caller)
 
-            prefix_sample = '_'.join((drms_process_sample.name, sample.name))
+            prefix_sample = '_'.join((stage_process_sample.name, sample.name))
 
             file_path_dict_sample = {
                 'temporary_directory': prefix_sample + '_temporary',
@@ -1759,7 +1758,7 @@ class VariantCallingGATK(Analysis):
                 'raw_variants_gvcf_idx': prefix_sample + '_raw_variants.g.vcf.gz.tbi',
             }
 
-            # Create a Runnable and Executable for processing each Sample object.
+            # Create a Runnable and Executable for processing each Sample.
 
             runnable_process_sample = self.add_runnable(
                 runnable=Runnable(
@@ -1770,8 +1769,8 @@ class VariantCallingGATK(Analysis):
                     cache_path_dict=cache_path_dict,
                     file_path_dict=file_path_dict_sample,
                     debug=self.debug))
-            executable_process_sample = self.set_drms_runnable(
-                drms=drms_process_sample,
+            executable_process_sample = self.set_stage_runnable(
+                stage=stage_process_sample,
                 runnable=runnable_process_sample)
             executable_process_sample.dependencies.extend(vc_process_sample_dependencies)
 
@@ -2123,7 +2122,7 @@ class VariantCallingGATK(Analysis):
             # bsfR bsf_variant_calling_coverage.R   (diagnose_sample_coverage)
             # Picard CalculateHsMetrics             (diagnose_sample_picard_calculate_hybrid_selection_metrics)
 
-            prefix_diagnosis = '_'.join((drms_diagnose_sample.name, sample.name))
+            prefix_diagnosis = '_'.join((stage_diagnose_sample.name, sample.name))
 
             file_path_dict_diagnosis = {
                 'temporary_directory': prefix_diagnosis + '_temporary',
@@ -2187,8 +2186,8 @@ class VariantCallingGATK(Analysis):
                     cache_path_dict=cache_path_dict,
                     file_path_dict=file_path_dict_diagnosis,
                     debug=self.debug))
-            executable_diagnose_sample = self.set_drms_runnable(
-                drms=drms_diagnose_sample,
+            executable_diagnose_sample = self.set_stage_runnable(
+                stage=stage_diagnose_sample,
                 runnable=runnable_diagnose_sample)
             executable_diagnose_sample.dependencies.append(executable_process_sample.name)
 
@@ -2360,7 +2359,7 @@ class VariantCallingGATK(Analysis):
         # cohort-specific GVCF files.
 
         for cohort_key, sample_gvcf_list in vc_merge_cohort_sample_dict.iteritems():
-            prefix_merge = '_'.join((drms_merge_cohort.name, cohort_key))
+            prefix_merge = '_'.join((stage_merge_cohort.name, cohort_key))
 
             vc_merge_cohort_prefix_list.append(prefix_merge)
 
@@ -2381,8 +2380,8 @@ class VariantCallingGATK(Analysis):
                     cache_path_dict=cache_path_dict,
                     file_path_dict=file_path_dict_merge,
                     debug=self.debug))
-            executable_merge_cohort = self.set_drms_runnable(
-                drms=drms_merge_cohort,
+            executable_merge_cohort = self.set_stage_runnable(
+                stage=stage_merge_cohort,
                 runnable=runnable_merge_cohort)
             executable_merge_cohort.dependencies.extend(vc_merge_cohort_dependency_dict[cohort_key])
 
@@ -2415,7 +2414,7 @@ class VariantCallingGATK(Analysis):
         # Run the GATK CombineGVCFs analysis once more to merge all cohort-specific GVCF files defined in this project.
 
         if len(vc_merge_cohort_sample_dict) > 1:
-            prefix_merge = '_'.join((drms_merge_cohort.name, self.cohort_name))
+            prefix_merge = '_'.join((stage_merge_cohort.name, self.cohort_name))
 
             vc_merge_cohort_prefix_list.append(prefix_merge)
 
@@ -2436,8 +2435,8 @@ class VariantCallingGATK(Analysis):
                     cache_path_dict=cache_path_dict,
                     file_path_dict=file_path_dict_merge,
                     debug=self.debug))
-            executable_merge_cohort = self.set_drms_runnable(
-                drms=drms_merge_cohort,
+            executable_merge_cohort = self.set_stage_runnable(
+                stage=stage_merge_cohort,
                 runnable=runnable_merge_cohort)
             executable_merge_cohort.dependencies.extend(vc_merge_cohort_dependency_list)
 
@@ -2481,7 +2480,7 @@ class VariantCallingGATK(Analysis):
         # snpEff                                (process_cohort_snpeff)
         # GATK VariantAnnotator                 (process_cohort_gatk_variant_annotator)
 
-        prefix_cohort = '_'.join((drms_process_cohort.name, self.cohort_name))
+        prefix_cohort = '_'.join((stage_process_cohort.name, self.cohort_name))
 
         file_path_dict_cohort = {
             'temporary_directory': prefix_cohort + '_temporary',
@@ -2524,8 +2523,8 @@ class VariantCallingGATK(Analysis):
                 cache_path_dict=cache_path_dict,
                 file_path_dict=file_path_dict_cohort,
                 debug=self.debug))
-        executable_process_cohort = self.set_drms_runnable(
-            drms=drms_process_cohort,
+        executable_process_cohort = self.set_stage_runnable(
+            stage=stage_process_cohort,
             runnable=runnable_process_cohort)
         executable_process_cohort.dependencies.append(vc_merge_cohort_final_dependency)
 
@@ -2575,7 +2574,7 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
         if self.interval_padding:
             runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-        runnable_step.add_gatk_option(key='num_threads', value=str(drms_process_cohort.threads))
+        runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
         if self.known_sites_discovery:
             runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
         if len(self.accessory_cohort_gvcfs):
@@ -2608,7 +2607,7 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(drms_process_cohort.threads))
+            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             runnable_step.add_gatk_option(key='mode', value='SNP')
             for resource in self.vqsr_resources_snp_dict.keys():
                 resource_option = 'resource:{},known={},training={},truth={},prior={}'. \
@@ -2648,7 +2647,7 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(drms_process_cohort.threads))
+            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             runnable_step.add_gatk_option(key='mode', value='SNP')
             runnable_step.add_gatk_option(key='input', value=file_path_dict_cohort['genotyped_raw_vcf'])
             runnable_step.add_gatk_option(key='recal_file', value=file_path_dict_cohort['recalibration_snp'])
@@ -2684,7 +2683,7 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(drms_process_cohort.threads))
+            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             runnable_step.add_gatk_option(key='mode', value='INDEL')
             for resource in self.vqsr_resources_indel_dict.keys():
                 resource_option = 'resource:{},known={},training={},truth={},prior={}'. \
@@ -2724,7 +2723,7 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(drms_process_cohort.threads))
+            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             runnable_step.add_gatk_option(key='mode', value='INDEL')
             runnable_step.add_gatk_option(key='input', value=file_path_dict_cohort['recalibrated_snp_raw_indel_vcf'])
             runnable_step.add_gatk_option(key='recal_file', value=file_path_dict_cohort['recalibration_indel'])
@@ -2755,7 +2754,7 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(drms_process_cohort.threads))
+            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             runnable_step.add_gatk_option(
                 key='variant',
                 value=file_path_dict_cohort['recalibrated_snp_recalibrated_indel_vcf'])
@@ -2771,25 +2770,25 @@ class VariantCallingGATK(Analysis):
 
         # Run the snpEff tool for functional variant annotation.
 
-        java_process = runnable_process_cohort.add_runnable_step(
+        runnable_step = runnable_process_cohort.add_runnable_step(
             runnable_step=RunnableStep(
                 name='process_cohort_snpeff',
                 program='java',
                 sub_command=Command(program='eff')))
 
-        java_process.add_switch_short(
+        runnable_step.add_switch_short(
             key='d64')
-        java_process.add_option_short(
+        runnable_step.add_option_short(
             key='jar',
             value=os.path.join(self.classpath_snpeff, 'snpEff.jar'))
-        java_process.add_switch_short(
+        runnable_step.add_switch_short(
             key='Xmx6G')
-        java_process.add_option_pair(
+        runnable_step.add_option_pair(
             key='-Djava.io.tmpdir',
             value=file_path_dict_cohort['temporary_directory'])
-        java_process.stdout_path = file_path_dict_cohort['snpeff_vcf']
+        runnable_step.stdout_path = file_path_dict_cohort['snpeff_vcf']
 
-        sub_command = java_process.sub_command
+        sub_command = runnable_step.sub_command
         sub_command.add_switch_short(key='download')
         sub_command.add_option_short(key='o', value='gatk')
         sub_command.add_option_short(key='stats', value=file_path_dict_cohort['snpeff_stats'])
@@ -2815,7 +2814,7 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
         if self.interval_padding:
             runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-        # runnable_step.add_gatk_option(key='num_threads', value=str(drms_process_cohort.threads))
+        # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
         if self.known_sites_discovery:
             runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
 
@@ -2860,7 +2859,7 @@ class VariantCallingGATK(Analysis):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
 
-            prefix_split = '_'.join((drms_split_cohort.name, sample.name))
+            prefix_split = '_'.join((stage_split_cohort.name, sample.name))
 
             file_path_dict_split = {
                 'temporary_directory': prefix_split + '_temporary',
@@ -2877,8 +2876,8 @@ class VariantCallingGATK(Analysis):
                     cache_path_dict=cache_path_dict,
                     file_path_dict=file_path_dict_split,
                     debug=self.debug))
-            executable_split_cohort = self.set_drms_runnable(
-                drms=drms_split_cohort,
+            executable_split_cohort = self.set_stage_runnable(
+                stage=stage_split_cohort,
                 runnable=runnable_split_cohort)
             executable_split_cohort.dependencies.append(executable_process_cohort.name)
 
@@ -2902,7 +2901,7 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(drms_process_cohort.threads))
+            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             runnable_step.add_gatk_option(key='variant', value=file_path_dict_cohort['annotated_vcf'])
             runnable_step.add_gatk_option(key='out', value=file_path_dict_split['sample_vcf'])
             runnable_step.add_gatk_option(key='sample_name', value=sample.name)
@@ -2978,7 +2977,7 @@ class VariantCallingGATK(Analysis):
         #
         # bsfR bsf_variant_calling_summary.R    (summary)
 
-        prefix_summary = '_'.join((drms_summary.name, self.cohort_name))
+        prefix_summary = '_'.join((stage_summary.name, self.cohort_name))
 
         file_path_dict_summary = {
             'temporary_directory': prefix_summary + '_temporary',
@@ -3027,8 +3026,8 @@ class VariantCallingGATK(Analysis):
                 cache_path_dict=cache_path_dict,
                 file_path_dict=file_path_dict_summary,
                 debug=self.debug))
-        executable_summary = self.set_drms_runnable(
-            drms=drms_summary,
+        executable_summary = self.set_stage_runnable(
+            stage=stage_summary,
             runnable=runnable_summary)
         # Set dependencies on diagnose_sample processes, which imply dependencies on process_sample and process_lane.
         executable_summary.dependencies.extend(vc_summary_dependency_list)
@@ -3062,7 +3061,7 @@ class VariantCallingGATK(Analysis):
             if len(self.comparisons[key]) != 2:
                 continue
 
-            prefix_somatic = '_'.join((drms_somatic.name, key))
+            prefix_somatic = '_'.join((stage_somatic.name, key))
 
             # Somatic variant calling-specific file paths
 
@@ -3088,13 +3087,13 @@ class VariantCallingGATK(Analysis):
                     cache_path_dict=cache_path_dict,
                     file_path_dict=file_path_dict_somatic,
                     debug=self.debug))
-            executable_somatic = self.set_drms_runnable(
-                drms=drms_somatic,
+            executable_somatic = self.set_stage_runnable(
+                stage=stage_somatic,
                 runnable=runnable_somatic)
             executable_somatic.dependencies.append(
-                '_'.join((drms_process_sample.name, self.comparisons[key][0][1][0].name)))
+                '_'.join((stage_process_sample.name, self.comparisons[key][0][1][0].name)))
             executable_somatic.dependencies.append(
-                '_'.join((drms_process_sample.name, self.comparisons[key][-1][1][0].name)))
+                '_'.join((stage_process_sample.name, self.comparisons[key][-1][1][0].name)))
 
             reference_somatic = runnable_somatic.get_absolute_cache_file_path(
                 file_path=self.bwa_genome_db)
@@ -3122,33 +3121,33 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='cosmic', value=file_path, override=True)
             runnable_step.add_gatk_option(
                 key='input_file:normal',
-                value='_'.join((drms_process_sample.name, self.comparisons[key][0][1][0].name, 'realigned.bam')))
+                value='_'.join((stage_process_sample.name, self.comparisons[key][0][1][0].name, 'realigned.bam')))
             runnable_step.add_gatk_option(
                 key='input_file:tumor',
-                value='_'.join((drms_process_sample.name, self.comparisons[key][-1][1][0].name, 'realigned.bam')))
+                value='_'.join((stage_process_sample.name, self.comparisons[key][-1][1][0].name, 'realigned.bam')))
             runnable_step.add_gatk_option(key='out', value=file_path_dict_somatic['somatic_vcf'])
 
             # Run the snpEff tool for functional variant annotation.
 
-            java_process = runnable_somatic.add_runnable_step(
+            runnable_step = runnable_somatic.add_runnable_step(
                 runnable_step=RunnableStep(
                     name='somatic_snpeff',
                     program='java',
                     sub_command=Command(program='eff')))
 
-            java_process.add_switch_short(
+            runnable_step.add_switch_short(
                 key='d64')
-            java_process.add_option_short(
+            runnable_step.add_option_short(
                 key='jar',
                 value=os.path.join(self.classpath_snpeff, 'snpEff.jar'))
-            java_process.add_switch_short(
+            runnable_step.add_switch_short(
                 key='Xmx6G')
-            java_process.add_option_pair(
+            runnable_step.add_option_pair(
                 key='-Djava.io.tmpdir',
                 value=file_path_dict_somatic['temporary_directory'])
-            java_process.stdout_path = file_path_dict_somatic['snpeff_vcf']
+            runnable_step.stdout_path = file_path_dict_somatic['snpeff_vcf']
 
-            sub_command = java_process.sub_command
+            sub_command = runnable_step.sub_command
             sub_command.add_switch_short(key='download')
             sub_command.add_option_short(key='o', value='gatk')
             sub_command.add_option_short(key='stats', value=file_path_dict_somatic['snpeff_stats'])
@@ -3174,7 +3173,7 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(drms_process_cohort.threads))
+            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             if self.known_sites_discovery:
                 runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
 
@@ -3375,13 +3374,13 @@ class VariantCallingGATK(Analysis):
             replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
 
             runnable_process_sample = self.runnable_dict[
-                '_'.join((self.drms_name_process_sample, sample.name))]
+                '_'.join((self.stage_name_process_sample, sample.name))]
             assert isinstance(runnable_process_sample, Runnable)
             runnable_diagnose_sample = self.runnable_dict[
-                '_'.join((self.drms_name_diagnose_sample, sample.name))]
+                '_'.join((self.stage_name_diagnose_sample, sample.name))]
             assert isinstance(runnable_diagnose_sample, Runnable)
             runnable_split_cohort = self.runnable_dict[
-                '_'.join((self.drms_name_split_cohort, sample.name))]
+                '_'.join((self.stage_name_split_cohort, sample.name))]
             assert isinstance(runnable_split_cohort, Runnable)
 
             # Alignment track
@@ -3476,7 +3475,7 @@ class VariantCallingGATK(Analysis):
 
             for replicate_key in replicate_keys:
                 runnable_process_lane = self.runnable_dict[
-                    '_'.join((self.drms_name_process_lane, replicate_key))]
+                    '_'.join((self.stage_name_process_lane, replicate_key))]
                 assert isinstance(runnable_process_lane, Runnable)
                 output_html += '<tr>\n'
                 output_html += '<td class="left"></td>\n'  # Sample
@@ -3511,7 +3510,7 @@ class VariantCallingGATK(Analysis):
         output_html += '<tbody>\n'
 
         runnable_process_cohort = self.runnable_dict[
-            '_'.join((self.drms_name_process_cohort, self.cohort_name))]
+            '_'.join((self.stage_name_process_cohort, self.cohort_name))]
         assert isinstance(runnable_process_cohort, Runnable)
 
         output_html += '<tr>\n'
@@ -3567,7 +3566,7 @@ class VariantCallingGATK(Analysis):
                 if len(self.comparisons[key]) != 2:
                     continue
 
-                runnable_somatic = self.runnable_dict['_'.join((self.drms_name_somatic, key))]
+                runnable_somatic = self.runnable_dict['_'.join((self.stage_name_somatic, key))]
                 assert isinstance(runnable_somatic, Runnable)
                 output_html += '<tr>\n'
                 output_html += '<td>{}</td>\n'.format(key)
@@ -3597,7 +3596,7 @@ class VariantCallingGATK(Analysis):
         output_html += '</thead>\n'
         output_html += '<tbody>\n'
 
-        runnable_summary = self.runnable_dict['_'.join((self.drms_name_summary, self.cohort_name))]
+        runnable_summary = self.runnable_dict['_'.join((self.stage_name_summary, self.cohort_name))]
         assert isinstance(runnable_summary, Runnable)
         file_path_dict_summary = runnable_summary.file_path_dict
 

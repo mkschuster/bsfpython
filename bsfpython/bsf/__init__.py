@@ -53,8 +53,10 @@ def _comma_separated_to_list(value_string):
 
 
 class Analysis(object):
-    """The C{bsf.Analysis} class represents a high-level analysis that may run one or more
-    C{bsf.process.Executable} objects (programs).
+    """The C{bsf.Analysis} class represents a high-level analysis.
+
+    It consists of one or more C{bsf.Stage} objects that may run one or more
+    C{bsf.process.Executable} or C{bsf.process.Runnable} objects (programs).
 
     Attributes:
     @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
@@ -77,8 +79,8 @@ class Analysis(object):
     @type project_directory: str | unicode
     @ivar genome_directory: Genome-specific directory
     @type genome_directory: str | unicode
-    @ivar drms_list: Python C{list} of C{DRMS} objects
-    @type drms_list: list[DRMS]
+    @ivar stage_list: Python C{list} of C{bsf.Stage} objects
+    @type stage_list: list[bsf.Stage]
     @ivar runnable_dict: Python C{dict} of Python C{str} (C{bsf.Runnable.name}) key data and C{bsf.Runnable} value data
     @type runnable_dict: dict[bsf.Runnable.name, bsf.Runnable]
     @ivar collection: C{bsf.data.Collection}
@@ -94,11 +96,11 @@ class Analysis(object):
 
     @classmethod
     def from_config_file_path(cls, config_path):
-        """Create a new C{bsf.Analysis} object from a UNIX-style configuration file path via the
-        C{bsf.standards.Configuration} class.
+        """Create a new C{bsf.Analysis} from a UNIX-style configuration file path.
 
         The configuration file on C{bsf.standards.Default.global_file_path} is read as default,
-        the project-specific one gets read, if it is not the same file.
+        before the project-specific one gets read, if it is not the same file.
+
         @param config_path: UNIX-style configuration file path
         @type config_path: str | unicode
         @return: C{bsf.Analysis}
@@ -114,7 +116,7 @@ class Analysis(object):
 
     @classmethod
     def from_configuration(cls, configuration):
-        """Create a new C{bsf.Analysis} object from a C{bsf.standards.Configuration} object.
+        """Create a new C{bsf.Analysis} from a C{bsf.standards.Configuration}.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -153,12 +155,12 @@ class Analysis(object):
             sas_prefix=None,
             e_mail=None,
             debug=0,
-            drms_list=None,
+            stage_list=None,
             runnable_dict=None,
             collection=None,
             comparisons=None,
             samples=None):
-        """Initialise a C{bsf.Analysis} object.
+        """Initialise a C{bsf.Analysis}.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -187,8 +189,8 @@ class Analysis(object):
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param drms_list: Python C{list} of C{DRMS} objects
-        @type drms_list: list[DRMS]
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
         @param runnable_dict: Python C{dict} of Python C{str} (C{bsf.Runnable.name}) and C{bsf.Runnable} value data
         @type runnable_dict: dict[bsf.Runnable.name, bsf.Runnable]
         @param collection: C{bsf.data.Collection}
@@ -266,10 +268,10 @@ class Analysis(object):
             assert isinstance(debug, int)
             self.debug = debug
 
-        if drms_list is None:
-            self.drms_list = list()
+        if stage_list is None:
+            self.stage_list = list()
         else:
-            self.drms_list = drms_list
+            self.stage_list = stage_list
 
         if runnable_dict is None:
             self.runnable_dict = dict()
@@ -295,7 +297,7 @@ class Analysis(object):
         return
 
     def trace(self, level):
-        """Trace a C{bsf.Analysis} object.
+        """Trace a C{bsf.Analysis}.
 
         @param level: Indentation level
         @type level: int
@@ -316,7 +318,7 @@ class Analysis(object):
         output += '{}  sas_prefix: {!r}\n'.format(indent, self.sas_prefix)
         output += '{}  e_mail: {!r}\n'.format(indent, self.e_mail)
         output += '{}  debug: {!r}\n'.format(indent, self.debug)
-        output += '{}  drms_list: {!r}\n'.format(indent, self.drms_list)
+        output += '{}  stage_list: {!r}\n'.format(indent, self.stage_list)
         output += '{}  runnable_dict: {!r}\n'.format(indent, self.runnable_dict)
         output += '{}  collection: {!r}\n'.format(indent, self.collection)
         output += '{}  comparisons: {!r}\n'.format(indent, self.comparisons)
@@ -342,20 +344,23 @@ class Analysis(object):
 
         return output
 
-    def add_drms(self, drms):
-        """Convenience method to facilitate initialising, adding and returning a C{bsf.DRMS} object.
+    def add_stage(self, stage):
+        """Convenience method to facilitate initialising, adding and returning a C{bsf.Stage}.
 
-        @param drms: C{bsf.DRMS}
-        @type drms: DRMS
-        @return: C{bsf.DRMS}
-        @rtype: DRMS
+        If the C{bsf.Stage} exists already in the C{bsf.Analysis.stage_list} the method returns the
+        already existing C{bsf.Stage}.
+
+        @param stage: C{bsf.Stage}
+        @type stage: bsf.Stage
+        @return: C{bsf.Stage}
+        @rtype: bsf.Stage
         """
-        assert isinstance(drms, DRMS)
+        assert isinstance(stage, Stage)
 
-        if drms not in self.drms_list:
-            self.drms_list.append(drms)
+        if stage not in self.stage_list:
+            self.stage_list.append(stage)
 
-        return drms
+        return stage
 
     def add_runnable(self, runnable):
         """Convenience method to facilitate initialising, adding and returning a C{bsf.Runnable}.
@@ -364,12 +369,12 @@ class Analysis(object):
         @type runnable: bsf.Runnable
         @return: C{bsf.Runnable}
         @rtype: bsf.Runnable
-        @raise Exception: The C{bsf.Runnable.name} already exists in the C{bsf.Analysis}
+        @raise Exception: The C{bsf.Runnable.name} already exists in the C{bsf.Analysis.runnable_dict}
         """
         assert isinstance(runnable, Runnable)
 
         if runnable.name in self.runnable_dict:
-            raise Exception("A Runnable object with name {!r} already exists in Analysis {!r}".
+            raise Exception("A Runnable with name {!r} already exists in Analysis {!r}".
                             format(runnable.name, self.project_name))
         else:
             self.runnable_dict[runnable.name] = runnable
@@ -377,11 +382,12 @@ class Analysis(object):
         return runnable
 
     def add_sample(self, sample):
-        """Add a C{bsf.data.Sample} object to the Python C{list} of C{bsf.data.Sample} objects,
-        if it does not already exist.
+        """Add a C{bsf.data.Sample} to the Python C{list} of C{bsf.data.Sample} objects.
 
+        If the C{bsf.data.Sample} already exists in the C{bsf.Analysis}, the method just returns.
         The check is based on the Python 'in' comparison operator and in lack of a specific
         __cmp__ method, relies on object identity (i.e. address).
+
         @param sample: C{bsf.data.Sample}
         @type sample: bsf.data.Sample
         @return:
@@ -394,62 +400,64 @@ class Analysis(object):
 
         return
 
-    def get_drms(self, name):
-        """Get a C{bsf.DRMS} object form a C{bsf.Analysis}.
-        If the C{bsf.DRMS} object does not exist, it is created and initialised it via the
-        C{bsf.standards.Configuration} object in C{bsf.Analysis.configuration}.
+    def get_stage(self, name):
+        """Get a C{bsf.Stage} from a C{bsf.Analysis}.
+
+        If the C{bsf.Stage} does not exist, it is created and initialised it via the
+        C{bsf.standards.Configuration} in C{bsf.Analysis.configuration}.
         Reads from configuration file sections
-        I{[bsf.DRMS]}
-        I{[bsf.Analysis.DRMS]} or I{[bsf.analyses.*.DRMS]}
-        I{[bsf.Analysis.DRMS.name]} or I{[bsf.analyses.*.DRMS.name]}
+        I{[bsf.Stage]}
+        I{[bsf.Analysis.Stage]} or I{[bsf.analyses.*.Stage]}
+        I{[bsf.Analysis.Stage.name]} or I{[bsf.analyses.*.Stage.name]}
+
         @param name: Name
         @type name: str
-        @return: C{bsf.DRMS} object
-        @rtype: DRMS
+        @return: C{bsf.Stage}
+        @rtype: bsf.Stage
         """
-        # Check if a DRMS object with this the name already exists and if so, return it.
-        for drms in self.drms_list:
-            if drms.name == name:
-                return drms
+        # Check if a Stage with this the name already exists and if so, return it.
+        for stage in self.stage_list:
+            if stage.name == name:
+                return stage
 
-        # Initialise a new DRMS object and add it to the Python list of DRMS objects.
+        # Initialise a new Stage and add it to the Python list of Stage objects.
 
-        drms = DRMS(name=name, working_directory=self.genome_directory)
-        self.drms_list.append(drms)
+        stage = Stage(name=name, working_directory=self.genome_directory)
+        self.stage_list.append(stage)
 
-        # A "bsf.DRMS" section specifies defaults for all DRMS objects of an Analysis.
+        # A "bsf.Stage" section specifies defaults for all Stage objects of an Analysis.
 
-        section = Configuration.section_from_instance(instance=drms)
-        drms.set_configuration(configuration=self.configuration, section=section)
-
-        if self.debug > 1:
-            print 'DRMS configuration section: {!r}.'.format(section)
-
-        # A "bsf.Analysis.DRMS" or "bsf.analyses.*.DRMS" pseudo-class section specifies
-        # Analysis-specific or sub-class-specific options for the DRMS, respectively.
-
-        section = '.'.join((Configuration.section_from_instance(instance=self), 'DRMS'))
-        drms.set_configuration(configuration=self.configuration, section=section)
+        section = Configuration.section_from_instance(instance=stage)
+        stage.set_configuration(configuration=self.configuration, section=section)
 
         if self.debug > 1:
-            print 'DRMS configuration section: {!r}.'.format(section)
+            print 'Stage configuration section: {!r}.'.format(section)
 
-        # A "bsf.Analysis.DRMS.name" or "bsf.analyses.*.DRMS.name" section specifies defaults
-        # for a particular DRMS object of an Analysis or sub-class, respectively.
+        # A "bsf.Analysis.Stage" or "bsf.analyses.*.Stage" pseudo-class section specifies
+        # Analysis-specific or sub-class-specific options for the Stage, respectively.
 
-        section = '.'.join((Configuration.section_from_instance(instance=self), 'DRMS', drms.name))
-        drms.set_configuration(configuration=self.configuration, section=section)
+        section = '.'.join((Configuration.section_from_instance(instance=self), 'Stage'))
+        stage.set_configuration(configuration=self.configuration, section=section)
 
         if self.debug > 1:
-            print 'DRMS configuration section: {!r}.'.format(section)
+            print 'Stage configuration section: {!r}.'.format(section)
 
-        return drms
+        # A "bsf.Analysis.Stage.name" or "bsf.analyses.*.Stage.name" section specifies defaults
+        # for a particular Stage of an Analysis or sub-class, respectively.
+
+        section = '.'.join((Configuration.section_from_instance(instance=self), 'Stage', stage.name))
+        stage.set_configuration(configuration=self.configuration, section=section)
+
+        if self.debug > 1:
+            print 'Stage configuration section: {!r}.'.format(section)
+
+        return stage
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.Analysis} object via a section of a
-        C{bsf.standards.Configuration} object.
+        """Set instance variables of a C{bsf.Analysis} via a C{bsf.standards.Configuration} section.
 
         Instance variables without a configuration option remain unchanged.
+
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
@@ -508,8 +516,7 @@ class Analysis(object):
         return
 
     def set_command_configuration(self, command):
-        """Set default C{bsf.argument.Argument} objects for a C{bsf.process.Command} or sub-class object
-        in the context of this C{bsf.Analysis} object.
+        """Set default C{bsf.argument.Argument} objects for a C{bsf.process.Command}.
 
         @param command: C{bsf.process.Command}
         @type command: bsf.process.Command
@@ -521,7 +528,7 @@ class Analysis(object):
         section = Configuration.section_from_instance(instance=command)
 
         # For plain Executable objects append the value of the
-        # Executable.program to make this more meaningful.
+        # Executable.program to make the configuration section more meaningful.
 
         if section == 'bsf.process.Executable':
             section += '.'
@@ -534,28 +541,30 @@ class Analysis(object):
 
         return
 
-    def set_drms_runnable(self, drms, runnable):
-        """Create a C{bsf.process.Executable} to submit a C{bsf.Runnable} into a C{DRMS}.
+    def set_stage_runnable(self, stage, runnable):
+        """Create a C{bsf.process.Executable} to assign a C{bsf.Runnable} to a C{bsf.Stage}.
 
-        In case C{bsf.Runnable.get_relative_status_path} exists already,
+        In case the file in C{bsf.Runnable.get_relative_status_path} exists already,
         C{bsf.process.Executable.submit} will be set to C{False}.
-        @param drms: C{DRMS}
-        @type drms: DRMS
+
+        @param stage: C{bsf.Stage}
+        @type stage: bsf.Stage
         @param runnable: C{bsf.Runnable}
         @type runnable: bsf.Runnable
         @return: C{bsf.process.Executable}
         @rtype: bsf.process.Executable
-        @raise Exception: A C{bsf.Runnable.name} does not exist in C{bsf.Analysis}
+        @raise Exception: A C{bsf.Runnable.name} does not exist in C{bsf.Analysis.runnable_dict}
+        @raise Exception: A C{bsf.Stage} does not exist in C{bsf.Analysis.stage_list}
         """
-        assert isinstance(drms, DRMS)
+        assert isinstance(stage, Stage)
         assert isinstance(runnable, Runnable)
 
-        if drms not in self.drms_list:
-            raise Exception("A DRMS object with name {!r} does not exist in the Analysis object with name {!r}.".
-                            format(drms.name, self.project_name))
+        if stage not in self.stage_list:
+            raise Exception("A Stage with name {!r} does not exist in the Analysis with name {!r}.".
+                            format(stage.name, self.project_name))
 
         if runnable.name not in self.runnable_dict:
-            raise Exception("A Runnable object with name {!r} does not exist in the Analysis object with name {!r}.".
+            raise Exception("A Runnable with name {!r} does not exist in the Analysis with name {!r}.".
                             format(runnable.name, self.project_name))
 
         executable = Executable(name=runnable.name, program=Runnable.runner_script)
@@ -570,12 +579,12 @@ class Analysis(object):
         if os.path.exists(runnable.get_absolute_status_path):
             executable.submit = False
 
-        drms.add_executable(executable=executable)
+        stage.add_executable(executable=executable)
 
         return executable
 
     def run(self):
-        """Run the C{bsf.Analysis}.
+        """Run a C{bsf.Analysis}.
 
         @raise Exception: An C{bsf.Analysis.project_name} has not been defined
         @return:
@@ -659,6 +668,7 @@ class Analysis(object):
         """Create a C{bsf.Analysis} report.
 
         The method must be implemented in a sub-class.
+
         @return:
         @rtype:
         """
@@ -851,6 +861,7 @@ class Analysis(object):
 
         The method automatically concatenates the XHTML header C{bsf.Analysis.get_html_header}, the XHTML content and
         the XHTML footer C{bsf.Analysis.get_html_footer} before returning the report.
+
         @param content: XHTML 1.0 content
         @type content: str
         @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional Document Type Declaration,
@@ -910,8 +921,10 @@ class Analysis(object):
             url_protocol=None,
             url_host_name=None):
         """Write a XHTML 1.0 report I{prefix_report.html} file into the C{bsf.Analysis.genome_directory}.
+
         The method automatically concatenates the XHTML header C{bsf.Analysis.get_html_header}, the XHTML content and
         the XHTML footer C{bsf.Analysis.get_html_footer} before writing the file.
+
         @param content: XHTML 1.0 content
         @type content: str
         @param prefix: A file name prefix (e.g. chipseq, rnaseq, ...), defaults to C{bsf.Analysis.prefix}
@@ -967,7 +980,7 @@ class Analysis(object):
         return
 
     def create_project_genome_directory(self):
-        """Check and create a C{bsf.Analysis.project_directory} or C{bsf.Analysis.genome_directory} if necessary.
+        """Check for and create a C{bsf.Analysis.project_directory} or C{bsf.Analysis.genome_directory} if necessary.
 
         @return:
         @rtype:
@@ -998,6 +1011,7 @@ class Analysis(object):
 
         The link will be placed in the sub directory and contain
         the project name followed by a 128 bit hexadecimal UUID string.
+
         @param sub_directory: C{bsf.Analysis}-specific directory
         @type sub_directory: str
         @return: Symbolic link to the project directory
@@ -1147,8 +1161,9 @@ class Analysis(object):
         return cgi.escape(s=primary_url, quote=True)
 
     def ucsc_hub_write_hub(self, prefix=None):
-        """Write a UCSC Track Hub I{prefix_hub.txt} file into the C{bsf.Analysis.project_directory},
-        above the C{bsf.Analysis.genome_directory}.
+        """Write a UCSC Track Hub I{prefix_hub.txt} file into the C{bsf.Analysis.project_directory}.
+
+        The C{bsf.Analysis.project_directory} is one level above the C{bsf.Analysis.genome_directory}.
 
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
@@ -1183,8 +1198,9 @@ class Analysis(object):
         return
 
     def ucsc_hub_write_genomes(self, prefix=None):
-        """Write a UCSC Track Hub I{prefix_genomes.txt} file into the C{bsf.Analysis.project_directory},
-        above the C{bsf.Analysis.genome_directory}.
+        """Write a UCSC Track Hub I{prefix_genomes.txt} file into the C{bsf.Analysis.project_directory}.
+
+        The C{bsf.Analysis.project_directory} is one level above the C{bsf.Analysis.genome_directory}.
 
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
@@ -1286,6 +1302,7 @@ class Analysis(object):
         The method writes a I{prefix_hub.txt} and a I{prefix_genomes.txt} file into the
         C{bsf.Analysis.project_directory}, above the C{bsf.Analysis.genome_directory}, as well as a
         I{prefix_trackDB.txt} file into the C{bsf.Analysis.genome_directory}.
+
         @param content: Content of the track database file
         @type content: str
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...), defaults to C{bsf.Analysis.prefix}
@@ -1303,22 +1320,25 @@ class Analysis(object):
         return
 
     def check_state(self):
-        """Check the state for each C{DRMS} object.
+        """Check the state of each C{bsf.Stage}.
 
         @return:
         @rtype:
         """
-        for drms in self.drms_list:
-            assert isinstance(drms, DRMS)
-            drms.check_state(debug=self.debug)
+        for stage in self.stage_list:
+            assert isinstance(stage, Stage)
+            stage.check_state(debug=self.debug)
 
         return
 
-    def submit(self, drms_name=None):
-        """Submit each C{DRMS} object and pickle each C{bsf.Runnable} object.
+    def submit(self, name=None):
+        """Submit each C{bsf.Stage}.
 
-        @param drms_name: Only submit C{bsf.process.Executable} objects linked to C{DRMS.name}
-        @type drms_name: str
+        Submits each C{bsf.process.Executable} of either all C{bsf.Stage} objects or a named one and pickles
+        each C{bsf.Runnable}.
+
+        @param name: Only submit C{bsf.process.Executable} objects linked to C{bsf.Stage.name}
+        @type name: bsf.Stage.name
         @return:
         @rtype:
         """
@@ -1329,37 +1349,39 @@ class Analysis(object):
             assert isinstance(key, str)
             self.runnable_dict[key].to_pickler_path()
 
-        # Submit all Executable objects of all Distributed Resource Management System objects.
+        # Submit all Executable objects of all Stage objects.
 
         submit = 0
 
-        for drms in self.drms_list:
-            assert isinstance(drms, DRMS)
-            if drms_name:
-                if drms_name == drms.name:
+        for stage in self.stage_list:
+            assert isinstance(stage, Stage)
+            if name:
+                if name == stage.name:
                     submit += 1
                 else:
                     continue
-            drms.submit(debug=self.debug)
+            stage.submit(debug=self.debug)
 
             if self.debug:
-                print repr(drms)
-                print drms.trace(1)
+                print repr(stage)
+                print stage.trace(1)
 
-        if drms_name:
-            if drms_name == 'report':
+        if name:
+            if name == 'report':
                 self.report()
             elif not submit:
-                name_list = [drms.name for drms in self.drms_list]
+                name_list = [stage.name for stage in self.stage_list]
                 name_list.append('report')
-                print 'Valid Analysis DRMS names are: {!r}'.format(name_list)
+                print 'Valid Analysis Stage names are: {!r}'.format(name_list)
 
         return
 
 
-class DRMS(object):
-    """The I{Distributed Resource Management System} (C{DRMS}) class represents a
-    I{Distributed Resource Management System} or batch job scheduler.
+class Stage(object):
+    """The C{bsf.Stage} class represents a stage of a C{bsf.Analysis}.
+
+    A C{bsf.Stage} represents C{bsf.process.Executable} or C{bsf.Runnable} objects that share
+    similar resource requirements of a I{Distributed Resource Management System} (I{DRMS}).
 
     Attributes:
     @ivar name: Name
@@ -1395,8 +1417,8 @@ class DRMS(object):
     @ivar is_script: C{bsf.process.Executable} objects represent shell scripts,
         or alternatively binary programs
     @type is_script: bool
-    @ivar executables: Python C{list} of C{bsf.process.Executable} objects
-    @type executables: list[bsf.process.Executable]
+    @ivar executable_list: Python C{list} of C{bsf.process.Executable} objects
+    @type executable_list: list[bsf.process.Executable]
     """
 
     def __init__(
@@ -1417,8 +1439,8 @@ class DRMS(object):
             threads=1,
             hold=None,
             is_script=False,
-            executables=None):
-        """Initialise a C{DRMS} object.
+            executable_list=None):
+        """Initialise a C{bsf.Stage}.
 
         @param name: Name
         @type name: str
@@ -1453,13 +1475,13 @@ class DRMS(object):
         @param is_script: C{bsf.process.Executable} objects represent shell scripts,
             or alternatively binary programs
         @type is_script: bool
-        @param executables: Python C{list} of C{bsf.process.Executable} objects
-        @type executables: list[bsf.process.Executable]
+        @param executable_list: Python C{list} of C{bsf.process.Executable} objects
+        @type executable_list: list[bsf.process.Executable]
         @return:
         @rtype:
         """
 
-        super(DRMS, self).__init__()
+        super(Stage, self).__init__()
 
         if name is None:
             self.name = str()
@@ -1543,15 +1565,15 @@ class DRMS(object):
             assert isinstance(is_script, bool)
             self.is_script = is_script
 
-        if executables is None:
-            self.executables = list()
+        if executable_list is None:
+            self.executable_list = list()
         else:
-            self.executables = executables
+            self.executable_list = executable_list
 
         return
 
     def trace(self, level):
-        """Trace a C{DRMS} object.
+        """Trace a C{bsf.Stage}.
 
         @param level: Indentation level
         @type level: int
@@ -1579,18 +1601,19 @@ class DRMS(object):
         output += '{}  hold:                 {!r}\n'.format(indent, self.hold)
         output += '{}  is_script:            {!r}\n'.format(indent, self.is_script)
 
-        output += '{}  executables:\n'.format(indent)
+        output += '{}  executable_list:\n'.format(indent)
 
-        for executable in self.executables:
+        for executable in self.executable_list:
             assert isinstance(executable, Executable)
             output += executable.trace(level=level + 2)
 
         return output
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{DRMS} object via a section of a C{bsf.standards.Configuration} object.
+        """Set instance variables of a C{bsf.Stage} via a C{bsf.standards.Configuration} section.
 
         Instance variables without a configuration option remain unchanged.
+
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
         @param section: Configuration file section
@@ -1687,12 +1710,12 @@ class DRMS(object):
 
         assert isinstance(executable, Executable)
 
-        self.executables.append(executable)
+        self.executable_list.append(executable)
 
         return executable
 
     def check_state(self, debug=0):
-        """Check the state for each C{bsf.process.Executable} object.
+        """Check the state of each C{bsf.process.Executable}.
 
         @param debug: Debug level
         @type debug: int
@@ -1704,12 +1727,12 @@ class DRMS(object):
 
         module = importlib.import_module('.'.join((__name__, 'drms', self.implementation)))
 
-        module.check_state(drms=self, debug=debug)
+        module.check_state(stage=self, debug=debug)
 
         return
 
     def submit(self, debug=0):
-        """Submit a command line for each C{bsf.process.Executable} object.
+        """Submit a command line for each C{bsf.process.Executable}.
 
         @param debug: Debug level
         @type debug: int
@@ -1721,14 +1744,17 @@ class DRMS(object):
 
         module = importlib.import_module('.'.join((__name__, 'drms', self.implementation)))
 
-        module.submit(drms=self, debug=debug)
+        module.submit(stage=self, debug=debug)
 
         return
 
 
 class Runnable(object):
-    """The C{bsf.Runnable} class holds all information to run one or more C{bsf.process.Executable} objects through the
-    I{Runner} script. It can be thought of a script that executes runnable steps.
+    """The C{bsf.Runnable} class represents one or more C{bsf.process.Executable} objects for the I{Runner} script.
+
+    A C{bsf.Runnable} holds all information to run one or more C{bsf.process.Executable} objects through the
+    C{bsf.Runnable.runner_script}. It can be thought of a GNU Bash script that executes as set of
+    C{bsf.process.RunnableStep} objects reflecting commands of a GNU Bash script.
 
     Attributes:
     @cvar runner_script: Name of the I{Runner} script
@@ -1736,7 +1762,7 @@ class Runnable(object):
     @ivar name: Name
     @type name: str
     @ivar code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
-        C{bsf.process.Executable} objects via the I{Runner} script.
+        C{bsf.process.Executable} objects via the C{bsf.Runnable.runner_script}.
     @type code_module: str
     @ivar cache_directory: Cache directory
     @type cache_directory: str | unicode
@@ -1765,12 +1791,12 @@ class Runnable(object):
             file_path_dict=None,
             runnable_step_list=None,
             debug=0):
-        """Initialise a C{bsf.Runnable} object.
+        """Initialise a C{bsf.Runnable}.
 
         @param name: Name
         @type name: str
         @param code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
-            C{bsf.process.Executable} objects via the I{Runner} script
+            C{bsf.process.Executable} objects via the C{bsf.Runnable.runner_script}
         @type code_module: str
         @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
         @type working_directory: str | unicode
@@ -1825,7 +1851,7 @@ class Runnable(object):
         return
 
     def trace(self, level=1):
-        """Trace a C{bsf.Runnable} object.
+        """Trace a C{bsf.Runnable}.
 
         @param level: Indentation level
         @type level: int
@@ -1895,7 +1921,7 @@ class Runnable(object):
         return os.path.join(self.working_directory, '.'.join((self.name, 'pkl')))
 
     def to_pickler_path(self):
-        """Write this C{bsf.Runnable} object as a Python C{pickle.Pickler} file into the working directory.
+        """Write this C{bsf.Runnable} as a Python C{pickle.Pickler} file into the working directory.
 
         @return:
         @rtype:
@@ -1910,7 +1936,7 @@ class Runnable(object):
 
     @classmethod
     def from_pickler_path(cls, file_path):
-        """Create a C{bsf.Runnable} object from a Python C{pickle.Pickler} file via Python C{pickle.Unpickler}.
+        """Create a C{bsf.Runnable} from a Python C{pickle.Pickler} file via Python C{pickle.Unpickler}.
 
         @param file_path: File path to a Python C{pickle.Pickler} file
         @type file_path: str | unicode
@@ -1929,10 +1955,9 @@ class Runnable(object):
 
     @property
     def get_relative_cache_directory_path(self):
-        """Get the relative cache directory path for this C{bsf.Runnable}.
-        (i.e. C{bsf.Runnable.name}_cache)
+        """Get the relative cache directory path of a C{bsf.Runnable}.
 
-        @return: Relative cache directory path
+        @return: Relative cache directory path (i.e. C{bsf.Runnable.name}_cache)
         @rtype: str
         """
 
@@ -1940,10 +1965,9 @@ class Runnable(object):
 
     @property
     def get_relative_status_path(self):
-        """Get the relative status file path indicating successful completion of this
-        C{bsf.Runnable}. (i.e. C{bsf.Runnable.name}_completed.txt)
+        """Get the relative status file path indicating successful completion of a C{bsf.Runnable}.
 
-        @return: Relative status file path
+        @return: Relative status file path (i.e. C{bsf.Runnable.name}_completed.txt)
         @rtype: str
         """
 
@@ -1951,10 +1975,9 @@ class Runnable(object):
 
     @property
     def get_relative_temporary_directory_path(self):
-        """Get the relative temporary directory path for this C{bsf.Runnable}.
-        (i.e. C{bsf.Runnable.name}_temporary)
+        """Get the relative temporary directory path of a C{bsf.Runnable}.
 
-        @return: Relative temporary directory path
+        @return: Relative temporary directory path (i.e. C{bsf.Runnable.name}_temporary)
         @rtype: str
         """
 
@@ -1963,6 +1986,7 @@ class Runnable(object):
     @property
     def get_absolute_cache_directory_path(self):
         """Get the absolute cache directory path including the C{bsf.Runnable.cache_directory}.
+
         If C{bsf.Runnable.cache_directory} is not defined, C{bsf.Runnable.working_directory} will be prepended.
         Since the relative cache directory path includes the C{bsf.Runnable.name},
         the directory is C{bsf.Runnable}-specific.
@@ -1999,9 +2023,9 @@ class Runnable(object):
     @property
     def get_absolute_status_path(self):
         """Get the absolute status file path including the C{bsf.Runnable.working_directory}.
-        (i.e. C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_completed.txt)
 
         @return: Absolute status file path
+            (i.e. C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_completed.txt)
         @rtype: str
         """
 
@@ -2010,9 +2034,9 @@ class Runnable(object):
     @property
     def get_absolute_temporary_directory_path(self):
         """Get the absolute temporary directory path including the C{bsf.Runnable.working_directory}.
-        (i.e. C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_temporary)
 
         @return: Absolute temporary directory path
+            (i.e. C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_temporary)
         @rtype: str
         """
 
@@ -2037,6 +2061,7 @@ class Runnable(object):
 
     def runnable_step_status_file_create(self, runnable_step, success=True):
         """Create an empty status file for a C{bsf.process.RunnableStep} of a C{bsf.Runnable}.
+
         This method is mainly used by C{bsf.runnable.generic} and related modules.
 
         @param runnable_step: C{bsf.process.RunnableStep}
@@ -2055,6 +2080,7 @@ class Runnable(object):
 
     def runnable_step_status_file_remove(self, runnable_step):
         """Remove the status file for a C{bsf.process.RunnableStep} of a C{bsf.Runnable}.
+
         This method is mainly used by C{bsf.runnable.generic} and related modules.
 
         @param runnable_step: C{bsf.process.RunnableStep}

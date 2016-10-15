@@ -87,7 +87,7 @@ if name_space.sas_file:
 
 annotation_sheet = trimmomatic.run()
 trimmomatic.check_state()
-trimmomatic.submit(drms_name=name_space.stage)
+trimmomatic.submit(name=name_space.stage)
 
 print 'Trimmomatic Analysis'
 print 'Project name:      ', trimmomatic.project_name
