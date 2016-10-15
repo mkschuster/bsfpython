@@ -29,7 +29,7 @@ import argparse
 import inspect
 import os
 import re
-from stat import *
+import stat
 
 from bsf import Analysis
 from bsf.standards import Default
@@ -58,11 +58,11 @@ def scan_directory(report_dict_local, directory_root, directory_path=None):
     for file_name in os.listdir(directory_absolute):
         file_path = os.path.join(directory_absolute, file_name)
         mode = os.stat(file_path).st_mode
-        if S_ISDIR(mode):
+        if stat.S_ISDIR(mode):
             scan_directory(report_dict_local=report_dict_local,
                            directory_root=directory_root,
                            directory_path=os.path.join(directory_path, file_name))
-        elif S_ISREG(mode):
+        elif stat.S_ISREG(mode):
             match = re.search(pattern=r'^(.*)_report.html$', string=file_name)
             if match:
                 report_type = match.group(1)

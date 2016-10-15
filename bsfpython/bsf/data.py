@@ -29,7 +29,7 @@ A package of classes and methods modelling next-generation sequencing data direc
 
 import os
 import re
-from stat import *
+import stat
 import warnings
 import weakref
 
@@ -624,7 +624,7 @@ class Sample(object):
                     continue
                 file_path = os.path.join(sample.file_path, file_name)
                 file_mode = os.stat(file_path).st_mode
-                if not S_ISREG(file_mode):
+                if not stat.S_ISREG(file_mode):
                     continue
                 sample.add_reads(reads=Reads.from_file_path(file_path=file_path, file_type=file_type))
         else:
@@ -991,7 +991,7 @@ class Project(object):
                 file_path = os.path.join(project.file_path, file_name)
                 file_mode = os.stat(file_path).st_mode
                 re_match = re_pattern.search(string=file_name)
-                if S_ISDIR(file_mode) and re_match is not None:
+                if stat.S_ISDIR(file_mode) and re_match is not None:
                     if re_match.group(1) in project.samples:
                         raise Exception(
                             'Sample with name {!r} already exists.'.format(re_match.group(1)))
@@ -1272,7 +1272,7 @@ class ProcessedRunFolder(object):
                 file_path = os.path.join(prf.file_path, file_name)
                 file_mode = os.stat(file_path).st_mode
                 re_match = re_pattern.search(string=file_name)
-                if S_ISDIR(file_mode) and re_match is not None:
+                if stat.S_ISDIR(file_mode) and re_match is not None:
                     if re_match.group(1) in prf.projects:
                         raise Exception(
                             'Project with name {!r} already exists.'.format(re_match.group(1)))

@@ -28,7 +28,7 @@
 import argparse
 import os
 import re
-from stat import *
+import stat
 
 from bsf.standards import Default
 
@@ -52,13 +52,13 @@ for file_name in os.listdir(prf_path):
     file_path = os.path.join(prf_path, file_name)
     mode = os.stat(file_path).st_mode
     match = re.search(pattern=r'^(\d+)$', string=file_name)
-    if S_ISDIR(mode) and match:
+    if stat.S_ISDIR(mode) and match:
         # This is the lane directory. Should be changed from 1 to L001 for CASAVA compatibility ...
         for file_name_2 in os.listdir(file_path):
             file_path_2 = os.path.join(file_path, file_name_2)
             mode = os.stat(file_path_2).st_mode
             match = re.search(pattern=r'([^.]+).([^.]+).output.metrics.txt', string=file_name_2)
-            if S_ISREG(mode) and match:
+            if stat.S_ISREG(mode) and match:
                 metrics_file = open(name=file_path_2, mode='r')
                 for line in metrics_file:
 

@@ -39,7 +39,7 @@ import urllib
 import uuid
 import warnings
 from pickle import Pickler, Unpickler, HIGHEST_PROTOCOL
-from stat import *
+import stat
 
 from bsf import defaults
 from bsf.argument import *
@@ -1054,7 +1054,7 @@ class Analysis(object):
         for file_name in os.listdir(html_path):
             path_name = os.path.join(html_path, file_name)
             mode = os.lstat(path_name).st_mode
-            if S_ISLNK(mode):
+            if stat.S_ISLNK(mode):
                 target_name = os.readlink(path_name)
                 if not os.path.isabs(target_name):
                     target_name = os.path.join(html_path, target_name)

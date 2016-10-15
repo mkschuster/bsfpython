@@ -30,7 +30,7 @@
 from argparse import ArgumentParser
 import errno
 import os
-from stat import *
+import stat
 
 
 def scan_directory(directory_path, debug=0):
@@ -47,10 +47,10 @@ def scan_directory(directory_path, debug=0):
     for file_name in os.listdir(directory_path):
         file_path = os.path.join(directory_path, file_name)
         file_mode = os.lstat(file_path).st_mode
-        if S_ISDIR(file_mode):
+        if stat.S_ISDIR(file_mode):
             # For a directory, recurse further down the tree.
             scan_directory(directory_path=file_path)
-        elif S_ISLNK(file_mode):
+        elif stat.S_ISLNK(file_mode):
             # For a link, evaluate the link.
             source_path = os.readlink(file_path)
             if not os.path.exists(path=source_path):
@@ -73,7 +73,7 @@ def scan_directory(directory_path, debug=0):
                 print 'source {!r} target {!r} of new symbolic link'.format(source_path, file_name)
                 # Check that the directory is writable.
                 directory_mode = os.lstat(directory_path)
-                if directory_mode[ST_MODE] & S_IWUSR:
+                if directory_mode[stat.ST_MODE] & stat.S_IWUSR:
                     # The old symbolic link need deleting before a new one can be set.
                     # Secure against race conditions in case the link has already been deleted
                     # before calling os.remove() or added before calling os.symlink().
