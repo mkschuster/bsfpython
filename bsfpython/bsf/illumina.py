@@ -28,6 +28,8 @@ specific for Illumina HiSeq and MiSeq systems.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import datetime
+import dateutil.tz
 import os
 import warnings
 from xml.etree.ElementTree import ElementTree, Element
@@ -517,6 +519,25 @@ class RunInformation(object):
         return cycle_number
 
     @property
+    def get_iso_date(self):
+        """Get the run start date in ISO 8601 format.
+
+        @return: The run start date in ISO 8601 format.
+        @rtype: str
+        """
+
+        return datetime.datetime(
+            int(self.date[0:2]) + 2000L,  # year
+            int(self.date[2:4]),  # month
+            int(self.date[4:6]),  # day
+            0L,  # hour
+            0L,  # minute
+            0L,  # second
+            0L,  # microsecond
+            dateutil.tz.tzlocal()  # tzinfo
+        ).isoformat()
+
+    @property
     def get_read_number(self):
         """Get the total number of reads.
 
@@ -675,8 +696,8 @@ class RunParameters(object):
         @rtype: str
         """
 
-        if self.get_run_parameters_version == 'MiSeq_1_1':
-            # MiSeq 1_1 run
+        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
+            # MiSeq or NextSeq
             return self.element_tree.find(path='ExperimentName').text
         else:
             # HiSeq run or else
@@ -693,9 +714,11 @@ class RunParameters(object):
         @rtype: str
         """
 
-        if self.get_run_parameters_version == 'MiSeq_1_1':
+        if self.get_run_parameters_version in ('MiSeq_1_1', ):
             # MiSeq 1_1 run
             return self.element_tree.find(path='Barcode').text
+        elif self.get_run_parameters_version in ('NextSeq_2_1_0', ):
+            return self.element_tree.find(path='FlowCellSerial').text
         else:
             # HiSeq run or else
             return self.element_tree.find(path='Setup/Barcode').text
@@ -711,10 +734,14 @@ class RunParameters(object):
         @rtype: str
         """
 
-        if self.get_run_parameters_version == 'MiSeq_1_1':
+        if self.get_run_parameters_version in ('MiSeq_1_1', ):
             # MiSeq 1_1 run
             # The MiSeq has no concept of a <Flowcell> chemistry type, only a <ReagentKitVersion>.
             return self.element_tree.find(path='ReagentKitVersion').text
+        elif self.get_run_parameters_version in ('NextSeq_2_1_0', ):
+            # NextSeq_2_1_0
+            # The NextSeq uses <Chemistry>
+            return self.element_tree.find(path='Chemistry').text
         else:
             # HiSeq run or else
             return self.element_tree.find(path='Setup/Flowcell').text
@@ -730,7 +757,7 @@ class RunParameters(object):
         @rtype: str
         """
 
-        if self.get_run_parameters_version == 'MiSeq_1_1':
+        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
             # MiSeq 1_1 run
             # The MiSeq has no concept of a <Index> version, only a <ReagentKitVersion>.
             return str()
@@ -749,7 +776,7 @@ class RunParameters(object):
         @rtype: str
         """
 
-        if self.get_run_parameters_version == 'MiSeq_1_1':
+        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
             # MiSeq 1_1 run
             # The MiSeq has no concept of a <Pe> version, only a <ReagentKitVersion>.
             return str()
@@ -768,7 +795,7 @@ class RunParameters(object):
         @rtype: str
         """
 
-        if self.get_run_parameters_version == 'MiSeq_1_1':
+        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
             # MiSeq 1_1 run
             # The MiSeq has no concept of a <Sbs> chemistry version, only a <ReagentKitVersion>.
             return str()
@@ -788,10 +815,13 @@ class RunParameters(object):
         @rtype: str
         """
 
-        if self.get_run_parameters_version == 'MiSeq_1_1':
+        if self.get_run_parameters_version in ('MiSeq_1_1', ):
             # MiSeq 1_1 run
             # The MiSeq has no concept of a <FCPosition>.
             return str()
+        elif self._run_parameters_version in ('NextSeq_2_1_0', ):
+            # The NextSeq has no concept of <FCPosition>, but always uses "A".
+            return "A"
         else:
             # HiSeq run or else
             element = self.element_tree.find(path='Setup/FCPosition')
@@ -811,7 +841,7 @@ class RunParameters(object):
         @rtype: str
         """
 
-        if self.get_run_parameters_version == 'MiSeq_1_1':
+        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
             # MiSeq 1_1 run
             return self.element_tree.find(path='RunID').text
         else:
@@ -831,7 +861,7 @@ class RunParameters(object):
             C{bsf.illumina.RunInformation.reads} instance variable.
         """
 
-        if self.get_run_parameters_version == 'MiSeq_1_1':
+        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
             # MiSeq 1_1 run
             return str()
         else:
@@ -856,7 +886,7 @@ class RunParameters(object):
             C{bsf.illumina.RunInformation.reads} instance variable.
         """
 
-        if self.get_run_parameters_version == 'MiSeq_1_1':
+        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
             # MiSeq 1_1 run
             return str()
         else:
@@ -882,7 +912,7 @@ class RunParameters(object):
             C{bsf.illumina.RunInformation.reads} instance variable.
         """
 
-        if self.get_run_parameters_version == 'MiSeq_1_1':
+        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
             # MiSeq 1_1 run
             return str()
         else:
@@ -912,7 +942,7 @@ class RunParameters(object):
             C{bsf.illumina.RunInformation.reads} instance variable.
         """
 
-        if self.get_run_parameters_version == 'MiSeq_1_1':
+        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
             # MiSeq 1_1 run
             return str()
         else:
@@ -934,7 +964,7 @@ class RunParameters(object):
         @rtype: str
         """
 
-        if self.get_run_parameters_version == 'MiSeq_1_1':
+        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
             # MiSeq 1_1 run
             return self.element_tree.find(path='RTAVersion').text
         else:
@@ -1150,6 +1180,16 @@ class RunFolder(object):
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
+        # HiSeq and MiSeq Control Software uses runParameters.xml, while NextSeq Control Software uses a
+        # RunParameters.xml file. Why?
+
+        if os.path.exists(os.path.join(file_path, 'runParameters.xml')):
+            run_parameters_path = os.path.join(file_path, 'runParameters.xml')
+        elif os.path.exists(os.path.join(file_path, 'RunParameters.xml')):
+            run_parameters_path = os.path.join(file_path, 'RunParameters.xml')
+        else:
+            raise Exception("Found neither a runParameters.xml not a RunParameters.xml file.")
+
         # Illumina Run Folders obey a "YYMMDD_SN000_Run_PositionFCID" schema.
 
         components = file_name.split('_')
@@ -1163,7 +1203,7 @@ class RunFolder(object):
             run=components[2],
             flow_cell=components[3],
             run_information=RunInformation.from_file_path(file_path=os.path.join(file_path, 'RunInfo.xml')),
-            run_parameters=RunParameters.from_file_path(file_path=os.path.join(file_path, 'runParameters.xml')),
+            run_parameters=RunParameters.from_file_path(file_path=run_parameters_path),
             image_analysis=ImageAnalysis.from_file_path(file_path=os.path.join(
                 file_path, 'Data', 'Intensities', 'config.xml')),
             base_call_analysis=BaseCallAnalysis.from_file_path(file_path=os.path.join(
@@ -1417,7 +1457,8 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta in ('2.7.3', '2.7.6'):
+        if rta in ('2.4.11', '2.7.3', '2.7.6'):
+            # RTA 2.4.11 (NextSeq) doe not have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             # RTA 2.7.3 (HiSeq 3000/4000) does no longer have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             return
 
@@ -1434,7 +1475,7 @@ class RunFolder(object):
         if debug:
             print "Processing 'IRF/Data/Intensities/BaseCalls/{}/'".format(matrix_name)
 
-        if rta in '2.5.2':
+        if rta in ('2.5.2', ):
             # For RTA 2.5.2 (HiSeq 3000/4000) process IRF/Data/Intensities/BaseCalls/Matrix/L00[1-8] directories.
             for lane in range(1, fcl.lane_count + 1):
                 lane_name = 'L{:03d}'.format(lane)
@@ -1546,7 +1587,8 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta in ('2.7.3', '2.7.6'):
+        if rta in ('2.4.11', '2.7.3', '2.7.6'):
+            # RTA 2.4.11 (NextSeq) doe not have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             # RTA 2.7.3 (HiSeq 3000/4000) does no longer have a IRF/Data/Intensities/BaseCalls/Phasing/ directory.
             return
 
@@ -1626,7 +1668,7 @@ class RunFolder(object):
                                     print "Missing file IRF/Data/intensities/BaseCalls/{}/{}". \
                                         format(phasing_name, tile_file)
 
-        if rta not in '2.5.2':
+        if rta not in ('2.5.2', ):
             # RTA 2.5.2 (HiSeq 3000/4000) does not have
             # IRF/DataIntensities/BaseCalls/Phasing/s_{lane}_{cycle}_phasing.xml files.
             for lane in range(1, fcl.lane_count + 1):
@@ -1679,8 +1721,8 @@ class RunFolder(object):
 
         # Process the IRF/Data/Intensities/BaseCalls/config.xml file.
 
-        if rta not in ('2.5.2', '2.7.3', '2.7.6'):
-            # HiSeq 3000/4000 does not have the IRF/Data/Intensities/BaseCalls/config.xml file.
+        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6'):
+            # HiSeq 3000/4000 and NextSeq does not have the IRF/Data/Intensities/BaseCalls/config.xml file.
             config_name = 'config.xml'
             if config_name in base_calls_dict:
                 del base_calls_dict[config_name]
@@ -1708,18 +1750,99 @@ class RunFolder(object):
 
             # Process IRF/Data/Intensities/BaseCalls/L00[1-8]/C[0-9]+.1 directories.
 
-            for cycle in range(1, self.run_information.get_cycle_number + 1):
-                cycle_name = 'C{:d}.1'.format(cycle)
-                if cycle_name in lane_dict:
-                    del lane_dict[cycle_name]
+            if rta in ('2.4.11', ):
+                # For NextSeq
+                for cycle in range(1, self.run_information.get_cycle_number + 1):
+                    cycle_file = '{:04d}.bcl.bgzf'.format(cycle)
+                    if cycle_file in lane_dict:
+                        del lane_dict[cycle_file]
+                    else:
+                        print "Missing cycle bcl.bgzf file IRF/Data/Intensities/{}/{}/{}". \
+                            format(base_calls_name, lane_name, cycle_file)
+                    cycle_file = '{:04d}.bcl.bgzf.bci'.format(cycle)
+                    if cycle_file in lane_dict:
+                        del lane_dict[cycle_file]
+                    else:
+                        print "Missing cycle bcl.bgzf.bci file IRF/Data/Intensities/{}/{}/{}". \
+                            format(base_calls_name, lane_name, cycle_file)
+
+                cycle_file = 's_{:d}.bci'.format(lane)
+                if cycle_file in lane_dict:
+                    del lane_dict[cycle_file]
                 else:
-                    print "Missing directory IRF/Data/Intensities/{}/{}/{}/". \
-                        format(base_calls_name, lane_name, cycle_name)
-                    continue
+                    print "Missing lane bci file IRF/Data/Intensities/{}/{}/{}". \
+                        format(base_calls_name, lane_name, cycle_file)
 
-                cycle_path = os.path.join(lane_path, cycle_name)
-                cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
+                cycle_file = 's_{:d}.filter'.format(lane)
+                if cycle_file in lane_dict:
+                    del lane_dict[cycle_file]
+                else:
+                    print "Missing lane filter file IRF/Data/Intensities/{}/{}/{}". \
+                        format(base_calls_name, lane_name, cycle_file)
+            else:
+                # For HiSeq and MiSeq
+                for cycle in range(1, self.run_information.get_cycle_number + 1):
+                    cycle_name = 'C{:d}.1'.format(cycle)
+                    if cycle_name in lane_dict:
+                        del lane_dict[cycle_name]
+                    else:
+                        print "Missing directory IRF/Data/Intensities/{}/{}/{}/". \
+                            format(base_calls_name, lane_name, cycle_name)
+                        continue
 
+                    cycle_path = os.path.join(lane_path, cycle_name)
+                    cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
+
+                    for surface in range(1, fcl.surface_count + 1):
+                        for swath in range(1, fcl.swath_count + 1):
+                            for tile in range(1, fcl.tile_count + 1):
+                                # Not all tiles have to exists especially after catastrophic events during the
+                                # cluster generation step.
+                                tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
+                                if self._is_missing_base_call_tile(lane=lane, tile=tile_name):
+                                    continue
+                                # Process tile base call (BCL) files.
+                                # s_1_1101.bcl
+                                # s_1_2316.bcl
+                                tile_file = 's_{:1d}_{:1d}{:1d}{:02d}.bcl'.format(lane, surface, swath, tile)
+                                if tile_file in cycle_dict:
+                                    del cycle_dict[tile_file]
+                                else:
+                                    # Base call (BCL) files can also be GNU Zip compressed.
+                                    # s_1_1101.bcl.gz
+                                    # s_1_2316.bcl.gz
+                                    tile_file += '.gz'
+                                    if tile_file in cycle_dict:
+                                        del cycle_dict[tile_file]
+                                    else:
+                                        print "Missing tile bcl file IRF/Data/Intensities/{}/{}/{}/{}". \
+                                            format(base_calls_name, lane_name, cycle_name, tile_file)
+
+                                # Process tile stats files.
+                                # s_1_1101.stats
+                                # s_1_2316.stats
+                                if rta not in ('2.5.2', '2.7.3', '2.7.6'):
+                                    # HiSeq 3000/4000 does not have stats files.
+                                    tile_file = 's_{:1d}_{:1d}{:1d}{:02d}.stats'.format(lane, surface, swath, tile)
+                                    if tile_file in cycle_dict:
+                                        del cycle_dict[tile_file]
+                                    else:
+                                        print "Missing tile stats file IRF/Data/Intensities/{}/{}/{}/{}". \
+                                            format(base_calls_name, lane_name, cycle_name, tile_file)
+
+                    # The cycle_dict should now be empty.
+
+                    if len(cycle_dict):
+                        print "IRF/Data/Intensities/{}/{}/{}/ with number of entries: {:d}". \
+                            format(base_calls_name, lane_name, cycle_name, len(cycle_dict))
+                        entry_names = cycle_dict.keys()
+                        entry_names.sort(cmp=lambda x, y: cmp(x, y))
+                        print '  Remaining entries: {!r}'.format(entry_names)
+
+            # Process control and filter files.
+
+            if rta not in ('2.4.11', ):
+                # Not for NextSeq
                 for surface in range(1, fcl.surface_count + 1):
                     for swath in range(1, fcl.swath_count + 1):
                         for tile in range(1, fcl.tile_count + 1):
@@ -1728,75 +1851,27 @@ class RunFolder(object):
                             tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
                             if self._is_missing_base_call_tile(lane=lane, tile=tile_name):
                                 continue
-                            # Process tile base call (BCL) files.
-                            # s_1_1101.bcl
-                            # s_1_2316.bcl
-                            tile_file = 's_{:1d}_{:1d}{:1d}{:02d}.bcl'.format(lane, surface, swath, tile)
-                            if tile_file in cycle_dict:
-                                del cycle_dict[tile_file]
-                            else:
-                                # Base call (BCL) files can also be GNU Zip compressed.
-                                # s_1_1101.bcl.gz
-                                # s_1_2316.bcl.gz
-                                tile_file += '.gz'
-                                if tile_file in cycle_dict:
-                                    del cycle_dict[tile_file]
-                                else:
-                                    print "Missing tile bcl file IRF/Data/Intensities/{}/{}/{}/{}". \
-                                        format(base_calls_name, lane_name, cycle_name, tile_file)
-
-                            # Process tile stats files.
-                            # s_1_1101.stats
-                            # s_1_2316.stats
+                            # Process tile control files.
+                            # s_1_1101.control
+                            # s_1_2316.control
                             if rta not in ('2.5.2', '2.7.3', '2.7.6'):
-                                # HiSeq 3000/4000 does not have stats files.
-                                tile_file = 's_{:1d}_{:1d}{:1d}{:02d}.stats'.format(lane, surface, swath, tile)
-                                if tile_file in cycle_dict:
-                                    del cycle_dict[tile_file]
+                                # HiSeq 3000/4000 does not have control files.
+                                tile_file = 's_{:1d}_{:1d}{:1d}{:02d}.control'.format(lane, surface, swath, tile)
+                                if tile_file in lane_dict:
+                                    del lane_dict[tile_file]
                                 else:
-                                    print "Missing tile stats file IRF/Data/Intensities/{}/{}/{}/{}". \
-                                        format(base_calls_name, lane_name, cycle_name, tile_file)
+                                    print "Missing tile control file IRF/Data/Intensities/{}/{}/{}". \
+                                        format(base_calls_name, lane_name, tile_file)
 
-                # The cycle_dict should now be empty.
-
-                if len(cycle_dict):
-                    print "IRF/Data/Intensities/{}/{}/{}/ with number of entries: {:d}". \
-                        format(base_calls_name, lane_name, cycle_name, len(cycle_dict))
-                    entry_names = cycle_dict.keys()
-                    entry_names.sort(cmp=lambda x, y: cmp(x, y))
-                    print '  Remaining entries: {!r}'.format(entry_names)
-
-            # Process control and filter files.
-
-            for surface in range(1, fcl.surface_count + 1):
-                for swath in range(1, fcl.swath_count + 1):
-                    for tile in range(1, fcl.tile_count + 1):
-                        # Not all tiles have to exists especially after catastrophic events during the
-                        # cluster generation step.
-                        tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
-                        if self._is_missing_base_call_tile(lane=lane, tile=tile_name):
-                            continue
-                        # Process tile control files.
-                        # s_1_1101.control
-                        # s_1_2316.control
-                        if rta not in ('2.5.2', '2.7.3', '2.7.6'):
-                            # HiSeq 3000/4000 does not have control files.
-                            tile_file = 's_{:1d}_{:1d}{:1d}{:02d}.control'.format(lane, surface, swath, tile)
+                            # Process tile filter files.
+                            # s_1_1101.filter
+                            # s_1_2316.filter
+                            tile_file = 's_{:1d}_{:1d}{:1d}{:02d}.filter'.format(lane, surface, swath, tile)
                             if tile_file in lane_dict:
                                 del lane_dict[tile_file]
                             else:
-                                print "Missing tile control file IRF/Data/Intensities/{}/{}/{}". \
+                                print "Missing tile filter file IRF/Data/Intensities/{}/{}/{}". \
                                     format(base_calls_name, lane_name, tile_file)
-
-                        # Process tile filter files.
-                        # s_1_1101.filter
-                        # s_1_2316.filter
-                        tile_file = 's_{:1d}_{:1d}{:1d}{:02d}.filter'.format(lane, surface, swath, tile)
-                        if tile_file in lane_dict:
-                            del lane_dict[tile_file]
-                        else:
-                            print "Missing tile filter file IRF/Data/Intensities/{}/{}/{}". \
-                                format(base_calls_name, lane_name, tile_file)
 
             # The lane_dict should now be empty.
 
@@ -1823,7 +1898,7 @@ class RunFolder(object):
 
         # Check the IRF/Data/Intensities/BaseCalls/SampleSheet.csv file.
 
-        if rta in '1.18.54':
+        if rta in ('1.18.54', ):
             # Only the MiSeq platform has this file.
             file_name = 'SampleSheet.csv'
             if file_name in base_calls_dict:
@@ -1842,8 +1917,7 @@ class RunFolder(object):
 
         return
 
-    @staticmethod
-    def _check_data_intensities_offsets(intensities_dict, intensities_path, debug=0):
+    def _check_data_intensities_offsets(self, intensities_dict, intensities_path, debug=0):
         """Check the I{IRF/Data/Intensities/Offsets/} directory.
 
         @param intensities_dict: Python C{dict} of I{IRF/Data/Intensities/} entries
@@ -1855,6 +1929,11 @@ class RunFolder(object):
         @return:
         @rtype:
         """
+
+        rta = self.run_parameters.get_real_time_analysis_version
+
+        if rta in ('2.4.11', ):
+            return
 
         directory_name = 'Offsets'
         if directory_name in intensities_dict:
@@ -1966,11 +2045,13 @@ class RunFolder(object):
 
             # Process the IRF/Data/Intensities/config.xml file.
 
-            file_name = 'config.xml'
-            if file_name in intensities_dict:
-                del intensities_dict[file_name]
-            else:
-                print "Missing configuration file IRF/Data/{}/{}".format(intensities_name, file_name)
+            if rta not in ('2.4.11', ):
+                # Not for NextSeq
+                file_name = 'config.xml'
+                if file_name in intensities_dict:
+                    del intensities_dict[file_name]
+                else:
+                    print "Missing configuration file IRF/Data/{}/{}".format(intensities_name, file_name)
 
             # Check for completeness of tiles in the image analysis configuration XML file (config.xml).
 
@@ -1992,38 +2073,45 @@ class RunFolder(object):
                 lane_path = os.path.join(intensities_path, lane_name)
                 lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
 
-                for surface in range(1, fcl.surface_count + 1):
-                    for swath in range(1, fcl.swath_count + 1):
-                        for tile in range(1, fcl.tile_count + 1):
-                            # Not all tiles have to exists especially after catastrophic events during the
-                            # cluster generation step.
-                            tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
-                            if self._is_missing_image_analysis_tile(lane=lane, tile=tile_name):
-                                continue
-                            if rta in '1.18.54':
-                                # The MiSeq platform uses locs files. Sigh.
-                                # s_1_1101.locs
-                                # s_1_2119.locs
-                                locs_name = 's_{}_{:d}{:d}{:02d}.locs'.format(lane, surface, swath, tile)
-                                if locs_name in lane_dict:
-                                    del lane_dict[locs_name]
+                if rta in ('2.4.11', ):
+                    locs_name = 's_{:d}.locs'.format(lane)
+                    if locs_name in lane_dict:
+                        del lane_dict[locs_name]
+                    else:
+                        print "Missing file IRF/Data/{}/{}/{}".format(intensities_name, lane_name, locs_name)
+                else:
+                    for surface in range(1, fcl.surface_count + 1):
+                        for swath in range(1, fcl.swath_count + 1):
+                            for tile in range(1, fcl.tile_count + 1):
+                                # Not all tiles have to exists especially after catastrophic events during the
+                                # cluster generation step.
+                                tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
+                                if self._is_missing_image_analysis_tile(lane=lane, tile=tile_name):
+                                    continue
+                                if rta in ('1.18.54', ):
+                                    # The MiSeq platform uses locs files. Sigh.
+                                    # s_1_1101.locs
+                                    # s_1_2119.locs
+                                    locs_name = 's_{}_{:d}{:d}{:02d}.locs'.format(lane, surface, swath, tile)
+                                    if locs_name in lane_dict:
+                                        del lane_dict[locs_name]
+                                    else:
+                                        print "Missing file IRF/Data/{}/{}/{}". \
+                                            format(intensities_name, lane_name, locs_name)
                                 else:
-                                    print "Missing file IRF/Data/{}/{}/{}". \
-                                        format(intensities_name, lane_name, locs_name)
-                            else:
-                                # s_1_1101.clocs
-                                # s_1_2316.clocs
-                                clocs_name = 's_{}_{:d}{:d}{:02d}.clocs'.format(lane, surface, swath, tile)
-                                if clocs_name in lane_dict:
-                                    del lane_dict[clocs_name]
-                                else:
-                                    print "Missing file IRF/Data/{}/{}/{}". \
-                                        format(intensities_name, lane_name, clocs_name)
+                                    # s_1_1101.clocs
+                                    # s_1_2316.clocs
+                                    clocs_name = 's_{}_{:d}{:d}{:02d}.clocs'.format(lane, surface, swath, tile)
+                                    if clocs_name in lane_dict:
+                                        del lane_dict[clocs_name]
+                                    else:
+                                        print "Missing file IRF/Data/{}/{}/{}". \
+                                            format(intensities_name, lane_name, clocs_name)
 
                 # Process IRF/Data/Intensities/L00[1-8]/C[0-9]+.1 directories.
 
-                if rta not in ('1.18.54', '1.18.64'):
-                    # Exclude the MiSeq and HiSeq 2500 platforms,
+                if rta not in ('1.18.54', '1.18.64', '2.4.11'):
+                    # Exclude the MiSeq, NextSeq and HiSeq 2500 platforms,
                     # as they do no longer store cycle-specific sub directories with
                     # cluster intensity files (*.cif), error map (*.errorMap) and
                     # full width at half maximum (*.FWHMMap) files.
@@ -2105,12 +2193,14 @@ class RunFolder(object):
 
             # Check the IRF/Data/Intensities/RTAConfiguration.xml file.
 
-            file_name = 'RTAConfiguration.xml'
-            if file_name in intensities_dict:
-                del intensities_dict[file_name]
-            else:
-                print "Missing Real Time Analysis configuration file IRF/Data/{}/{}". \
-                    format(intensities_name, file_name)
+            if rta not in ('2.4.11', ):
+                # Not for NextSeq
+                file_name = 'RTAConfiguration.xml'
+                if file_name in intensities_dict:
+                    del intensities_dict[file_name]
+                else:
+                    print "Missing Real Time Analysis configuration file IRF/Data/{}/{}". \
+                        format(intensities_name, file_name)
 
             if rta in ('1.12.4', '1.12.4.2', '1.13.48'):
                 # Older RTA version have position (*_pos.txt) files in addition to cluster location (*.clocs) files.
@@ -2153,7 +2243,7 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta not in '1.18.54':
+        if rta not in ('1.18.54', ):
             # Check the IRF/Data/TileStatus/ directory that only exist on the MiSeq platform.
             return
 
@@ -2234,8 +2324,8 @@ class RunFolder(object):
             data_dict=data_dict,
             debug=debug)
 
-        if rta not in ('2.5.2', '2.7.3', '2.7.6'):
-            # Exclude the HiSeq 3000/4000 platform.
+        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6'):
+            # Exclude the HiSeq 3000/4000 and NextSeq platforms.
             # Check the IRF/Data/ImageSize.dat file.
             file_name = 'ImageSize.dat'
             if file_name in data_dict:
@@ -2324,12 +2414,12 @@ class RunFolder(object):
             'TileMetricsOut.bin',
         ]
 
-        if rta in '1.18.54':
+        if rta in ('1.18.54', ):
             # Only on the MiSeq platform.
             file_list.append('IndexMetricsOut.bin')
 
-        if rta in ('2.5.2', '2.7.3', '2.7.6'):
-            # HiSeq 3000/4000 platform
+        if rta in ('2.4.11', '2.5.2', '2.7.3', '2.7.6'):
+            # HiSeq 3000/4000 and NextSeq platforms
             file_list.append('EmpiricalPhasingMetricsOut.bin')
             file_list.append('EventMetricsOut.bin')
             file_list.append('PFGridMetricsOut.bin')
@@ -2341,11 +2431,11 @@ class RunFolder(object):
             file_list.append('FWHMGridMetricsOut.bin')
             file_list.append('StaticRunMetricsOut.bin')
 
-        if rta not in ('1.18.54', '2.5.2'):
+        if rta not in ('1.18.54', '2.4.11', '2.5.2'):
             file_list.append('ImageMetricsOut.bin')
 
-        if rta not in ('2.5.2', '2.7.3', '2.7.6'):
-            # Other than HiSeq 3000/4000 platforms
+        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6'):
+            # Other than HiSeq 3000/4000 and NextSeq platforms
             file_list.append('ControlMetricsOut.bin')
 
         self._check_files(
@@ -2376,6 +2466,11 @@ class RunFolder(object):
         @return:
         @rtype:
         """
+
+        rta = self.run_parameters.get_real_time_analysis_version
+
+        if rta in ('2.4.11', ):
+            return
 
         directory_name = 'PeriodicSaveRates'
         if directory_name in folder_dict:
@@ -2434,7 +2529,7 @@ class RunFolder(object):
         directory_dict = dict(map(lambda x: (x, 1), os.listdir(directory_path)))
 
         file_list = list()
-        if rta in '1.18.54':
+        if rta in ('1.18.54', ):
             # The MiSeq platform uses the reagent kit barcode.
 
             file_list.append(
@@ -2478,6 +2573,10 @@ class RunFolder(object):
 
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
+
+        if rta in ('2.4.11', ):
+            # Not on the NextSeq platform
+            return
 
         flow_cell_barcode = self.run_parameters.get_flow_cell_barcode.lower()
 
@@ -2537,7 +2636,7 @@ class RunFolder(object):
                     for swath in range(1, fcl.swath_count + 1):
                         for base in ('a', 'c', 'g', 't'):
                             # Process swath image and zprof files.
-                            if rta in '1.18.54':
+                            if rta in ('1.18.54', ):
                                 # The MiSeq platform does not have swath image and zprof files.
                                 pass
                             else:
@@ -2629,6 +2728,7 @@ class RunFolder(object):
                 '1.18.54',  # MiSeq Control Software 2.5.0.5
                 '1.18.61',  # HiSeq Control Software 2.2.38
                 '1.18.64',  # HiSeq Control Software 2.2.58
+                '2.4.11',  # NextSeq Control Software 2.1.0.31
                 '2.5.2',  # HiSeq Control Software 3.3.20 (HiSeq 3000/4000)
                 '2.7.3',  # HiSeq Control Software 3.3.52 (HiSeq 3000/4000)
                 '2.7.6',  # HiSeq Control Software 3.3.76 (HiSeq 3000/4000)
@@ -2656,7 +2756,7 @@ class RunFolder(object):
 
         # Check the IRF/PeriodicSaveRates/ directory.
 
-        if rta not in '1.18.54':
+        if rta not in ('1.18.54', ):
             # The MiSeq platform does not have this directory.
             self._check_periodic_save_rates(
                 folder_dict=folder_dict,
@@ -2683,23 +2783,32 @@ class RunFolder(object):
             'Logs',  # directory
             'RTAComplete.txt',
             'RunInfo.xml',
-            'runParameters.xml',
         ]
 
-        if rta in '1.18.54':
+        if rta in ('2.4.11', ):
+            # On the NextSeq platform
+            file_list.append('RunParameters.xml')
+        else:
+            # On all but the NextSeq platform
+            file_list.append('runParameters.xml')
+
+        if rta in ('1.18.54', ):
             # The MiSeq platform has a sample annotation sheet.
             file_list.append('SampleSheet.csv')
-        else:
-            # The MiSeq platform does not have this file.
+
+        if rta not in ('1.18.54', '2.4.11'):
+            # Not for MiSeq and NextSeq platforms.
             file_list.append('First_Base_Report.htm')
 
-        if rta in ('2.5.2', '2.7.3', '2.7.6'):
-            # HiSeq 3000/4000 platform.
+        if rta in ('2.4.11', '2.5.2', '2.7.3', '2.7.6'):
+            # On HiSeq 3000/4000 and NextSeq platforms.
             file_list.append('RTAConfiguration.xml')
             file_list.append('RTALogs')  # directory
-            file_list.append('SequencingComplete.txt')
             for read in range(1, len(self.run_information.reads) + 1):
                 file_list.append('RTARead{:d}Complete.txt'.format(read))
+            if rta not in ('2.4.11', ):
+                # Not on the NextSeq platform
+                file_list.append('SequencingComplete.txt')
         else:
             # Other than HiSeq 3000/4000 platforms.
             file_list.append('Basecalling_Netcopy_complete.txt')
