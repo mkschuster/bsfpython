@@ -27,342 +27,1044 @@ A package of classes and methods modelling Picard analyses data files and data d
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import csv
-import errno
 import os
 import warnings
 import weakref
 
 from bsf import Analysis, Runnable
 from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
-from bsf.data import Reads, PairedReads, Sample
-from bsf.illumina import RunFolder
+from bsf.annotation import AnnotationSheet
+from bsf.data import Reads, PairedReads, Sample, SampleAnnotationSheet
+from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.process import RunnableStep, RunnableStepPicard, RunnableStepMakeDirectory
 from bsf.standards import Default
 
 import pysam
 
 
-def _process_row_dict(barcode_dict, row_dict, prefix=None):
-    """Private function to read fields from a Python row_dict object, index by the 'lane' field in the barcode_dict.
+class PicardIlluminaRunFolder(Analysis):
+    """The C{bsf.analyses.picard.PicardIlluminaRunFolder} class of Picard Analyses acting on Illumina Run Folders.
 
-    @param barcode_dict: A Python C{dict} of Python C{str} (lane) key data and Python C{list} objects of
-        lane_dict value data
-    @type barcode_dict: dict[str, str]
-    @param row_dict: Python row_dict object
-    @type row_dict: dict[str, str]
-    @param prefix: Optional prefix
-        (e.g. '[Control] lane', ...)
+    Attributes:
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @type name: str
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @return:
-    @rtype:
+    @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
+    @type stage_name_lane: str
+    @ivar run_directory: File path to an I{Illumina Run Folder}
+    @type run_directory: str | unicode
+    @ivar intensity_directory: File path to the I{Intensities} directory,
+        defaults to I{illumina_run_folder/Data/Intensities}
+    @type intensity_directory: str | unicode
+    @ivar basecalls_directory: File path to the I{BaseCalls} directory,
+        defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
+    @type basecalls_directory: str | unicode
+    @ivar experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
+        Illumina Run Folder parameters
+    @type experiment_name: str
+    @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
+    @type classpath_picard: str | unicode
+    @ivar force: Force processing of incomplete Illumina Run Folders
+    @type force: bool
     """
 
-    sample_dict = dict()
+    name = "Picard PicardIlluminaRunFolder Analysis"
+    prefix = "picard_illumina_run_folder"
 
-    if not prefix:
-        prefix = str()
+    stage_name_lane = '_'.join((prefix, 'lane'))
 
-    # Mandatory key 'lane'.
-    key1 = str(prefix + ' lane').lstrip(' ')
-    sample_dict['lane'] = row_dict[key1]
+    @classmethod
+    def get_prefix_lane(cls, project_name, lane):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
 
-    # Mandatory key 'barcode_sequence_1'.
-    key1 = str(prefix + ' barcode_sequence_1').lstrip(' ')
-    sample_dict['barcode_sequence_1'] = row_dict[key1]
+        @param project_name: A project name
+        @type project_name: str
+        @param lane: A lane number
+        @type lane: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.stage_name_lane, project_name, lane))
 
-    # Optional key 'barcode_sequence_2'.
-    key1 = str(prefix + ' barcode_sequence_2').lstrip(' ')
-    if key1 in row_dict and row_dict[key1]:
-        sample_dict['barcode_sequence_2'] = row_dict[key1]
-    else:
-        sample_dict['barcode_sequence_2'] = str()
+    def __init__(
+            self,
+            configuration=None,
+            project_name=None,
+            genome_version=None,
+            input_directory=None,
+            output_directory=None,
+            project_directory=None,
+            genome_directory=None,
+            e_mail=None,
+            debug=0,
+            stage_list=None,
+            collection=None,
+            comparisons=None,
+            samples=None,
+            run_directory=None,
+            intensity_directory=None,
+            basecalls_directory=None,
+            experiment_name=None,
+            classpath_picard=None,
+            force=False):
+        """Initialise a C{bsf.analyses.picard.PicardIlluminaRunFolder} object.
 
-    # Mandatory key 'library_name'.
-    key1 = str(prefix + ' library_name').lstrip(' ')
-    sample_dict['library_name'] = row_dict[key1]
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
+        @param project_name: Project name
+        @type project_name: str
+        @param genome_version: Genome version
+        @type genome_version: str
+        @param input_directory: C{bsf.Analysis}-wide input directory
+        @type input_directory: str
+        @param output_directory: C{bsf.Analysis}-wide output directory
+        @type output_directory: str
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
+        @type project_directory: str
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
+        @type genome_directory: str
+        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        @type e_mail: str
+        @param debug: Integer debugging level
+        @type debug: int
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
+        @param collection: C{bsf.data.Collection}
+        @type collection: bsf.data.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.data.Sample]]
+        @param samples: Python C{list} of C{bsf.data.Sample} objects
+        @type samples: list[bsf.data.Sample]
+        @param run_directory: File path to an I{Illumina Run Folder}
+        @type run_directory: str | unicode
+        @param intensity_directory: File path to the I{Intensities} directory,
+            defaults to I{illumina_run_folder/Data/Intensities}
+        @type intensity_directory: str | unicode
+        @param basecalls_directory: File path to the I{BaseCalls} directory,
+            defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
+        @type basecalls_directory: str | unicode
+        @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
+            Illumina Run Folder parameters
+        @type experiment_name: str
+        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
+        @type classpath_picard: str | unicode
+        @param force: Force processing of incomplete Illumina Run Folders
+        @type force: bool
+        @return:
+        @rtype:
+        """
 
-    # Mandatory key 'sample_name'.
-    key1 = str(prefix + ' sample_name').lstrip(' ')
-    sample_dict['sample_name'] = row_dict[key1]
+        super(PicardIlluminaRunFolder, self).__init__(
+            configuration=configuration,
+            project_name=project_name,
+            genome_version=genome_version,
+            input_directory=input_directory,
+            output_directory=output_directory,
+            project_directory=project_directory,
+            genome_directory=genome_directory,
+            e_mail=e_mail,
+            debug=debug,
+            stage_list=stage_list,
+            collection=collection,
+            comparisons=comparisons,
+            samples=samples)
 
-    if sample_dict['lane'] in barcode_dict:
-        lane_list = barcode_dict[sample_dict['lane']]
-        assert isinstance(lane_list, list)
-    else:
-        lane_list = list()
-        barcode_dict[sample_dict['lane']] = lane_list
+        if run_directory is None:
+            self.run_directory = str()
+        else:
+            self.run_directory = run_directory
 
-    lane_list.append(sample_dict)
+        if intensity_directory is None:
+            self.intensity_directory = str()
+        else:
+            self.intensity_directory = intensity_directory
 
-    return
+        if basecalls_directory is None:
+            self.basecalls_directory = str()
+        else:
+            self.basecalls_directory = basecalls_directory
+
+        if experiment_name is None:
+            self.experiment_name = str()
+        else:
+            self.experiment_name = experiment_name
+
+        if classpath_picard is None:
+            self.classpath_picard = str()
+        else:
+            self.classpath_picard = classpath_picard
+
+        if force is None:
+            self.force = False
+        else:
+            assert isinstance(force, bool)
+            self.force = force
+
+        self._irf = None
+
+        return
+
+    def set_configuration(self, configuration, section):
+        """Set instance variables of a C{bsf.analyses.picard.PicardIlluminaRunFolder} object via a section of a
+        C{bsf.standards.Configuration} object.
+
+        Instance variables without a configuration option remain unchanged.
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
+        @param section: Configuration file section
+        @type section: str
+        @return:
+        @rtype:
+        """
+
+        super(PicardIlluminaRunFolder, self).set_configuration(configuration=configuration, section=section)
+
+        # Sub-class specific ...
+
+        # Get Illumina Run Folder information.
+
+        option = 'illumina_run_folder'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.run_directory = configuration.config_parser.get(section=section, option=option)
+
+        option = 'intensity_directory'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.intensity_directory = configuration.config_parser.get(section=section, option=option)
+
+        option = 'basecalls_directory'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.basecalls_directory = configuration.config_parser.get(section=section, option=option)
+
+        # Get the experiment name.
+
+        option = 'experiment_name'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.experiment_name = configuration.config_parser.get(section=section, option=option)
+
+        # Get the Picard tools Java Archive (JAR) class path directory.
+
+        option = 'classpath_picard'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.classpath_picard = configuration.config_parser.get(section=section, option=option)
+
+        option = 'force'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.force = configuration.config_parser.getboolean(section=section, option=option)
+
+        return
+
+    def run(self):
+        """Run the C{bsf.analyses.picard.PicardIlluminaRunFolder} C{bsf.Analysis}.
+
+        @return:
+        @rtype:
+        """
+
+        default = Default.get_global_default()
+
+        # Define an Illumina Run Folder directory.
+        # Expand an eventual user part i.e. on UNIX ~ or ~user and
+        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Check if an absolute path has been provided, if not,
+        # automatically prepend standard BSF directory paths.
+
+        if not self.run_directory:
+            raise Exception('An Illumina run directory or file path has not been defined.')
+
+        self.run_directory = Default.get_absolute_path(
+            file_path=self.run_directory,
+            default_path=Default.absolute_runs_illumina())
+
+        # Check that the Illumina Run Folder exists.
+
+        if not os.path.isdir(self.run_directory):
+            raise Exception(
+                'The Illumina run directory {!r} does not exist.'.format(self.run_directory))
+
+        # Check that the Illumina Run Folder is complete.
+
+        if not (os.path.exists(path=os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
+            raise RunFolderNotComplete(
+                'The Illumina run directory {!r} is not complete.'.format(self.run_directory))
+
+        # Define an 'Intensities' directory.
+        # Expand an eventual user part i.e. on UNIX ~ or ~user and
+        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Check if an absolute path has been provided, if not,
+        # automatically prepend the Illumina Run Folder path.
+
+        if self.intensity_directory:
+            self.intensity_directory = Default.get_absolute_path(
+                file_path=self.intensity_directory,
+                default_path=self.run_directory)
+        else:
+            self.intensity_directory = os.path.join(self.run_directory, 'Data', 'Intensities')
+
+        # Check that the Intensities directory exists.
+
+        if not os.path.isdir(self.intensity_directory):
+            raise Exception(
+                'The Intensity directory {!r} does not exist.'.format(self.intensity_directory))
+
+        # Define a 'BaseCalls' directory.
+        # Expand an eventual user part i.e. on UNIX ~ or ~user and
+        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+        # Check if an absolute path has been provided, if not,
+        # automatically prepend the Intensities directory path.
+
+        if self.basecalls_directory:
+            self.basecalls_directory = Default.get_absolute_path(
+                file_path=self.basecalls_directory,
+                default_path=self.intensity_directory)
+        else:
+            self.basecalls_directory = os.path.join(self.intensity_directory, 'BaseCalls')
+
+        # Check that the BaseCalls directory exists.
+
+        if not os.path.isdir(self.basecalls_directory):
+            raise Exception(
+                'The BaseCalls directory {!r} does not exist.'.format(self.basecalls_directory))
+
+        self._irf = RunFolder.from_file_path(file_path=self.run_directory)
+
+        # The experiment name (e.g. BSF_0000) is used as the prefix for archive BAM files.
+        # Read it from the configuration file or from the
+        # Run Parameters of the Illumina Run Folder.
+
+        if not self.experiment_name:
+            self.experiment_name = self._irf.run_parameters.get_experiment_name
+
+        # The project name is a concatenation of the experiment name and the Illumina flow cell identifier.
+        # In case it has not been specified in the configuration file, read it from the
+        # Run Information of the Illumina Run Folder.
+
+        if not self.project_name:
+            self.project_name = '_'.join((self.experiment_name, self._irf.run_information.flow_cell))
+
+        # Get the Picard tools Java Archive (JAR) class path directory.
+
+        if not self.classpath_picard:
+            self.classpath_picard = default.classpath_picard
+
+        # Call the run method of the super class after the project_name has been defined.
+
+        super(PicardIlluminaRunFolder, self).run()
+
+        return
 
 
-def extract_illumina_barcodes(config_path):
-    """Convert an Illumina Run Folder into BAM files.
+class ExtractIlluminaBarcodesSheet(AnnotationSheet):
+    """The C{bsf.analyses.picard.ExtractIlluminaBarcodesSheet} class represents a
+    Tab-Separated Value (TSV) table of library information for the
+    C{bsf.analyses.picard.ExtractIlluminaBarcodes} C{bsf.Analysis}.
 
-    @param config_path: Configuration file
-    @type config_path: str | unicode
-    @return:
-    @rtype:
+    Attributes:
+    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
+    @type _file_type: str
+    @cvar _header_line: Header line exists
+    @type _header_line: bool
+    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
+    @type _field_names: list[str]
+    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
+        Python C{list} of Python C{function} value data
+    @type _test_methods: dict[str, list[function]]
     """
 
-    default = Default.get_global_default()
+    _file_type = 'excel-tab'
 
-    analysis = Analysis.from_config_file_path(config_path=config_path)
+    _header_line = True
 
-    cp = analysis.configuration.config_parser
-    section = '.'.join((__name__, analysis.__name__))
+    _field_names = [
+        'barcode_sequence_1',
+        'barcode_sequence_2',
+        'barcode_name',
+        'library_name',
+    ]
 
-    if cp.has_option(section=section, option='max_mismatches'):
-        max_mismatches = cp.get(section=section, option='max_mismatches')
-    else:
-        max_mismatches = str()
+    _test_methods = dict()
 
-    if cp.has_option(section=section, option='min_base_quality'):
-        min_base_quality = cp.get(section=section, option='min_base_quality')
-    else:
-        min_base_quality = str()
 
-    # Get the Illumina Run Folder
+class IlluminaBasecallsToSamSheet(AnnotationSheet):
+    """The C{bsf.analyses.picard.IlluminaBasecallsToSamSheet} class represents a
+    Tab-Separated Value (TSV) table of library information for the
+    C{bsf.analyses.picard.ExtractIlluminaBarcodes} C{bsf.Analysis}.
 
-    illumina_run_folder = cp.get(section=section, option='illumina_run_folder')
-    illumina_run_folder = os.path.expanduser(path=illumina_run_folder)
-    illumina_run_folder = os.path.expandvars(path=illumina_run_folder)
-    if not os.path.isabs(illumina_run_folder):
-        os.path.join(Default.absolute_runs_illumina(), illumina_run_folder)
+    Attributes:
+    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
+    @type _file_type: str
+    @cvar _header_line: Header line exists
+    @type _header_line: bool
+    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
+    @type _field_names: list[str]
+    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
+        Python C{list} of Python C{function} value data
+    @type _test_methods: dict[str, list[function]]
+    """
 
-    irf = RunFolder.from_file_path(file_path=illumina_run_folder)
+    _file_type = 'excel-tab'
 
-    base_calls_directory = irf.get_base_calls_directory
+    _header_line = True
 
-    # Read the barcodes file ...
+    _field_names = [
+        'OUTPUT',
+        'SAMPLE_ALIAS',
+        'LIBRARY_NAME',
+        'BARCODE_1',
+        'BARCODE_2',
+    ]
 
-    barcode_path = cp.get(section=section, option='barcode_file')
-    barcode_path = os.path.expanduser(barcode_path)
-    barcode_path = os.path.expandvars(barcode_path)
-    # TODO: Prepend path defaults.
+    _test_methods = dict()
 
-    barcode_dict = dict()
 
-    library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=barcode_path)
+class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
+    """The C{bsf.analyses.picard.ExtractIlluminaRunFolder} class represents to extract data from an Illumina Run Folder.
 
-    for row_dict in library_annotation_sheet.row_dicts:
-        assert isinstance(row_dict, dict)
-        _process_row_dict(row_dict=row_dict, prefix=analysis.sas_prefix, barcode_dict=barcode_dict)
+    The analysis is based on Picard ExtractIlluminaBarcodes and Picard IlluminaBasecallsToSam.
 
-    # Create a Stage for the Picard ExtractIlluminaBarcodes stage.
+    Attributes:
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @type name: str
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @type prefix: str
+    @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
+    @type stage_name_lane: str
+    @ivar samples_directory: BSF samples directory
+    @type samples_directory: str | unicode
+    @ivar experiment_directory: Experiment directory
+    @type experiment_directory: str | unicode
+    @ivar library_path: Library annotation file path
+    @type library_path: str | unicode
+    @ivar max_mismatches: Maximum number of mismatches
+    @type max_mismatches: str
+    @ivar min_base_quality: Minimum base quality
+    @type min_base_quality: str
+    @ivar sequencing_centre: Sequencing centre
+    @type sequencing_centre: str
+    """
 
-    stage_picard_eib = analysis.get_stage(name='picard_extract_illumina_barcodes')
+    name = "Picard ExtractIlluminaRunFolder Analysis"
+    prefix = "extract_illumina_run_folder"
 
-    # Create a Stage for the Picard IlluminaBasecallsToSam stage.
+    stage_name_lane = '_'.join((prefix, 'lane'))
 
-    stage_picard_ibs = analysis.get_stage(name='picard_illumina_basecalls_to_sam')
+    def __init__(
+            self,
+            configuration=None,
+            project_name=None,
+            genome_version=None,
+            input_directory=None,
+            output_directory=None,
+            project_directory=None,
+            genome_directory=None,
+            e_mail=None,
+            debug=0,
+            stage_list=None,
+            collection=None,
+            comparisons=None,
+            samples=None,
+            run_directory=None,
+            intensity_directory=None,
+            basecalls_directory=None,
+            experiment_name=None,
+            classpath_picard=None,
+            force=False,
+            samples_directory=None,
+            experiment_directory=None,
+            library_path=None,
+            max_mismatches=None,
+            min_base_quality=None,
+            sequencing_centre=None):
+        """Initialise a C{bsf.analyses.picard.ExtractIlluminaRunFolder} object.
 
-    # For each lane in the barcode_dict ...
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
+        @param project_name: Project name
+        @type project_name: str
+        @param genome_version: Genome version
+        @type genome_version: str
+        @param input_directory: C{bsf.Analysis}-wide input directory
+        @type input_directory: str
+        @param output_directory: C{bsf.Analysis}-wide output directory
+        @type output_directory: str
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
+        @type project_directory: str
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
+        @type genome_directory: str
+        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        @type e_mail: str
+        @param debug: Integer debugging level
+        @type debug: int
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
+        @param collection: C{bsf.data.Collection}
+        @type collection: bsf.data.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.data.Sample]]
+        @param samples: Python C{list} of C{bsf.data.Sample} objects
+        @type samples: list[bsf.data.Sample]
+        @param run_directory: File path to an I{Illumina Run Folder}
+        @type run_directory: str | unicode
+        @param intensity_directory: File path to the I{Intensities} directory,
+            defaults to I{illumina_run_folder/Data/Intensities}
+        @type intensity_directory: str | unicode
+        @param basecalls_directory: File path to the I{BaseCalls} directory,
+            defaults to I{illumina_run_folder/Data/Intensities/BaseCalls}
+        @type basecalls_directory: str | unicode
+        @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
+            Illumina Run Folder parameters
+        @type experiment_name: str
+        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
+        @type classpath_picard: str | unicode
+        @param force: Force processing of incomplete Illumina Run Folders
+        @type force: bool
+        @param samples_directory: BSF samples directory
+        @type samples_directory: str | unicode
+        @param experiment_directory: Experiment directory
+        @type experiment_directory: str | unicode
+        @param library_path: Library annotation file path
+        @type library_path: str | unicode
+        @param max_mismatches: Maximum number of mismatches
+        @type max_mismatches: str
+        @param min_base_quality: Minimum base quality
+        @type min_base_quality: str
+        @param sequencing_centre: Sequencing centre
+        @type sequencing_centre: str
+        @return:
+        @rtype:
+        """
 
-    keys = barcode_dict.keys()
-    keys.sort(cmp=lambda x, y: cmp(x, y))
+        super(ExtractIlluminaRunFolder, self).__init__(
+            configuration=configuration,
+            project_name=project_name,
+            genome_version=genome_version,
+            input_directory=input_directory,
+            output_directory=output_directory,
+            project_directory=project_directory,
+            genome_directory=genome_directory,
+            e_mail=e_mail,
+            debug=debug,
+            stage_list=stage_list,
+            collection=collection,
+            comparisons=comparisons,
+            samples=samples,
+            run_directory=run_directory,
+            intensity_directory=intensity_directory,
+            basecalls_directory=basecalls_directory,
+            experiment_name=experiment_name,
+            classpath_picard=classpath_picard,
+            force=force)
 
-    for key in keys:
-        assert isinstance(key, str)
+        if samples_directory is None:
+            self.samples_directory = str()
+        else:
+            self.samples_directory = samples_directory
 
-        # Make a directory L001 - L008 for each lane.
-        # TODO: Check if lane is numeric or a string.
+        if experiment_directory is None:
+            self.experiment_directory = str()
+        else:
+            self.experiment_directory = experiment_directory
 
-        lane_path = os.path.join(analysis.project_directory, 'L{:03d}'.format(int(key)))
+        if library_path is None:
+            self.library_path = str()
+        else:
+            self.library_path = library_path
 
-        try:
-            os.makedirs(lane_path)
-        except OSError as exc:  # Python > 2.5
-            if exc.errno == errno.EEXIST and os.path.isdir(lane_path):
-                pass
+        if max_mismatches is None:
+            self.max_mismatches = str()
+        else:
+            self.max_mismatches = max_mismatches
+
+        if min_base_quality is None:
+            self.min_base_quality = str()
+        else:
+            self.min_base_quality = min_base_quality
+
+        if sequencing_centre is None:
+            self.sequencing_centre = str()
+        else:
+            self.sequencing_centre = sequencing_centre
+
+        return
+
+    def set_configuration(self, configuration, section):
+        """Set instance variables of a C{bsf.analyses.picard.ExtractIlluminaRunFolder} object via a section of a
+        C{bsf.standards.Configuration} object.
+
+        Instance variables without a configuration option remain unchanged.
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
+        @param section: Configuration file section
+        @type section: str
+        @return:
+        @rtype:
+        """
+
+        super(ExtractIlluminaRunFolder, self).set_configuration(configuration=configuration, section=section)
+
+        # Sub-class specific ...
+
+        # Get the general samples directory.
+
+        option = 'samples_directory'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.samples_directory = configuration.config_parser.get(section=section, option=option)
+
+        # For the moment, the experiment_directory cannot be configured.
+        # It is automatically assembled from self.samples_directory and self.project_name by the run() method.
+
+        # Get the library annotation file.
+
+        option = 'library_path'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.library_path = configuration.config_parser.get(section=section, option=option)
+
+        # Get the maximum number of mismatches.
+
+        option = 'max_mismatches'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.max_mismatches = configuration.config_parser.get(section=section, option=option)
+
+        # Get the minimum base quality.
+
+        option = 'min_base_quality'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.min_base_quality = configuration.config_parser.get(section=section, option=option)
+
+        # Get sequencing centre information.
+
+        option = 'sequencing_centre'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.sequencing_centre = configuration.config_parser.get(section=section, option=option)
+
+        return
+
+    def run(self):
+        """Run a C{bsf.analyses.picard.ExtractIlluminaRunFolder} C{bsf.Analysis}.
+
+        @return:
+        @rtype:
+        """
+
+        super(ExtractIlluminaRunFolder, self).run()
+
+        default = Default.get_global_default()
+
+        self.samples_directory = Default.get_absolute_path(
+            file_path=self.samples_directory,
+            default_path=Default.absolute_samples())
+
+        # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
+
+        if not os.path.isdir(self.samples_directory):
+            raise Exception(
+                'The ExtractIlluminaRunFolder samples_directory {!r} does not exist.'.format(self.samples_directory))
+
+        self.experiment_directory = os.path.join(self.samples_directory, self.project_name)
+
+        # Get sequencing centre information.
+
+        if not self.sequencing_centre:
+            self.sequencing_centre = default.operator_sequencing_centre
+
+        # Get the library annotation sheet.
+        # The library annotation sheet is deliberately not passed in via sas_file,
+        # as the Analysis.run() method reads that option into a BSF Collection object.
+
+        self.library_path = os.path.expanduser(path=self.library_path)
+        self.library_path = os.path.expandvars(path=self.library_path)
+
+        if not self.library_path:
+            self.library_path = '_'.join((self.project_name, 'libraries.csv'))
+
+        self.library_path = os.path.normpath(path=self.library_path)
+
+        if not os.path.exists(path=self.library_path):
+            raise Exception('Library annotation file {!r} does not exist.'.format(self.library_path))
+
+        # Read the LibraryAnnotationSheet and populate a flow cell dict indexed on the lane number ...
+        # FIXME: Differences to BamIndexDecoder. No validation for the moment.
+        flow_cell_dict = dict()
+
+        library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=self.library_path)
+
+        for row_dict in library_annotation_sheet.row_dicts:
+            if row_dict['lane'] not in flow_cell_dict:
+                flow_cell_dict[row_dict['lane']] = list()
+
+            flow_cell_dict[row_dict['lane']].append(row_dict)
+
+        # Create a Sample Annotation Sheet in the project directory and
+        # eventually transfer it into the experiment_directory.
+        sample_annotation_name = '_'.join((self.project_name, 'samples.csv'))
+        sample_annotation_sheet = SampleAnnotationSheet(
+            file_path=os.path.join(self.project_directory, sample_annotation_name))
+
+        stage_lane = self.get_stage(name=self.stage_name_lane)
+
+        # For each lane in the flow_cell_dict ...
+        # TODO: For the moment this depends on the lanes (keys) defined in the LibraryAnnotationSheet.
+        # Not all lanes may thus get extracted.
+
+        keys = flow_cell_dict.keys()
+        keys.sort(cmp=lambda x, y: cmp(x, y))
+
+        for key in keys:
+            assert isinstance(key, str)
+
+            # The key represents the lane number as a Python str.
+            file_path_dict_lane = {
+                'output_directory': '_'.join((self.project_name, key, 'output')),
+                'samples_directory': '_'.join((self.project_name, key, 'samples')),
+                'barcode_tsv': '_'.join((self.project_name, key, 'barcode.tsv')),
+                'metrics_tsv': '_'.join((self.project_name, key, 'metrics.tsv')),
+                'library_tsv': '_'.join((self.project_name, key, 'library.tsv')),
+            }
+
+            # BARCODE_FILE
+            eib_sheet = ExtractIlluminaBarcodesSheet(
+                file_path=os.path.join(self.project_directory, file_path_dict_lane['barcode_tsv']))
+
+            # LIBRARY_PARAMS
+            ibs_sheet = IlluminaBasecallsToSamSheet(
+                file_path=os.path.join(self.project_directory, file_path_dict_lane['library_tsv']))
+
+            # Initialise a list of barcode sequence lengths.
+            bc_length_list = list()
+
+            # Sort each lane by sample name.
+            flow_cell_dict_list = flow_cell_dict[key]
+            assert isinstance(flow_cell_dict_list, list)
+            flow_cell_dict_list.sort(cmp=lambda x, y: cmp(x['sample_name'], y['sample_name']))
+
+            for row_dict in flow_cell_dict_list:
+                assert isinstance(row_dict, dict)
+                # Determine and check the length of the barcode sequences.
+                for index in range(0L, 1L + 1L):
+                    if len(bc_length_list) == index:
+                        # If this is the first barcode, assign it.
+                        bc_length_list.append(len(row_dict['barcode_sequence_' + str(index + 1L)]))
+                    else:
+                        # If this a subsequent barcode, check it.
+                        bc_length = len(row_dict['barcode_sequence_' + str(index + 1L)])
+                        if bc_length != bc_length_list[index]:
+                            # Barcode lengths do not match ...
+                            warnings.warn(
+                                'The length ({}) of barcode {} {!r} does not match '
+                                'the length ({}) of previous barcodes.'.format(
+                                    bc_length,
+                                    index + 1L,
+                                    row_dict['barcode_sequence_' + str(index + 1L)],
+                                    bc_length_list[index]),
+                                UserWarning)
+
+                # Add a row to the lane-specific Picard ExtractIlluminaBarcodesSheet.
+
+                eib_sheet.row_dicts.append({
+                    'barcode_sequence_1': row_dict['barcode_sequence_1'],
+                    'barcode_sequence_2': row_dict['barcode_sequence_2'],
+                    'barcode_name': row_dict['sample_name'],
+                    'library_name': row_dict['library_name'],
+                })
+
+                # Add a row to the lane-specific Picard IlluminaBasecallsToSamSheet.
+
+                ibs_sheet.row_dicts.append({
+                    'BARCODE_1': row_dict['barcode_sequence_1'],
+                    'BARCODE_2': row_dict['barcode_sequence_2'],
+                    'OUTPUT': os.path.join(
+                        file_path_dict_lane['samples_directory'],
+                        '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])),
+                    'SAMPLE_ALIAS': row_dict['sample_name'],
+                    'LIBRARY_NAME': row_dict['library_name'],
+                })
+
+                # Add a row to the flow cell-specific sample annotation sheet.
+
+                sample_annotation_sheet.row_dicts.append({
+                    'File Type': 'Automatic',
+                    'ProcessedRunFolder Name': self.project_name,
+                    'Project Name': row_dict['library_name'],
+                    'Project Size': row_dict['library_size'],
+                    'Sample Name': row_dict['sample_name'],
+                    'PairedReads Index 1': row_dict['barcode_sequence_1'],
+                    'PairedReads Index 2': row_dict['barcode_sequence_2'],
+                    # TODO: It would be good to add a RunnableStep to populate the ReadGroup.
+                    'PairedReads ReadGroup': '',
+                    'Reads1 Name': '_'.join((self.project_name, key, row_dict['sample_name'])),
+                    'Reads1 File': os.path.join(
+                        os.path.basename(self.experiment_directory),
+                        file_path_dict_lane['samples_directory'],
+                        '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])),
+                    'Reads2 Name': '',
+                    'Reads2 File': '',
+                })
+
+            # The IlluminaBasecallsToSamSheet needs adjusting ...
+
+            if len(ibs_sheet.row_dicts) == 1 and len(ibs_sheet.row_dicts[0]['BARCODE_1']) == 0 and len(
+                    ibs_sheet.row_dicts[0]['BARCODE_2']) == 0:
+                # ... if a single sample, but neither BARCODE_1 nor BARCODE_2 were defined,
+                # BARCODE_1 needs setting to 'N'.
+                ibs_sheet.row_dicts[0]['BARCODE_1'] = 'N'
             else:
-                raise
+                # ... in all other cases as a last row for unmatched barcode sequences needs adding.
+                ibs_sheet.row_dicts.append({
+                    'BARCODE_1': 'N',
+                    'BARCODE_2': '',
+                    'OUTPUT': os.path.join(
+                        file_path_dict_lane['samples_directory'],
+                        '{}_{}#0.bam'.format(self.project_name, key)),
+                    'SAMPLE_ALIAS': 'Unmatched',
+                    'LIBRARY_NAME': ibs_sheet.row_dicts[0]['LIBRARY_NAME'],
+                })
 
-        barcodes_path = os.path.join(lane_path, '{}_L{:03d}_input_barcodes.txt'.format(irf.flow_cell, int(key)))
-        metrics_path = os.path.join(lane_path, '{}_L{:03d}_output_metrics.txt'.format(irf.flow_cell, int(key)))
-        library_path = os.path.join(lane_path, '{}_L{:03d}_library.txt'.format(irf.flow_cell, int(key)))
+            # Calculate the read structure string from the IRF and the bc_length_list above ...
 
-        lane_list = barcode_dict[key]
-        assert isinstance(lane_list, list)
+            read_structure = str()
+            index_read_index = 0L  # Number of index reads.
+            assert isinstance(self._irf, RunFolder)
+            # Instantiate and sort a new list of RunInformationRead objects.
+            run_information_read_list = list(self._irf.run_information.reads)
+            run_information_read_list.sort(cmp=lambda x, y: cmp(x.number, y.number))
+            for run_information_read in run_information_read_list:
+                if run_information_read.index:
+                    # For an index read ...
+                    read_structure += '{}B'.format(bc_length_list[index_read_index])
+                    if run_information_read.cycles < bc_length_list[index_read_index]:
+                        read_structure += '{}S'.format(run_information_read.cycles - bc_length_list[index_read_index])
+                    index_read_index += 1  # Increment to the next barcode read
+                else:
+                    # For a template read ...
+                    read_structure += '{}T'.format(run_information_read.cycles)
 
-        # Check whether all barcodes are of the same length in a particular lane.
+            # Further adjust the IlluminaBaseCallsToSamSheet and remove any BARCODE_N columns not represented
+            # in the read structure.
 
-        # TODO: Generalise this to any number of barcodes.
-        bc1_length = 0
-        bc2_length = 9
+            for index in range(0L, 1L + 1L):
+                if index + 1L > index_read_index:
+                    # Remove the 'BARCODE_N' filed from the list of field names.
+                    if 'BARCODE_' + str(index + 1L) in ibs_sheet.field_names:
+                        ibs_sheet.field_names.remove('BARCODE_' + str(index + 1L))
+                    # Remove the 'BARCODE_N' entry form each row dict object, since csv.DictWriter requires it.
+                    for row_dict in ibs_sheet.row_dicts:
+                        row_dict.pop('BARCODE_' + str(index + 1L), None)
 
-        for lane_dict in lane_list:
-            assert isinstance(lane_dict, dict)
+            # Write the lane-specific Picard ExtractIlluminaBarcodesSheet and Picard IlluminaBasecallsToSamSheet.
 
-            if lane_dict['barcode_sequence_1'] == 'NoIndex' or not lane_dict['barcode_sequence_1']:
-                bc_length = -1
-            else:
-                bc_length = len(lane_dict['barcode_sequence_1'])
+            if index_read_index > 0L:
+                eib_sheet.to_file_path()
 
-            if not bc1_length:
-                bc1_length = bc_length
-            else:
-                if bc1_length != bc_length:
-                    # Barcode lengths do not match ...
-                    warnings.warn(
-                        'The length {} of barcode 1 {!r} does not match the length ({}) of other barcodes.'.format(
-                            bc_length,
-                            lane_dict['barcode_sequence_1'],
-                            bc1_length),
-                        UserWarning)
+            ibs_sheet.to_file_path()
 
-            if lane_dict['barcode_sequence_2'] == 'NoIndex' or not lane_dict['barcode_sequence_2']:
-                bc_length = -1
-            else:
-                bc_length = len(lane_dict['barcode_sequence_2'])
+            # Create a Runnable and Executable for the lane stage.
 
-            if not bc2_length:
-                bc2_length = bc_length
-            else:
-                if bc2_length != bc_length:
-                    # Barcode lengths do not match ...
-                    warnings.warn(
-                        'The length {} of barcode 2 {!r} does not match the length ({}) of other barcodes.'.format(
-                            bc_length,
-                            lane_dict['barcode_sequence_2'],
-                            bc2_length),
-                        UserWarning)
+            runnable_lane = self.add_runnable(
+                runnable=Runnable(
+                    name=self.get_prefix_lane(project_name=self.project_name, lane=key),
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.project_directory,
+                    file_path_dict=file_path_dict_lane))
+            self.set_stage_runnable(
+                stage=stage_lane,
+                runnable=runnable_lane)
 
-        # TODO: Get the read structure from the IRF and the bc_lengths above ...
+            # Create an output_directory in the project_directory.
 
-        for iread in irf.run_information.reads:
-            if iread.number == 1:
-                if iread.cycles != bc1_length:
-                    # TODO: Finish this!
-                    warnings.warn()
+            runnable_lane.add_runnable_step(
+                runnable_step=RunnableStepMakeDirectory(
+                    name='make_output_directory',
+                    directory_path=file_path_dict_lane['output_directory']))
 
-        # Create a BARCODE_FILE file for Picard ExtractIlluminaBarcodes.
+            # Create a samples_directory in the project_directory.
 
-        field_names = ['barcode_sequence_1', 'barcode_sequence_2', 'barcode_name', 'library_name']
-        barcodes_file = open(barcodes_path, 'w')
-        csv_writer = csv.DictWriter(f=barcodes_file, fieldnames=field_names, dialect=csv.excel_tab)
-        csv_writer.writeheader()
-        for lane_dict in lane_list:
-            assert isinstance(lane_dict, dict)
-            # Create a new row dict to adjust column names to the ones required by ExtractIlluminaBarcodes.
-            row_dict = dict()
-            row_dict['barcode_sequence_1'] = lane_dict['barcode_sequence_1']
-            row_dict['barcode_sequence_2'] = lane_dict['barcode_sequence_2']
-            row_dict['barcode_name'] = lane_dict['sample_name']
-            row_dict['library_name'] = lane_dict['library_name']
-            csv_writer.writerow(rowdict=row_dict)
-        barcodes_file.close()
+            runnable_lane.add_runnable_step(
+                runnable_step=RunnableStepMakeDirectory(
+                    name='make_samples_directory',
+                    directory_path=file_path_dict_lane['samples_directory']))
 
-        # Create a LIBRARY_PARAMS file for Picard IlluminaBasecallsToSam.
-        field_names = ['OUTPUT', 'SAMPLE_ALIAS', 'LIBRARY_NAME', 'BARCODE_1', 'BARCODE_2']
-        library_file = open(library_path, 'w')
-        csv_writer = csv.DictWriter(f=library_file, fieldnames=field_names, dialect=csv.excel_tab)
-        csv_writer.writeheader()
-        for lane_dict in lane_list:
-            assert isinstance(lane_dict, dict)
-            # Create a new row_dict to adjust column names to the ones required by IlluminaBasecallsToSam.
-            row_dict = dict()
-            row_dict['OUTPUT'] = '{}_{}_L{:03d}_unmapped.bam'.format(lane_dict['sample_name'], irf.flow_cell, int(key))
-            row_dict['SAMPLE_ALIAS'] = lane_dict['sample_name']
-            row_dict['LIBRARY_NAME'] = lane_dict['library_name']
-            row_dict['BARCODE_1'] = lane_dict['barcode_sequence_1']
-            row_dict['BARCODE_2'] = lane_dict['barcode_sequence_2']
-            csv_writer.writerow(rowdict=row_dict)
-        library_file.close()
+            # Create a RunnableStep for Picard ExtractIlluminaBarcodes, only if index (barcode) reads are present.
 
-        # Picard ExtractIlluminaBarcodes
+            if index_read_index > 0L:
+                runnable_step = runnable_lane.add_runnable_step(
+                    runnable_step=RunnableStepPicard(
+                        name='picard_extract_illumina_barcodes',
+                        java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
+                        java_heap_maximum='Xmx2G',
+                        picard_classpath=self.classpath_picard,
+                        picard_command='ExtractIlluminaBarcodes'))
+                assert isinstance(runnable_step, RunnableStepPicard)
+                runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
+                runnable_step.add_picard_option(key='OUTPUT_DIR', value=file_path_dict_lane['output_directory'])
+                runnable_step.add_picard_option(key='LANE', value=key)
+                runnable_step.add_picard_option(key='READ_STRUCTURE', value=read_structure)
+                runnable_step.add_picard_option(key='BARCODE_FILE', value=file_path_dict_lane['barcode_tsv'])
+                runnable_step.add_picard_option(key='METRICS_FILE', value=file_path_dict_lane['metrics_tsv'])
+                if self.max_mismatches:
+                    # Maximum mismatches for a barcode to be considered a match. Default value: 1.
+                    runnable_step.add_picard_option(key='MAX_MISMATCHES', value=self.max_mismatches)
+                # MIN_MISMATCH_DELTA: Minimum difference between number of mismatches in the best and
+                # second best barcodes for a barcode to be considered a match. Default value: 1.
+                # MAX_NO_CALLS Maximum allowable number of no-calls in a barcode read before it is
+                # considered unmatchable. Default value: 2.
+                if self.min_base_quality:
+                    # Minimum base quality. Any barcode bases falling below this quality will be considered
+                    # a mismatch even in the bases match. Default value: 0.
+                    runnable_step.add_picard_option(key='MINIMUM_BASE_QUALITY', value=self.min_base_quality)
+                # MINIMUM_QUALITY The minimum quality (after transforming 0s to 1s) expected from reads.
+                # If qualities are lower than this value, an error is thrown.The default of 2 is what the
+                # Illumina's spec describes as the minimum, but in practice the value has been observed lower.
+                # Default value: 2.
+                runnable_step.add_picard_option(key='COMPRESS_OUTPUTS', value='true')
+                runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
+                runnable_step.add_picard_option(
+                    key='TMP_DIR',
+                    value=runnable_lane.get_relative_temporary_directory_path)
 
-        prefix_picard_eib = '_'.join((stage_picard_eib.name, key))
+            # Picard IlluminaBasecallsToSam
 
-        file_path_dict_picard_eib = dict()
+            # Create a RunnableStep for Picard IlluminaBasecallsToSam.
 
-        # Create a Runnable for the Picard ExtractIlluminaBarcodes stage.
-
-        runnable_picard_eib = analysis.add_runnable(
-            runnable=Runnable(
-                name=prefix_picard_eib,
-                code_module='bsf.runnables.generic',
-                working_directory=analysis.project_directory,
-                file_path_dict=file_path_dict_picard_eib))
-
-        # Create an Executable for running the Picard ExtractIlluminaBarcodes Runnable.
-
-        executable_picard_eib = analysis.set_stage_runnable(
-            stage=stage_picard_eib,
-            runnable=runnable_picard_eib)
-
-        runnable_step = runnable_picard_eib.add_runnable_step(
-            runnable_step=RunnableStepPicard(
-                name='picard_eib',
-                java_temporary_path=runnable_picard_eib.get_relative_temporary_directory_path,
-                java_heap_maximum='Xmx2G',
-                picard_classpath=default.classpath_picard,  # TODO: This has to be self.classpath_picard.
-                picard_command='ExtractIlluminaBarcodes'))
-        assert isinstance(runnable_step, RunnableStepPicard)
-        runnable_step.add_picard_option(key='BASECALLS_DIR', value=base_calls_directory)
-        # OUTPUT_DIR for s_l_t_barcode.txt files not set. Defaults to BASECALLS_DIR.
-        runnable_step.add_picard_option(key='LANE', value=key)
-        # TODO: This would also require barcode lengths.
-        runnable_step.add_picard_option(key='READ_STRUCTURE', value='')
-        # BARCODE not set, since BARCODE_FILE gets used.
-        runnable_step.add_picard_option(key='BARCODE_FILE', value=barcodes_path)
-        runnable_step.add_picard_option(key='METRICS_FILE', value=metrics_path)
-        if max_mismatches:
-            runnable_step.add_picard_option(key='MAX_MISMATCHES', value=max_mismatches)
-            # MIN_MISMATCH_DELTA
-        # MAX_NO_CALLS
-        if min_base_quality:
-            runnable_step.add_picard_option(key='MINIMUM_BASE_QUALITY', value=min_base_quality)
+            runnable_step = runnable_lane.add_runnable_step(
+                runnable_step=RunnableStepPicard(
+                    name='picard_illumina_basecalls_to_sam',
+                    java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
+                    java_heap_maximum='Xmx2G',
+                    picard_classpath=self.classpath_picard,
+                    picard_command='IlluminaBasecallsToSam'))
+            assert isinstance(runnable_step, RunnableStepPicard)
+            runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
+            if index_read_index > 0L:
+                runnable_step.add_picard_option(key='BARCODES_DIR', value=file_path_dict_lane['output_directory'])
+            runnable_step.add_picard_option(key='LANE', value=key)
+            # OUTPUT is deprecated.
+            # TODO: Does the RUN_BARCODE work???
+            runnable_step.add_picard_option(key='RUN_BARCODE', value=self._irf.run_parameters.get_flow_cell_barcode)
+            # SAMPLE_ALIAS is deprecated.
+            runnable_step.add_picard_option(key='READ_GROUP_ID', value='{}_{}'.format(self.project_name, key))
+            # LIBRARY_NAME is deprecated.
+            runnable_step.add_picard_option(key='SEQUENCING_CENTER', value=self.sequencing_centre)
+            # NOTE: The ISO date format still does not work for Picard tools 2.6.1. Sigh.
+            # runnable_step.add_picard_option(key='RUN_START_DATE', value=self._irf.run_information.get_iso_date)
+            # NOTE: The only date format that seems to work is mm/dd/yyyy. Sigh.
+            runnable_step.add_picard_option(key='RUN_START_DATE', value='{}/{}/20{}'.format(
+                self._irf.run_information.date[2:4],
+                self._irf.run_information.date[4:6],
+                self._irf.run_information.date[0:2]))
+            # PLATFORM The name of the sequencing technology that produced the read. Default value: illumina.
+            # FIXME: IlluminaToBam defaults to 'ILLUMINA'.
+            # runnable_step.add_picard_option(key='PLATFORM', value='ILLUMINA')
+            runnable_step.add_picard_option(key='READ_STRUCTURE', value=read_structure)
+            runnable_step.add_picard_option(key='LIBRARY_PARAMS', value=file_path_dict_lane['library_tsv'])
+            # runnable_step.add_picard_option(key='ADAPTERS_TO_CHECK', value='')  # TODO: ???
+            runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
+            # FIRST_TILE
+            # TILE_LIMIT
+            # FORCE_GC
+            # APPLY_EAMSS_FILTER
+            # MAX_READS_IN_RAM_PER_TILE
             # MINIMUM_QUALITY
-        # COMPRESS_OUTPUTS for s_l_t_barcode.txt files
-        runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_picard_eib.threads))
-        runnable_step.add_picard_option(key='COMPRESS_OUTPUTS', value='TRUE')
+            # INCLUDE_NON_PF_READS  # FIXME: Set this to the filter section in the configuration file.
+            # IGNORE_UNEXPECTED_BARCODES
+            # MOLECULAR_INDEX_TAG
+            # MOLECULAR_INDEX_BASE_QUALITY_TAG
+            # TAG_PER_MOLECULAR_INDEX
+            runnable_step.add_picard_option(key='TMP_DIR', value=runnable_lane.get_relative_temporary_directory_path)
+            runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+            runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
 
-        # Picard IlluminaBasecallsToSam
+        # Finally, write the flow cell-specific SampleAnnotationSheet to the internal file path.
 
-        prefix_picard_ibs = '_'.join((stage_picard_ibs.name, key))
+        sample_annotation_sheet.to_file_path()
 
-        file_path_dict_picard_ibs = dict()
+        return
 
-        # Create a Runnable for the Picard IlluminaBasecallsToSam stage.
 
-        runnable_picard_ibs = analysis.add_runnable(
-            runnable=Runnable(
-                name=prefix_picard_ibs,
-                code_module='bsf.runnables.generic',
-                working_directory=analysis.project_directory,
-                file_path_dict=file_path_dict_picard_ibs))
+class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
+    """The C{bsf.analyses.picard.CollectHiSeqXPfFailMetrics} class represents Picard CollectHiSeqXPfFailMetrics.
 
-        # Create an Executable for running the Picard IlluminaBasecallsToSam Runnable.
+    Attributes:
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @type name: str
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @type prefix: str
+    @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
+    @type stage_name_lane: str
+    """
 
-        executable_picard_ibs = analysis.set_stage_runnable(
-            stage=stage_picard_ibs,
-            runnable=runnable_picard_ibs)
-        executable_picard_ibs.dependencies.append(executable_picard_eib.name)
+    name = "Picard CollectHiSeqXPfFailMetrics Analysis"
+    prefix = "picard_hiseq_x_pf_fail"
 
-        runnable_step = runnable_picard_eib.add_runnable_step(
-            runnable_step=RunnableStepPicard(
-                name='picard_ibs',
-                java_temporary_path=runnable_picard_ibs.get_relative_temporary_directory_path,
-                java_heap_maximum='Xmx2G',
-                picard_classpath=default.classpath_picard,  # TODO: This has to be self.classpath_picard.
-                picard_command='IlluminaBasecallsToSam'))
-        assert isinstance(runnable_step, RunnableStepPicard)
-        runnable_step.add_picard_option(key='BASECALLS_DIR', value=base_calls_directory)
-        runnable_step.add_picard_option(key='LANE', value=key)
-        runnable_step.add_picard_option(key='RUN_BARCODE', value='')  # TODO:
-        runnable_step.add_picard_option(key='READ_GROUP_ID', value='')  # TODO:
-        runnable_step.add_picard_option(key='SEQUENCING_CENTER', value='')  # TODO: Get from Defaults?
-        runnable_step.add_picard_option(key='RUN_START_DATE', value='')  # TODO:
-        runnable_step.add_picard_option(key='PLATFORM', value='')  # TODO: Defaults to illumina
-        runnable_step.add_picard_option(key='READ_STRUCTURE', value='')  # TODO
-        runnable_step.add_picard_option(key='LIBRARY_PARAMS', value=library_path)
-        runnable_step.add_picard_option(key='ADAPTERS_TO_CHECK', value='')  # TODO
-        runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_picard_ibs.threads))
+    stage_name_lane = '_'.join((prefix, 'lane'))
 
-    return
+    def run(self):
+        """Run the C{bsf.analyses.picard.CollectHiSeqXPfFailMetrics} C{bsf.Analysis}.
+
+        @return:
+        @rtype:
+        """
+
+        super(CollectHiSeqXPfFailMetrics, self).run()
+
+        # Picard CollectHiSeqXPfFailMetrics
+
+        stage_lane = self.get_stage(name=self.stage_name_lane)
+
+        cell_dependency_list = list()
+
+        for lane_int in range(0 + 1, self._irf.run_information.flow_cell_layout.lane_count + 1):
+            lane_str = str(lane_int)
+
+            lane_prefix = self.get_prefix_lane(
+                project_name=self.project_name,
+                lane=lane_str)
+
+            file_path_dict_lane = {
+                'summary_tsv': lane_prefix + '.pffail_summary_metrics',
+                'detailed_tsv': lane_prefix + '.pffail_detailed_metrics',
+            }
+
+            # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the Stage.
+            runnable_lane = self.add_runnable(
+                runnable=Runnable(
+                    name=self.get_prefix_lane(
+                        project_name=self.project_name,
+                        lane=lane_str),
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.project_directory,
+                    file_path_dict=file_path_dict_lane))
+
+            executable_lane = self.set_stage_runnable(
+                stage=stage_lane,
+                runnable=runnable_lane)
+
+            # Add the dependency for the cell-specific process.
+
+            cell_dependency_list.append(executable_lane.name)
+
+            runnable_step = runnable_lane.add_runnable_step(
+                runnable_step=RunnableStepPicard(
+                    name='illumina_to_bam',
+                    java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
+                    java_heap_maximum='Xmx4G',
+                    picard_classpath=self.classpath_picard,
+                    picard_command='CollectHiSeqXPfFailMetrics'))
+            assert isinstance(runnable_step, RunnableStepPicard)
+            # BASECALLS_DIR is required.
+            runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
+            # OUTPUT is required.
+            runnable_step.add_picard_option(key='OUTPUT', value=lane_prefix)
+            # LANE is required.
+            runnable_step.add_picard_option(key='LANE', value=lane_str)
+            # NUM_PROCESSORS defaults to '1'.
+            runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
+            # N_CYCLES defaults to '24'. Should match Illumina RTA software.
+
+        return
 
 
 class SamToFastq(Analysis):
