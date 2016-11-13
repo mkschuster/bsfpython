@@ -27,7 +27,6 @@ A package of classes and methods supporting analyses of the Illumina2Bam-Tools p
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import errno
 import os
 import warnings
 
@@ -897,7 +896,6 @@ class IlluminaToBam(Analysis):
         stage_cell = self.get_stage(name=self.stage_name_cell)
 
         for lane_int in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
-
             lane_str = str(lane_int)
 
             file_path_dict_lane = {
@@ -1606,19 +1604,16 @@ class BamIndexDecoder(Analysis):
 
             if executable_lane.submit:
                 # Only if this Executable actually gets submitted ...
-                # Create the samples directory in the project_directory if it does not exist.
-
-                project_samples_path = os.path.join(self.project_directory, file_path_dict_lane['samples_directory'])
-                if not os.path.isdir(project_samples_path):
-                    try:
-                        os.makedirs(project_samples_path)
-                    except OSError as exception:
-                        if exception.errno != errno.EEXIST:
-                            raise
-
                 # Write the lane-specific BamIndexDecoderSheet to the internal file path.
 
                 bam_index_decoder_sheet.to_file_path()
+
+            # Create a samples_directory in the project_directory.
+
+            runnable_lane.add_runnable_step(
+                runnable_step=RunnableStepMakeDirectory(
+                    name='make_samples_directory',
+                    directory_path=file_path_dict_lane['samples_directory']))
 
             if barcode_number:
                 # Run the BamIndexDecoder if there is at least one line containing a barcode sequence.
