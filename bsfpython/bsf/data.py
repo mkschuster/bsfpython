@@ -1979,7 +1979,7 @@ class Collection(object):
                     key_list.remove(re_match.string)
                 # Capture the string from the end of the match to the end of the string and strip white space.
                 key2 = re_match.string[re_match.end(0):].strip()
-                if key2 and key2 not in 'Name':
+                if key2 and key2 != 'Name':
                     # Exclude empty key strings and the 'Name' key that is not an annotation as such.
                     if row_dict[re_match.string]:
                         # Exclude empty fields.
@@ -2050,7 +2050,7 @@ class Collection(object):
                     key_list.remove(re_match.string)
                 # Capture the string from the end of the match to the end of the string and strip white space.
                 key2 = re_match.string[re_match.end(0):].strip()
-                if key2 and key2 not in 'Name':
+                if key2 and key2 != 'Name':
                     # Exclude empty key strings and the 'Name' key that is not an annotation as such.
                     if row_dict[re_match.string]:
                         # Exclude empty fields.
@@ -2121,7 +2121,7 @@ class Collection(object):
                     key_list.remove(re_match.string)
                 # Capture the string from the end of the match to the end of the string and strip white space.
                 key2 = re_match.string[re_match.end(0):].strip()
-                if key2 and key2 not in 'Name':
+                if key2 and key2 != 'Name':
                     # Exclude empty key strings and the 'Name' key that is not an annotation as such.
                     if row_dict[re_match.string]:
                         # Exclude empty fields.
