@@ -744,21 +744,21 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             for row_dict in flow_cell_dict_list:
                 assert isinstance(row_dict, dict)
                 # Determine and check the length of the barcode sequences.
-                for index in range(0L, 1L + 1L):
+                for index in range(0, 1 + 1):
                     if len(bc_length_list) == index:
                         # If this is the first barcode, assign it.
-                        bc_length_list.append(len(row_dict['barcode_sequence_' + str(index + 1L)]))
+                        bc_length_list.append(len(row_dict['barcode_sequence_' + str(index + 1)]))
                     else:
                         # If this a subsequent barcode, check it.
-                        bc_length = len(row_dict['barcode_sequence_' + str(index + 1L)])
+                        bc_length = len(row_dict['barcode_sequence_' + str(index + 1)])
                         if bc_length != bc_length_list[index]:
                             # Barcode lengths do not match ...
                             warnings.warn(
                                 'The length ({}) of barcode {} {!r} does not match '
                                 'the length ({}) of previous barcodes.'.format(
                                     bc_length,
-                                    index + 1L,
-                                    row_dict['barcode_sequence_' + str(index + 1L)],
+                                    index + 1,
+                                    row_dict['barcode_sequence_' + str(index + 1)],
                                     bc_length_list[index]),
                                 UserWarning)
 
@@ -826,7 +826,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             # Calculate the read structure string from the IRF and the bc_length_list above ...
 
             read_structure = str()
-            index_read_index = 0L  # Number of index reads.
+            index_read_index = 0  # Number of index reads.
             assert isinstance(self._irf, RunFolder)
             # Instantiate and sort a new list of RunInformationRead objects.
             run_information_read_list = list(self._irf.run_information.reads)
@@ -845,18 +845,18 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             # Further adjust the IlluminaBaseCallsToSamSheet and remove any BARCODE_N columns not represented
             # in the read structure.
 
-            for index in range(0L, 1L + 1L):
-                if index + 1L > index_read_index:
+            for index in range(0, 1 + 1):
+                if index + 1 > index_read_index:
                     # Remove the 'BARCODE_N' filed from the list of field names.
-                    if 'BARCODE_' + str(index + 1L) in ibs_sheet.field_names:
-                        ibs_sheet.field_names.remove('BARCODE_' + str(index + 1L))
+                    if 'BARCODE_' + str(index + 1) in ibs_sheet.field_names:
+                        ibs_sheet.field_names.remove('BARCODE_' + str(index + 1))
                     # Remove the 'BARCODE_N' entry form each row dict object, since csv.DictWriter requires it.
                     for row_dict in ibs_sheet.row_dicts:
-                        row_dict.pop('BARCODE_' + str(index + 1L), None)
+                        row_dict.pop('BARCODE_' + str(index + 1), None)
 
             # Write the lane-specific Picard ExtractIlluminaBarcodesSheet and Picard IlluminaBasecallsToSamSheet.
 
-            if index_read_index > 0L:
+            if index_read_index > 0:
                 eib_sheet.to_file_path()
 
             ibs_sheet.to_file_path()
@@ -889,7 +889,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             # Create a RunnableStep for Picard ExtractIlluminaBarcodes, only if index (barcode) reads are present.
 
-            if index_read_index > 0L:
+            if index_read_index > 0:
                 runnable_step = runnable_lane.add_runnable_step(
                     runnable_step=RunnableStepPicard(
                         name='picard_extract_illumina_barcodes',
@@ -938,7 +938,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     picard_command='IlluminaBasecallsToSam'))
             assert isinstance(runnable_step, RunnableStepPicard)
             runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
-            if index_read_index > 0L:
+            if index_read_index > 0:
                 runnable_step.add_picard_option(key='BARCODES_DIR', value=file_path_dict_lane['output_directory'])
             runnable_step.add_picard_option(key='LANE', value=key)
             # OUTPUT is deprecated.

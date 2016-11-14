@@ -527,13 +527,13 @@ class RunInformation(object):
         """
 
         return datetime.datetime(
-            int(self.date[0:2]) + 2000L,  # year
+            int(self.date[0:2]) + 2000,  # year
             int(self.date[2:4]),  # month
             int(self.date[4:6]),  # day
-            0L,  # hour
-            0L,  # minute
-            0L,  # second
-            0L,  # microsecond
+            0,  # hour
+            0,  # minute
+            0,  # second
+            0,  # microsecond
             dateutil.tz.tzlocal()  # tzinfo
         ).isoformat()
 
