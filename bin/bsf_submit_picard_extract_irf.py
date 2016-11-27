@@ -60,6 +60,12 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
+    '--mode',
+    help='HiSeq run mode i.e. high (high-output) or rapid (rapid run)',
+    required=False,
+    type=str)
+
+argument_parser.add_argument(
     '--force',
     action='store_true',
     help='force processing of an incomplete Illumina Run Folder')
@@ -77,6 +83,18 @@ if name_space.debug:
 
 if name_space.irf:
     eirf.run_directory = name_space.irf
+
+if name_space.mode:
+    if name_space.mode == 'high':
+        eirf.lanes = 8
+    elif name_space.mode == 'rapid':
+        eirf.lanes = 2
+    elif name_space.mode == 'miseq':
+        eirf.lanes = 1
+    elif name_space.mode == 'nextseq':
+        eirf.lanes = 4
+    else:
+        raise Exception("Unknown output mode " + name_space.mode)
 
 if name_space.force:
     eirf.force = name_space.force

@@ -69,15 +69,15 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
-    '--force',
-    action='store_true',
-    help='force processing even if library annotation sheet validation fails')
-
-argument_parser.add_argument(
     '--mode',
     help='HiSeq run mode i.e. high (high-output) or rapid (rapid run)',
     required=False,
     type=str)
+
+argument_parser.add_argument(
+    '--force',
+    action='store_true',
+    help='force processing even if library annotation sheet validation fails')
 
 name_space = argument_parser.parse_args()
 
@@ -95,11 +95,13 @@ if name_space.project_name:
 
 if name_space.mode:
     if name_space.mode == 'high':
-        bid.lanes = int(8)
+        bid.lanes = 8
     elif name_space.mode == 'rapid':
-        bid.lanes = int(2)
+        bid.lanes = 2
     elif name_space.mode == 'miseq':
-        bid.lanes = int(1)
+        bid.lanes = 1
+    elif name_space.mode == 'nextseq':
+        bid.lanes = 4
     else:
         raise Exception("Unknown output mode " + name_space.mode)
 

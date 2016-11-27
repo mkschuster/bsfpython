@@ -216,11 +216,13 @@ if name_space.debug:
 
 if name_space.mode:
     if name_space.mode == 'high':
-        bid.lanes = int(8)
+        bid.lanes = 8
     elif name_space.mode == 'rapid':
-        bid.lanes = int(2)
+        bid.lanes = 2
     elif name_space.mode == 'miseq':
-        bid.lanes = int(1)
+        bid.lanes = 1
+    elif name_space.mode == 'nextseq':
+        bid.lanes = 4
     else:
         raise Exception("Unknown output mode " + name_space.mode)
 else:
