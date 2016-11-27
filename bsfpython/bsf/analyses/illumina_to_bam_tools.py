@@ -1506,12 +1506,17 @@ class BamIndexDecoder(Analysis):
 
             flow_cell_dict[row_dict['lane']].append(row_dict)
 
+        file_path_dict_cell = {
+            'experiment_directory': self.experiment_directory,
+            'sample_annotation_sheet_csv': '_'.join((self.project_name, 'samples.csv')),
+        }
+
         # Create a Sample Annotation Sheet in the project directory and
         # eventually transfer it into the experiment_directory.
-        sample_annotation_name = '_'.join((self.project_name, 'samples.csv'))
         sample_annotation_sheet = SampleAnnotationSheet(
-            file_path=os.path.join(self.project_directory, sample_annotation_name))
-        sample_annotation_transferred = 0
+            file_path=os.path.join(
+                self.project_directory,
+                file_path_dict_cell['sample_annotation_sheet_csv']))
 
         cell_dependency_list = list()
 
@@ -1782,25 +1787,11 @@ class BamIndexDecoder(Analysis):
                         source_path=file_path_dict_lane['metrics_tsv'],
                         target_path=self.experiment_directory))
 
-            # Move the Sample Annotation Sheet once.
-
-            if not sample_annotation_transferred:
-                sample_annotation_transferred += 1
-                runnable_lane.add_runnable_step(
-                    runnable_step=RunnableStepMove(
-                        name='move_sample_annotation',
-                        source_path=os.path.join(self.project_directory, sample_annotation_name),
-                        target_path=self.experiment_directory))
-
         # Finally, write the flow cell-specific SampleAnnotationSheet to the internal file path.
 
         sample_annotation_sheet.to_file_path()
 
-        # Add another Runnable to reset directory and file mode permissions if requested.
-
-        file_path_dict_cell = {
-            'experiment_directory': self.experiment_directory,
-        }
+        # Create a flow-cell specific Runnable.
 
         runnable_cell = self.add_runnable(
             runnable=Runnable(
@@ -1813,6 +1804,17 @@ class BamIndexDecoder(Analysis):
             stage=stage_cell,
             runnable=runnable_cell)
         executable_cell.dependencies.extend(cell_dependency_list)
+
+        # Move the Sample Annotation Sheet from the project_directory to the experiment_directory.
+
+        if os.path.exists(sample_annotation_sheet.file_path):
+            runnable_cell.add_runnable_step(
+                runnable_step=RunnableStepMove(
+                    name='move_sample_annotation',
+                    source_path=file_path_dict_cell['sample_annotation_sheet_csv'],
+                    target_path=file_path_dict_cell['experiment_directory']))
+
+        # Change directory and file access permissions.
 
         runnable_cell.add_runnable_step(
             runnable_step=RunnableStepChangeMode(
