@@ -28,6 +28,7 @@ A package of classes and methods modelling Picard analyses data files and data d
 
 
 import os
+import re
 import warnings
 import weakref
 
@@ -36,7 +37,8 @@ from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
 from bsf.annotation import AnnotationSheet
 from bsf.data import Reads, PairedReads, Sample, SampleAnnotationSheet
 from bsf.illumina import RunFolder, RunFolderNotComplete
-from bsf.process import RunnableStep, RunnableStepPicard, RunnableStepMakeDirectory
+from bsf.process import RunnableStep, RunnableStepChangeMode, RunnableStepPicard, RunnableStepMakeDirectory,\
+    RunnableStepMove
 from bsf.standards import Default
 
 import pysam
@@ -52,6 +54,8 @@ class PicardIlluminaRunFolder(Analysis):
     @type prefix: str
     @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
     @type stage_name_lane: str
+    @cvar stage_name_cell: C{bsf.Stage.name} for the flow cell-specific stage
+    @type stage_name_cell: str
     @ivar run_directory: File path to an I{Illumina Run Folder}
     @type run_directory: str | unicode
     @ivar intensity_directory: File path to the I{Intensities} directory,
@@ -73,6 +77,18 @@ class PicardIlluminaRunFolder(Analysis):
     prefix = "picard_illumina_run_folder"
 
     stage_name_lane = '_'.join((prefix, 'lane'))
+    stage_name_cell = '_'.join((prefix, 'cell'))
+
+    @classmethod
+    def get_prefix_cell(cls, project_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
+
+        @param project_name: A project name
+        @type project_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.stage_name_cell, project_name))
 
     @classmethod
     def get_prefix_lane(cls, project_name, lane):
@@ -431,24 +447,35 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
     @type prefix: str
     @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
     @type stage_name_lane: str
+    @cvar stage_name_cell: C{bsf.Stage.name} for the flow cell-specific stage
+    @type stage_name_cell: str
     @ivar samples_directory: BSF samples directory
     @type samples_directory: str | unicode
-    @ivar experiment_directory: Experiment directory
-    @type experiment_directory: str | unicode
     @ivar library_path: Library annotation file path
     @type library_path: str | unicode
+    @ivar experiment_directory: Experiment directory
+    @type experiment_directory: str | unicode
+    @ivar mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
+    @type mode_directory: str
+    @ivar mode_file: Comma-separated list of file permission bit names according to the C{stat} module
+    @type mode_file: str
     @ivar max_mismatches: Maximum number of mismatches
     @type max_mismatches: str
     @ivar min_base_quality: Minimum base quality
     @type min_base_quality: str
     @ivar sequencing_centre: Sequencing centre
     @type sequencing_centre: str
+    @ivar lanes: Number of lanes on the flow cell
+    @type lanes: int
+    @ivar vendor_quality_filter: Python C{dict} of flow cell chemistry type and Python bool value for filtering
+    @type vendor_quality_filter: dict[str, bool]
     """
 
-    name = "Picard ExtractIlluminaRunFolder Analysis"
+    name = "Picard Extract Illumina Run Folder Analysis"
     prefix = "extract_illumina_run_folder"
 
     stage_name_lane = '_'.join((prefix, 'lane'))
+    stage_name_cell = '_'.join((prefix, 'cell'))
 
     def __init__(
             self,
@@ -471,12 +498,16 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             experiment_name=None,
             classpath_picard=None,
             force=False,
+            library_path=None,
             samples_directory=None,
             experiment_directory=None,
-            library_path=None,
+            mode_directory=None,
+            mode_file=None,
             max_mismatches=None,
             min_base_quality=None,
-            sequencing_centre=None):
+            sequencing_centre=None,
+            lanes=8,
+            vendor_quality_filter=None):
         """Initialise a C{bsf.analyses.picard.ExtractIlluminaRunFolder} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -522,18 +553,26 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         @type classpath_picard: str | unicode
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool
+        @param library_path: Library annotation file path
+        @type library_path: str | unicode
         @param samples_directory: BSF samples directory
         @type samples_directory: str | unicode
         @param experiment_directory: Experiment directory
         @type experiment_directory: str | unicode
-        @param library_path: Library annotation file path
-        @type library_path: str | unicode
+        @param mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
+        @type mode_directory: str
+        @param mode_file: Comma-separated list of file permission bit names according to the C{stat} module
+        @type mode_file: str
         @param max_mismatches: Maximum number of mismatches
         @type max_mismatches: str
         @param min_base_quality: Minimum base quality
         @type min_base_quality: str
         @param sequencing_centre: Sequencing centre
         @type sequencing_centre: str
+        @param lanes: Number of lanes on the flow cell
+        @type lanes: int
+        @param vendor_quality_filter: Python C{dict} of flow cell chemistry type and Python bool value for filtering
+        @type vendor_quality_filter: dict[str, bool]
         @return:
         @rtype:
         """
@@ -564,15 +603,21 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         else:
             self.samples_directory = samples_directory
 
+        if library_path is None:
+            self.library_path = str()
+        else:
+            self.library_path = library_path
+
         if experiment_directory is None:
             self.experiment_directory = str()
         else:
             self.experiment_directory = experiment_directory
 
-        if library_path is None:
-            self.library_path = str()
-        else:
-            self.library_path = library_path
+        # Can be None.
+        self.mode_directory = mode_directory
+
+        # Can be None.
+        self.mode_file = mode_file
 
         if max_mismatches is None:
             self.max_mismatches = str()
@@ -588,6 +633,17 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             self.sequencing_centre = str()
         else:
             self.sequencing_centre = sequencing_centre
+
+        if lanes is None:
+            self.lanes = int()
+        else:
+            assert isinstance(lanes, int)
+            self.lanes = lanes
+
+        if vendor_quality_filter is None:
+            self.vendor_quality_filter = dict()
+        else:
+            self.vendor_quality_filter = vendor_quality_filter
 
         return
 
@@ -608,6 +664,12 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         # Sub-class specific ...
 
+        # Get the library annotation file.
+
+        option = 'library_path'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.library_path = configuration.config_parser.get(section=section, option=option)
+
         # Get the general samples directory.
 
         option = 'samples_directory'
@@ -617,11 +679,17 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # For the moment, the experiment_directory cannot be configured.
         # It is automatically assembled from self.samples_directory and self.project_name by the run() method.
 
-        # Get the library annotation file.
+        # Get directory access mode permission bits.
 
-        option = 'library_path'
+        option = 'mode_directory'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.library_path = configuration.config_parser.get(section=section, option=option)
+            self.mode_directory = configuration.config_parser.get(section=section, option=option)
+
+        # Get file access mode permission bits.
+
+        option = 'mode_file'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.mode_file = configuration.config_parser.get(section=section, option=option)
 
         # Get the maximum number of mismatches.
 
@@ -640,6 +708,21 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         option = 'sequencing_centre'
         if configuration.config_parser.has_option(section=section, option=option):
             self.sequencing_centre = configuration.config_parser.get(section=section, option=option)
+
+        option = 'lanes'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.lanes = configuration.config_parser.getint(section=section, option=option)
+
+        # Read the VendorQualityFilter section, which consists of flow cell chemistry type keys and boolean values
+        # to set filtering.
+
+        vqf_section = '.'.join((section, 'VendorQualityFilter'))
+
+        if configuration.config_parser.has_section(section=vqf_section):
+            for option_name in configuration.config_parser.options(section=vqf_section):
+                self.vendor_quality_filter[option_name] = configuration.config_parser.getboolean(
+                    section=vqf_section,
+                    option=option_name)
 
         return
 
@@ -671,6 +754,12 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         if not self.sequencing_centre:
             self.sequencing_centre = default.operator_sequencing_centre
 
+        # Check that the flow cell chemistry type is defined in the vendor quality filter.
+
+        if self._irf.run_parameters.get_flow_cell_type not in self.vendor_quality_filter:
+            raise Exception('Flow cell chemistry type {!r} not defined.'.format(
+                self._irf.run_parameters.get_flow_cell_type))
+
         # Get the library annotation sheet.
         # The library annotation sheet is deliberately not passed in via sas_file,
         # as the Analysis.run() method reads that option into a BSF Collection object.
@@ -686,29 +775,49 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         if not os.path.exists(path=self.library_path):
             raise Exception('Library annotation file {!r} does not exist.'.format(self.library_path))
 
+        stage_lane = self.get_stage(name=self.stage_name_lane)
+        stage_cell = self.get_stage(name=self.stage_name_cell)
+
         # Read the LibraryAnnotationSheet and populate a flow cell dict indexed on the lane number ...
-        # FIXME: Differences to BamIndexDecoder. No validation for the moment.
-        flow_cell_dict = dict()
 
         library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=self.library_path)
 
+        validation_messages = library_annotation_sheet.validate(lanes=self.lanes)
+
+        if validation_messages:
+            if self.force:
+                warnings.warn('Validation of library annotation sheet {!r}:\n{}'.
+                              format(self.library_path, validation_messages))
+            else:
+                raise Exception('Validation of library annotation sheet {!r}:\n{}'.
+                                format(self.library_path, validation_messages))
+
+        flow_cell_dict = dict()
         for row_dict in library_annotation_sheet.row_dicts:
             if row_dict['lane'] not in flow_cell_dict:
                 flow_cell_dict[row_dict['lane']] = list()
 
             flow_cell_dict[row_dict['lane']].append(row_dict)
 
+        file_path_dict_cell = {
+            'experiment_directory': self.experiment_directory,
+            'sample_annotation_sheet_csv': '_'.join((self.project_name, 'samples.csv')),
+        }
+
         # Create a Sample Annotation Sheet in the project directory and
         # eventually transfer it into the experiment_directory.
-        sample_annotation_name = '_'.join((self.project_name, 'samples.csv'))
         sample_annotation_sheet = SampleAnnotationSheet(
-            file_path=os.path.join(self.project_directory, sample_annotation_name))
-
-        stage_lane = self.get_stage(name=self.stage_name_lane)
+            file_path=os.path.join(
+                self.project_directory,
+                file_path_dict_cell['sample_annotation_sheet_csv']))
 
         # For each lane in the flow_cell_dict ...
         # TODO: For the moment this depends on the lanes (keys) defined in the LibraryAnnotationSheet.
         # Not all lanes may thus get extracted.
+        # TODO: For NextSeq instruments, it would be sufficient to require annotation for only lane one and
+        # copy information to lanes two to four internally.
+
+        cell_dependency_list = list()
 
         keys = flow_cell_dict.keys()
         keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -869,9 +978,11 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory,
                     file_path_dict=file_path_dict_lane))
-            self.set_stage_runnable(
+            executable_lane = self.set_stage_runnable(
                 stage=stage_lane,
                 runnable=runnable_lane)
+
+            cell_dependency_list.append(executable_lane.name)
 
             # Create an output_directory in the project_directory.
 
@@ -905,25 +1016,34 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 runnable_step.add_picard_option(key='BARCODE_FILE', value=file_path_dict_lane['barcode_tsv'])
                 runnable_step.add_picard_option(key='METRICS_FILE', value=file_path_dict_lane['metrics_tsv'])
                 if self.max_mismatches:
-                    # Maximum mismatches for a barcode to be considered a match. Default value: 1.
+                    # Maximum mismatches for a barcode to be considered a match. Default value: '1'.
                     runnable_step.add_picard_option(key='MAX_MISMATCHES', value=self.max_mismatches)
                 # MIN_MISMATCH_DELTA: Minimum difference between number of mismatches in the best and
-                # second best barcodes for a barcode to be considered a match. Default value: 1.
+                # second best barcodes for a barcode to be considered a match. Default value: '1'.
                 # MAX_NO_CALLS Maximum allowable number of no-calls in a barcode read before it is
-                # considered unmatchable. Default value: 2.
+                # considered unmatchable. Default value: '2'.
                 if self.min_base_quality:
                     # Minimum base quality. Any barcode bases falling below this quality will be considered
-                    # a mismatch even in the bases match. Default value: 0.
+                    # a mismatch even in the bases match. Default value: '0'.
                     runnable_step.add_picard_option(key='MINIMUM_BASE_QUALITY', value=self.min_base_quality)
                 # MINIMUM_QUALITY The minimum quality (after transforming 0s to 1s) expected from reads.
                 # If qualities are lower than this value, an error is thrown.The default of 2 is what the
                 # Illumina's spec describes as the minimum, but in practice the value has been observed lower.
-                # Default value: 2.
+                # Default value: '2'.
                 runnable_step.add_picard_option(key='COMPRESS_OUTPUTS', value='true')
                 runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
                     value=runnable_lane.get_relative_temporary_directory_path)
+                # VERBOSITY defaults to 'INFO'.
+                # QUIET defaults to 'false'.
+                # VALIDATION_STRINGENCY defaults to 'STRICT'.
+                # COMPRESSION_LEVEL defaults to '5'.
+                # MAX_RECORDS_IN_RAM  defaults to '500000'.
+                # CREATE_INDEX defaults to 'false'.
+                # CREATE_MD5_FILE defaults to 'false'.
+                # REFERENCE_SEQUENCE
+                # GA4GH_CLIENT_SECRETS defaults to 'client_secrets.json'.
 
             # Picard IlluminaBasecallsToSam
 
@@ -942,44 +1062,116 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 runnable_step.add_picard_option(key='BARCODES_DIR', value=file_path_dict_lane['output_directory'])
             runnable_step.add_picard_option(key='LANE', value=key)
             # OUTPUT is deprecated.
-            # TODO: Does the RUN_BARCODE work???
-            runnable_step.add_picard_option(key='RUN_BARCODE', value=self._irf.run_parameters.get_flow_cell_barcode)
+            runnable_step.add_picard_option(
+                key='RUN_BARCODE',
+                value=self._irf.run_parameters.get_flow_cell_barcode)
             # SAMPLE_ALIAS is deprecated.
-            runnable_step.add_picard_option(key='READ_GROUP_ID', value='{}_{}'.format(self.project_name, key))
+            runnable_step.add_picard_option(
+                key='READ_GROUP_ID',
+                value='{}_{}'.format(self._irf.run_parameters.get_flow_cell_barcode, key))
             # LIBRARY_NAME is deprecated.
             runnable_step.add_picard_option(key='SEQUENCING_CENTER', value=self.sequencing_centre)
             # NOTE: The ISO date format still does not work for Picard tools 2.6.1. Sigh.
             # runnable_step.add_picard_option(key='RUN_START_DATE', value=self._irf.run_information.get_iso_date)
-            # NOTE: The only date format that seems to work is mm/dd/yyyy. Sigh.
+            # NOTE: The only date format that seems to work is mm/dd/yyyy. Why?
             runnable_step.add_picard_option(key='RUN_START_DATE', value='{}/{}/20{}'.format(
                 self._irf.run_information.date[2:4],
                 self._irf.run_information.date[4:6],
                 self._irf.run_information.date[0:2]))
             # PLATFORM The name of the sequencing technology that produced the read. Default value: illumina.
-            # FIXME: IlluminaToBam defaults to 'ILLUMINA'.
+            # NOTE: IlluminaToBam defaults to 'ILLUMINA'.
             # runnable_step.add_picard_option(key='PLATFORM', value='ILLUMINA')
             runnable_step.add_picard_option(key='READ_STRUCTURE', value=read_structure)
+            # BARCODE_PARAMS is deprecated.
             runnable_step.add_picard_option(key='LIBRARY_PARAMS', value=file_path_dict_lane['library_tsv'])
-            # runnable_step.add_picard_option(key='ADAPTERS_TO_CHECK', value='')  # TODO: ???
+            # ADAPTERS_TO_CHECK defaults to [INDEXED, DUAL_INDEXED, NEXTERA_V2, FLUIDIGM].
+            # runnable_step.add_picard_option(key='ADAPTERS_TO_CHECK', value='')
             runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
-            # FIRST_TILE
-            # TILE_LIMIT
-            # FORCE_GC
+            # FIRST_TILE defaults to 'null'.
+            # TILE_LIMIT defaults to 'null'.
+            # FORCE_GC defaults to 'true'.
             # APPLY_EAMSS_FILTER
             # MAX_READS_IN_RAM_PER_TILE
-            # MINIMUM_QUALITY
-            # INCLUDE_NON_PF_READS  # FIXME: Set this to the filter section in the configuration file.
-            # IGNORE_UNEXPECTED_BARCODES
-            # MOLECULAR_INDEX_TAG
-            # MOLECULAR_INDEX_BASE_QUALITY_TAG
-            # TAG_PER_MOLECULAR_INDEX
+            # MINIMUM_QUALITY defaults to '2'.
+            # INCLUDE_NON_PF_READS
+            if not self.vendor_quality_filter[self._irf.run_parameters.get_flow_cell_type]:
+                runnable_step.add_picard_option(key='INCLUDE_NON_PF_READS', value='true')
+            # IGNORE_UNEXPECTED_BARCODES defaults to 'false'.
+            # MOLECULAR_INDEX_TAG defaults to 'RX'.
+            # MOLECULAR_INDEX_BASE_QUALITY_TAG defaults to 'QX'.
+            # TAG_PER_MOLECULAR_INDEX The list of tags to store each molecular index.
             runnable_step.add_picard_option(key='TMP_DIR', value=runnable_lane.get_relative_temporary_directory_path)
+            # VERBOSITY defaults to 'INFO'.
+            # QUIET defaults to 'false'.
+            # VALIDATION_STRINGENCY defaults to 'STRICT'.
+            # COMPRESSION_LEVEL defaults to '5'.
             runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+            # MAX_RECORDS_IN_RAM  defaults to '500000'.
+            # CREATE_INDEX defaults to 'false'.
+            # CREATE_MD5_FILE defaults to 'false'.
             runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+            # REFERENCE_SEQUENCE
+            # GA4GH_CLIENT_SECRETS defaults to 'client_secrets.json'.
+
+            # Create the experiment directory if it does not exist already.
+
+            runnable_lane.add_runnable_step(
+                runnable_step=RunnableStepMakeDirectory(
+                    name='make_directory',
+                    directory_path=self.experiment_directory))
+
+            # Move the samples directory into the experiment directory.
+
+            runnable_lane.add_runnable_step(
+                runnable_step=RunnableStepMove(
+                    name='move_samples_directory',
+                    source_path=file_path_dict_lane['samples_directory'],
+                    target_path=self.experiment_directory))
+
+            # Move the metrics file into the experiment directory.
+
+            if index_read_index > 0:
+                runnable_lane.add_runnable_step(
+                    runnable_step=RunnableStepMove(
+                        name='move_metrics_tsv',
+                        source_path=file_path_dict_lane['metrics_tsv'],
+                        target_path=self.experiment_directory))
 
         # Finally, write the flow cell-specific SampleAnnotationSheet to the internal file path.
 
         sample_annotation_sheet.to_file_path()
+
+        # Create a flow-cell specific Runnable.
+
+        runnable_cell = self.add_runnable(
+            runnable=Runnable(
+                name=self.get_prefix_cell(project_name=self.project_name),
+                code_module='bsf.runnables.generic',
+                working_directory=self.project_directory,
+                file_path_dict=file_path_dict_cell))
+
+        executable_cell = self.set_stage_runnable(
+            stage=stage_cell,
+            runnable=runnable_cell)
+        executable_cell.dependencies.extend(cell_dependency_list)
+
+        # Move the Sample Annotation Sheet from the project_directory to the experiment_directory.
+
+        if os.path.exists(sample_annotation_sheet.file_path):
+            runnable_cell.add_runnable_step(
+                runnable_step=RunnableStepMove(
+                    name='move_sample_annotation',
+                    source_path=file_path_dict_cell['sample_annotation_sheet_csv'],
+                    target_path=file_path_dict_cell['experiment_directory']))
+
+        # Change directory and file access permissions.
+
+        runnable_cell.add_runnable_step(
+            runnable_step=RunnableStepChangeMode(
+                name='chmod',
+                file_path=file_path_dict_cell['experiment_directory'],
+                mode_directory=self.mode_directory,
+                mode_file=self.mode_file))
 
         return
 
@@ -1279,7 +1471,14 @@ class SamToFastq(Analysis):
                         alignment_file = pysam.AlignmentFile(reads.file_path, 'rb', check_sq=False)
 
                         for read_group in alignment_file.header['RG']:
-                            platform_unit = read_group['PU'].replace('#', '_')
+                            # The makeFileNameSafe() method of htsjdk.samtools.util.IOUtil uses the following pattern:
+                            # [\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]
+                            platform_unit = re.sub(
+                                pattern="[\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]",
+                                repl='_',
+                                string=read_group['PU'])
+                            # Replacing the '#' character may not be enough.
+                            # platform_unit = read_group['PU'].replace('#', '_')
                             read_group_list = ['@RG']
                             read_group_list.extend(map(lambda x: '{}:{}'.format(x, read_group[x]), read_group.keys()))
                             if read_group == alignment_file.header['RG'][0]:
