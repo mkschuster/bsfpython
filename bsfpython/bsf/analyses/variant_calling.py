@@ -968,7 +968,7 @@ class VariantCallingGATK(Analysis):
                 if self.debug > 0:
                     print "Comparison sheet row_dict {!r}".format(row_dict)
 
-                for prefix in 'Normal', 'Tumor':
+                for prefix in ('Normal', 'Tumor'):
                     # TODO: Collection.get_samples_from_row_dict() may not work with normalised
                     # Sample Annotation Sheets.
                     group_name, group_samples = self.collection.get_samples_from_row_dict(
@@ -1079,11 +1079,11 @@ class VariantCallingGATK(Analysis):
         @rtype:
         """
 
+        super(VariantCallingGATK, self).run()
+
         # Get global defaults.
 
         default = Default.get_global_default()
-
-        super(VariantCallingGATK, self).run()
 
         # VariantCallingGATK requires a genome version, which gets configured by the super-class.
 
@@ -2500,11 +2500,15 @@ class VariantCallingGATK(Analysis):
                 prefix_cohort + '_recalibrated_snp_recalibrated_indel.vcf.gz.tbi',
             'multi_sample_vcf': prefix_cohort + '_multi_sample.vcf.gz',
             'multi_sample_idx': prefix_cohort + '_multi_sample.vcf.gz.tbi',
+            'ensembl_vep_vcf': prefix_cohort + '_vep.vcf',
+            'ensembl_vep_statistics': prefix_cohort + '_vep_statistics.html',
             'snpeff_vcf': prefix_cohort + '_snpeff.vcf',
             'snpeff_idx': prefix_cohort + '_snpeff.vcf.idx',
+            'snpeff_vcf_bgz': prefix_cohort + '_snpeff.vcf.gz',
+            'snpeff_vcf_tbi': prefix_cohort + '_snpeff.vcf.gz.tbi',
             'snpeff_stats': prefix_cohort + '_snpeff_summary.html',
             'annotated_vcf': prefix_cohort + '_annotated.vcf.gz',
-            'annotated_idx': prefix_cohort + '_annotated.vcf.gz.tbi',
+            'annotated_tbi': prefix_cohort + '_annotated.vcf.gz.tbi',
             'recalibration_indel': prefix_cohort + '_recalibration_indel.recal',
             'recalibration_snp': prefix_cohort + '_recalibration_snp.recal',
             'tranches_indel': prefix_cohort + '_recalibration_indel.tranches',
@@ -2798,6 +2802,23 @@ class VariantCallingGATK(Analysis):
         sub_command.arguments.append(self.snpeff_genome_version)
         sub_command.arguments.append(file_path_dict_cohort['multi_sample_vcf'])
 
+        # Automatically compress and index the snpEff VCF file with bgzip and tabix, respectively.
+        # TODO: It would be better for the file system, if output could be directly piped into bgzip.
+
+        runnable_process_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='snpeff_bgzip',
+                program='bgzip',
+                arguments=[file_path_dict_cohort['snpeff_vcf']]))
+
+        runnable_step = runnable_process_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='snpeff_tabix',
+                program='tabix',
+                arguments=[file_path_dict_cohort['snpeff_vcf_bgz']]))
+        assert isinstance(runnable_step, RunnableStep)
+        runnable_step.add_option_long(key='preset', value='vcf')
+
         # Run the GATK VariantAnnotator analysis.
 
         runnable_step = runnable_process_cohort.add_runnable_step(
@@ -2838,8 +2859,40 @@ class VariantCallingGATK(Analysis):
         # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
         # runnable_step.add_gatk_option(key='annotation', value='AlleleBalanceBySample')
         runnable_step.add_gatk_option(key='annotation', value='SnpEff')
-        runnable_step.add_gatk_option(key='snpEffFile', value=file_path_dict_cohort['snpeff_vcf'])
+        runnable_step.add_gatk_option(key='snpEffFile', value=file_path_dict_cohort['snpeff_vcf_bgz'])
         runnable_step.add_gatk_option(key='out', value=file_path_dict_cohort['annotated_vcf'])
+
+        # Run the Ensembl Variant Effect Predictor in parallel.
+
+        if False:
+            runnable_step = runnable_process_cohort.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='ensembl_vep',
+                    program='perl',
+                    sub_command=Command()))
+            # TODO: Moving of the Executable.name instance variable?
+            # Should the Executable.name instance variable be moved upstream to Command.name, so that it
+            # could be used in Analysis-specific configuration sections?
+            runnable_step.arguments.append('/cm/shared/apps/ensembl/85/ensembl-tools/scripts/variant_effect_predictor/variant_effect_predictor.pl')
+            # TODO: This has to be configurable.
+            assert isinstance(runnable_step, RunnableStep)
+            sub_command = runnable_step.sub_command
+            sub_command.add_switch_long(key='no_progress')
+            sub_command.add_switch_long(key='everything')
+            sub_command.add_option_long(key='species', value='homo_sapiens')
+            sub_command.add_option_long(key='assembly', value='GRCh37')
+            sub_command.add_option_long(key='input_file', value=file_path_dict_cohort['multi_sample_vcf'])
+            sub_command.add_option_long(key='format', value='vcf')
+            sub_command.add_option_long(key='output_file', value=file_path_dict_cohort['ensembl_vep_vcf'])
+            sub_command.add_option_long(key='stats_file', value=file_path_dict_cohort['ensembl_vep_statistics'])
+            sub_command.add_switch_long(key='dont_skip')
+            sub_command.add_switch_long(key='cache')
+            sub_command.add_option_long(key='dir_cache', value='/scratch/lab_bsf/scratch/vep_cache')
+            sub_command.add_option_long(key='failed', value='1')
+            sub_command.add_switch_long(key='vcf')
+            sub_command.add_switch_long(key='allow_non_variant')
+            sub_command.add_option_long(key='port', value='3337')
+            sub_command.add_switch_long(key='gencode_basic')
 
         ######################################################
         # Step 7: Re-process and split the cohort by sample. #
@@ -3075,10 +3128,12 @@ class VariantCallingGATK(Analysis):
                 'somatic_idx': prefix_somatic + '_somatic.vcf.gz.tbi',
                 'snpeff_vcf': prefix_somatic + '_snpeff.vcf',
                 'snpeff_idx': prefix_somatic + '_snpeff.vcf.idx',
+                'snpeff_vcf_bgz': prefix_somatic + '_snpeff.vcf.gz',
+                'snpeff_vcf_tbi': prefix_somatic + '_snpeff.vcf.gz.tbi',
                 'snpeff_stats': prefix_somatic + '_snpeff_summary.html',
                 'snpeff_genes': prefix_somatic + '_snpeff_summary.genes.txt',
                 'annotated_vcf': prefix_somatic + '_annotated.vcf.gz',
-                'annotated_idx': prefix_somatic + '_annotated.vcf.gz.tbi',
+                'annotated_tbi': prefix_somatic + '_annotated.vcf.gz.tbi',
                 'annotated_tsv': prefix_somatic + '_annotated.tsv',
             }
 
@@ -3160,6 +3215,23 @@ class VariantCallingGATK(Analysis):
             sub_command.arguments.append(self.snpeff_genome_version)
             sub_command.arguments.append(file_path_dict_somatic['somatic_vcf'])
 
+            # Automatically compress and index the snpEff VCF file with bgzip and tabix, respectively.
+            # TODO: It would be better for the file system, if output could be directly piped into bgzip.
+
+            runnable_somatic.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='snpeff_bgzip',
+                    program='bgzip',
+                    arguments=[file_path_dict_somatic['snpeff_vcf']]))
+
+            runnable_step = runnable_somatic.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='snpeff_tabix',
+                    program='tabix',
+                    arguments=[file_path_dict_somatic['snpeff_vcf_bgz']]))
+            assert isinstance(runnable_step, RunnableStep)
+            runnable_step.add_option_long(key='preset', value='vcf')
+
             # Run the GATK VariantAnnotator analysis.
 
             runnable_step = runnable_somatic.add_runnable_step(
@@ -3200,7 +3272,7 @@ class VariantCallingGATK(Analysis):
             # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
             # runnable_step.add_gatk_option(key='annotation', value='AlleleBalanceBySample')
             runnable_step.add_gatk_option(key='annotation', value='SnpEff')
-            runnable_step.add_gatk_option(key='snpEffFile', value=file_path_dict_somatic['snpeff_vcf'])
+            runnable_step.add_gatk_option(key='snpEffFile', value=file_path_dict_somatic['snpeff_vcf_bgz'])
             runnable_step.add_gatk_option(key='out', value=file_path_dict_somatic['annotated_vcf'])
 
             # Run the GATK VariantsToTable analysis.
@@ -3420,9 +3492,9 @@ class VariantCallingGATK(Analysis):
 
         for key, extension in (
                 ('annotated_vcf', '_annotated.vcf.gz'),
-                ('annotated_idx', '_annotated.vcf.gz.tbi'),
-                ('snpeff_vcf', '_snpeff.vcf'),
-                ('snpeff_idx', '_snpeff.vcf.idx'),
+                ('annotated_tbi', '_annotated.vcf.gz.tbi'),
+                ('snpeff_vcf_bgz', '_snpeff.vcf.gz'),
+                ('snpeff_vcf_tbi', '_snpeff.vcf.gz.tbi'),
                 ('snpeff_stats', '_snpeff_summary.html')):
             self._create_symbolic_link(
                 source_path=os.path.relpath(
@@ -3687,16 +3759,22 @@ class VariantCallingGATK(Analysis):
         output_html += '<tr>\n'
         output_html += '<td class="left">{}</td>\n'. \
             format(self.cohort_name)
-        output_html += '<td class="left">snpEff-annotated multi-sample <a href="{}">VCF</a></td>\n'. \
-            format(runnable_process_cohort.file_path_dict['snpeff_vcf'])
+        output_html += '<td class="left">' \
+                       'snpEff-annotated multi-sample <a href="{}">VCF</a> and <a href="{}">TBI</a>' \
+                       '</td>\n'. \
+            format(runnable_process_cohort.file_path_dict['snpeff_vcf_bgz'],
+                   runnable_process_cohort.file_path_dict['snpeff_vcf_tbi'])
         output_html += '<td class="left">Functional annotation of all splice variants</td>\n'
         output_html += '</tr>\n'
 
         output_html += '<tr>\n'
         output_html += '<td class="left">{}</td>\n'. \
             format(self.cohort_name)
-        output_html += '<td class="left">GATK-annotated multi-sample <a href="{}">VCF</a></td>\n'. \
-            format(runnable_process_cohort.file_path_dict['annotated_vcf'])
+        output_html += '<td class="left">' \
+                       'GATK-annotated multi-sample <a href="{}">VCF</a> and <a href="{}">TBI</a>' \
+                       '</td>\n'. \
+            format(runnable_process_cohort.file_path_dict['annotated_vcf'],
+                   runnable_process_cohort.file_path_dict['annotated_tbi'])
         output_html += '<td class="left">Functional annotation of only the most severely affected splice variant</td>\n'
         output_html += '</tr>\n'
 
