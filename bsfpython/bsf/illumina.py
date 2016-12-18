@@ -686,6 +686,22 @@ class RunParameters(object):
         return self._run_parameters_version
 
     @property
+    def get_instrument_type(self):
+        """Get the instrument type based on a C{bsf.illumina.RunParameters} object.
+
+        Returns I{MiSeq}, I{NextSeq} or I{HiSeq}
+        @return: Instrument type
+        @rtype: str
+        """
+
+        if self.get_run_parameters_version in ('MiSeq_1_1', ):
+            return 'MiSeq'
+        elif self.get_run_parameters_version in ('NextSeq_2_1_0', ):
+            return 'NextSeq'
+        else:
+            return 'HiSeq'
+
+    @property
     def get_experiment_name(self):
         """Get the experiment name of a C{bsf.illumina.RunParameters} object.
 
