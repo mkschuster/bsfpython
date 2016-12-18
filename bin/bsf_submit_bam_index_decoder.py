@@ -81,6 +81,15 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
+# This analysis requires either a non-default --configuration argument or a
+# --project-name and --sas-file argument.
+
+if name_space.configuration == Default.global_file_path:
+    if name_space.project_name is None:
+        raise Exception("argument --project-name is required if --configuration is not set")
+    if name_space.library_path is None:
+        raise Exception("argument --library-path is required if --configuration is not set")
+
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
 bid = BamIndexDecoder.from_config_file_path(config_path=name_space.configuration)

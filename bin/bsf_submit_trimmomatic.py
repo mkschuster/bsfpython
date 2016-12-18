@@ -57,17 +57,26 @@ argument_parser.add_argument(
     '--project-name',
     dest='project_name',
     help='project name',
-    required=True,
+    required=False,
     type=str)
 
 argument_parser.add_argument(
     '--sas-file',
     dest='sas_file',
     help='sample annotation sheet (*.csv) file path',
-    required=True,
+    required=False,
     type=unicode)
 
 name_space = argument_parser.parse_args()
+
+# This analysis requires either a non-default --configuration argument or a
+# --project-name and --sas-file argument.
+
+if name_space.configuration == Default.global_file_path:
+    if name_space.project_name is None:
+        raise Exception("argument --project-name is required if --configuration is not set")
+    if name_space.sas_file is None:
+        raise Exception("argument --sas-file is required if --configuration is not set")
 
 # Create a Picard SamToFastq analysis and run it.
 

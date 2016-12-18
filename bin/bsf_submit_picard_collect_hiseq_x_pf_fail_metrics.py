@@ -47,15 +47,15 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
-    '--irf',
-    help='Illumina Run Folder name or file path',
+    '--configuration',
+    default=Default.global_file_path,
+    help='configuration (*.ini) file path',
     required=False,
     type=str)
 
 argument_parser.add_argument(
-    '--configuration',
-    default=Default.global_file_path,
-    help='configuration (*.ini) file path',
+    '--irf',
+    help='Illumina Run Folder name or file path',
     required=False,
     type=str)
 
@@ -65,6 +65,13 @@ argument_parser.add_argument(
     help='force processing of an incomplete Illumina Run Folder')
 
 name_space = argument_parser.parse_args()
+
+# This analysis requires either a non-default --configuration argument or a
+# --irf argument.
+
+if name_space.configuration == Default.global_file_path:
+    if name_space.irf is None:
+        raise Exception("argument --irf is required if --configuration is not set")
 
 # Create a CollectHiSeqXPfFailMetrics analysis, run and submit it.
 
