@@ -57,11 +57,13 @@ name_space = argument_parser.parse_args()
 library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=name_space.library_path)
 
 if name_space.mode == 'high':
-    lanes = int(8)
+    lanes = 8
 elif name_space.mode == 'rapid':
-    lanes = int(2)
+    lanes = 2
 elif name_space.mode == 'miseq':
-    lanes = int(1)
+    lanes = 1
+elif name_space.mode == 'nextseq':
+    lanes = 4
 else:
     raise Exception("Unknown output mode " + name_space.mode)
 
