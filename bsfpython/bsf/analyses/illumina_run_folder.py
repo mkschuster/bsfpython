@@ -466,15 +466,17 @@ class IlluminaRunFolderArchive(Analysis):
         chmod_command.arguments.append('+')
 
         # 6. Compress all files in the IRF/Logs/ and IRF/Logs/IALogs/ directories.
+        #    The NextSeq compresses into a single Logs.zip file.
 
-        compress_logs = runnable_pre_process_folder.add_runnable_step(
-            runnable_step=RunnableStep(
-                name='compress_logs',
-                program='gzip'))
+        if irf.run_parameters.get_instrument_type not in ('NextSeq', ):
+            compress_logs = runnable_pre_process_folder.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='compress_logs',
+                    program='gzip'))
 
-        compress_logs.add_switch_long(key='best')
-        compress_logs.add_switch_long(key='recursive')
-        compress_logs.arguments.append(os.path.join(self.run_directory, 'Logs'))
+            compress_logs.add_switch_long(key='best')
+            compress_logs.add_switch_long(key='recursive')
+            compress_logs.arguments.append(os.path.join(self.run_directory, 'Logs'))
 
         # 7. Compress all files in the IRF/Data/RTALogs/ directory if it exists.
         #    It does not on the HiSeq 3000/4000 platform.
@@ -506,8 +508,14 @@ class IlluminaRunFolderArchive(Analysis):
 
         exclude_intensities_patterns = list()
         archive_folder_dependencies = list()
+        archive_folder_dependencies.append(runnable_pre_process_folder.name)
 
         for lane_int in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
+            # MiSeq and NextSeq instruments do not need lane processing.
+
+            if irf.run_parameters.get_instrument_type in ('MiSeq', 'NextSeq'):
+                continue
+
             # Process the IRF/Data/Intensities/BaseCalls/ directory.
 
             runnable_base_calls = self.add_runnable(
