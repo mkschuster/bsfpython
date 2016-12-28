@@ -890,6 +890,7 @@ class IlluminaToBam(Analysis):
 
         super(IlluminaToBam, self).run()
 
+        lane_dependency_str = str()
         cell_dependency_list = list()
 
         stage_lane = self.get_stage(name=self.stage_name_lane)
@@ -927,6 +928,13 @@ class IlluminaToBam(Analysis):
                 IlluminaRunFolderRestore.get_prefix_compress_base_calls(
                     project_name=self.project_name,
                     lane=lane_str))
+            # For NextSeq instruments the number of open file handles can become really large.
+            # Set dependencies to run Illumina2bam lane for lane.
+            if irf.run_parameters.get_instrument_type in ('NextSeq', ) and lane_dependency_str:
+                executable_lane.dependencies.append(lane_dependency_str)
+
+            lane_dependency_str = runnable_lane.name
+
             # Add the dependency for the cell-specific process.
             cell_dependency_list.append(executable_lane.name)
 
