@@ -33,7 +33,7 @@ import re
 
 from bsf import Analysis, Runnable
 from bsf.annotation import AnnotationSheet, TuxedoSamplePairSheet
-from bsf.data import PairedReads, Sample
+from bsf.ngs import PairedReads, Sample
 from bsf.executables import TopHat
 from bsf.process import Executable, RunnableStep
 from bsf.standards import Default
@@ -103,70 +103,70 @@ class Tuxedo(Analysis):
     stage_name_process_cuffdiff = '_'.join((prefix, 'process_cuffdiff'))
 
     @classmethod
-    def get_prefix_rnaseq_run_tophat(cls, replicate_key):
+    def get_prefix_rnaseq_run_tophat(cls, paired_reads_name):
         """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
-        @param replicate_key: Replicate key
-        @type replicate_key: str
+        @param paired_reads_name: Replicate key
+        @type paired_reads_name: str
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_run_tophat, replicate_key))
+        return '_'.join((cls.stage_name_run_tophat, paired_reads_name))
 
     @classmethod
-    def get_prefix_rnaseq_run_cuffmerge(cls, comparison_key):
+    def get_prefix_rnaseq_run_cuffmerge(cls, comparison_name):
         """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
-        @param comparison_key: Comparison key
-        @type comparison_key: str
+        @param comparison_name: Comparison key
+        @type comparison_name: str
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_run_cuffmerge, comparison_key))
+        return '_'.join((cls.stage_name_run_cuffmerge, comparison_name))
 
     @classmethod
-    def get_prefix_rnaseq_run_cuffquant(cls, comparison_key):
+    def get_prefix_rnaseq_run_cuffquant(cls, comparison_name):
         """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
-        @param comparison_key: Comparison key
-        @type comparison_key: str
+        @param comparison_name: Comparison key
+        @type comparison_name: str
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_run_cuffquant, comparison_key))
+        return '_'.join((cls.stage_name_run_cuffquant, comparison_name))
 
     @classmethod
-    def get_prefix_rnaseq_run_cuffnorm(cls, comparison_key):
+    def get_prefix_rnaseq_run_cuffnorm(cls, comparison_name):
         """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
-        @param comparison_key: Comparison key
-        @type comparison_key: str
+        @param comparison_name: Comparison key
+        @type comparison_name: str
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_run_cuffnorm, comparison_key))
+        return '_'.join((cls.stage_name_run_cuffnorm, comparison_name))
 
     @classmethod
-    def get_prefix_rnaseq_run_cuffdiff(cls, comparison_key):
+    def get_prefix_rnaseq_run_cuffdiff(cls, comparison_name):
         """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
-        @param comparison_key: Comparison key
-        @type comparison_key: str
+        @param comparison_name: Comparison key
+        @type comparison_name: str
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_run_cuffdiff, comparison_key))
+        return '_'.join((cls.stage_name_run_cuffdiff, comparison_name))
 
     @classmethod
-    def get_prefix_rnaseq_process_cuffdiff(cls, comparison_key):
+    def get_prefix_rnaseq_process_cuffdiff(cls, comparison_name):
         """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
-        @param comparison_key: Comparison key
-        @type comparison_key: str
+        @param comparison_name: Comparison key
+        @type comparison_name: str
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_process_cuffdiff, comparison_key))
+        return '_'.join((cls.stage_name_process_cuffdiff, comparison_name))
 
     def __init__(
             self,
@@ -182,7 +182,7 @@ class Tuxedo(Analysis):
             stage_list=None,
             collection=None,
             comparisons=None,
-            samples=None,
+            sample_list=None,
             replicate_grouping=False,
             cmp_file=None,
             genome_fasta_path=None,
@@ -216,13 +216,13 @@ class Tuxedo(Analysis):
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.Stage} objects
         @type stage_list: list[bsf.Stage]
-        @param collection: C{bsf.data.Collection}
-        @type collection: bsf.data.Collection
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of Python C{str} (comparison name) key objects and
-            Python C{tuple} value objects of C{bsf.data.Sample.name} and Python C{list} of C{bsf.data.Sample} objects
-        @type comparisons: dict[str, (bsf.data.Sample.name, list[bsf.data.Sample])]
-        @param samples: Python C{list} of C{bsf.data.Sample} objects
-        @type samples: list[bsf.data.Sample]
+            Python C{tuple} value objects of C{bsf.ngs.Sample.name} and Python C{list} of C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, (bsf.ngs.Sample.name, list[bsf.ngs.Sample])]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
         @type replicate_grouping: bool
         @param cmp_file: Comparison file
@@ -259,7 +259,7 @@ class Tuxedo(Analysis):
             stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
-            samples=samples)
+            sample_list=sample_list)
 
         # Sub-class specific ...
 
@@ -376,13 +376,12 @@ class Tuxedo(Analysis):
         """
 
         # Without a comparison file path, simply add all Sample objects from the Collection.
-        self.samples.extend(self.collection.get_all_samples())
+        self.sample_list.extend(self.collection.get_all_samples())
 
         # Create a global comparison by adding all samples under their sample name as group name.
 
         comparison_groups = list()
-        for sample in self.samples:
-            assert isinstance(sample, Sample)
+        for sample in self.sample_list:
             # Add a tuple of group (i.e. sample) name and a Python list of the Sample object.
             comparison_groups.append((sample.name, [sample]))
 
@@ -402,13 +401,13 @@ class Tuxedo(Analysis):
         """
 
         # Without a comparison file path, simply add all Sample objects from the Collection.
-        self.samples.extend(self.collection.get_all_samples())
+        self.sample_list.extend(self.collection.get_all_samples())
 
         # Create a global comparison by adding all sample groups.
 
         comparison_groups = list()
-        for key in self.collection.sample_groups.keys():
-            comparison_groups.append((key, self.collection.sample_groups[key]))
+        for key in self.collection.sample_group_dict.keys():
+            comparison_groups.append((key, self.collection.sample_group_dict[key]))
 
         # Sort the list of comparison groups by group name.
         comparison_groups.sort(cmp=lambda x, y: cmp(x[0], y[0]))
@@ -420,7 +419,7 @@ class Tuxedo(Analysis):
     def _read_comparisons(self, cmp_file):
         """Read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
 
-        All C{bsf.data.Sample} objects referenced in a comparison are added from the C{bsf.data.Collection} to the
+        All C{bsf.ngs.Sample} objects referenced in a comparison are added from the C{bsf.ngs.Collection} to the
         C{bsf.Analysis} object.
 
             - Column headers for CASAVA folders:
@@ -454,7 +453,7 @@ class Tuxedo(Analysis):
             assert isinstance(row_dict, dict)
             # In addition to defining samples, allow also the definition of groups in comparison files.
             # If the row dictionary has a 'Group' key, then the Sample in the same row gets added to the group.
-            # So, 'ProcessedRunFolder','Project','Sample','Group' defines the groups, while ...
+            # So, 'ProcessedRunFolder', 'Project', 'Sample', 'Group' defines the groups, while ...
             # 'Control Group','Treatment Group' defines a comparison, as does ...
             # 'Control Group','Treatment ProcessedRunFolder','Treatment Project','Treatment Sample'
 
@@ -482,7 +481,7 @@ class Tuxedo(Analysis):
                     key += group_name
                     key += '__'
                     comparison_groups.append((group_name, group_samples))
-                    # Also expand each Python list of bsf.data.Sample objects to get all those bsf.data.Sample objects
+                    # Also expand each Python list of bsf.ngs.Sample objects to get all those bsf.ngs.Sample objects
                     # that this bsf.Analysis needs considering.
                     for sample in group_samples:
                         assert isinstance(sample, Sample)
@@ -556,13 +555,13 @@ class Tuxedo(Analysis):
         else:
             # Without a comparison file path, simply add all Sample objects from the Collection.
             # This means that only the initial pipeline stages, but not the comparison stage gets run.
-            self.samples.extend(self.collection.get_all_samples())
+            self.sample_list.extend(self.collection.get_all_samples())
 
         # Experimentally, sort the Python list of Sample objects by the Sample name.
         # This cannot be done in the super-class, because Sample objects are only put into the
         # bsf.Analysis.samples list by the _read_comparisons method.
 
-        self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
         # Define the reference genome FASTA file path.
         # If it does not exist, construct it from defaults.
@@ -656,44 +655,39 @@ class Tuxedo(Analysis):
 
         process_cufflinks_dependencies = list()
 
-        for sample in self.samples:
-            assert isinstance(sample, Sample)
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
-
-            replicate_keys = replicate_dict.keys()
-            if not len(replicate_keys):
+            paired_reads_name_list = paired_reads_dict.keys()
+            if not len(paired_reads_name_list):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            for replicate_key in replicate_keys:
-                assert isinstance(replicate_key, str)
+            for paired_reads_name in paired_reads_name_list:
+                assert isinstance(paired_reads_name, str)
 
-                # Create a Tophat Runnable per replicate (replicate_key).
+                # Create a Tophat Runnable per paired_reads_name.
 
                 # TODO: Activate the new code once the bsf_run_rnaseq_tophat.py script has been retired.
 
-                # prefix_run_tophat = '_'.join((stage_run_tophat.name, replicate_key))
+                # prefix_run_tophat = '_'.join((stage_run_tophat.name, paired_reads_name))
 
                 file_path_dict_tophat = {
                     # The output directory deviates from the prefix_run_tophat that itself is based on
                     # stage_run_tophat.name. Both rnaseq_run_tophat and rnaseq_process_tophat processes should
                     # use the same rnaseq_tophat directory.
                     # output_directory=prefix_run_tophat,
-                    'output_directory': '_'.join(('rnaseq_tophat', replicate_key)),
+                    'output_directory': '_'.join(('rnaseq_tophat', paired_reads_name)),
                 }
 
                 # runnable_run_tophat = self.add_runnable(
                 #         runnable=Runnable(
-                #                 name=self.get_prefix_rnaseq_run_tophat(replicate_key=replicate_key),
+                #                 name=self.get_prefix_rnaseq_run_tophat(paired_reads_name=paired_reads_name),
                 #                 code_module='bsf.runnables.generic',
                 #                 working_directory=self.genome_directory,
                 #                 file_path_dict=file_path_dict_tophat,
@@ -710,7 +704,7 @@ class Tuxedo(Analysis):
                 #     program='tophat2'))
 
                 tophat = TopHat(
-                    name='_'.join(('rnaseq_tophat', replicate_key)),
+                    name='_'.join(('rnaseq_tophat', paired_reads_name)),
                     analysis=self)
 
                 # Set tophat options.
@@ -761,15 +755,15 @@ class Tuxedo(Analysis):
                 reads1 = list()
                 reads2 = list()
 
-                for paired_reads in replicate_dict[replicate_key]:
+                for paired_reads in paired_reads_dict[paired_reads_name]:
                     assert isinstance(paired_reads, PairedReads)
                     if self.debug > 0:
                         print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
 
-                    if paired_reads.reads1:
-                        reads1.append(paired_reads.reads1.file_path)
-                    if paired_reads.reads2:
-                        reads2.append(paired_reads.reads2.file_path)
+                    if paired_reads.reads_1:
+                        reads1.append(paired_reads.reads_1.file_path)
+                    if paired_reads.reads_2:
+                        reads2.append(paired_reads.reads_2.file_path)
 
                 tophat.arguments.append(','.join(reads1))
                 tophat.arguments.append(','.join(reads2))
@@ -780,13 +774,13 @@ class Tuxedo(Analysis):
 
                 pickler_dict_run_tophat = {
                     'prefix': stage_run_tophat.name,
-                    'replicate_key': replicate_key,
+                    'replicate_key': paired_reads_name,
                     'tophat_executable': tophat,
                 }
 
                 pickler_path = os.path.join(
                     self.genome_directory,
-                    '{}_{}.pkl'.format(stage_run_tophat.name, replicate_key))
+                    '{}_{}.pkl'.format(stage_run_tophat.name, paired_reads_name))
                 pickler_file = open(pickler_path, 'wb')
                 pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
                 pickler.dump(obj=pickler_dict_run_tophat)
@@ -794,7 +788,7 @@ class Tuxedo(Analysis):
 
                 run_tophat = stage_run_tophat.add_executable(
                     executable=Executable(
-                        name='_'.join((stage_run_tophat.name, replicate_key)),
+                        name='_'.join((stage_run_tophat.name, paired_reads_name)),
                         program='bsf_run_rnaseq_tophat.py'))
 
                 # The rnaseq_run_tophat Executable requires no Stage.dependencies.
@@ -810,7 +804,7 @@ class Tuxedo(Analysis):
 
                 process_tophat = stage_process_tophat.add_executable(
                     executable=Executable(
-                        name='_'.join((stage_process_tophat.name, replicate_key)),
+                        name='_'.join((stage_process_tophat.name, paired_reads_name)),
                         program='bsf_rnaseq_process_tophat2.sh'))
                 process_tophat.dependencies.append(run_tophat.name)
 
@@ -839,16 +833,16 @@ class Tuxedo(Analysis):
                 #     file_path_dict=file_path_dict_process_tophat,
                 #     debug=self.debug))
 
-                # Create a Cufflinks Runnable per replicate (replicate_key).
+                # Create a Cufflinks Runnable per paired_reads_name.
 
-                prefix_run_cufflinks = '_'.join((stage_run_cufflinks.name, replicate_key))
+                prefix_run_cufflinks = '_'.join((stage_run_cufflinks.name, paired_reads_name))
 
                 file_path_dict_cufflinks = {
                     # The output directory deviates from the prefix_run_cufflinks that itself is based on
                     # stage_run_cufflinks.name. Both rnaseq_run_cufflinks and rnaseq_process_cufflinks processes
                     # should use the same rnaseq_cufflinks directory.
                     # output_directory=prefix_run_cufflinks,
-                    'output_directory': '_'.join(('rnaseq_cufflinks', replicate_key)),
+                    'output_directory': '_'.join(('rnaseq_cufflinks', paired_reads_name)),
                     'tophat_accepted_hits': os.path.join(
                         file_path_dict_tophat['output_directory'],
                         'accepted_hits.bam'),
@@ -982,7 +976,7 @@ class Tuxedo(Analysis):
             assert isinstance(comparison_key, str)
 
             # TODO: Should the comparison prefix also include the project name or number?
-            prefix_cuffmerge = self.get_prefix_rnaseq_run_cuffmerge(comparison_key=comparison_key)
+            prefix_cuffmerge = self.get_prefix_rnaseq_run_cuffmerge(comparison_name=comparison_key)
 
             file_path_dict_cuffmerge = {
                 'output_directory': prefix_cuffmerge,
@@ -1054,50 +1048,46 @@ class Tuxedo(Analysis):
 
                 for sample in group_samples:
                     assert isinstance(sample, Sample)
-                    # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-                    # Python str comparison_key and Python list of Python list objects
-                    # of bsf.data.PairedReads objects.
-
-                    replicate_dict = sample.get_all_paired_reads(
+                    paired_reads_dict = sample.get_all_paired_reads(
                         replicate_grouping=self.replicate_grouping,
                         exclude=True)
 
-                    replicate_keys = replicate_dict.keys()
-                    if len(replicate_keys):
+                    paired_reads_name_list = paired_reads_dict.keys()
+                    if len(paired_reads_name_list):
                         sample_count += 1
                     else:
                         # Skip Sample objects, which PairedReads objects have all been excluded.
                         continue
-                    replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+                    paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                    for replicate_key in replicate_keys:
+                    for paired_reads_name in paired_reads_name_list:
                         assert isinstance(comparison_key, str)
 
                         # Add the Cufflinks assembled transcripts to the Cuffmerge manifest.
 
                         transcripts_path = os.path.join(
                             self.genome_directory,
-                            '_'.join(('rnaseq_cufflinks', replicate_key)),
+                            '_'.join(('rnaseq_cufflinks', paired_reads_name)),
                             'transcripts.gtf')
                         assembly_file.write(transcripts_path + '\n')
 
                         # Wait for each Cufflinks replicate to finish, before Cuffmerge can run.
 
                         executable_run_cuffmerge.dependencies.append(
-                            '_'.join((self.stage_name_run_cufflinks, replicate_key)))
+                            '_'.join((self.stage_name_run_cufflinks, paired_reads_name)))
 
-                        # Create a Cuffquant Runnable per comparison (comparison_key) and replicate (replicate_key)
+                        # Create a Cuffquant Runnable per comparison (comparison_key) and replicate (paired_reads_name)
                         # on the basis of the Cuffmerge GTF file.
 
-                        prefix_cuffquant = '_'.join((stage_run_cuffquant.name, comparison_key, replicate_key))
+                        prefix_cuffquant = '_'.join((stage_run_cuffquant.name, comparison_key, paired_reads_name))
 
                         file_path_dict_cuffquant = {
                             'output_directory': prefix_cuffquant,
                             'abundances': os.path.join(prefix_cuffquant, 'abundances.cxb'),
                             'merged_gtf': file_path_dict_cuffmerge['merged_gtf'],
-                            'tophat_directory': '_'.join(('rnaseq_tophat', replicate_key)),
+                            'tophat_directory': '_'.join(('rnaseq_tophat', paired_reads_name)),
                             'tophat_accepted_hits': os.path.join(
-                                '_'.join(('rnaseq_tophat', replicate_key)),
+                                '_'.join(('rnaseq_tophat', paired_reads_name)),
                                 'accepted_hits.bam'),
                         }
 
@@ -1553,26 +1543,21 @@ class Tuxedo(Analysis):
         output_hub += 'group alignments\n'
         output_hub += '\n'
 
-        for sample in self.samples:
-            assert isinstance(sample, Sample)
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
-
-            replicate_keys = replicate_dict.keys()
-            if not len(replicate_keys):
+            paired_reads_name_list = paired_reads_dict.keys()
+            if not len(paired_reads_name_list):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            for replicate_key in replicate_keys:
-                assert isinstance(replicate_key, str)
+            for paired_reads_name in paired_reads_name_list:
+                assert isinstance(paired_reads_name, str)
                 # TopHat produces accepted_hits.bam, deletions.bb,
                 # insertions.bb and junctions.bb files.
 
@@ -1583,14 +1568,14 @@ class Tuxedo(Analysis):
                 # Common trackDb settings.
 
                 output_hub += 'track {}_alignments\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'type bam\n'
                 output_hub += 'shortLabel {}_alignments\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'longLabel {} TopHat RNA-Seq read alignments\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'bigDataUrl rnaseq_tophat_{}/accepted_hits.bam\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'visibility dense\n'
                 # track_output += 'html {}\n'.format()
 
@@ -1615,16 +1600,16 @@ class Tuxedo(Analysis):
                 # Common trackDB settings.
 
                 output_hub += 'track {}_coverage\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 # TODO: The bigWig type must declare the expected signal range.
                 # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
                 output_hub += 'type bigWig\n'
                 output_hub += 'shortLabel {}_coverage\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'longLabel {} TopHat RNA-Seq alignment coverage\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'bigDataUrl rnaseq_tophat_{}/accepted_hits.bw\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'visibility full\n'
                 # track_output += 'html {}\n'.format()
 
@@ -1660,14 +1645,14 @@ class Tuxedo(Analysis):
                 #
 
                 output_hub += 'track {}_deletions\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'type bigBed\n'
                 output_hub += 'shortLabel {}_deletions\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'longLabel {} TopHat RNA-Seq deletions\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'bigDataUrl rnaseq_tophat_{}/deletions.bb\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'visibility hide\n'
                 # 'html' is missing from the common settings.
 
@@ -1684,14 +1669,14 @@ class Tuxedo(Analysis):
                 # Insertions
 
                 output_hub += 'track insertions_{}\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'type bigBed\n'
                 output_hub += 'shortLabel {}_insertions\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'longLabel {} TopHat RNA-Seq insertions\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'bigDataUrl rnaseq_tophat_{}/insertions.bb\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'visibility hide\n'
                 # 'html' is missing from the common settings.
 
@@ -1708,14 +1693,14 @@ class Tuxedo(Analysis):
                 # Junctions
 
                 output_hub += 'track {}_junctions\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'type bigBed\n'
                 output_hub += 'shortLabel {}_junctions\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'longLabel {} TopHat RNA-Seq splice junctions\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'bigDataUrl rnaseq_tophat_{}/junctions.bb\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'visibility pack\n'
                 # 'html' is missing from the common settings.
 
@@ -1740,7 +1725,7 @@ class Tuxedo(Analysis):
                         Default.url_absolute_projects(),
                         link_name,
                         self.genome_version,
-                        replicate_key),
+                        paired_reads_name),
                 }
                 if ucsc_location:
                     options_dict['position'] = ucsc_location
@@ -1748,20 +1733,20 @@ class Tuxedo(Analysis):
                 # UCSC track dictionary.
 
                 # track_dict = {
-                #     'name': '{}_transcripts'.format(replicate_key),
-                #     'description': '"{} Cufflinks RNA-Seq transcript assembly"'.format(replicate_key),
+                #     'name': '{}_transcripts'.format(paired_reads_name),
+                #     'description': '"{} Cufflinks RNA-Seq transcript assembly"'.format(paired_reads_name),
                 #     'track_type': 'gtf',
                 #     'visibility': 'squish',
                 #     'color': '0,0,0',
                 #     'db': self.genome_version,
                 # }
 
-                prefix = 'rnaseq_cufflinks_{}'.format(replicate_key)
+                prefix = 'rnaseq_cufflinks_{}'.format(paired_reads_name)
 
                 output_html += '<tr>\n'
                 output_html += '<td class="left">' \
                                '{}' \
-                               '</td>\n'.format(replicate_key)
+                               '</td>\n'.format(paired_reads_name)
                 output_html += '<td class="center">' \
                                '<a href="{}">Transcript Assembly</a>' \
                                '</td>\n'.format(self.ucsc_track_url(options_dict=options_dict))
@@ -1779,13 +1764,13 @@ class Tuxedo(Analysis):
                                '</td>\n'.format(prefix, prefix)
                 output_html += '<td class="center">' \
                                '<a href="{}/rnaseq_tophat_{}_accepted_hits.bam">Aligned BAM</a>' \
-                               '</td>\n'.format(prefix, replicate_key)
+                               '</td>\n'.format(prefix, paired_reads_name)
                 output_html += '<td class="center">' \
                                '<a href="{}/rnaseq_tophat_{}_accepted_hits.bam.bai">Aligned BAI</a>' \
-                               '</td>\n'.format(prefix, replicate_key)
+                               '</td>\n'.format(prefix, paired_reads_name)
                 output_html += '<td class="center">' \
                                '<a href="{}/rnaseq_tophat_{}_unaligned.bam">Unaligned BAM</a>' \
-                               '</td>\n'.format(prefix, replicate_key)
+                               '</td>\n'.format(prefix, paired_reads_name)
                 output_html += '</tr>\n'
 
         output_html += '</tbody>\n'

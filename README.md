@@ -48,7 +48,7 @@ analysis type, sample comparison sheets, need to be specified.
 ## Sample Annotation Sheet
 
 A sample annotation sheet specifies the file system location of NGS reads. For data pre-processed via
-Illumina CASAVA, a hierarchy of run folders, projects samples, and paired reads can be automatically
+Illumina CASAVA, a hierarchy of run folders, projects, samples, and paired reads can be automatically
 discovered. Additional reads can be linked into the system by specifying the exact file system path.
 Sample annotation sheets also provide grouping of samples that is available to the analysis.
 

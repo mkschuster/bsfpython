@@ -30,7 +30,7 @@ A package of classes and methods to clean a sample sheet for the Picard SamToFas
 import os
 
 from bsf.argument import OptionLong
-from bsf.data import Collection, ProcessedRunFolder, Project, Sample, PairedReads
+from bsf.ngs import Collection, ProcessedRunFolder, Project, Sample, PairedReads
 from bsf.process import RunnableStep
 
 
@@ -61,35 +61,35 @@ def run(runnable):
             name='picard_sam_to_fastq',
             sas_path=argument.value)
 
-    for prf in collection.processed_run_folders.itervalues():
+    for prf in collection.processed_run_folder_dict.itervalues():
         assert isinstance(prf, ProcessedRunFolder)
-        for project in prf.projects.itervalues():
+        for project in prf.project_dict.itervalues():
             assert isinstance(project, Project)
-            for sample in project.samples.itervalues():
+            for sample in project.sample_dict.itervalues():
                 assert isinstance(sample, Sample)
                 new_paired_reads_list = list()
                 for paired_reads in sample.paired_reads_list:
                     assert isinstance(paired_reads, PairedReads)
                     paired_reads_keep = False
-                    if paired_reads.reads1 is not None:
-                        if os.path.exists(paired_reads.reads1.file_path):
-                            if os.path.getsize(paired_reads.reads1.file_path):
+                    if paired_reads.reads_1 is not None:
+                        if os.path.exists(paired_reads.reads_1.file_path):
+                            if os.path.getsize(paired_reads.reads_1.file_path):
                                 paired_reads_keep = True
                             else:
-                                os.remove(paired_reads.reads1.file_path)
+                                os.remove(paired_reads.reads_1.file_path)
                         else:
                             # The PairedReads object does not have a meaningful Reads object in reads1.
-                            paired_reads.reads1 = None
-                    if paired_reads.reads2 is not None:
-                        if os.path.exists(paired_reads.reads2.file_path):
-                            if os.path.getsize(paired_reads.reads2.file_path):
+                            paired_reads.reads_1 = None
+                    if paired_reads.reads_2 is not None:
+                        if os.path.exists(paired_reads.reads_2.file_path):
+                            if os.path.getsize(paired_reads.reads_2.file_path):
                                 paired_reads_keep = True
                             else:
-                                os.remove(paired_reads.reads2.file_path)
+                                os.remove(paired_reads.reads_2.file_path)
                         else:
                             # The PairedReads object does not have a meaningful Reads object in reads2.
-                            paired_reads.reads2 = None
-                    if paired_reads.reads1 is None and paired_reads.reads2 is None:
+                            paired_reads.reads_2 = None
+                    if paired_reads.reads_1 is None and paired_reads.reads_2 is None:
                         paired_reads_keep = False
                     if paired_reads_keep:
                         new_paired_reads_list.append(paired_reads)

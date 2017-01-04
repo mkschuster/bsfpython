@@ -33,7 +33,7 @@ import warnings
 from bsf import Analysis, Runnable
 from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
 from bsf.annotation import AnnotationSheet
-from bsf.data import SampleAnnotationSheet
+from bsf.ngs import SampleAnnotationSheet
 from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.process import Command, RunnableStepChangeMode, RunnableStepJava, RunnableStepPicard, \
     RunnableStepLink, RunnableStepMakeDirectory, RunnableStepMove
@@ -489,7 +489,7 @@ class IlluminaToBam(Analysis):
             stage_list=None,
             collection=None,
             comparisons=None,
-            samples=None,
+            sample_list=None,
             run_directory=None,
             intensity_directory=None,
             basecalls_directory=None,
@@ -528,12 +528,12 @@ class IlluminaToBam(Analysis):
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.Stage} objects
         @type stage_list: list[bsf.Stage]
-        @param collection: C{bsf.data.Collection}
-        @type collection: bsf.data.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.data.Sample]]
-        @param samples: Python C{list} of C{bsf.data.Sample} objects
-        @type samples: list[bsf.data.Sample]
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
         @type run_directory: str | unicode
         @param intensity_directory: File path to the I{Intensities} directory,
@@ -582,7 +582,7 @@ class IlluminaToBam(Analysis):
             stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
-            samples=samples)
+            sample_list=sample_list)
 
         # Sub-class specific ...
 
@@ -1203,7 +1203,7 @@ class BamIndexDecoder(Analysis):
             stage_list=None,
             collection=None,
             comparisons=None,
-            samples=None,
+            sample_list=None,
             hash_algorithm=None,
             library_path=None,
             sequences_directory=None,
@@ -1239,12 +1239,12 @@ class BamIndexDecoder(Analysis):
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.Stage} objects
         @type stage_list: list[bsf.Stage]
-        @param collection: C{bsf.data.Collection}
-        @type collection: bsf.data.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.data.Sample]]
-        @param samples: Python C{list} of C{bsf.data.Sample} objects
-        @type samples: list[bsf.data.Sample]
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
         @param hash_algorithm: Use a BSF-specific hashing algorithm for demultiplexing
         @type hash_algorithm: bool
         @param library_path: Library annotation file path
@@ -1284,7 +1284,7 @@ class BamIndexDecoder(Analysis):
             stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
-            samples=samples)
+            sample_list=sample_list)
 
         # Sub-class specific ...
 

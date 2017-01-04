@@ -35,7 +35,7 @@ import weakref
 from bsf import Analysis, Runnable
 from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
 from bsf.annotation import AnnotationSheet
-from bsf.data import Reads, PairedReads, Sample, SampleAnnotationSheet
+from bsf.ngs import Reads, PairedReads, SampleAnnotationSheet
 from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.process import RunnableStep, RunnableStepChangeMode, RunnableStepPicard, RunnableStepMakeDirectory,\
     RunnableStepMove
@@ -117,7 +117,7 @@ class PicardIlluminaRunFolder(Analysis):
             stage_list=None,
             collection=None,
             comparisons=None,
-            samples=None,
+            sample_list=None,
             run_directory=None,
             intensity_directory=None,
             basecalls_directory=None,
@@ -148,12 +148,12 @@ class PicardIlluminaRunFolder(Analysis):
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.Stage} objects
         @type stage_list: list[bsf.Stage]
-        @param collection: C{bsf.data.Collection}
-        @type collection: bsf.data.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.data.Sample]]
-        @param samples: Python C{list} of C{bsf.data.Sample} objects
-        @type samples: list[bsf.data.Sample]
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
         @type run_directory: str | unicode
         @param intensity_directory: File path to the I{Intensities} directory,
@@ -186,7 +186,7 @@ class PicardIlluminaRunFolder(Analysis):
             stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
-            samples=samples)
+            sample_list=sample_list)
 
         if run_directory is None:
             self.run_directory = str()
@@ -491,7 +491,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             stage_list=None,
             collection=None,
             comparisons=None,
-            samples=None,
+            sample_list=None,
             run_directory=None,
             intensity_directory=None,
             basecalls_directory=None,
@@ -532,12 +532,12 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.Stage} objects
         @type stage_list: list[bsf.Stage]
-        @param collection: C{bsf.data.Collection}
-        @type collection: bsf.data.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.data.Sample]]
-        @param samples: Python C{list} of C{bsf.data.Sample} objects
-        @type samples: list[bsf.data.Sample]
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
         @type run_directory: str | unicode
         @param intensity_directory: File path to the I{Intensities} directory,
@@ -590,7 +590,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
-            samples=samples,
+            sample_list=sample_list,
             run_directory=run_directory,
             intensity_directory=intensity_directory,
             basecalls_directory=basecalls_directory,
@@ -1291,7 +1291,7 @@ class SamToFastq(Analysis):
             stage_list=None,
             collection=None,
             comparisons=None,
-            samples=None,
+            sample_list=None,
             classpath_picard=None,
             include_non_pf_reads=False):
         """Initialise a C{bsf.analyses.picard.SamToFastq} object.
@@ -1318,12 +1318,12 @@ class SamToFastq(Analysis):
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.Stage} objects
         @type stage_list: list[bsf.Stage]
-        @param collection: C{bsf.data.Collection}
-        @type collection: bsf.data.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.data.Sample]]
-        @param samples: Python C{list} of C{bsf.data.Sample} objects
-        @type samples: list[bsf.data.Sample]
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: str | unicode
         @param include_non_pf_reads: Include non-pass filer reads
@@ -1345,7 +1345,7 @@ class SamToFastq(Analysis):
             stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
-            samples=samples)
+            sample_list=sample_list)
 
         if classpath_picard is None:
             self.classpath_picard = str()
@@ -1391,7 +1391,7 @@ class SamToFastq(Analysis):
 
     def _read_comparisons(self):
 
-        self.samples.extend(self.collection.get_all_samples())
+        self.sample_list.extend(self.collection.get_all_samples())
 
         return
 
@@ -1399,7 +1399,7 @@ class SamToFastq(Analysis):
         """Run the C{bsf.analyses.picard.SamToFastq} C{bsf.Analysis} to convert a
         I{BAM} or I{SAM} file into I{FASTQ} files.
 
-        This method changes the C{bsf.data.Collection} object of this C{bsf.Analysis} to update with FASTQ file paths.
+        This method changes the C{bsf.ngs.Collection} object of this C{bsf.Analysis} to update with FASTQ file paths.
         @return:
         @rtype:
         """
@@ -1421,40 +1421,30 @@ class SamToFastq(Analysis):
 
         stage_picard_stf = self.get_stage(name='picard_sam_to_fastq')
 
-        for sample in self.samples:
-            assert isinstance(sample, Sample)
-
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(level=1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=False)
+            paired_reads_name_list = paired_reads_dict.keys()
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            replicate_keys = replicate_dict.keys()
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-            for replicate_key in replicate_keys:
-                assert isinstance(replicate_key, str)
-
-                for paired_reads in replicate_dict[replicate_key]:
-                    assert isinstance(paired_reads, PairedReads)
-
+            for paired_reads_name in paired_reads_name_list:
+                for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
                         print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
 
                     # Apply some sanity checks.
 
-                    if paired_reads.reads2 and not paired_reads.reads1:
+                    if paired_reads.reads_2 and not paired_reads.reads_1:
                         raise Exception('PairedReads object with reads1 but no reads2 object.', UserWarning)
 
-                    reads = paired_reads.reads1
+                    reads = paired_reads.reads_1
                     if reads.file_path.endswith('.bam'):
                         bam_file_path = reads.file_path
-                        prefix_picard_stf = '_'.join((stage_picard_stf.name, replicate_key))
+                        prefix_picard_stf = '_'.join((stage_picard_stf.name, paired_reads_name))
 
                         file_path_dict_picard_stf = {
                             'temporary_directory': '_'.join((prefix_picard_stf, 'temporary')),
@@ -1465,8 +1455,6 @@ class SamToFastq(Analysis):
 
                         # Open the BAM file, while not checking sequence (@SQ) entries.
                         # De-multiplexed, unaligned BAM files have no reference sequence dictionary.
-                        # The check_sq option exists in the calignment code, yet, does not seem to be part of the
-                        # function interface.
 
                         alignment_file = pysam.AlignmentFile(reads.file_path, 'rb', check_sq=False)
 
@@ -1477,52 +1465,51 @@ class SamToFastq(Analysis):
                                 pattern="[\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]",
                                 repl='_',
                                 string=read_group['PU'])
-                            # Replacing the '#' character may not be enough.
-                            # platform_unit = read_group['PU'].replace('#', '_')
                             read_group_list = ['@RG']
                             read_group_list.extend(map(lambda x: '{}:{}'.format(x, read_group[x]), read_group.keys()))
                             if read_group == alignment_file.header['RG'][0]:
                                 # For the first read group, modify the PairedReads object in place.
                                 paired_reads.read_group = '\\t'.join(read_group_list)
-                                paired_reads.reads1.name = platform_unit + '_1'
-                                paired_reads.reads1.file_path = os.path.join(
+                                paired_reads.reads_1.name = platform_unit + '_1'
+                                paired_reads.reads_1.file_path = os.path.join(
                                     file_path_dict_picard_stf['output_directory'],
                                     platform_unit + '_1.fastq')
-                                paired_reads.reads2 = Reads(
+                                paired_reads.reads_2 = Reads(
+                                    name=platform_unit + '_2',
                                     file_path=os.path.join(
                                         file_path_dict_picard_stf['output_directory'],
                                         platform_unit + '_2.fastq'),
-                                    file_type=paired_reads.reads1.file_type,
-                                    name=platform_unit + '_2',
-                                    lane=paired_reads.reads1.lane,
-                                    read=paired_reads.reads1.read,
-                                    chunk=paired_reads.reads1.chunk,
+                                    file_type=paired_reads.reads_1.file_type,
+                                    lane=paired_reads.reads_1.lane,
+                                    read=paired_reads.reads_1.read,
+                                    chunk=paired_reads.reads_1.chunk,
                                     weak_reference_paired_reads=weakref.ref(paired_reads))
                             else:
                                 # For further read groups, create new PairedReads objects.
                                 reads1 = Reads(
+                                    name=platform_unit + '_1',
                                     file_path=os.path.join(
                                         file_path_dict_picard_stf['output_directory'],
                                         platform_unit + '_1.fastq'),
-                                    file_type=paired_reads.reads1.file_type,
-                                    name=platform_unit + '_1',
-                                    lane=paired_reads.reads1.lane,
+                                    file_type=paired_reads.reads_1.file_type,
+                                    lane=paired_reads.reads_1.lane,
                                     read='R1',
-                                    chunk=paired_reads.reads1.chunk)
+                                    chunk=paired_reads.reads_1.chunk)
                                 reads2 = Reads(
+                                    name=platform_unit + '_2',
                                     file_path=os.path.join(
                                         file_path_dict_picard_stf['output_directory'],
                                         platform_unit + '_2.fastq'),
-                                    file_type=paired_reads.reads2.file_type,
-                                    name=platform_unit + '_2',
-                                    lane=paired_reads.reads1.lane,
+                                    file_type=paired_reads.reads_2.file_type,
+                                    lane=paired_reads.reads_1.lane,
                                     read='R2',
-                                    chunk=paired_reads.reads1.chunk)
+                                    chunk=paired_reads.reads_1.chunk)
                                 new_paired_reads = PairedReads(
-                                    reads1=reads1,
-                                    reads2=reads2,
+                                    reads_1=reads1,
+                                    reads_2=reads2,
                                     read_group='\\t'.join(read_group_list))
 
+                                # FIXME: Should this use add_reads to set the weak reference?
                                 reads1.weak_reference_paired_reads = weakref.ref(new_paired_reads)
                                 reads2.weak_reference_paired_reads = weakref.ref(new_paired_reads)
                                 sample.add_paired_reads(paired_reads=new_paired_reads)

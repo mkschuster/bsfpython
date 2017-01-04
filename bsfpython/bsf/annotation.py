@@ -918,9 +918,9 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
 
 
 class TuxedoSamplePairSheet(AnnotationSheet):
-    """The C{bsf.annotation.TuxedoSamplePairSheet} class represents C{bsf.data.Sample} pairs.
+    """The C{bsf.annotation.TuxedoSamplePairSheet} class represents C{bsf.ngs.Sample} pairs.
 
-    The C{bsf.data.Sample} pairs are defined by the C{bsf_rnaseq_process_cuffdiff.R} script.
+    The C{bsf.ngs.Sample} pairs are defined by the C{bsf_rnaseq_process_cuffdiff.R} script.
 
     Attributes:
     @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)

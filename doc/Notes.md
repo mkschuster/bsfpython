@@ -9,22 +9,22 @@ automatically discovered.
 
 ### Columns
 
-The Sample Annotation Sheet format is defined in bsf.data.Collection._process_row_dict
+The Sample Annotation Sheet format is defined in bsf.ngs.Collection._process_row_dict
 
  - FileType: BSF Data object file_type (i.e. 'CASAVA', 'External' or 'Automatic'), defaults to 'Automatic'.
              The FileType 'CASAVA' allows for auto-discovery of BSF ProcessedRunFolder and subsequent objects.
 
- - ProcessedRunFolder: bsf.data.ProcessedRunFolder.file_path, can be automatically registered.
+ - ProcessedRunFolder: bsf.ngs.ProcessedRunFolder.file_path, can be automatically registered.
 
- - Project: bsf.data.Project.name
+ - Project: bsf.ngs.Project.name
 
- - Sample: bsf.data.Sample.name
+ - Sample: bsf.ngs.Sample.name
 
- - File1: bsf.data.Reads.file_name instance variable.
+ - File1: bsf.ngs.Reads.file_name instance variable.
           Subjected to os.path.expanduser and os.path.expandvars.
           If still relative, the BSF Collection file_path is prepended.
 
- - Reads1: bsf.data.Reads.name instance variable
+ - Reads1: bsf.ngs.Reads.name instance variable
 
  - File2: Same as File1
 
@@ -53,12 +53,12 @@ BSF Sample objects resulted from the same BSF Processed Run Folder object (i.e f
 Later, when it became clear that samples could result from different flow cells resulting in
 BSF Sample objects bearing the same name, the code base needed some adjustments.
 
-The bsf.data.Collection.sample_groups instance variable has been changed from a Python dict of
+The bsf.ngs.Collection.sample_group_dict instance variable has been changed from a Python dict of
 BSF Sample name keys and BSF Sample values to a Python list of BSF Sample objects. For the moment,
 a check is in place testing, whether the Python list contains already the same BSF Sample object.
 The Python 'in' comparison operator uses the memory address in lack of a specific __cmp__ method, but
 it may make sense to implement such a more specific method.
-See method bsf.data.Collection._process_row_dict
+See method bsf.ngs.Collection._process_row_dict
 
 The bsf.Analysis.samples instance variable also needed changing from a dict to a list. A similar
 check avoiding duplicates is in place in the bsf.Analysis.add_sample method.
@@ -104,7 +104,7 @@ individually or as a pool and a subsequent comparison stage.
 
     However, BSF PairedReads objects that result from different flow cells could potentially bear
     the same name, which causes problems with SGE job names that need be unique.
-    The bsf.data.Collection
+    The bsf.ngs.Collection
 
     A remaining problem is that BSF PairedReads and BSF Sample objects from different flow cells
     may have the same name. Although the BSF Collection could hold them apart, SGE jobs could still
@@ -128,16 +128,16 @@ The bsf.Analysis class represents a high-level analysis of NGS data.
 
 The bsf.process.Executable class represents an executable program, its options and arguments.
 
-bsf.data class hierarchy:
+bsf.ngs class hierarchy:
 
-    bsf.data.Reads - Represents a single FASTQ file.
-    bsf.data.PairedReads - Represents paired reads holding one or two Reads objects
-    bsf.data.Sample - Represents one or more PairedReads objects (replicates)
-    bsf.data.Project - Represents one or more Sample objects
-    bsf.data.ProcessedRunFolder - Represents a Processed Run Folder (e.g. after CASAVA run)
-    bsf.data.Collection - Represents a collection of ProcessedRunFolder objects
+    bsf.ngs.Reads - Represents a single FASTQ file.
+    bsf.ngs.PairedReads - Represents paired reads holding one or two Reads objects
+    bsf.ngs.Sample - Represents one or more PairedReads objects (replicates)
+    bsf.ngs.Project - Represents one or more Sample objects
+    bsf.ngs.ProcessedRunFolder - Represents a Processed Run Folder (e.g. after CASAVA run)
+    bsf.ngs.Collection - Represents a collection of ProcessedRunFolder objects
 
-The bsf.data.Sample configuration still has some problems.
+The bsf.ngs.Sample configuration still has some problems.
 
 Change Collection._process_row_dict() and eventually Collection.get_sample_from_row_dict()
 to deal with wildcards. Also, if a column is empty or does not even exist, register
@@ -150,9 +150,9 @@ Since Sample names are not guaranteed to be unique between BSF Project objects
 - they typically are 1, 2, 3, ... - both 'Project' and 'ProcessedRunFolder' need specifying.
 
 
-bsf.data.Pool
+bsf.ngs.Pool
 
-Would a new bsf.data.Pool object make sense for bsf.data.Sample objects that have run
+Would a new bsf.ngs.Pool object make sense for bsf.ngs.Sample objects that have run
 on more than one lane and represent sequencing replicates. For the moment, a solution to
 merge two samples is implemented in the bsf.analyses.chip_seq.ChIPSeq class.
 
@@ -174,18 +174,18 @@ merge two samples is implemented in the bsf.analyses.chip_seq.ChIPSeq class.
 
 bsf
   - from bsf import Defaults (no further dependency)
-  - from bsf.data import Collection (no further dependency)
+  - from bsf.ngs import Collection (no further dependency)
   - from bsf.argument import * (no further dependency)
 
 bsf.Analysis
   - from bsf import Analysis, Configuration, Default, Defaults, Stage, Executable (no further dependency)
-  - from bsf.data import Collection, ProcessedRunFolder, Sample, SampleAnnotationSheet (no further dependency)
+  - from bsf.ngs import Collection, ProcessedRunFolder, Sample, SampleAnnotationSheet (no further dependency)
   - from bsf.executables import Bowtie2, Macs14, Macs2Callpeak, Cuffdiff, Cufflinks, Cuffmerge, TopHat, FastQC
 
 bsf.argument
   - no further dependency
 
-bsf.data
+bsf.ngs
   - no further dependency
 
 bsf.defaults

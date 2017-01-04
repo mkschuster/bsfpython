@@ -34,7 +34,7 @@ import warnings
 
 from bsf import Analysis, defaults
 from bsf.annotation import AnnotationSheet
-from bsf.data import Collection, ProcessedRunFolder, Sample
+from bsf.ngs import Collection, ProcessedRunFolder, Sample
 from bsf.executables import Bowtie2, Macs14, Macs2Bdgcmp, Macs2Callpeak, FastQC
 from bsf.process import Executable
 from bsf.standards import Default
@@ -48,10 +48,10 @@ class ChIPSeqComparison(object):
     @type c_name: str
     @ivar t_name: Treatment name
     @type t_name: str
-    @ivar c_samples: Python C{list} of control C{bsf.data.Sample} objects
-    @type c_samples: list[bsf.data.Sample]
-    @ivar t_samples: Python C{list} of treatment C{bsf.data.Sample} objects
-    @type t_samples: list[bsf.data.Sample]
+    @ivar c_samples: Python C{list} of control C{bsf.ngs.Sample} objects
+    @type c_samples: list[bsf.ngs.Sample]
+    @ivar t_samples: Python C{list} of treatment C{bsf.ngs.Sample} objects
+    @type t_samples: list[bsf.ngs.Sample]
     @ivar factor: ChIP factor
     @type factor: str
     @ivar tissue: Tissue
@@ -84,10 +84,10 @@ class ChIPSeqComparison(object):
         @type c_name: str
         @param t_name: Treatment name
         @type t_name: str
-        @param c_samples: Python C{list} of control C{bsf.data.Sample} objects
-        @type c_samples: list[bsf.data.Sample]
-        @param t_samples: Python C{list} of treatment C{bsf.data.Sample} objects
-        @type t_samples:list[bsf.data.Sample]
+        @param c_samples: Python C{list} of control C{bsf.ngs.Sample} objects
+        @type c_samples: list[bsf.ngs.Sample]
+        @param t_samples: Python C{list} of treatment C{bsf.ngs.Sample} objects
+        @type t_samples:list[bsf.ngs.Sample]
         @param factor: ChIP factor
         @type factor: str
         @param tissue: Tissue
@@ -150,7 +150,7 @@ class ChIPSeqComparison(object):
             self.treatment = treatment
 
         if replicate is None:
-            self.replicate = int(x=0)
+            self.replicate = 0
         else:
             self.replicate = replicate
 
@@ -292,7 +292,7 @@ class ChIPSeq(Analysis):
             stage_list=None,
             collection=None,
             comparisons=None,
-            samples=None,
+            sample_list=None,
             replicate_grouping=True,
             cmp_file=None,
             genome_fasta_path=None,
@@ -321,12 +321,12 @@ class ChIPSeq(Analysis):
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.Stage} objects
         @type stage_list: list[bsf.Stage]
-        @param collection: C{bsf.data.Collection}
-        @type collection: bsf.data.Collection
-        @param comparisons: Python C{dict} of Python C{list} objects of C{bsf.data.Sample} objects
-        @type comparisons: dict[str, list[bsf.data.Sample]]
-        @param samples: Python C{list} of C{bsf.data.Sample} objects
-        @type samples: list[bsf.data.Sample]
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
+        @param comparisons: Python C{dict} of Python C{list} objects of C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, list[bsf.ngs.Sample]]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
         @type replicate_grouping: bool
         @param cmp_file: Comparison file
@@ -352,7 +352,7 @@ class ChIPSeq(Analysis):
             stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
-            samples=samples)
+            sample_list=sample_list)
 
         # Sub-class specific ...
 
@@ -467,7 +467,7 @@ class ChIPSeq(Analysis):
                         sample_dict[n_sample.name] = n_sample
 
         # Second pass, add all Sample objects mentioned in a comparison.
-        level1_dict = dict()
+        level_1_dict = dict()
 
         for row_dict in annotation_sheet.row_dicts:
 
@@ -539,16 +539,13 @@ class ChIPSeq(Analysis):
             # The second-level dict stores Treatment Sample key data and int value data.
 
             if 'Replicate' in row_dict:
-
                 value = row_dict['Replicate']
 
-                if value in level1_dict:
-                    level2_dict = level1_dict[value]
-                else:
-                    level2_dict = dict()
-                    level1_dict[value] = level2_dict
+                if value not in level_1_dict:
+                    level_1_dict[value] = dict()
 
-                level2_dict[comparison_key] = 0
+                level_2_dict = level_1_dict[value]
+                level_2_dict[comparison_key] = 0
 
             self.comparisons[comparison_key] = ChIPSeqComparison(
                 c_name=c_name,
@@ -564,19 +561,18 @@ class ChIPSeq(Analysis):
 
         # Sort the comparison keys alphabetically and assign replicate numbers into ChIPSeqComparison objects.
 
-        for key1 in level1_dict.keys():
+        for key_1 in level_1_dict.keys():
+            level_2_dict = level_1_dict[key_1]
 
-            level2_dict = level1_dict[key1]
-
-            keys2 = level2_dict.keys()
-            keys2.sort(cmp=lambda x, y: cmp(x, y))
+            key_2_list = level_2_dict.keys()
+            key_2_list.sort(cmp=lambda x, y: cmp(x, y))
 
             i = 1
-            for key2 in keys2:
-                if not self.comparisons[key2].diff_bind:
+            for key_2 in key_2_list:
+                if not self.comparisons[key_2].diff_bind:
                     continue
-                level2_dict[key2] = i
-                self.comparisons[key2].replicate = i
+                level_2_dict[key_2] = i
+                self.comparisons[key_2].replicate = i
                 i += 1
 
         return
@@ -612,7 +608,7 @@ class ChIPSeq(Analysis):
         # This cannot be done in the super-class, because Samples are only put into the Analysis.samples list
         # by the _read_comparisons method.
 
-        self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
         # Define the reference genome FASTA file path.
         # If it does not exist, construct it from defaults.
@@ -661,31 +657,25 @@ class ChIPSeq(Analysis):
 
         stage_sam2bam = self.get_stage(name='sam2bam')
 
-        for sample in self.samples:
-
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+            paired_reads_name_list = paired_reads_dict.keys()
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            replicate_keys = replicate_dict.keys()
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-            for replicate_key in replicate_keys:
-
+            for paired_reads_name in paired_reads_name_list:
                 bowtie2 = stage_bowtie2.add_executable(
                     executable=Bowtie2(
-                        name='chipseq_bowtie2_{}'.format(replicate_key),
+                        name='chipseq_bowtie2_{}'.format(paired_reads_name),
                         analysis=self))
 
                 sam2bam = stage_sam2bam.add_executable(
                     executable=Executable(
-                        name='chipseq_sam2bam_{}'.format(replicate_key),
+                        name='chipseq_sam2bam_{}'.format(paired_reads_name),
                         program='bsf_sam2bam.sh'))
                 sam2bam.dependencies.append(bowtie2.name)
 
@@ -698,11 +688,11 @@ class ChIPSeq(Analysis):
                 reads1 = list()
                 reads2 = list()
 
-                for paired_reads in replicate_dict[replicate_key]:
-                    if paired_reads.reads1:
-                        reads1.append(paired_reads.reads1.file_path)
-                    if paired_reads.reads2:
-                        reads2.append(paired_reads.reads2.file_path)
+                for paired_reads in paired_reads_dict[paired_reads_name]:
+                    if paired_reads.reads_1:
+                        reads1.append(paired_reads.reads_1.file_path)
+                    if paired_reads.reads_2:
+                        reads2.append(paired_reads.reads_2.file_path)
 
                 if len(reads1) and not len(reads2):
                     bowtie2.add_option_short(key='U', value=','.join(reads1))
@@ -729,7 +719,7 @@ class ChIPSeq(Analysis):
                 # Put all sample-specific information into a sub-directory.
 
                 replicate_directory = os.path.join(self.genome_directory,
-                                                   'chipseq_bowtie2_{}'.format(replicate_key))
+                                                   'chipseq_bowtie2_{}'.format(paired_reads_name))
 
                 try:
                     os.makedirs(replicate_directory)
@@ -745,16 +735,16 @@ class ChIPSeq(Analysis):
 
                 bowtie2.stdout_path = os.path.join(self.genome_directory,
                                                    replicate_directory,
-                                                   replicate_key + '.sam')
+                                                   paired_reads_name + '.sam')
 
                 # Set bsf_sam2bam.sh options.
 
                 sam2bam.arguments.append(os.path.join(self.genome_directory,
                                                       replicate_directory,
-                                                      replicate_key))
+                                                      paired_reads_name))
 
-                if (os.path.exists('{}.bam.bai'.format(replicate_key)) and
-                        os.path.getsize('{}.bam.bai'.format(replicate_key))):
+                if (os.path.exists('{}.bam.bai'.format(paired_reads_name)) and
+                        os.path.getsize('{}.bam.bai'.format(paired_reads_name))):
                     bowtie2.submit = False
                     sam2bam.submit = False
 
@@ -774,45 +764,37 @@ class ChIPSeq(Analysis):
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
-
             chipseq_comparison = self.comparisons[key]
             assert isinstance(chipseq_comparison, ChIPSeqComparison)
-
             factor = chipseq_comparison.factor.upper()
 
             for t_sample in chipseq_comparison.t_samples:
+                t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                t_replicate_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+                t_paired_reads_name_list = t_paired_reads_dict.keys()
+                t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-                # Python str key and Python list of Python list objects
-                # of bsf.data.PairedReads objects.
-
-                t_replicate_keys = t_replicate_dict.keys()
-                t_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-                for t_replicate_key in t_replicate_keys:
-
+                for t_paired_reads_name in t_paired_reads_name_list:
                     for c_sample in chipseq_comparison.c_samples:
+                        c_paired_reads_dict = c_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                        c_replicate_dict = c_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+                        c_paired_reads_name_list = c_paired_reads_dict.keys()
+                        c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                        c_replicate_keys = c_replicate_dict.keys()
-                        c_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-                        for c_replicate_key in c_replicate_keys:
-
+                        for c_paired_reads_name in c_paired_reads_name_list:
                             macs14 = stage_macs14.add_executable(
                                 executable=Macs14(
-                                    name='chipseq_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
+                                    name='chipseq_macs14_{}__{}'.format(t_paired_reads_name, c_paired_reads_name),
                                     analysis=self))
 
-                            macs14.dependencies.append('chipseq_sam2bam_' + t_replicate_key)
-                            macs14.dependencies.append('chipseq_sam2bam_' + c_replicate_key)
+                            macs14.dependencies.append('chipseq_sam2bam_' + t_paired_reads_name)
+                            macs14.dependencies.append('chipseq_sam2bam_' + c_paired_reads_name)
 
                             process_macs14 = stage_process_macs14.add_executable(
                                 executable=Executable(
-                                    name='chipseq_process_macs14_{}__{}'.format(t_replicate_key, c_replicate_key),
+                                    name='chipseq_process_macs14_{}__{}'.format(
+                                        t_paired_reads_name,
+                                        c_paired_reads_name),
                                     program='bsf_chipseq_process_macs14.sh'))
                             process_macs14.dependencies.append(macs14.name)
 
@@ -824,21 +806,21 @@ class ChIPSeq(Analysis):
                                 key='treatment',
                                 value=os.path.join(
                                     self.genome_directory,
-                                    'chipseq_bowtie2_{}'.format(t_replicate_key),
-                                    '{}.bam'.format(t_replicate_key)))
+                                    'chipseq_bowtie2_{}'.format(t_paired_reads_name),
+                                    '{}.bam'.format(t_paired_reads_name)))
                             macs14.add_option_long(
                                 key='control',
                                 value=os.path.join(
                                     self.genome_directory,
-                                    'chipseq_bowtie2_{}'.format(c_replicate_key),
-                                    '{}.bam'.format(c_replicate_key)))
+                                    'chipseq_bowtie2_{}'.format(c_paired_reads_name),
+                                    '{}.bam'.format(c_paired_reads_name)))
 
                             # TODO: Experimentally prepend a chipseq_macs14 directory
                             # MACS14 can hopefully also cope with directories specified in the --name option, but
                             # the resulting R script has them set too. Hence the R script has to be started
                             # from the genome_directory. However, the R script needs re-writing anyway, because
                             # it would be better to use the PNG rather than the PDF device for plotting.
-                            prefix = 'chipseq_macs14_{}__{}'.format(t_replicate_key, c_replicate_key)
+                            prefix = 'chipseq_macs14_{}__{}'.format(t_paired_reads_name, c_paired_reads_name)
 
                             replicate_directory = os.path.join(self.genome_directory, prefix)
 
@@ -919,52 +901,47 @@ class ChIPSeq(Analysis):
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
-
             chipseq_comparison = self.comparisons[key]
             assert isinstance(chipseq_comparison, ChIPSeqComparison)
-
             factor = chipseq_comparison.factor.upper()
-
             for t_sample in chipseq_comparison.t_samples:
+                t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                t_replicate_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+                t_paired_reads_name_list = t_paired_reads_dict.keys()
+                t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-                # Python str key and Python list of Python list objects
-                # of bsf.data.PairedReads objects.
-
-                t_replicate_keys = t_replicate_dict.keys()
-                t_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-                for t_replicate_key in t_replicate_keys:
-
+                for t_paired_reads_name in t_paired_reads_name_list:
                     for c_sample in chipseq_comparison.c_samples:
+                        c_paired_reads_dict = c_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                        c_replicate_dict = c_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+                        c_paired_reads_name_list = c_paired_reads_dict.keys()
+                        c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                        c_replicate_keys = c_replicate_dict.keys()
-                        c_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-                        for c_replicate_key in c_replicate_keys:
-
+                        for c_paired_reads_name in c_paired_reads_name_list:
                             macs2_callpeak = stage_macs2_callpeak.add_executable(
                                 executable=Macs2Callpeak(
-                                    name='chipseq_macs2_callpeak_{}__{}'.format(t_replicate_key, c_replicate_key),
+                                    name='chipseq_macs2_callpeak_{}__{}'.format(
+                                        t_paired_reads_name,
+                                        c_paired_reads_name),
                                     analysis=self))
 
-                            macs2_callpeak.dependencies.append('chipseq_sam2bam_' + t_replicate_key)
-                            macs2_callpeak.dependencies.append('chipseq_sam2bam_' + c_replicate_key)
+                            macs2_callpeak.dependencies.append('chipseq_sam2bam_' + t_paired_reads_name)
+                            macs2_callpeak.dependencies.append('chipseq_sam2bam_' + c_paired_reads_name)
 
                             macs2_bdgcmp = stage_macs2_bdgcmp.add_executable(
                                 executable=Macs2Bdgcmp(
-                                    name='chipseq_macs2_bdgcmp_{}__{}'.format(t_replicate_key, c_replicate_key),
+                                    name='chipseq_macs2_bdgcmp_{}__{}'.format(
+                                        t_paired_reads_name,
+                                        c_paired_reads_name),
                                     analysis=self))
 
                             macs2_bdgcmp.dependencies.append(macs2_callpeak.name)
 
                             process_macs2 = stage_process_macs2.add_executable(
                                 executable=Executable(
-                                    name='chipseq_process_macs2_{}__{}'.format(t_replicate_key, c_replicate_key),
+                                    name='chipseq_process_macs2_{}__{}'.format(
+                                        t_paired_reads_name,
+                                        c_paired_reads_name),
                                     program='bsf_chipseq_process_macs2.sh'))
                             process_macs2.dependencies.append(macs2_bdgcmp.name)
 
@@ -978,22 +955,22 @@ class ChIPSeq(Analysis):
                                 key='treatment',
                                 value=os.path.join(
                                     self.genome_directory,
-                                    'chipseq_bowtie2_{}'.format(t_replicate_key),
-                                    '{}.bam'.format(t_replicate_key)))
+                                    'chipseq_bowtie2_{}'.format(t_paired_reads_name),
+                                    '{}.bam'.format(t_paired_reads_name)))
 
                             mc2.add_option_long(
                                 key='control',
                                 value=os.path.join(
                                     self.genome_directory,
-                                    'chipseq_bowtie2_{}'.format(c_replicate_key),
-                                    '{}.bam'.format(c_replicate_key)))
+                                    'chipseq_bowtie2_{}'.format(c_paired_reads_name),
+                                    '{}.bam'.format(c_paired_reads_name)))
 
                             # TODO: Experimentally prepend a chipseq_macs2 directory.
                             # MACS2 can cope with directories specified in the --name option, but
                             # the resulting R script has them set too. Hence the R script has to be started
                             # from the genome_directory. However, the R script needs re-writing anyway, because
                             # it would be better to use the PNG rather than the PDF device for plotting.
-                            prefix = 'chipseq_macs2_{}__{}'.format(t_replicate_key, c_replicate_key)
+                            prefix = 'chipseq_macs2_{}__{}'.format(t_paired_reads_name, c_paired_reads_name)
 
                             replicate_directory = os.path.join(self.genome_directory, prefix)
 
@@ -1090,7 +1067,7 @@ class ChIPSeq(Analysis):
 
                             # Set process_macs2 arguments.
 
-                            process_macs2.arguments.append('{}__{}'.format(t_replicate_key, c_replicate_key))
+                            process_macs2.arguments.append('{}__{}'.format(t_paired_reads_name, c_paired_reads_name))
                             process_macs2.arguments.append(self.genome_sizes_path)
 
                             if os.path.exists(os.path.join(prefix, '{}_peaks.bb'.format(prefix))):
@@ -1160,51 +1137,45 @@ class ChIPSeq(Analysis):
             dbs = ChIPSeqDiffBindSheet(file_path=file_path)
 
             for chipseq_comparison in factor_list:
-
+                assert isinstance(chipseq_comparison, ChIPSeqComparison)
                 if not chipseq_comparison.diff_bind:
                     continue
 
                 for t_sample in chipseq_comparison.t_samples:
+                    t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                    t_replicate_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+                    t_paired_reads_name_list = t_paired_reads_dict.keys()
+                    t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                    # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-                    # Python str key and Python list of Python list objects
-                    # of bsf.data.PairedReads objects.
-
-                    t_replicate_keys = t_replicate_dict.keys()
-                    t_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-                    for t_replicate_key in t_replicate_keys:
-
+                    for t_paired_reads_name in t_paired_reads_name_list:
                         for c_sample in chipseq_comparison.c_samples:
+                            c_paired_reads_dict = c_sample.get_all_paired_reads(
+                                replicate_grouping=self.replicate_grouping)
 
-                            c_replicate_dict = c_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+                            c_paired_reads_name_list = c_paired_reads_dict.keys()
+                            c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                            c_replicate_keys = c_replicate_dict.keys()
-                            c_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-                            for c_replicate_key in c_replicate_keys:
+                            for c_paired_reads_name in c_paired_reads_name_list:
                                 row_dict = dict()
 
-                                row_dict['SampleID'] = t_replicate_key
+                                row_dict['SampleID'] = t_paired_reads_name
                                 row_dict['Tissue'] = chipseq_comparison.tissue
                                 row_dict['Factor'] = chipseq_comparison.factor
                                 row_dict['Condition'] = chipseq_comparison.condition
                                 row_dict['Treatment'] = chipseq_comparison.treatment
                                 row_dict['Replicate'] = chipseq_comparison.replicate
                                 row_dict['bamReads'] = os.path.join(self.genome_directory,
-                                                                    'chipseq_bowtie2_{}'.format(t_replicate_key),
-                                                                    '{}.bam'.format(t_replicate_key))
+                                                                    'chipseq_bowtie2_{}'.format(t_paired_reads_name),
+                                                                    '{}.bam'.format(t_paired_reads_name))
                                 row_dict['bamControl'] = os.path.join(self.genome_directory,
-                                                                      'chipseq_bowtie2_{}'.format(c_replicate_key),
-                                                                      '{}.bam'.format(c_replicate_key))
-                                row_dict['ControlID'] = c_replicate_key
+                                                                      'chipseq_bowtie2_{}'.format(c_paired_reads_name),
+                                                                      '{}.bam'.format(c_paired_reads_name))
+                                row_dict['ControlID'] = c_paired_reads_name
                                 row_dict['Peaks'] = os.path.join(self.genome_directory,
                                                                  'chipseq_macs2_{}__{}'.
-                                                                 format(t_replicate_key, c_replicate_key),
+                                                                 format(t_paired_reads_name, c_paired_reads_name),
                                                                  'chipseq_macs2_{}__{}_peaks.xls'.
-                                                                 format(t_replicate_key, c_replicate_key))
+                                                                 format(t_paired_reads_name, c_paired_reads_name))
                                 row_dict['PeakCaller'] = 'macs'
                                 row_dict['PeakFormat'] = 'macs'
                                 # row_dict['ScoreCol'] = str()
@@ -1215,7 +1186,9 @@ class ChIPSeq(Analysis):
                                 # ## sas.csv_writer_next(row_dict=row_dict)
                                 dbs.row_dicts.append(row_dict)
 
-                                job_dependency = 'chipseq_process_macs2_{}__{}'.format(t_replicate_key, c_replicate_key)
+                                job_dependency = 'chipseq_process_macs2_{}__{}'.format(
+                                    t_paired_reads_name,
+                                    c_paired_reads_name)
                                 job_dependencies.append(job_dependency)
 
             # TODO: Remove once the code works.
@@ -1304,44 +1277,33 @@ class ChIPSeq(Analysis):
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
-
             chipseq_comparison = self.comparisons[key]
-
+            assert isinstance(chipseq_comparison, ChIPSeqComparison)
             for t_sample in chipseq_comparison.t_samples:
+                t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                t_replicate_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+                t_paired_reads_name_list = t_paired_reads_dict.keys()
+                t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-                # Python str key and Python list of Python list objects
-                # of bsf.data.PairedReads objects.
-
-                t_replicate_keys = t_replicate_dict.keys()
-                t_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-                for t_replicate_key in t_replicate_keys:
-
+                for t_paired_reads_name in t_paired_reads_name_list:
                     for c_sample in chipseq_comparison.c_samples:
+                        c_paired_reads_dict = c_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                        c_replicate_dict = c_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+                        c_paired_reads_name_list = c_paired_reads_dict.keys()
+                        c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                        c_replicate_keys = c_replicate_dict.keys()
-                        c_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-                        for c_replicate_key in c_replicate_keys:
-
-                            # prefix = 'chipseq_macs14_{}__{}'.format(t_replicate_key, c_replicate_key)
+                        for c_paired_reads_name in c_paired_reads_name_list:
+                            # prefix = 'chipseq_macs14_{}__{}'.format(t_paired_reads_name, c_paired_reads_name)
 
                             # Add UCSC trackDB entries for each treatment/control and absolute/normalised pair.
 
                             for treatment in [True, False]:
-
                                 if treatment:
                                     state = 'treat'
                                 else:
                                     state = 'control'
 
                                 for absolute in [True, False]:
-
                                     if absolute:
                                         scaling = 'absolute'
                                     else:
@@ -1352,16 +1314,16 @@ class ChIPSeq(Analysis):
                                     # Common trackDb settings.
 
                                     output_hub += 'track ChIP_{}__{}_{}_{}\n'. \
-                                        format(t_replicate_key, c_replicate_key, state, scaling)
+                                        format(t_paired_reads_name, c_paired_reads_name, state, scaling)
                                     output_hub += 'type bigWig\n'
                                     output_hub += 'shortLabel ChIP_{}__{}_{}_{}\n'. \
-                                        format(t_replicate_key, c_replicate_key, state, scaling)
+                                        format(t_paired_reads_name, c_paired_reads_name, state, scaling)
                                     output_hub += 'longLabel {} ChIP-Seq read counts for {} of {} versus {}\n'. \
-                                        format(scaling.capitalize(), state, t_replicate_key, c_replicate_key)
+                                        format(scaling.capitalize(), state, t_paired_reads_name, c_paired_reads_name)
                                     output_hub += 'bigDataUrl '
                                     output_hub += '{}__{}_MACS_wiggle/{}/{}__{}_{}_afterfiting_all.bw\n'. \
-                                        format(t_replicate_key, c_replicate_key, state,
-                                               t_replicate_key, c_replicate_key, state)
+                                        format(t_paired_reads_name, c_paired_reads_name, state,
+                                               t_paired_reads_name, c_paired_reads_name, state)
                                     if treatment and not absolute:
                                         output_hub += 'visibility full\n'
                                     else:
@@ -1392,14 +1354,14 @@ class ChIPSeq(Analysis):
                             # Add a UCSC trackDB entry for each bigBed peaks file.
 
                             output_hub += 'track Peaks_{}__{}\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'type bigBed\n'
                             output_hub += 'shortLabel Peaks_{}__{}\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'longLabel ChIP-Seq peaks for {} versus {}\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'bigDataUrl {}__{}_peaks.bb\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'visibility pack\n'
                             # 'html' is missing from the common settings.
 
@@ -1414,23 +1376,23 @@ class ChIPSeq(Analysis):
                             output_html += '<tr>\n'
 
                             # if treatment and absolute:
-                            # output += '<td><strong>{}</strong></td>\n'.format(t_replicate_key)
+                            # output += '<td><strong>{}</strong></td>\n'.format(t_paired_reads_name)
                             # if not treatment and absolute:
-                            # output += '<td><strong>{}</strong></td>\n'.format(c_replicate_key)
+                            # output += '<td><strong>{}</strong></td>\n'.format(c_paired_reads_name)
 
                             output_html += '<td><a href="{}__{}_peaks.xls">Peaks {} versus {}</a></td>\n'. \
-                                format(t_replicate_key, c_replicate_key,
-                                       t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name,
+                                       t_paired_reads_name, c_paired_reads_name)
 
                             output_html += '<td>'
                             output_html += '<a href="{}__{}_negative_peaks.xls">Negative peaks {} versus {}</a>'. \
-                                format(t_replicate_key, c_replicate_key,
-                                       t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name,
+                                       t_paired_reads_name, c_paired_reads_name)
                             output_html += '</td>\n'
 
                             output_html += '<td><a href="{}__{}_model.r">R model</a></td>\n'. \
-                                format(t_replicate_key, c_replicate_key,
-                                       t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name,
+                                       t_paired_reads_name, c_paired_reads_name)
 
                             output_html += '</tr>\n'
                             output_html += '\n'
@@ -1440,33 +1402,28 @@ class ChIPSeq(Analysis):
 
         # Add UCSC trackDB entries for each Bowtie2 BAM file.
 
-        for sample in self.samples:
-
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+            paired_reads_name_list = paired_reads_dict.keys()
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            replicate_keys = replicate_dict.keys()
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-            for replicate_key in replicate_keys:
+            for paired_reads_name in paired_reads_name_list:
                 # Add a UCSC trackDB entry.
 
                 # Common trackDb settings.
 
-                output_hub += 'track Alignment_{}\n'.format(replicate_key)
+                output_hub += 'track Alignment_{}\n'.format(paired_reads_name)
                 output_hub += 'type bam\n'
-                output_hub += 'shortLabel Alignment_{}\n'.format(replicate_key)
+                output_hub += 'shortLabel Alignment_{}\n'.format(paired_reads_name)
                 output_hub += 'longLabel Bowtie2 alignment of {}\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'bigDataUrl {}.bam\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'visibility hide\n'
                 # TODO: The 'html' option is missing.
 
@@ -1480,7 +1437,7 @@ class ChIPSeq(Analysis):
 
                 # TODO: Including FastQC results would require rearranging the above HTML code.
                 # output += '{}__{}_fastqc/fastqc_report.html'. \
-                # format(t_replicate_key, c_replicate_key)
+                # format(t_paired_reads_name, c_paired_reads_name)
 
         self.report_to_file(content=output_html)
         self.ucsc_hub_to_file(content=output_hub)
@@ -1602,34 +1559,24 @@ class ChIPSeq(Analysis):
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
-
             chipseq_comparison = self.comparisons[key]
-
+            assert isinstance(chipseq_comparison, ChIPSeqComparison)
             factor = chipseq_comparison.factor.upper()
-
             for t_sample in chipseq_comparison.t_samples:
+                t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                t_replicate_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+                t_paired_reads_name_list = t_paired_reads_dict.keys()
+                t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-                # Python str key and Python list of Python list objects
-                # of bsf.data.PairedReads objects.
-
-                t_replicate_keys = t_replicate_dict.keys()
-                t_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-                for t_replicate_key in t_replicate_keys:
-
+                for t_paired_reads_name in t_paired_reads_name_list:
                     for c_sample in chipseq_comparison.c_samples:
+                        c_paired_reads_dict = c_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                        c_replicate_dict = c_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+                        c_paired_reads_name_list = c_paired_reads_dict.keys()
+                        c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                        c_replicate_keys = c_replicate_dict.keys()
-                        c_replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-                        for c_replicate_key in c_replicate_keys:
-
-                            prefix = 'chipseq_macs2_{}__{}'.format(t_replicate_key, c_replicate_key)
+                        for c_paired_reads_name in c_paired_reads_name_list:
+                            prefix = 'chipseq_macs2_{}__{}'.format(t_paired_reads_name, c_paired_reads_name)
 
                             # Add UCSC trackDB entries for each treatment/control and absolute/normalised pair.
                             # NAME_control_lambda.bw
@@ -1658,14 +1605,14 @@ class ChIPSeq(Analysis):
                             # Common trackDb settings.
 
                             output_hub += 'track {}__{}_background\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             # TODO: The bigWig type must declare the expected signal range.
                             # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
                             output_hub += 'type bigWig\n'
                             output_hub += 'shortLabel {}__{}_bkg\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'longLabel ChIP background signal {} versus {}\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'bigDataUrl {}/{}_control_lambda.bw\n'. \
                                 format(prefix, prefix)
                             output_hub += 'visibility dense\n'
@@ -1720,13 +1667,13 @@ class ChIPSeq(Analysis):
                             # Common trackDb settings.
 
                             output_hub += 'track {}__{}_enrichment\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             # TODO: The bigWig type must declare the expected signal range.
                             output_hub += 'type bigWig\n'
                             output_hub += 'shortLabel {}__{}_enr\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'longLabel ChIP enrichment signal {} versus {}\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'bigDataUrl {}/{}_treat_pileup.bw\n'. \
                                 format(prefix, prefix)
                             output_hub += 'visibility dense\n'
@@ -1781,13 +1728,13 @@ class ChIPSeq(Analysis):
                             # Common trackDb settings.
 
                             output_hub += 'track {}__{}_intensity\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             # TODO: The bigWig type must declare the expected signal range.
                             output_hub += 'type bigWig\n'
                             output_hub += 'shortLabel {}__{}_int\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'longLabel ChIP intensity {} versus {}\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'bigDataUrl {}/{}_bdgcmp.bw\n'. \
                                 format(prefix, prefix)
                             output_hub += 'visibility full\n'
@@ -1827,12 +1774,12 @@ class ChIPSeq(Analysis):
                             # Common trackDb settings.
 
                             output_hub += 'track {}__{}_peaks\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'type bigBed\n'
                             output_hub += 'shortLabel {}__{}_peaks\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'longLabel ChIP peaks {} versus {}\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'bigDataUrl {}/{}_peaks.bb\n'. \
                                 format(prefix, prefix)
                             output_hub += 'visibility pack\n'
@@ -1857,12 +1804,12 @@ class ChIPSeq(Analysis):
                             # Common trackDb settings.
 
                             output_hub += 'track {}__{}_summits\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'type bigBed\n'
                             output_hub += 'shortLabel {}__{}_summits\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'longLabel ChIP summits {} versus {}\n'. \
-                                format(t_replicate_key, c_replicate_key)
+                                format(t_paired_reads_name, c_paired_reads_name)
                             output_hub += 'bigDataUrl {}/{}_summits.bb\n'. \
                                 format(prefix, prefix)
                             output_hub += 'visibility pack\n'
@@ -1885,7 +1832,7 @@ class ChIPSeq(Analysis):
                             output_html += '<tr>\n'
 
                             output_html += '<td><a href="{}/{}_peaks.xls">Peaks {} versus {}</a></td>\n'. \
-                                format(prefix, prefix, t_replicate_key, c_replicate_key)
+                                format(prefix, prefix, t_paired_reads_name, c_paired_reads_name)
 
                             output_html += '<td><a href="{}/{}_model.r">R model</a></td>\n'. \
                                 format(prefix, prefix)
@@ -1898,35 +1845,30 @@ class ChIPSeq(Analysis):
 
         # Add UCSC trackDB entries for each Bowtie2 BAM file.
 
-        for sample in self.samples:
-
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+            paired_reads_name_list = paired_reads_dict.keys()
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            replicate_keys = replicate_dict.keys()
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-            for replicate_key in replicate_keys:
+            for paired_reads_name in paired_reads_name_list:
                 #
                 # Add a UCSC trackDB entry for each NAME.bam file.
                 #
 
                 # Common trackDb settings.
 
-                output_hub += 'track {}_alignment\n'.format(replicate_key)
+                output_hub += 'track {}_alignment\n'.format(paired_reads_name)
                 output_hub += 'type bam\n'
-                output_hub += 'shortLabel {}_alignment\n'.format(replicate_key)
+                output_hub += 'shortLabel {}_alignment\n'.format(paired_reads_name)
                 output_hub += 'longLabel {} ChIP read alignment\n'. \
-                    format(replicate_key)
+                    format(paired_reads_name)
                 output_hub += 'bigDataUrl chipseq_bowtie2_{}/{}.bam\n'. \
-                    format(replicate_key, replicate_key)
+                    format(paired_reads_name, paired_reads_name)
                 output_hub += 'visibility hide\n'
                 # track_output += 'html {}\n'.format()
 
@@ -2123,7 +2065,7 @@ class RunFastQC(Analysis):
             stage_list=None,
             collection=None,
             comparisons=None,
-            samples=None,
+            sample_list=None,
             cmp_file=None):
         """Initialise a C{bsf.analyses.RunFastQC}.
 
@@ -2149,12 +2091,12 @@ class RunFastQC(Analysis):
         @type debug: int
         @param stage_list: Python C{list} of BSF C{bsf.Stage} objects
         @type stage_list: list[bsf.Stage]
-        @param collection: C{bsf.data.Collection}
-        @type collection: bsf.data.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.data.Sample]]
-        @param samples: Python C{list} of C{bsf.data.Sample} objects
-        @type samples: list[bsf.data.Sample]
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
         @param cmp_file: Comparison file
         @type cmp_file: str | unicode
         @return:
@@ -2174,7 +2116,7 @@ class RunFastQC(Analysis):
             stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
-            samples=samples)
+            sample_list=sample_list)
 
         if cmp_file is None:
             self.cmp_file = str()
@@ -2211,7 +2153,7 @@ class RunFastQC(Analysis):
         return
 
     def _read_comparisons(self, cmp_file):
-        """Read a C{bsf.data.AnnotationSheet} CSV file from disk.
+        """Read a C{bsf.ngs.AnnotationSheet} CSV file from disk.
 
             - Column headers for CASAVA folders:
                 - Treatment/Control ProcessedRunFolder:
@@ -2260,7 +2202,7 @@ class RunFastQC(Analysis):
         # This cannot be done in the super-class, because BSF Samples are only put into the Analysis.samples list
         # by the _read_comparisons method.
 
-        self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
         self._create_fastqc_jobs()
 
@@ -2296,8 +2238,8 @@ class RunFastQC(Analysis):
             projects = config_parser.get(section=config_section, option='projects')
             components = projects.split(',')
             for component in components:
-                if component in prf.projects:
-                    project = prf.projects[component]
+                if component in prf.project_dict:
+                    project = prf.project_dict[component]
                     for sample in project.get_all_samples():
                         self.add_sample(sample=sample)
                 else:
@@ -2318,7 +2260,7 @@ class RunFastQC(Analysis):
                 # Processed Run Folder and a CASAVA Project name.
 
                 prf = ProcessedRunFolder.from_file_path(file_path=self.input_directory, file_type='Automatic')
-                project = prf.projects[self.project_name]
+                project = prf.project_dict[self.project_name]
                 for sample in project.get_all_samples():
                     self.add_sample(sample=sample)
 
@@ -2337,26 +2279,20 @@ class RunFastQC(Analysis):
 
         stage_fastqc = self.get_stage(name='fastqc')
 
-        for sample in self.samples:
-
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping)
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping)
+            paired_reads_name_list = paired_reads_dict.keys()
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            replicate_keys = replicate_dict.keys()
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-            for replicate_key in replicate_keys:
-
+            for paired_reads_name in paired_reads_name_list:
                 fastqc = stage_fastqc.add_executable(
                     executable=FastQC(
-                        name='fastqc_{}'.format(replicate_key),
+                        name='fastqc_{}'.format(paired_reads_name),
                         analysis=self))
 
                 # Set FastQC options.
@@ -2373,15 +2309,15 @@ class RunFastQC(Analysis):
                 reads1 = list()
                 reads2 = list()
 
-                for paired_reads in replicate_dict[replicate_key]:
+                for paired_reads in paired_reads_dict[paired_reads_name]:
 
                     if self.debug > 0:
                         print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
 
-                    if paired_reads.reads1:
-                        reads1.append(paired_reads.reads1.file_path)
-                    if paired_reads.reads2:
-                        reads2.append(paired_reads.reads2.file_path)
+                    if paired_reads.reads_1:
+                        reads1.append(paired_reads.reads_1.file_path)
+                    if paired_reads.reads_2:
+                        reads2.append(paired_reads.reads_2.file_path)
 
                 fastqc.arguments.append(' '.join(reads1 + reads2))
 
@@ -2430,29 +2366,23 @@ class RunFastQC(Analysis):
         output_html += '</tr>\n'
         output_html += '\n'
 
-        for sample in self.samples:
-
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
-            # Since FastQC is run on each replicate this needs the full name.
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping, full=True)
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping, full=True)
+            paired_reads_name_list = paired_reads_dict.keys()
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            replicate_keys = replicate_dict.keys()
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-            for replicate_key in replicate_keys:
+            for paired_reads_name in paired_reads_name_list:
                 output_html += '<tr>\n'
-                output_html += '<td>{}</td>\n'.format(replicate_key)
+                output_html += '<td>{}</td>\n'.format(paired_reads_name)
                 output_html += '<td><a href="{}_fastqc/fastqc_report.html"><strong>Report</strong></a></td>\n'. \
-                    format(replicate_key)
-                output_html += '<td><a href="{}_fastqc/summary.txt">Summary</a></td>\n'.format(replicate_key)
-                output_html += '<td><a href="{}_fastqc.zip">ZIP archive</a></td>\n'.format(replicate_key)
+                    format(paired_reads_name)
+                output_html += '<td><a href="{}_fastqc/summary.txt">Summary</a></td>\n'.format(paired_reads_name)
+                output_html += '<td><a href="{}_fastqc.zip">ZIP archive</a></td>\n'.format(paired_reads_name)
                 output_html += '</tr>\n'
                 output_html += '\n'
 
@@ -2491,7 +2421,7 @@ class RunBamToFastq(Analysis):
             stage_list=None,
             collection=None,
             comparisons=None,
-            samples=None):
+            sample_list=None):
         """Initialise a RunBamToFastq.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -2518,10 +2448,10 @@ class RunBamToFastq(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: BSF Collection
         @type collection: Collection
-        @param comparisons: Python C{dict} of Python C{list} objects of C{bsf.data.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.data.Sample]]
-        @param samples: Python C{list} of C{bsf.data.Sample} objects
-        @type samples: list[bsf.data.Sample]
+        @param comparisons: Python C{dict} of Python C{list} objects of C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
         @return:
         @rtype:
         """
@@ -2539,7 +2469,7 @@ class RunBamToFastq(Analysis):
             stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
-            samples=samples)
+            sample_list=sample_list)
 
         # Nothing else to do for this sub-class ...
 
@@ -2596,32 +2526,25 @@ class RunBamToFastq(Analysis):
         stage_sam_to_fastq = self.get_stage(name='sam_to_fastq')
 
         for sample in self.collection.get_all_samples():
-
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping)
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping)
+            paired_reads_name_list = paired_reads_dict.keys()
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            replicate_keys = replicate_dict.keys()
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
-
-            for replicate_key in replicate_keys:
-
-                for paired_reads in replicate_dict[replicate_key]:
-
+            for paired_reads_name in paired_reads_name_list:
+                for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
                         print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
 
                     # In a BSF Paired Reads object, the SAM or BAM file could potentially
                     # occur as reads1 or reads2 instance variable.
 
-                    if paired_reads.reads1:
-                        file_name = paired_reads.reads1.file_path
+                    if paired_reads.reads_1:
+                        file_name = paired_reads.reads_1.file_path
                         file_name = file_name.rstrip('/ ')
                         file_name = os.path.basename(file_name)
 
@@ -2630,15 +2553,15 @@ class RunBamToFastq(Analysis):
                         if match:
                             sam_to_fastq = stage_sam_to_fastq.add_executable(
                                 executable=Executable(
-                                    name='picard_sam_to_fastq_{}_1'.format(replicate_key),
+                                    name='picard_sam_to_fastq_{}_1'.format(paired_reads_name),
                                     program='bsf_bam2fastq.sh'))
                             self.set_command_configuration(command=sam_to_fastq)
-                            sam_to_fastq.arguments.append(paired_reads.reads1.file_path)
+                            sam_to_fastq.arguments.append(paired_reads.reads_1.file_path)
                             sam_to_fastq.arguments.append(os.path.join(default.classpath_picard, 'picard.jar'))
                             sam_to_fastq.arguments.append(os.path.join(self.genome_directory, match.group(1)))
 
-                    if paired_reads.reads2:
-                        file_name = paired_reads.reads2.file_path
+                    if paired_reads.reads_2:
+                        file_name = paired_reads.reads_2.file_path
                         file_name = file_name.rstrip('/ ')
                         file_name = os.path.basename(file_name)
 
@@ -2646,10 +2569,10 @@ class RunBamToFastq(Analysis):
                         if match:
                             sam_to_fastq = stage_sam_to_fastq.add_executable(
                                 executable=Executable(
-                                    name='picard_sam_to_fastq_{}_2'.format(replicate_key),
+                                    name='picard_sam_to_fastq_{}_2'.format(paired_reads_name),
                                     program='bsf_bam2fastq.sh'))
                             self.set_command_configuration(command=sam_to_fastq)
-                            sam_to_fastq.arguments.append(paired_reads.reads2.file_path)
+                            sam_to_fastq.arguments.append(paired_reads.reads_2.file_path)
                             sam_to_fastq.arguments.append(os.path.join(default.classpath_picard, 'picard.jar'))
                             sam_to_fastq.arguments.append(os.path.join(self.genome_directory, match.group(1)))
 

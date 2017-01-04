@@ -41,7 +41,7 @@ class Bowtie1(Analysis):
     @type prefix: str
     @cvar stage_name_bowtie1: C{bsf.Stage.name} for the Bowtie1 alignment C{bsf.Analysis} stage
     @type stage_name_bowtie1: str
-    @ivar replicate_grouping: Group individual C{bsf.data.PairedReads} objects for processing or run them separately
+    @ivar replicate_grouping: Group individual C{bsf.ngs.PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool
     @ivar bwa_genome_db: Genome sequence file path with BWA index
     @type bwa_genome_db: str | unicode
@@ -66,7 +66,7 @@ class Bowtie1(Analysis):
             stage_list=None,
             collection=None,
             comparisons=None,
-            samples=None,
+            sample_list=None,
             replicate_grouping=False,
             bwa_genome_db=None):
         """Initialise a C{bsf.analyses.bowtie.Bowtie1}.
@@ -93,13 +93,13 @@ class Bowtie1(Analysis):
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.Stage} objects
         @type stage_list: list[bsf.Stage]
-        @param collection: C{bsf.data.Collection}
-        @type collection: bsf.data.Collection
-        @param comparisons: Python C{dict} of Python C{str} key and Python C{list} objects of C{bsf.data.Sample} objects
-        @type comparisons: dict[str, list[bsf.data.Sample]]
-        @param samples: Python C{list} of C{bsf.data.Sample} objects
-        @type samples: list[bsf.data.Sample]
-        @param replicate_grouping: Group individual C{bsf.data.PairedReads} objects for processing or
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
+        @param comparisons: Python C{dict} of Python C{str} key and Python C{list} objects of C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, list[bsf.ngs.Sample]]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
+        @param replicate_grouping: Group individual C{bsf.ngs.PairedReads} objects for processing or
             run them separately
         @type replicate_grouping: bool
         @param bwa_genome_db: Genome sequence file path with BWA index
@@ -121,7 +121,7 @@ class Bowtie1(Analysis):
             stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
-            samples=samples)
+            sample_list=sample_list)
 
         # Sub-class specific ...
 
@@ -183,29 +183,22 @@ class Bowtie1(Analysis):
 
         stage_bowtie1 = self.get_stage(name=self.stage_name_bowtie1)
 
-        for sample in self.samples:
-
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of PairedReads objects.
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
-            replicate_keys = replicate_dict.keys()
-            if not len(replicate_keys):
-                # Skip Sample objects, which PairedReads objects have all been excluded.
-                continue
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+            paired_reads_name_list = paired_reads_dict.keys()
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            for replicate_key in replicate_keys:
-                if not len(replicate_dict[replicate_key]):
+            for paired_reads_name in paired_reads_name_list:
+                if not len(paired_reads_dict[paired_reads_name]):
                     # Skip replicate keys, which PairedReads objects have all been excluded.
                     continue
 
-                prefix_bowtie1 = '_'.join((stage_bowtie1.name, replicate_key))
+                prefix_bowtie1 = '_'.join((stage_bowtie1.name, paired_reads_name))
 
                 # Bowtie1-specific file paths
 
@@ -239,11 +232,11 @@ class Bowtie1(Analysis):
                 reads1 = list()
                 reads2 = list()
 
-                for paired_reads in replicate_dict[replicate_key]:
-                    if paired_reads.reads1:
-                        reads1.append(paired_reads.reads1.file_path)
-                    if paired_reads.reads2:
-                        reads2.append(paired_reads.reads2.file_path)
+                for paired_reads in paired_reads_dict[paired_reads_name]:
+                    if paired_reads.reads_1:
+                        reads1.append(paired_reads.reads_1.file_path)
+                    if paired_reads.reads_2:
+                        reads2.append(paired_reads.reads_2.file_path)
 
                 if len(reads1) and not len(reads2):
                     # For Bowtie1 unpaired reads are an argument, paired come with options -1 <m1> and -2 <m2>.

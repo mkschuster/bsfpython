@@ -30,7 +30,7 @@ A package of classes and methods supporting the Trimmomatic tool.
 import os
 
 from bsf import Analysis, Default, Runnable
-from bsf.data import Reads, PairedReads, Sample
+from bsf.ngs import Reads, PairedReads
 from bsf.process import Command, RunnableStep, RunnableStepJava, RunnableStepMakeDirectory
 from bsf.standards import Configuration
 
@@ -72,7 +72,7 @@ class Trimmomatic(Analysis):
             stage_list=None,
             collection=None,
             comparisons=None,
-            samples=None,
+            sample_list=None,
             adapter_path=None,
             classpath_trimmomatic=None):
         """Initialise a C{bsf.analyses.trimmomatic.Trimmomatic} object.
@@ -99,12 +99,12 @@ class Trimmomatic(Analysis):
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.Stage} objects
         @type stage_list: list[bsf.Stage]
-        @param collection: C{bsf.data.Collection}
-        @type collection: bsf.data.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.data.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.data.Sample]]
-        @param samples: Python C{list} of C{bsf.data.Sample} objects
-        @type samples: list[bsf.data.Sample]
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
         @param adapter_path: Adapter file path
         @type adapter_path: str | unicode
         @param classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
@@ -126,7 +126,7 @@ class Trimmomatic(Analysis):
             stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
-            samples=samples)
+            sample_list=sample_list)
 
         if adapter_path is None:
             self.adapter_path = str()
@@ -171,14 +171,14 @@ class Trimmomatic(Analysis):
         return
 
     def _read_comparisons(self):
-        self.samples.extend(self.collection.get_all_samples())
+        self.sample_list.extend(self.collection.get_all_samples())
 
         return
 
     def run(self):
         """Run the C{bsf.analyses.trimmomatic.Trimmomatic} C{bsf.Analysis}.
 
-        This method changes the C{bsf.data.Collection} object of this C{bsf.Analysis} to update with FASTQ file paths.
+        This method changes the C{bsf.ngs.Collection} object of this C{bsf.Analysis} to update with FASTQ file paths.
         @return:
         @rtype:
         """
@@ -204,29 +204,20 @@ class Trimmomatic(Analysis):
 
         stage_trimmomatic = self.get_stage(name=self.stage_name_trimmomatic)
 
-        for sample in self.samples:
-            assert isinstance(sample, Sample)
-
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(level=1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
-
             # The Trimmomatic analysis does not obey excluded PairedReads objects,
             # more high-level analyses generally do.
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=False)
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=False)
 
-            replicate_keys = replicate_dict.keys()
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+            paired_reads_name_list = paired_reads_dict.keys()
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            for replicate_key in replicate_keys:
-                assert isinstance(replicate_key, str)
-                for paired_reads in replicate_dict[replicate_key]:
-                    assert isinstance(paired_reads, PairedReads)
-
+            for paired_reads_name in paired_reads_name_list:
+                for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
                         print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
 
@@ -234,10 +225,10 @@ class Trimmomatic(Analysis):
 
                     # Maybe this case should be allowed after Trimmomatic trimming,
                     # where only the second Read survives.
-                    if paired_reads.reads2 and not paired_reads.reads1:
+                    if paired_reads.reads_2 and not paired_reads.reads_1:
                         raise Exception('PairedReads object with reads1 but no reads2 object.', UserWarning)
 
-                    prefix_trimmomatic = '_'.join((stage_trimmomatic.name, replicate_key))
+                    prefix_trimmomatic = '_'.join((stage_trimmomatic.name, paired_reads_name))
 
                     if self.debug > 0:
                         print 'Trimmomatic Prefix: {}'.format(prefix_trimmomatic)
@@ -279,7 +270,7 @@ class Trimmomatic(Analysis):
                             java_heap_maximum='Xmx4G',
                             java_jar_path=self.classpath_trimmomatic))
 
-                    if paired_reads.reads2 is None:
+                    if paired_reads.reads_2 is None:
                         runnable_step_trimmomatic.sub_command.sub_command = Command(program='SE')
                     else:
                         runnable_step_trimmomatic.sub_command.sub_command = Command(program='PE')
@@ -288,34 +279,34 @@ class Trimmomatic(Analysis):
                     sub_command = runnable_step_trimmomatic.sub_command.sub_command
                     sub_command.add_option_short(key='trimlog', value=file_path_dict_trimmomatic['trim_log_tsv'])
 
-                    if paired_reads.reads2 is None:
+                    if paired_reads.reads_2 is None:
                         file_path_1u = os.path.join(
                             file_path_dict_trimmomatic['output_directory'],
-                            paired_reads.reads1.name + 'U.fastq.gz')
+                            paired_reads.reads_1.name + 'U.fastq.gz')
 
-                        sub_command.arguments.append(paired_reads.reads1.file_path)
+                        sub_command.arguments.append(paired_reads.reads_1.file_path)
                         sub_command.arguments.append(file_path_1u)
 
                         # Update unpaired Reads information.
 
-                        paired_reads.reads1.name += 'U'
-                        paired_reads.reads1.file_path = file_path_1u
+                        paired_reads.reads_1.name += 'U'
+                        paired_reads.reads_1.file_path = file_path_1u
                     else:
                         file_path_1p = os.path.join(
                             file_path_dict_trimmomatic['output_directory'],
-                            paired_reads.reads1.name + 'P.fastq.gz')
+                            paired_reads.reads_1.name + 'P.fastq.gz')
                         file_path_1u = os.path.join(
                             file_path_dict_trimmomatic['output_directory'],
-                            paired_reads.reads1.name + 'U.fastq.gz')
+                            paired_reads.reads_1.name + 'U.fastq.gz')
                         file_path_2p = os.path.join(
                             file_path_dict_trimmomatic['output_directory'],
-                            paired_reads.reads2.name + 'P.fastq.gz')
+                            paired_reads.reads_2.name + 'P.fastq.gz')
                         file_path_2u = os.path.join(
                             file_path_dict_trimmomatic['output_directory'],
-                            paired_reads.reads2.name + 'U.fastq.gz')
+                            paired_reads.reads_2.name + 'U.fastq.gz')
 
-                        sub_command.arguments.append(paired_reads.reads1.file_path)
-                        sub_command.arguments.append(paired_reads.reads2.file_path)
+                        sub_command.arguments.append(paired_reads.reads_1.file_path)
+                        sub_command.arguments.append(paired_reads.reads_2.file_path)
                         sub_command.arguments.append(file_path_1p)
                         sub_command.arguments.append(file_path_1u)
                         sub_command.arguments.append(file_path_2p)
@@ -323,18 +314,18 @@ class Trimmomatic(Analysis):
 
                         # Update paired Reads information.
 
-                        paired_reads.reads1.name += 'P'
-                        paired_reads.reads1.file_path = file_path_1p
-                        paired_reads.reads2.name += 'P'
-                        paired_reads.reads2.file_path = file_path_2p
+                        paired_reads.reads_1.name += 'P'
+                        paired_reads.reads_1.file_path = file_path_1p
+                        paired_reads.reads_2.name += 'P'
+                        paired_reads.reads_2.file_path = file_path_2p
 
                         # Add unpaired Reads 1 and 2 as separate PairedReads objects to this sample.
 
                         # TODO: This needs to copy Reads and PairedReads objects.
                         sample.add_paired_reads(
                             paired_reads=PairedReads(
-                                reads1=Reads(file_path=file_path_1u, name=paired_reads.reads1.name[:-1] + 'U'),
-                                annotation=paired_reads.annotation,
+                                annotation_dict=paired_reads.annotation_dict,
+                                reads_1=Reads(name=paired_reads.reads_1.name[:-1] + 'U', file_path=file_path_1u),
                                 exclude=paired_reads.exclude,
                                 index_1=paired_reads.index_1,
                                 index_2=paired_reads.index_2,
@@ -342,8 +333,8 @@ class Trimmomatic(Analysis):
 
                         sample.add_paired_reads(
                             paired_reads=PairedReads(
-                                reads1=Reads(file_path=file_path_2u, name=paired_reads.reads2.name[:-1] + 'U'),
-                                annotation=paired_reads.annotation,
+                                annotation_dict=paired_reads.annotation_dict,
+                                reads_1=Reads(name=paired_reads.reads_2.name[:-1] + 'U', file_path=file_path_2u),
                                 exclude=paired_reads.exclude,
                                 index_1=paired_reads.index_1,
                                 index_2=paired_reads.index_2,
@@ -421,30 +412,25 @@ class Trimmomatic(Analysis):
         output_html += '</thead>\n'
         output_html += '<tbody>\n'
 
-        for sample in self.samples:
-
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
-
             # The Trimmomatic analysis does not obey excluded PairedReads objects,
             # more high-level analyses generally do.
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=False)
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=False)
 
-            replicate_keys = replicate_dict.keys()
-            if not len(replicate_keys):
+            paired_reads_name_list = paired_reads_dict.keys()
+            if not len(paired_reads_name_list):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
-            # replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+            # paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            # This analysis is special in that replicate names carry 'P' or 'U' suffices and samples carry additional
-            # replicates after trimming that do no longer correspond to the initial Runnable objects. Sigh.
-            replicate_keys = dict(map(lambda x: (x[:-1], True), replicate_keys)).keys()
-            replicate_keys.sort()
+            # This analysis is special in that read group names carry 'P' or 'U' suffices and samples carry additional
+            # read groups after trimming that do no longer correspond to the initial Runnable objects. Sigh.
+            paired_reads_name_list = dict(map(lambda x: (x[:-1], True), paired_reads_name_list)).keys()
+            paired_reads_name_list.sort()
 
             output_html += '<tr>\n'
             output_html += '<td class="left">{}</td>\n'.format(sample.name)
@@ -454,13 +440,13 @@ class Trimmomatic(Analysis):
             output_html += '<td class="center"></td>\n'  # Summary TSV
             output_html += '</tr>\n'
 
-            for replicate_key in replicate_keys:
+            for paired_reads_name in paired_reads_name_list:
                 # The second read may still not be there.
-                if '_'.join((self.stage_name_trimmomatic, replicate_key)) not in self.runnable_dict:
+                if '_'.join((self.stage_name_trimmomatic, paired_reads_name)) not in self.runnable_dict:
                     continue
 
                 runnable_trimmomatic = self.runnable_dict[
-                    '_'.join((self.stage_name_trimmomatic, replicate_key))]
+                    '_'.join((self.stage_name_trimmomatic, paired_reads_name))]
                 assert isinstance(runnable_trimmomatic, Runnable)
                 file_path_dict_trimmomatic = runnable_trimmomatic.file_path_dict
 
@@ -468,7 +454,7 @@ class Trimmomatic(Analysis):
                 # Sample
                 output_html += '<td class="left"></td>\n'
                 # Aliquot
-                output_html += '<td class="left">{}</td>\n'.format(replicate_key)
+                output_html += '<td class="left">{}</td>\n'.format(paired_reads_name)
                 # Coverage
                 output_html += '<td class="center">' \
                                '<a href="{}">' \

@@ -31,7 +31,7 @@ import csv
 import os
 import re
 
-from bsf.data import ProcessedRunFolder, Project, Sample, PairedReads
+from bsf.ngs import ProcessedRunFolder, Project, Sample, PairedReads
 from bsf.standards import Default
 
 
@@ -69,19 +69,19 @@ input_directory = Default.get_absolute_path(file_path=args.input_directory, defa
 
 prf = ProcessedRunFolder.from_file_path(file_path=input_directory, file_type='Automatic')
 
-project_names = prf.projects.keys()
-project_names.sort(cmp=lambda x, y: cmp(x, y))
+project_name_list = prf.project_dict.keys()
+project_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-for project_name in project_names:
+for project_name in project_name_list:
 
-    project = prf.projects[project_name]
+    project = prf.project_dict[project_name]
     assert isinstance(project, Project)
 
-    sample_names = project.samples.keys()
-    sample_names.sort(cmp=lambda x, y: cmp(x, y))
+    sample_name_list = project.sample_dict.keys()
+    sample_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-    for sample_name in sample_names:
-        sample = project.samples[sample_name]
+    for sample_name in sample_name_list:
+        sample = project.sample_dict[sample_name]
         assert isinstance(sample, Sample)
 
         row_dict = {'ProcessedRunFolder': prf.name, 'Project': project.name, 'Sample': sample.name}
@@ -89,11 +89,11 @@ for project_name in project_names:
         if args.full:
             for paired_reads in sample.paired_reads_list:
                 assert isinstance(paired_reads, PairedReads)
-                if paired_reads.reads1:
-                    row_dict['File1'] = paired_reads.reads1.file_path
+                if paired_reads.reads_1:
+                    row_dict['File1'] = paired_reads.reads_1.file_path
                     # row_dict['Reads1'] = paired_reads.reads1.name
                     # Deduce the Reads.name from the base name without file extensions.
-                    file_name = os.path.basename(paired_reads.reads1.file_path.rstrip('/ '))
+                    file_name = os.path.basename(paired_reads.reads_1.file_path.rstrip('/ '))
                     # Remove any file-extensions like .bam, .fastq.gz, ...
                     match = re.search(pattern=r'^([^.]*)', string=file_name)
                     if match:
@@ -102,11 +102,11 @@ for project_name in project_names:
                 else:
                     row_dict['File1'] = str()
                     row_dict['Reads1'] = str()
-                if paired_reads.reads2:
-                    row_dict['File2'] = paired_reads.reads2.file_path
+                if paired_reads.reads_2:
+                    row_dict['File2'] = paired_reads.reads_2.file_path
                     # row_dict['Reads2'] = paired_reads.reads2.name
                     # Deduce the Reads.name from the base name without file extensions.
-                    file_name = os.path.basename(paired_reads.reads2.file_path.rstrip('/ '))
+                    file_name = os.path.basename(paired_reads.reads_2.file_path.rstrip('/ '))
                     # Remove any file-extensions like .bam, .fastq.gz, ...
                     match = re.search(pattern=r'^([^.]*)', string=file_name)
                     if match:

@@ -35,7 +35,7 @@ import warnings
 
 from bsf import Analysis, Runnable
 from bsf.annotation import AnnotationSheet
-from bsf.data import PairedReads
+from bsf.ngs import PairedReads
 from bsf.executables import BWA
 from bsf.process import Command, Executable, RunnableStep, RunnableStepJava, RunnableStepPicard, RunnableStepLink, \
     RunnableStepMove
@@ -190,7 +190,7 @@ class VariantCallingGATK(Analysis):
     @type stage_name_summary: str
     @cvar stage_name_somatic: C{bsf.Stage.name} for the somatic stage
     @type stage_name_somatic: str
-    @ivar replicate_grouping: Group individual C{bsf.data.PairedReads} objects for processing or run them separately
+    @ivar replicate_grouping: Group individual C{bsf.ngs.PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool
     @ivar bwa_genome_db: Genome sequence file path with BWA index
     @type bwa_genome_db: str | unicode
@@ -289,7 +289,7 @@ class VariantCallingGATK(Analysis):
             stage_list=None,
             collection=None,
             comparisons=None,
-            samples=None,
+            sample_list=None,
             replicate_grouping=False,
             bwa_genome_db=None,
             comparison_path=None,
@@ -350,14 +350,14 @@ class VariantCallingGATK(Analysis):
         @type debug: int
         @param stage_list: Python C{list} of C{bsf.Stage} objects
         @type stage_list: list[bsf.Stage]
-        @param collection: C{bsf.data.Collection}
-        @type collection: bsf.data.Collection
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of Python C{str} key and Python C{list} value objects of
-            C{bsf.data.Sample} objects
-        @type comparisons: dict[str, list[bsf.data.Sample]]
-        @param samples: Python C{list} of C{bsf.data.Sample} objects
-        @type samples: list[bsf.data.Sample]
-        @param replicate_grouping: Group individual C{bsf.data.PairedReads} objects
+            C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, list[bsf.ngs.Sample]]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
+        @param replicate_grouping: Group individual C{bsf.ngs.PairedReads} objects
             for processing or run them separately
         @type replicate_grouping: bool
         @param bwa_genome_db: Genome sequence file path with BWA index
@@ -451,7 +451,7 @@ class VariantCallingGATK(Analysis):
             stage_list=stage_list,
             collection=collection,
             comparisons=comparisons,
-            samples=samples)
+            sample_list=sample_list)
 
         # Sub-class specific ...
 
@@ -1600,7 +1600,7 @@ class VariantCallingGATK(Analysis):
         # This cannot be done in the super-class, because Samples are only put into the Analysis.samples list
         # by the _read_comparisons method.
 
-        self.samples.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
         stage_align_lane = self.get_stage(name=self.stage_name_align_lane)
         stage_process_lane = self.get_stage(name=self.stage_name_process_lane)
@@ -1619,29 +1619,24 @@ class VariantCallingGATK(Analysis):
 
         vc_summary_dependency_list = list()
 
-        for sample in self.samples:
-
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of PairedReads objects.
-
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
-            replicate_keys = replicate_dict.keys()
-            if not len(replicate_keys):
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
+            paired_reads_name_list = paired_reads_dict.keys()
+            if not len(paired_reads_name_list):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
             vc_process_sample_dependencies = list()
             vc_process_sample_replicates = list()
 
-            for replicate_key in replicate_keys:
-                if not len(replicate_dict[replicate_key]):
-                    # Skip replicate keys, which PairedReads objects have all been excluded.
+            for paired_reads_name in paired_reads_name_list:
+                if not len(paired_reads_dict[paired_reads_name]):
+                    # Skip names, which PairedReads objects have all been excluded.
                     continue
 
                 #################################
@@ -1652,7 +1647,7 @@ class VariantCallingGATK(Analysis):
                 # - Picard SamToFastq
                 # - BWA MEM
 
-                bwa = BWA(name='variant_calling_bwa_{}'.format(replicate_key), analysis=self)
+                bwa = BWA(name='variant_calling_bwa_{}'.format(paired_reads_name), analysis=self)
                 # Instead of adding the BWA Executable to the Stage, it gets serialised into the pickler_file.
                 # stage_bwa.add_executable(executable=bwa)
 
@@ -1685,12 +1680,12 @@ class VariantCallingGATK(Analysis):
 
                 read_group = str()
 
-                for paired_reads in replicate_dict[replicate_key]:
+                for paired_reads in paired_reads_dict[paired_reads_name]:
                     assert isinstance(paired_reads, PairedReads)
-                    if paired_reads.reads1:
-                        reads1.append(paired_reads.reads1.file_path)
-                    if paired_reads.reads2:
-                        reads2.append(paired_reads.reads2.file_path)
+                    if paired_reads.reads_1:
+                        reads1.append(paired_reads.reads_1.file_path)
+                    if paired_reads.reads_2:
+                        reads2.append(paired_reads.reads_2.file_path)
                     if not read_group and paired_reads.read_group:
                         read_group = paired_reads.read_group
 
@@ -1709,11 +1704,11 @@ class VariantCallingGATK(Analysis):
 
                 file_path_align_lane = {
                     # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
-                    # It is currently based on the stage_align_lane.name and replicate_key.
+                    # It is currently based on the stage_align_lane.name and paired_reads_name.
                     # The script should also be changed to pre-set all file names beforehand.
-                    'aligned_bam': '{}_{}.bam'.format(stage_align_lane.name, replicate_key),
-                    'aligned_bai': '{}_{}.bai'.format(stage_align_lane.name, replicate_key),
-                    'aligned_md5': '{}_{}.bam.md5'.format(stage_align_lane.name, replicate_key),
+                    'aligned_bam': '{}_{}.bam'.format(stage_align_lane.name, paired_reads_name),
+                    'aligned_bai': '{}_{}.bai'.format(stage_align_lane.name, paired_reads_name),
+                    'aligned_md5': '{}_{}.bam.md5'.format(stage_align_lane.name, paired_reads_name),
                 }
 
                 # Normally, the bwa object would be pushed onto the Stage list.
@@ -1721,7 +1716,7 @@ class VariantCallingGATK(Analysis):
 
                 pickler_dict_align_lane = {
                     'prefix': stage_align_lane.name,
-                    'replicate_key': replicate_key,
+                    'replicate_key': paired_reads_name,
                     'classpath_gatk': self.classpath_gatk,
                     'classpath_picard': self.classpath_picard,
                     'bwa_executable': bwa,
@@ -1729,7 +1724,7 @@ class VariantCallingGATK(Analysis):
 
                 pickler_path = os.path.join(
                     self.genome_directory,
-                    '{}_{}.pkl'.format(stage_align_lane.name, replicate_key))
+                    '{}_{}.pkl'.format(stage_align_lane.name, paired_reads_name))
                 pickler_file = open(pickler_path, 'wb')
                 pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
                 pickler.dump(obj=pickler_dict_align_lane)
@@ -1739,7 +1734,7 @@ class VariantCallingGATK(Analysis):
 
                 run_bwa = stage_align_lane.add_executable(
                     executable=Executable(
-                        name='_'.join((stage_align_lane.name, replicate_key)),
+                        name='_'.join((stage_align_lane.name, paired_reads_name)),
                         program='bsf_run_bwa.py'))
 
                 # Only submit this Executable if the final result file does not exist.
@@ -1749,7 +1744,7 @@ class VariantCallingGATK(Analysis):
                 # Check also for existence of a new-style Runnable status file.
                 if os.path.exists(os.path.join(
                         stage_align_lane.working_directory,
-                        '_'.join((stage_align_lane.name, replicate_key, 'completed.txt')))):
+                        '_'.join((stage_align_lane.name, paired_reads_name, 'completed.txt')))):
                     run_bwa.submit = False
 
                     # Set run_bwa options.
@@ -1771,18 +1766,18 @@ class VariantCallingGATK(Analysis):
                 # GATK PrintReads                       (process_lane_gatk_print_reads)
                 # Picard CollectAlignmentSummaryMetrics (process_lane_picard_collect_alignment_summary_metrics)
 
-                prefix_lane = '_'.join((stage_process_lane.name, replicate_key))
+                prefix_lane = '_'.join((stage_process_lane.name, paired_reads_name))
 
                 # Lane-specific file paths
 
                 file_path_dict_lane = {
                     'temporary_directory': prefix_lane + '_temporary',
                     # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
-                    # It is currently based on the stage_align_lane.name and replicate_key.
+                    # It is currently based on the stage_align_lane.name and paired_reads_name.
                     # The script should also be changed to pre-set all file names beforehand.
-                    'aligned_bam': '{}_{}.bam'.format(stage_align_lane.name, replicate_key),
-                    'aligned_bai': '{}_{}.bai'.format(stage_align_lane.name, replicate_key),
-                    'aligned_md5': '{}_{}.bam.md5'.format(stage_align_lane.name, replicate_key),
+                    'aligned_bam': '{}_{}.bam'.format(stage_align_lane.name, paired_reads_name),
+                    'aligned_bai': '{}_{}.bai'.format(stage_align_lane.name, paired_reads_name),
+                    'aligned_md5': '{}_{}.bam.md5'.format(stage_align_lane.name, paired_reads_name),
                     'duplicates_marked_bam': prefix_lane + '_duplicates_marked.bam',
                     'duplicates_marked_bai': prefix_lane + '_duplicates_marked.bai',
                     'duplicates_marked_md5': prefix_lane + '_duplicates_marked.bam.md5',
@@ -2137,7 +2132,7 @@ class VariantCallingGATK(Analysis):
                 file_path=self.bwa_genome_db)
 
             if len(vc_process_sample_replicates) == 1:
-                # If there is only one replicate, sample-level read processing can be skipped.
+                # If there is only one read group, sample-level read processing can be skipped.
                 # Rename files on the basis of the first and only list component.
                 file_path_dict_lane = vc_process_sample_replicates[0]
                 assert isinstance(file_path_dict_lane, dict)
@@ -2454,8 +2449,8 @@ class VariantCallingGATK(Analysis):
             # 'Cohort Name' annotation, or if it does not exist, under the cohort name defined in the
             # Analysis in the configuration file.
 
-            if 'Cohort Name' in sample.annotation:
-                cohort_key = sample.annotation['Cohort Name'][0]
+            if 'Cohort Name' in sample.annotation_dict:
+                cohort_key = sample.annotation_dict['Cohort Name'][0]
             else:
                 cohort_key = self.cohort_name
 
@@ -2496,16 +2491,16 @@ class VariantCallingGATK(Analysis):
             target_interval_path = str()
             probe_interval_path = str()
 
-            if 'Target Name' in sample.annotation:
-                target_name_list = sample.annotation['Target Name']
+            if 'Target Name' in sample.annotation_dict:
+                target_name_list = sample.annotation_dict['Target Name']
                 if len(target_name_list) > 1:
                     warnings.warn('More than one set of Target Name annotations is currently not supported.\n'
                                   'Choosing the first one of {!r} for sample {!r}'.
                                   format(target_name_list, sample.name))
                 target_interval_name = target_name_list[0]
 
-            if 'Target Intervals' in sample.annotation:
-                target_interval_list = sample.annotation['Target Intervals']
+            if 'Target Intervals' in sample.annotation_dict:
+                target_interval_list = sample.annotation_dict['Target Intervals']
                 if len(target_interval_list) > 1:
                     warnings.warn('More than one set of Target Interval annotations is currently not supported.\n'
                                   'Choosing the first one of {!r} for sample {!r}'.
@@ -2516,8 +2511,8 @@ class VariantCallingGATK(Analysis):
                         file_path=target_interval_path,
                         default_path=Default.absolute_intervals())
 
-            if 'Probe Intervals' in sample.annotation:
-                probe_interval_list = sample.annotation['Probe Intervals']
+            if 'Probe Intervals' in sample.annotation_dict:
+                probe_interval_list = sample.annotation_dict['Probe Intervals']
                 if len(probe_interval_list) > 1:
                     warnings.warn('More than one set of Probe Interval annotations is currently not supported.\n'
                                   'Choosing the first one of {!r} for sample {!r}'.
@@ -3226,7 +3221,7 @@ class VariantCallingGATK(Analysis):
                 key='variant',
                 value=file_path_dict_cohort['recalibrated_snp_recalibrated_indel_vcf'])
             runnable_step.add_gatk_option(key='out', value=file_path_dict_cohort['multi_sample_vcf'])
-            for sample in self.samples:
+            for sample in self.sample_list:
                 runnable_step.add_gatk_option(key='sample_name', value=sample.name, override=True)
             runnable_step.add_gatk_switch(key='excludeNonVariants')
         else:
@@ -3363,15 +3358,10 @@ class VariantCallingGATK(Analysis):
         # GATK SelectVariants   (split_cohort_gatk_select_variants)
         # GATK VariantsToTable  (split_cohort_gatk_variants_to_table)
 
-        for sample in self.samples:
-
+        for sample in self.sample_list:
             # Get all PairedReads objects solely to exclude samples without any.
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of PairedReads objects.
-
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
-            if not len(replicate_dict):
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
+            if not len(paired_reads_dict):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
 
@@ -3872,22 +3862,18 @@ class VariantCallingGATK(Analysis):
         directory_results_by_type = self._create_directory(
             path=os.path.join(directory_results, 'by_type'))
 
-        for sample in self.samples:
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
-
-            replicate_keys = replicate_dict.keys()
-            if not len(replicate_keys):
+            paired_reads_name_list = paired_reads_dict.keys()
+            if not len(paired_reads_name_list):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
             runnable_process_sample = self.runnable_dict[
                 '_'.join((self.stage_name_process_sample, sample.name))]
@@ -4052,23 +4038,18 @@ class VariantCallingGATK(Analysis):
         output_hub += 'group variants\n'
         output_hub += '\n'
 
-        for sample in self.samples:
-
+        for sample in self.sample_list:
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
-            # bsf.data.Sample.get_all_paired_reads() returns a Python dict of
-            # Python str key and Python list of Python list objects
-            # of bsf.data.PairedReads objects.
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
-            replicate_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
-
-            replicate_keys = replicate_dict.keys()
-            if not len(replicate_keys):
+            paired_reads_name_list = paired_reads_dict.keys()
+            if not len(paired_reads_name_list):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
-            replicate_keys.sort(cmp=lambda x, y: cmp(x, y))
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
             runnable_process_sample = self.runnable_dict[
                 '_'.join((self.stage_name_process_sample, sample.name))]
@@ -4170,9 +4151,9 @@ class VariantCallingGATK(Analysis):
                 output_html += '<td class="center"></td>\n'
             output_html += '</tr>\n'
 
-            for replicate_key in replicate_keys:
+            for paired_reads_name in paired_reads_name_list:
                 runnable_process_lane = self.runnable_dict[
-                    '_'.join((self.stage_name_process_lane, replicate_key))]
+                    '_'.join((self.stage_name_process_lane, paired_reads_name))]
                 assert isinstance(runnable_process_lane, Runnable)
                 output_html += '<tr>\n'
                 output_html += '<td class="left"></td>\n'  # Sample
@@ -4180,7 +4161,7 @@ class VariantCallingGATK(Analysis):
                 output_html += '<td class="center"></td>\n'  # Variants TSV
                 output_html += '<td class="center"></td>\n'  # Aligned BAM
                 output_html += '<td class="center"></td>\n'  # Aligned BAI
-                output_html += '<td class="left">{}</td>\n'.format(replicate_key)
+                output_html += '<td class="left">{}</td>\n'.format(paired_reads_name)
                 output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \
                     format(runnable_process_lane.file_path_dict['duplicate_metrics'])
                 output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \

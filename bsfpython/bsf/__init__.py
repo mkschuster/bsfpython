@@ -43,7 +43,7 @@ import stat
 
 from bsf import defaults
 from bsf.argument import *
-from bsf.data import Collection, Sample
+from bsf.ngs import Collection, Sample
 from bsf.process import Command, Executable, RunnableStep
 from bsf.standards import Configuration, Default
 
@@ -83,12 +83,12 @@ class Analysis(object):
     @type stage_list: list[bsf.Stage]
     @ivar runnable_dict: Python C{dict} of Python C{str} (C{bsf.Runnable.name}) key data and C{bsf.Runnable} value data
     @type runnable_dict: dict[bsf.Runnable.name, bsf.Runnable]
-    @ivar collection: C{bsf.data.Collection}
-    @type collection: bsf.data.Collection
+    @ivar collection: C{bsf.ngs.Collection}
+    @type collection: bsf.ngs.Collection
     @ivar comparisons: Python C{dict} of comparisons
     @type comparisons: dict[str, Any]
-    @ivar samples: Python C{list} of C{bsf.data.Sample} objects
-    @type samples: list[bsf.data.Sample]
+    @ivar sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+    @type sample_list: list[bsf.ngs.Sample]
     """
 
     name = 'Analysis'
@@ -159,7 +159,7 @@ class Analysis(object):
             runnable_dict=None,
             collection=None,
             comparisons=None,
-            samples=None):
+            sample_list=None):
         """Initialise a C{bsf.Analysis}.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -193,13 +193,13 @@ class Analysis(object):
         @type stage_list: list[bsf.Stage]
         @param runnable_dict: Python C{dict} of Python C{str} (C{bsf.Runnable.name}) and C{bsf.Runnable} value data
         @type runnable_dict: dict[bsf.Runnable.name, bsf.Runnable]
-        @param collection: C{bsf.data.Collection}
-        @type collection: bsf.data.Collection
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of C{bsf.Analysis}-specific objects
             (i.e. Python tuple for RNA-Seq and ChIPSeqComparison for ChIPSeq)
         @type comparisons: dict[str, Any]
-        @param samples: Python C{list} of C{bsf.data.Sample} objects
-        @type samples: list[bsf.data.Sample]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
         @return:
         @rtype:
         """
@@ -289,10 +289,10 @@ class Analysis(object):
         else:
             self.comparisons = comparisons
 
-        if samples is None:
-            self.samples = list()
+        if sample_list is None:
+            self.sample_list = list()
         else:
-            self.samples = samples
+            self.sample_list = sample_list
 
         return
 
@@ -322,20 +322,21 @@ class Analysis(object):
         output += '{}  runnable_dict: {!r}\n'.format(indent, self.runnable_dict)
         output += '{}  collection: {!r}\n'.format(indent, self.collection)
         output += '{}  comparisons: {!r}\n'.format(indent, self.comparisons)
-        output += '{}  samples: {!r}\n'.format(indent, self.samples)
+        output += '{}  sample_list: {!r}\n'.format(indent, self.sample_list)
 
         output += '{}  Python dict of Runnable objects:\n'.format(indent)
-        keys = self.runnable_dict.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
-        for key in keys:
-            assert isinstance(key, str)
-            output += '{}    Key: {!r} Runnable: {!r}\n'.format(indent, key, self.runnable_dict[key])
-            runnable = self.runnable_dict[key]
+        runnable_name_list = self.runnable_dict.keys()
+        runnable_name_list.sort(cmp=lambda x, y: cmp(x, y))
+        for runnable_name in runnable_name_list:
+            assert isinstance(runnable_name, str)
+            output += '{}    Key: {!r} Runnable: {!r}\n'.format(
+                indent, runnable_name, self.runnable_dict[runnable_name])
+            runnable = self.runnable_dict[runnable_name]
             assert isinstance(runnable, Runnable)
             output += runnable.trace(level=level + 2)
 
         output += '{}  Python List of Sample objects:\n'.format(indent)
-        for sample in self.samples:
+        for sample in self.sample_list:
             assert isinstance(sample, Sample)
             output += '{}    Sample name: {!r} file_path: {!r}\n'.format(indent, sample.name, sample.file_path)
 
@@ -382,21 +383,21 @@ class Analysis(object):
         return runnable
 
     def add_sample(self, sample):
-        """Add a C{bsf.data.Sample} to the Python C{list} of C{bsf.data.Sample} objects.
+        """Add a C{bsf.ngs.Sample} to the Python C{list} of C{bsf.ngs.Sample} objects.
 
-        If the C{bsf.data.Sample} already exists in the C{bsf.Analysis}, the method just returns.
+        If the C{bsf.ngs.Sample} already exists in the C{bsf.Analysis}, the method just returns.
         The check is based on the Python 'in' comparison operator and in lack of a specific
         __cmp__ method, relies on object identity (i.e. address).
 
-        @param sample: C{bsf.data.Sample}
-        @type sample: bsf.data.Sample
+        @param sample: C{bsf.ngs.Sample}
+        @type sample: bsf.ngs.Sample
         @return:
         @rtype:
         """
         assert isinstance(sample, Sample)
 
-        if sample not in self.samples:
-            self.samples.append(sample)
+        if sample not in self.sample_list:
+            self.sample_list.append(sample)
 
         return
 
@@ -1137,13 +1138,12 @@ class Analysis(object):
             pass
 
         if track_dict:
-
             options_dict['hgct_customText'] = 'track'
 
-            keys = track_dict.keys()
-            keys.sort(cmp=lambda x, y: cmp(x, y))
+            key_list = track_dict.keys()
+            key_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            for key in keys:
+            for key in key_list:
                 options_dict['hgct_customText'] += ' {}={}'.format(key, track_dict[key])
 
         if ucsc_protocol is None or not ucsc_protocol:
@@ -1258,11 +1258,11 @@ class Analysis(object):
             genome_version_dict[ucsc_genome_version] = '{}/{}_trackDB.txt'.format(self.genome_version, prefix)
 
         output = str()
-        keys = genome_version_dict.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
-        for key in keys:
-            output += 'genome {}\n'.format(key)
-            output += 'trackDb {}\n'.format(genome_version_dict[key])
+        genome_version_list = genome_version_dict.keys()
+        genome_version_list.sort(cmp=lambda x, y: cmp(x, y))
+        for genome_version in genome_version_list:
+            output += 'genome {}\n'.format(genome_version)
+            output += 'trackDb {}\n'.format(genome_version_dict[genome_version])
             output += '\n'
 
         file_handle = open(name=file_path, mode='w')
@@ -1345,9 +1345,9 @@ class Analysis(object):
 
         # Pickle all Runnable objects.
 
-        for key in self.runnable_dict.keys():
-            assert isinstance(key, str)
-            self.runnable_dict[key].to_pickler_path()
+        for runnable_name in self.runnable_dict.keys():
+            assert isinstance(runnable_name, str)
+            self.runnable_dict[runnable_name].to_pickler_path()
 
         # Submit all Executable objects of all Stage objects.
 
@@ -1872,16 +1872,16 @@ class Runnable(object):
         output += '{}  debug: {!r}\n'.format(indent, self.debug)
 
         output += '{}  Python dict of Python str (cache path) objects:\n'.format(indent)
-        keys = self.cache_path_dict.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
-        for key in keys:
+        key_list = self.cache_path_dict.keys()
+        key_list.sort(cmp=lambda x, y: cmp(x, y))
+        for key in key_list:
             assert isinstance(key, str)
             output += '{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.cache_path_dict[key])
 
         output += '{}  Python dict of Python str (file path) objects:\n'.format(indent)
-        keys = self.file_path_dict.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
-        for key in keys:
+        key_list = self.file_path_dict.keys()
+        key_list.sort(cmp=lambda x, y: cmp(x, y))
+        for key in key_list:
             assert isinstance(key, str)
             output += '{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.file_path_dict[key])
 
