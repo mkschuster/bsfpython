@@ -34,7 +34,6 @@ import stat
 
 
 def scan_directory(directory_path, debug=0):
-    # type: (str | unicode, int) -> None
     """Scan a directory for symbolic links or directories recursively.
 
     @param directory_path: Directory path
@@ -91,6 +90,7 @@ def scan_directory(directory_path, debug=0):
                 else:
                     print 'No write permission for link in directory {!r}.'.format(directory_path)
 
+    return
 
 argument_parser = ArgumentParser(
     description='Fix symbolic links between the BSF samples and BSF sequences directory.')

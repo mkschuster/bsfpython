@@ -381,12 +381,12 @@ class Command(object):
 
         # Add all options and switches in alphabetical order.
 
-        keys = self.options.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
+        argument_key_list = self.options.keys()
+        argument_key_list.sort(cmp=lambda x, y: cmp(x, y))
 
-        for key in keys:
-            assert isinstance(key, str)
-            options_list = self.options[key]
+        for argument_key in argument_key_list:
+            assert isinstance(argument_key, str)
+            options_list = self.options[argument_key]
             assert isinstance(options_list, list)
             for argument in options_list:
                 assert isinstance(argument, Argument)
@@ -436,12 +436,12 @@ class Command(object):
 
         # Add all options and switches in alphabetical order.
 
-        keys = self.options.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
+        argument_key_list = self.options.keys()
+        argument_key_list.sort(cmp=lambda x, y: cmp(x, y))
 
-        for key in keys:
-            assert isinstance(key, str)
-            options_list = self.options[key]
+        for argument_key in argument_key_list:
+            assert isinstance(argument_key, str)
+            options_list = self.options[argument_key]
             assert isinstance(options_list, list)
             for argument in options_list:
                 assert isinstance(argument, Argument)

@@ -326,11 +326,11 @@ class LinearTapeFileSystemCopy(object):
         ltfs_data = xml.etree.ElementTree.Element(tag='data')
         ltfs_specification.append(element=ltfs_data)
 
-        ltfs_directory_keys = self.ltfs_directory_dict.keys()
-        ltfs_directory_keys.sort(lambda x, y: cmp(x, y))
+        source_path_list = self.ltfs_directory_dict.keys()
+        source_path_list.sort(lambda x, y: cmp(x, y))
 
-        for ltfs_directory_key in ltfs_directory_keys:
-            ltfs_directory = self.ltfs_directory_dict[ltfs_directory_key]
+        for source_path in source_path_list:
+            ltfs_directory = self.ltfs_directory_dict[source_path]
             assert isinstance(ltfs_directory, LinearTapeFileSystemDirectory)
 
             ltfs_file = xml.etree.ElementTree.Element(tag='file')
