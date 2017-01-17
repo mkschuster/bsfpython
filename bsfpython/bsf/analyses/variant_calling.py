@@ -998,37 +998,37 @@ class VariantCallingGATK(Analysis):
         for sample in self.collection.get_all_samples():
             self.add_sample(sample=sample)
 
-        if comparison_path:
-            annotation_sheet = AnnotationSheet.from_file_path(file_path=comparison_path, name='Somatic Comparisons')
+        if not comparison_path:
+            return
 
-            for row_dict in annotation_sheet.row_dicts:
-                key = str()
-                comparison_groups = list()
+        annotation_sheet = AnnotationSheet.from_file_path(file_path=comparison_path, name='Somatic Comparisons')
 
-                if self.debug > 0:
-                    print "Comparison sheet row_dict {!r}".format(row_dict)
+        for row_dict in annotation_sheet.row_dicts:
+            key = str()
+            comparison_list = list()
 
-                for prefix in ('Normal', 'Tumor'):
-                    # TODO: Collection.get_samples_from_row_dict() may not work with normalised
-                    # Sample Annotation Sheets.
-                    group_name, group_samples = self.collection.get_samples_from_row_dict(
-                        row_dict=row_dict, prefix=prefix)
-                    if group_name and len(group_samples):
-                        key += group_name
-                        key += '__'
-                        # key = '__'.join((key, group_name))
-                        comparison_groups.append((group_name, group_samples))
-                        # Also expand each Python list of Sample objects to get all those Sample objects
-                        # that this Analysis needs considering.
-                        for sample in group_samples:
-                            if self.debug > 1:
-                                print '  {} Sample name: {!r} file_path: {!r}'. \
-                                    format(prefix, sample.name, sample.file_path)
-                                # print sample.trace(1)
-                                # self.add_sample(sample=sample)
+            if self.debug > 0:
+                print "Comparison sheet row_dict {!r}".format(row_dict)
 
-                # Remove the last '__' from the key.
-                self.comparisons[key[:-2]] = comparison_groups
+            for prefix in ('Normal', 'Tumor'):
+                group_name, group_samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix=prefix)
+                if group_name and len(group_samples):
+                    key += group_name
+                    key += '__'
+                    # key = '__'.join((key, group_name))
+                    comparison_list.append((group_name, group_samples))
+                    # Also expand each Python list of Sample objects to get all those Sample objects
+                    # that this Analysis needs considering.
+                    for sample in group_samples:
+                        if self.debug > 1:
+                            print '  {} Sample name: {!r} file_path: {!r}'. \
+                                format(prefix, sample.name, sample.file_path)
+                            # print sample.trace(1)
+                            # Adding individual samples is not required, as all samples are automatically added above.
+                            # self.add_sample(sample=sample)
+
+            # Remove the last '__' from the key.
+            self.comparisons[key[:-2]] = comparison_list
 
         return
 
@@ -2875,13 +2875,13 @@ class VariantCallingGATK(Analysis):
             runnable_process_cohort_scatter.add_runnable_step(
                 RunnableStepMove(
                     name='process_cohort_gather_move_vcf',
-                    source_path=file_path_dict_cohort_scatter['gvcf_vcf'],
+                    source_path=file_path_dict_cohort_scatter['vcf'],
                     target_path=file_path_dict_cohort_scatter['genotyped_raw_vcf']))
 
             runnable_process_cohort_scatter.add_runnable_step(
                 RunnableStepMove(
                     name='process_cohort_gather_move_tbi',
-                    source_path=file_path_dict_cohort_scatter['gvcf_tbi'],
+                    source_path=file_path_dict_cohort_scatter['tbi'],
                     target_path=file_path_dict_cohort_scatter['genotyped_raw_vcf']))
 
             # return runnable_merge_cohort_scatter
@@ -3565,7 +3565,6 @@ class VariantCallingGATK(Analysis):
             print "Somatic variant calling: {!r}".format(key_list)
 
         for key in key_list:
-
             # The list of samples must contain exactly one normal and one tumor sample.
             if len(self.comparisons[key]) != 2:
                 continue
@@ -3589,6 +3588,217 @@ class VariantCallingGATK(Analysis):
                 'annotated_tsv': prefix_somatic + '_annotated.tsv',
             }
 
+            # Run the GATK MuTect2 analysis to characterise somatic variants in a scatter gather approach.
+
+            vc_somatic_scatter_runnable_list = list()
+            runnable_somatic_scatter = None
+            for tile_index in range(0, len(self._tile_region_list)):
+                prefix_somatic_scatter = '_'.join((
+                    stage_somatic.name, key, 'scatter', str(tile_index)))
+
+                file_path_dict_somatic_scatter = {
+                    'temporary_directory': prefix_somatic_scatter + '_temporary',
+                    # The 'vcf' and 'tbi' keys are private to the scatter and gather dictionaries,
+                    # but shared between them, to that the scatter Runnable objects can be put into the initial list
+                    # for hierarchical gathering.
+                    'vcf': prefix_somatic_scatter + '_somatic.vcf.gz',
+                    'tbi': prefix_somatic_scatter + '_somatic.vcf.gz.tbi',
+                }
+
+                runnable_somatic_scatter = self.add_runnable(
+                    runnable=Runnable(
+                        name=prefix_somatic_scatter,
+                        code_module='bsf.runnables.generic',
+                        working_directory=self.genome_directory,
+                        cache_directory=self.cache_directory,
+                        cache_path_dict=self._cache_path_dict,
+                        file_path_dict=file_path_dict_somatic_scatter,
+                        debug=self.debug))
+                executable_somatic_scatter = self.set_stage_runnable(
+                    stage=stage_somatic,
+                    runnable=runnable_somatic_scatter)
+                executable_somatic_scatter.dependencies.append(
+                    '_'.join((stage_process_sample.name, self.comparisons[key][0][1][0].name)))
+                executable_somatic_scatter.dependencies.append(
+                    '_'.join((stage_process_sample.name, self.comparisons[key][-1][1][0].name)))
+
+                vc_somatic_scatter_runnable_list.append(runnable_somatic_scatter)
+
+                reference_somatic_scatter = runnable_somatic_scatter.get_absolute_cache_file_path(
+                    file_path=self.bwa_genome_db)
+
+                runnable_step = runnable_somatic_scatter.add_runnable_step(
+                    runnable_step=RunnableStepGATK(
+                        name='somatic_gatk_mutect2_scatter',
+                        java_temporary_path=file_path_dict_somatic_scatter['temporary_directory'],
+                        java_heap_maximum='Xmx4G',
+                        gatk_classpath=self.classpath_gatk))
+                assert isinstance(runnable_step, RunnableStepGATK)
+                runnable_step.add_gatk_option(key='analysis_type', value='MuTect2')
+                runnable_step.add_gatk_option(key='reference_sequence', value=reference_somatic_scatter)
+                for interval in self.exclude_intervals_list:
+                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                # for interval in self.include_intervals_list:
+                #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                # if self.interval_padding:
+                #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                for region_tuple in self._tile_region_list[tile_index]:
+                    # The list of tiles is initialised to an empty tile to trigger at least one process.
+                    # Do not assign an interval in such cases.
+                    if region_tuple[0]:
+                        runnable_step.add_gatk_option(
+                            key='intervals',
+                            value='{:s}:{:d}-{:d}'.format(region_tuple[0], region_tuple[1], region_tuple[2]),
+                            override=True)
+                if self.known_sites_discovery:
+                    runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
+                for file_path in self.known_somatic_discovery:
+                    runnable_step.add_gatk_option(key='cosmic', value=file_path, override=True)
+                runnable_step.add_gatk_option(
+                    key='input_file:normal',
+                    value='_'.join((stage_process_sample.name, self.comparisons[key][0][1][0].name, 'realigned.bam')))
+                runnable_step.add_gatk_option(
+                    key='input_file:tumor',
+                    value='_'.join((stage_process_sample.name, self.comparisons[key][-1][1][0].name, 'realigned.bam')))
+                runnable_step.add_gatk_option(key='out', value=file_path_dict_somatic_scatter['vcf'])
+
+            # Gather
+
+            # If there is only one tile, no need to gather, just rename the file and return the Runnable.
+
+            if len(self._tile_region_list) == 1:
+                file_path_dict_somatic_scatter = runnable_somatic_scatter.file_path_dict
+                # Add sample-specific keys to the file path dictionary.
+                file_path_dict_somatic_scatter['somatic_vcf'] = file_path_dict_somatic['somatic_vcf']
+                file_path_dict_somatic_scatter['somatic_idx'] = file_path_dict_somatic['somatic_idx']
+
+                runnable_somatic_scatter.add_runnable_step(
+                    RunnableStepMove(
+                        name='somatic_gather_move_vcf',
+                        source_path=file_path_dict_somatic_scatter['vcf'],
+                        target_path=file_path_dict_somatic_scatter['somatic_vcf']))
+
+                runnable_somatic_scatter.add_runnable_step(
+                    RunnableStepMove(
+                        name='somatic_gather_move_tbi',
+                        source_path=file_path_dict_somatic_scatter['tbi'],
+                        target_path=file_path_dict_somatic_scatter['somatic_idx']))
+
+                # return runnable_somatic_scatter
+                runnable_somatic_gather = runnable_somatic_scatter
+            else:
+                # Second, gather by the number of chunks on the partitioned genome tile index list.
+
+                # Second, Merge chunks hierarchically.
+                # Initialise a list of Runnable objects and indices for the hierarchical merge.
+                vc_somatic_gather_runnable_list = vc_somatic_scatter_runnable_list
+                vc_somatic_gather_index_list = range(0, len(self._tile_region_list))
+                runnable_somatic_gather = None  # Global variable to keep and return the last Runnable.
+                level = 0
+                while len(vc_somatic_gather_index_list) > 1:
+                    temporary_gather_runnable_list = list()
+                    temporary_gather_index_list = list()
+                    # Partition the index list into chunks of given size.
+                    partition_list = [vc_somatic_gather_index_list[offset:offset + self.number_of_chunks]
+                                      for offset in range(0,
+                                                          len(vc_somatic_gather_index_list),
+                                                          self.number_of_chunks)]
+
+                    for partition_index in range(0, len(partition_list)):
+                        chunk_index_list = partition_list[partition_index]
+                        assert isinstance(chunk_index_list, list)
+                        # The file prefix includes the level and partition index.
+                        prefix_somatic_gather = '_'.join(
+                            (stage_somatic.name, key, 'gather', str(level), str(partition_index)))
+
+                        file_path_dict_somatic_gather = {
+                            'temporary_directory': prefix_somatic_gather + '_temporary',
+                            'vcf': prefix_somatic_gather + '_combined.g.vcf.gz',
+                            'tbi': prefix_somatic_gather + '_combined.g.vcf.gz.tbi',
+                        }
+
+                        runnable_somatic_gather = self.add_runnable(
+                            runnable=Runnable(
+                                name=prefix_somatic_gather,
+                                code_module='bsf.runnables.generic',
+                                working_directory=self.genome_directory,
+                                cache_directory=self.cache_directory,
+                                cache_path_dict=self._cache_path_dict,
+                                file_path_dict=file_path_dict_somatic_gather,
+                                debug=self.debug))
+                        executable_somatic_gather = self.set_stage_runnable(
+                            stage=stage_somatic,
+                            runnable=runnable_somatic_gather)
+                        # Dependencies on scatter processes are set based on genome tile indices below.
+                        temporary_gather_runnable_list.append(runnable_somatic_gather)
+                        temporary_gather_index_list.append(partition_index)
+
+                        reference_somatic_gather = runnable_somatic_gather.get_absolute_cache_file_path(
+                            file_path=self.bwa_genome_db)
+
+                        # GATK CatVariants by-passes the GATK engine and thus requires a completely different
+                        # command line.
+                        runnable_step = runnable_somatic_gather.add_runnable_step(
+                            runnable_step=RunnableStepJava(
+                                name='somatic_gatk_cat_variants',
+                                sub_command=Command(program='org.broadinstitute.gatk.tools.CatVariants'),
+                                java_temporary_path=file_path_dict_somatic_gather['temporary_directory'],
+                                java_heap_maximum='Xmx4G'))
+                        runnable_step.add_option_short(
+                            key='classpath',
+                            value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+                        sub_command = runnable_step.sub_command
+                        # Add the 'reference' not 'reference_sequence' option.
+                        sub_command.add_option_long(
+                            key='reference',
+                            value=reference_somatic_gather)
+                        sub_command.add_option_long(
+                            key='outputFile',
+                            value=file_path_dict_somatic_gather['vcf'])
+                        sub_command.add_switch_long(key='assumeSorted')
+                        # Finally, add RunnabkeStep options, obsolete files and Executable dependencies per chunk index.
+                        for chunk_index in chunk_index_list:
+                            # Set GATK option variant
+                            sub_command.add_option_long(
+                                key='variant',
+                                value=vc_somatic_gather_runnable_list[chunk_index].file_path_dict['vcf'],
+                                override=True)
+                            # Delete the *.g.vcf.gz file.
+                            runnable_step.obsolete_file_path_list.append(
+                                vc_somatic_gather_runnable_list[chunk_index].file_path_dict['vcf'])
+                            # Delete the *.g.vcf.gz.tbi file.
+                            runnable_step.obsolete_file_path_list.append(
+                                vc_somatic_gather_runnable_list[chunk_index].file_path_dict['tbi'])
+                            # Depend on the Runnable.name of the corresponding Runnable of the scattering above.
+                            executable_somatic_gather.dependencies.append(
+                                vc_somatic_gather_runnable_list[chunk_index].name)
+
+                    # Set the temporary index list as the new list and increment the merge level.
+                    vc_somatic_gather_runnable_list = temporary_gather_runnable_list
+                    vc_somatic_gather_index_list = temporary_gather_index_list
+                    level += 1
+                else:
+                    # For the last instance, additionally rename the final file.
+                    file_path_dict_somatic_gather = runnable_somatic_gather.file_path_dict
+
+                    # Add sample-specific keys to the file path dictionary.
+                    file_path_dict_somatic_gather['somatic_vcf'] = file_path_dict_somatic['somatic_vcf']
+                    file_path_dict_somatic_gather['somatic_idx'] = file_path_dict_somatic['somatic_idx']
+
+                    runnable_somatic_gather.add_runnable_step(
+                        RunnableStepMove(
+                            name='somatic_gather_move_vcf',
+                            source_path=file_path_dict_somatic_gather['vcf'],
+                            target_path=file_path_dict_somatic_gather['somatic_vcf']))
+
+                    runnable_somatic_gather.add_runnable_step(
+                        RunnableStepMove(
+                            name='somatic_gather_move_tbi',
+                            source_path=file_path_dict_somatic_gather['tbi'],
+                            target_path=file_path_dict_somatic_gather['somatic_idx']))
+
+                    # return runnable_somatic_gather
+
             runnable_somatic = self.add_runnable(
                 runnable=Runnable(
                     name=prefix_somatic,
@@ -3601,42 +3811,10 @@ class VariantCallingGATK(Analysis):
             executable_somatic = self.set_stage_runnable(
                 stage=stage_somatic,
                 runnable=runnable_somatic)
-            executable_somatic.dependencies.append(
-                '_'.join((stage_process_sample.name, self.comparisons[key][0][1][0].name)))
-            executable_somatic.dependencies.append(
-                '_'.join((stage_process_sample.name, self.comparisons[key][-1][1][0].name)))
+            executable_somatic.dependencies.append(runnable_somatic_gather.name)
 
             reference_somatic = runnable_somatic.get_absolute_cache_file_path(
                 file_path=self.bwa_genome_db)
-
-            # Run the GATK MuTect2 analysis to characterise somatic variants.
-
-            runnable_step = runnable_somatic.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='somatic_gatk_mutect2',
-                    java_temporary_path=file_path_dict_somatic['temporary_directory'],
-                    java_heap_maximum='Xmx4G',
-                    gatk_classpath=self.classpath_gatk))
-            assert isinstance(runnable_step, RunnableStepGATK)
-            runnable_step.add_gatk_option(key='analysis_type', value='MuTect2')
-            runnable_step.add_gatk_option(key='reference_sequence', value=reference_somatic)
-            for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-            for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-            if self.interval_padding:
-                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            if self.known_sites_discovery:
-                runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
-            for file_path in self.known_somatic_discovery:
-                runnable_step.add_gatk_option(key='cosmic', value=file_path, override=True)
-            runnable_step.add_gatk_option(
-                key='input_file:normal',
-                value='_'.join((stage_process_sample.name, self.comparisons[key][0][1][0].name, 'realigned.bam')))
-            runnable_step.add_gatk_option(
-                key='input_file:tumor',
-                value='_'.join((stage_process_sample.name, self.comparisons[key][-1][1][0].name, 'realigned.bam')))
-            runnable_step.add_gatk_option(key='out', value=file_path_dict_somatic['somatic_vcf'])
 
             # Run the snpEff tool for functional variant annotation.
 
@@ -3652,7 +3830,7 @@ class VariantCallingGATK(Analysis):
                 key='jar',
                 value=os.path.join(self.classpath_snpeff, 'snpEff.jar'))
             runnable_step.add_switch_short(
-                key='Xmx6G')
+                key='Xmx4G')
             runnable_step.add_option_pair(
                 key='-Djava.io.tmpdir',
                 value=file_path_dict_somatic['temporary_directory'])
@@ -3701,7 +3879,7 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
+            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_somatic.threads))
             if self.known_sites_discovery:
                 runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
 
