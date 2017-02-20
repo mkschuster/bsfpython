@@ -397,11 +397,15 @@ class Command(object):
                 elif isinstance(argument, OptionLong):
                     command_line.append('--{}'.format(argument.key))
                     if argument.value:
-                        command_line.append(argument.value)
+                        # command_line.append(argument.value)
+                        # Allow more than one value i.e. --key value1 value2
+                        command_line.extend(argument.value.split())
                 elif isinstance(argument, OptionShort):
                     command_line.append('-{}'.format(argument.key))
                     if argument.value:
-                        command_line.append(argument.value)
+                        # command_line.append(argument.value)
+                        # Allow more than one value i.e. --key value1 value2
+                        command_line.extend(argument.value.split())
                 elif isinstance(argument, OptionPair):
                     command_line.append('{}={}'.format(argument.key, argument.value))
                 else:
