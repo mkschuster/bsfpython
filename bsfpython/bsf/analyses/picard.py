@@ -1259,6 +1259,259 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
         return
 
 
+class DownsampleSam(Analysis):
+    """The C{bsf.analyses.picard.DownsampleSam} class represents the logic to run the Picard DownsampleSam analysis.
+
+    Attributes:
+
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @type name: str
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @type prefix: str
+    @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
+    @type classpath_picard: str | unicode
+    """
+
+    name = 'Picard DownsampleSam Analysis'
+    prefix = 'picard_downsample_sam'
+
+    def __init__(
+            self,
+            configuration=None,
+            project_name=None,
+            genome_version=None,
+            input_directory=None,
+            output_directory=None,
+            project_directory=None,
+            genome_directory=None,
+            e_mail=None,
+            debug=0,
+            stage_list=None,
+            collection=None,
+            comparisons=None,
+            sample_list=None,
+            classpath_picard=None):
+        """Initialise a C{bsf.analyses.picard.DownsampleSam} object.
+
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
+        @param project_name: Project name
+        @type project_name: str
+        @param genome_version: Genome version
+        @type genome_version: str
+        @param input_directory: C{bsf.Analysis}-wide input directory
+        @type input_directory: str
+        @param output_directory: C{bsf.Analysis}-wide output directory
+        @type output_directory: str
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
+        @type project_directory: str
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
+        @type genome_directory: str
+        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        @type e_mail: str
+        @param debug: Integer debugging level
+        @type debug: int
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
+        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
+        @param classpath_picard: Picard tools Java Archive (JAR) class path directory
+        @type classpath_picard: str | unicode
+        @return:
+        @rtype:
+        """
+
+        super(DownsampleSam, self).__init__(
+            configuration=configuration,
+            project_name=project_name,
+            genome_version=genome_version,
+            input_directory=input_directory,
+            output_directory=output_directory,
+            project_directory=project_directory,
+            genome_directory=genome_directory,
+            e_mail=e_mail,
+            debug=debug,
+            stage_list=stage_list,
+            collection=collection,
+            comparisons=comparisons,
+            sample_list=sample_list)
+
+        if classpath_picard is None:
+            self.classpath_picard = str()
+        else:
+            self.classpath_picard = classpath_picard
+
+        return
+
+    def set_configuration(self, configuration, section):
+        """Set instance variables of a C{bsf.analyses.picard.DownsampleSam} object via a section of a
+        C{bsf.standards.Configuration} object.
+
+        Instance variables without a configuration option remain unchanged.
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
+        @param section: Configuration file section
+        @type section: str
+        @return:
+        @rtype:
+        """
+
+        super(DownsampleSam, self).set_configuration(configuration=configuration, section=section)
+
+        # Sub-class specific ...
+
+        # Get the Picard tools Java Archive (JAR) class path directory.
+
+        option = 'classpath_picard'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.classpath_picard = configuration.config_parser.get(section=section, option=option)
+
+        return
+
+    def _read_comparisons(self):
+
+        self.sample_list.extend(self.collection.get_all_samples())
+
+        return
+
+    def run(self):
+        """Run the C{bsf.analyses.picard.DownsampleSam} C{bsf.Analysis}.
+
+        This method changes the C{bsf.ngs.Collection} object of this C{bsf.Analysis} to update with FASTQ file paths.
+        @return:
+        @rtype:
+        """
+
+        super(DownsampleSam, self).run()
+
+        default = Default.get_global_default()
+
+        # Get the Picard tools Java Archive (JAR) class path directory.
+
+        if not self.classpath_picard:
+            self.classpath_picard = default.classpath_picard
+
+        self._read_comparisons()
+
+        # Picard DownsampleSam
+
+        stage_picard_dss = self.get_stage(name='picard_downsample_sam')
+
+        for sample in self.sample_list:
+            if self.debug > 0:
+                print '{!r} Sample name: {}'.format(self, sample.name)
+                print sample.trace(level=1)
+
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
+
+            paired_reads_name_list = paired_reads_dict.keys()
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+            for paired_reads_name in paired_reads_name_list:
+                for paired_reads in paired_reads_dict[paired_reads_name]:
+                    if self.debug > 0:
+                        print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
+
+                    # Apply some sanity checks.
+
+                    if paired_reads.reads_2 and not paired_reads.reads_1:
+                        raise Exception('PairedReads object with reads_1 but no reads_2 object.', UserWarning)
+
+                    reads = paired_reads.reads_1
+                    if not (reads.file_path.endswith('.bam') or reads.file_path.endswith('.sam')):
+                        raise Exception(
+                            "Picard DownsampleSam can only work on BAM or SAM files. {}".format(reads.file_path))
+
+                    prefix_picard_dss = '_'.join((stage_picard_dss.name, paired_reads_name))
+
+                    file_path_dict_picard_dss = {
+                        'temporary_directory': '_'.join((prefix_picard_dss, 'temporary')),
+                        'output_directory': prefix_picard_dss,
+                        'downsampled_bam': prefix_picard_dss + '_downsampled.bam',
+                    }
+
+                    # Keep the original BAM file and modify the file_path in the Reads object.
+                    bam_file_path = reads.file_path
+                    reads.file_path = os.path.join(
+                        self.project_directory,
+                        file_path_dict_picard_dss['downsampled_bam'])
+                    # (file_root, file_extension) = os.path.splitext(bam_file_path)
+                    # reads.file_path = file_root + 'downsampled' + file_extension
+
+                    # Create a Runnable for running the Picard DownsampleSam analysis.
+
+                    runnable_picard_dss = self.add_runnable(
+                        runnable=Runnable(
+                            name=prefix_picard_dss,
+                            code_module='bsf.runnables.generic',
+                            working_directory=self.project_directory,
+                            file_path_dict=file_path_dict_picard_dss))
+
+                    # Create an Executable for running the Picard SamToFastq Runnable.
+
+                    self.set_stage_runnable(stage=stage_picard_dss, runnable=runnable_picard_dss)
+
+                    # Create a new RunnableStepMakeDirectory in preparation of the Picard program.
+
+                    if False:
+                        runnable_picard_dss.add_runnable_step(
+                            runnable_step=RunnableStepMakeDirectory(
+                                name='mkdir',
+                                directory_path=file_path_dict_picard_dss['output_directory']))
+
+                    # Create a new RunnableStep for the Picard DownsampleSam program.
+
+                    runnable_step = runnable_picard_dss.add_runnable_step(
+                        runnable_step=RunnableStepPicard(
+                            name='picard_donwsample_sam',
+                            java_temporary_path=runnable_picard_dss.get_relative_temporary_directory_path,
+                            java_heap_maximum='Xmx2G',
+                            picard_classpath=self.classpath_picard,
+                            picard_command='DownsampleSam'))
+                    assert isinstance(runnable_step, RunnableStepPicard)
+                    runnable_step.add_picard_option(key='INPUT', value=bam_file_path)
+                    runnable_step.add_picard_option(
+                        key='OUTPUT',
+                        value=file_path_dict_picard_dss['downsampled_bam'])
+                    # FIXME: Add to the configuration file and documentation.
+                    if 'DownsampleSam Probability' in paired_reads.annotation_dict:
+                        runnable_step.add_picard_option(
+                            key='PROBABILITY',
+                            value=paired_reads.annotation_dict['DownsampleSam Probability'][0])
+                    runnable_step.add_picard_option(
+                        key='TMP_DIR',
+                        value=file_path_dict_picard_dss['temporary_directory'])
+                    # VERBOSITY defaults to 'INFO'.
+                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
+                    # QUIET defaults to 'false'.
+                    runnable_step.add_picard_option(key='QUIET', value='false')
+                    # VALIDATION_STRINGENCY defaults to 'STRICT'.
+                    runnable_step.add_picard_option(key='VALIDATION_STRINGENCY', value='STRICT')
+                    # COMPRESSION_LEVEL defaults to '5'.
+                    # MAX_RECORDS_IN_RAM defaults to '500000'.
+                    # CREATE_INDEX defaults to 'false'.
+                    # CREATE_MD5_FILE defaults to 'false'.
+                    # OPTIONS_FILE
+
+        # Convert the (modified) Collection object into a SampleAnnotationSheet object and write it to disk.
+
+        annotation_sheet = self.collection.to_sas(
+            file_path=os.path.join(
+                self.project_directory,
+                '_'.join((self.project_name, 'picard_downsample_sam_samples.csv'))),
+            name='_'.join((self.project_name, 'picard_downsample_sam')))
+
+        annotation_sheet.to_file_path()
+
+        return
+
+
 class SamToFastq(Analysis):
     """The C{bsf.analyses.picard.SamToFastq} class represents the logic to run the Picard SamToFastq analysis.
 
@@ -1396,8 +1649,7 @@ class SamToFastq(Analysis):
         return
 
     def run(self):
-        """Run the C{bsf.analyses.picard.SamToFastq} C{bsf.Analysis} to convert a
-        I{BAM} or I{SAM} file into I{FASTQ} files.
+        """Run the C{bsf.analyses.picard.SamToFastq} C{bsf.Analysis}.
 
         This method changes the C{bsf.ngs.Collection} object of this C{bsf.Analysis} to update with FASTQ file paths.
         @return:
@@ -1439,7 +1691,7 @@ class SamToFastq(Analysis):
                     # Apply some sanity checks.
 
                     if paired_reads.reads_2 and not paired_reads.reads_1:
-                        raise Exception('PairedReads object with reads1 but no reads2 object.', UserWarning)
+                        raise Exception('PairedReads object with reads_1 but no reads_2 object.', UserWarning)
 
                     reads = paired_reads.reads_1
                     if reads.file_path.endswith('.bam'):
@@ -1458,16 +1710,20 @@ class SamToFastq(Analysis):
 
                         alignment_file = pysam.AlignmentFile(reads.file_path, 'rb', check_sq=False)
 
-                        for read_group in alignment_file.header['RG']:
+                        for read_group_dict in alignment_file.header['RG']:
+                            assert isinstance(read_group_dict, dict)
                             # The makeFileNameSafe() method of htsjdk.samtools.util.IOUtil uses the following pattern:
                             # [\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]
                             platform_unit = re.sub(
                                 pattern="[\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]",
                                 repl='_',
-                                string=read_group['PU'])
+                                string=read_group_dict['PU'])
                             read_group_list = ['@RG']
-                            read_group_list.extend(map(lambda x: '{}:{}'.format(x, read_group[x]), read_group.keys()))
-                            if read_group == alignment_file.header['RG'][0]:
+                            read_group_list.extend(map(lambda x: '{}:{}'.format(x, read_group_dict[x]),
+                                                       read_group_dict.keys()))
+                            if read_group_dict == alignment_file.header['RG'][0]:
+                                # Use the '==' rather than the 'is' operator, since dictionaries do not seem to be
+                                # at the same memory address.
                                 # For the first read group, modify the PairedReads object in place.
                                 paired_reads.read_group = '\\t'.join(read_group_list)
                                 paired_reads.reads_1.name = platform_unit + '_1'
@@ -1483,10 +1739,12 @@ class SamToFastq(Analysis):
                                     lane=paired_reads.reads_1.lane,
                                     read=paired_reads.reads_1.read,
                                     chunk=paired_reads.reads_1.chunk,
-                                    weak_reference_paired_reads=weakref.ref(paired_reads))
+                                    weak_reference_paired_reads=weakref.ReferenceType(paired_reads))
+                                # Retain the original BAM file path as annotation.
+                                paired_reads.add_annotation(key='BAM File', value=bam_file_path)
                             else:
                                 # For further read groups, create new PairedReads objects.
-                                reads1 = Reads(
+                                reads_1 = Reads(
                                     name=platform_unit + '_1',
                                     file_path=os.path.join(
                                         file_path_dict_picard_stf['output_directory'],
@@ -1495,23 +1753,22 @@ class SamToFastq(Analysis):
                                     lane=paired_reads.reads_1.lane,
                                     read='R1',
                                     chunk=paired_reads.reads_1.chunk)
-                                reads2 = Reads(
+                                reads_2 = Reads(
                                     name=platform_unit + '_2',
                                     file_path=os.path.join(
                                         file_path_dict_picard_stf['output_directory'],
                                         platform_unit + '_2.fastq'),
-                                    file_type=paired_reads.reads_2.file_type,
+                                    file_type=paired_reads.reads_1.file_type,
                                     lane=paired_reads.reads_1.lane,
                                     read='R2',
                                     chunk=paired_reads.reads_1.chunk)
                                 new_paired_reads = PairedReads(
-                                    reads_1=reads1,
-                                    reads_2=reads2,
+                                    reads_1=reads_1,
+                                    reads_2=reads_2,
                                     read_group='\\t'.join(read_group_list))
+                                # Retain the original BAM file path as annotation.
+                                new_paired_reads.add_annotation(key='BAM File', value=bam_file_path)
 
-                                # FIXME: Should this use add_reads to set the weak reference?
-                                reads1.weak_reference_paired_reads = weakref.ref(new_paired_reads)
-                                reads2.weak_reference_paired_reads = weakref.ref(new_paired_reads)
                                 sample.add_paired_reads(paired_reads=new_paired_reads)
 
                         alignment_file.close()
