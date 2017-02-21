@@ -157,6 +157,33 @@ class NextGenerationBase(object):
 
         return
 
+    def process_annotation(self, row_dict, key_list, prefix):
+        """Process annotation from a Python C{dict} of row entries of a Python C{csv} object.
+
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param key_list: A Python C{list} of Python C{str} (key) objects in the row
+        @type key_list: list[str]
+        @param prefix: Optional configuration prefix
+            (e.g. '[Control] ReadsN', '[Treatment] ReadsN', '[Point N] ReadsN', ...)
+        @type prefix: str
+        @return:
+        @rtype:
+        """
+        re_pattern = re.compile(pattern=' '.join((prefix, self.__class__.__name__)).lstrip())
+        for key in list(key_list):
+            # Only match the pattern at the start of the string.
+            re_match = re.match(pattern=re_pattern, string=key)
+            if re_match is not None:
+                key_list.remove(re_match.string)
+                # Capture the string from the end of the match to the end of the string and strip white space.
+                annotation_key = re_match.string[re_match.end(0):].strip()
+                if annotation_key and row_dict[re_match.string]:
+                    # Exclude empty keys and values.
+                    self.add_annotation(key=annotation_key, value=row_dict[re_match.string])
+
+        return
+
 
 class Reads(NextGenerationBase):
     """The C{bsf.ngs.Reads} class represents a file of Next-Generation Sequencing (NGS) reads.
@@ -192,29 +219,25 @@ class Reads(NextGenerationBase):
         @rtype: bsf.ngs.Reads
         """
 
+        file_path = os.path.normpath(file_path)
+        file_name = os.path.basename(file_path)
+
         if file_type == 'CASAVA':
-            file_path = os.path.normpath(file_path)
-            file_name = os.path.basename(file_path)
-
             # CASAVA Reads obey a SampleName_Index_Lane_Read_Chunk schema.
-            components = file_name.split('.')
-            components[0] = components[0].split('_')
 
-            name = '_'.join(components[0][:-4])
-            barcode = components[0][-4]
-            lane = components[0][-3]
-            read = components[0][-2]
-            chunk = components[0][-1]
+            component_list = file_name.split('.')  # Split file extensions
+
+            component_list[0] = component_list[0].split('_')  # Split components
 
             reads = cls(
-                name=name,
+                name='_'.join(component_list[0][:-4]),  # Exclude the SampleName
                 file_path=file_path,
                 file_type=file_type,
                 annotation_dict=None,
-                barcode=barcode,
-                lane=lane,
-                read=read,
-                chunk=chunk,
+                barcode=component_list[0][-4],
+                lane=component_list[0][-3],
+                read=component_list[0][-2],
+                chunk=component_list[0][-1],
                 weak_reference_paired_reads=None)
         else:
             raise Exception('Unsupported file_type {!r}.'.format(file_type))
@@ -321,6 +344,17 @@ class Reads(NextGenerationBase):
             or self.lane != other.lane \
             or self.read != other.read \
             or self.chunk != other.chunk
+
+    def __nonzero__(self):
+        """Test C{bsf.ngs.Reads} objects for non-zero.
+
+        @return: C{True} if non-zero, i.e file_path or name are meaningfully defined.
+        @rtype: bool
+        """
+        if self.file_path and self.name:
+            return True
+        else:
+            return False
 
     def trace(self, level):
         """Trace a C{bsf.ngs.Reads} object.
@@ -475,6 +509,8 @@ class PairedReads(NextGenerationBase):
         For the C{bsf.ngs.Reads.file_type} I{CASAVA} the reads object will be
         automatically assigned on the basis of the C{bsf.ngs.Reads.read}
         attribute (i.e. I{R1} or I{R2}).
+        Upon initialisation of this C{bsf.ngs.PairedReads} object, weak references (C{weakref.ReferenceType})
+        are set in the C{bsf.ngs.Reads} objects.
         @param name: Name
         @type name: str
         @param file_path: File path
@@ -796,17 +832,18 @@ class Sample(NextGenerationBase):
         @rtype: bsf.ngs.Sample
         """
 
-        if file_type == 'CASAVA':
-            file_path = os.path.normpath(file_path)
-            file_name = os.path.basename(file_path)
+        file_path = os.path.normpath(file_path)
+        file_name = os.path.basename(file_path)
 
+        if file_type == 'CASAVA':
             # CASAVA Samples obey a "Sample_name" schema.
 
-            components = file_name.split('_')
+            component_list = file_name.split('_')
 
-            name = '_'.join(components[1:])
-
-            sample = cls(file_path=file_path, file_type=file_type, name=name)
+            sample = cls(
+                file_path=file_path,
+                file_type=file_type,
+                name='_'.join(component_list[1:]))
 
             # Automatically discover CASAVA Reads files ...
 
@@ -1104,17 +1141,18 @@ class Project(NextGenerationBase):
         @rtype: bsf.ngs.Project
         """
 
-        if file_type == 'CASAVA':
-            file_path = os.path.normpath(file_path)
-            file_name = os.path.basename(file_path)
+        file_path = os.path.normpath(file_path)
+        file_name = os.path.basename(file_path)
 
+        if file_type == 'CASAVA':
             # CASAVA Projects obey a "Project_name" schema.
 
-            components = file_name.split('_')
+            component_list = file_name.split('_')
 
-            name = '_'.join(components[1:])
-
-            project = cls(file_path=file_path, file_type=file_type, name=name)
+            project = cls(
+                file_path=file_path,
+                file_type=file_type,
+                name='_'.join(component_list[1:]))
 
             # Automatically discover CASAVA Sample directories ...
 
@@ -1303,9 +1341,9 @@ class ProcessedRunFolder(NextGenerationBase):
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
-        components = file_name.split('_')
+        component_list = file_name.split('_')
 
-        if components[-1].startswith('CASAVA'):
+        if component_list[-1].startswith('CASAVA'):
             return 'CASAVA'
         else:
             return 'External'
@@ -1331,10 +1369,10 @@ class ProcessedRunFolder(NextGenerationBase):
         if not file_type or file_type == 'Automatic':
             file_type = ProcessedRunFolder.guess_file_type(file_path=file_path)
 
-        if file_type == 'CASAVA':
-            file_path = os.path.normpath(file_path)
-            file_name = os.path.basename(file_path)
+        file_path = os.path.normpath(file_path)
+        file_name = os.path.basename(file_path)
 
+        if file_type == 'CASAVA':
             # CASAVA Processed Run Folders obey a "Prefix_FCID_CASAVA182"
             # schema. The following prefixes are currently in use:
             # -- BSF_ Biomedical Sequencing Facility
@@ -1342,15 +1380,15 @@ class ProcessedRunFolder(NextGenerationBase):
             # -- MUW_ Medical University Vienna
             # -- SET_ Robert Kralovics group
 
-            components = file_name.split('_')
+            component_list = file_name.split('_')
 
-            name = '_'.join(components[:])
-            prefix = components[0]
-            flow_cell = components[1]
-            version = components[2]
-
-            prf = cls(file_path=file_path, file_type=file_type, name=name,
-                      prefix=prefix, flow_cell=flow_cell, version=version)
+            prf = cls(
+                file_path=file_path,
+                file_type=file_type,
+                name=file_name,
+                prefix=component_list[0],
+                flow_cell=component_list[1],
+                version=component_list[2])
 
             # Automatically discover CASAVA Project directories ...
 
@@ -1367,9 +1405,6 @@ class ProcessedRunFolder(NextGenerationBase):
                         prf.add_project(project=Project.from_file_path(file_path=file_path, file_type=file_type))
         elif file_type == 'External':
             # Create a new, minimal ProcessedRunFolder.
-            file_path = os.path.normpath(file_path)
-            file_name = os.path.basename(file_path)
-
             prf = cls(file_path=file_path, file_type=file_type, name=file_name)
         else:
             raise Exception('Unsupported file_type {!r}.'.format(file_type))
@@ -1620,6 +1655,7 @@ class Collection(NextGenerationBase):
         prf = None
         project = None
         sample = None
+        paired_reads = None
 
         for row_dict in sas.row_dicts:
             key_list = row_dict.keys()
@@ -1648,36 +1684,13 @@ class Collection(NextGenerationBase):
                 file_type=file_type,
                 project=project)
 
-            reads_1 = collection._process_reads(
+            paired_reads = collection._process_paired_reads(
+                paired_reads=paired_reads,
                 row_dict=row_dict,
                 key_list=key_list,
                 prefix=sas_prefix,
                 file_type=file_type,
-                suffix='1')
-
-            reads_2 = collection._process_reads(
-                row_dict=row_dict,
-                key_list=key_list,
-                prefix=sas_prefix,
-                file_type=file_type,
-                suffix='2')
-
-            pr_exclude, pr_index_1, pr_index_2, pr_read_group = collection._process_paired_reads(
-                row_dict=row_dict,
-                key_list=key_list,
-                prefix=sas_prefix)
-
-            # If none of the Reads objects has been defined, the Sample
-            # may have been automatically loaded from a CASAVA ProcessedRunFolder.
-
-            if reads_1 or reads_2:
-                sample.add_paired_reads(paired_reads=PairedReads(
-                    reads_1=reads_1,
-                    reads_2=reads_2,
-                    exclude=pr_exclude,
-                    index_1=pr_index_1,
-                    index_2=pr_index_2,
-                    read_group=pr_read_group))
+                sample=sample)
 
             # Optionally group the Sample objects.
 
@@ -1967,6 +1980,7 @@ class Collection(NextGenerationBase):
 
         if key in row_dict:
             # The key exists ...
+            key_list.remove(key)
             if row_dict[key]:
                 # ... and has a meaningful value ...
                 value = row_dict[key]
@@ -1990,23 +2004,7 @@ class Collection(NextGenerationBase):
                 new_prf = self.add_processed_run_folder(
                     prf=ProcessedRunFolder(name=ProcessedRunFolder.default_name, file_type=file_type))
 
-        # Look for additional ProcessedRunFolder keys that provide further annotation.
-
-        re_pattern = re.compile(pattern='{} ProcessedRunFolder'.format(prefix).lstrip())
-        for key in row_dict.keys():
-            # Only search for the pattern at the start of the string.
-            re_match = re.match(pattern=re_pattern, string=key)
-            if re_match is not None:
-                # If present, delete the key from the key list, which includes the 'Name' key.
-                if re_match.string in key_list:
-                    key_list.remove(re_match.string)
-                # Capture the string from the end of the match to the end of the string and strip white space.
-                annotation_key = re_match.string[re_match.end(0):].strip()
-                if annotation_key and annotation_key != 'Name':
-                    # Exclude empty key strings and the 'Name' key that is not an annotation as such.
-                    if row_dict[re_match.string]:
-                        # Exclude empty fields.
-                        new_prf.add_annotation(key=annotation_key, value=row_dict[re_match.string])
+        new_prf.process_annotation(row_dict=row_dict, key_list=key_list, prefix=prefix)
 
         return new_prf
 
@@ -2039,6 +2037,7 @@ class Collection(NextGenerationBase):
 
         if key in row_dict:
             # The key exists ...
+            key_list.remove(key)  # Remove the 'Name' key.
             if row_dict[key]:
                 # ... and has a meaningful value ...
                 value = row_dict[key]
@@ -2061,23 +2060,7 @@ class Collection(NextGenerationBase):
             else:
                 new_project = prf.add_project(project=Project(name=Project.default_name, file_type=file_type))
 
-        # Look for additional Project keys that provide additional annotation.
-
-        re_pattern = re.compile(pattern='{} Project'.format(prefix).lstrip())
-        for key in row_dict.keys():
-            # Only search for the pattern at the start of the string.
-            re_match = re.match(pattern=re_pattern, string=key)
-            if re_match is not None:
-                # If present, delete the key from the key list, which includes the 'Name' key.
-                if re_match.string in key_list:
-                    key_list.remove(re_match.string)
-                # Capture the string from the end of the match to the end of the string and strip white space.
-                annotation_key = re_match.string[re_match.end(0):].strip()
-                if annotation_key and annotation_key != 'Name':
-                    # Exclude empty key strings and the 'Name' key that is not an annotation as such.
-                    if row_dict[re_match.string]:
-                        # Exclude empty fields.
-                        new_project.add_annotation(key=annotation_key, value=row_dict[re_match.string])
+        new_project.process_annotation(row_dict=row_dict, key_list=key_list, prefix=prefix)
 
         return new_project
 
@@ -2109,6 +2092,7 @@ class Collection(NextGenerationBase):
         key = '{} Sample Name'.format(prefix).lstrip()
 
         if key in row_dict:
+            key_list.remove(key)  # Remove the 'Name' key.
             # The key exists ...
             if row_dict[key]:
                 # ... and has a meaningful value ...
@@ -2132,31 +2116,18 @@ class Collection(NextGenerationBase):
             else:
                 new_sample = project.add_sample(sample=Sample(name=Sample.default_name, file_type=file_type))
 
-        # Look for additional Sample keys that provide additional annotation.
-
-        re_pattern = re.compile(pattern='{} Sample'.format(prefix).lstrip())
-        for key in row_dict.keys():
-            # Only search for the pattern at the start of the string.
-            re_match = re.match(pattern=re_pattern, string=key)
-            if re_match is not None:
-                # If present, delete the key from the key list, which includes the 'Name' key.
-                if re_match.string in key_list:
-                    key_list.remove(re_match.string)
-                # Capture the string from the end of the match to the end of the string and strip white space.
-                annotation_key = re_match.string[re_match.end(0):].strip()
-                if annotation_key and annotation_key != 'Name':
-                    # Exclude empty key strings and the 'Name' key that is not an annotation as such.
-                    if row_dict[re_match.string]:
-                        # Exclude empty fields.
-                        new_sample.add_annotation(key=annotation_key, value=row_dict[re_match.string])
+        new_sample.process_annotation(row_dict=row_dict, key_list=key_list, prefix=prefix)
 
         return new_sample
 
-    def _process_reads(self, row_dict, key_list, prefix, file_type, suffix):
+    def _process_reads(self, reads, row_dict, key_list, prefix, file_type, suffix):
         """Get or create a C{bsf.ngs.Reads} object.
 
         A 'I{[Prefix] Reads{suffix} Name}' key and 'I{[Prefix] Reads{suffix} File}' key are optional,
         in which case the default is a C{None} object.
+        @param reads: Current C{bsf.ngs.Reads} that may get replaced upon encountering a new
+            'I{[Prefix] ReadsN Name}' key
+        @type reads: bsf.ngs.Reads
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str | unicode]
         @param key_list: A Python C{list} of Python C{str} (key) objects in the row
@@ -2172,32 +2143,72 @@ class Collection(NextGenerationBase):
         @rtype: bsf.ngs.Reads
         """
 
-        key_file = '{} Reads{} File'.format(prefix, suffix).lstrip()
-        key_name = '{} Reads{} Name'.format(prefix, suffix).lstrip()
+        if reads is None:
+            reads = Reads()
 
-        if key_file in key_list:
-            key_list.remove(key_file)
-        if key_name in key_list:
-            key_list.remove(key_name)
+        new_reads = Reads(file_type=file_type)
 
-        if key_file in row_dict and row_dict[key_file]:
-            file_path = row_dict[key_file]
-            file_path = os.path.expanduser(file_path)
-            file_path = os.path.expandvars(file_path)
+        # Pre-process the Reads.file_path instance variable.
 
-            if not os.path.isabs(file_path):
-                file_path = os.path.join(self.file_path, file_path)
+        key = '{} Reads{} File'.format(prefix, suffix).lstrip()
+        if key in key_list:
+            key_list.remove(key)
 
-            file_path = os.path.normpath(file_path)
+        is_new_file_path = False
+        if key in row_dict and row_dict[key]:
+            new_reads.file_path = row_dict[key]
+            new_reads.file_path = os.path.expanduser(new_reads.file_path)
+            new_reads.file_path = os.path.expandvars(new_reads.file_path)
+            if not os.path.isabs(new_reads.file_path):
+                new_reads.file_path = os.path.join(self.file_path, new_reads.file_path)
+            new_reads.file_path = os.path.normpath(new_reads.file_path)
+            # Check for a non-matching, i.e. new "file_path" instance variable.
+            if new_reads.file_path != reads.file_path:
+                is_new_file_path = True
 
-            if key_name in row_dict and row_dict[key_name]:
-                reads = Reads(name=row_dict[key_name], file_path=file_path, file_type=file_type)
-            else:
-                reads = None
+        # Pre-process the Reads.name instance variable.
+
+        key = '{} Reads{} Name'.format(prefix, suffix).lstrip()
+        if key in key_list:
+            key_list.remove(key)
+
+        is_new_name = False
+        if key in row_dict and row_dict[key]:
+            new_reads.name = row_dict[key]
+            # Check for a non-matching i.e. new "name" instance variable.
+            if new_reads.name != reads.name:
+                is_new_name = True
+
+        if is_new_file_path and is_new_name:
+            # All is well. Just return the new Reads object.
+            pass
+        elif is_new_file_path:
+            # A new file_path, but check the name.
+            if new_reads.name:
+                if reads.name and new_reads.name == reads.name:
+                    # The old Reads object has the same Reads.name instance variable.
+                    raise Exception("Encountered new Reads.file_path {} -> {}, but the same Reads.name {}.".format(
+                        reads.file_path, new_reads.file_path, new_reads.name))
+                else:
+                    # Set the Reads.name instance variable.
+                    reads.name = new_reads.name
+                    new_reads = reads
+        elif is_new_name:
+            # A new name, but check the file_path.
+            if new_reads.file_path:
+                if reads.file_path and new_reads.file_path == reads.file_path:
+                    # The old Reads object has the same Reads.file_path instance variable.
+                    raise Exception("Encountered new Reads.name {} -> {}, but same reads.file_path {}.".format(
+                        reads.name, new_reads.name, new_reads.file_path))
+                else:
+                    # Set the Reads.file_path instance variable.
+                    reads.file_path = new_reads.file_path
+                    new_reads = reads
         else:
-            reads = None
+            # Nothing new, just return the old Reads object.
+            new_reads = reads
 
-        return reads
+        return new_reads
 
     # Taken from ConfigParser.RawConfigParser.getboolean()
 
@@ -2205,13 +2216,14 @@ class Collection(NextGenerationBase):
         '1': True, 'yes': True, 'true': True, 'on': True,
         '0': False, 'no': False, 'false': False, 'off': False}
 
-    @staticmethod
-    def _process_paired_reads(row_dict, key_list, prefix):
+    def _process_paired_reads(self, paired_reads, row_dict, key_list, prefix, file_type, sample):
         """Get or create a C{bsf.ngs.PairedReads} object.
 
         The 'I{[Prefix] PairedReads Exclude}' key is optional, in which case the default is Python C{bool} I{False}.
         The 'I{[Prefix] PairedReads Index 1}', 'I{[Prefix] PairedReads Index 2}' and 'I{[Prefix] PairedReads ReadGroup}'
         keys are optional, in which case the default is an empty Python C{str} object.
+        @param paired_reads: C{PairedReads}
+        @type paired_reads: PairedReads
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
         @type row_dict: dict[str, str | unicode]
         @param key_list: A Python C{list} of Python C{str} (key) objects in the row
@@ -2221,54 +2233,104 @@ class Collection(NextGenerationBase):
             '[Treatment] PairedReads ReadGroup',
             '[Point N] PairedReads ReadGroup', ...)
         @type prefix: str
-        @return: Python C{tuple} of Python C{bool} (exclude flag), Python C{str} (read group), Python C{str} (index 1)
-            and Python C{str} (index 2)
-        @rtype: tuple[bool, str, str, str]
+        @param file_type: File type
+        @type file_type: str
+        @return: C{PairedReads}
+        @rtype: PairedReads
         """
 
-        key = '{} PairedReads Exclude'.format(prefix).lstrip()
+        def _is_new_reads(reads_1, reads_2):
+            """Test whether a C{bsf.ngs.Reads} object is new.
 
+            To test for object equality is not good enough here. A new C{bsf.ngs.Reads} object is encountered
+            upon mismatches in the C{bsf.ngs.Reads.file_path} or C{bsf.ngs.Reads.name} instance variables.
+            @param reads_1: C{bsf.ngs.Reads}
+            @type reads_1: Reads
+            @param reads_2: C{bsf.ngs.Reads}
+            @type reads_2: Reads
+            @return: True if C{Reads} is new
+            @rtype: bool
+            """
+            if reads_1 is None and reads_2 is None:
+                # Both Reads objects are not defined, so, nothing new.
+                is_new_reads = False
+            elif not (reads_1 or reads_2):
+                is_new_reads = False
+            elif reads_1 is None:
+                # At least reads_2 must be defined.
+                is_new_reads = True
+            elif reads_2 is None:
+                # At least reads_1 must be defined.
+                is_new_reads = True
+            elif reads_1.name != reads_2.name or reads_1.file_path != reads_2.file_path:
+                is_new_reads = True
+            else:
+                is_new_reads = False
+
+            return is_new_reads
+
+        # PairedReads objects have no name instance variable. Thus, a new PairedReads object has to begin,
+        # when a new Reads() object is encountered.
+
+        if paired_reads is None:
+            paired_reads = PairedReads()
+
+        new_paired_reads = PairedReads(
+            file_type=file_type,
+            reads_1=self._process_reads(
+                reads=paired_reads.reads_1,
+                row_dict=row_dict,
+                key_list=key_list,
+                prefix=prefix,
+                file_type=file_type,
+                suffix='1'),
+            reads_2=self._process_reads(
+                reads=paired_reads.reads_2,
+                row_dict=row_dict,
+                key_list=key_list,
+                prefix=prefix,
+                file_type=file_type,
+                suffix='2'))
+
+        if _is_new_reads(new_paired_reads.reads_1, paired_reads.reads_1) or \
+                _is_new_reads(new_paired_reads.reads_2, paired_reads.reads_2):
+            sample.add_paired_reads(paired_reads=new_paired_reads)
+        else:
+            new_paired_reads = paired_reads
+
+        key = '{} PairedReads Exclude'.format(prefix).lstrip()
         if key in key_list:
             key_list.remove(key)
 
         if key in row_dict and row_dict[key]:
             if row_dict[key].lower() not in Collection._boolean_states:
                 raise ValueError('Value in field {!r} is not a boolean: {!r}'.format(key, row_dict[key]))
-            exclude = Collection._boolean_states[row_dict[key].lower()]
-        else:
-            exclude = False
+            new_paired_reads.exclude = Collection._boolean_states[row_dict[key].lower()]
 
         key = '{} PairedReads Index 1'.format(prefix).lstrip()
-
         if key in key_list:
             key_list.remove(key)
 
         if key in row_dict and row_dict[key]:
-            index_1 = row_dict[key]
-        else:
-            index_1 = str()
+            new_paired_reads.index_1 = row_dict[key]
 
         key = '{} PairedReads Index 2'.format(prefix).lstrip()
-
         if key in key_list:
             key_list.remove(key)
 
         if key in row_dict and row_dict[key]:
-            index_2 = row_dict[key]
-        else:
-            index_2 = str()
+            new_paired_reads.index_2 = row_dict[key]
 
         key = '{} PairedReads ReadGroup'.format(prefix).lstrip()
-
         if key in key_list:
             key_list.remove(key)
 
         if key in row_dict and row_dict[key]:
-            read_group = row_dict[key]
-        else:
-            read_group = str()
+            new_paired_reads.read_group = row_dict[key]
 
-        return exclude, index_1, index_2, read_group
+        new_paired_reads.process_annotation(row_dict=row_dict, key_list=key_list, prefix=prefix)
+
+        return new_paired_reads
 
     def get_sample_from_row_dict(self, row_dict, prefix=None):
         """Get a Sample from a C{bsf.ngs.SampleAnnotationSheet} row Python C{dict}.
