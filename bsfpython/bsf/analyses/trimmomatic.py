@@ -48,6 +48,10 @@ class Trimmomatic(Analysis):
     @type stage_name_trimmomatic: str
     @ivar adapter_path: Adapter file path
     @type adapter_path: str | unicode
+    @ivar trimming_step_pe_list: Colon-separated Trimmomatic steps for paired-end data
+    @type trimming_step_pe_list: list[str | unicode]
+    @ivar trimming_step_se_list: Colon-separated Trimmomatic steps for single-end data
+    @type trimming_step_se_list: list[str | unicode]
     @ivar classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
     @type classpath_trimmomatic: str | unicode
     """
@@ -74,6 +78,8 @@ class Trimmomatic(Analysis):
             comparisons=None,
             sample_list=None,
             adapter_path=None,
+            trimming_step_pe_list=None,
+            trimming_step_se_list=None,
             classpath_trimmomatic=None):
         """Initialise a C{bsf.analyses.trimmomatic.Trimmomatic} object.
 
@@ -107,6 +113,10 @@ class Trimmomatic(Analysis):
         @type sample_list: list[bsf.ngs.Sample]
         @param adapter_path: Adapter file path
         @type adapter_path: str | unicode
+        @param trimming_step_pe_list: Colon-separated Trimmomatic steps for paired-end data
+        @type trimming_step_pe_list: list[str | unicode]
+        @param trimming_step_se_list: Colon-separated Trimmomatic steps for single-end data
+        @type trimming_step_se_list: list[str | unicode]
         @param classpath_trimmomatic: Trimmomatic tool Java Archive (JAR) class path directory
         @type classpath_trimmomatic: str | unicode
         @return:
@@ -132,6 +142,16 @@ class Trimmomatic(Analysis):
             self.adapter_path = str()
         else:
             self.adapter_path = adapter_path
+
+        if trimming_step_pe_list is None:
+            self.trimming_step_pe_list = list()
+        else:
+            self.trimming_step_pe_list = trimming_step_pe_list
+
+        if trimming_step_se_list is None:
+            self.trimming_step_se_list = list()
+        else:
+            self.trimming_step_se_list = trimming_step_se_list
 
         if classpath_trimmomatic is None:
             self.classpath_trimmomatic = str()
@@ -162,16 +182,31 @@ class Trimmomatic(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.adapter_path = configuration.config_parser.get(section=section, option=option)
 
+        # Get the list of default trimming steps for paired-end data mode.
+
+        option = 'trimming_steps_pe'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.trimming_step_pe_list = filter(
+                lambda x: x != '',
+                map(
+                    lambda x: x.strip(),
+                    configuration.config_parser.get(section=section, option=option).split(',')))
+
+        # Get the list of default trimming steps for single-end data mode.
+
+        option = 'trimming_steps_se'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.trimming_step_se_list = filter(
+                lambda x: x != '',
+                map(
+                    lambda x: x.strip(),
+                    configuration.config_parser.get(section=section, option=option).split(',')))
+
         # Get the Trimmomatic tool Java Archive (JAR) class path directory.
 
         option = 'classpath_trimmomatic'
         if configuration.config_parser.has_option(section=section, option=option):
             self.classpath_trimmomatic = configuration.config_parser.get(section=section, option=option)
-
-        return
-
-    def _read_comparisons(self):
-        self.sample_list.extend(self.collection.get_all_samples())
 
         return
 
@@ -183,22 +218,52 @@ class Trimmomatic(Analysis):
         @rtype:
         """
 
+        def _adjust_illumina_clip_path(trimming_step_list):
+            """Adjust the adapter FASTA file path of ILLUMINACLIP trimming steps.
+
+            If the file path is not absolute, prepend the value of the adapter_path
+            instance variable.
+            @param trimming_step_list: Python C{list} of trimming steps.
+            @type trimming_step_list: list[str | unicode]
+            @return:
+            @rtype:
+            """
+            for i in range(1, len(trimming_step_list)):
+                if trimming_step_list[i].startswith('ILLUMINACLIP'):
+                    component_list = trimming_step_list[i].split(':')
+                    if not os.path.isabs(component_list[2]):
+                        component_list[2] = os.path.join(self.adapter_path, component_list[2])
+                    trimming_step_list[i] = ':'.join(component_list)
+            return
+
+        def _read_comparisons():
+            """Read a comparison annotation sheet to select those C{Sample} objects that should be analysed.
+
+            By default, the C{Collection} object can automatically register all C{Sample} objects.
+            @return:
+            @rtype:
+            """
+            self.sample_list.extend(self.collection.get_all_samples())
+            return
+
         super(Trimmomatic, self).run()
 
         # default = Default.get_global_default()
 
-        self.adapter_path = 'TruSeq3-PE-2.fa'
-        # TODO: This should be configurable per sample.
         if not os.path.isabs(self.adapter_path):
             self.adapter_path = os.path.join(
-                os.path.dirname(self.classpath_trimmomatic), 'adapters', self.adapter_path)
+                os.path.dirname(self.classpath_trimmomatic),
+                'adapters')
+
+        _adjust_illumina_clip_path(trimming_step_list=self.trimming_step_pe_list)
+        _adjust_illumina_clip_path(trimming_step_list=self.trimming_step_se_list)
 
         # Get the Trimmomatic tool Java Archive (JAR) class path directory.
 
         # if not self.classpath_trimmomatic:
-        #     self.classpath_trimmomatic = default.classpath_picard
+        #     self.classpath_trimmomatic = default.classpath_trimmomatic
 
-        self._read_comparisons()
+        _read_comparisons()
 
         # Trimmomatic
 
@@ -208,6 +273,13 @@ class Trimmomatic(Analysis):
             if self.debug > 0:
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(level=1)
+
+            sample_step_list = list()
+            if 'Trimmomatic Steps' in sample.annotation_dict:
+                for trimming_step in sample.annotation_dict['Trimmomatic Steps']:
+                    sample_step_list.extend(
+                        filter(lambda x: x != '', map(lambda x: x.strip(), trimming_step.split(','))))
+                _adjust_illumina_clip_path(trimming_step_list=sample_step_list)
 
             # The Trimmomatic analysis does not obey excluded PairedReads objects,
             # more high-level analyses generally do.
@@ -220,6 +292,13 @@ class Trimmomatic(Analysis):
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
                         print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
+
+                    paired_reads_step_list = list()
+                    if 'Trimmomatic Steps' in paired_reads.annotation_dict:
+                        for trimming_step in paired_reads.annotation_dict['Trimmomatic Steps']:
+                            paired_reads_step_list.extend(
+                                filter(lambda x: x != '', map(lambda x: x.strip(), trimming_step.split(','))))
+                        _adjust_illumina_clip_path(trimming_step_list=paired_reads_step_list)
 
                     # Apply some sanity checks.
 
@@ -340,14 +419,17 @@ class Trimmomatic(Analysis):
                                 index_2=paired_reads.index_2,
                                 read_group=paired_reads.read_group))
 
-                    # Append trimming steps.
-                    # TODO: This has to be configurable, ideally by sample.
-                    sub_command.arguments.append('ILLUMINACLIP:{}:2:30:10:1:true'.format(self.adapter_path))
-                    # FIXME: For QUANTseq data.
-                    # sub_command.arguments.append('ILLUMINACLIP:{}:2:30:5:1:true'.format(
-                    #     '/scratch/lab_bsf/projects/BSA_0000_Test/PolyA-SE.fa'))
-                    sub_command.arguments.append('SLIDINGWINDOW:4:15')
-                    sub_command.arguments.append('MINLEN:20')
+                    # Append trimming steps in order of specificity read group, sample and default.
+
+                    if len(paired_reads_step_list):
+                        sub_command.arguments.extend(paired_reads_step_list)
+                    elif len(sample_step_list):
+                        sub_command.arguments.extend(sample_step_list)
+                    else:
+                        if paired_reads.reads_2 is None:
+                            sub_command.arguments.extend(self.trimming_step_se_list)
+                        else:
+                            sub_command.arguments.extend(self.trimming_step_pe_list)
 
                     # Create a new RunnableStep to aggregate the trim log file.
 
