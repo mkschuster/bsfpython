@@ -1192,19 +1192,13 @@ class VariantCallingGATK(Analysis):
             'combined_gvcf_tbi': prefix_merge_cohort + '_combined.g.vcf.gz.tbi',
         }
 
+        # If the cohort index file already exists, create the Runnable objects, but do not submit their
+        # corresponding Executable objects.
+
         if os.path.exists(os.path.join(self.genome_directory, file_path_dict_merge_cohort['combined_gvcf_tbi'])):
-            # If the cohort index file already exists, return a Runnable object without any RunnableStep objects and
-            # without a corresponding Executable object. The Runnable just supplies a file path dictionary and the
-            # Runnable.name for setting down-stream dependencies.
-            return self.add_runnable(
-                runnable=Runnable(
-                    name=prefix_merge_cohort,
-                    code_module='bsf.runnables.generic',
-                    working_directory=self.genome_directory,
-                    cache_directory=self.cache_directory,
-                    cache_path_dict=self._cache_path_dict,
-                    file_path_dict=file_path_dict_merge_cohort,
-                    debug=self.debug))
+            submit_runnable = False
+        else:
+            submit_runnable = True
 
         # The cohort_object_list contains either Runnable objects from the process_sample stage or
         # Pythons str GVCF file_path objects for accessory cohorts to be merged.
@@ -1240,6 +1234,8 @@ class VariantCallingGATK(Analysis):
             executable_merge_cohort_scatter = self.set_stage_runnable(
                 stage=analysis_stage,
                 runnable=runnable_merge_cohort_scatter)
+            # Submit the Executable only, if the cohort index file does not exist.
+            executable_merge_cohort_scatter.submit = submit_runnable
             for cohort_component in cohort_object_list:
                 # Set dependencies only for Runnable objects not Python basestr (file path) objects.
                 if isinstance(cohort_component, Runnable):
@@ -1352,6 +1348,8 @@ class VariantCallingGATK(Analysis):
                 executable_merge_cohort_gather = self.set_stage_runnable(
                     stage=analysis_stage,
                     runnable=runnable_merge_cohort_gather)
+                # Submit the Executable only, if the cohort index file does not exist.
+                executable_merge_cohort_gather.submit = submit_runnable
                 # Dependencies on scatter processes are set based on genome tile indices below.
                 temporary_gather_runnable_list.append(runnable_merge_cohort_gather)
                 temporary_gather_index_list.append(partition_index)
@@ -2735,7 +2733,7 @@ class VariantCallingGATK(Analysis):
             # Python list of Runnable value data. Initialise the list with teh last Runnable object and
             # extend with the the list of accessory cohort file names. The _merge_cohort_scatter_gather() method
             # can cope with Runnable or basestr objects.
-            cohort_key = 'super'
+            cohort_key = '_'.join((self.cohort_name, 'accessory'))
             vc_merge_cohort_runnable_dict = {cohort_key: [runnable_merge_cohort]}
             vc_merge_cohort_runnable_list = vc_merge_cohort_runnable_dict[cohort_key]
             vc_merge_cohort_runnable_list.extend(self.accessory_cohort_gvcfs)
@@ -2776,7 +2774,12 @@ class VariantCallingGATK(Analysis):
             'multi_sample_vcf': prefix_cohort + '_multi_sample.vcf.gz',
             'multi_sample_idx': prefix_cohort + '_multi_sample.vcf.gz.tbi',
             'ensembl_vep_vcf': prefix_cohort + '_vep.vcf',
+            'ensembl_vep_vcf_bgz': prefix_cohort + '_vep.vcf.gz',
+            'ensembl_vep_vcf_tbi': prefix_cohort + '_vep.vcf.tbi',
             'ensembl_vep_statistics': prefix_cohort + '_vep_statistics.html',
+            'ensembl_filtered_vcf': prefix_cohort + '_vep_filtered.vcf',
+            'ensembl_filtered_vcf_bgz': prefix_cohort + '_vep_filtered.vcf.gz',
+            'ensembl_filtered_vcf_tbi': prefix_cohort + '_vep_filtered.vcf.tbi',
             'snpeff_vcf': prefix_cohort + '_snpeff.vcf',
             'snpeff_idx': prefix_cohort + '_snpeff.vcf.idx',
             'snpeff_vcf_bgz': prefix_cohort + '_snpeff.vcf.gz',
@@ -2793,6 +2796,11 @@ class VariantCallingGATK(Analysis):
         }
 
         # Run GATK GenotypeGVCFs in a scatter and gather approach.
+
+        if os.path.exists(os.path.join(self.genome_directory, file_path_dict_cohort['genotyped_raw_tbi'])):
+            submit_runnable = False
+        else:
+            submit_runnable = True
 
         vc_process_cohort_scatter_runnable_list = list()
         runnable_process_cohort_scatter = None
@@ -2822,6 +2830,7 @@ class VariantCallingGATK(Analysis):
             executable_process_cohort_scatter = self.set_stage_runnable(
                 stage=stage_process_cohort,
                 runnable=runnable_process_cohort_scatter)
+            executable_process_cohort_scatter.submit = submit_runnable
             # Set dependency on the last merge_cohort Runnable.name.
             executable_process_cohort_scatter.dependencies.append(runnable_merge_cohort.name)
 
@@ -2926,9 +2935,11 @@ class VariantCallingGATK(Analysis):
                             cache_path_dict=self._cache_path_dict,
                             file_path_dict=file_path_dict_process_cohort_gather,
                             debug=self.debug))
-                    executable_merge_cohort_gather = self.set_stage_runnable(
+                    executable_process_cohort_gather = self.set_stage_runnable(
                         stage=stage_process_cohort,
                         runnable=runnable_process_cohort_gather)
+                    executable_process_cohort_gather.submit = submit_runnable
+
                     # Dependencies on scatter processes are set based on genome tile indices below.
                     temporary_gather_runnable_list.append(runnable_process_cohort_gather)
                     temporary_gather_index_list.append(partition_index)
@@ -2969,7 +2980,7 @@ class VariantCallingGATK(Analysis):
                         runnable_step.obsolete_file_path_list.append(
                             vc_process_cohort_gather_runnable_list[chunk_index].file_path_dict['tbi'])
                         # Depend on the Runnable.name of the corresponding Runnable of the scattering above.
-                        executable_merge_cohort_gather.dependencies.append(
+                        executable_process_cohort_gather.dependencies.append(
                             vc_process_cohort_gather_runnable_list[chunk_index].name)
 
                 # Set the temporary index list as the new list and increment the merge level.
@@ -2996,7 +3007,7 @@ class VariantCallingGATK(Analysis):
                         source_path=file_path_dict_process_cohort_gather['tbi'],
                         target_path=file_path_dict_process_cohort_gather['genotyped_raw_tbi']))
 
-            # return runnable_process_cohort_gather
+                # return runnable_process_cohort_gather
 
         # Create a Runnable and Executable for processing the cohort.
 
@@ -3321,35 +3332,83 @@ class VariantCallingGATK(Analysis):
 
         # Run the Ensembl Variant Effect Predictor in parallel.
 
-        if False:
-            runnable_step = runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='ensembl_vep',
-                    program='perl',
-                    sub_command=Command()))
-            # TODO: Moving of the Executable.name instance variable?
-            # Should the Executable.name instance variable be moved upstream to Command.name, so that it
-            # could be used in Analysis-specific configuration sections?
-            runnable_step.arguments.append('/cm/shared/apps/ensembl/85/ensembl-tools/scripts/variant_effect_predictor/variant_effect_predictor.pl')
-            # TODO: This has to be configurable.
-            assert isinstance(runnable_step, RunnableStep)
-            sub_command = runnable_step.sub_command
-            sub_command.add_switch_long(key='no_progress')
-            sub_command.add_switch_long(key='everything')
-            sub_command.add_option_long(key='species', value='homo_sapiens')
-            sub_command.add_option_long(key='assembly', value='GRCh37')
-            sub_command.add_option_long(key='input_file', value=file_path_dict_cohort['multi_sample_vcf'])
-            sub_command.add_option_long(key='format', value='vcf')
-            sub_command.add_option_long(key='output_file', value=file_path_dict_cohort['ensembl_vep_vcf'])
-            sub_command.add_option_long(key='stats_file', value=file_path_dict_cohort['ensembl_vep_statistics'])
-            sub_command.add_switch_long(key='dont_skip')
-            sub_command.add_switch_long(key='cache')
-            sub_command.add_option_long(key='dir_cache', value='/scratch/lab_bsf/scratch/vep_cache')
-            sub_command.add_option_long(key='failed', value='1')
-            sub_command.add_switch_long(key='vcf')
-            sub_command.add_switch_long(key='allow_non_variant')
-            sub_command.add_option_long(key='port', value='3337')
-            sub_command.add_switch_long(key='gencode_basic')
+        runnable_step = runnable_process_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='ensembl_vep',
+                program='perl',
+                sub_command=Command()))
+        # TODO: Moving of the Executable.name instance variable?
+        # Should the Executable.name instance variable be moved upstream to Command.name, so that it
+        # could be used in Analysis-specific configuration sections?
+        runnable_step.arguments.append(os.path.join(default.directory_vep_src, 'variant_effect_predictor.pl'))
+        assert isinstance(runnable_step, RunnableStep)
+        sub_command = runnable_step.sub_command
+        sub_command.add_switch_long(key='no_progress')
+        sub_command.add_switch_long(key='everything')
+        sub_command.add_option_long(key='species', value='homo_sapiens')  # TODO: Has to be configurable
+        sub_command.add_option_long(key='assembly', value='GRCh37')  # TODO: Has to be configurable
+        sub_command.add_option_long(key='input_file', value=file_path_dict_cohort['multi_sample_vcf'])
+        sub_command.add_option_long(key='format', value='vcf')
+        sub_command.add_option_long(key='output_file', value=file_path_dict_cohort['ensembl_vep_vcf'])
+        sub_command.add_option_long(key='stats_file', value=file_path_dict_cohort['ensembl_vep_statistics'])
+        sub_command.add_switch_long(key='dont_skip')
+        sub_command.add_switch_long(key='cache')
+        sub_command.add_option_long(key='dir_cache', value=default.directory_vep_cache)
+        sub_command.add_option_long(key='failed', value='1')
+        sub_command.add_switch_long(key='vcf')
+        sub_command.add_switch_long(key='allow_non_variant')
+        sub_command.add_option_long(key='port', value='3337')
+        sub_command.add_switch_long(key='gencode_basic')
+        # sub_command.add_switch_long(key='write_cache')
+
+        runnable_process_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='ensembl_vep_bgzip',
+                program='bgzip',
+                arguments=[file_path_dict_cohort['ensembl_vep_vcf']]))
+
+        runnable_step = runnable_process_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='ensembl_vep_tabix',
+                program='tabix',
+                arguments=[file_path_dict_cohort['ensembl_vep_vcf_bgz']]))
+        assert isinstance(runnable_step, RunnableStep)
+        runnable_step.add_option_long(key='preset', value='vcf')
+
+        # Run the Ensembl Variant Effect Predictor filter script.
+
+        runnable_step = runnable_process_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='ensembl_filter',
+                program='perl',
+                sub_command=Command()))
+        runnable_step.arguments.append(os.path.join(default.directory_vep_src, 'filter_vep.pl'))
+        assert isinstance(runnable_step, RunnableStep)
+        sub_command = runnable_step.sub_command
+        sub_command.add_option_long(key='input_file', value=file_path_dict_cohort['ensembl_vep_vcf_bgz'])
+        sub_command.add_option_long(key='format', value='vcf')
+        sub_command.add_option_long(key='output_file', value=file_path_dict_cohort['ensembl_filtered_vcf'])
+        sub_command.add_switch_long(key='only_matched')
+        sub_command.add_option_long(key='filter', value='Consequence ne upstream_gene_variant', override=True)
+        sub_command.add_option_long(key='filter', value='Consequence ne downstream_gene_variant', override=True)
+        sub_command.add_option_long(key='filter', value='Consequence ne intron_variant', override=True)
+        sub_command.add_option_long(key='filter', value='BIOTYPE ne processed_transcript', override=True)
+        sub_command.add_option_long(key='filter', value='CANONICAL eq YES', override=True)
+        sub_command.add_switch_long(key='force_overwrite')
+
+        runnable_process_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='ensembl_filtered_bgzip',
+                program='bgzip',
+                arguments=[file_path_dict_cohort['ensembl_filtered_vcf']]))
+
+        runnable_step = runnable_process_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='ensembl_filtered_tabix',
+                program='tabix',
+                arguments=[file_path_dict_cohort['ensembl_filtered_vcf_bgz']]))
+        assert isinstance(runnable_step, RunnableStep)
+        runnable_step.add_option_long(key='preset', value='vcf')
 
         ######################################################
         # Step 7: Re-process and split the cohort by sample. #
@@ -4034,6 +4093,9 @@ class VariantCallingGATK(Analysis):
         directory_results_by_cohort = self._create_directory(
             path=os.path.join(directory_results, 'by_cohort'))
 
+        directory_results_by_pair = self._create_directory(
+            path=os.path.join(directory_results, 'by_pair'))
+
         directory_results_by_sample = self._create_directory(
             path=os.path.join(directory_results, 'by_sample'))
 
@@ -4127,6 +4189,25 @@ class VariantCallingGATK(Analysis):
                     os.path.join(self.genome_directory, runnable_process_cohort.file_path_dict[key]),
                     directory_results_by_cohort),
                 target_path=os.path.join(directory_results_by_cohort, self.cohort_name + extension))
+
+        for comparison_name in self.comparisons.keys():
+            runnable_somatic = self.runnable_dict['_'.join((self.stage_name_somatic, comparison_name))]
+            assert isinstance(runnable_somatic, Runnable)
+            for key, extension in (
+                    ('somatic_vcf', '.vcf.gz'),
+                    ('somatic_idx', '.vcf.gz.tbi'),
+                    ('snpeff_vcf_bgz', '_snpeff.vcf.gz'),
+                    ('snpeff_vcf_tbi', '_snpeff.vcf.gz.tbi'),
+                    ('snpeff_genes', '_snpeff_summary.genes.txt'),
+                    ('snpeff_stats', '_snpeff_summary.html'),
+                    ('annotated_vcf', '_annotated.vcf.gz'),
+                    ('annotated_tbi', '_annotated.vcf.gz.tbi'),
+                    ('annotated_tsv', '_annotated.tsv')):
+                self._create_symbolic_link(
+                    source_path=os.path.relpath(
+                        os.path.join(self.genome_directory, runnable_somatic.file_path_dict[key]),
+                        directory_results_by_pair),
+                    target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
 
         return
 
