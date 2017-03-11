@@ -206,6 +206,10 @@ class Default(object):
     @type directory_gatk_bundle: str | unicode
     @ivar directory_snpeff_data: snpEff database directory
     @type directory_snpeff_data: str | unicode
+    @ivar directory_vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
+    @type directory_vep_cache: str | unicode
+    @ivar directory_vep_src: Ensembl Variant Effect Predictor (VEP) source directory
+    @type directory_vep_src: str | unicode
     @ivar indices: Python C{dict} of program name key and index directory name value data
     @type indices: dict[str, str]
     @ivar operator_contact: Contact e-mail address
@@ -337,6 +341,8 @@ class Default(object):
             directory_gatk_bundle=None,
             directory_intervals=None,
             directory_snpeff_data=None,
+            directory_vep_cache=None,
+            directory_vep_src=None,
             indices=None,
             operator_contact=None,
             operator_e_mail=None,
@@ -383,6 +389,10 @@ class Default(object):
         @type directory_intervals: str | unicode
         @param directory_snpeff_data: snpEff database directory
         @type directory_snpeff_data: str | unicode
+        @param directory_vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
+        @type directory_vep_cache: str | unicode
+        @param directory_vep_src: Ensembl Variant Effect Predictor (VEP) source directory
+        @type directory_vep_src: str | unicode
         @param indices: Python C{dict} of program name key and index directory name value data
         @type indices: dict[str, str]
         @param operator_contact: Contact e-mail address
@@ -497,6 +507,16 @@ class Default(object):
         else:
             self.directory_snpeff_data = directory_snpeff_data
 
+        if directory_vep_cache is None:
+            self.directory_vep_cache = str()
+        else:
+            self.directory_vep_cache = directory_vep_cache
+
+        if directory_vep_src is None:
+            self.directory_vep_src = str()
+        else:
+            self.directory_vep_src = directory_vep_src
+
         # Set index information.
 
         if indices is None:
@@ -608,6 +628,8 @@ class Default(object):
         self.directory_gatk_bundle = cp.get(section=section, option='gatk_bundle')
         self.directory_intervals = cp.get(section=section, option='intervals')
         self.directory_snpeff_data = cp.get(section=section, option='snpeff_data')
+        self.directory_vep_cache = cp.get(section=section, option='vep_cache')
+        self.directory_vep_src = cp.get(section=section, option='vep_src')
 
         section = 'indices'
 
