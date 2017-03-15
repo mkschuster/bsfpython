@@ -48,6 +48,8 @@ class Command(object):
     A C{bsf.process.Command} can possibly contain another subordinate C{bsf.process.Command}.
 
     Attributes:
+    @ivar name: Name
+    @type name: str
     @ivar program: Program
     @type program: str
     @ivar options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
@@ -61,12 +63,15 @@ class Command(object):
 
     def __init__(
             self,
+            name=None,
             program=None,
             options=None,
             arguments=None,
             sub_command=None):
         """Initialise a C{bsf.process.Command}.
 
+        @param name: Name
+        @type name: str
         @param program: Program
         @type program: str
         @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
@@ -82,7 +87,15 @@ class Command(object):
 
         super(Command, self).__init__()
 
-        self.program = program  # Can be None.
+        if name is None:
+            self.name = str()
+        else:
+            self.name = name
+
+        if program is None:
+            self.program = str()
+        else:
+            self.program = program
 
         if options is None:
             self.options = dict()
@@ -110,6 +123,8 @@ class Command(object):
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
+        output += '{}  name:               {!r}\n'. \
+            format(indent, self.name)
         output += '{}  program:            {!r}\n'. \
             format(indent, self.program)
 
@@ -484,17 +499,6 @@ class Executable(Command):
     """The C{bsf.process.Executable} class represents one C{bsf.process.Command} as UNIX process.
 
     Attributes:
-    @ivar name: Name in the context of a C{bsf.Stage} dependency
-    @type name: str
-    @ivar program: Program (executable or full file path)
-    @type program: str
-    @ivar options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
-        Python C{list} value objects of C{bsf.argument.Argument} objects
-    @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]]
-    @ivar arguments: Python C{list} of Python C{str} or C{unicode} (argument) objects
-    @type arguments: list[str | unicode]
-    @ivar sub_command: Subordinate C{bsf.process.Command}
-    @type sub_command: bsf.process.Command
     @ivar stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
     @type stdout_path: str | unicode
     @ivar stderr_path: Standard error (STDERR) redirection in Bash (2>word)
@@ -616,7 +620,7 @@ class Executable(Command):
 
     def __init__(
             self,
-            name,
+            name=None,
             program=None,
             options=None,
             arguments=None,
@@ -663,13 +667,18 @@ class Executable(Command):
         @rtype:
         """
 
+        # Further constrain the name instance variable in the Executable class.
+
+        if not name:
+            raise Exception("The Executable class requires a non-empty name option {!r} for program option {!r}.".
+                            format(name, program))
+
         super(Executable, self).__init__(
+            name=name,
             program=program,
             options=options,
             arguments=arguments,
             sub_command=sub_command)
-
-        self.name = name  # Can be None.
 
         if stderr_path is None:
             self.stderr_path = str()
@@ -726,8 +735,6 @@ class Executable(Command):
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
-        output += '{}  name:               {!r}\n'. \
-            format(indent, self.name)
         output += '{}  stdout:             {!r}\n'. \
             format(indent, self.stdout_path)
         output += '{}  stderr:             {!r}\n'. \
@@ -890,8 +897,8 @@ class Executable(Command):
 
         else:
             if debug > 0:
-                print '[{}] Runnable {!r} exceeded the maximum retry counter {}.' \
-                    .format(datetime.datetime.now().isoformat(), self.name, self.maximum_attempts)
+                print '[{}] Runnable {!r} exceeded the maximum retry counter {}.'. \
+                    format(datetime.datetime.now().isoformat(), self.name, self.maximum_attempts)
 
         return child_return_code
 
@@ -1303,8 +1310,12 @@ class RunnableStepJava(RunnableStep):
             process_name=process_name,
             obsolete_file_path_list=obsolete_file_path_list)
 
+        # JavaVM name
+        if not self.name:
+            self.name = 'java'
+
         # JavaVM command
-        if self.program is None:
+        if not self.program:
             self.program = 'java'
 
         # JavaVM options
@@ -1428,7 +1439,7 @@ class RunnableStepPicard(RunnableStepJava):
 
         # The Picard algorithm is then another sub-command.
         if self.sub_command.sub_command is None:
-            self.sub_command.sub_command = Command(program=picard_command)
+            self.sub_command.sub_command = Command(name=picard_command, program=picard_command)
 
         return
 
