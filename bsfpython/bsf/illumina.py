@@ -1474,7 +1474,7 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta in ('2.4.11', '2.7.3', '2.7.6'):
+        if rta in ('2.4.11', '2.7.3', '2.7.6', '2.7.7'):
             # RTA 2.4.11 (NextSeq) doe not have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             # RTA 2.7.3 (HiSeq 3000/4000) does no longer have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             return
@@ -1613,7 +1613,7 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta in ('2.4.11', '2.7.3', '2.7.6'):
+        if rta in ('2.4.11', '2.7.3', '2.7.6', '2.7.7'):
             # RTA 2.4.11 (NextSeq) doe not have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             # RTA 2.7.3 (HiSeq 3000/4000) does no longer have a IRF/Data/Intensities/BaseCalls/Phasing/ directory.
             return
@@ -1743,7 +1743,7 @@ class RunFolder(object):
 
         # Process the IRF/Data/Intensities/BaseCalls/config.xml file.
 
-        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6'):
+        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
             # HiSeq 3000/4000 and NextSeq does not have the IRF/Data/Intensities/BaseCalls/config.xml file.
             _entry_name = 'config.xml'
             if _entry_name in _directory_dict:
@@ -1841,7 +1841,7 @@ class RunFolder(object):
                                 # Process tile stats files.
                                 # s_1_1101.stats
                                 # s_1_2316.stats
-                                if rta not in ('2.5.2', '2.7.3', '2.7.6'):
+                                if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7'):
                                     # HiSeq 3000/4000 does not have stats files.
                                     _entry_name = 's_{:1d}_{:1d}{:1d}{:02d}.stats'.format(lane, surface, swath, tile)
                                     if _entry_name in cycle_dict:
@@ -1872,7 +1872,7 @@ class RunFolder(object):
                             # Process tile control files.
                             # s_1_1101.control
                             # s_1_2316.control
-                            if rta not in ('2.5.2', '2.7.3', '2.7.6'):
+                            if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7'):
                                 # HiSeq 3000/4000 does not have control files.
                                 _entry_name = 's_{:1d}_{:1d}{:1d}{:02d}.control'.format(lane, surface, swath, tile)
                                 if _entry_name in lane_dict:
@@ -2035,7 +2035,7 @@ class RunFolder(object):
             directory_path=_directory_path,
             debug=debug)
 
-        if rta in ('2.5.2', '2.7.3', '2.7.6'):
+        if rta in ('2.5.2', '2.7.3', '2.7.6', '2.7.7'):
             # The HiSeq 3000/4000 platform has:
             # s.locs
 
@@ -2326,7 +2326,7 @@ class RunFolder(object):
             directory_path=_directory_path,
             debug=debug)
 
-        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6'):
+        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
             # Exclude the HiSeq 3000/4000 and NextSeq platforms.
             # Check the IRF/Data/ImageSize.dat file.
             _entry_name = 'ImageSize.dat'
@@ -2417,14 +2417,14 @@ class RunFolder(object):
             # Only on the MiSeq platform.
             _file_name_list.append('IndexMetricsOut.bin')
 
-        if rta in ('2.4.11', '2.5.2', '2.7.3', '2.7.6'):
+        if rta in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
             # HiSeq 3000/4000 and NextSeq platforms
             _file_name_list.append('EmpiricalPhasingMetricsOut.bin')
             _file_name_list.append('EventMetricsOut.bin')
             _file_name_list.append('PFGridMetricsOut.bin')
             _file_name_list.append('RegistrationMetricsOut.bin')
 
-        if rta in ('2.7.3', '2.7.6'):
+        if rta in ('2.7.3', '2.7.6', '2.7.7'):
             # HiSeq 3000/4000 platform, excluding RTA 2.5.2 version
             _file_name_list.append('ColorMatrixMetricsOut.bin')
             _file_name_list.append('FWHMGridMetricsOut.bin')
@@ -2433,7 +2433,7 @@ class RunFolder(object):
         if rta not in ('1.18.54', '2.4.11', '2.5.2'):
             _file_name_list.append('ImageMetricsOut.bin')
 
-        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6'):
+        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
             # Other than HiSeq 3000/4000 and NextSeq platforms
             _file_name_list.append('ControlMetricsOut.bin')
 
@@ -2531,7 +2531,7 @@ class RunFolder(object):
         else:
             _file_name_list.append(flow_cell_barcode + '.xml')
 
-            if rta not in ('2.5.2', '2.7.3', '2.7.6'):
+            if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7'):
                 # The HiSeq 3000/4000 platform does not have a 'FCID_RunState.xml' file.
                 _file_name_list.append(flow_cell_barcode + '_RunState.xml')
 
@@ -2639,7 +2639,7 @@ class RunFolder(object):
                                         format(_directory_name, lane_name, cycle_name, _entry_name)
 
                                 _entry_name += '.zprof'
-                                if rta in ('2.5.2', '2.7.3', '2.7.6') and base in ('c', 'g', 't'):
+                                if rta in ('2.5.2', '2.7.3', '2.7.6', '2.7.7') and base in ('c', 'g', 't'):
                                     # The HiSeq 3000/4000 platform does not have swath files for bases c, g and t.
                                     pass
                                 else:
@@ -2650,7 +2650,7 @@ class RunFolder(object):
                                             format(_directory_name, lane_name, cycle_name, _entry_name)
 
                             # Process tile image files.
-                            if rta in ('1.18.54', '2.5.2', '2.7.3', '2.7.6'):
+                            if rta in ('1.18.54', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
                                 # The HiSeq 3000/4000 and MiSeq platforms use lower case bases.
                                 pass
                             else:
@@ -2712,6 +2712,7 @@ class RunFolder(object):
                 '2.5.2',  # HiSeq Control Software 3.3.20 (HiSeq 3000/4000)
                 '2.7.3',  # HiSeq Control Software 3.3.52 (HiSeq 3000/4000)
                 '2.7.6',  # HiSeq Control Software 3.3.76 (HiSeq 3000/4000)
+                '2.7.7',  # HiSeq Control Software HD 3.4.0.38 (HiSeq 3000/4000)
         ):
             raise Exception("Unsupported RTA version: '{}'".format(rta))
 
@@ -2779,7 +2780,7 @@ class RunFolder(object):
             # Not for MiSeq and NextSeq platforms.
             _file_name_list.append('First_Base_Report.htm')
 
-        if rta in ('2.4.11', '2.5.2', '2.7.3', '2.7.6'):
+        if rta in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
             # On HiSeq 3000/4000 and NextSeq platforms.
             _file_name_list.append('RTAConfiguration.xml')
             _file_name_list.append('RTALogs')  # directory
