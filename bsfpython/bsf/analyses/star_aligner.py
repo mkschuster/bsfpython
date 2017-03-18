@@ -1,7 +1,7 @@
 """bsf.analyses.star_aligner
 
-A package of classes and methods supporting the spliced Transcripts Alignment to a Reference (STAR) aligner by
-Alexander Dobin.
+A package of classes and methods supporting the spliced Transcripts Alignment
+to a Reference (STAR) aligner by Alexander Dobin.
 
 Project:  https://github.com/alexdobin/STAR
 """
@@ -30,9 +30,13 @@ Project:  https://github.com/alexdobin/STAR
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import os
+
+import pysam
+
 from bsf import Analysis, Runnable
 from bsf.ngs import PairedReads
-from bsf.process import Command, RunnableStep, RunnableStepLink, RunnableStepMove, RunnableStepPicard
+from bsf.process import RunnableStep, RunnableStepLink, RunnableStepMove, RunnableStepPicard
 from bsf.standards import Default
 
 
@@ -68,6 +72,39 @@ class StarAligner(Analysis):
     stage_name_align = '_'.join((prefix, 'align'))
     stage_name_index = '_'.join((prefix, 'index'))
     stage_name_merge = '_'.join((prefix, 'merge'))
+
+    @classmethod
+    def get_prefix_star_aligner_align(cls, paired_reads_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param paired_reads_name: Replicate key
+        @type paired_reads_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.stage_name_align, paired_reads_name))
+
+    @classmethod
+    def get_prefix_star_aligner_index(cls, paired_reads_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param paired_reads_name: Replicate key
+        @type paired_reads_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.stage_name_index, paired_reads_name))
+
+    @classmethod
+    def get_prefix_star_aligner_merge(cls, sample_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param sample_name: Sample name
+        @type sample_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.stage_name_merge, sample_name))
 
     def __init__(
             self,
@@ -225,6 +262,9 @@ class StarAligner(Analysis):
 
     def run(self):
         """Run this C{bsf.analyses.rna_seq.Tuxedo} analysis.
+
+        Although the STAR aligner can directly count reads according to its splice junction database,
+        more than one read group may need aligning so that the count tables had to be combined.
         @return:
         @rtype:
         """
@@ -268,6 +308,9 @@ class StarAligner(Analysis):
                 print '{!r} Sample name: {}'.format(self, sample.name)
                 print sample.trace(1)
 
+            file_path_dict_list_merge = list()
+            dependency_list_merge = list()
+
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
             paired_reads_name_list = paired_reads_dict.keys()
@@ -278,8 +321,6 @@ class StarAligner(Analysis):
 
             for paired_reads_name in paired_reads_name_list:
                 assert isinstance(paired_reads_name, str)
-                file_path_dict_list_merge = list()
-                merge_dependency_list = list()
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     assert isinstance(paired_reads, PairedReads)
                     if self.debug > 0:
@@ -315,18 +356,50 @@ class StarAligner(Analysis):
                     runnable_step = runnable_align.add_runnable_step(
                         runnable_step=RunnableStep(
                             name='STAR',
-                            program='STAR',
-                            sub_command=Command()))
+                            program='STAR'))
                     assert isinstance(runnable_step, RunnableStep)
+                    self.set_runnable_step_configuration(runnable_step=runnable_step)
                     runnable_step.add_option_long(key='runThreadN', value=str(stage_align.threads))
                     runnable_step.add_option_long(key='genomeDir', value=self.index_directory)
                     runnable_step.add_option_long(key='outFileNamePrefix', value=prefix_align + '_')
-                    # STAR has another peculiarity in that an option can have one or two values.
-                    # --readFilesIn /path/to/read1 [/path/to/read2]
-                    sub_command = runnable_step.sub_command
-                    sub_command.add_option_long(key='readFilesIn', value=paired_reads.reads_1.file_path)
-                    if paired_reads.reads_2 is not None:
-                        sub_command.arguments.append(paired_reads.reads_2.file_path)
+                    if paired_reads.reads_2 is None:
+                        runnable_step.add_option_long(
+                            key='readFilesIn',
+                            value=paired_reads.reads_1.file_path)
+                    else:
+                        runnable_step.add_option_long(
+                            key='readFilesIn',
+                            value=' '.join((paired_reads.reads_1.file_path, paired_reads.reads_2.file_path)))
+
+                    # If the original BAM file was annotated in the PairedReads object, the read group can be set.
+
+                    if 'BAM File' in paired_reads.annotation_dict:
+                        # There should be only one BAM file linked to the PairedReads object.
+                        bam_file_path = paired_reads.annotation_dict['BAM File'][0]
+                        if os.path.exists(bam_file_path):
+                            alignment_file = pysam.AlignmentFile(bam_file_path, 'rb', check_sq=False)
+
+                            # Add the @RG line.
+                            for read_group_dict in alignment_file.header['RG']:
+                                assert isinstance(read_group_dict, dict)
+                                # There should also be only one read group.
+                                key_list = read_group_dict.keys()
+                                # Remove the 'ID' from the key_list, as it has to go first.
+                                key_list.remove('ID')
+                                read_group_str = "ID:{}".format(read_group_dict['ID'])
+                                for key in key_list:
+                                    read_group_str += ' "{}:{}"'.format(key, read_group_dict[key])
+                                runnable_step.add_option_long(key='outSAMattrRGline', value=read_group_str)
+
+                            # Add @PG lines.
+                            # The STAR aligner allows only a single @PG line, which is not terribly helpful.
+                            # for program_dict in alignment_file.header['PG']:
+                            #     assert isinstance(program_dict, dict)
+                            #     key_list = program_dict.keys()
+                            #     program_str = ''
+                            #     for key in key_list:
+                            #         program_str += ' "{}:{}"'.format(key, program_dict[key])
+                            #     runnable_step.add_option_long(key='outSAMheaderPG', value=program_str)
 
                     #####################
                     # 2. Indexing Stage #
@@ -358,7 +431,7 @@ class StarAligner(Analysis):
                         runnable=runnable_index)
                     executable_index.dependencies.append(executable_align.name)
 
-                    merge_dependency_list.append(executable_index.name)
+                    dependency_list_merge.append(executable_index.name)
 
                     runnable_step = runnable_index.add_runnable_step(
                         RunnableStepPicard(
@@ -397,92 +470,96 @@ class StarAligner(Analysis):
                     runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
                     runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
 
-                ####################
-                # 3. Merging Stage #
-                ####################
+            ####################
+            # 3. Merging Stage #
+            ####################
 
-                # For more than one ReadPair object the aligned BAM files need merging.
+            # For more than one ReadPair object the aligned BAM files need merging into Sample-specific ones.
 
-                prefix_merge = '_'.join((stage_merge.name, paired_reads_name))
+            prefix_merge = '_'.join((stage_merge.name, sample.name))
 
-                file_path_dict_merge = {
-                    'temporary_directory': prefix_merge + '_temporary',
-                    'merged_bam': prefix_merge + '.bam',
-                    'merged_bai': prefix_merge + '.bai',
-                    'merged_lnk': prefix_merge + '.bam.bai',
-                    'merged_md5': prefix_merge + '.bam.md5',
-                    'merged_tsv': prefix_merge + '.tsv',
-                    'merged_pdf': prefix_merge + '.pdf',
-                }
+            file_path_dict_merge = {
+                'temporary_directory': prefix_merge + '_temporary',
+                'merged_bam': prefix_merge + '.bam',
+                'merged_bai': prefix_merge + '.bai',
+                'merged_lnk': prefix_merge + '.bam.bai',
+                'merged_md5': prefix_merge + '.bam.md5',
+                'merged_tsv': prefix_merge + '.tsv',
+                'merged_pdf': prefix_merge + '.pdf',
+            }
 
-                runnable_merge = self.add_runnable(
-                    runnable=Runnable(
-                        name=prefix_merge,
-                        code_module='bsf.runnables.generic',
-                        working_directory=self.genome_directory,
-                        cache_directory=self.cache_directory,
-                        file_path_dict=file_path_dict_merge,
-                        debug=self.debug))
-                executable_merge = self.set_stage_runnable(
-                    stage=stage_index,
-                    runnable=runnable_merge)
-                executable_merge.dependencies.extend(merge_dependency_list)
+            runnable_merge = self.add_runnable(
+                runnable=Runnable(
+                    name=prefix_merge,
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.genome_directory,
+                    cache_directory=self.cache_directory,
+                    file_path_dict=file_path_dict_merge,
+                    debug=self.debug))
+            executable_merge = self.set_stage_runnable(
+                stage=stage_merge,
+                runnable=runnable_merge)
+            executable_merge.dependencies.extend(dependency_list_merge)
 
-                if len(paired_reads_dict[paired_reads_name]) == 1:
-                    # For a single ReadPair, just rename the files.
-                    runnable_merge.add_runnable_step(
-                        RunnableStepMove(
-                            name='move_bam',
-                            source_path=file_path_dict_list_merge[0]['aligned_bam'],
-                            target_path=file_path_dict_merge['merged_bam']))
-                    runnable_merge.add_runnable_step(
-                        RunnableStepMove(
-                            name='move_bai',
-                            source_path=file_path_dict_list_merge[0]['aligned_bai'],
-                            target_path=file_path_dict_merge['merged_bai']))
-                    runnable_merge.add_runnable_step(
-                        RunnableStepMove(
-                            name='move_md5',
-                            source_path=file_path_dict_list_merge[0]['aligned_md5'],
-                            target_path=file_path_dict_merge['merged_md5']))
-                else:
-                    # Run Picard MergeSamFiles on each BAM file.
-                    runnable_step = runnable_merge.add_runnable_step(
-                        RunnableStepPicard(
-                            name='picard_merge_sam_files',
-                            java_temporary_path=file_path_dict_merge['temporary_directory'],
-                            java_heap_maximum='Xmx2G',
-                            picard_classpath=self.classpath_picard,
-                            picard_command='MergeSamFiles'))
-                    assert isinstance(runnable_step, RunnableStepPicard)
-                    for file_path_dict_index in file_path_dict_list_merge:
-                        runnable_step.obsolete_file_path_list.append(file_path_dict_index['aligned_bam'])
-                        runnable_step.obsolete_file_path_list.append(file_path_dict_index['aligned_bai'])
-                        runnable_step.obsolete_file_path_list.append(file_path_dict_index['aligned_md5'])
-                        runnable_step.add_picard_option(
-                            key='INPUT',
-                            value=file_path_dict_index['aligned_bam'],
-                            override=True)
-
-                    runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_merge['merged_bam'])
-                    runnable_step.add_picard_option(key='SORT_ORDER', value='coordinate')
-                    runnable_step.add_picard_option(key='TMP_DIR', value=file_path_dict_merge['temporary_directory'])
-                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                    runnable_step.add_picard_option(key='QUIET', value='false')
-                    runnable_step.add_picard_option(key='VALIDATION_STRINGENCY', value='STRICT')
-                    runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
-                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
-                    runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
-                    runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
-
-                # Create a symbolic link from the Picard-style *.bai file to a samtools-style *.bam.bai file.
-
+            if len(file_path_dict_list_merge) == 1:
+                # For a single ReadPair, just rename the files.
                 runnable_merge.add_runnable_step(
-                    runnable_step=RunnableStepLink(
-                        name='link',
-                        source_path=file_path_dict_merge['merged_bai'],
-                        target_path=file_path_dict_merge['merged_lnk']))
+                    RunnableStepMove(
+                        name='move_bam',
+                        source_path=file_path_dict_list_merge[0]['aligned_bam'],
+                        target_path=file_path_dict_merge['merged_bam']))
+                runnable_merge.add_runnable_step(
+                    RunnableStepMove(
+                        name='move_bai',
+                        source_path=file_path_dict_list_merge[0]['aligned_bai'],
+                        target_path=file_path_dict_merge['merged_bai']))
+                runnable_merge.add_runnable_step(
+                    RunnableStepMove(
+                        name='move_md5',
+                        source_path=file_path_dict_list_merge[0]['aligned_md5'],
+                        target_path=file_path_dict_merge['merged_md5']))
+            else:
+                # Run Picard MergeSamFiles on each BAM file.
+                runnable_step = runnable_merge.add_runnable_step(
+                    RunnableStepPicard(
+                        name='picard_merge_sam_files',
+                        java_temporary_path=file_path_dict_merge['temporary_directory'],
+                        java_heap_maximum='Xmx2G',
+                        picard_classpath=self.classpath_picard,
+                        picard_command='MergeSamFiles'))
+                assert isinstance(runnable_step, RunnableStepPicard)
+                for file_path_dict_index in file_path_dict_list_merge:
+                    runnable_step.obsolete_file_path_list.append(file_path_dict_index['aligned_bam'])
+                    runnable_step.obsolete_file_path_list.append(file_path_dict_index['aligned_bai'])
+                    runnable_step.obsolete_file_path_list.append(file_path_dict_index['aligned_md5'])
+                    runnable_step.add_picard_option(
+                        key='INPUT',
+                        value=file_path_dict_index['aligned_bam'],
+                        override=True)
 
+                runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_merge['merged_bam'])
+                runnable_step.add_picard_option(key='SORT_ORDER', value='coordinate')
+                runnable_step.add_picard_option(key='TMP_DIR', value=file_path_dict_merge['temporary_directory'])
+                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
+                runnable_step.add_picard_option(key='QUIET', value='false')
+                runnable_step.add_picard_option(key='VALIDATION_STRINGENCY', value='STRICT')
+                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+                runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+                runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
+                runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+
+            # Create a symbolic link from the Picard-style *.bai file to a samtools-style *.bam.bai file.
+
+            runnable_merge.add_runnable_step(
+                runnable_step=RunnableStepLink(
+                    name='link',
+                    source_path=file_path_dict_merge['merged_bai'],
+                    target_path=file_path_dict_merge['merged_lnk']))
+
+            if False:
+                # Create a RunnableStep for htseq-count.
+                # For the moment, the counting infrastructure in Bioconductor GenomeAlignment is used
+                # that directly yields a RangedSummarizedExperiment object suitable for downstream analysis.
                 runnable_step = runnable_merge.add_runnable_step(
                     runnable_step=RunnableStep(
                         name='count',
@@ -496,20 +573,20 @@ class StarAligner(Analysis):
                 runnable_step.arguments.append(file_path_dict_merge['merged_bam'])
                 runnable_step.arguments.append(self.transcriptome_gtf)
 
-                if False:
-                    # The htseq-qa script no longer seems compatible with the Python matplotlib 1.5.3 module
-                    runnable_step = runnable_merge.add_runnable_step(
-                        runnable_step=RunnableStep(
-                            name='qa',
-                            program='htseq-qa'))
-                    runnable_step.add_option_long(key='type', value='bam')
-                    runnable_step.add_option_long(key='outfile', value=file_path_dict_merge['merged_pdf'])
-                    # readlength can be guessed from the file
-                    # gamma defaults to 0.3
-                    # nosplit defaults ot false
-                    # NOTE: The 'maxqual' option defaults to 41, but the HiSeq 3000/4000 platform may set 42 as maximum.
-                    runnable_step.add_option_long(key='maxqual', value='42')
+            if False:
+                # The htseq-qa script no longer seems compatible with the Python matplotlib 1.5.3 module
+                runnable_step = runnable_merge.add_runnable_step(
+                    runnable_step=RunnableStep(
+                        name='qa',
+                        program='htseq-qa'))
+                runnable_step.add_option_long(key='type', value='bam')
+                runnable_step.add_option_long(key='outfile', value=file_path_dict_merge['merged_pdf'])
+                # readlength can be guessed from the file
+                # gamma defaults to 0.3
+                # nosplit defaults ot false
+                # NOTE: The 'maxqual' option defaults to 41, but the HiSeq 3000/4000 platform may set 42 as maximum.
+                runnable_step.add_option_long(key='maxqual', value='42')
 
-                    runnable_step.arguments.append(file_path_dict_merge['merged_bam'])
+                runnable_step.arguments.append(file_path_dict_merge['merged_bam'])
 
         return
