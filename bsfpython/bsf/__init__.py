@@ -404,7 +404,7 @@ class Analysis(object):
     def get_stage(self, name):
         """Get a C{bsf.Stage} from a C{bsf.Analysis}.
 
-        If the C{bsf.Stage} does not exist, it is created and initialised it via the
+        If the C{bsf.Stage} does not exist, it is created and initialised via the
         C{bsf.standards.Configuration} in C{bsf.Analysis.configuration}.
         Reads from configuration file sections
         I{[bsf.Stage]}
@@ -524,6 +524,8 @@ class Analysis(object):
         @return:
         @rtype:
         """
+        # TODO: Phase out this method.
+        # Once all accessory scripts are converted to Runnable and RunnableStep objects this method becomes redundant.
         assert isinstance(command, Command)
 
         section = Configuration.section_from_instance(instance=command)
@@ -539,6 +541,57 @@ class Analysis(object):
             print 'Command configuration section: {!r}.'.format(section)
 
         command.set_configuration(configuration=self.configuration, section=section)
+
+        return
+
+    def set_runnable_step_configuration(self, runnable_step):
+        """Set default C{bsf.argument.Argument} objects for a C{bsf.process.RunnableStep}.
+
+        This method reads configuration section(s)
+        "Analysis.__class__.__name__"."RunnableStep.name"[."Command.name"]*
+        @param runnable_step: C{bsf.process.RunnableStep}
+        @type runnable_step: bsf.process.RunnableStep
+        @return:
+        @rtype:
+        """
+
+        def _set_configuration(command, section):
+            """Recursively set default C{bsf.argument.Argument} objects for a C{bsf.process.RunnableStep}.
+
+            The method sets the default C{bsf.argument.Argument} objects for a C{bsf.process.RunnableStep},
+            as well as for its contained sub C{bsf.process.Command} objects.
+            @param command: C{bsf.process.Command}
+            @type command: bsf.process.Command
+            @param section: Configuration section
+            @type section: str
+            @return:
+            @rtype:
+            """
+            assert isinstance(command, Command)
+            assert isinstance(prefix, str)
+
+            if command.name:
+                section += '.' + command.name
+            else:
+                section += '.' + command.program
+
+            if self.debug > 1:
+                print 'RunnableStep configuration section: {!r}'.format(section)
+
+            command.set_configuration(configuration=self.configuration, section=section)
+
+            if command.sub_command is not None:
+                _set_configuration(command=command.sub_command, section=section)
+
+            return
+
+        assert isinstance(runnable_step, RunnableStep)
+
+        # Initially, the configuration section prefix is based on the Analysis class name and the Analysis Stage.name.
+
+        prefix = Configuration.section_from_instance(instance=self)
+
+        _set_configuration(command=runnable_step, section=prefix)
 
         return
 
@@ -569,11 +622,6 @@ class Analysis(object):
                             format(runnable.name, self.project_name))
 
         executable = Executable(name=runnable.name, program=Runnable.runner_script)
-        # TODO: Read configuration files for RunnableStep objects rather than Runnable objects.
-        # Since bsf.Runnable.code_module objects such as 'bsf.runnables.generic' can be very generic,
-        # it makes no sense to read standard configuration options from a Configuration object.
-        # executable.set_configuration(configuration=analysis.configuration, section=runnable.code_module)
-        # It would be better to read standard configuration options for RunnableStep objects.
         executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
 
         # Only submit the Executable if the status file does not exist already.
