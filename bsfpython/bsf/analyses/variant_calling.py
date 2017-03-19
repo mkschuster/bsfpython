@@ -2480,6 +2480,8 @@ class VariantCallingGATK(Analysis):
                 'missing_report': prefix_diagnosis + '_missing.gatkreport',
                 'callable_bed': prefix_diagnosis + '_callable_loci.bed',
                 'callable_txt': prefix_diagnosis + '_callable_loci.txt',
+                'callable_bb': prefix_diagnosis + '_callable_loci.bb',
+                'sorted_bed': prefix_diagnosis + '_callable_sorted.bed',
                 'non_callable_loci_tsv': prefix_diagnosis + '_non_callable_loci.tsv',  # Defined in the R script.
                 'non_callable_summary_tsv': prefix_diagnosis + '_non_callable_summary.tsv',  # Defined in the R script.
                 'hybrid_selection_metrics': prefix_diagnosis + '_hybrid_selection_metrics.tsv',
@@ -2554,7 +2556,11 @@ class VariantCallingGATK(Analysis):
                         java_heap_maximum='Xmx6G',
                         gatk_classpath=self.classpath_gatk))
                 assert isinstance(runnable_step, RunnableStepGATK)
+                self.set_runnable_step_configuration(runnable_step=runnable_step)
+                # CommandLineGATK
+                # Required Parameters
                 runnable_step.add_gatk_option(key='analysis_type', value='DiagnoseTargets')
+                # Optional Inputs
                 runnable_step.add_gatk_option(key='reference_sequence', value=reference_diagnose_sample)
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
@@ -2568,10 +2574,13 @@ class VariantCallingGATK(Analysis):
                 if target_interval_path:
                     runnable_step.add_gatk_option(key='intervals', value=target_interval_path)
                 runnable_step.add_gatk_option(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
-                runnable_step.add_gatk_option(key='out', value=file_path_dict_diagnosis['diagnose_targets_vcf'])
+                # DiagnoseTargets
+                # Optional Outputs
                 runnable_step.add_gatk_option(
                     key='missing_intervals',
                     value=file_path_dict_diagnosis['missing_intervals'])
+                runnable_step.add_gatk_option(key='out', value=file_path_dict_diagnosis['diagnose_targets_vcf'])
+                # Optional Parameters
 
                 # Run the GATK QualifyMissingIntervals analysis per sample, only if targets have been defined.
 
@@ -2582,7 +2591,11 @@ class VariantCallingGATK(Analysis):
                         java_heap_maximum='Xmx6G',
                         gatk_classpath=self.classpath_gatk))
                 assert isinstance(runnable_step, RunnableStepGATK)
+                self.set_runnable_step_configuration(runnable_step=runnable_step)
+                # CommandLineGATK
+                # Required Parameters
                 runnable_step.add_gatk_option(key='analysis_type', value='QualifyMissingIntervals')
+                # Optional Inputs
                 runnable_step.add_gatk_option(key='reference_sequence', value=reference_diagnose_sample)
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
@@ -2596,11 +2609,15 @@ class VariantCallingGATK(Analysis):
                 # of the Diagnose Targets analysis, regardless.
                 runnable_step.add_gatk_option(key='intervals', value=file_path_dict_diagnosis['missing_intervals'])
                 runnable_step.add_gatk_option(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
-                if probe_interval_path:
-                    runnable_step.add_gatk_option(key='baitsfile', value=probe_interval_path)
+                # QualifyMissingIntervals
+                # Required Parameters
                 if target_interval_path:
                     runnable_step.add_gatk_option(key='targetsfile', value=target_interval_path)
+                # Optional Outputs
                 runnable_step.add_gatk_option(key='out', value=file_path_dict_diagnosis['missing_report'])
+                # Optional Parameters
+                if probe_interval_path:
+                    runnable_step.add_gatk_option(key='baitsfile', value=probe_interval_path)
 
             # Run the GATK CallableLoci analysis per sample.
 
@@ -2611,7 +2628,11 @@ class VariantCallingGATK(Analysis):
                     java_heap_maximum='Xmx6G',
                     gatk_classpath=self.classpath_gatk))
             assert isinstance(runnable_step, RunnableStepGATK)
+            self.set_runnable_step_configuration(runnable_step=runnable_step)
+            # CommandLineGATK
+            # Required Parameters
             runnable_step.add_gatk_option(key='analysis_type', value='CallableLoci')
+            # Optional Inputs
             runnable_step.add_gatk_option(key='reference_sequence', value=reference_diagnose_sample)
             if self.downsample_to_fraction:
                 runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
@@ -2625,8 +2646,10 @@ class VariantCallingGATK(Analysis):
             if target_interval_path:
                 runnable_step.add_gatk_option(key='intervals', value=target_interval_path)
             runnable_step.add_gatk_option(key='input_file', value=file_path_dict_diagnosis['realigned_bam'])
-            runnable_step.add_gatk_option(key='out', value=file_path_dict_diagnosis['callable_bed'])
+            # Required Outputs
             runnable_step.add_gatk_option(key='summary', value=file_path_dict_diagnosis['callable_txt'])
+            # Optional Outputs
+            runnable_step.add_gatk_option(key='out', value=file_path_dict_diagnosis['callable_bed'])
 
             # Run the bsfR bsf_variant_calling_coverage.R script.
 
@@ -2635,6 +2658,7 @@ class VariantCallingGATK(Analysis):
                     name='diagnose_sample_coverage',
                     program='bsf_variant_calling_coverage.R'))
             assert isinstance(runnable_step, RunnableStep)
+            self.set_runnable_step_configuration(runnable_step=runnable_step)
             runnable_step.add_option_long(key='exons', value=self.genome_annotation_gtf)
             runnable_step.add_option_long(key='callable-loci', value=file_path_dict_diagnosis['callable_bed'])
             if target_interval_path.endswith('.bed'):
@@ -2644,6 +2668,29 @@ class VariantCallingGATK(Analysis):
             elif target_interval_path:
                 runnable_step.add_option_long(key='targets', value=target_interval_path)
             # If a target interval path has not been defined, run without it.
+
+            # Run the UCSC bedSort tool.
+
+            runnable_step = runnable_diagnose_sample.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='diagnose_sample_bed_sort',
+                    program='bedSort'))
+            runnable_step.arguments.append(file_path_dict_diagnosis['callable_bed'])
+            runnable_step.arguments.append(file_path_dict_diagnosis['sorted_bed'])
+
+            # Run the UCSC bedToBigBed tool.
+
+            runnable_step = runnable_diagnose_sample.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='diagnose_sample_bed_to_big_bed',
+                    program='bedToBigBed',
+                    obsolete_file_path_list=[
+                        file_path_dict_diagnosis['sorted_bed'],
+                    ]))
+            runnable_step.add_option_short(key='type', value='bed4')
+            runnable_step.arguments.append(file_path_dict_diagnosis['sorted_bed'])
+            runnable_step.arguments.append(reference_diagnose_sample + '.fai')
+            runnable_step.arguments.append(file_path_dict_diagnosis['callable_bb'])
 
             if target_interval_path:
                 # Run the Picard CalculateHsMetrics analysis per sample, only if targets have been defined.
@@ -3334,12 +3381,10 @@ class VariantCallingGATK(Analysis):
 
         runnable_step = runnable_process_cohort.add_runnable_step(
             runnable_step=RunnableStep(
-                name='ensembl_vep',
+                name='process_cohort_ensembl_vep',
                 program='perl',
                 sub_command=Command()))
-        # TODO: Moving of the Executable.name instance variable?
-        # Should the Executable.name instance variable be moved upstream to Command.name, so that it
-        # could be used in Analysis-specific configuration sections?
+        self.set_runnable_step_configuration(runnable_step=runnable_step)
         runnable_step.arguments.append(os.path.join(default.directory_vep_src, 'variant_effect_predictor.pl'))
         assert isinstance(runnable_step, RunnableStep)
         sub_command = runnable_step.sub_command
@@ -3363,13 +3408,13 @@ class VariantCallingGATK(Analysis):
 
         runnable_process_cohort.add_runnable_step(
             runnable_step=RunnableStep(
-                name='ensembl_vep_bgzip',
+                name='process_cohort_ensembl_vep_bgzip',
                 program='bgzip',
                 arguments=[file_path_dict_cohort['ensembl_vep_vcf']]))
 
         runnable_step = runnable_process_cohort.add_runnable_step(
             runnable_step=RunnableStep(
-                name='ensembl_vep_tabix',
+                name='process_cohort_ensembl_vep_tabix',
                 program='tabix',
                 arguments=[file_path_dict_cohort['ensembl_vep_vcf_bgz']]))
         assert isinstance(runnable_step, RunnableStep)
@@ -3379,9 +3424,10 @@ class VariantCallingGATK(Analysis):
 
         runnable_step = runnable_process_cohort.add_runnable_step(
             runnable_step=RunnableStep(
-                name='ensembl_filter',
+                name='process_cohort_ensembl_filter',
                 program='perl',
                 sub_command=Command()))
+        self.set_runnable_step_configuration(runnable_step=runnable_step)
         runnable_step.arguments.append(os.path.join(default.directory_vep_src, 'filter_vep.pl'))
         assert isinstance(runnable_step, RunnableStep)
         sub_command = runnable_step.sub_command
@@ -3398,13 +3444,13 @@ class VariantCallingGATK(Analysis):
 
         runnable_process_cohort.add_runnable_step(
             runnable_step=RunnableStep(
-                name='ensembl_filtered_bgzip',
+                name='process_cohort_ensembl_filtered_bgzip',
                 program='bgzip',
                 arguments=[file_path_dict_cohort['ensembl_filtered_vcf']]))
 
         runnable_step = runnable_process_cohort.add_runnable_step(
             runnable_step=RunnableStep(
-                name='ensembl_filtered_tabix',
+                name='process_cohort_ensembl_filtered_tabix',
                 program='tabix',
                 arguments=[file_path_dict_cohort['ensembl_filtered_vcf_bgz']]))
         assert isinstance(runnable_step, RunnableStep)
@@ -4267,10 +4313,8 @@ class VariantCallingGATK(Analysis):
         output_html += '<thead>\n'
         output_html += '<tr>\n'
         output_html += '<th>Sample</th>\n'
-        output_html += '<th>Variants VCF file</th>\n'
-        output_html += '<th>Variants TSV file</th>\n'
-        output_html += '<th>Aligned BAM file</th>\n'
-        output_html += '<th>Aligned BAI file</th>\n'
+        output_html += '<th>Variants</th>\n'
+        output_html += '<th>Alignments</th>\n'
         output_html += '<th>Read Group</th>\n'
         output_html += '<th>Duplicate Metrics</th>\n'
         output_html += '<th>Alignment Summary Metrics</th>\n'
@@ -4288,6 +4332,13 @@ class VariantCallingGATK(Analysis):
         output_hub += 'longLabel BWA NGS read alignments\n'
         output_hub += 'superTrack on show\n'
         output_hub += 'group alignments\n'
+        output_hub += '\n'
+
+        output_hub += 'track Callable\n'
+        output_hub += 'shortLabel Callable\n'
+        output_hub += 'longLabel Callable\n'
+        output_hub += 'superTrack on show\n'
+        output_hub += 'group callable\n'
         output_hub += '\n'
 
         output_hub += 'track Variants\n'
@@ -4349,6 +4400,34 @@ class VariantCallingGATK(Analysis):
             output_hub += 'parent Alignments\n'
             output_hub += '\n'
 
+            # Callable track
+
+            if os.path.isfile(
+                    os.path.join(
+                        self.genome_directory,
+                        runnable_diagnose_sample.file_path_dict['callable_bb'])):
+                output_hub += 'track {}_callable\n'. \
+                    format(sample.name)
+                output_hub += 'type bigBed\n'
+                output_hub += 'shortLabel {}_callable\n'. \
+                    format(sample.name)
+                output_hub += 'longLabel {} callable\n'. \
+                    format(sample.name)
+                output_hub += 'bigDataUrl {}\n'. \
+                    format(runnable_diagnose_sample.file_path_dict['callable_bb'])
+                # track_output += 'html {}\n'.format()
+                output_hub += 'visibility squish\n'
+
+                # Common optional settings.
+
+                output_hub += 'color {}\n'. \
+                    format('0,0,0')
+
+                # Composite track settings.
+
+                output_hub += 'parent Callable\n'
+                output_hub += '\n'
+
             # Variant track
 
             output_hub += 'track {}_variants\n'.format(sample.name)
@@ -4371,14 +4450,20 @@ class VariantCallingGATK(Analysis):
             output_html += '<tr>\n'
             output_html += '<td class="left">{}</td>\n'. \
                 format(sample.name)
-            output_html += '<td class="center"><a href="{}">VCF</a></td>\n'. \
+            output_html += '<td class="center">'
+            output_html += '<a href="{}">VCF</a>&nbsp;'. \
                 format(runnable_split_cohort.file_path_dict['sample_vcf'])
-            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \
+            output_html += '<a href="{}">TBI</a>&nbsp;'. \
+                format(runnable_split_cohort.file_path_dict['sample_idx'])
+            output_html += '<a href="{}">TSV</a>'. \
                 format(runnable_split_cohort.file_path_dict['sample_tsv'])
-            output_html += '<td class="center"><a href="{}">BAM</a></td>\n'. \
+            output_html += '</td>\n'
+            output_html += '<td class="center">'
+            output_html += '<a href="{}">BAM</a>&nbsp;'. \
                 format(runnable_process_sample.file_path_dict['realigned_bam'])
-            output_html += '<td class="center"><a href="{}">BAI</a></td>\n'. \
+            output_html += '<a href="{}">BAI</a> '. \
                 format(runnable_process_sample.file_path_dict['realigned_bai'])
+            output_html += '</td>\n'
             output_html += '<td class="left"></td>\n'  # Read Group
             output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \
                 format(runnable_process_sample.file_path_dict['duplicate_metrics'])
@@ -4392,14 +4477,18 @@ class VariantCallingGATK(Analysis):
                     format(runnable_diagnose_sample.file_path_dict['hybrid_selection_metrics'])
             else:
                 output_html += '<td class="center"></td>\n'
+            output_html += '<td class="center">'
             if os.path.isfile(
                     os.path.join(
                         self.genome_directory,
                         runnable_diagnose_sample.file_path_dict['non_callable_loci_tsv'])):
-                output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \
+                output_html += '<a href="{}">BED</a>&nbsp;'. \
+                    format(runnable_diagnose_sample.file_path_dict['callable_bed'])
+                output_html += '<a href="{}">BigBED</a>&nbsp;'. \
+                    format(runnable_diagnose_sample.file_path_dict['callable_bb'])
+                output_html += '<a href="{}">TSV</a>'. \
                     format(runnable_diagnose_sample.file_path_dict['non_callable_loci_tsv'])
-            else:
-                output_html += '<td class="center"></td>\n'
+            output_html += '</td>\n'
             if os.path.isfile(
                     os.path.join(
                         self.genome_directory,
@@ -4416,10 +4505,8 @@ class VariantCallingGATK(Analysis):
                 assert isinstance(runnable_process_lane, Runnable)
                 output_html += '<tr>\n'
                 output_html += '<td class="left"></td>\n'  # Sample
-                output_html += '<td class="center"></td>\n'  # Variants VCF
-                output_html += '<td class="center"></td>\n'  # Variants TSV
-                output_html += '<td class="center"></td>\n'  # Aligned BAM
-                output_html += '<td class="center"></td>\n'  # Aligned BAI
+                output_html += '<td class="center"></td>\n'  # Variants VCF, TBI, TSV
+                output_html += '<td class="center"></td>\n'  # Alignments BAM, BAI
                 output_html += '<td class="left">{}</td>\n'.format(paired_reads_name)
                 output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \
                     format(runnable_process_lane.file_path_dict['duplicate_metrics'])
