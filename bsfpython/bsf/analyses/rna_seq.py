@@ -27,15 +27,17 @@ A package of classes and methods supporting RNA-Seq analyses.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+import errno
 import os
 from pickle import Pickler, HIGHEST_PROTOCOL
 import re
 
 from bsf import Analysis, Runnable
+from bsf.analyses.star_aligner import StarAligner
 from bsf.annotation import AnnotationSheet, TuxedoSamplePairSheet
 from bsf.ngs import PairedReads, Sample
 from bsf.executables import TopHat
-from bsf.process import Executable, RunnableStep
+from bsf.process import Executable, RunnableStep, RunnableStepLink
 from bsf.standards import Default
 
 
@@ -837,15 +839,24 @@ class Tuxedo(Analysis):
 
                 prefix_run_cufflinks = '_'.join((stage_run_cufflinks.name, paired_reads_name))
 
+                prefix_cufflinks = '_'.join(('rnaseq_cufflinks', paired_reads_name))
+                # The output directory deviates from the prefix_run_cufflinks that itself is based on
+                # stage_run_cufflinks.name. Both rnaseq_run_cufflinks and rnaseq_process_cufflinks processes
+                # should use the same rnaseq_cufflinks directory.
+
                 file_path_dict_cufflinks = {
-                    # The output directory deviates from the prefix_run_cufflinks that itself is based on
-                    # stage_run_cufflinks.name. Both rnaseq_run_cufflinks and rnaseq_process_cufflinks processes
-                    # should use the same rnaseq_cufflinks directory.
                     # output_directory=prefix_run_cufflinks,
-                    'output_directory': '_'.join(('rnaseq_cufflinks', paired_reads_name)),
+                    'output_directory': prefix_cufflinks,
                     'tophat_accepted_hits': os.path.join(
                         file_path_dict_tophat['output_directory'],
                         'accepted_hits.bam'),
+                    'transcripts_gtf': os.path.join(prefix_cufflinks, 'transcripts.gtf'),
+                    'transcripts_gp': os.path.join(prefix_cufflinks, 'transcripts_gene_pred.tsv'),
+                    'transcripts_bp': os.path.join(prefix_cufflinks, 'transcripts_big_gene_pred.tsv'),
+                    'transcripts_st': os.path.join(prefix_cufflinks, 'transcripts_sorted.tsv'),
+                    'transcripts_bb': os.path.join(prefix_cufflinks, 'transcripts.bb'),
+                    'transcripts_lnk_gtf': os.path.join(prefix_cufflinks, prefix_cufflinks + 'transcripts.gtf'),
+                    'transcripts_lnk_bb': os.path.join(prefix_cufflinks, prefix_cufflinks + 'transcripts.bb'),
                 }
 
                 runnable_run_cufflinks = self.add_runnable(
@@ -865,7 +876,7 @@ class Tuxedo(Analysis):
 
                 # Create a new Cufflinks RunnableStep.
 
-                cufflinks = runnable_run_cufflinks.add_runnable_step(
+                runnable_step = runnable_run_cufflinks.add_runnable_step(
                     runnable_step=RunnableStep(
                         name='cufflinks',
                         program='cufflinks'))
@@ -879,58 +890,129 @@ class Tuxedo(Analysis):
                 # assemble novel transcripts.
 
                 if novel_transcripts:
-                    cufflinks.add_option_long(
+                    runnable_step.add_option_long(
                         key='GTF-guide',
                         value=self.transcriptome_gtf_path)
                 else:
-                    cufflinks.add_option_long(
+                    runnable_step.add_option_long(
                         key='GTF',
                         value=self.transcriptome_gtf_path)
 
                 if self.mask_gtf_path:
-                    cufflinks.add_option_long(
+                    runnable_step.add_option_long(
                         key='mask-file',
                         value=self.mask_gtf_path)
 
-                cufflinks.add_option_long(
+                runnable_step.add_option_long(
                     key='frag-bias-correct',
                     value=self.genome_fasta_path)
 
                 if self.multi_read_correction:
-                    cufflinks.add_switch_long(
+                    runnable_step.add_switch_long(
                         key='multi-read-correct')
 
                 if self.library_type:
-                    cufflinks.add_option_long(
+                    runnable_step.add_option_long(
                         key='library-type',
                         value=self.library_type)
 
                 # Cufflinks has a --library-norm-method option, but only one option (classic-fpkm) seems supported.
 
                 if self.no_length_correction:
-                    cufflinks.add_switch_long(
+                    runnable_step.add_switch_long(
                         key='no-length-correction')
 
-                cufflinks.add_option_long(
+                runnable_step.add_option_long(
                     key='output-dir',
                     value=file_path_dict_cufflinks['output_directory'])
 
-                cufflinks.add_option_long(
+                runnable_step.add_option_long(
                     key='num-threads',
                     value=str(stage_run_cufflinks.threads))
 
-                cufflinks.add_switch_long(
+                runnable_step.add_switch_long(
                     key='quiet')
 
-                cufflinks.add_switch_long(
+                runnable_step.add_switch_long(
                     key='no-update-check')
 
                 # Set Cufflinks arguments.
 
-                cufflinks.arguments.append(file_path_dict_cufflinks['tophat_accepted_hits'])
+                runnable_step.arguments.append(file_path_dict_cufflinks['tophat_accepted_hits'])
 
                 # Add the run_cufflinks dependency for process_cufflinks.
                 process_cufflinks_dependencies.append(executable_run_cufflinks.name)
+
+                # Convert the resulting transcripts GTF file into a UCSC genePred file.
+
+                runnable_step = runnable_run_cufflinks.add_runnable_step(
+                    runnable_step=RunnableStep(
+                        name='gtf_to_gp',
+                        program='gtfToGenePred'))
+                runnable_step.add_switch_short(key='genePredExt')
+                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_gtf'])
+                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_gp'])
+
+                # Convert the UCSC genePred into a UCSC bigGenePred file.
+
+                runnable_step = runnable_run_cufflinks.add_runnable_step(
+                    runnable_step=RunnableStep(
+                        name='gp_to_bgp',
+                        program='genePredToBigGenePred',
+                        obsolete_file_path_list=[
+                            file_path_dict_cufflinks['transcripts_gp']
+                        ]))
+                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_gp'])
+                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_bp'])
+
+                # Run bedSort on the UCSC bigGenePred file to sort field 1 in lexicographic mode and 2 in numeric mode.
+
+                runnable_step = runnable_run_cufflinks.add_runnable_step(
+                    runnable_step=RunnableStep(
+                        name='bed_sort',
+                        program='bedSort',
+                        obsolete_file_path_list=[
+                            file_path_dict_cufflinks['transcripts_bp']
+                        ]))
+                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_bp'])
+                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_st'])
+
+                # Convert the sorted UCSC bigGenePred into a bigBed file.
+
+                runnable_step = runnable_run_cufflinks.add_runnable_step(
+                    runnable_step=RunnableStep(
+                        name='bgp_to_bb',
+                        program='bedToBigBed',
+                        obsolete_file_path_list=[
+                            file_path_dict_cufflinks['transcripts_st'],
+                        ]))
+                # FIXME: It would be good to allow options with and without an equal sign.
+                # i.e. --type=bed12+8 versus --type bed12+8, which does not work.
+                # How could this work with configuration.ini files?
+                # FIXME: This needs to be configurable.
+                # Either another instance variable is required or via a generic configuration option
+                # for the RunnableStep.
+                # TODO: The location of the autoSQL file needs to be configurable.
+                runnable_step.add_switch_short(key='as=/scratch/lab_bsf/resources/UCSC/bigGenePred.as')
+                runnable_step.add_switch_short(key='tab')
+                runnable_step.add_switch_short(key='type=bed12+8')
+                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_st'])
+                runnable_step.arguments.append(genome_sizes)
+                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_bb'])
+
+                # Add a symbolic link for the transcripts bigBed file, that includes a sample name prefix.
+                runnable_run_cufflinks.add_runnable_step(
+                    runnable_step=RunnableStepLink(
+                        name='link_transcripts_bb',
+                        source_path=file_path_dict_cufflinks['transcripts_bb'],
+                        target_path=file_path_dict_cufflinks['transcripts_lnk_bb']))
+
+                # Add a symbolic link for the transcripts GTF file, that includes a sample name prefix.
+                runnable_run_cufflinks.add_runnable_step(
+                    runnable_step=RunnableStepLink(
+                        name='link_transcripts_gtf',
+                        source_path=file_path_dict_cufflinks['transcripts_gtf'],
+                        target_path=file_path_dict_cufflinks['transcripts_lnk_gtf']))
 
         # Create one process_cufflinks Executable to process all sub-directories.
 
@@ -1472,8 +1554,8 @@ class Tuxedo(Analysis):
         # http://cufflinks.cbcb.umd.edu/manual.html#fpkm_tracking_format
         output_html += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
                        'fpkm-tracking-format">FPKM Tracking format</a>.\n'
-        output_html += 'The isofroms.count_tracking and genes.count_tracking files\n'
-        output_html += 'contain the scaled isofrom or gene count values in the generic\n'
+        output_html += 'The isoforms.count_tracking and genes.count_tracking files\n'
+        output_html += 'contain the scaled isoform or gene count values in the generic\n'
         output_html += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
                        'count-tracking-format">Count Tracking format</a>.\n'
         output_html += '</p>\n'
@@ -1541,6 +1623,14 @@ class Tuxedo(Analysis):
         output_hub += 'visibility show\n'
         output_hub += 'superTrack on\n'
         output_hub += 'group alignments\n'
+        output_hub += '\n'
+
+        output_hub += 'track Transcripts\n'
+        output_hub += 'shortLabel Transcripts\n'
+        output_hub += 'longLabel Cufflinks transcript structures\n'
+        output_hub += 'visibility show\n'
+        output_hub += 'superTrack on\n'
+        output_hub += 'group transcripts\n'
         output_hub += '\n'
 
         for sample in self.sample_list:
@@ -1712,6 +1802,30 @@ class Tuxedo(Analysis):
                 # Composite track settings.
 
                 output_hub += 'parent Junctions\n'
+                output_hub += '\n'
+
+                # Transcripts
+
+                output_hub += 'track {}_transcripts\n'. \
+                    format(paired_reads_name)
+                output_hub += 'type bigGenePred\n'
+                output_hub += 'shortLabel {}_transcripts\n'. \
+                    format(paired_reads_name)
+                output_hub += 'longLabel {} Cufflinks transcript assembly\n'. \
+                    format(paired_reads_name)
+                output_hub += 'bigDataUrl rnaseq_cufflinks_{}/transcripts.bb\n'. \
+                    format(paired_reads_name)
+                output_hub += 'visibility hide\n'
+                # 'html' is missing from the common settings.
+
+                # Common optional settings.
+
+                output_hub += 'color {}\n'. \
+                    format('0,0,0')
+
+                # Composite track settings.
+
+                output_hub += 'parent Transcripts\n'
                 output_hub += '\n'
 
                 # Cufflinks produces genes.fpkm_tracking, isoforms.fpkm_tracking,
@@ -2289,5 +2403,320 @@ class Tuxedo(Analysis):
 
         self.report_to_file(content=output_html)
         self.ucsc_hub_to_file(content=output_hub)
+
+        return
+
+
+class DESeq(Analysis):
+    """DESeq RNASeq C{bsf.Analysis} sub-class.
+
+    Attributes:
+    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @type name: str
+    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @type prefix: str
+    @cvar stage_name_deseq: C{bsf.Stage.name} for the run DESeq stage
+    @type stage_name_deseq: str
+    """
+
+    name = 'RNA-seq Analysis'
+    prefix = 'rnaseq'
+
+    # Replicate stage
+    stage_name_deseq = '_'.join((prefix, 'deseq'))
+
+    def __init__(
+            self,
+            configuration=None,
+            project_name=None,
+            genome_version=None,
+            input_directory=None,
+            output_directory=None,
+            project_directory=None,
+            genome_directory=None,
+            e_mail=None,
+            debug=0,
+            stage_list=None,
+            collection=None,
+            comparisons=None,
+            sample_list=None,
+            replicate_grouping=False,
+            cmp_file=None,
+            genome_fasta_path=None,
+            transcriptome_gtf_path=None,
+            transcriptome_index_path=None,
+            mask_gtf_path=None,
+            multi_read_correction=None,
+            library_type=None,
+            no_length_correction=False):
+        """Initialise a C{bsf.analyses.rna_seq.DESeq} object.
+
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
+        @param project_name: Project name
+        @type project_name: str
+        @param genome_version: Genome version
+        @type genome_version: str
+        @param input_directory: C{bsf.Analysis}-wide input directory
+        @type input_directory: str
+        @param output_directory: C{bsf.Analysis}-wide output directory
+        @type output_directory: str
+        @param project_directory: C{bsf.Analysis}-wide project directory,
+            normally under the C{bsf.Analysis}-wide output directory
+        @type project_directory: str
+        @param genome_directory: C{bsf.Analysis}-wide genome directory,
+            normally under the C{bsf.Analysis}-wide project directory
+        @type genome_directory: str
+        @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+        @type e_mail: str
+        @param debug: Integer debugging level
+        @type debug: int
+        @param stage_list: Python C{list} of C{bsf.Stage} objects
+        @type stage_list: list[bsf.Stage]
+        @param collection: C{bsf.ngs.Collection}
+        @type collection: bsf.ngs.Collection
+        @param comparisons: Python C{dict} of Python C{str} (comparison name) key objects and
+            Python C{tuple} value objects of C{bsf.ngs.Sample.name} and Python C{list} of C{bsf.ngs.Sample} objects
+        @type comparisons: dict[str, (bsf.ngs.Sample.name, list[bsf.ngs.Sample])]
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
+        @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
+        @type replicate_grouping: bool
+        @param cmp_file: Comparison file
+        @type cmp_file: str | unicode
+        @param genome_fasta_path: Reference genome sequence FASTA file path
+        @type genome_fasta_path: str | unicode
+        @param transcriptome_gtf_path: Reference transcriptome GTF file path
+        @type transcriptome_gtf_path: str | unicode
+        @param transcriptome_index_path: Tophat transcriptome index path
+        @type transcriptome_index_path: str | unicode
+        @param mask_gtf_path: GTF file path to mask transcripts
+        @type mask_gtf_path: str | unicode
+        @param multi_read_correction: Apply multi-read correction
+        @type multi_read_correction: bool
+        @param library_type: Library type
+            Cuffquant and Cuffdiff I{fr-unstranded} (default), I{fr-firststrand} or I{fr-secondstrand}
+        @type library_type: str
+        @param no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
+        @type no_length_correction: bool
+        @return:
+        @rtype:
+        """
+
+        super(DESeq, self).__init__(
+            configuration=configuration,
+            project_name=project_name,
+            genome_version=genome_version,
+            input_directory=input_directory,
+            output_directory=output_directory,
+            project_directory=project_directory,
+            genome_directory=genome_directory,
+            e_mail=e_mail,
+            debug=debug,
+            stage_list=stage_list,
+            collection=collection,
+            comparisons=comparisons,
+            sample_list=sample_list)
+
+        # Sub-class specific ...
+
+        if replicate_grouping is None:
+            self.replicate_grouping = False
+        else:
+            assert isinstance(replicate_grouping, bool)
+            self.replicate_grouping = replicate_grouping
+
+        if cmp_file is None:
+            self.cmp_file = str()
+        else:
+            self.cmp_file = cmp_file
+
+        if genome_fasta_path is None:
+            self.genome_fasta_path = str()
+        else:
+            self.genome_fasta_path = genome_fasta_path
+
+        if transcriptome_gtf_path is None:
+            self.transcriptome_gtf_path = str()
+        else:
+            self.transcriptome_gtf_path = transcriptome_gtf_path
+
+        if transcriptome_index_path is None:
+            self.transcriptome_index_path = str()
+        else:
+            self.transcriptome_index_path = transcriptome_index_path
+
+        if mask_gtf_path is None:
+            self.mask_gtf_path = str()
+        else:
+            self.mask_gtf_path = mask_gtf_path
+
+        if multi_read_correction is None:
+            self.multi_read_correction = False
+        else:
+            assert isinstance(multi_read_correction, bool)
+            self.multi_read_correction = multi_read_correction
+
+        if library_type is None:
+            self.library_type = str()
+        else:
+            self.library_type = library_type
+
+        if no_length_correction is None:
+            self.no_length_correction = False
+        else:
+            assert isinstance(no_length_correction, bool)
+            self.no_length_correction = no_length_correction
+
+        return
+
+    def set_configuration(self, configuration, section):
+        """Set instance variables of a C{bsf.analyses.rna_seq.Tuxedo} object via a section of a
+        C{bsf.standards.Configuration} object.
+
+        Instance variables without a configuration option remain unchanged.
+        @param configuration: C{bsf.standards.Configuration}
+        @type configuration: bsf.standards.Configuration
+        @param section: Configuration file section
+        @type section: str
+        @return:
+        @rtype:
+        """
+
+        super(DESeq, self).set_configuration(configuration=configuration, section=section)
+
+        # Sub-class specific ...
+
+        option = 'replicate_grouping'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.replicate_grouping = configuration.config_parser.getboolean(section=section, option=option)
+
+        option = 'cmp_file'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.cmp_file = configuration.config_parser.get(section=section, option=option)
+
+        option = 'genome_fasta'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.genome_fasta_path = configuration.config_parser.get(section=section, option=option)
+
+        option = 'transcriptome_gtf'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.transcriptome_gtf_path = configuration.config_parser.get(section=section, option=option)
+
+        option = 'transcriptome_index'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.transcriptome_index_path = configuration.config_parser.get(section=section, option=option)
+
+        option = 'mask_gtf'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.mask_gtf_path = configuration.config_parser.get(section=section, option=option)
+
+        option = 'multi_read_correction'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.multi_read_correction = configuration.config_parser.getboolean(section=section, option=option)
+
+        option = 'library_type'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.library_type = configuration.config_parser.get(section=section, option=option)
+
+        option = 'no_length_correction'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.no_length_correction = configuration.config_parser.getboolean(section=section, option=option)
+
+        return
+
+    def run(self):
+        """Run this C{bsf.analyses.rna_seq.Tuxedo} analysis.
+        @return:
+        @rtype:
+        """
+
+        super(DESeq, self).run()
+
+        # Tuxedo requires a genome version.
+
+        if not self.genome_version:
+            raise Exception('A Tuxedo analysis requires a genome_version configuration option.')
+
+        # For DESeq, all samples need adding to the Analysis regardless.
+        # TODO: Sort out the comparison issue.
+        for sample in self.collection.get_all_samples():
+            self.add_sample(sample=sample)
+
+        prefix = 'rnaseq_deseq_global'
+
+        comparison_directory = os.path.join(self.genome_directory, prefix)
+
+        if not os.path.isdir(comparison_directory):
+            try:
+                os.makedirs(comparison_directory)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise
+
+        annotation_sheet = AnnotationSheet(
+            file_path=os.path.join(comparison_directory, prefix + '_comparisons.tsv'),
+            file_type='excel-tab',
+            name='DESeq Annotation',
+            header=True)
+
+        # Re-index the sample group dict by sample name.
+        sample_dict = dict()
+        for (group_name, sample_list) in self.collection.sample_group_dict.iteritems():
+            for sample in sample_list:
+                if sample.name not in sample_dict:
+                    sample_dict[sample.name] = list()
+                sample_dict[sample.name].append(group_name)
+
+        for sample in self.sample_list:
+            if self.debug > 0:
+                print '{!r} Sample name: {}'.format(self, sample.name)
+                print sample.trace(1)
+
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
+
+            paired_reads_name_list = paired_reads_dict.keys()
+            if not len(paired_reads_name_list):
+                # Skip Sample objects, which PairedReads objects have all been excluded.
+                continue
+            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+            row_dict = dict()
+            # Set the group from the original Sample Annotation Sheet.
+            row_dict['sample'] = sample.name
+            row_dict['group'] = sample_dict[sample.name][0]
+            row_dict['bam_path'] = StarAligner.get_prefix_star_aligner_merge(sample_name=sample.name) + '.bam'
+            row_dict['bai_path'] = StarAligner.get_prefix_star_aligner_merge(sample_name=sample.name) + '.bai'
+            # Set additional columns from the Sample Annotation Sheet prefixed with "Sample DESeq ".
+            for annotation_key in filter(lambda x: x.startswith('DESeq '), sample.annotation_dict.keys()):
+                row_dict[annotation_key[6:]] = sample.annotation_dict[annotation_key][0]
+
+            for paired_reads_name in paired_reads_name_list:
+                assert isinstance(paired_reads_name, str)
+
+                # Create a ??? Runnable per paired_reads_name.
+
+                # prefix_run_tophat = '_'.join((stage_run_tophat.name, paired_reads_name))
+
+                file_path_dict_deseq = {
+                    # The output directory deviates from the prefix_run_tophat that itself is based on
+                    # stage_run_tophat.name. Both rnaseq_run_tophat and rnaseq_process_tophat processes should
+                    # use the same rnaseq_tophat directory.
+                    # output_directory=prefix_run_tophat,
+                    'output_directory': '_'.join(('rnaseq_tophat', paired_reads_name)),
+                }
+
+            annotation_sheet.row_dicts.append(row_dict)
+        # TODO: Create a directory for the comparison.
+        # TODO: Write a data frame defining the experiment for DESeq2.
+
+        # Process all row_dict objects to get the superset of field names.
+        for row_dict in annotation_sheet.row_dicts:
+            for key in row_dict.iterkeys():
+                if key not in annotation_sheet.field_names:
+                    annotation_sheet.field_names.append(key)
+
+        # Write the Annotation Sheet to disk.
+        annotation_sheet.to_file_path()
 
         return
