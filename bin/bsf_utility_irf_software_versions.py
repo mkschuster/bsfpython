@@ -86,7 +86,8 @@ for file_name in file_name_list:
         print 'No match: {!r}'.format(file_name)
         continue
     file_path = os.path.join(name_space.directory, file_name)
-    if not os.path.exists(os.path.join(file_path, 'runParameters.xml')):
+    if not (os.path.exists(os.path.join(file_path, 'runParameters.xml')) or
+            os.path.exists(os.path.join(file_path, 'RunParameters.xml'))):
         print 'Directory {!r} not an Illumina Run Folder'.format(file_name)
         continue
     # Temporarily catch IOError and xml.etree.ElementTree.ParseError exceptions
