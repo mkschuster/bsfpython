@@ -30,7 +30,7 @@ A package of classes and methods supporting analyses of the Illumina2Bam-Tools p
 import os
 import warnings
 
-from bsf import Analysis, Runnable
+from bsf import Analysis, FilePath, Runnable
 from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
 from bsf.annotation import AnnotationSheet
 from bsf.ngs import SampleAnnotationSheet
@@ -397,6 +397,25 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
         """
 
         return self.sub_command.sub_command.add_option_pair(key=key, value=value, override=override)
+
+
+class FilePathIlluminaToBamLane(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathIlluminaToBamLane, self).__init__(prefix=prefix)
+
+        self.illumina_directory = ''
+        self.sequences_directory = ''
+        self.experiment_directory = ''
+        self.unsorted_bam = prefix + '_unsorted.bam'
+        self.unsorted_md5 = prefix + '_unsorted.bam.md5'
+        self.sorted_bam = prefix + '_sorted.bam'
+        self.sorted_md5 = prefix + '_sorted.bam.md5'
+        self.lane_bam = prefix + '.bam'
+        self.lane_md5 = prefix + '.bam.md5'
+
+        return
 
 
 class IlluminaToBam(Analysis):
@@ -899,17 +918,8 @@ class IlluminaToBam(Analysis):
         for lane_int in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
             lane_str = str(lane_int)
 
-            file_path_dict_lane = {
-                'illumina_directory': self.run_directory,
-                'sequences_directory': self.sequences_directory,
-                'experiment_directory': self.experiment_directory,
-                'unsorted_bam': '_'.join((self.project_name, lane_str, 'unsorted.bam')),
-                'unsorted_md5': '_'.join((self.project_name, lane_str, 'unsorted.bam.md5')),
-                'sorted_bam': '_'.join((self.project_name, lane_str, 'sorted.bam')),
-                'sorted_md5': '_'.join((self.project_name, lane_str, 'sorted.bam.md5')),
-                'lane_bam': '{}_{:d}.bam'.format(self.project_name, lane_int),
-                'lane_md5': '{}_{:d}.bam.md5'.format(self.project_name, lane_int)
-            }
+            file_path_lane = FilePathIlluminaToBamLane(
+                prefix=self.get_prefix_illumina_to_bam_lane(project_name=self.project_name, lane=lane_str))
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the Stage.
             runnable_lane = self.add_runnable(
@@ -917,7 +927,7 @@ class IlluminaToBam(Analysis):
                     name=self.get_prefix_illumina_to_bam_lane(project_name=self.project_name, lane=lane_str),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory,
-                    file_path_dict=file_path_dict_lane))
+                    file_path_object=file_path_lane))
 
             # TODO: The Runnable class could have dependencies just like the Executable class so that they could be
             # passed on upon creation of the Executable from the Runnable via Executable.from_analysis_runnable().
@@ -939,8 +949,9 @@ class IlluminaToBam(Analysis):
             cell_dependency_list.append(executable_lane.name)
 
             # Only submit this Executable if the final result file does not exist.
-            if os.path.exists(file_path_dict_lane['sorted_md5']) and os.path.getsize(file_path_dict_lane['sorted_md5']):
-                executable_lane.submit = False
+            # absolute_sorted_md5 = os.path.join(self.experiment_directory, file_path_lane.sorted_md5)
+            # if os.path.exists(absolute_sorted_md5) and os.path.getsize(absolute_sorted_md5):
+            #     executable_lane.submit = False
 
             # Run Illumina2Bam tools Illumina2bam.
 
@@ -973,7 +984,7 @@ class IlluminaToBam(Analysis):
             # LANE is required.
             runnable_step.add_itb_option(key='LANE', value=lane_str)
             # OUTPUT is required.
-            runnable_step.add_itb_option(key='OUTPUT', value=file_path_dict_lane['unsorted_bam'])
+            runnable_step.add_itb_option(key='OUTPUT', value=file_path_lane.unsorted_bam)
             # GENERATE_SECONDARY_BASE_CALLS defaults to 'false'.
             # PF_FILTER defaults to 'true'.
             if not self.vendor_quality_filter[irf.run_parameters.get_flow_cell_type]:
@@ -1028,20 +1039,20 @@ class IlluminaToBam(Analysis):
                 runnable_lane.add_runnable_step(
                     runnable_step=RunnableStepMove(
                         name='move_unsorted_bam',
-                        source_path=file_path_dict_lane['unsorted_bam'],
-                        target_path=file_path_dict_lane['sorted_bam']))
+                        source_path=file_path_lane.unsorted_bam,
+                        target_path=file_path_lane.sorted_bam))
                 runnable_lane.add_runnable_step(
                     runnable_step=RunnableStepMove(
                         name='move_unsorted_md5',
-                        source_path=file_path_dict_lane['unsorted_md5'],
-                        target_path=file_path_dict_lane['sorted_md5']))
+                        source_path=file_path_lane.unsorted_md5,
+                        target_path=file_path_lane.sorted_md5))
             else:
                 runnable_step = runnable_lane.add_runnable_step(
                     runnable_step=RunnableStepPicard(
                         name='picard_sort_sam',
                         obsolete_file_path_list=[
-                            file_path_dict_lane['unsorted_bam'],
-                            file_path_dict_lane['unsorted_md5'],
+                            file_path_lane.unsorted_bam,
+                            file_path_lane.unsorted_md5,
                         ],
                         java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
                         java_heap_maximum='Xmx18G',
@@ -1049,9 +1060,9 @@ class IlluminaToBam(Analysis):
                         picard_command='SortSam'))
                 assert isinstance(runnable_step, RunnableStepPicard)
                 # INPUT is required.
-                runnable_step.add_picard_option(key='INPUT', value=file_path_dict_lane['unsorted_bam'])
+                runnable_step.add_picard_option(key='INPUT', value=file_path_lane.unsorted_bam)
                 # OUTPUT is required.
-                runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_lane['sorted_bam'])
+                runnable_step.add_picard_option(key='OUTPUT', value=file_path_lane.sorted_bam)
                 # SORT_ORDER is required.
                 runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
                 # TMP_DIR
@@ -1083,29 +1094,24 @@ class IlluminaToBam(Analysis):
             runnable_lane.add_runnable_step(
                 runnable_step=RunnableStepMove(
                     name='move_sorted_bam',
-                    source_path=file_path_dict_lane['sorted_bam'],
-                    target_path=os.path.join(self.experiment_directory, file_path_dict_lane['lane_bam'])))
+                    source_path=file_path_lane.sorted_bam,
+                    target_path=os.path.join(self.experiment_directory, file_path_lane.lane_bam)))
 
             # Move and rename the checksum file.
 
             runnable_lane.add_runnable_step(
                 runnable_step=RunnableStepMove(
                     name='move_sorted_md5',
-                    source_path=file_path_dict_lane['sorted_md5'],
-                    target_path=os.path.join(self.experiment_directory, file_path_dict_lane['lane_md5'])))
+                    source_path=file_path_lane.sorted_md5,
+                    target_path=os.path.join(self.experiment_directory, file_path_lane.lane_md5)))
 
         # Add another flow cell-specific Runnable to reset directory and file mode permissions if requested.
-
-        file_path_dict_cell = {
-            'experiment_directory': self.experiment_directory,
-        }
 
         runnable_cell = self.add_runnable(
             runnable=Runnable(
                 name=self.get_prefix_illumina_to_bam_cell(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
-                working_directory=self.project_directory,
-                file_path_dict=file_path_dict_cell))
+                working_directory=self.project_directory))
 
         executable_cell = self.set_stage_runnable(
             stage=stage_cell,
@@ -1115,9 +1121,35 @@ class IlluminaToBam(Analysis):
         runnable_cell.add_runnable_step(
             runnable_step=RunnableStepChangeMode(
                 name='chmod',
-                file_path=file_path_dict_cell['experiment_directory'],
+                file_path=self.experiment_directory,
                 mode_directory=self.mode_directory,
                 mode_file=self.mode_file))
+
+        return
+
+
+class FilePathBamIndexDecoderCell(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathBamIndexDecoderCell, self).__init__(prefix=prefix)
+
+        self.sample_annotation_sheet_csv = prefix + '_samples.csv'
+
+        return
+
+
+class FilePathBamIndexDecoderLane(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathBamIndexDecoderLane, self).__init__(prefix=prefix)
+
+        self.project_barcode = prefix + '_barcode.tsv'
+        self.samples_directory = prefix + '_samples'
+        self.barcode_tsv = prefix + '_barcode.tsv'
+        self.metrics_tsv = prefix + '_metrics.tsv'
+        self.input_bam = ''
 
         return
 
@@ -1514,17 +1546,14 @@ class BamIndexDecoder(Analysis):
 
             flow_cell_dict[row_dict['lane']].append(row_dict)
 
-        file_path_dict_cell = {
-            'experiment_directory': self.experiment_directory,
-            'sample_annotation_sheet_csv': '_'.join((self.project_name, 'samples.csv')),
-        }
+        file_path_cell = FilePathBamIndexDecoderCell(prefix=self.project_name)
 
         # Create a Sample Annotation Sheet in the project directory and
         # eventually transfer it into the experiment_directory.
         sample_annotation_sheet = SampleAnnotationSheet(
             file_path=os.path.join(
                 self.project_directory,
-                file_path_dict_cell['sample_annotation_sheet_csv']))
+                file_path_cell.sample_annotation_sheet_csv))
 
         cell_dependency_list = list()
 
@@ -1533,23 +1562,16 @@ class BamIndexDecoder(Analysis):
 
         for key in keys:
             # The key represents the lane number as a Python str.
-            file_path_dict_lane = {
-                'project_barcode': '_'.join((self.project_name, key, 'barcode.tsv')),
-                'samples_directory': '_'.join((self.project_name, key, 'samples')),
-                'barcode_tsv': '_'.join((self.project_name, key, 'barcode.tsv')),
-                'metrics_tsv': '_'.join((self.project_name, key, 'metrics.tsv')),
-                'input_bam': os.path.join(self.sequences_directory, '{}_{}.bam'.format(self.project_name, key)),
-            }
+            prefix_lane = self.get_prefix_bam_index_decoder_lane(project_name=self.project_name, lane=key)
+            file_path_lane = FilePathBamIndexDecoderLane(prefix=prefix_lane)
+            file_path_lane.input_bam = os.path.join(self.sequences_directory, prefix_lane + '.bam')
 
             # Do not check whether the sorted input BAM file exists, because at the time of
             # BamIndexDecoder submission the IlluminaToBam analysis may not have finished.
-            #
-            # if not os.path.exists(file_path_dict_lane['input_bam']):
-            # raise Exception('Sequence archive BAM file {!r} does not exist.'.format(file_path_dict_lane['input_bam']))
 
             barcode_number = 0
             bam_index_decoder_sheet = BamIndexDecoderSheet(
-                file_path=os.path.join(self.project_directory, file_path_dict_lane['barcode_tsv']))
+                file_path=os.path.join(self.project_directory, file_path_lane.barcode_tsv))
 
             for row_dict in flow_cell_dict[key]:
 
@@ -1587,7 +1609,7 @@ class BamIndexDecoder(Analysis):
                     'Reads1 Name': '_'.join((self.project_name, key, row_dict['sample_name'])),
                     'Reads1 File': os.path.join(
                         os.path.basename(self.experiment_directory),
-                        file_path_dict_lane['samples_directory'],
+                        file_path_lane.samples_directory,
                         '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])),
                     'Reads2 Name': '',
                     'Reads2 File': '',
@@ -1601,7 +1623,7 @@ class BamIndexDecoder(Analysis):
                     name=self.get_prefix_bam_index_decoder_lane(project_name=self.project_name, lane=key),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory,
-                    file_path_dict=file_path_dict_lane))
+                    file_path_object=file_path_lane))
 
             # TODO: It would be good to extend the Runnable so that it holds dependencies on other Runnable objects
             # and that it could be submitted to a Stage so that the Executable gets automatically created and submitted.
@@ -1626,7 +1648,7 @@ class BamIndexDecoder(Analysis):
             runnable_lane.add_runnable_step(
                 runnable_step=RunnableStepMakeDirectory(
                     name='make_samples_directory',
-                    directory_path=file_path_dict_lane['samples_directory']))
+                    directory_path=file_path_lane.samples_directory))
 
             if barcode_number:
                 # Run the BamIndexDecoder if there is at least one line containing a barcode sequence.
@@ -1639,10 +1661,10 @@ class BamIndexDecoder(Analysis):
                         itb_command='BamIndexDecoder'))
                 assert isinstance(runnable_step, RunnableStepIlluminaToBam)
                 # INPUT is required
-                runnable_step.add_itb_option(key='INPUT', value=file_path_dict_lane['input_bam'])
+                runnable_step.add_itb_option(key='INPUT', value=file_path_lane.input_bam)
                 # OUTPUT is required, but cannot be used together with OUTPUT_FORMAT, OUTPUT_PREFIX and OUTPUT_DIR.
                 # OUTPUT_DIR is required, but cannot be used with OUTPUT.
-                runnable_step.add_itb_option(key='OUTPUT_DIR', value=file_path_dict_lane['samples_directory'])
+                runnable_step.add_itb_option(key='OUTPUT_DIR', value=file_path_lane.samples_directory)
                 # OUTPUT_PREFIX is required, but cannot be used with OUTPUT.
                 runnable_step.add_itb_option(key='OUTPUT_PREFIX', value='_'.join((self.project_name, key)))
                 # OUTPUT_FORMAT is required, but cannot be used with OUTPUT.
@@ -1651,9 +1673,9 @@ class BamIndexDecoder(Analysis):
                 # BARCODE_QUALITY_TAG_NAME defaults to 'QT'.
                 # BARCODE cannot be used with BARCODE_FILE.
                 # BARCODE_FILE is required, but cannot be used with BARCODE.
-                runnable_step.add_itb_option(key='BARCODE_FILE', value=file_path_dict_lane['barcode_tsv'])
+                runnable_step.add_itb_option(key='BARCODE_FILE', value=file_path_lane.barcode_tsv)
                 # METRICS_FILE is required.
-                runnable_step.add_itb_option(key='METRICS_FILE', value=file_path_dict_lane['metrics_tsv'])
+                runnable_step.add_itb_option(key='METRICS_FILE', value=file_path_lane.metrics_tsv)
                 # MAX_MISMATCHES defaults to '1'.
                 if 'barcode_mismatches' in flow_cell_dict[key][0] and len(flow_cell_dict[key][0]['barcode_mismatches']):
                     # If the barcode_mismatches field exists and its string length is greater than 0.
@@ -1702,7 +1724,7 @@ class BamIndexDecoder(Analysis):
                 runnable_lane.add_runnable_step(
                     runnable_step=RunnableStepMove(
                         name='move_samples_directory',
-                        source_path=file_path_dict_lane['samples_directory'],
+                        source_path=file_path_lane.samples_directory,
                         target_path=self.experiment_directory))
 
                 # Move the metrics file into the experiment directory.
@@ -1710,7 +1732,7 @@ class BamIndexDecoder(Analysis):
                 runnable_lane.add_runnable_step(
                     runnable_step=RunnableStepMove(
                         name='move_metrics_tsv',
-                        source_path=file_path_dict_lane['metrics_tsv'],
+                        source_path=file_path_lane.metrics_tsv,
                         target_path=self.experiment_directory))
             else:
                 # Run Picard CollectAlignmentSummaryMetrics if there is no line containing a barcode sequence.
@@ -1718,7 +1740,7 @@ class BamIndexDecoder(Analysis):
                     runnable_step=RunnableStepPicard(
                         name='picard_collect_alignment_summary_metrics',
                         obsolete_file_path_list=[
-                            file_path_dict_lane['barcode_tsv'],
+                            file_path_lane.barcode_tsv,
                         ],
                         java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
                         java_heap_maximum='Xmx4G',
@@ -1731,9 +1753,9 @@ class BamIndexDecoder(Analysis):
                 runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP')
                 # IS_BISULFITE_SEQUENCED defaults to 'false'.
                 # INPUT is required.
-                runnable_step.add_picard_option(key='INPUT', value=file_path_dict_lane['input_bam'])
+                runnable_step.add_picard_option(key='INPUT', value=file_path_lane.input_bam)
                 # OUTPUT is required.
-                runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict_lane['metrics_tsv'])
+                runnable_step.add_picard_option(key='OUTPUT', value=file_path_lane.metrics_tsv)
                 # REFERENCE_SEQUENCE defaults to 'null'.
                 # ASSUME_SORTED defaults to 'true'.
                 # STOP_AFTER defaults to '0'.
@@ -1769,19 +1791,19 @@ class BamIndexDecoder(Analysis):
                 runnable_lane.add_runnable_step(
                     runnable_step=RunnableStepMove(
                         name='move_samples_directory',
-                        source_path=file_path_dict_lane['samples_directory'],
+                        source_path=file_path_lane.samples_directory,
                         target_path=self.experiment_directory))
 
                 # Add a symbolic link to the BSF Sequence Archive file within the samples directory.
 
                 experiment_samples_directory = os.path.join(
                     self.experiment_directory,
-                    file_path_dict_lane['samples_directory'])
+                    file_path_lane.samples_directory)
 
                 runnable_lane.add_runnable_step(
                     runnable_step=RunnableStepLink(
                         name='link',
-                        source_path=os.path.relpath(file_path_dict_lane['input_bam'], experiment_samples_directory),
+                        source_path=os.path.relpath(file_path_lane.input_bam, experiment_samples_directory),
                         target_path=os.path.join(
                             experiment_samples_directory,
                             '{}_{}#{}.bam'.format(self.project_name, key,
@@ -1792,7 +1814,7 @@ class BamIndexDecoder(Analysis):
                 runnable_lane.add_runnable_step(
                     runnable_step=RunnableStepMove(
                         name='move_metrics_tsv',
-                        source_path=file_path_dict_lane['metrics_tsv'],
+                        source_path=file_path_lane.metrics_tsv,
                         target_path=self.experiment_directory))
 
         # Finally, write the flow cell-specific SampleAnnotationSheet to the internal file path.
@@ -1806,7 +1828,7 @@ class BamIndexDecoder(Analysis):
                 name=self.get_prefix_bam_index_decoder_cell(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
-                file_path_dict=file_path_dict_cell))
+                file_path_object=file_path_cell))
 
         executable_cell = self.set_stage_runnable(
             stage=stage_cell,
@@ -1819,15 +1841,15 @@ class BamIndexDecoder(Analysis):
             runnable_cell.add_runnable_step(
                 runnable_step=RunnableStepMove(
                     name='move_sample_annotation',
-                    source_path=file_path_dict_cell['sample_annotation_sheet_csv'],
-                    target_path=file_path_dict_cell['experiment_directory']))
+                    source_path=file_path_cell.sample_annotation_sheet_csv,
+                    target_path=self.experiment_directory))
 
         # Change directory and file access permissions.
 
         runnable_cell.add_runnable_step(
             runnable_step=RunnableStepChangeMode(
                 name='chmod',
-                file_path=file_path_dict_cell['experiment_directory'],
+                file_path=self.experiment_directory,
                 mode_directory=self.mode_directory,
                 mode_file=self.mode_file))
 

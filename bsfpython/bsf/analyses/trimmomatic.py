@@ -29,10 +29,31 @@ A package of classes and methods supporting the Trimmomatic tool.
 
 import os
 
-from bsf import Analysis, Default, Runnable
+from bsf import Analysis, Default, FilePath, Runnable
 from bsf.ngs import Reads, PairedReads
 from bsf.process import Command, RunnableStep, RunnableStepJava, RunnableStepMakeDirectory
 from bsf.standards import Configuration
+
+
+class FilePathTrimmomatic(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathTrimmomatic, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
+        # Automatic GNU Zip-compression of trim log files does not work.
+        self.trim_log_tsv = prefix + 'trim_log.tsv'
+        self.summary_tsv = prefix + 'summary.tsv'  # Defined by the R script.
+        self.coverage_png = prefix + 'coverage.png'  # Defined by the R script.
+        self.frequency_png = prefix + 'frequency.png'  # Defined by the R script.
+        self.surviving_png = prefix + 'surviving.png'  # Defined by the R script.
+        self.reads_1p = ''
+        self.reads_1u = ''
+        self.reads_2p = ''
+        self.reads_2u = ''
+
+        return
 
 
 class Trimmomatic(Analysis):
@@ -312,16 +333,7 @@ class Trimmomatic(Analysis):
                     if self.debug > 0:
                         print 'Trimmomatic Prefix: {}'.format(prefix_trimmomatic)
 
-                    file_path_dict_trimmomatic = {
-                        'temporary_directory': '_'.join((prefix_trimmomatic, 'temporary')),
-                        'output_directory': os.path.join(self.project_directory, prefix_trimmomatic),
-                        # Automatic GNU Zip-compression of trim log files does not work.
-                        'trim_log_tsv': '_'.join((prefix_trimmomatic, 'trim_log.tsv')),
-                        'summary_tsv': '_'.join((prefix_trimmomatic, 'summary.tsv')),  # Defined by the R script.
-                        'coverage_png': '_'.join((prefix_trimmomatic, 'coverage.png')),  # Defined by the R script.
-                        'frequency_png': '_'.join((prefix_trimmomatic, 'frequency.png')),  # Defined by the R script.
-                        'surviving_png': '_'.join((prefix_trimmomatic, 'surviving.png')),  # Defined by the R script.
-                    }
+                    file_path_trimmomatic = FilePathTrimmomatic(prefix=prefix_trimmomatic)
 
                     # Create a Runnable and an Executable for running the Trimmomatic analysis.
 
@@ -330,7 +342,7 @@ class Trimmomatic(Analysis):
                             name=prefix_trimmomatic,
                             code_module='bsf.runnables.generic',
                             working_directory=self.project_directory,
-                            file_path_dict=file_path_dict_trimmomatic))
+                            file_path_object=file_path_trimmomatic))
                     self.set_stage_runnable(stage=stage_trimmomatic, runnable=runnable_trimmomatic)
 
                     # Create a new RunnableStepMakeDirectory in preparation of the Trimmomatic program.
@@ -338,14 +350,14 @@ class Trimmomatic(Analysis):
                     runnable_trimmomatic.add_runnable_step(
                         runnable_step=RunnableStepMakeDirectory(
                             name='mkdir',
-                            directory_path=file_path_dict_trimmomatic['output_directory']))
+                            directory_path=file_path_trimmomatic.output_directory))
 
                     # Create a RunnableStep for the Trimmomatic program.
 
                     runnable_step_trimmomatic = runnable_trimmomatic.add_runnable_step(
                         runnable_step=RunnableStepJava(
                             name='trimmomatic',
-                            java_temporary_path=file_path_dict_trimmomatic['temporary_directory'],
+                            java_temporary_path=runnable_trimmomatic.get_relative_temporary_directory_path,
                             java_heap_maximum='Xmx4G',
                             java_jar_path=self.classpath_trimmomatic))
 
@@ -356,55 +368,56 @@ class Trimmomatic(Analysis):
 
                     # Add options to the sub command.
                     sub_command = runnable_step_trimmomatic.sub_command.sub_command
-                    sub_command.add_option_short(key='trimlog', value=file_path_dict_trimmomatic['trim_log_tsv'])
+                    sub_command.add_option_short(key='trimlog', value=file_path_trimmomatic.trim_log_tsv)
 
                     if paired_reads.reads_2 is None:
-                        file_path_1u = os.path.join(
-                            file_path_dict_trimmomatic['output_directory'],
+                        file_path_trimmomatic.reads_1u = os.path.join(
+                            file_path_trimmomatic.output_directory,
                             paired_reads.reads_1.name + 'U.fastq.gz')
 
                         sub_command.arguments.append(paired_reads.reads_1.file_path)
-                        sub_command.arguments.append(file_path_1u)
+                        sub_command.arguments.append(file_path_trimmomatic.reads_1u)
 
                         # Update unpaired Reads information.
 
                         paired_reads.reads_1.name += 'U'
-                        paired_reads.reads_1.file_path = file_path_1u
+                        paired_reads.reads_1.file_path = file_path_trimmomatic.reads_1u
                     else:
-                        file_path_1p = os.path.join(
-                            file_path_dict_trimmomatic['output_directory'],
+                        file_path_trimmomatic.reads_1p = os.path.join(
+                            file_path_trimmomatic.output_directory,
                             paired_reads.reads_1.name + 'P.fastq.gz')
-                        file_path_1u = os.path.join(
-                            file_path_dict_trimmomatic['output_directory'],
+                        file_path_trimmomatic.reads_1u = os.path.join(
+                            file_path_trimmomatic.output_directory,
                             paired_reads.reads_1.name + 'U.fastq.gz')
-                        file_path_2p = os.path.join(
-                            file_path_dict_trimmomatic['output_directory'],
+                        file_path_trimmomatic.reads_2p = os.path.join(
+                            file_path_trimmomatic.output_directory,
                             paired_reads.reads_2.name + 'P.fastq.gz')
-                        file_path_2u = os.path.join(
-                            file_path_dict_trimmomatic['output_directory'],
+                        file_path_trimmomatic.reads_2u = os.path.join(
+                            file_path_trimmomatic.output_directory,
                             paired_reads.reads_2.name + 'U.fastq.gz')
 
                         sub_command.arguments.append(paired_reads.reads_1.file_path)
                         sub_command.arguments.append(paired_reads.reads_2.file_path)
-                        sub_command.arguments.append(file_path_1p)
-                        sub_command.arguments.append(file_path_1u)
-                        sub_command.arguments.append(file_path_2p)
-                        sub_command.arguments.append(file_path_2u)
+                        sub_command.arguments.append(file_path_trimmomatic.reads_1p)
+                        sub_command.arguments.append(file_path_trimmomatic.reads_1u)
+                        sub_command.arguments.append(file_path_trimmomatic.reads_2p)
+                        sub_command.arguments.append(file_path_trimmomatic.reads_2u)
 
                         # Update paired Reads information.
 
                         paired_reads.reads_1.name += 'P'
-                        paired_reads.reads_1.file_path = file_path_1p
+                        paired_reads.reads_1.file_path = file_path_trimmomatic.reads_1p
                         paired_reads.reads_2.name += 'P'
-                        paired_reads.reads_2.file_path = file_path_2p
+                        paired_reads.reads_2.file_path = file_path_trimmomatic.reads_2p
 
                         # Add unpaired Reads 1 and 2 as separate PairedReads objects to this sample.
 
-                        # TODO: This needs to copy Reads and PairedReads objects.
                         sample.add_paired_reads(
                             paired_reads=PairedReads(
                                 annotation_dict=paired_reads.annotation_dict,
-                                reads_1=Reads(name=paired_reads.reads_1.name[:-1] + 'U', file_path=file_path_1u),
+                                reads_1=Reads(
+                                    name=paired_reads.reads_1.name[:-1] + 'U',
+                                    file_path=file_path_trimmomatic.reads_1u),
                                 exclude=paired_reads.exclude,
                                 index_1=paired_reads.index_1,
                                 index_2=paired_reads.index_2,
@@ -413,7 +426,9 @@ class Trimmomatic(Analysis):
                         sample.add_paired_reads(
                             paired_reads=PairedReads(
                                 annotation_dict=paired_reads.annotation_dict,
-                                reads_1=Reads(name=paired_reads.reads_2.name[:-1] + 'U', file_path=file_path_2u),
+                                reads_1=Reads(
+                                    name=paired_reads.reads_2.name[:-1] + 'U',
+                                    file_path=file_path_trimmomatic.reads_2u),
                                 exclude=paired_reads.exclude,
                                 index_1=paired_reads.index_1,
                                 index_2=paired_reads.index_2,
@@ -438,12 +453,12 @@ class Trimmomatic(Analysis):
                             name='trimmomatic_summary',
                             program='bsf_trimmomatic_summary.R',
                             obsolete_file_path_list=[
-                                file_path_dict_trimmomatic['trim_log_tsv'],
+                                file_path_trimmomatic.trim_log_tsv,
                             ]))
 
                     runnable_step_trimmomatic_summary.add_option_long(
                         key='file_path',
-                        value=file_path_dict_trimmomatic['trim_log_tsv'])
+                        value=file_path_trimmomatic.trim_log_tsv)
 
         # Convert the (modified) Collection object into a SampleAnnotationSheet object and write it to disk.
 
@@ -529,8 +544,8 @@ class Trimmomatic(Analysis):
 
                 runnable_trimmomatic = self.runnable_dict[
                     '_'.join((self.stage_name_trimmomatic, paired_reads_name))]
-                assert isinstance(runnable_trimmomatic, Runnable)
-                file_path_dict_trimmomatic = runnable_trimmomatic.file_path_dict
+                file_path_trimmomatic = runnable_trimmomatic.file_path_object
+                assert isinstance(file_path_trimmomatic, FilePathTrimmomatic)
 
                 output_html += '<tr>\n'
                 # Sample
@@ -542,16 +557,16 @@ class Trimmomatic(Analysis):
                                '<a href="{}">' \
                                '<img alt="Coverage {}" src="{}" height="100" width="100" />' \
                                '</a>' \
-                               '</td>\n'.format(file_path_dict_trimmomatic['coverage_png'],
+                               '</td>\n'.format(file_path_trimmomatic.coverage_png,
                                                 runnable_trimmomatic.name,
-                                                file_path_dict_trimmomatic['coverage_png'])
+                                                file_path_trimmomatic.coverage_png)
                 # Frequency
                 output_html += '<td class="center"><a href="{}">PNG</a></td>\n'.format(
-                    file_path_dict_trimmomatic['frequency_png'])
+                    file_path_trimmomatic.frequency_png)
                 # The frequency plots provide little information that does not necessarily justify
                 # adding another set of images onto the HTML report.
                 output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
-                    file_path_dict_trimmomatic['summary_tsv'])
+                    file_path_trimmomatic.summary_tsv)
                 output_html += '</tr>\n'
 
         output_html += '</tbody>\n'

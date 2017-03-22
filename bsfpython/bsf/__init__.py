@@ -1797,6 +1797,32 @@ class Stage(object):
         return
 
 
+class FilePath(object):
+    """The C{bsf.FilePath} class represents formalised file path information for the C{bsf.Runnable} class.
+
+    Each C{bsf.Runnable} class is expected to define its corresponding C{bsf.FilePath} sub-class.
+    Attributes:
+    @ivar prefix: File path prefix
+    @type prefix: str | unicode
+    #ivar temporary_directory: Temporary directory path
+    #type temporary_directory: str | unicode
+    """
+
+    def __init__(self, prefix):
+        """Initialise a C{bsf.FilePath}.
+
+        @param prefix: File path prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype:
+        """
+
+        self.prefix = prefix
+        # self.temporary_directory = prefix + '_temporary'
+
+        return
+
+
 class Runnable(object):
     """The C{bsf.Runnable} class represents one or more C{bsf.process.Executable} objects for the I{Runner} script.
 
@@ -1817,8 +1843,8 @@ class Runnable(object):
     @ivar cache_path_dict: Python C{dict} of Python C{str} (name) key and
         Python C{str} (file_path) value data of files that will be copied into the C{bsf.Runnable.cache_directory}
     @type cache_path_dict: dict[str, str | unicode]
-    @ivar file_path_dict: Python C{dict} of Python C{str} (name) key data and Python C{str} (file_path) value data
-    @type file_path_dict: dict[str, str | unicode]
+    @ivar file_path_object: C{bsf.FilePath}
+    @type file_path_object: bsf.FilePath
     @ivar runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
     @type runnable_step_list: list[bsf.process.RunnableStep]
     @ivar working_directory: Working directory to write C{pickle.Pickler} files
@@ -1836,7 +1862,7 @@ class Runnable(object):
             working_directory,
             cache_directory=None,
             cache_path_dict=None,
-            file_path_dict=None,
+            file_path_object=None,
             runnable_step_list=None,
             debug=0):
         """Initialise a C{bsf.Runnable}.
@@ -1853,9 +1879,8 @@ class Runnable(object):
         @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
             Python C{str} (file_path) value data of files that will be copied into the C{bsf.Runnable.cache_directory}
         @type cache_path_dict: dict[str, str | unicode]
-        @param file_path_dict: Python C{dict} of Python C{str} (name) key data and
-            Python C{str} (file_path) value data
-        @type file_path_dict: dict[bsf.process.Executable.name, str | unicode]
+        @param file_path_object: C{bsf.FilePath}
+        @type file_path_object: bsf.FilePath
         @param runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
         @type runnable_step_list: list[bsf.process.RunnableStep]
         @param debug: Integer debugging level
@@ -1880,10 +1905,10 @@ class Runnable(object):
         else:
             self.cache_path_dict = cache_path_dict
 
-        if file_path_dict is None:
-            self.file_path_dict = dict()
+        if file_path_object is None:
+            self.file_path_object = FilePath(prefix='default_file_path')
         else:
-            self.file_path_dict = file_path_dict
+            self.file_path_object = file_path_object
 
         if runnable_step_list is None:
             self.runnable_step_list = list()
@@ -1915,7 +1940,7 @@ class Runnable(object):
         output += '{}  working_directory: {!r}\n'.format(indent, self.working_directory)
         output += '{}  cache_directory: {!r}\n'.format(indent, self.cache_directory)
         output += '{}  cache_path_dict: {!r}\n'.format(indent, self.cache_path_dict)
-        output += '{}  file_path_dict: {!r}\n'.format(indent, self.file_path_dict)
+        output += '{}  file_path_object: {!r}\n'.format(indent, self.file_path_object)
         output += '{}  runnable_step_list: {!r}\n'.format(indent, self.runnable_step_list)
         output += '{}  debug: {!r}\n'.format(indent, self.debug)
 
@@ -1925,13 +1950,6 @@ class Runnable(object):
         for key in key_list:
             assert isinstance(key, str)
             output += '{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.cache_path_dict[key])
-
-        output += '{}  Python dict of Python str (file path) objects:\n'.format(indent)
-        key_list = self.file_path_dict.keys()
-        key_list.sort(cmp=lambda x, y: cmp(x, y))
-        for key in key_list:
-            assert isinstance(key, str)
-            output += '{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.file_path_dict[key])
 
         output += '{}  Python list of RunnableStep objects:\n'.format(indent)
         for runnable_step in self.runnable_step_list:

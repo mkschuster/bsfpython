@@ -32,13 +32,105 @@ import os
 from pickle import Pickler, HIGHEST_PROTOCOL
 import re
 
-from bsf import Analysis, Runnable
+from bsf import Analysis, FilePath, Runnable
 from bsf.analyses.star_aligner import StarAligner
 from bsf.annotation import AnnotationSheet, TuxedoSamplePairSheet
 from bsf.ngs import PairedReads, Sample
 from bsf.executables import TopHat
 from bsf.process import Executable, RunnableStep, RunnableStepLink
 from bsf.standards import Default
+
+
+class FilePathTophat(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathTophat, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
+        self.accepted_hits_bam = os.path.join(prefix, 'accepted_hits.bam')
+        self.accepted_hits_bai = os.path.join(prefix, 'accepted_hits.bam.bai')
+        self.accepted_hits_bw = os.path.join(prefix, 'accepted_hits.bw')
+        self.align_summary = os.path.join(prefix, 'align_summary.txt')
+        self.deletions_bed = os.path.join(prefix, 'deletions.bed')
+        self.deletions_bb = os.path.join(prefix, 'deletions.bb')
+        self.insertions_bed = os.path.join(prefix, 'insertions.bed')
+        self.insertions_bb = os.path.join(prefix, 'insertions.bb')
+        self.junctions_bed = os.path.join(prefix, 'junctions.bed')
+        self.junctions_bb = os.path.join(prefix, 'junctions.bb')
+        self.prep_reads_info = os.path.join(prefix, 'prep_reads.info')
+        self.unmapped_bam = os.path.join(prefix, 'unmapped.bam')
+
+        return
+
+
+class FilePathCufflinks(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathCufflinks, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
+        self.transcripts_gtf = os.path.join(prefix, 'transcripts.gtf')
+        self.transcripts_gp = os.path.join(prefix, 'transcripts_gene_pred.tsv')
+        self.transcripts_bp = os.path.join(prefix, 'transcripts_big_gene_pred.tsv')
+        self.transcripts_st = os.path.join(prefix, 'transcripts_sorted.tsv')
+        self.transcripts_bb = os.path.join(prefix, 'transcripts.bb')
+        self.transcripts_lnk_gtf = os.path.join(prefix, prefix + 'transcripts.gtf')
+        self.transcripts_lnk_bb = os.path.join(prefix, prefix + 'transcripts.bb')
+        # TODO: Files are missing.
+
+        return
+
+
+class FilePathCuffmerge(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathCuffmerge, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
+        self.merged_gtf = os.path.join(prefix, 'merged.gtf')
+        self.assembly_txt = '_'.join((prefix, 'assembly.txt'))
+
+        return
+
+
+class FilePathCuffquant(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathCuffquant, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
+        self.abundances = os.path.join(prefix, 'abundances.cxb')
+        # TODO: Remove after rearranging _create_tophat_...() and _create_cuffmerge_...() into run().
+        # self.tophat_accepted_hits = os.path.join('_'.join(('rnaseq_tophat', paired_reads_name)), 'accepted_hits.bam')
+        self.tophat_accepted_hits = ''
+
+        return
+
+
+class FilePathCuffnorm(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathCuffnorm, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
+
+        return
+
+
+class FilePathCuffdiff(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathCuffdiff, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
+
+        return
 
 
 class Tuxedo(Analysis):
@@ -679,20 +771,23 @@ class Tuxedo(Analysis):
 
                 # prefix_run_tophat = '_'.join((stage_run_tophat.name, paired_reads_name))
 
-                file_path_dict_tophat = {
-                    # The output directory deviates from the prefix_run_tophat that itself is based on
-                    # stage_run_tophat.name. Both rnaseq_run_tophat and rnaseq_process_tophat processes should
-                    # use the same rnaseq_tophat directory.
-                    # output_directory=prefix_run_tophat,
-                    'output_directory': '_'.join(('rnaseq_tophat', paired_reads_name)),
-                }
+                prefix_tophat = '_'.join(('rnaseq_tophat', paired_reads_name))
+
+                file_path_tophat = FilePathTophat(prefix=prefix_tophat)
+                # file_path_tophat = {
+                #     # The output directory deviates from the prefix_run_tophat that itself is based on
+                #     # stage_run_tophat.name. Both rnaseq_run_tophat and rnaseq_process_tophat processes should
+                #     # use the same rnaseq_tophat directory.
+                #     # output_directory=prefix_run_tophat,
+                #     'output_directory': '_'.join(('rnaseq_tophat', paired_reads_name)),
+                # }
 
                 # runnable_run_tophat = self.add_runnable(
                 #         runnable=Runnable(
                 #                 name=self.get_prefix_rnaseq_run_tophat(paired_reads_name=paired_reads_name),
                 #                 code_module='bsf.runnables.generic',
                 #                 working_directory=self.genome_directory,
-                #                 file_path_dict=file_path_dict_tophat,
+                #                 file_path_object=file_path_tophat,
                 #                 debug=self.debug))
                 # executable_run_tophat = self.set_stage_runnable(
                 #         stage=stage_run_tophat,
@@ -720,7 +815,7 @@ class Tuxedo(Analysis):
                         value=self.transcriptome_index_path)
                 tophat.add_option_long(
                     key='output-dir',
-                    value=file_path_dict_tophat['output_directory'])
+                    value=file_path_tophat.output_directory)
                 tophat.add_option_long(
                     key='num-threads',
                     value=str(stage_run_tophat.threads))
@@ -814,7 +909,7 @@ class Tuxedo(Analysis):
 
                 # Set rnaseq_process_tophat arguments.
                 self.set_command_configuration(command=process_tophat)
-                process_tophat.arguments.append(file_path_dict_tophat['output_directory'])
+                process_tophat.arguments.append(file_path_tophat.output_directory)
                 process_tophat.arguments.append(genome_sizes)
 
                 # TODO: Switch from an external Bash script to a set of Runnable and RunnableStep objects.
@@ -824,7 +919,7 @@ class Tuxedo(Analysis):
 
                 # Create a process_tophat Runnable.
 
-                # file_path_dict_process_tophat = {
+                # file_path_process_tophat = {
                 #
                 # }
                 #
@@ -832,7 +927,7 @@ class Tuxedo(Analysis):
                 #     name='rnaseq_process_tophat',
                 #     code_module='bsf.runnables.generic',
                 #     working_directory=self.genome_directory,
-                #     file_path_dict=file_path_dict_process_tophat,
+                #     file_path_object=file_path_process_tophat,
                 #     debug=self.debug))
 
                 # Create a Cufflinks Runnable per paired_reads_name.
@@ -844,27 +939,28 @@ class Tuxedo(Analysis):
                 # stage_run_cufflinks.name. Both rnaseq_run_cufflinks and rnaseq_process_cufflinks processes
                 # should use the same rnaseq_cufflinks directory.
 
-                file_path_dict_cufflinks = {
-                    # output_directory=prefix_run_cufflinks,
-                    'output_directory': prefix_cufflinks,
-                    'tophat_accepted_hits': os.path.join(
-                        file_path_dict_tophat['output_directory'],
-                        'accepted_hits.bam'),
-                    'transcripts_gtf': os.path.join(prefix_cufflinks, 'transcripts.gtf'),
-                    'transcripts_gp': os.path.join(prefix_cufflinks, 'transcripts_gene_pred.tsv'),
-                    'transcripts_bp': os.path.join(prefix_cufflinks, 'transcripts_big_gene_pred.tsv'),
-                    'transcripts_st': os.path.join(prefix_cufflinks, 'transcripts_sorted.tsv'),
-                    'transcripts_bb': os.path.join(prefix_cufflinks, 'transcripts.bb'),
-                    'transcripts_lnk_gtf': os.path.join(prefix_cufflinks, prefix_cufflinks + 'transcripts.gtf'),
-                    'transcripts_lnk_bb': os.path.join(prefix_cufflinks, prefix_cufflinks + 'transcripts.bb'),
-                }
+                file_path_cufflinks = FilePathCufflinks(prefix=prefix_cufflinks)
+                # file_path_cufflinks = {
+                #     # output_directory=prefix_run_cufflinks,
+                #     'output_directory': prefix_cufflinks,
+                #     'tophat_accepted_hits': os.path.join(
+                #         file_path_tophat['output_directory'],
+                #         'accepted_hits.bam'),
+                #     'transcripts_gtf': os.path.join(prefix_cufflinks, 'transcripts.gtf'),
+                #     'transcripts_gp': os.path.join(prefix_cufflinks, 'transcripts_gene_pred.tsv'),
+                #     'transcripts_bp': os.path.join(prefix_cufflinks, 'transcripts_big_gene_pred.tsv'),
+                #     'transcripts_st': os.path.join(prefix_cufflinks, 'transcripts_sorted.tsv'),
+                #     'transcripts_bb': os.path.join(prefix_cufflinks, 'transcripts.bb'),
+                #     'transcripts_lnk_gtf': os.path.join(prefix_cufflinks, prefix_cufflinks + 'transcripts.gtf'),
+                #     'transcripts_lnk_bb': os.path.join(prefix_cufflinks, prefix_cufflinks + 'transcripts.bb'),
+                # }
 
                 runnable_run_cufflinks = self.add_runnable(
                     runnable=Runnable(
                         name=prefix_run_cufflinks,
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
-                        file_path_dict=file_path_dict_cufflinks,
+                        file_path_object=file_path_cufflinks,
                         debug=self.debug))
 
                 # Create an Executable for running the Cufflinks Runnable.
@@ -924,7 +1020,7 @@ class Tuxedo(Analysis):
 
                 runnable_step.add_option_long(
                     key='output-dir',
-                    value=file_path_dict_cufflinks['output_directory'])
+                    value=file_path_cufflinks.output_directory)
 
                 runnable_step.add_option_long(
                     key='num-threads',
@@ -938,7 +1034,7 @@ class Tuxedo(Analysis):
 
                 # Set Cufflinks arguments.
 
-                runnable_step.arguments.append(file_path_dict_cufflinks['tophat_accepted_hits'])
+                runnable_step.arguments.append(file_path_tophat.accepted_hits_bam)
 
                 # Add the run_cufflinks dependency for process_cufflinks.
                 process_cufflinks_dependencies.append(executable_run_cufflinks.name)
@@ -950,8 +1046,8 @@ class Tuxedo(Analysis):
                         name='gtf_to_gp',
                         program='gtfToGenePred'))
                 runnable_step.add_switch_short(key='genePredExt')
-                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_gtf'])
-                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_gp'])
+                runnable_step.arguments.append(file_path_cufflinks.transcripts_gtf)
+                runnable_step.arguments.append(file_path_cufflinks.transcripts_gp)
 
                 # Convert the UCSC genePred into a UCSC bigGenePred file.
 
@@ -960,10 +1056,10 @@ class Tuxedo(Analysis):
                         name='gp_to_bgp',
                         program='genePredToBigGenePred',
                         obsolete_file_path_list=[
-                            file_path_dict_cufflinks['transcripts_gp']
+                            file_path_cufflinks.transcripts_gp,
                         ]))
-                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_gp'])
-                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_bp'])
+                runnable_step.arguments.append(file_path_cufflinks.transcripts_gp)
+                runnable_step.arguments.append(file_path_cufflinks.transcripts_bp)
 
                 # Run bedSort on the UCSC bigGenePred file to sort field 1 in lexicographic mode and 2 in numeric mode.
 
@@ -972,10 +1068,10 @@ class Tuxedo(Analysis):
                         name='bed_sort',
                         program='bedSort',
                         obsolete_file_path_list=[
-                            file_path_dict_cufflinks['transcripts_bp']
+                            file_path_cufflinks.transcripts_bp,
                         ]))
-                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_bp'])
-                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_st'])
+                runnable_step.arguments.append(file_path_cufflinks.transcripts_bp)
+                runnable_step.arguments.append(file_path_cufflinks.transcripts_st)
 
                 # Convert the sorted UCSC bigGenePred into a bigBed file.
 
@@ -984,7 +1080,7 @@ class Tuxedo(Analysis):
                         name='bgp_to_bb',
                         program='bedToBigBed',
                         obsolete_file_path_list=[
-                            file_path_dict_cufflinks['transcripts_st'],
+                            file_path_cufflinks.transcripts_st,
                         ]))
                 # FIXME: It would be good to allow options with and without an equal sign.
                 # i.e. --type=bed12+8 versus --type bed12+8, which does not work.
@@ -996,23 +1092,23 @@ class Tuxedo(Analysis):
                 runnable_step.add_switch_short(key='as=/scratch/lab_bsf/resources/UCSC/bigGenePred.as')
                 runnable_step.add_switch_short(key='tab')
                 runnable_step.add_switch_short(key='type=bed12+8')
-                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_st'])
+                runnable_step.arguments.append(file_path_cufflinks.transcripts_st)
                 runnable_step.arguments.append(genome_sizes)
-                runnable_step.arguments.append(file_path_dict_cufflinks['transcripts_bb'])
+                runnable_step.arguments.append(file_path_cufflinks.transcripts_bb)
 
                 # Add a symbolic link for the transcripts bigBed file, that includes a sample name prefix.
                 runnable_run_cufflinks.add_runnable_step(
                     runnable_step=RunnableStepLink(
                         name='link_transcripts_bb',
-                        source_path=file_path_dict_cufflinks['transcripts_bb'],
-                        target_path=file_path_dict_cufflinks['transcripts_lnk_bb']))
+                        source_path=file_path_cufflinks.transcripts_bb,
+                        target_path=file_path_cufflinks.transcripts_lnk_bb))
 
                 # Add a symbolic link for the transcripts GTF file, that includes a sample name prefix.
                 runnable_run_cufflinks.add_runnable_step(
                     runnable_step=RunnableStepLink(
                         name='link_transcripts_gtf',
-                        source_path=file_path_dict_cufflinks['transcripts_gtf'],
-                        target_path=file_path_dict_cufflinks['transcripts_lnk_gtf']))
+                        source_path=file_path_cufflinks.transcripts_gtf,
+                        target_path=file_path_cufflinks.transcripts_lnk_gtf))
 
         # Create one process_cufflinks Executable to process all sub-directories.
 
@@ -1060,18 +1156,19 @@ class Tuxedo(Analysis):
             # TODO: Should the comparison prefix also include the project name or number?
             prefix_cuffmerge = self.get_prefix_rnaseq_run_cuffmerge(comparison_name=comparison_key)
 
-            file_path_dict_cuffmerge = {
-                'output_directory': prefix_cuffmerge,
-                'merged_gtf': os.path.join(prefix_cuffmerge, 'merged.gtf'),
-                'assembly_txt': '_'.join((prefix_cuffmerge, 'assembly.txt')),
-            }
+            file_path_cuffmerge = FilePathCuffmerge(prefix=prefix_cuffmerge)
+            # file_path_cuffmerge = {
+            #     'output_directory': prefix_cuffmerge,
+            #     'merged_gtf': os.path.join(prefix_cuffmerge, 'merged.gtf'),
+            #     'assembly_txt': '_'.join((prefix_cuffmerge, 'assembly.txt')),
+            # }
 
             runnable_run_cuffmerge = self.add_runnable(
                 runnable=Runnable(
                     name=prefix_cuffmerge,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
-                    file_path_dict=file_path_dict_cuffmerge,
+                    file_path_object=file_path_cuffmerge,
                     debug=self.debug))
             executable_run_cuffmerge = self.set_stage_runnable(
                 stage=stage_run_cuffmerge,
@@ -1092,7 +1189,7 @@ class Tuxedo(Analysis):
 
             cuffmerge.add_option_long(
                 key='output-dir',
-                value=file_path_dict_cuffmerge['output_directory'])
+                value=file_path_cuffmerge.output_directory)
             cuffmerge.add_option_long(
                 key='num-threads',
                 value=str(stage_run_cuffmerge.threads))
@@ -1109,7 +1206,7 @@ class Tuxedo(Analysis):
             # This file requires an absolute path, because the working directory is not set at the stage of
             # job submission.
 
-            assembly_path = os.path.join(self.genome_directory, '_'.join((prefix_cuffmerge, 'assembly.txt')))
+            assembly_path = os.path.join(self.genome_directory, file_path_cuffmerge.assembly_txt)
             assembly_file = open(name=assembly_path, mode='w')
 
             # Process rnaseq_cuffmerge and rnaseq_cuffdiff arguments in parallel.
@@ -1163,22 +1260,25 @@ class Tuxedo(Analysis):
 
                         prefix_cuffquant = '_'.join((stage_run_cuffquant.name, comparison_key, paired_reads_name))
 
-                        file_path_dict_cuffquant = {
-                            'output_directory': prefix_cuffquant,
-                            'abundances': os.path.join(prefix_cuffquant, 'abundances.cxb'),
-                            'merged_gtf': file_path_dict_cuffmerge['merged_gtf'],
-                            'tophat_directory': '_'.join(('rnaseq_tophat', paired_reads_name)),
-                            'tophat_accepted_hits': os.path.join(
-                                '_'.join(('rnaseq_tophat', paired_reads_name)),
-                                'accepted_hits.bam'),
-                        }
+                        file_path_cuffquant = FilePathCuffquant(prefix=prefix_cuffquant)
+                        # file_path_cuffquant = {
+                        #     'output_directory': prefix_cuffquant,
+                        #     'abundances': os.path.join(prefix_cuffquant, 'abundances.cxb'),
+                        #     'merged_gtf': file_path_cuffmerge['merged_gtf'],
+                        #     'tophat_accepted_hits': os.path.join(
+                        #         '_'.join(('rnaseq_tophat', paired_reads_name)),
+                        #         'accepted_hits.bam'),
+                        # }
+                        # TODO: Remove after rearranging this method into the run method.
+                        file_path_cuffquant.tophat_accepted_hits = \
+                            os.path.join('_'.join(('rnaseq_tophat', paired_reads_name)), 'accepted_hits.bam')
 
                         runnable_run_cuffquant = self.add_runnable(
                             runnable=Runnable(
                                 name=prefix_cuffquant,
                                 code_module='bsf.runnables.generic',
                                 working_directory=self.genome_directory,
-                                file_path_dict=file_path_dict_cuffquant,
+                                file_path_object=file_path_cuffquant,
                                 debug=self.debug))
                         executable_run_cuffquant = self.set_stage_runnable(
                             stage=stage_run_cuffquant,
@@ -1199,7 +1299,7 @@ class Tuxedo(Analysis):
 
                         cuffquant.add_option_long(
                             key='output-dir',
-                            value=file_path_dict_cuffquant['output_directory'])
+                            value=file_path_cuffquant.output_directory)
                         cuffquant.add_option_long(
                             key='num-threads',
                             value=str(stage_run_cuffquant.threads))
@@ -1228,16 +1328,16 @@ class Tuxedo(Analysis):
                         # Set Cuffquant arguments.
                         # Add the Cuffmerge GTF file and the TopHat BAM file as Cuffquant arguments.
 
-                        cuffquant.arguments.append(file_path_dict_cuffquant['merged_gtf'])
-                        cuffquant.arguments.append(file_path_dict_cuffquant['tophat_accepted_hits'])
+                        cuffquant.arguments.append(file_path_cuffmerge.merged_gtf)
+                        cuffquant.arguments.append(file_path_cuffquant.tophat_accepted_hits)
 
                         # Add the Cuffquant abundances file to the Cuffdiff list.
 
-                        per_group_abundances_list.append(file_path_dict_cuffquant['abundances'])
+                        per_group_abundances_list.append(file_path_cuffquant.abundances)
 
                         # Add the TopHat BAM file to the Cuffdiff alignments list.
 
-                        per_group_alignments_list.append(file_path_dict_cuffquant['tophat_accepted_hits'])
+                        per_group_alignments_list.append(file_path_cuffquant.tophat_accepted_hits)
 
                         # Add the Cuffquant Runnable process name to the Cuffdiff and Cuffnorm dependencies list.
 
@@ -1257,17 +1357,18 @@ class Tuxedo(Analysis):
 
             prefix_cuffnorm = '_'.join((stage_run_cuffnorm.name, comparison_key))
 
-            file_path_dict_cuffnorm = {
-                'output_directory': prefix_cuffnorm,
-                'merged_gtf': file_path_dict_cuffmerge['merged_gtf'],
-            }
+            file_path_cuffnorm = FilePathCuffnorm(prefix=prefix_cuffnorm)
+            # file_path_cuffnorm = {
+            #     'output_directory': prefix_cuffnorm,
+            #     'merged_gtf': file_path_cuffmerge['merged_gtf'],
+            # }
 
             runnable_run_cuffnorm = self.add_runnable(
                 runnable=Runnable(
                     name=prefix_cuffnorm,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
-                    file_path_dict=file_path_dict_cuffnorm,
+                    file_path_object=file_path_cuffnorm,
                     debug=self.debug))
             executable_run_cuffnorm = self.set_stage_runnable(
                 stage=stage_run_cuffnorm,
@@ -1286,7 +1387,7 @@ class Tuxedo(Analysis):
 
             cuffnorm.add_option_long(
                 key='output-dir',
-                value=file_path_dict_cuffnorm['output_directory'])
+                value=file_path_cuffnorm.output_directory)
             cuffnorm.add_option_long(
                 key='labels',
                 value=','.join(cuffdiff_cuffnorm_labels))
@@ -1303,7 +1404,7 @@ class Tuxedo(Analysis):
                 key='no-update-check')
 
             # Add the Cuffmerge GTF file as first Cuffnorm argument.
-            cuffnorm.arguments.append(file_path_dict_cuffnorm['merged_gtf'])
+            cuffnorm.arguments.append(file_path_cuffmerge.merged_gtf)
 
             # Add the Cuffquant abundances files per point as Cuffnorm arguments.
             for per_group_abundances_list in cuffdiff_cuffnorm_abundances:
@@ -1314,17 +1415,18 @@ class Tuxedo(Analysis):
 
             prefix_cuffdiff = '_'.join((stage_run_cuffdiff.name, comparison_key))
 
-            file_path_dict_cuffdiff = {
-                'output_directory': prefix_cuffdiff,
-                'merged_gtf': file_path_dict_cuffmerge['merged_gtf'],
-            }
+            file_path_cuffdiff = FilePathCuffdiff(prefix=prefix_cuffdiff)
+            # file_path_cuffdiff = {
+            #     'output_directory': prefix_cuffdiff,
+            #     'merged_gtf': file_path_cuffmerge['merged_gtf'],
+            # }
 
             runnable_run_cuffdiff = self.add_runnable(
                 runnable=Runnable(
                     name=prefix_cuffdiff,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
-                    file_path_dict=file_path_dict_cuffdiff,
+                    file_path_object=file_path_cuffdiff,
                     debug=self.debug))
             executable_run_cuffdiff = self.set_stage_runnable(
                 stage=stage_run_cuffdiff,
@@ -1348,7 +1450,7 @@ class Tuxedo(Analysis):
 
             cuffdiff.add_option_long(
                 key='output-dir',
-                value=file_path_dict_cuffdiff['output_directory'])
+                value=file_path_cuffdiff.output_directory)
             cuffdiff.add_option_long(
                 key='labels',
                 value=','.join(cuffdiff_cuffnorm_labels))
@@ -1378,7 +1480,7 @@ class Tuxedo(Analysis):
                 key='no-update-check')
 
             # Add the Cuffmerge GTF file as first Cuffdiff argument.
-            cuffdiff.arguments.append(file_path_dict_cuffdiff['merged_gtf'])
+            cuffdiff.arguments.append(file_path_cuffmerge.merged_gtf)
 
             # Cuffdiff seems to have a problem with Cuffquant abundances files in that the isoforms.count_tracking
             # files show ridiculously low numbers such as 1e-319 for some splice variants. Usually, other splice
@@ -1409,7 +1511,7 @@ class Tuxedo(Analysis):
                 value=comparison_key)
             process_cuffdiff.add_option_long(
                 key='gtf-assembly',
-                value=file_path_dict_cuffdiff['merged_gtf'])
+                value=file_path_cuffmerge.merged_gtf)
             process_cuffdiff.add_option_long(
                 key='gtf-reference',
                 value=self.transcriptome_gtf_path)
@@ -2407,6 +2509,17 @@ class Tuxedo(Analysis):
         return
 
 
+class FilePathDESeq(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathDESeq, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
+
+        return
+
+
 class DESeq(Analysis):
     """DESeq RNASeq C{bsf.Analysis} sub-class.
 
@@ -2698,13 +2811,7 @@ class DESeq(Analysis):
 
                 # prefix_run_tophat = '_'.join((stage_run_tophat.name, paired_reads_name))
 
-                file_path_dict_deseq = {
-                    # The output directory deviates from the prefix_run_tophat that itself is based on
-                    # stage_run_tophat.name. Both rnaseq_run_tophat and rnaseq_process_tophat processes should
-                    # use the same rnaseq_tophat directory.
-                    # output_directory=prefix_run_tophat,
-                    'output_directory': '_'.join(('rnaseq_tophat', paired_reads_name)),
-                }
+                file_path_deseq = FilePathDESeq(prefix=prefix)
 
             annotation_sheet.row_dicts.append(row_dict)
         # TODO: Create a directory for the comparison.

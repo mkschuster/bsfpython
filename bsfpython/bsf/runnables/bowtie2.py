@@ -34,6 +34,7 @@ import shutil
 
 import bsf
 from bsf import Analysis
+from bsf.analyses.chip_seq import FilePathChIPSeq
 from bsf.argument import OptionShort
 from bsf.executables import Bowtie2
 from bsf.process import Command, Executable
@@ -119,7 +120,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     # Propagate SAM header lines @PG and @RG around FASTQ files into the final BAM file. Sigh!
 
     bam_file_name = os.path.basename(bam_file_path)
-    sam_file_path = os.path.join(runnable.file_path_dict['temporary_directory'], bam_file_name[:-4] + '.sam')
+    sam_file_path = os.path.join(runnable.get_relative_temporary_directory_path, bam_file_name[:-4] + '.sam')
 
     samtools = Executable(
         name='samtools_view',
@@ -155,7 +156,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     java_process.add_switch_short(key='d64')
     java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx2G')
-    java_process.add_option_pair(key='-Djava.io.tmpdir', value=runnable.file_path_dict['temporary_directory'])
+    java_process.add_option_pair(key='-Djava.io.tmpdir', value=runnable.get_relative_temporary_directory_path)
 
     picard_process = java_process.sub_command
     picard_process.add_option_short(key='jar', value=os.path.join(default.classpath_picard, 'picard.jar'))
@@ -164,9 +165,9 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     sam_to_fastq = picard_process.sub_command
     sam_to_fastq.add_option_pair(key='INPUT', value=bam_file_path)
     sam_to_fastq.add_option_pair(key='OUTPUT_PER_RG', value='true')
-    sam_to_fastq.add_option_pair(key='OUTPUT_DIR', value=runnable.file_path_dict['temporary_directory'])
+    sam_to_fastq.add_option_pair(key='OUTPUT_DIR', value=runnable.get_relative_temporary_directory_path)
     sam_to_fastq.add_option_pair(key='INCLUDE_NON_PF_READS', value='false')  # TODO: Make this configurable.
-    sam_to_fastq.add_option_pair(key='TMP_DIR', value=runnable.file_path_dict['temporary_directory'])
+    sam_to_fastq.add_option_pair(key='TMP_DIR', value=runnable.get_relative_temporary_directory_path)
     sam_to_fastq.add_option_pair(key='VERBOSITY', value='WARNING')
     sam_to_fastq.add_option_pair(key='QUIET', value='false')
     sam_to_fastq.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
@@ -185,8 +186,8 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
             if element[:3] == 'PU:':
                 # Picard builds file names from the PU string, but replaces all non-alphanumeric characters.
                 sam_pu = re.sub(pattern=regular_expression, repl='_', string=element[3:])
-                sam_pu_r1_path = os.path.join(runnable.file_path_dict['temporary_directory'], sam_pu + '_1.fastq')
-                sam_pu_r2_path = os.path.join(runnable.file_path_dict['temporary_directory'], sam_pu + '_2.fastq')
+                sam_pu_r1_path = os.path.join(runnable.get_relative_temporary_directory_path, sam_pu + '_1.fastq')
+                sam_pu_r2_path = os.path.join(runnable.get_relative_temporary_directory_path, sam_pu + '_2.fastq')
 
                 if os.path.exists(sam_pu_r1_path) and os.path.getsize(sam_pu_r1_path):
                     rgc.fastq_1_path = sam_pu_r1_path
@@ -210,17 +211,18 @@ def run_bowtie2(runnable):
 
     # Put all sample-specific information into a sub-directory.
 
-    path_replicate = runnable.file_path_dict['replicate_directory']
+    file_path_read_group = runnable.file_path_object
+    assert isinstance(file_path_read_group, FilePathChIPSeq)
 
-    if not os.path.isdir(path_replicate):
+    if not os.path.isdir(file_path_read_group.replicate_directory):
         try:
-            os.makedirs(path_replicate)
+            os.makedirs(file_path_read_group.replicate_directory)
         except OSError as exception:  # Python > 2.5
             if exception.errno != errno.EEXIST:
                 raise
 
-    if os.path.exists(path=runnable.file_path_dict['aligned_sam']) \
-            and os.path.getsize(filename=runnable.file_path_dict['aligned_sam']):
+    if os.path.exists(path=file_path_read_group.aligned_sam) \
+            and os.path.getsize(filename=file_path_read_group.aligned_sam):
         return
 
     # FIXME: The Runnable object now only has a list of RunnableStep objects.
@@ -299,7 +301,7 @@ def run_bowtie2(runnable):
         bowtie2.add_option_short(key='U', value=','.join(fastq_list))
 
         sam_file_path = os.path.join(
-            runnable.file_path_dict['temporary_directory'],
+            runnable.get_relative_temporary_directory_path,
             'all_fastq_files.sam')
         bowtie2.stdout_path = sam_file_path
         sam_file_path_list.append(sam_file_path)
@@ -322,7 +324,7 @@ def run_bowtie2(runnable):
         java_process.add_switch_short(key='d64')
         java_process.add_switch_short(key='server')
         java_process.add_switch_short(key='Xmx2G')
-        java_process.add_option_pair(key='-Djava.io.tmpdir', value=runnable.file_path_dict['temporary_directory'])
+        java_process.add_option_pair(key='-Djava.io.tmpdir', value=runnable.get_relative_temporary_directory_path)
 
         picard_process = java_process.sub_command
         picard_process.add_option_short(key='jar', value=os.path.join(default.classpath_picard, 'picard.jar'))
@@ -331,9 +333,9 @@ def run_bowtie2(runnable):
         sam_to_fastq = picard_process.sub_command
         # sam_to_fastq.add_option_pair(key='INPUT', value=bam_file_path)  # TODO:
         sam_to_fastq.add_option_pair(key='OUTPUT_PER_RG', value='true')
-        sam_to_fastq.add_option_pair(key='OUTPUT_DIR', value=runnable.file_path_dict['temporary_directory'])
+        sam_to_fastq.add_option_pair(key='OUTPUT_DIR', value=runnable.get_relative_temporary_directory_path)
         sam_to_fastq.add_option_pair(key='INCLUDE_NON_PF_READS', value='false')  # TODO: Make this configurable.
-        sam_to_fastq.add_option_pair(key='TMP_DIR', value=runnable.file_path_dict['temporary_directory'])
+        sam_to_fastq.add_option_pair(key='TMP_DIR', value=runnable.get_relative_temporary_directory_path)
         sam_to_fastq.add_option_pair(key='VERBOSITY', value='WARNING')
         sam_to_fastq.add_option_pair(key='QUIET', value='false')
         sam_to_fastq.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
@@ -348,20 +350,19 @@ def run(runnable):
     @rtype:
     """
 
-    path_temporary = runnable.file_path_dict['temporary_directory']
-
-    if not os.path.isdir(path_temporary):
+    if not os.path.isdir(runnable.get_relative_temporary_directory_path):
         try:
-            os.makedirs(path_temporary)
+            os.makedirs(runnable.get_relative_temporary_directory_path)
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
 
-    path_replicate = runnable.file_path_dict['replicate_directory']
+    file_path_read_group = runnable.file_path_object
+    assert isinstance(file_path_read_group, FilePathChIPSeq)
 
-    if not os.path.isdir(path_replicate):
+    if not os.path.isdir(file_path_read_group.replicate_directory):
         try:
-            os.makedirs(path_replicate)
+            os.makedirs(file_path_read_group.replicate_directory)
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
@@ -372,6 +373,6 @@ def run(runnable):
 
     # Remove the temporary directory and everything within it.
 
-    shutil.rmtree(path=path_temporary, ignore_errors=False)
+    shutil.rmtree(path=runnable.get_relative_temporary_directory_path, ignore_errors=False)
 
     # Job done.

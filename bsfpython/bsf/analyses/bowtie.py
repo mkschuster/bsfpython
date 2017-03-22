@@ -200,12 +200,6 @@ class Bowtie1(Analysis):
 
                 prefix_bowtie1 = '_'.join((stage_bowtie1.name, paired_reads_name))
 
-                # Bowtie1-specific file paths
-
-                file_path_dict_bowtie1 = {
-                    'temporary_directory': prefix_bowtie1 + '_temporary',
-                }
-
                 # Create a Runnable and Executable for processing each Bowtie1 alignment.
 
                 runnable_bowtie1 = self.add_runnable(
@@ -214,7 +208,6 @@ class Bowtie1(Analysis):
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
-                        file_path_dict=file_path_dict_bowtie1,
                         debug=self.debug))
                 executable_bowtie1 = self.set_stage_runnable(
                     stage=stage_bowtie1,
@@ -224,9 +217,8 @@ class Bowtie1(Analysis):
                     runnable_step=RunnableStep(
                         name='bowtie1',
                         obsolete_file_path_list=[
-                        ],))
+                        ]))
                 assert isinstance(runnable_step, RunnableStep)
-                # runnable_step.add_option_long(key='INPUT', value=file_path_dict_lane['aligned_bam'])
                 runnable_step.arguments.append(self.bwa_genome_db)
 
                 reads1 = list()

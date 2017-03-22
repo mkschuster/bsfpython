@@ -30,7 +30,7 @@ A package of classes and methods supporting analyses to archive and restore Illu
 import errno
 import os
 
-from bsf import Analysis, Runnable
+from bsf import Analysis, FilePath, Runnable
 from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.process import Command, RunnableStep, RunnableStepSleep
 from bsf.standards import Configuration, Default
@@ -686,6 +686,19 @@ class IlluminaRunFolderArchive(Analysis):
         return
 
 
+class FilePathIlluminaRunFolderRestore(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathIlluminaRunFolderRestore, self).__init__(prefix=prefix)
+
+        self.folder = '_'.join((prefix, 'Folder.tar'))
+        self.intensities = '_'.join((prefix, 'Intensities.tar'))
+        # There are additional attributes L001 to L008 depending on the flow cell layout.
+
+        return
+
+
 class IlluminaRunFolderRestore(Analysis):
     """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} class represents the logic to restore an
     Illumina Run Folder from a format suitable for magnetic tape libraries.
@@ -987,30 +1000,26 @@ class IlluminaRunFolderRestore(Analysis):
             raise Exception('The Illumina Run Folder directory {!r} exists already.'.
                             format(self.get_run_directory_path))
 
-        archive_name = {
+        file_path_dict = {
             'folder': '_'.join((self.get_run_directory_name, 'Folder.tar')),
             'intensities': '_'.join((self.get_run_directory_name, 'Intensities.tar')),
         }
 
+        # Add additional, lane-specific keys.
         for lane_int in range(0 + 1, self.maximum_lane_number + 1):
-            archive_name['L{:03d}'.format(lane_int)] = '_'.join((self.get_run_directory_name,
-                                                                 'L{:03d}.tar'.format(lane_int)))
-
-        file_path_dict = dict()
-
-        for key in archive_name.keys():
-            file_path_dict[key] = os.path.join(self.archive_directory, archive_name[key])
+            file_path_dict['L{:03d}'.format(lane_int)] = \
+                '_'.join((self.get_run_directory_name, 'L{:03d}.tar'.format(lane_int)))
 
         # At least the IRF_Folder.tar, IRF_Intensities.tar and IRF_L001.tar files have to be there.
 
-        if not os.path.exists(file_path_dict['folder']):
-            raise Exception('Illumina Run Archive file {!r} is missing.'.format(archive_name['folder']))
+        if not os.path.exists(os.path.join(self.archive_directory, file_path_dict['folder'])):
+            raise Exception('Illumina Run Archive file {!r} is missing.'.format(file_path_dict['folder']))
 
-        if not os.path.exists(file_path_dict['intensities']):
-            raise Exception('Illumina Run Archive file {!r} is missing.'.format(archive_name['intensities']))
+        if not os.path.exists(os.path.join(self.archive_directory, file_path_dict['intensities'])):
+            raise Exception('Illumina Run Archive file {!r} is missing.'.format(file_path_dict['intensities']))
 
-        if not os.path.exists(file_path_dict['L001']):
-            raise Exception('Illumina Run Archive file {!r} is missing.'.format(archive_name['L001']))
+        if not os.path.exists(os.path.join(self.archive_directory, file_path_dict['L001'])):
+            raise Exception('Illumina Run Archive file {!r} is missing.'.format(file_path_dict['L001']))
 
         super(IlluminaRunFolderRestore, self).run()
 
@@ -1024,8 +1033,7 @@ class IlluminaRunFolderRestore(Analysis):
             runnable=Runnable(
                 name=self.get_prefix_extract_archive(project_name=self.project_name, lane='folder'),
                 code_module='bsf.runnables.generic',
-                working_directory=self.project_directory,
-                file_path_dict=file_path_dict))
+                working_directory=self.project_directory))
         executable_extract_folder = self.set_stage_runnable(
             stage=stage_extract_archive,
             runnable=runnable_extract_folder)
@@ -1037,7 +1045,9 @@ class IlluminaRunFolderRestore(Analysis):
 
         extract_folder.add_switch_long(key='extract')
         extract_folder.add_option_long(key='directory', value=self.illumina_directory)
-        extract_folder.add_option_long(key='file', value=file_path_dict['folder'])
+        extract_folder.add_option_long(
+            key='file',
+            value=os.path.join(self.archive_directory, file_path_dict['folder']))
 
         # Compress all files in the IRF/Logs and IRF/Data/RTALogs directories.
 
@@ -1045,8 +1055,7 @@ class IlluminaRunFolderRestore(Analysis):
             runnable=Runnable(
                 name=self.get_prefix_compress_logs(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
-                working_directory=self.project_directory,
-                file_path_dict=file_path_dict))
+                working_directory=self.project_directory))
         executable_compress_logs = self.set_stage_runnable(
             stage=stage_compress_logs,
             runnable=runnable_compress_logs)
@@ -1075,8 +1084,7 @@ class IlluminaRunFolderRestore(Analysis):
         runnable_extract_intensities = self.add_runnable(runnable=Runnable(
             name=self.get_prefix_extract_archive(project_name=self.project_name, lane='intensities'),
             code_module='bsf.runnables.generic',
-            working_directory=self.project_directory,
-            file_path_dict=file_path_dict))
+            working_directory=self.project_directory))
         executable_extract_intensities = self.set_stage_runnable(
             stage=stage_extract_archive,
             runnable=runnable_extract_intensities)
@@ -1090,21 +1098,22 @@ class IlluminaRunFolderRestore(Analysis):
 
         extract_intensities.add_switch_long(key='extract')
         extract_intensities.add_option_long(key='directory', value=self.illumina_directory)
-        extract_intensities.add_option_long(key='file', value=file_path_dict['intensities'])
+        extract_intensities.add_option_long(
+            key='file',
+            value=os.path.join(self.archive_directory, file_path_dict['intensities']))
 
         # Unpack the IRF_L001.tar to IRF_L008.tar files if they exist.
 
         for lane_int in range(0 + 1, self.maximum_lane_number + 1):
 
             # HiSeq and MiSeq instruments offer various run modes with differing number of lanes.
-            if not os.path.exists(file_path_dict['L{:03d}'.format(lane_int)]):
+            if not os.path.exists(os.path.join(self.archive_directory, file_path_dict['L{:03d}'.format(lane_int)])):
                 continue
 
             runnable_extract_lane = self.add_runnable(runnable=Runnable(
                 name=self.get_prefix_extract_archive(project_name=self.project_name, lane=str(lane_int)),
                 code_module='bsf.runnables.generic',
-                working_directory=self.project_directory,
-                file_path_dict=file_path_dict))
+                working_directory=self.project_directory))
             self.set_stage_runnable(
                 stage=stage_extract_archive,
                 runnable=runnable_extract_lane)
@@ -1118,7 +1127,9 @@ class IlluminaRunFolderRestore(Analysis):
 
             extract_lane.add_switch_long(key='extract')
             extract_lane.add_option_long(key='directory', value=self.illumina_directory)
-            extract_lane.add_option_long(key='file', value=file_path_dict['L{:03d}'.format(lane_int)])
+            extract_lane.add_option_long(
+                key='file',
+                value=os.path.join(self.archive_directory, file_path_dict['L{:03d}'.format(lane_int)]))
 
             if not self.extract_intensities:
                 extract_lane.add_option_long(key='exclude', value='C*.1', override=True)
@@ -1128,8 +1139,7 @@ class IlluminaRunFolderRestore(Analysis):
             runnable_compress_base_calls = self.add_runnable(runnable=Runnable(
                 name=self.get_prefix_compress_base_calls(project_name=self.project_name, lane=str(lane_int)),
                 code_module='bsf.runnables.generic',
-                working_directory=self.project_directory,
-                file_path_dict=file_path_dict))
+                working_directory=self.project_directory))
             executable_compress_base_calls = self.set_stage_runnable(
                 stage=stage_compress_base_calls,
                 runnable=runnable_compress_base_calls)

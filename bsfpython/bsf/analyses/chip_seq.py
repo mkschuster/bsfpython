@@ -32,7 +32,7 @@ import os
 from pickle import Pickler, HIGHEST_PROTOCOL
 import warnings
 
-from bsf import Analysis, defaults, Runnable
+from bsf import Analysis, defaults, FilePath, Runnable
 from bsf.annotation import AnnotationSheet, ChIPSeqDiffBindSheet
 from bsf.ngs import Sample
 from bsf.executables import BWA, Macs14
@@ -158,6 +158,23 @@ class ChIPSeqComparison(object):
             self.diff_bind = True
         else:
             self.diff_bind = diff_bind
+
+        return
+
+
+class FilePathChIPSeq(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathChIPSeq, self).__init__(prefix=prefix)
+
+        self.replicate_directory = prefix
+        self.aligned_sam = os.path.join(prefix, '_'.join((prefix, 'aligned.sam')))
+        self.cleaned_sam = os.path.join(prefix, '_'.join((prefix, 'cleaned.sam')))
+        self.sorted_bam = os.path.join(prefix, '_'.join((prefix, 'sorted.bam')))
+        self.aligned_bam = os.path.join(prefix, '_'.join((prefix, '.bam')))
+        self.aligned_bai = os.path.join(prefix, '_'.join((prefix, '.bai')))
+        self.aligned_md5 = os.path.join(prefix, '_'.join((prefix, '.bam.md5')))
 
         return
 
@@ -588,22 +605,16 @@ class ChIPSeq(Analysis):
             paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
             for paired_reads_name in paired_reads_name_list:
-                prefix = '_'.join((stage_alignment.name, paired_reads_name))
+                prefix_read_group = '_'.join((stage_alignment.name, paired_reads_name))
 
-                file_path_dict = {
-                    'temporary_directory': '_'.join((prefix, 'temporary')),
-                    'replicate_directory': prefix,
-                    'aligned_sam': os.path.join(prefix, '_'.join((prefix, 'aligned.sam'))),
-                    'cleaned_sam': os.path.join(prefix, '_'.join((prefix, 'cleaned.sam'))),
-                    'sorted_bam': os.path.join(prefix, '_'.join((prefix, 'sorted.bam'))),
-                }
+                file_path_read_group = FilePathChIPSeq(prefix=prefix_read_group)
 
                 self.add_runnable(
                     runnable=Runnable(
-                        name=prefix,
+                        name=prefix_read_group,
                         code_module='bsf.runnables.chipseq_alignment',
                         working_directory=self.genome_directory,
-                        file_path_dict=file_path_dict,
+                        file_path_object=file_path_read_group,
                         debug=self.debug))
 
                 # Step 1: Process per lane.
@@ -655,20 +666,11 @@ class ChIPSeq(Analysis):
                 if len(reads2):
                     warnings.warn('Only second reads, but no first reads have been defined.')
 
-                file_path_chipseq_alignment = {
-                    # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
-                    # It is currently based on the stage_alignment.name and paired_reads_name.
-                    # The script should also be changed to pre-set all file names beforehand.
-                    'aligned_bam': '{}_{}.bam'.format(stage_alignment.name, paired_reads_name),
-                    'aligned_bai': '{}_{}.bai'.format(stage_alignment.name, paired_reads_name),
-                    'aligned_md5': '{}_{}.bam.md5'.format(stage_alignment.name, paired_reads_name),
-                }
-
                 # Normally, the bwa object would be pushed onto the Stage list.
                 # Experimentally, use Pickler to serialize the Executable object into a file.
 
                 pickler_dict_align_lane = {
-                    'prefix': stage_alignment.name,
+                    'prefix_read_group': stage_alignment.name,
                     'replicate_key': paired_reads_name,
                     'classpath_picard': self.classpath_picard,
                     'bwa_executable': bwa,
@@ -690,9 +692,9 @@ class ChIPSeq(Analysis):
                         program='bsf_run_bwa.py'))
 
                 # Only submit this Executable if the final result file does not exist.
-                if (os.path.exists(os.path.join(self.genome_directory, file_path_chipseq_alignment['aligned_md5'])) and
+                if (os.path.exists(os.path.join(self.genome_directory, file_path_read_group.aligned_md5)) and
                         os.path.getsize(
-                            os.path.join(self.genome_directory, file_path_chipseq_alignment['aligned_md5']))):
+                            os.path.join(self.genome_directory, file_path_read_group.aligned_md5))):
                     run_bwa.submit = False
 
                     # Set run_bwa options.
@@ -753,20 +755,14 @@ class ChIPSeq(Analysis):
             for paired_reads_name in paired_reads_name_list:
                 prefix = '_'.join((stage_alignment.name, paired_reads_name))
 
-                file_path_dict = {
-                    'temporary_directory': '_'.join((prefix, 'temporary')),
-                    'replicate_directory': prefix,
-                    'aligned_sam': os.path.join(prefix, '_'.join((prefix, 'aligned.sam'))),
-                    'cleaned_sam': os.path.join(prefix, '_'.join((prefix, 'cleaned.sam'))),
-                    'sorted_bam': os.path.join(prefix, '_'.join((prefix, '.bam'))),
-                }
+                file_path_read_group = FilePathChIPSeq(prefix=prefix)
 
                 runnable_alignment = self.add_runnable(
                     runnable=Runnable(
                         name=prefix,
                         code_module='bsf.runnables.bowtie2',
                         working_directory=self.genome_directory,
-                        file_path_dict=file_path_dict))
+                        file_path_object=file_path_read_group))
                 self.set_stage_runnable(
                     stage=stage_alignment,
                     runnable=runnable_alignment)
@@ -813,21 +809,23 @@ class ChIPSeq(Analysis):
 
                 # Set Bowtie2 arguments.
 
-                runnable_step.stdout_path = file_path_dict['aligned_sam']
+                runnable_step.stdout_path = file_path_read_group.aligned_sam
 
                 # Run Picard CleanSam to convert the aligned SAM file into a cleaned SAM file.
 
                 runnable_step = runnable_alignment.add_runnable_step(
                     runnable_step=RunnableStepPicard(
                         name='picard_clean_sam',
-                        java_temporary_path=file_path_dict['temporary_directory'],
+                        java_temporary_path=runnable_alignment.get_relative_temporary_directory_path,
                         java_heap_maximum='Xmx4G',
                         java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
                         picard_command='CleanSam'))
                 assert isinstance(runnable_step, RunnableStepPicard)
-                runnable_step.add_picard_option(key='INPUT', value=file_path_dict['aligned_sam'])
-                runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict['cleaned_sam'])
-                runnable_step.add_picard_option(key='TMP_DIR', value=file_path_dict['temporary_directory'])
+                runnable_step.add_picard_option(key='INPUT', value=file_path_read_group.aligned_sam)
+                runnable_step.add_picard_option(key='OUTPUT', value=file_path_read_group.cleaned_sam)
+                runnable_step.add_picard_option(
+                    key='TMP_DIR',
+                    value=runnable_alignment.get_relative_temporary_directory_path)
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                 runnable_step.add_picard_option(key='QUIET', value='false')
                 runnable_step.add_picard_option(key='VALIDATION_STRINGENCY', value='STRICT')
@@ -837,15 +835,17 @@ class ChIPSeq(Analysis):
                 runnable_step = runnable_alignment.add_runnable_step(
                     runnable_step=RunnableStepPicard(
                         name='picard_sort_sam',
-                        java_temporary_path=file_path_dict['temporary_directory'],
+                        java_temporary_path=runnable_alignment.get_relative_temporary_directory_path,
                         java_heap_maximum='Xmx6G',
                         java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
                         picard_command='SortSam'))
                 assert isinstance(runnable_step, RunnableStepPicard)
-                runnable_step.add_picard_option(key='INPUT', value=file_path_dict['cleaned_sam'])
-                runnable_step.add_picard_option(key='OUTPUT', value=file_path_dict['sorted_bam'])
+                runnable_step.add_picard_option(key='INPUT', value=file_path_read_group.cleaned_sam)
+                runnable_step.add_picard_option(key='OUTPUT', value=file_path_read_group.sorted_bam)
                 runnable_step.add_picard_option(key='SORT_ORDER', value='coordinate')
-                runnable_step.add_picard_option(key='TMP_DIR', value=file_path_dict['temporary_directory'])
+                runnable_step.add_picard_option(
+                    key='TMP_DIR',
+                    value=runnable_alignment.get_relative_temporary_directory_path)
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                 runnable_step.add_picard_option(key='QUIET', value='false')
                 runnable_step.add_picard_option(key='VALIDATION_STRINGENCY', value='STRICT')
@@ -1027,17 +1027,11 @@ class ChIPSeq(Analysis):
                                 t_paired_reads_name,
                                 c_paired_reads_name)
 
-                            file_path_dict = {
-                                'temporary_directory': '_'.join((prefix, 'temporary')),
-                                'replicate_directory': prefix,
-                            }
-
                             runnable_peak_calling = self.add_runnable(
                                 runnable=Runnable(
                                     name=prefix,
                                     code_module='bsf.runnables.chip_seq_peak_calling',
-                                    working_directory=self.genome_directory,
-                                    file_path_dict=file_path_dict))
+                                    working_directory=self.genome_directory))
 
                             macs2_call_peak = runnable_peak_calling.add_runnable_step(
                                 runnable_step=RunnableStep(

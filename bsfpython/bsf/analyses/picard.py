@@ -32,7 +32,7 @@ import re
 import warnings
 import weakref
 
-from bsf import Analysis, Runnable
+from bsf import Analysis, FilePath, Runnable
 from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
 from bsf.annotation import AnnotationSheet
 from bsf.ngs import Reads, PairedReads, SampleAnnotationSheet
@@ -435,6 +435,32 @@ class IlluminaBasecallsToSamSheet(AnnotationSheet):
     _test_methods = dict()
 
 
+class FilePathExtractIlluminaCell(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathExtractIlluminaCell, self).__init__(prefix=prefix)
+
+        self.sample_annotation_sheet_csv = prefix + '_samples.csv'
+
+        return
+
+
+class FilePathExtractIlluminaLane(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathExtractIlluminaLane, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix + '_output'
+        self.samples_directory = prefix + '_samples'
+        self.barcode_tsv = prefix + '_barcode.tsv'
+        self.metrics_tsv = prefix + '_metrics.tsv'
+        self.library_tsv = prefix + '_library.tsv'
+
+        return
+
+
 class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
     """The C{bsf.analyses.picard.ExtractIlluminaRunFolder} class represents to extract data from an Illumina Run Folder.
 
@@ -796,20 +822,14 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         for row_dict in library_annotation_sheet.row_dicts:
             if row_dict['lane'] not in flow_cell_dict:
                 flow_cell_dict[row_dict['lane']] = list()
-
             flow_cell_dict[row_dict['lane']].append(row_dict)
 
-        file_path_dict_cell = {
-            'experiment_directory': self.experiment_directory,
-            'sample_annotation_sheet_csv': '_'.join((self.project_name, 'samples.csv')),
-        }
+        file_path_cell = FilePathExtractIlluminaCell(prefix=self.project_name)
 
         # Create a Sample Annotation Sheet in the project directory and
         # eventually transfer it into the experiment_directory.
         sample_annotation_sheet = SampleAnnotationSheet(
-            file_path=os.path.join(
-                self.project_directory,
-                file_path_dict_cell['sample_annotation_sheet_csv']))
+            file_path=os.path.join(self.project_directory, file_path_cell.sample_annotation_sheet_csv))
 
         # For each lane in the flow_cell_dict ...
         # TODO: For the moment this depends on the lanes (keys) defined in the LibraryAnnotationSheet.
@@ -826,21 +846,17 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             assert isinstance(key, str)
 
             # The key represents the lane number as a Python str.
-            file_path_dict_lane = {
-                'output_directory': '_'.join((self.project_name, key, 'output')),
-                'samples_directory': '_'.join((self.project_name, key, 'samples')),
-                'barcode_tsv': '_'.join((self.project_name, key, 'barcode.tsv')),
-                'metrics_tsv': '_'.join((self.project_name, key, 'metrics.tsv')),
-                'library_tsv': '_'.join((self.project_name, key, 'library.tsv')),
-            }
+            prefix_lane = '_'.join((self.project_name, key))
+
+            file_path_lane = FilePathExtractIlluminaLane(prefix=prefix_lane)
 
             # BARCODE_FILE
             eib_sheet = ExtractIlluminaBarcodesSheet(
-                file_path=os.path.join(self.project_directory, file_path_dict_lane['barcode_tsv']))
+                file_path=os.path.join(self.project_directory, file_path_lane.barcode_tsv))
 
             # LIBRARY_PARAMS
             ibs_sheet = IlluminaBasecallsToSamSheet(
-                file_path=os.path.join(self.project_directory, file_path_dict_lane['library_tsv']))
+                file_path=os.path.join(self.project_directory, file_path_lane.library_tsv))
 
             # Initialise a list of barcode sequence lengths.
             bc_length_list = list()
@@ -886,7 +902,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     'BARCODE_1': row_dict['barcode_sequence_1'],
                     'BARCODE_2': row_dict['barcode_sequence_2'],
                     'OUTPUT': os.path.join(
-                        file_path_dict_lane['samples_directory'],
+                        file_path_lane.samples_directory,
                         '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])),
                     'SAMPLE_ALIAS': row_dict['sample_name'],
                     'LIBRARY_NAME': row_dict['library_name'],
@@ -907,7 +923,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     'Reads1 Name': '_'.join((self.project_name, key, row_dict['sample_name'])),
                     'Reads1 File': os.path.join(
                         os.path.basename(self.experiment_directory),
-                        file_path_dict_lane['samples_directory'],
+                        file_path_lane.samples_directory,
                         '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])),
                     'Reads2 Name': '',
                     'Reads2 File': '',
@@ -926,7 +942,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     'BARCODE_1': 'N',
                     'BARCODE_2': '',
                     'OUTPUT': os.path.join(
-                        file_path_dict_lane['samples_directory'],
+                        file_path_lane.samples_directory,
                         '{}_{}#0.bam'.format(self.project_name, key)),
                     'SAMPLE_ALIAS': 'Unmatched',
                     'LIBRARY_NAME': ibs_sheet.row_dicts[0]['LIBRARY_NAME'],
@@ -977,7 +993,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     name=self.get_prefix_lane(project_name=self.project_name, lane=key),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory,
-                    file_path_dict=file_path_dict_lane))
+                    file_path_object=file_path_lane))
             executable_lane = self.set_stage_runnable(
                 stage=stage_lane,
                 runnable=runnable_lane)
@@ -989,14 +1005,14 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             runnable_lane.add_runnable_step(
                 runnable_step=RunnableStepMakeDirectory(
                     name='make_output_directory',
-                    directory_path=file_path_dict_lane['output_directory']))
+                    directory_path=file_path_lane.output_directory))
 
             # Create a samples_directory in the project_directory.
 
             runnable_lane.add_runnable_step(
                 runnable_step=RunnableStepMakeDirectory(
                     name='make_samples_directory',
-                    directory_path=file_path_dict_lane['samples_directory']))
+                    directory_path=file_path_lane.samples_directory))
 
             # Create a RunnableStep for Picard ExtractIlluminaBarcodes, only if index (barcode) reads are present.
 
@@ -1010,11 +1026,11 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                         picard_command='ExtractIlluminaBarcodes'))
                 assert isinstance(runnable_step, RunnableStepPicard)
                 runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
-                runnable_step.add_picard_option(key='OUTPUT_DIR', value=file_path_dict_lane['output_directory'])
+                runnable_step.add_picard_option(key='OUTPUT_DIR', value=file_path_lane.output_directory)
                 runnable_step.add_picard_option(key='LANE', value=key)
                 runnable_step.add_picard_option(key='READ_STRUCTURE', value=read_structure)
-                runnable_step.add_picard_option(key='BARCODE_FILE', value=file_path_dict_lane['barcode_tsv'])
-                runnable_step.add_picard_option(key='METRICS_FILE', value=file_path_dict_lane['metrics_tsv'])
+                runnable_step.add_picard_option(key='BARCODE_FILE', value=file_path_lane.barcode_tsv)
+                runnable_step.add_picard_option(key='METRICS_FILE', value=file_path_lane.metrics_tsv)
                 if self.max_mismatches:
                     # Maximum mismatches for a barcode to be considered a match. Default value: '1'.
                     runnable_step.add_picard_option(key='MAX_MISMATCHES', value=self.max_mismatches)
@@ -1059,7 +1075,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             assert isinstance(runnable_step, RunnableStepPicard)
             runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
             if index_read_index > 0:
-                runnable_step.add_picard_option(key='BARCODES_DIR', value=file_path_dict_lane['output_directory'])
+                runnable_step.add_picard_option(key='BARCODES_DIR', value=file_path_lane.output_directory)
             runnable_step.add_picard_option(key='LANE', value=key)
             # OUTPUT is deprecated.
             runnable_step.add_picard_option(
@@ -1083,7 +1099,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             # runnable_step.add_picard_option(key='PLATFORM', value='ILLUMINA')
             runnable_step.add_picard_option(key='READ_STRUCTURE', value=read_structure)
             # BARCODE_PARAMS is deprecated.
-            runnable_step.add_picard_option(key='LIBRARY_PARAMS', value=file_path_dict_lane['library_tsv'])
+            runnable_step.add_picard_option(key='LIBRARY_PARAMS', value=file_path_lane.library_tsv)
             # ADAPTERS_TO_CHECK defaults to [INDEXED, DUAL_INDEXED, NEXTERA_V2, FLUIDIGM].
             # runnable_step.add_picard_option(key='ADAPTERS_TO_CHECK', value='')
             runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
@@ -1125,7 +1141,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             runnable_lane.add_runnable_step(
                 runnable_step=RunnableStepMove(
                     name='move_samples_directory',
-                    source_path=file_path_dict_lane['samples_directory'],
+                    source_path=file_path_lane.samples_directory,
                     target_path=self.experiment_directory))
 
             # Move the metrics file into the experiment directory.
@@ -1134,7 +1150,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 runnable_lane.add_runnable_step(
                     runnable_step=RunnableStepMove(
                         name='move_metrics_tsv',
-                        source_path=file_path_dict_lane['metrics_tsv'],
+                        source_path=file_path_lane.metrics_tsv,
                         target_path=self.experiment_directory))
 
         # Finally, write the flow cell-specific SampleAnnotationSheet to the internal file path.
@@ -1148,7 +1164,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 name=self.get_prefix_cell(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
-                file_path_dict=file_path_dict_cell))
+                file_path_object=file_path_cell))
 
         executable_cell = self.set_stage_runnable(
             stage=stage_cell,
@@ -1161,17 +1177,29 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             runnable_cell.add_runnable_step(
                 runnable_step=RunnableStepMove(
                     name='move_sample_annotation',
-                    source_path=file_path_dict_cell['sample_annotation_sheet_csv'],
-                    target_path=file_path_dict_cell['experiment_directory']))
+                    source_path=file_path_cell.sample_annotation_sheet_csv,
+                    target_path=self.experiment_directory))
 
         # Change directory and file access permissions.
 
         runnable_cell.add_runnable_step(
             runnable_step=RunnableStepChangeMode(
                 name='chmod',
-                file_path=file_path_dict_cell['experiment_directory'],
+                file_path=self.experiment_directory,
                 mode_directory=self.mode_directory,
                 mode_file=self.mode_file))
+
+        return
+
+
+class FilePathCollectHiSeqXPfFailMetricsLane(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathCollectHiSeqXPfFailMetricsLane, self).__init__(prefix=prefix)
+
+        self.summary_tsv = prefix + '.pffail_summary_metrics'
+        self.detailed_tsv = prefix + '.pffail_detailed_metrics'
 
         return
 
@@ -1211,14 +1239,11 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
         for lane_int in range(0 + 1, self._irf.run_information.flow_cell_layout.lane_count + 1):
             lane_str = str(lane_int)
 
-            lane_prefix = self.get_prefix_lane(
+            prefix_lane = self.get_prefix_lane(
                 project_name=self.project_name,
                 lane=lane_str)
 
-            file_path_dict_lane = {
-                'summary_tsv': lane_prefix + '.pffail_summary_metrics',
-                'detailed_tsv': lane_prefix + '.pffail_detailed_metrics',
-            }
+            file_path_lane = FilePathCollectHiSeqXPfFailMetricsLane(prefix=prefix_lane)
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the Stage.
             runnable_lane = self.add_runnable(
@@ -1228,7 +1253,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
                         lane=lane_str),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory,
-                    file_path_dict=file_path_dict_lane))
+                    file_path_object=file_path_lane))
 
             executable_lane = self.set_stage_runnable(
                 stage=stage_lane,
@@ -1249,12 +1274,24 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
             # BASECALLS_DIR is required.
             runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
             # OUTPUT is required.
-            runnable_step.add_picard_option(key='OUTPUT', value=lane_prefix)
+            runnable_step.add_picard_option(key='OUTPUT', value=prefix_lane)
             # LANE is required.
             runnable_step.add_picard_option(key='LANE', value=lane_str)
             # NUM_PROCESSORS defaults to '1'.
             runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
             # N_CYCLES defaults to '24'. Should match Illumina RTA software.
+
+        return
+
+
+class FilePathDownsampleSam(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathDownsampleSam, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
+        self.downsampled_bam = prefix + '_downsampled.bam'
 
         return
 
@@ -1428,19 +1465,13 @@ class DownsampleSam(Analysis):
                         raise Exception(
                             "Picard DownsampleSam can only work on BAM or SAM files. {}".format(reads.file_path))
 
-                    prefix_picard_dss = '_'.join((stage_picard_dss.name, paired_reads_name))
+                    prefix_read_group = '_'.join((stage_picard_dss.name, paired_reads_name))
 
-                    file_path_dict_picard_dss = {
-                        'temporary_directory': '_'.join((prefix_picard_dss, 'temporary')),
-                        'output_directory': prefix_picard_dss,
-                        'downsampled_bam': prefix_picard_dss + '_downsampled.bam',
-                    }
+                    file_path_read_group = FilePathDownsampleSam(prefix=prefix_read_group)
 
                     # Keep the original BAM file and modify the file_path in the Reads object.
                     bam_file_path = reads.file_path
-                    reads.file_path = os.path.join(
-                        self.project_directory,
-                        file_path_dict_picard_dss['downsampled_bam'])
+                    reads.file_path = os.path.join(self.project_directory, file_path_read_group.downsampled_bam)
                     # (file_root, file_extension) = os.path.splitext(bam_file_path)
                     # reads.file_path = file_root + 'downsampled' + file_extension
 
@@ -1448,10 +1479,10 @@ class DownsampleSam(Analysis):
 
                     runnable_picard_dss = self.add_runnable(
                         runnable=Runnable(
-                            name=prefix_picard_dss,
+                            name=prefix_read_group,
                             code_module='bsf.runnables.generic',
                             working_directory=self.project_directory,
-                            file_path_dict=file_path_dict_picard_dss))
+                            file_path_object=file_path_read_group))
 
                     # Create an Executable for running the Picard SamToFastq Runnable.
 
@@ -1463,7 +1494,7 @@ class DownsampleSam(Analysis):
                         runnable_picard_dss.add_runnable_step(
                             runnable_step=RunnableStepMakeDirectory(
                                 name='mkdir',
-                                directory_path=file_path_dict_picard_dss['output_directory']))
+                                directory_path=file_path_read_group.output_directory))
 
                     # Create a new RunnableStep for the Picard DownsampleSam program.
 
@@ -1478,7 +1509,7 @@ class DownsampleSam(Analysis):
                     runnable_step.add_picard_option(key='INPUT', value=bam_file_path)
                     runnable_step.add_picard_option(
                         key='OUTPUT',
-                        value=file_path_dict_picard_dss['downsampled_bam'])
+                        value=file_path_read_group.downsampled_bam)
                     # FIXME: Add to the configuration file and documentation.
                     if 'DownsampleSam Probability' in paired_reads.annotation_dict:
                         runnable_step.add_picard_option(
@@ -1486,7 +1517,7 @@ class DownsampleSam(Analysis):
                             value=paired_reads.annotation_dict['DownsampleSam Probability'][0])
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
-                        value=file_path_dict_picard_dss['temporary_directory'])
+                        value=runnable_picard_dss.get_relative_temporary_directory_path)
                     # VERBOSITY defaults to 'INFO'.
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                     # QUIET defaults to 'false'.
@@ -1508,6 +1539,17 @@ class DownsampleSam(Analysis):
             name='_'.join((self.project_name, 'picard_downsample_sam')))
 
         annotation_sheet.to_file_path()
+
+        return
+
+
+class FilePathSamToFastq(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathSamToFastq, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
 
         return
 
@@ -1698,10 +1740,7 @@ class SamToFastq(Analysis):
                         bam_file_path = reads.file_path
                         prefix_picard_stf = '_'.join((stage_picard_stf.name, paired_reads_name))
 
-                        file_path_dict_picard_stf = {
-                            'temporary_directory': '_'.join((prefix_picard_stf, 'temporary')),
-                            'output_directory': os.path.join(self.project_directory, prefix_picard_stf),
-                        }
+                        file_path_picard_stf = FilePathSamToFastq(prefix=prefix_picard_stf)
 
                         # Get the SAM header of a BAM file to extract the read group (@RG), amongst other things.
 
@@ -1728,12 +1767,14 @@ class SamToFastq(Analysis):
                                 paired_reads.read_group = '\\t'.join(read_group_list)
                                 paired_reads.reads_1.name = platform_unit + '_1'
                                 paired_reads.reads_1.file_path = os.path.join(
-                                    file_path_dict_picard_stf['output_directory'],
+                                    self.project_directory,
+                                    file_path_picard_stf.output_directory,
                                     platform_unit + '_1.fastq')
                                 paired_reads.reads_2 = Reads(
                                     name=platform_unit + '_2',
                                     file_path=os.path.join(
-                                        file_path_dict_picard_stf['output_directory'],
+                                        self.project_directory,
+                                        file_path_picard_stf.output_directory,
                                         platform_unit + '_2.fastq'),
                                     file_type=paired_reads.reads_1.file_type,
                                     lane=paired_reads.reads_1.lane,
@@ -1747,7 +1788,8 @@ class SamToFastq(Analysis):
                                 reads_1 = Reads(
                                     name=platform_unit + '_1',
                                     file_path=os.path.join(
-                                        file_path_dict_picard_stf['output_directory'],
+                                        self.project_directory,
+                                        file_path_picard_stf.output_directory,
                                         platform_unit + '_1.fastq'),
                                     file_type=paired_reads.reads_1.file_type,
                                     lane=paired_reads.reads_1.lane,
@@ -1756,7 +1798,8 @@ class SamToFastq(Analysis):
                                 reads_2 = Reads(
                                     name=platform_unit + '_2',
                                     file_path=os.path.join(
-                                        file_path_dict_picard_stf['output_directory'],
+                                        self.project_directory,
+                                        file_path_picard_stf.output_directory,
                                         platform_unit + '_2.fastq'),
                                     file_type=paired_reads.reads_1.file_type,
                                     lane=paired_reads.reads_1.lane,
@@ -1780,7 +1823,7 @@ class SamToFastq(Analysis):
                                 name=prefix_picard_stf,
                                 code_module='bsf.runnables.generic',
                                 working_directory=self.project_directory,
-                                file_path_dict=file_path_dict_picard_stf))
+                                file_path_object=file_path_picard_stf))
 
                         # Create an Executable for running the Picard SamToFastq Runnable.
 
@@ -1795,7 +1838,7 @@ class SamToFastq(Analysis):
                         runnable_picard_stf.add_runnable_step(
                             runnable_step=RunnableStepMakeDirectory(
                                 name='mkdir',
-                                directory_path=file_path_dict_picard_stf['output_directory']))
+                                directory_path=file_path_picard_stf.output_directory))
 
                         # Create a new RunnableStep for the Picard SamToFastq program.
 
@@ -1811,7 +1854,7 @@ class SamToFastq(Analysis):
                         runnable_step.add_picard_option(key='OUTPUT_PER_RG', value='true')
                         runnable_step.add_picard_option(
                             key='OUTPUT_DIR',
-                            value=file_path_dict_picard_stf['output_directory'])
+                            value=file_path_picard_stf.output_directory)
                         # RE_REVERSE
                         # INTERLEAVE
                         if self.include_non_pass_filter_reads:
@@ -1827,7 +1870,7 @@ class SamToFastq(Analysis):
                         # INCLUDE_NON_PRIMARY_ALIGNMENTS
                         runnable_step.add_picard_option(
                             key='TMP_DIR',
-                            value=file_path_dict_picard_stf['temporary_directory'])
+                            value=runnable_picard_stf.get_relative_temporary_directory_path)
                         # VERBOSITY defaults to 'INFO'.
                         runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                         # QUIET defaults to 'false'.
@@ -1854,17 +1897,14 @@ class SamToFastq(Analysis):
 
         prefix_prune_sas = '_'.join((stage_picard_stf.name, self.project_name))
 
-        file_path_dict_prune_sas = {
-            'temporary_directory': '_'.join((prefix_prune_sas, 'temporary')),
-            'output_directory': prefix_prune_sas,
-        }
+        file_path_prune_sas = FilePathSamToFastq(prefix=prefix_prune_sas)
 
         runnable_prune_sas = self.add_runnable(
             runnable=Runnable(
                 name=prefix_prune_sas,
                 code_module='bsf.runnables.picard_sam_to_fastq_sample_sheet',
                 working_directory=self.project_directory,
-                file_path_dict=file_path_dict_prune_sas))
+                file_path_object=file_path_prune_sas))
 
         # Create an Executable for running the Runnable for pruning the sample annotation sheet.
 
