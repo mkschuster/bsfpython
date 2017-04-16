@@ -48,6 +48,8 @@ class AnnotationSheet(object):
     @type _regular_expression_non_numeric: re.RegexObject
     @cvar _regular_expression_non_sequence: Regular expression for non-sequence characters
     @type _regular_expression_non_sequence: re.RegexObject
+    @cvar _regular_expression_non_ambiguous_sequence: Regular expression for non-ambiguous sequence characters
+    @type _regular_expression_non_ambiguous_sequence: re.RegexObject
     @cvar _regular_expression_multiple_underscore: Regular expression for multiple underscore characters
     @type _regular_expression_multiple_underscore: re.RegexObject
     @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
@@ -85,6 +87,7 @@ class AnnotationSheet(object):
     _regular_expression_non_alpha = re.compile(pattern='\W')
     _regular_expression_non_numeric = re.compile(pattern='\D')
     _regular_expression_non_sequence = re.compile(pattern='[^ACGTacgt]')
+    _regular_expression_non_ambiguous_sequence = re.compile(pattern='[^ACGTacgtWSMKRYwsmkryBDHVbdhvNn]')
     _regular_expression_multiple_underscore = re.compile(pattern='_{2,}')
 
     _file_type = 'excel'
@@ -331,10 +334,10 @@ class AnnotationSheet(object):
 
     @classmethod
     def _check_sequence(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
-        """Validate a particular column value as I{sequence}.
+        """Validate a particular column value as I{IUPAC sequence}.
 
         If the particular column name key exists in the row dictionary and if it has
-        an associated value, it must contain only valid sequence characters.
+        an associated value, it must contain only valid IUPAC sequence characters.
 
         @param row_number: Row number for warning messages
         @type row_number: int
@@ -359,14 +362,15 @@ class AnnotationSheet(object):
         if column_value is not None:
             match = re.search(pattern=cls._regular_expression_non_sequence, string=row_dict[column_name])
             if match:
-                messages += 'Field {!r} in row {} contains a sequence {!r} with illegal characters.\n'. \
+                messages += 'Field {!r} in row {} contains a IUPAC sequence {!r} ' \
+                            'with illegal characters.\n'. \
                     format(column_name, row_number, row_dict[column_name])
 
         return messages
 
     @classmethod
     def check_sequence(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{optional sequence}.
+        """Validate a particular column value as I{IUPAC sequence}.
 
         Neither the column nor the value needs existing.
 
@@ -388,7 +392,7 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_sequence_column(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{sequence}.
+        """Validate a particular column value as I{IUPAC sequence}.
 
         The column, but not the value need existing.
 
@@ -410,7 +414,7 @@ class AnnotationSheet(object):
 
     @classmethod
     def check_sequence_value(cls, row_number, row_dict, column_name):
-        """Validate a particular column value as I{sequence}.
+        """Validate a particular column value as I{IUPAC sequence}.
 
         Both, the column and value need existing.
 
@@ -424,6 +428,108 @@ class AnnotationSheet(object):
         @rtype: str
         """
         return cls._check_sequence(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=True,
+            require_value=True)
+
+    @classmethod
+    def _check_ambiguous_sequence(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
+        """Validate a particular column value as I{IUPAC ambiguous sequence}.
+
+        If the particular column name key exists in the row dictionary and if it has
+        an associated value, it must contain only valid IUPAC ambiguity sequence characters.
+
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param column_name: Column name
+        @type column_name: str
+        @param require_column: Require the column_name to be defined in the row_dict
+        @type require_column: bool
+        @param require_value: Require a value
+        @type require_value: bool
+        @return: Warning messages
+        @rtype: str
+        """
+        messages, column_value = cls.check_column_value(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=require_column,
+            require_value=require_value)
+
+        if column_value is not None:
+            match = re.search(pattern=cls._regular_expression_non_ambiguous_sequence, string=row_dict[column_name])
+            if match:
+                messages += 'Field {!r} in row {} contains a IUPAC ambiguous sequence {!r} ' \
+                            'with illegal characters.\n'. \
+                    format(column_name, row_number, row_dict[column_name])
+
+        return messages
+
+    @classmethod
+    def check_ambiguous_sequence(cls, row_number, row_dict, column_name):
+        """Validate a particular column value as I{IUPAC ambiguous sequence}.
+
+        Neither the column nor the value needs existing.
+
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
+        """
+        return cls._check_ambiguous_sequence(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=False,
+            require_value=False)
+
+    @classmethod
+    def check_ambiguous_sequence_column(cls, row_number, row_dict, column_name):
+        """Validate a particular column value as I{IUPAC ambiguous sequence}.
+
+        The column, but not the value need existing.
+
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
+        """
+        return cls._check_ambiguous_sequence(
+            row_number=row_number,
+            row_dict=row_dict,
+            column_name=column_name,
+            require_column=True,
+            require_value=False)
+
+    @classmethod
+    def check_ambiguous_sequence_value(cls, row_number, row_dict, column_name):
+        """Validate a particular column value as I{IUPAC ambiguous sequence}.
+
+        Both, the column and value need existing.
+
+        @param row_number: Row number for warning messages
+        @type row_number: int
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param column_name: Column name
+        @type column_name: str
+        @return: Warning messages
+        @rtype: str
+        """
+        return cls._check_ambiguous_sequence(
             row_number=row_number,
             row_dict=row_dict,
             column_name=column_name,
@@ -674,7 +780,7 @@ class AnnotationSheet(object):
         else:
             csv_file_type = None
 
-        self._csv_reader_file = open(name=self.file_path, mode='rb')
+        self._csv_reader_file = open(self.file_path, 'rb')
         self._csv_reader_object = csv.DictReader(
             f=self._csv_reader_file,
             fieldnames=csv_field_names,
@@ -726,7 +832,7 @@ class AnnotationSheet(object):
         else:
             csv_file_type = None
 
-        self._csv_writer_file = open(name=self.file_path, mode='wb')
+        self._csv_writer_file = open(self.file_path, 'wb')
         self._csv_writer_object = csv.DictWriter(
             f=self._csv_writer_file,
             fieldnames=self.field_names,

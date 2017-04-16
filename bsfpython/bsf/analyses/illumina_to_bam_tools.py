@@ -114,10 +114,10 @@ class LibraryAnnotationSheet(AnnotationSheet):
             AnnotationSheet.check_numeric,
         ],
         'barcode_sequence_1': [
-            AnnotationSheet.check_sequence_value,
+            AnnotationSheet.check_ambiguous_sequence_value,
         ],
         'barcode_sequence_2': [
-            AnnotationSheet.check_sequence,
+            AnnotationSheet.check_ambiguous_sequence,
         ],
         'barcode_start': [
             AnnotationSheet.check_numeric,
@@ -242,30 +242,30 @@ class LibraryAnnotationSheet(AnnotationSheet):
                                flow_cell_dict[row_dict['lane']]['barcode_start'])
 
         for lane_int in range(0 + 1, lanes + 1):
-            lane_string = str(lane_int)
+            lane_str = str(lane_int)
 
             # Check that all lanes have annotation.
-            if lane_string not in flow_cell_dict:
+            if lane_str not in flow_cell_dict:
                 messages += 'No annotation for lane number {!r}.\n'.format(lane_int)
                 continue
 
             # Check that all or none of the rows have index sequence 1 or 2 populated.
             no_index_1 = 0
             no_index_2 = 0
-            for key in flow_cell_dict[lane_string]['barcode_dict'].keys():
+            for key in flow_cell_dict[lane_str]['barcode_dict'].keys():
                 if key[:9] == '-NoIndex-':
                     no_index_1 += 1
                 if key[-9:] == '-NoIndex-':
                     no_index_2 += 1
 
-            if not (no_index_1 == 0 or no_index_1 == len(flow_cell_dict[lane_string]['barcode_dict'])):
+            if not (no_index_1 == 0 or no_index_1 == len(flow_cell_dict[lane_str]['barcode_dict'])):
                 messages += 'Some empty barcode_sequence_1 fields in lane {}.\n'.format(lane_int)
-            if not (no_index_2 == 0 or no_index_2 == len(flow_cell_dict[lane_string]['barcode_dict'])):
+            if not (no_index_2 == 0 or no_index_2 == len(flow_cell_dict[lane_str]['barcode_dict'])):
                 messages += 'Some empty barcode_sequence_2 fields in lane {}.\n'.format(lane_int)
 
             # Check that all barcode sequences have the same length.
             # This test also finds cases of missing sequences tested for above.
-            key_list = flow_cell_dict[lane_string]['barcode_dict'].keys()
+            key_list = flow_cell_dict[lane_str]['barcode_dict'].keys()
             key_length = len(key_list[0])
             for key in key_list[1:]:
                 if len(key) != key_length:
@@ -401,19 +401,31 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
 
 class FilePathIlluminaToBamLane(FilePath):
 
-    def __init__(self, prefix):
+    def __init__(self, project_name, lane, experiment_directory):
+        """Initialise a C{FilePathIlluminaToBamLane} object.
+        
+        @param project_name: Project name
+        @type project_name: str
+        @param lane: Lane
+        @type lane: str
+        @param experiment_directory: Experiment-specific directory
+        @type experiment_directory: str | unicode
+        @return:
+        @rtype:
+        """
+
+        prefix = IlluminaToBam.get_prefix_illumina_to_bam_lane(project_name=project_name, lane=lane)
 
         super(FilePathIlluminaToBamLane, self).__init__(prefix=prefix)
 
-        self.illumina_directory = ''
-        self.sequences_directory = ''
-        self.experiment_directory = ''
         self.unsorted_bam = prefix + '_unsorted.bam'
         self.unsorted_md5 = prefix + '_unsorted.bam.md5'
         self.sorted_bam = prefix + '_sorted.bam'
         self.sorted_md5 = prefix + '_sorted.bam.md5'
-        self.lane_bam = prefix + '.bam'
-        self.lane_md5 = prefix + '.bam.md5'
+        # The final BAM and MD5 files are non-standard in that they do not contain a prefix and
+        # reside in the experiment_directory.
+        self.archive_bam = os.path.join(experiment_directory, '_'.join((project_name, lane)) + '.bam')
+        self.archive_md5 = os.path.join(experiment_directory, '_'.join((project_name, lane)) + '.bam.md5')
 
         return
 
@@ -919,7 +931,9 @@ class IlluminaToBam(Analysis):
             lane_str = str(lane_int)
 
             file_path_lane = FilePathIlluminaToBamLane(
-                prefix=self.get_prefix_illumina_to_bam_lane(project_name=self.project_name, lane=lane_str))
+                project_name=self.project_name,
+                lane=lane_str,
+                experiment_directory=self.experiment_directory)
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the Stage.
             runnable_lane = self.add_runnable(
@@ -1095,7 +1109,7 @@ class IlluminaToBam(Analysis):
                 runnable_step=RunnableStepMove(
                     name='move_sorted_bam',
                     source_path=file_path_lane.sorted_bam,
-                    target_path=os.path.join(self.experiment_directory, file_path_lane.lane_bam)))
+                    target_path=file_path_lane.archive_bam))
 
             # Move and rename the checksum file.
 
@@ -1103,7 +1117,7 @@ class IlluminaToBam(Analysis):
                 runnable_step=RunnableStepMove(
                     name='move_sorted_md5',
                     source_path=file_path_lane.sorted_md5,
-                    target_path=os.path.join(self.experiment_directory, file_path_lane.lane_md5)))
+                    target_path=file_path_lane.archive_md5))
 
         # Add another flow cell-specific Runnable to reset directory and file mode permissions if requested.
 
@@ -1130,10 +1144,15 @@ class IlluminaToBam(Analysis):
 
 class FilePathBamIndexDecoderCell(FilePath):
 
-    def __init__(self, prefix):
+    def __init__(self, project_name):
+
+        prefix = BamIndexDecoder.get_prefix_bam_index_decoder_cell(project_name=project_name)
 
         super(FilePathBamIndexDecoderCell, self).__init__(prefix=prefix)
 
+        # All paths are non-standard in that they do not contain the regular Analysis Stage prefix.
+        # Re-define the prefix accordingly.
+        prefix = project_name
         self.sample_annotation_sheet_csv = prefix + '_samples.csv'
 
         return
@@ -1141,15 +1160,34 @@ class FilePathBamIndexDecoderCell(FilePath):
 
 class FilePathBamIndexDecoderLane(FilePath):
 
-    def __init__(self, prefix):
+    def __init__(self, project_name, lane, sequences_directory):
+        """Initialise a C{FilePathBamIndexDecoderLane} object.
+        
+        @param project_name: Project name
+        @type project_name: str
+        @param lane: Lane
+        @type lane: str
+        @param sequences_directory: BSF sequences directory
+        @type sequences_directory: str | unicode
+        @return:
+        @rtype:
+        """
+
+        prefix = BamIndexDecoder.get_prefix_bam_index_decoder_lane(project_name=project_name, lane=lane)
 
         super(FilePathBamIndexDecoderLane, self).__init__(prefix=prefix)
 
+        # All paths are non-standard in that they do not contain the regular Analysis Stage prefix.
+        # Re-define the prefix accordingly.
+        prefix = '_'.join((project_name, lane))
         self.project_barcode = prefix + '_barcode.tsv'
-        self.samples_directory = prefix + '_samples'
         self.barcode_tsv = prefix + '_barcode.tsv'
         self.metrics_tsv = prefix + '_metrics.tsv'
-        self.input_bam = ''
+        self.samples_directory = prefix + '_samples'
+        # The input (sequence archive) files are non-standard in that they do not contain a prefix and
+        # reside in the sequences_directory.
+        self.archive_bam = os.path.join(sequences_directory, prefix + '.bam')
+        self.archive_md5 = os.path.join(sequences_directory, prefix + '.bam.md5')
 
         return
 
@@ -1514,6 +1552,7 @@ class BamIndexDecoder(Analysis):
         # Load the library annotation sheet file and validate.
 
         library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=self.library_path)
+        assert isinstance(library_annotation_sheet, LibraryAnnotationSheet)
 
         validation_messages = library_annotation_sheet.validate(lanes=self.lanes)
 
@@ -1546,7 +1585,7 @@ class BamIndexDecoder(Analysis):
 
             flow_cell_dict[row_dict['lane']].append(row_dict)
 
-        file_path_cell = FilePathBamIndexDecoderCell(prefix=self.project_name)
+        file_path_cell = FilePathBamIndexDecoderCell(project_name=self.project_name)
 
         # Create a Sample Annotation Sheet in the project directory and
         # eventually transfer it into the experiment_directory.
@@ -1557,14 +1596,18 @@ class BamIndexDecoder(Analysis):
 
         cell_dependency_list = list()
 
-        keys = flow_cell_dict.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
+        lane_str_list = flow_cell_dict.keys()
+        lane_str_list.sort(cmp=lambda x, y: cmp(x, y))
 
-        for key in keys:
-            # The key represents the lane number as a Python str.
-            prefix_lane = self.get_prefix_bam_index_decoder_lane(project_name=self.project_name, lane=key)
-            file_path_lane = FilePathBamIndexDecoderLane(prefix=prefix_lane)
-            file_path_lane.input_bam = os.path.join(self.sequences_directory, prefix_lane + '.bam')
+        for lane_str in lane_str_list:
+            file_path_lane = FilePathBamIndexDecoderLane(
+                project_name=self.project_name,
+                lane=lane_str,
+                sequences_directory=self.sequences_directory)
+
+            experiment_samples_directory = os.path.join(
+                self.experiment_directory,
+                file_path_lane.samples_directory)
 
             # Do not check whether the sorted input BAM file exists, because at the time of
             # BamIndexDecoder submission the IlluminaToBam analysis may not have finished.
@@ -1573,7 +1616,7 @@ class BamIndexDecoder(Analysis):
             bam_index_decoder_sheet = BamIndexDecoderSheet(
                 file_path=os.path.join(self.project_directory, file_path_lane.barcode_tsv))
 
-            for row_dict in flow_cell_dict[key]:
+            for row_dict in flow_cell_dict[lane_str]:
 
                 # Determine the number of barcodes on the basis of the first line.
                 # All other lines of a lane have to use the same number and lengths of barcodes.
@@ -1606,11 +1649,11 @@ class BamIndexDecoder(Analysis):
                     'PairedReads Index 2': row_dict['barcode_sequence_2'],
                     # TODO: It would be good to add a RunnableStep to populate the ReadGroup.
                     'PairedReads ReadGroup': '',
-                    'Reads1 Name': '_'.join((self.project_name, key, row_dict['sample_name'])),
+                    'Reads1 Name': '_'.join((self.project_name, lane_str, row_dict['sample_name'])),
                     'Reads1 File': os.path.join(
                         os.path.basename(self.experiment_directory),
                         file_path_lane.samples_directory,
-                        '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])),
+                        '{}_{}#{}.bam'.format(self.project_name, lane_str, row_dict['sample_name'])),
                     'Reads2 Name': '',
                     'Reads2 File': '',
                 }
@@ -1620,7 +1663,7 @@ class BamIndexDecoder(Analysis):
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the Stage.
             runnable_lane = self.add_runnable(
                 runnable=Runnable(
-                    name=self.get_prefix_bam_index_decoder_lane(project_name=self.project_name, lane=key),
+                    name=self.get_prefix_bam_index_decoder_lane(project_name=self.project_name, lane=lane_str),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory,
                     file_path_object=file_path_lane))
@@ -1633,7 +1676,7 @@ class BamIndexDecoder(Analysis):
             executable_lane.dependencies.append(
                 IlluminaToBam.get_prefix_illumina_to_bam_lane(
                     project_name=self.project_name,
-                    lane=key))
+                    lane=lane_str))
 
             cell_dependency_list.append(executable_lane.name)
 
@@ -1654,19 +1697,19 @@ class BamIndexDecoder(Analysis):
                 # Run the BamIndexDecoder if there is at least one line containing a barcode sequence.
                 runnable_step = runnable_lane.add_runnable_step(
                     runnable_step=RunnableStepIlluminaToBam(
-                        name='illumina_to_bam',
+                        name='bam_index_decoder',
                         java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
                         java_heap_maximum='Xmx4G',
                         itb_classpath=self.classpath_illumina2bam,
                         itb_command='BamIndexDecoder'))
                 assert isinstance(runnable_step, RunnableStepIlluminaToBam)
                 # INPUT is required
-                runnable_step.add_itb_option(key='INPUT', value=file_path_lane.input_bam)
+                runnable_step.add_itb_option(key='INPUT', value=file_path_lane.archive_bam)
                 # OUTPUT is required, but cannot be used together with OUTPUT_FORMAT, OUTPUT_PREFIX and OUTPUT_DIR.
                 # OUTPUT_DIR is required, but cannot be used with OUTPUT.
                 runnable_step.add_itb_option(key='OUTPUT_DIR', value=file_path_lane.samples_directory)
                 # OUTPUT_PREFIX is required, but cannot be used with OUTPUT.
-                runnable_step.add_itb_option(key='OUTPUT_PREFIX', value='_'.join((self.project_name, key)))
+                runnable_step.add_itb_option(key='OUTPUT_PREFIX', value='_'.join((self.project_name, lane_str)))
                 # OUTPUT_FORMAT is required, but cannot be used with OUTPUT.
                 runnable_step.add_itb_option(key='OUTPUT_FORMAT', value='bam')
                 # BARCODE_TAG_NAME defaults to 'BC'.
@@ -1677,11 +1720,12 @@ class BamIndexDecoder(Analysis):
                 # METRICS_FILE is required.
                 runnable_step.add_itb_option(key='METRICS_FILE', value=file_path_lane.metrics_tsv)
                 # MAX_MISMATCHES defaults to '1'.
-                if 'barcode_mismatches' in flow_cell_dict[key][0] and len(flow_cell_dict[key][0]['barcode_mismatches']):
+                if 'barcode_mismatches' in flow_cell_dict[lane_str][0] and \
+                        len(flow_cell_dict[lane_str][0]['barcode_mismatches']):
                     # If the barcode_mismatches field exists and its string length is greater than 0.
                     runnable_step.add_itb_option(
                         key='MAX_MISMATCHES',
-                        value=flow_cell_dict[key][0]['barcode_mismatches'])
+                        value=flow_cell_dict[lane_str][0]['barcode_mismatches'])
                 elif barcode_number == 2:
                     runnable_step.add_itb_option(key='MAX_MISMATCHES', value='2')
                 # MIN_MISMATCH_DELTA defaults to '1'.
@@ -1692,10 +1736,11 @@ class BamIndexDecoder(Analysis):
                 if self.hash_algorithm:
                     runnable_step.add_itb_option(key='USE_HASH_DEMULTIPLEXING', value='true')
                 # BARCODE_STARTBASE_INDEX defaults to 0.
-                if 'barcode_start' in flow_cell_dict[key][0] and len(flow_cell_dict[key][0]['barcode_start']):
+                if 'barcode_start' in flow_cell_dict[lane_str][0] and \
+                        len(flow_cell_dict[lane_str][0]['barcode_start']):
                     runnable_step.add_itb_option(
                         key='BARCODE_STARTBASE_INDEX',
-                        value=flow_cell_dict[key][0]['barcode_start'])
+                        value=flow_cell_dict[lane_str][0]['barcode_start'])
                 # TMP_DIR
                 runnable_step.add_itb_option(
                     key='TMP_DIR',
@@ -1753,7 +1798,7 @@ class BamIndexDecoder(Analysis):
                 runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP')
                 # IS_BISULFITE_SEQUENCED defaults to 'false'.
                 # INPUT is required.
-                runnable_step.add_picard_option(key='INPUT', value=file_path_lane.input_bam)
+                runnable_step.add_picard_option(key='INPUT', value=file_path_lane.archive_bam)
                 # OUTPUT is required.
                 runnable_step.add_picard_option(key='OUTPUT', value=file_path_lane.metrics_tsv)
                 # REFERENCE_SEQUENCE defaults to 'null'.
@@ -1796,18 +1841,23 @@ class BamIndexDecoder(Analysis):
 
                 # Add a symbolic link to the BSF Sequence Archive file within the samples directory.
 
-                experiment_samples_directory = os.path.join(
-                    self.experiment_directory,
-                    file_path_lane.samples_directory)
+                runnable_lane.add_runnable_step(
+                    runnable_step=RunnableStepLink(
+                        name='link_bam',
+                        source_path=os.path.relpath(file_path_lane.archive_bam, experiment_samples_directory),
+                        target_path=os.path.join(
+                            experiment_samples_directory,
+                            '{}_{}#{}.bam'.format(self.project_name, lane_str,
+                                                  flow_cell_dict[lane_str][0]['sample_name']))))
 
                 runnable_lane.add_runnable_step(
                     runnable_step=RunnableStepLink(
-                        name='link',
-                        source_path=os.path.relpath(file_path_lane.input_bam, experiment_samples_directory),
+                        name='link_md5',
+                        source_path=os.path.relpath(file_path_lane.archive_md5, experiment_samples_directory),
                         target_path=os.path.join(
                             experiment_samples_directory,
-                            '{}_{}#{}.bam'.format(self.project_name, key,
-                                                  flow_cell_dict[key][0]['sample_name']))))
+                            '{}_{}#{}.bam.md5'.format(self.project_name, lane_str,
+                                                      flow_cell_dict[lane_str][0]['sample_name']))))
 
                 # Move the metrics file into the experiment directory.
 
