@@ -4,7 +4,7 @@ A package of classes and methods supporting variant calling analyses.
 """
 
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2017 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -242,8 +242,10 @@ class FilePathDiagnoseSample(FilePath):
         self.callable_txt = prefix + '_callable_loci.txt'
         self.callable_bb = prefix + '_callable_loci.bb'
         self.sorted_bed = prefix + '_callable_sorted.bed'
-        self.non_callable_loci_tsv = prefix + '_non_callable_loci.tsv'  # Defined in the R script.
-        self.non_callable_summary_tsv = prefix + '_non_callable_summary.tsv'  # Defined in the R script.
+        # Defined in bsf_variant_calling_coverage.R.
+        self.non_callable_loci_tsv = prefix + '_non_callable_loci.tsv'
+        self.non_callable_regions_tsv = prefix + '_non_callable_regions.tsv'
+        self.non_callable_summary_tsv = prefix + '_non_callable_summary.tsv'
         self.hybrid_selection_metrics = prefix + '_hybrid_selection_metrics.tsv'
 
         return
@@ -905,6 +907,120 @@ class VariantCallingGATK(Analysis):
         @rtype:
         """
 
+        def _read_vqsr_configuration(vqsr_resources_dict, variation_type):
+            """Private function to read variant quality score recalibration (VQSR) configuration information.
+
+            Configuration options I{vqsr_resources_indel} and I{vqsr_resources_snp} provide a comma-separated list of
+            resources that are to be used in the VQSR procedure. Each option needs to correspond to a sub-section of
+            the C{ConfigParser.SafeConfigParser} in C{bsf.standards.Configuration.config_parser}.
+            Each sub-section needs options 'known', 'training', 'truth', 'prior' and 'file_path'.
+            @param vqsr_resources_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
+            @type vqsr_resources_dict: dict[str, dict[str, str | unicode]]
+            @param variation_type: Variation type I{indel} or I{snp}
+            @type variation_type: str
+            @return:
+            @rtype:
+            """
+
+            assert isinstance(vqsr_resources_dict, dict)
+            assert isinstance(variation_type, str)
+
+            if variation_type not in ('indel', 'snp'):
+                raise Exception("Variation type has to be 'indel' or 'snp', not {!r}.".format(variation_type))
+
+            # The vqsr_resources_indel|snp options of the current configuration section hold a comma-separated list
+            # of resources that should correspond to a sub-section in the configuration file.
+            vqsr_option = '_'.join(('vqsr_resources', variation_type))
+            if config_parser.has_option(section=section, option=vqsr_option):
+                # Split the resource list on a comma, split white space characters and remove remaining empty strings.
+                for resource_key in filter(
+                        lambda x: x != '',
+                        map(
+                            lambda x: x.strip(),
+                            config_parser.get(section=section, option=vqsr_option).split(','))):
+                    # The VQSR resource section consists of section.vqsr_(indel|snp)_resource.
+                    resource_section = '.'.join((section, '_'.join(('vqsr', variation_type, resource_key))))
+                    if config_parser.has_section(section=resource_section):
+                        if resource_key not in vqsr_resources_dict:
+                            vqsr_resources_dict[resource_key] = dict()
+                        resource_dict = vqsr_resources_dict[resource_key]
+
+                        for resource_option in ('known', 'training', 'truth', 'prior', 'file_path'):
+                            if config_parser.has_option(section=resource_section, option=resource_option):
+                                resource_dict[resource_option] = config_parser.get(
+                                    section=resource_section,
+                                    option=resource_option)
+                            else:
+                                raise Exception(
+                                    'Missing configuration option {!r} in section {!r}'.format(
+                                        resource_option,
+                                        resource_section))
+                    else:
+                        raise Exception(
+                            'Missing configuration section {!r} declared in option {!r} {!r}.'.format(
+                                resource_section,
+                                vqsr_option,
+                                config_parser.get(section=section, option=vqsr_option)))
+
+            return
+
+        def _read_annotation_configuration(annotation_resources_dict):
+            """Private function to read variant annotation configuration information.
+
+            @param annotation_resources_dict: Python dict of Python str (annotation resource name) key and
+                Python tuple of Python str (file path) and Python list of Python str (annotation) value data
+            @type annotation_resources_dict: dict
+            @return:
+            @rtype:
+            """
+
+            annotation_option = 'annotation_resources'
+            if config_parser.has_option(section=section, option=option):
+                # Split the resource list on a comma, split white space characters and remove remaining empty strings.
+                for resource_key in filter(
+                        lambda x: x != '',
+                        map(
+                            lambda x: x.strip(),
+                            config_parser.get(section=section, option=annotation_option).split(','))):
+                    # The annotation resource section consists of section.annotation_resource.
+                    resource_section = '.'.join((section, '_'.join(('annotation', resource_key))))
+                    if config_parser.has_section(section=resource_section):
+                        resource_option = 'file_path'
+                        if config_parser.has_option(section=resource_section, option=resource_option):
+                            file_path = config_parser.get(section=resource_section, option=resource_option)
+                        else:
+                            raise Exception(
+                                "Missing configuration option {!r} in configuration section {!r}.".format(
+                                    resource_option,
+                                    resource_section))
+                        resource_option = 'annotations'
+                        if config_parser.has_option(section=resource_section, option=resource_option):
+                            # Split the annotation list on a comma, split white space characters and
+                            # remove remaining empty strings.
+                            annotation_list = filter(
+                                lambda x: x != '',
+                                map(
+                                    lambda x: x.strip(), config_parser.get(
+                                        section=resource_section,
+                                        option=resource_option).split(',')))
+                        else:
+                            raise Exception(
+                                "Missing configuration option {!r} in configuration section {!r}.".format(
+                                    resource_option,
+                                    resource_section))
+                        # Create a dict key and a tuple of a Python str and Python list.
+                        annotation_resources_dict[resource_key] = file_path, annotation_list
+                    else:
+                        raise Exception(
+                            'Missing configuration section {!r} declared in option {!r} {!r}.'.format(
+                                resource_section,
+                                annotation_option,
+                                config_parser.get(section=section, option=annotation_option)))
+
+            return
+
+        # Start of set_configuration() method body.
+
         assert isinstance(configuration, Configuration)
         assert isinstance(section, str)
 
@@ -1027,68 +1143,15 @@ class VariantCallingGATK(Analysis):
 
         # Read VQSR resources and corresponding configuration sections for INDELs.
 
-        self._read_vqsr_configuration(
-            configuration=configuration,
-            section=section,
-            vqsr_resources_dict=self.vqsr_resources_indel_dict,
-            variation_type='indel')
+        _read_vqsr_configuration(vqsr_resources_dict=self.vqsr_resources_indel_dict, variation_type='indel')
 
         # Read VQSR resources and corresponding configuration sections for SNPs.
 
-        self._read_vqsr_configuration(
-            configuration=configuration,
-            section=section,
-            vqsr_resources_dict=self.vqsr_resources_snp_dict,
-            variation_type='snp')
+        _read_vqsr_configuration(vqsr_resources_dict=self.vqsr_resources_snp_dict, variation_type='snp')
 
         # Read additionally requested annotation resources for the GATK AnnotateVariants step.
 
-        # Python dict of Python str (annotation resource name) key and
-        # Python tuple of
-        # Python str (file path) and Python list of Python str (annotation) value data.
-
-        option = 'annotation_resources'
-        if config_parser.has_option(section=section, option=option):
-            # Split the resource list on a comma, split white space characters and remove remaining empty strings.
-            for resource in filter(
-                    lambda x: x != '',
-                    map(
-                        lambda x: x.strip(),
-                        config_parser.get(section=section, option=option).split(','))):
-                # The annotation resource section consists of section.annotation_resource.
-                resource_section = '.'.join((section, '_'.join(('annotation', resource))))
-                if config_parser.has_section(section=resource_section):
-                    resource_option = 'file_path'
-                    if config_parser.has_option(section=resource_section, option=resource_option):
-                        file_path = config_parser.get(section=resource_section, option=resource_option)
-                    else:
-                        raise Exception(
-                            "Missing configuration option {!r} in configuration section {!r}.".format(
-                                resource_option,
-                                resource_section))
-                    resource_option = 'annotations'
-                    if config_parser.has_option(section=resource_section, option=resource_option):
-                        # Split the annotation list on a comma, split white space characters and
-                        # remove remaining empty strings.
-                        annotation_list = filter(
-                            lambda x: x != '',
-                            map(
-                                lambda x: x.strip(), config_parser.get(
-                                    section=resource_section,
-                                    option=resource_option).split(',')))
-                    else:
-                        raise Exception(
-                            "Missing configuration option {!r} in configuration section {!r}.".format(
-                                resource_option,
-                                resource_section))
-                    # Create a dict key and a tuple of a Python str and Python list.
-                    self.annotation_resources_dict[resource] = file_path, annotation_list
-                else:
-                    raise Exception(
-                        'Missing configuration section {!r} declared in option {!r} {!r}.'.format(
-                            resource_section,
-                            option,
-                            config_parser.get(section=section, option=option)))
+        _read_annotation_configuration(annotation_resources_dict=self.annotation_resources_dict)
 
         # Single VCF file of known sites for the
         # GATK HaplotypeCaller and GenotypeGVCFs steps.
@@ -1234,7 +1297,7 @@ class VariantCallingGATK(Analysis):
         @rtype:
         """
 
-        assert isinstance(comparison_path, basestring)
+        assert isinstance(comparison_path, (str, unicode))
 
         # For variant calling, all samples need adding to the Analysis regardless.
         for sample in self.collection.get_all_samples():
@@ -1271,73 +1334,6 @@ class VariantCallingGATK(Analysis):
 
             # Remove the last '__' from the key.
             self.comparisons[key[:-2]] = comparison_list
-
-        return
-
-    @staticmethod
-    def _read_vqsr_configuration(configuration, section, vqsr_resources_dict, variation_type):
-        """Private method to read variant quality score recalibration (VQSR) configuration information.
-
-        Configuration options I{vqsr_resources_indel} and I{vqsr_resources_snp} provide a comma-separated list of
-        resources that are to be used in the VQSR procedure. Each option needs to correspond to a sub-section of the
-        C{ConfigParser.SafeConfigParser} in C{bsf.standards.Configuration.config_parser}. Each sub-section needs
-        options 'known', 'training', 'truth', 'prior' and 'file_path'.
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
-        @param section: Configuration file section
-        @type section: str
-        @param vqsr_resources_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
-        @type vqsr_resources_dict: dict[str, dict[str, str | unicode]]
-        @param variation_type: Variation type I{indel} or I{snp}
-        @type variation_type: str
-        @return:
-        @rtype:
-        """
-
-        assert isinstance(configuration, Configuration)
-        assert isinstance(section, str)
-        assert isinstance(vqsr_resources_dict, dict)
-        assert isinstance(variation_type, str)
-
-        if variation_type not in ('indel', 'snp'):
-            raise Exception("Variation type has to be 'indel' or 'snp', not {!r}.".format(variation_type))
-
-        config_parser = configuration.config_parser
-        # The vqsr_resources_indel|snp options of the current configuration section hold a comma-separated list
-        # of resources that should correspond to a sub-section in the configuration file.
-        option = '_'.join(('vqsr_resources', variation_type))
-        if config_parser.has_option(section=section, option=option):
-            # Split the resource list on a comma, split white space characters and remove remaining empty strings.
-            for resource in filter(
-                    lambda x: x != '',
-                    map(
-                        lambda x: x.strip(),
-                        config_parser.get(section=section, option=option).split(','))):
-                # The VQSR resource section consists of section.vqsr_indel|snp_resource.
-                resource_section = '.'.join((section, '_'.join(('vqsr', variation_type, resource))))
-                if config_parser.has_section(section=resource_section):
-                    if resource in vqsr_resources_dict:
-                        resource_dict = vqsr_resources_dict[resource]
-                        assert isinstance(resource_dict, dict)
-                    else:
-                        resource_dict = dict()
-                        vqsr_resources_dict[resource] = resource_dict
-                    for resource_option in ('known', 'training', 'truth', 'prior', 'file_path'):
-                        if config_parser.has_option(section=resource_section, option=resource_option):
-                            resource_dict[resource_option] = config_parser.get(
-                                section=resource_section,
-                                option=resource_option)
-                        else:
-                            raise Exception(
-                                'Missing configuration option {!r} in section {!r}'.format(
-                                    resource_option,
-                                    resource_section))
-                else:
-                    raise Exception(
-                        'Missing configuration section {!r} declared in option {!r} {!r}.'.format(
-                            resource_section,
-                            option,
-                            config_parser.get(section=section, option=option)))
 
         return
 
@@ -1442,11 +1438,11 @@ class VariantCallingGATK(Analysis):
             submit_runnable = True
 
         # The cohort_object_list contains either Runnable objects from the process_sample stage or
-        # Python str (GVCF file path) objects for accessory cohorts to be merged.
+        # Python str | unicode (GVCF file path) objects for accessory cohorts to be merged.
         cohort_object_list = cohort_runnable_dict[cohort_name]
         assert isinstance(cohort_object_list, list)
 
-        vc_merge_cohort_scatter_runnable_list = list()
+        vc_runnable_merge_cohort_scatter_list = list()
 
         # Scatter by the number of genomic tiles.
         # Create a Runnable and Executable for each GATK CombineGVCFs from its Sample objects.
@@ -1471,11 +1467,12 @@ class VariantCallingGATK(Analysis):
             # Submit the Executable only, if the cohort index file does not exist.
             executable_merge_cohort_scatter.submit = submit_runnable
             for cohort_component in cohort_object_list:
-                # Set dependencies only for Runnable objects not Python basestr (file path) objects.
+                # Set dependencies on preceding Runnable.name or Executable.name objects.
+                # Set them only for Runnable objects, but not for Python str | unicode (file path) objects.
                 if isinstance(cohort_component, Runnable):
                     executable_merge_cohort_scatter.dependencies.append(cohort_component.name)
 
-            vc_merge_cohort_scatter_runnable_list.append(runnable_merge_cohort_scatter)
+            vc_runnable_merge_cohort_scatter_list.append(runnable_merge_cohort_scatter)
 
             reference_merge_cohort_scatter = runnable_merge_cohort_scatter.get_absolute_cache_file_path(
                 file_path=self.bwa_genome_db)
@@ -1515,7 +1512,7 @@ class VariantCallingGATK(Analysis):
                         except AttributeError:
                             pass
                     runnable_step.add_gatk_option(key='variant', value=variant_path, override=True)
-                elif isinstance(cohort_component, basestring):
+                elif isinstance(cohort_component, (str, unicode)):
                     runnable_step.add_gatk_option(key='variant', value=cohort_component, override=True)
                 else:
                     raise Exception('Unexpected object type on merge_cohort list.')
@@ -1550,7 +1547,7 @@ class VariantCallingGATK(Analysis):
 
         # Second, Merge chunks hierarchically.
         # Initialise a list of Runnable objects and indices for the hierarchical merge.
-        vc_merge_cohort_gather_runnable_list = vc_merge_cohort_scatter_runnable_list
+        vc_runnable_merge_cohort_gather_list = vc_runnable_merge_cohort_scatter_list
         vc_merge_cohort_gather_index_list = range(0, len(self._tile_region_list))
         runnable_merge_cohort_gather = None  # Global variable to keep and return the last Runnable.
         level = 0
@@ -1610,9 +1607,9 @@ class VariantCallingGATK(Analysis):
                     key='outputFile',
                     value=file_path_merge_cohort_gather.partial_gvcf_vcf)
                 sub_command.add_switch_long(key='assumeSorted')
-                # Finally, add RunnableStep options, obsolete files and Executable dependencies per chunk index.
+                # Finally, process per chunk index.
                 for chunk_index in chunk_index_list:
-                    runnable_object = vc_merge_cohort_gather_runnable_list[chunk_index]
+                    runnable_object = vc_runnable_merge_cohort_gather_list[chunk_index]
                     assert isinstance(runnable_object, Runnable)
                     file_path_object = runnable_object.file_path_object
                     assert isinstance(file_path_object, FilePathMergeCohort)
@@ -1622,16 +1619,15 @@ class VariantCallingGATK(Analysis):
                         value=file_path_object.partial_gvcf_vcf,
                         override=True)
                     # Delete the *.g.vcf.gz file.
-                    runnable_step.obsolete_file_path_list.append(
-                        file_path_object.partial_gvcf_vcf)
+                    runnable_step.obsolete_file_path_list.append(file_path_object.partial_gvcf_vcf)
                     # Delete the *.g.vcf.gz.tbi file.
-                    runnable_step.obsolete_file_path_list.append(
-                        file_path_object.partial_gvcf_tbi)
+                    runnable_step.obsolete_file_path_list.append(file_path_object.partial_gvcf_tbi)
+                    # Set dependencies on preceding Runnable.name or Executable.name objects.
                     # Depend on the Runnable.name of the corresponding Runnable of the scattering above.
                     executable_merge_cohort_gather.dependencies.append(runnable_object.name)
 
             # Set the temporary index list as the new list and increment the merge level.
-            vc_merge_cohort_gather_runnable_list = temporary_gather_runnable_list
+            vc_runnable_merge_cohort_gather_list = temporary_gather_runnable_list
             vc_merge_cohort_gather_index_list = temporary_gather_index_list
             level += 1
         else:
@@ -1725,7 +1721,7 @@ class VariantCallingGATK(Analysis):
         for key in self.annotation_resources_dict.keys():
             assert isinstance(key, str)
             file_path, annotation_list = self.annotation_resources_dict[key]
-            assert isinstance(file_path, basestring)
+            assert isinstance(file_path, (str, unicode))
             assert isinstance(annotation_list, list)
             file_path = Default.get_absolute_path(file_path=file_path, default_path=self.get_gatk_bundle_path)
             if os.path.exists(file_path):
@@ -1744,7 +1740,7 @@ class VariantCallingGATK(Analysis):
 
         temporary_list = list()
         for file_path in self.known_sites_realignment:
-            assert isinstance(file_path, basestring)
+            assert isinstance(file_path, (str, unicode))
             file_path = Default.get_absolute_path(file_path=file_path, default_path=self.get_gatk_bundle_path)
             if os.path.exists(file_path):
                 temporary_list.append(file_path)
@@ -1755,7 +1751,7 @@ class VariantCallingGATK(Analysis):
 
         temporary_list = list()
         for file_path in self.known_sites_recalibration:
-            assert isinstance(file_path, basestring)
+            assert isinstance(file_path, (str, unicode))
             file_path = Default.get_absolute_path(file_path=file_path, default_path=self.get_gatk_bundle_path)
             if os.path.exists(file_path):
                 temporary_list.append(file_path)
@@ -1851,9 +1847,11 @@ class VariantCallingGATK(Analysis):
         # Create a Python dict of Python str (cohort name) key and Python list of process_sample Runnable object
         # value data. This dictionary is required by the merge_cohort stage to hierarchically merge cohorts.
 
-        vc_process_sample_runnable_dict = dict()
+        vc_runnable_process_sample_dict = dict()
 
-        vc_summary_dependency_list = list()
+        # Create a Python list of diagnose_sample Runnable objects.
+
+        vc_runnable_diagnose_sample_list = list()
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -1867,8 +1865,7 @@ class VariantCallingGATK(Analysis):
                 continue
             paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            vc_process_sample_dependencies = list()
-            vc_process_sample_replicates = list()
+            vc_runnable_process_read_group_list = list()
 
             for paired_reads_name in paired_reads_name_list:
                 if not len(paired_reads_dict[paired_reads_name]):
@@ -2019,7 +2016,11 @@ class VariantCallingGATK(Analysis):
                 executable_process_lane = self.set_stage_runnable(
                     stage=stage_process_lane,
                     runnable=runnable_process_lane)
+                # Set dependencies on preceding Runnable.name or Executable.name objects.
                 executable_process_lane.dependencies.append(run_bwa.name)
+                # Set dependencies for succeeding Runnable or Executable objects.
+                vc_runnable_process_read_group_list.append(runnable_process_lane)
+
                 reference_process_lane = runnable_process_lane.get_absolute_cache_file_path(
                     file_path=self.bwa_genome_db)
 
@@ -2306,12 +2307,6 @@ class VariantCallingGATK(Analysis):
                 # CREATE_MD5_FILE defaults to 'false'.
                 # OPTIONS_FILE
 
-                # TODO: Recode to use the list of Runnable object directly as below.
-                # Set dependencies for the next stage.
-                vc_process_sample_dependencies.append(executable_process_lane.name)
-                # Add the file path dict of the variant_calling_process_lane Runnable.
-                vc_process_sample_replicates.append(file_path_process_read_group)
-
             ###############################
             # Step 3: Process per sample. #
             ###############################
@@ -2342,15 +2337,20 @@ class VariantCallingGATK(Analysis):
             executable_process_sample = self.set_stage_runnable(
                 stage=stage_process_sample,
                 runnable=runnable_process_sample)
-            executable_process_sample.dependencies.extend(vc_process_sample_dependencies)
+            # Set dependencies on preceding Runnable.name or Executable.name objects.
+            for runnable_process_lane in vc_runnable_process_read_group_list:
+                assert isinstance(runnable_process_lane, Runnable)
+                executable_process_sample.dependencies.append(runnable_process_lane.name)
 
             reference_process_sample = runnable_process_sample.get_absolute_cache_file_path(
                 file_path=self.bwa_genome_db)
 
-            if len(vc_process_sample_replicates) == 1:
+            if len(vc_runnable_process_read_group_list) == 1:
                 # If there is only one read group, sample-level read processing can be skipped.
                 # Rename files on the basis of the first and only list component.
-                file_path_process_read_group = vc_process_sample_replicates[0]
+                runnable_process_lane = vc_runnable_process_read_group_list[0]
+                assert isinstance(runnable_process_lane, Runnable)
+                file_path_process_read_group = runnable_process_lane.file_path_object
                 assert isinstance(file_path_process_read_group, FilePathProcessReadGroup)
 
                 # Rename the BAM file.
@@ -2399,8 +2399,15 @@ class VariantCallingGATK(Analysis):
                         picard_classpath=self.classpath_picard,
                         picard_command='MergeSamFiles'))
                 assert isinstance(runnable_step, RunnableStepPicard)
-                for file_path_process_read_group in vc_process_sample_replicates:
+                runnable_step.add_picard_option(key='COMMENT', value='Merged from the following files:')
+                for runnable_process_lane in vc_runnable_process_read_group_list:
+                    assert isinstance(runnable_process_lane, Runnable)
+                    file_path_process_read_group = runnable_process_lane.file_path_object
                     assert isinstance(file_path_process_read_group, FilePathProcessReadGroup)
+                    runnable_step.add_picard_option(
+                        key='COMMENT',
+                        value=file_path_process_read_group.recalibrated_bam,
+                        override=True)
                     runnable_step.add_picard_option(
                         key='INPUT',
                         value=file_path_process_read_group.recalibrated_bam,
@@ -2410,13 +2417,6 @@ class VariantCallingGATK(Analysis):
                     runnable_step.obsolete_file_path_list.append(file_path_process_read_group.recalibrated_md5)
                 runnable_step.add_picard_option(key='OUTPUT', value=file_path_process_sample.merged_bam)
                 runnable_step.add_picard_option(key='USE_THREADING', value='true')
-                runnable_step.add_picard_option(key='COMMENT', value='Merged from the following files:')
-                for file_path_process_read_group in vc_process_sample_replicates:
-                    assert isinstance(file_path_process_read_group, FilePathProcessReadGroup)
-                    runnable_step.add_picard_option(
-                        key='COMMENT',
-                        value=file_path_process_read_group.recalibrated_bam,
-                        override=True)
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
                     value=runnable_process_sample.get_relative_temporary_directory_path)
@@ -2680,11 +2680,11 @@ class VariantCallingGATK(Analysis):
             else:
                 cohort_key = self.cohort_name
 
-            if cohort_key not in vc_process_sample_runnable_dict:
-                vc_process_sample_runnable_dict[cohort_key] = list()
-            sample_list = vc_process_sample_runnable_dict[cohort_key]
-            assert isinstance(sample_list, list)
-            sample_list.append(runnable_process_sample)
+            if cohort_key not in vc_runnable_process_sample_dict:
+                vc_runnable_process_sample_dict[cohort_key] = list()
+            _runnable_process_sample_list = vc_runnable_process_sample_dict[cohort_key]
+            assert isinstance(_runnable_process_sample_list, list)
+            _runnable_process_sample_list.append(runnable_process_sample)
 
             ################################
             # Step 4: Diagnose the sample. #
@@ -2750,11 +2750,10 @@ class VariantCallingGATK(Analysis):
             executable_diagnose_sample = self.set_stage_runnable(
                 stage=stage_diagnose_sample,
                 runnable=runnable_diagnose_sample)
-            executable_diagnose_sample.dependencies.append(executable_process_sample.name)
-
-            # Record process dependencies for the summary stage.
-
-            vc_summary_dependency_list.append(executable_diagnose_sample.name)
+            # Set dependencies on preceding Runnable.name or Executable.name objects.
+            executable_diagnose_sample.dependencies.append(runnable_process_sample.name)
+            # Set dependencies for succeding Runnable or Executable objects.
+            vc_runnable_diagnose_sample_list.append(runnable_diagnose_sample)
 
             reference_diagnose_sample = runnable_diagnose_sample.get_absolute_cache_file_path(
                 file_path=self.bwa_genome_db)
@@ -2900,7 +2899,8 @@ class VariantCallingGATK(Analysis):
                     obsolete_file_path_list=[
                         file_path_diagnose_sample.sorted_bed,
                     ]))
-            runnable_step.add_option_short(key='type', value='bed4')
+            # FIXME: It would be good to allow options with and without an equal sign.
+            runnable_step.add_switch_short(key='type=bed4')
             runnable_step.arguments.append(file_path_diagnose_sample.sorted_bed)
             runnable_step.arguments.append(reference_diagnose_sample + '.fai')
             runnable_step.arguments.append(file_path_diagnose_sample.callable_bb)
@@ -2962,28 +2962,28 @@ class VariantCallingGATK(Analysis):
         # Create a Python dict of Python str (cohort name) key and Python list of Runnable value data.
         # Initialise a single key with the final cohort name and an empty list for merging the final cohort.
 
-        vc_merge_cohort_runnable_dict = {self.cohort_name: []}
-        vc_merge_cohort_runnable_list = vc_merge_cohort_runnable_dict[self.cohort_name]
+        vc_runnable_merge_cohort_dict = {self.cohort_name: []}
+        vc_runnable_merge_cohort_list = vc_runnable_merge_cohort_dict[self.cohort_name]
 
         # Run the GATK CombineGVCFs analysis for each cohort and Sample defined in this project to build up
         # cohort-specific GVCF files.
 
-        for cohort_key in vc_process_sample_runnable_dict.keys():
-            vc_merge_cohort_runnable_list.append(
+        for cohort_key in vc_runnable_process_sample_dict.keys():
+            vc_runnable_merge_cohort_list.append(
                 self._merge_cohort_scatter_gather(
                     analysis_stage=stage_merge_cohort,
-                    cohort_runnable_dict=vc_process_sample_runnable_dict,
+                    cohort_runnable_dict=vc_runnable_process_sample_dict,
                     cohort_name=cohort_key))
 
         # Run the GATK CombineGVCF analysis once more to merge all cohort-specific GVCF files defined in this project.
 
-        if len(vc_merge_cohort_runnable_list) == 1:
+        if len(vc_runnable_merge_cohort_list) == 1:
             # If the cohort-specific Runnable list has only one component, the merge has already been completed.
-            runnable_merge_cohort = vc_merge_cohort_runnable_list[-1]
-        elif len(vc_merge_cohort_runnable_list) > 1:
+            runnable_merge_cohort = vc_runnable_merge_cohort_list[-1]
+        elif len(vc_runnable_merge_cohort_list) > 1:
             runnable_merge_cohort = self._merge_cohort_scatter_gather(
                 analysis_stage=stage_merge_cohort,
-                cohort_runnable_dict=vc_merge_cohort_runnable_dict,
+                cohort_runnable_dict=vc_runnable_merge_cohort_dict,
                 cohort_name=self.cohort_name)
         else:
             raise Exception("Unexpected number of Runnable objects on the merge_cohort list.")
@@ -2994,15 +2994,15 @@ class VariantCallingGATK(Analysis):
             # If accessory cohorts are defined, initialise a new Python dict of Python str cohort name key and
             # Python list of Runnable value data. Initialise the list with teh last Runnable object and
             # extend with the the list of accessory cohort file names. The _merge_cohort_scatter_gather() method
-            # can cope with Runnable or basestr objects.
+            # can cope with Runnable or str | unicode objects.
             cohort_key = '_'.join((self.cohort_name, 'accessory'))
-            vc_merge_cohort_runnable_dict = {cohort_key: [runnable_merge_cohort]}
-            vc_merge_cohort_runnable_list = vc_merge_cohort_runnable_dict[cohort_key]
-            vc_merge_cohort_runnable_list.extend(self.accessory_cohort_gvcfs)
+            vc_runnable_merge_cohort_dict = {cohort_key: [runnable_merge_cohort]}
+            vc_runnable_merge_cohort_list = vc_runnable_merge_cohort_dict[cohort_key]
+            vc_runnable_merge_cohort_list.extend(self.accessory_cohort_gvcfs)
 
             runnable_merge_cohort = self._merge_cohort_scatter_gather(
                 analysis_stage=stage_merge_cohort,
-                cohort_runnable_dict=vc_merge_cohort_runnable_dict,
+                cohort_runnable_dict=vc_runnable_merge_cohort_dict,
                 cohort_name=cohort_key)
 
         # Specify the final FilePathMergeCohort object from the final Runnable object.
@@ -3034,7 +3034,7 @@ class VariantCallingGATK(Analysis):
         else:
             submit_runnable = True
 
-        vc_process_cohort_scatter_runnable_list = list()
+        vc_runnable_process_cohort_scatter_list = list()
         runnable_process_cohort_scatter = None
         for tile_index in range(0, len(self._tile_region_list)):
             prefix_process_cohort_scatter = '_'.join((
@@ -3055,10 +3055,10 @@ class VariantCallingGATK(Analysis):
                 stage=stage_process_cohort,
                 runnable=runnable_process_cohort_scatter)
             executable_process_cohort_scatter.submit = submit_runnable
-            # Set dependency on the last merge_cohort Runnable.name.
+            # Set dependencies on preceding Runnable.name or Executable.name objects.
             executable_process_cohort_scatter.dependencies.append(runnable_merge_cohort.name)
 
-            vc_process_cohort_scatter_runnable_list.append(runnable_process_cohort_scatter)
+            vc_runnable_process_cohort_scatter_list.append(runnable_process_cohort_scatter)
 
             reference_process_cohort_scatter = runnable_process_cohort_scatter.get_absolute_cache_file_path(
                 file_path=self.bwa_genome_db)
@@ -3125,7 +3125,7 @@ class VariantCallingGATK(Analysis):
 
             # Second, Merge chunks hierarchically.
             # Initialise a list of Runnable objects and indices for the hierarchical merge.
-            vc_process_cohort_gather_runnable_list = vc_process_cohort_scatter_runnable_list
+            vc_runnable_process_cohort_gather_list = vc_runnable_process_cohort_scatter_list
             vc_process_cohort_gather_index_list = range(0, len(self._tile_region_list))
             runnable_process_cohort_gather = None  # Global variable to keep and return the last Runnable.
             level = 0
@@ -3187,9 +3187,9 @@ class VariantCallingGATK(Analysis):
                         key='outputFile',
                         value=file_path_genotype_cohort_gather.partial_vcf)
                     sub_command.add_switch_long(key='assumeSorted')
-                    # Finally, add RunnableStep options, obsolete files and Executable dependencies per chunk index.
+                    # Finally, process per chunk index.
                     for chunk_index in chunk_index_list:
-                        runnable_object = vc_process_cohort_gather_runnable_list[chunk_index]
+                        runnable_object = vc_runnable_process_cohort_gather_list[chunk_index]
                         assert isinstance(runnable_object, Runnable)
                         file_path_object = runnable_object.file_path_object
                         assert isinstance(file_path_object, FilePathGenotypeCohort)
@@ -3199,11 +3199,11 @@ class VariantCallingGATK(Analysis):
                         runnable_step.obsolete_file_path_list.append(file_path_object.partial_vcf)
                         # Delete the *.g.vcf.gz.tbi file.
                         runnable_step.obsolete_file_path_list.append(file_path_object.partial_tbi)
-                        # Depend on the Runnable.name of the corresponding Runnable of the scattering above.
+                        # Set dependencies on preceding Runnable.name or Executable.name objects.
                         executable_process_cohort_gather.dependencies.append(runnable_object.name)
 
                 # Set the temporary index list as the new list and increment the merge level.
-                vc_process_cohort_gather_runnable_list = temporary_gather_runnable_list
+                vc_runnable_process_cohort_gather_list = temporary_gather_runnable_list
                 vc_process_cohort_gather_index_list = temporary_gather_index_list
                 level += 1
             else:
@@ -3245,9 +3245,7 @@ class VariantCallingGATK(Analysis):
         executable_process_cohort = self.set_stage_runnable(
             stage=stage_process_cohort,
             runnable=runnable_process_cohort)
-        # Set a dependency on the final merge_cohort Runnable.name.
-        # executable_process_cohort.dependencies.append(runnable_merge_cohort.name)
-        # Set a dependency on the final process_cohort Runnable.name.
+        # Set dependencies on preceding Runnable.name or Executable.name objects.
         executable_process_cohort.dependencies.append(runnable_process_cohort_gather.name)
 
         reference_process_cohort = runnable_process_cohort.get_absolute_cache_file_path(
@@ -3661,7 +3659,8 @@ class VariantCallingGATK(Analysis):
             executable_split_cohort = self.set_stage_runnable(
                 stage=stage_split_cohort,
                 runnable=runnable_split_cohort)
-            executable_split_cohort.dependencies.append(executable_process_cohort.name)
+            # Set dependencies on preceding Runnable.name or Executable.name objects.
+            executable_split_cohort.dependencies.append(runnable_process_cohort.name)
 
             reference_split_cohort = runnable_split_cohort.get_absolute_cache_file_path(
                 file_path=self.bwa_genome_db)
@@ -3777,8 +3776,10 @@ class VariantCallingGATK(Analysis):
         executable_summary = self.set_stage_runnable(
             stage=stage_summary,
             runnable=runnable_summary)
-        # Set dependencies on diagnose_sample processes, which imply dependencies on process_sample and process_lane.
-        executable_summary.dependencies.extend(vc_summary_dependency_list)
+        # Set dependencies on preceding Runnable.name or Executable.name objects.
+        for runnable_diagnose_sample in vc_runnable_diagnose_sample_list:
+            assert isinstance(runnable_diagnose_sample, Runnable)
+            executable_summary.dependencies.append(runnable_diagnose_sample.name)
 
         # Run the bsfR script to summarise the variant calling procedure.
 
@@ -3816,7 +3817,8 @@ class VariantCallingGATK(Analysis):
 
             # Run the GATK MuTect2 analysis to characterise somatic variants in a scatter gather approach.
 
-            vc_somatic_scatter_runnable_list = list()
+            vc_runnable_somatic_scatter_list = list()
+
             runnable_somatic_scatter = None
             for tile_index in range(0, len(self._tile_region_list)):
                 prefix_somatic_scatter = '_'.join((
@@ -3836,12 +3838,13 @@ class VariantCallingGATK(Analysis):
                 executable_somatic_scatter = self.set_stage_runnable(
                     stage=stage_somatic,
                     runnable=runnable_somatic_scatter)
+                # Set dependencies on preceding Runnable.name or Executable.name objects.
                 executable_somatic_scatter.dependencies.append(
                     '_'.join((stage_process_sample.name, self.comparisons[key][0][1][0].name)))
                 executable_somatic_scatter.dependencies.append(
                     '_'.join((stage_process_sample.name, self.comparisons[key][-1][1][0].name)))
 
-                vc_somatic_scatter_runnable_list.append(runnable_somatic_scatter)
+                vc_runnable_somatic_scatter_list.append(runnable_somatic_scatter)
 
                 reference_somatic_scatter = runnable_somatic_scatter.get_absolute_cache_file_path(
                     file_path=self.bwa_genome_db)
@@ -3875,13 +3878,13 @@ class VariantCallingGATK(Analysis):
                     runnable_step.add_gatk_option(key='cosmic', value=file_path, override=True)
                 # Find and add the FilePathProcessSample object for the 'normal' Sample object.
                 file_path_object = self.runnable_dict['_'.join((
-                    stage_process_sample,
+                    stage_process_sample.name,
                     self.comparisons[key][0][1][0].name))].file_path_object
                 assert isinstance(file_path_object, FilePathProcessSample)
                 runnable_step.add_gatk_option(key='input_file:normal', value=file_path_object.realigned_bam)
                 # Find and add the FilePathProcessSample object for the 'tumor' Sample object.
                 file_path_object = self.runnable_dict['_'.join((
-                    stage_process_sample,
+                    stage_process_sample.name,
                     self.comparisons[key][-1][1][0].name))].file_path_object
                 assert isinstance(file_path_object, FilePathProcessSample)
                 runnable_step.add_gatk_option(
@@ -3919,7 +3922,7 @@ class VariantCallingGATK(Analysis):
 
                 # Second, Merge chunks hierarchically.
                 # Initialise a list of Runnable objects and indices for the hierarchical merge.
-                vc_somatic_gather_runnable_list = vc_somatic_scatter_runnable_list
+                vc_runnable_somatic_gather_list = vc_runnable_somatic_scatter_list
                 vc_somatic_gather_index_list = range(0, len(self._tile_region_list))
                 runnable_somatic_gather = None  # Global variable to keep and return the last Runnable.
                 level = 0
@@ -3982,7 +3985,7 @@ class VariantCallingGATK(Analysis):
                         sub_command.add_switch_long(key='assumeSorted')
                         # Finally, add RunnableStep options, obsolete files and Executable dependencies per chunk index.
                         for chunk_index in chunk_index_list:
-                            runnable_object = vc_somatic_gather_runnable_list[chunk_index]
+                            runnable_object = vc_runnable_somatic_gather_list[chunk_index]
                             assert isinstance(runnable_object, Runnable)
                             file_path_object = runnable_object.file_path_object
                             assert isinstance(file_path_object, FilePathSomaticScatterGather)
@@ -3995,12 +3998,11 @@ class VariantCallingGATK(Analysis):
                             runnable_step.obsolete_file_path_list.append(file_path_object.partial_vcf)
                             # Delete the *.g.vcf.gz.tbi file.
                             runnable_step.obsolete_file_path_list.append(file_path_object.partial_tbi)
-                            # Depend on the Runnable.name of the corresponding Runnable of the scattering above.
-                            executable_somatic_gather.dependencies.append(
-                                vc_somatic_gather_runnable_list[chunk_index].name)
+                            # Set dependencies on preceding Runnable.name or Executable.name objects.
+                            executable_somatic_gather.dependencies.append(runnable_object.name)
 
                     # Set the temporary index list as the new list and increment the merge level.
-                    vc_somatic_gather_runnable_list = temporary_gather_runnable_list
+                    vc_runnable_somatic_gather_list = temporary_gather_runnable_list
                     vc_somatic_gather_index_list = temporary_gather_index_list
                     level += 1
                 else:
@@ -4038,6 +4040,7 @@ class VariantCallingGATK(Analysis):
             executable_somatic = self.set_stage_runnable(
                 stage=stage_somatic,
                 runnable=runnable_somatic)
+            # Set dependencies on preceding Runnable.name or Executable.name objects.
             executable_somatic.dependencies.append(runnable_somatic_gather.name)
 
             reference_somatic = runnable_somatic.get_absolute_cache_file_path(
@@ -4204,70 +4207,71 @@ class VariantCallingGATK(Analysis):
 
         return
 
-    @staticmethod
-    def _create_directory(path):
-        """Private static method to create a directory avoiding race conditions.
-
-        @param path: Path
-        @type path: str | unicode
-        @return: Path
-        @rtype: str | unicode
-        """
-        if not os.path.isdir(path):
-            try:
-                os.makedirs(path)
-            except OSError as exception:
-                if exception.errno != errno.EEXIST:
-                    raise
-
-        return path
-
-    @staticmethod
-    def _create_symbolic_link(source_path, target_path):
-        """Private static method to set symbolic links.
-
-        @param source_path: Source path
-        @type source_path: str | unicode
-        @param target_path: Target path
-        @type target_path: str | unicode
-        @return:
-        @rtype:
-        """
-        if not os.path.islink(target_path):
-            # try:
-            #     os.remove(target_path)
-            # except OSError as exception:
-            #     if exception.errno != errno.ENOENT:
-            #         raise
-            try:
-                os.symlink(source_path, target_path)
-            except OSError as exception:
-                if exception.errno != errno.EEXIST:
-                    raise
-
-        return
-
     def _link(self):
         """Private method to create a result directory and two trees of symbolic links by sample and by type.
 
         @return:
         @rtype:
         """
+
+        def _create_directory(path):
+            """Private static method to create a directory avoiding race conditions.
+
+            @param path: Path
+            @type path: str | unicode
+            @return: Path
+            @rtype: str | unicode
+            """
+            if not os.path.isdir(path):
+                try:
+                    os.makedirs(path)
+                except OSError as exception:
+                    if exception.errno != errno.EEXIST:
+                        raise
+
+            return path
+
+        def _create_symbolic_link(source_path, target_path):
+            """Private static method to set symbolic links.
+
+            @param source_path: Source path
+            @type source_path: str | unicode
+            @param target_path: Target path
+            @type target_path: str | unicode
+            @return:
+            @rtype:
+            """
+            if not os.path.islink(target_path):
+                # try:
+                #     os.remove(target_path)
+                # except OSError as exception:
+                #     if exception.errno != errno.ENOENT:
+                #         raise
+                try:
+                    os.symlink(source_path, target_path)
+                except OSError as exception:
+                    if exception.errno != errno.EEXIST:
+                        raise
+
+            return
+
+        # Start of _link() method body.
+
         # Create a result directory as concatenation of bsf.Analysis.genome_version and bsf.Analysis.prefix.
 
-        directory_results = self._create_directory(
+        directory_results = _create_directory(
             path=os.path.join(self.project_directory, '_'.join((self.genome_version, self.prefix))))
 
-        directory_results_by_cohort = self._create_directory(
+        directory_results_by_cohort = _create_directory(
             path=os.path.join(directory_results, 'by_cohort'))
 
-        directory_results_by_pair = self._create_directory(
+        directory_results_by_pair = _create_directory(
             path=os.path.join(directory_results, 'by_pair'))
 
-        directory_results_by_sample = self._create_directory(
+        directory_results_by_sample = _create_directory(
             path=os.path.join(directory_results, 'by_sample'))
 
-        directory_results_by_type = self._create_directory(
+        directory_results_by_type = _create_directory(
             path=os.path.join(directory_results, 'by_type'))
 
         for sample in self.sample_list:
@@ -4298,14 +4302,14 @@ class VariantCallingGATK(Analysis):
             file_path_split_cohort = runnable_split_cohort.file_path_object
             assert isinstance(file_path_split_cohort, FilePathSplitCohort)
 
-            directory_sample = self._create_directory(
+            directory_sample = _create_directory(
                 path=os.path.join(directory_results_by_sample, sample.name))
 
             for key, extension in (
                     ('realigned_bam', '.bam'),
                     ('realigned_bai', '.bam.bai'),
                     ('realigned_md5', '.bam.md5')):
-                self._create_symbolic_link(
+                _create_symbolic_link(
                     source_path=os.path.relpath(
                         os.path.join(self.genome_directory, getattr(file_path_process_sample, key)),
                         directory_sample),
@@ -4315,33 +4319,33 @@ class VariantCallingGATK(Analysis):
                     ('sample_vcf', '.vcf.gz'),
                     ('sample_idx', '.vcf.gz.tbi'),
                     ('sample_tsv', '.tsv')):
-                self._create_symbolic_link(
+                _create_symbolic_link(
                     source_path=os.path.relpath(
                         os.path.join(self.genome_directory, getattr(file_path_split_cohort, key)),
                         directory_sample),
                     target_path=os.path.join(directory_sample, sample.name + extension))
 
-            directory_alignments = self._create_directory(
+            directory_alignments = _create_directory(
                 path=os.path.join(directory_results_by_type, 'alignments'))
 
             for key, extension in (
                     ('realigned_bam', '.bam'),
                     ('realigned_bai', '.bam.bai'),
                     ('realigned_md5', '.bam.md5')):
-                self._create_symbolic_link(
+                _create_symbolic_link(
                     source_path=os.path.relpath(
                         os.path.join(self.genome_directory, getattr(file_path_process_sample, key)),
                         directory_alignments),
                     target_path=os.path.join(directory_alignments, sample.name + extension))
 
-            directory_variants = self._create_directory(
+            directory_variants = _create_directory(
                 path=os.path.join(directory_results_by_type, 'variants'))
 
             for key, extension in (
                     ('sample_vcf', '.vcf.gz'),
                     ('sample_idx', '.vcf.gz.tbi'),
                     ('sample_tsv', '.tsv')):
-                self._create_symbolic_link(
+                _create_symbolic_link(
                     source_path=os.path.relpath(
                         os.path.join(self.genome_directory, getattr(file_path_split_cohort, key)),
                         directory_variants),
@@ -4358,7 +4362,7 @@ class VariantCallingGATK(Analysis):
                 ('snpeff_vcf_bgz', '_snpeff.vcf.gz'),
                 ('snpeff_vcf_tbi', '_snpeff.vcf.gz.tbi'),
                 ('snpeff_stats', '_snpeff_summary.html')):
-            self._create_symbolic_link(
+            _create_symbolic_link(
                 source_path=os.path.relpath(
                     os.path.join(self.genome_directory, getattr(file_path_process_cohort, key)),
                     directory_results_by_cohort),
@@ -4379,7 +4383,7 @@ class VariantCallingGATK(Analysis):
                     ('annotated_vcf', '_annotated.vcf.gz'),
                     ('annotated_tbi', '_annotated.vcf.gz.tbi'),
                     ('annotated_tsv', '_annotated.tsv')):
-                self._create_symbolic_link(
+                _create_symbolic_link(
                     source_path=os.path.relpath(
                         os.path.join(self.genome_directory, getattr(file_path_somatic, key)),
                         directory_results_by_pair),
@@ -4621,8 +4625,10 @@ class VariantCallingGATK(Analysis):
                     format(file_path_diagnosis.callable_bed)
                 output_html += '<a href="{}">BigBED</a>&nbsp;'. \
                     format(file_path_diagnosis.callable_bb)
+                # Do not link the more complex file_path_diagnosis.non_callable_regions_tsv
+                # file for the moment.
                 output_html += '<a href="{}">TSV</a>'. \
-                    format(file_path_diagnosis.non_callable_loci_tsv)
+                    format(file_path_diagnosis.non_callable_regions_tsv)
             output_html += '</td>\n'
             if os.path.isfile(
                     os.path.join(
