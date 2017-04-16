@@ -80,7 +80,7 @@ class Configuration(object):
         # Expand each file_path for user and variable names.
         expanded_list = list()
         for file_path in file_path_list:
-            assert isinstance(file_path, basestring)
+            assert isinstance(file_path, (str, unicode))
             file_path = os.path.expanduser(path=file_path)
             file_path = os.path.expandvars(path=file_path)
             file_path = os.path.normpath(path=file_path)
@@ -200,8 +200,8 @@ class Default(object):
     @type directory_public_html: str | unicode
     @ivar directory_genomes: Directory for genomes and their annotation
     @type directory_genomes: str | unicode
-    @ivar directory_annotations: Sub-directory for genome annotations
-    @type directory_annotations: str | unicode
+    @ivar directory_transcriptomes: Sub-directory for transcriptomes
+    @type directory_transcriptomes: str | unicode
     @ivar directory_gatk_bundle: Sub-directory for GATK bundle data
     @type directory_gatk_bundle: str | unicode
     @ivar directory_snpeff_data: snpEff database directory
@@ -337,7 +337,7 @@ class Default(object):
             directory_projects=None,
             directory_public_html=None,
             directory_genomes=None,
-            directory_annotations=None,
+            directory_transcriptomes=None,
             directory_gatk_bundle=None,
             directory_intervals=None,
             directory_snpeff_data=None,
@@ -381,8 +381,8 @@ class Default(object):
         @type directory_public_html: str | unicode
         @param directory_genomes: Directory for genomes and their annotation
         @type directory_genomes: str | unicode
-        @param directory_annotations: Sub-directory for genome annotations
-        @type directory_annotations: str | unicode
+        @param directory_transcriptomes: Sub-directory for transcriptomes
+        @type directory_transcriptomes: str | unicode
         @param directory_gatk_bundle: Sub-directory for GATK bundle data
         @type directory_gatk_bundle: str | unicode
         @param directory_intervals: Directory for interval list files
@@ -487,10 +487,10 @@ class Default(object):
         else:
             self.directory_genomes = directory_genomes
 
-        if directory_annotations is None:
-            self.directory_annotations = str()
+        if directory_transcriptomes is None:
+            self.directory_transcriptomes = str()
         else:
-            self.directory_annotations = directory_annotations
+            self.directory_transcriptomes = directory_transcriptomes
 
         if directory_gatk_bundle is None:
             self.directory_gatk_bundle = str()
@@ -624,7 +624,7 @@ class Default(object):
         self.directory_projects = cp.get(section=section, option='projects')
         self.directory_public_html = cp.get(section=section, option='public_html')
         self.directory_genomes = cp.get(section=section, option='genomes')
-        self.directory_annotations = cp.get(section=section, option='annotations')
+        self.directory_transcriptomes = cp.get(section=section, option='transcriptomes')
         self.directory_gatk_bundle = cp.get(section=section, option='gatk_bundle')
         self.directory_intervals = cp.get(section=section, option='intervals')
         self.directory_snpeff_data = cp.get(section=section, option='snpeff_data')
@@ -821,18 +821,21 @@ class Default(object):
             return os.path.join(default.directory_home, default.directory_intervals)
 
     @staticmethod
-    def absolute_genome_annotation(genome_version):
-        """Get the absolute directory path for genome annotation.
+    def absolute_transcriptomes(transcriptome_version):
+        """Get the absolute directory path for transcriptomes.
 
-        @param genome_version: The genome version (e.g. mm10, ...)
-        @type genome_version: str
-        @return: Absolute path to the genome annotation directory
+        @param transcriptome_version: The transcriptome version (e.g. mm10_e87, ...)
+        @type transcriptome_version: str
+        @return: Absolute path to the transcriptome directory
         @rtype: str | unicode
         """
 
         default = Default.get_global_default()
 
-        return os.path.join(default.directory_genomes, genome_version, default.directory_annotations)
+        if transcriptome_version:
+            return os.path.join(default.directory_transcriptomes, transcriptome_version)
+        else:
+            return default.directory_transcriptomes
 
     @staticmethod
     def absolute_genome_fasta(genome_version, genome_index):

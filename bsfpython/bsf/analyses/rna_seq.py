@@ -4,7 +4,7 @@ A package of classes and methods supporting RNA-Seq analyses.
 """
 
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2017 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -49,7 +49,11 @@ class FilePathTophat(FilePath):
 
         self.output_directory = prefix
         self.accepted_hits_bam = os.path.join(prefix, 'accepted_hits.bam')
+        self.accepted_hits_bam_link_source = 'accepted_hits.bam'
+        self.accepted_hits_bam_link_target = os.path.join(prefix, prefix + 'accepted_hits.bam')
         self.accepted_hits_bai = os.path.join(prefix, 'accepted_hits.bam.bai')
+        self.accepted_hits_bai_link_source = 'accepted_hits.bam.bai'
+        self.accepted_hits_bai_link_target = os.path.join(prefix, prefix + 'accepted_hits.bam.bai')
         self.accepted_hits_bw = os.path.join(prefix, 'accepted_hits.bw')
         self.align_summary = os.path.join(prefix, 'align_summary.txt')
         self.deletions_bed = os.path.join(prefix, 'deletions.bed')
@@ -60,6 +64,8 @@ class FilePathTophat(FilePath):
         self.junctions_bb = os.path.join(prefix, 'junctions.bb')
         self.prep_reads_info = os.path.join(prefix, 'prep_reads.info')
         self.unmapped_bam = os.path.join(prefix, 'unmapped.bam')
+        self.unmapped_bam_link_source = 'unmapped.bam'
+        self.unmapped_bam_link_target = os.path.join(prefix, prefix + 'unmapped.bam')
 
         return
 
@@ -72,13 +78,15 @@ class FilePathCufflinks(FilePath):
 
         self.output_directory = prefix
         self.transcripts_gtf = os.path.join(prefix, 'transcripts.gtf')
-        self.transcripts_gp = os.path.join(prefix, 'transcripts_gene_pred.tsv')
-        self.transcripts_bp = os.path.join(prefix, 'transcripts_big_gene_pred.tsv')
-        self.transcripts_st = os.path.join(prefix, 'transcripts_sorted.tsv')
+        self.temporary_gene_prediction = os.path.join(prefix, 'transcripts_gene_prediction.tsv')
+        self.temporary_big_gene_prediction = os.path.join(prefix, 'transcripts_big_gene_prediction.tsv')
+        self.temporary_sorted_tsv = os.path.join(prefix, 'transcripts_sorted.tsv')
         self.transcripts_bb = os.path.join(prefix, 'transcripts.bb')
-        self.transcripts_lnk_gtf = os.path.join(prefix, prefix + 'transcripts.gtf')
-        self.transcripts_lnk_bb = os.path.join(prefix, prefix + 'transcripts.bb')
-        # TODO: Files are missing.
+        self.transcripts_gtf_link_source = 'transcripts.gtf'
+        self.transcripts_gtf_link_target = os.path.join(prefix, prefix + 'transcripts.gtf')
+        self.transcripts_bb_link_source = 'transcripts.bb'
+        self.transcripts_bb_link_target = os.path.join(prefix, prefix + 'transcripts.bb')
+        # TODO: Some files are missing.
 
         return
 
@@ -90,8 +98,16 @@ class FilePathCuffmerge(FilePath):
         super(FilePathCuffmerge, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
-        self.merged_gtf = os.path.join(prefix, 'merged.gtf')
         self.assembly_txt = '_'.join((prefix, 'assembly.txt'))
+        self.merged_gtf = os.path.join(prefix, 'merged.gtf')
+        self.temporary_gene_prediction = os.path.join(prefix, 'merged_gene_prediction.tsv')
+        self.temporary_big_gene_prediction = os.path.join(prefix, 'merged_big_gene_prediction.tsv')
+        self.temporary_sorted_tsv = os.path.join(prefix, 'merged_sorted.tsv')
+        self.merged_bb = os.path.join(prefix, 'merged.bb')
+        self.merged_gtf_link_source = 'merged.gtf'
+        self.merged_gtf_link_target = os.path.join(prefix, prefix + 'merged.gtf')
+        self.merged_bb_link_source = 'merged.bb'
+        self.merged_bb_link_target = os.path.join(prefix, prefix + 'merged.bb')
 
         return
 
@@ -176,6 +192,8 @@ class Tuxedo(Analysis):
     @ivar library_type: Library type
         Cuffquant and Cuffdiff I{fr-unstranded} (default), I{fr-firststrand} or I{fr-secondstrand}
     @type library_type: str
+    @ivar novel_transcripts: Assemble novel transcripts
+    @type novel_transcripts: bool
     @ivar no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
     @type no_length_correction: bool
     """
@@ -285,6 +303,7 @@ class Tuxedo(Analysis):
             mask_gtf_path=None,
             multi_read_correction=None,
             library_type=None,
+            novel_transcripts=None,
             no_length_correction=False):
         """Initialise a C{bsf.analyses.rna_seq.Tuxedo} object.
 
@@ -334,6 +353,8 @@ class Tuxedo(Analysis):
         @param library_type: Library type
             Cuffquant and Cuffdiff I{fr-unstranded} (default), I{fr-firststrand} or I{fr-secondstrand}
         @type library_type: str
+        @param novel_transcripts: Assemble novel transcripts
+        @type novel_transcripts: bool
         @param no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
         @type no_length_correction: bool
         @return:
@@ -399,6 +420,11 @@ class Tuxedo(Analysis):
         else:
             self.library_type = library_type
 
+        if novel_transcripts is None:
+            self.novel_transcripts = True
+        else:
+            self.novel_transcripts = novel_transcripts
+
         if no_length_correction is None:
             self.no_length_correction = False
         else:
@@ -456,57 +482,13 @@ class Tuxedo(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.library_type = configuration.config_parser.get(section=section, option=option)
 
+        option = 'novel_transcripts'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.novel_transcripts = configuration.config_parser.getboolean(section=section, option=option)
+
         option = 'no_length_correction'
         if configuration.config_parser.has_option(section=section, option=option):
             self.no_length_correction = configuration.config_parser.getboolean(section=section, option=option)
-
-        return
-
-    def _calculate_comparisons_from_samples(self):
-        """Calculate the comparisons on the basis of the sample annotation sheet alone.
-        An all-against-all sample comparison gets configured.
-        @return:
-        @rtype:
-        """
-
-        # Without a comparison file path, simply add all Sample objects from the Collection.
-        self.sample_list.extend(self.collection.get_all_samples())
-
-        # Create a global comparison by adding all samples under their sample name as group name.
-
-        comparison_groups = list()
-        for sample in self.sample_list:
-            # Add a tuple of group (i.e. sample) name and a Python list of the Sample object.
-            comparison_groups.append((sample.name, [sample]))
-
-        # Sort the list of comparison groups by Sample.name.
-        comparison_groups.sort(cmp=lambda x, y: cmp(x[0], y[0]))
-
-        self.comparisons['global'] = comparison_groups
-
-        return
-
-    def _calculate_comparisons_from_groups(self):
-        """Calculate the comparisons on the basis of the sample annotation sheet alone.
-        An all-against-all group comparison gets configured.
-
-        @return:
-        @rtype:
-        """
-
-        # Without a comparison file path, simply add all Sample objects from the Collection.
-        self.sample_list.extend(self.collection.get_all_samples())
-
-        # Create a global comparison by adding all sample groups.
-
-        comparison_groups = list()
-        for key in self.collection.sample_group_dict.keys():
-            comparison_groups.append((key, self.collection.sample_group_dict[key]))
-
-        # Sort the list of comparison groups by group name.
-        comparison_groups.sort(cmp=lambda x, y: cmp(x[0], y[0]))
-
-        self.comparisons['global'] = comparison_groups
 
         return
 
@@ -618,6 +600,9 @@ class Tuxedo(Analysis):
 
         super(Tuxedo, self).run()
 
+        # Method configuration with regards to Cuffquant and Cuffdiff.
+        run_cuffquant_before_cuffdiff = False
+
         # Tuxedo requires a genome version.
 
         if not self.genome_version:
@@ -628,11 +613,28 @@ class Tuxedo(Analysis):
             if self.cmp_file == '*groups*':
                 # The special file name *groups* creates the comparisons on the basis of an
                 # all-against-all group comparison.
-                self._calculate_comparisons_from_groups()
+                # Without a comparison file path, simply add all Sample objects from the Collection.
+                self.sample_list.extend(self.collection.get_all_samples())
+                # Create a global comparison by adding all sample groups.
+                comparison_groups = list()
+                for key in self.collection.sample_group_dict.keys():
+                    comparison_groups.append((key, self.collection.sample_group_dict[key]))
+                # Sort the list of comparison groups by group name.
+                comparison_groups.sort(cmp=lambda x, y: cmp(x[0], y[0]))
+                self.comparisons['global'] = comparison_groups
             elif self.cmp_file == '*samples*':
                 # The special file name *samples* creates the comparisons on the basis of an
                 # all-against-all sample comparison.
-                self._calculate_comparisons_from_samples()
+                # Without a comparison file path, simply add all Sample objects from the Collection.
+                self.sample_list.extend(self.collection.get_all_samples())
+                # Create a global comparison by adding all samples under their sample name as group name.
+                comparison_groups = list()
+                for sample in self.sample_list:
+                    # Add a tuple of group (i.e. sample) name and a Python list of the Sample object.
+                    comparison_groups.append((sample.name, [sample]))
+                # Sort the list of comparison groups by Sample.name.
+                comparison_groups.sort(cmp=lambda x, y: cmp(x[0], y[0]))
+                self.comparisons['global'] = comparison_groups
             else:
                 # A comparison file path has been provided.
                 # Expand an eventual user part i.e. on UNIX ~ or ~user and
@@ -670,14 +672,29 @@ class Tuxedo(Analysis):
         # prepend the annotation default if not.
 
         if self.transcriptome_index_path:
+            # self.transcriptome_index_path = Default.get_absolute_path(
+            #     file_path=self.transcriptome_index_path,
+            #     default_path=Default.absolute_genomes(genome_version=self.genome_version))
+
+            # FIXME: Should there be a (static) method Default.get_absolute_transcriptomes()?
+            # For the moment, genomes and transcriptomes are co-located.
+            # Check if transcriptome_index_path is an absolute path.
             self.transcriptome_index_path = Default.get_absolute_path(
                 file_path=self.transcriptome_index_path,
-                default_path=Default.absolute_genomes(genome_version=self.genome_version))
+                default_path=Default.absolute_genomes(genome_version=''))
 
             if not os.path.isdir(self.transcriptome_index_path):
                 raise Exception("Reference transcriptome index directory {!r} does not exist.".
                                 format(self.transcriptome_index_path))
 
+            # Does a indices_for_TopHat directory exist?
+            transcriptome_index_path = os.path.join(self.transcriptome_index_path, 'indices_for_TopHat')
+            if os.path.isdir(transcriptome_index_path):
+                self.transcriptome_index_path = transcriptome_index_path
+
+            # TopHat creates another sub-directory with the transcriptome version.
+            transcriptome_index_path = os.path.join(transcriptome_index_path, )
+            # FIXME: This needs a transcriptome_version configuration variable.
             transcriptome_index = os.path.basename(self.transcriptome_index_path)
 
             # The tophat --transcript-index process puts a GFF file into the index directory
@@ -695,7 +712,7 @@ class Tuxedo(Analysis):
         elif self.transcriptome_gtf_path:
             self.transcriptome_gtf_path = Default.get_absolute_path(
                 file_path=self.transcriptome_gtf_path,
-                default_path=Default.absolute_genome_annotation(genome_version=self.genome_version))
+                default_path=Default.absolute_transcriptomes(transcriptome_version=self.genome_version))
 
             if not os.path.exists(self.transcriptome_gtf_path):
                 raise Exception("Reference transcriptome GTF file {!r} does not exist.".
@@ -703,21 +720,6 @@ class Tuxedo(Analysis):
 
         if not self.transcriptome_gtf_path:
             raise Exception("Reference transcriptome GTF file not defined.")
-
-        self._create_tophat_cufflinks_jobs()
-        self._create_cuffmerge_cuffdiff_jobs()
-
-        return
-
-    def _create_tophat_cufflinks_jobs(self):
-        """Create a TopHat aligner process and a Cufflinks transcript assembler process
-        for each sample or replicate.
-        @return:
-        @rtype:
-        """
-
-        if self.debug > 1:
-            print '{!r} method _create_TopHat_Cufflinks_jobs:'.format(self)
 
         # Read configuration options.
 
@@ -737,17 +739,17 @@ class Tuxedo(Analysis):
             bowtie2_index = os.path.join(Default.absolute_genomes(self.genome_version),
                                          'forBowtie2', self.genome_version)
 
-        if config_parser.has_option(section=config_section, option='novel_transcripts'):
-            novel_transcripts = config_parser.getboolean(section=config_section, option='novel_transcripts')
-        else:
-            novel_transcripts = True
-
         stage_run_tophat = self.get_stage(name=self.stage_name_run_tophat)
         stage_process_tophat = self.get_stage(name=self.stage_name_process_tophat)
         stage_run_cufflinks = self.get_stage(name=self.stage_name_run_cufflinks)
         stage_process_cufflinks = self.get_stage(name=self.stage_name_process_cufflinks)
+        stage_run_cuffmerge = self.get_stage(name=self.stage_name_run_cuffmerge)
+        stage_run_cuffquant = self.get_stage(name=self.stage_name_run_cuffquant)
+        stage_run_cuffnorm = self.get_stage(name=self.stage_name_run_cuffnorm)
+        stage_run_cuffdiff = self.get_stage(name=self.stage_name_run_cuffdiff)
+        stage_process_cuffdiff = self.get_stage(name=self.stage_name_process_cuffdiff)
 
-        process_cufflinks_dependencies = list()
+        runnable_run_cufflinks_list = list()
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -771,16 +773,12 @@ class Tuxedo(Analysis):
 
                 # prefix_run_tophat = '_'.join((stage_run_tophat.name, paired_reads_name))
 
+                # The output directory deviates from the prefix_run_tophat that itself is based on
+                # stage_run_tophat.name. Both rnaseq_run_tophat and rnaseq_process_tophat processes should
+                # use the same rnaseq_tophat directory.
                 prefix_tophat = '_'.join(('rnaseq_tophat', paired_reads_name))
 
                 file_path_tophat = FilePathTophat(prefix=prefix_tophat)
-                # file_path_tophat = {
-                #     # The output directory deviates from the prefix_run_tophat that itself is based on
-                #     # stage_run_tophat.name. Both rnaseq_run_tophat and rnaseq_process_tophat processes should
-                #     # use the same rnaseq_tophat directory.
-                #     # output_directory=prefix_run_tophat,
-                #     'output_directory': '_'.join(('rnaseq_tophat', paired_reads_name)),
-                # }
 
                 # runnable_run_tophat = self.add_runnable(
                 #         runnable=Runnable(
@@ -883,34 +881,35 @@ class Tuxedo(Analysis):
                 pickler.dump(obj=pickler_dict_run_tophat)
                 pickler_file.close()
 
-                run_tophat = stage_run_tophat.add_executable(
+                executable_run_tophat = stage_run_tophat.add_executable(
                     executable=Executable(
                         name='_'.join((stage_run_tophat.name, paired_reads_name)),
                         program='bsf_run_rnaseq_tophat.py'))
-
-                # The rnaseq_run_tophat Executable requires no Stage.dependencies.
+                # Set dependencies on previous Runnable or Executable objects.
+                # None.
 
                 # Set rnaseq_run_tophat options.
-                self.set_command_configuration(command=run_tophat)
-                run_tophat.add_option_long(key='pickler_path', value=pickler_path)
-                run_tophat.add_option_long(key='debug', value=str(self.debug))
+                self.set_command_configuration(command=executable_run_tophat)
+                executable_run_tophat.add_option_long(key='pickler_path', value=pickler_path)
+                executable_run_tophat.add_option_long(key='debug', value=str(self.debug))
 
                 # TODO: End of code block.
 
                 # Create a new rnaseq_process_tophat Executable.
 
-                process_tophat = stage_process_tophat.add_executable(
+                executable_process_tophat = stage_process_tophat.add_executable(
                     executable=Executable(
                         name='_'.join((stage_process_tophat.name, paired_reads_name)),
                         program='bsf_rnaseq_process_tophat2.sh'))
-                process_tophat.dependencies.append(run_tophat.name)
+                # Set dependencies on previous Runnable or Executable objects.
+                executable_process_tophat.dependencies.append(executable_run_tophat.name)
 
                 # Set rnaseq_process_tophat options.
 
                 # Set rnaseq_process_tophat arguments.
-                self.set_command_configuration(command=process_tophat)
-                process_tophat.arguments.append(file_path_tophat.output_directory)
-                process_tophat.arguments.append(genome_sizes)
+                self.set_command_configuration(command=executable_process_tophat)
+                executable_process_tophat.arguments.append(file_path_tophat.output_directory)
+                executable_process_tophat.arguments.append(genome_sizes)
 
                 # TODO: Switch from an external Bash script to a set of Runnable and RunnableStep objects.
                 # Since the Bash script includes Perl code to reset the BED score field to 0, rather than
@@ -919,9 +918,7 @@ class Tuxedo(Analysis):
 
                 # Create a process_tophat Runnable.
 
-                # file_path_process_tophat = {
-                #
-                # }
+                # file_path_process_tophat = FilePathProcessTophat(prefix=prefix_tophat)
                 #
                 # runnable_process_tophat = self.add_runnable(runnable=Runnable(
                 #     name='rnaseq_process_tophat',
@@ -940,20 +937,6 @@ class Tuxedo(Analysis):
                 # should use the same rnaseq_cufflinks directory.
 
                 file_path_cufflinks = FilePathCufflinks(prefix=prefix_cufflinks)
-                # file_path_cufflinks = {
-                #     # output_directory=prefix_run_cufflinks,
-                #     'output_directory': prefix_cufflinks,
-                #     'tophat_accepted_hits': os.path.join(
-                #         file_path_tophat['output_directory'],
-                #         'accepted_hits.bam'),
-                #     'transcripts_gtf': os.path.join(prefix_cufflinks, 'transcripts.gtf'),
-                #     'transcripts_gp': os.path.join(prefix_cufflinks, 'transcripts_gene_pred.tsv'),
-                #     'transcripts_bp': os.path.join(prefix_cufflinks, 'transcripts_big_gene_pred.tsv'),
-                #     'transcripts_st': os.path.join(prefix_cufflinks, 'transcripts_sorted.tsv'),
-                #     'transcripts_bb': os.path.join(prefix_cufflinks, 'transcripts.bb'),
-                #     'transcripts_lnk_gtf': os.path.join(prefix_cufflinks, prefix_cufflinks + 'transcripts.gtf'),
-                #     'transcripts_lnk_bb': os.path.join(prefix_cufflinks, prefix_cufflinks + 'transcripts.bb'),
-                # }
 
                 runnable_run_cufflinks = self.add_runnable(
                     runnable=Runnable(
@@ -962,13 +945,13 @@ class Tuxedo(Analysis):
                         working_directory=self.genome_directory,
                         file_path_object=file_path_cufflinks,
                         debug=self.debug))
-
-                # Create an Executable for running the Cufflinks Runnable.
-
                 executable_run_cufflinks = self.set_stage_runnable(
                     stage=stage_run_cufflinks,
                     runnable=runnable_run_cufflinks)
-                executable_run_cufflinks.dependencies.append(run_tophat.name)
+                # Set dependencies for subsequent Runnable or Executable objects.
+                runnable_run_cufflinks_list.append(runnable_run_cufflinks)
+                # Set dependencies on previous Runnable or Executable objects.
+                executable_run_cufflinks.dependencies.append(executable_run_tophat.name)
 
                 # Create a new Cufflinks RunnableStep.
 
@@ -977,15 +960,11 @@ class Tuxedo(Analysis):
                         name='cufflinks',
                         program='cufflinks'))
 
-                # Create a new rnaseq_cufflinks Executable, which is run via the rnaseq_run_cufflinks Executable below.
-
-                # Set Cufflinks options.
-
                 # Cufflinks has a GTF option, in which case it will not assemble
                 # novel transcripts and a GTF-guide option in which case it will
                 # assemble novel transcripts.
 
-                if novel_transcripts:
+                if self.novel_transcripts:
                     runnable_step.add_option_long(
                         key='GTF-guide',
                         value=self.transcriptome_gtf_path)
@@ -1036,9 +1015,6 @@ class Tuxedo(Analysis):
 
                 runnable_step.arguments.append(file_path_tophat.accepted_hits_bam)
 
-                # Add the run_cufflinks dependency for process_cufflinks.
-                process_cufflinks_dependencies.append(executable_run_cufflinks.name)
-
                 # Convert the resulting transcripts GTF file into a UCSC genePred file.
 
                 runnable_step = runnable_run_cufflinks.add_runnable_step(
@@ -1047,7 +1023,7 @@ class Tuxedo(Analysis):
                         program='gtfToGenePred'))
                 runnable_step.add_switch_short(key='genePredExt')
                 runnable_step.arguments.append(file_path_cufflinks.transcripts_gtf)
-                runnable_step.arguments.append(file_path_cufflinks.transcripts_gp)
+                runnable_step.arguments.append(file_path_cufflinks.temporary_gene_prediction)
 
                 # Convert the UCSC genePred into a UCSC bigGenePred file.
 
@@ -1056,10 +1032,10 @@ class Tuxedo(Analysis):
                         name='gp_to_bgp',
                         program='genePredToBigGenePred',
                         obsolete_file_path_list=[
-                            file_path_cufflinks.transcripts_gp,
+                            file_path_cufflinks.temporary_gene_prediction,
                         ]))
-                runnable_step.arguments.append(file_path_cufflinks.transcripts_gp)
-                runnable_step.arguments.append(file_path_cufflinks.transcripts_bp)
+                runnable_step.arguments.append(file_path_cufflinks.temporary_gene_prediction)
+                runnable_step.arguments.append(file_path_cufflinks.temporary_big_gene_prediction)
 
                 # Run bedSort on the UCSC bigGenePred file to sort field 1 in lexicographic mode and 2 in numeric mode.
 
@@ -1068,10 +1044,10 @@ class Tuxedo(Analysis):
                         name='bed_sort',
                         program='bedSort',
                         obsolete_file_path_list=[
-                            file_path_cufflinks.transcripts_bp,
+                            file_path_cufflinks.temporary_big_gene_prediction,
                         ]))
-                runnable_step.arguments.append(file_path_cufflinks.transcripts_bp)
-                runnable_step.arguments.append(file_path_cufflinks.transcripts_st)
+                runnable_step.arguments.append(file_path_cufflinks.temporary_big_gene_prediction)
+                runnable_step.arguments.append(file_path_cufflinks.temporary_sorted_tsv)
 
                 # Convert the sorted UCSC bigGenePred into a bigBed file.
 
@@ -1080,7 +1056,7 @@ class Tuxedo(Analysis):
                         name='bgp_to_bb',
                         program='bedToBigBed',
                         obsolete_file_path_list=[
-                            file_path_cufflinks.transcripts_st,
+                            file_path_cufflinks.temporary_sorted_tsv,
                         ]))
                 # FIXME: It would be good to allow options with and without an equal sign.
                 # i.e. --type=bed12+8 versus --type bed12+8, which does not work.
@@ -1092,7 +1068,7 @@ class Tuxedo(Analysis):
                 runnable_step.add_switch_short(key='as=/scratch/lab_bsf/resources/UCSC/bigGenePred.as')
                 runnable_step.add_switch_short(key='tab')
                 runnable_step.add_switch_short(key='type=bed12+8')
-                runnable_step.arguments.append(file_path_cufflinks.transcripts_st)
+                runnable_step.arguments.append(file_path_cufflinks.temporary_sorted_tsv)
                 runnable_step.arguments.append(genome_sizes)
                 runnable_step.arguments.append(file_path_cufflinks.transcripts_bb)
 
@@ -1100,44 +1076,36 @@ class Tuxedo(Analysis):
                 runnable_run_cufflinks.add_runnable_step(
                     runnable_step=RunnableStepLink(
                         name='link_transcripts_bb',
-                        source_path=file_path_cufflinks.transcripts_bb,
-                        target_path=file_path_cufflinks.transcripts_lnk_bb))
+                        source_path=file_path_cufflinks.transcripts_bb_link_source,
+                        target_path=file_path_cufflinks.transcripts_bb_link_target))
 
                 # Add a symbolic link for the transcripts GTF file, that includes a sample name prefix.
                 runnable_run_cufflinks.add_runnable_step(
                     runnable_step=RunnableStepLink(
                         name='link_transcripts_gtf',
-                        source_path=file_path_cufflinks.transcripts_gtf,
-                        target_path=file_path_cufflinks.transcripts_lnk_gtf))
+                        source_path=file_path_cufflinks.transcripts_gtf_link_source,
+                        target_path=file_path_cufflinks.transcripts_gtf_link_target))
 
         # Create one process_cufflinks Executable to process all sub-directories.
 
-        if len(process_cufflinks_dependencies):
-            process_cufflinks = stage_process_cufflinks.add_executable(
+        if len(runnable_run_cufflinks_list):
+            executable_process_cufflinks = stage_process_cufflinks.add_executable(
                 executable=Executable(
                     name=stage_process_cufflinks.name,
                     program='bsf_rnaseq_process_cufflinks.R'))
-            process_cufflinks.dependencies.extend(process_cufflinks_dependencies)
+            # Set dependencies on previous Runnable or Executable objects.
+            for runnable_run_cufflinks in runnable_run_cufflinks_list:
+                assert isinstance(runnable_run_cufflinks, Runnable)
+                executable_process_cufflinks.dependencies.append(runnable_run_cufflinks.name)
 
             # Set process_cufflinks options.
-            self.set_command_configuration(command=process_cufflinks)
-            # None so far.
-
-        return
-
-    def _create_cuffmerge_cuffdiff_jobs(self):
-        """Create a Cuffmerge and a Cuffdiff process for each comparison.
-        @return:
-        @rtype:
-        """
-
-        run_cuffquant_before_cuffdiff = False
-
-        stage_run_cuffmerge = self.get_stage(name=self.stage_name_run_cuffmerge)
-        stage_run_cuffquant = self.get_stage(name=self.stage_name_run_cuffquant)
-        stage_run_cuffnorm = self.get_stage(name=self.stage_name_run_cuffnorm)
-        stage_run_cuffdiff = self.get_stage(name=self.stage_name_run_cuffdiff)
-        stage_process_cuffdiff = self.get_stage(name=self.stage_name_process_cuffdiff)
+            self.set_command_configuration(command=executable_process_cufflinks)
+            executable_process_cufflinks.add_option_long(
+                key='gtf-reference',
+                value=self.transcriptome_gtf_path)
+            executable_process_cufflinks.add_option_long(
+                key='genome-version',
+                value=self.genome_version)
 
         # The Cuffmerge process generates temporary files in the working directory that
         # have the same name for each comparison. If more than one Cuffmerge process runs at the same time,
@@ -1157,11 +1125,6 @@ class Tuxedo(Analysis):
             prefix_cuffmerge = self.get_prefix_rnaseq_run_cuffmerge(comparison_name=comparison_key)
 
             file_path_cuffmerge = FilePathCuffmerge(prefix=prefix_cuffmerge)
-            # file_path_cuffmerge = {
-            #     'output_directory': prefix_cuffmerge,
-            #     'merged_gtf': os.path.join(prefix_cuffmerge, 'merged.gtf'),
-            #     'assembly_txt': '_'.join((prefix_cuffmerge, 'assembly.txt')),
-            # }
 
             runnable_run_cuffmerge = self.add_runnable(
                 runnable=Runnable(
@@ -1180,23 +1143,23 @@ class Tuxedo(Analysis):
 
             # Create a new Cuffmerge RunnableStep.
 
-            cuffmerge = runnable_run_cuffmerge.add_runnable_step(
+            runnable_step_cuffmerge = runnable_run_cuffmerge.add_runnable_step(
                 runnable_step=RunnableStep(
                     name='cuffmerge',
                     program='cuffmerge'))
 
             # Set rnaseq_cuffmerge options.
 
-            cuffmerge.add_option_long(
+            runnable_step_cuffmerge.add_option_long(
                 key='output-dir',
                 value=file_path_cuffmerge.output_directory)
-            cuffmerge.add_option_long(
+            runnable_step_cuffmerge.add_option_long(
                 key='num-threads',
                 value=str(stage_run_cuffmerge.threads))
-            cuffmerge.add_option_long(
+            runnable_step_cuffmerge.add_option_long(
                 key='ref-gtf',
                 value=self.transcriptome_gtf_path)
-            cuffmerge.add_option_long(
+            runnable_step_cuffmerge.add_option_long(
                 key='ref-sequence',
                 value=self.genome_fasta_path)
 
@@ -1207,7 +1170,7 @@ class Tuxedo(Analysis):
             # job submission.
 
             assembly_path = os.path.join(self.genome_directory, file_path_cuffmerge.assembly_txt)
-            assembly_file = open(name=assembly_path, mode='w')
+            assembly_file = open(assembly_path, 'w')
 
             # Process rnaseq_cuffmerge and rnaseq_cuffdiff arguments in parallel.
 
@@ -1261,14 +1224,6 @@ class Tuxedo(Analysis):
                         prefix_cuffquant = '_'.join((stage_run_cuffquant.name, comparison_key, paired_reads_name))
 
                         file_path_cuffquant = FilePathCuffquant(prefix=prefix_cuffquant)
-                        # file_path_cuffquant = {
-                        #     'output_directory': prefix_cuffquant,
-                        #     'abundances': os.path.join(prefix_cuffquant, 'abundances.cxb'),
-                        #     'merged_gtf': file_path_cuffmerge['merged_gtf'],
-                        #     'tophat_accepted_hits': os.path.join(
-                        #         '_'.join(('rnaseq_tophat', paired_reads_name)),
-                        #         'accepted_hits.bam'),
-                        # }
                         # TODO: Remove after rearranging this method into the run method.
                         file_path_cuffquant.tophat_accepted_hits = \
                             os.path.join('_'.join(('rnaseq_tophat', paired_reads_name)), 'accepted_hits.bam')
@@ -1351,24 +1306,91 @@ class Tuxedo(Analysis):
             assembly_file.close()
 
             # Add the assembly manifest file as Cuffmerge argument.
-            cuffmerge.arguments.append(assembly_path)
+            runnable_step_cuffmerge.arguments.append(assembly_path)
+
+            # Convert the resulting merged GTF file into a UCSC genePred file.
+
+            runnable_step = runnable_run_cuffmerge.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='gtf_to_gp',
+                    program='gtfToGenePred'))
+            runnable_step.add_switch_short(key='genePredExt')
+            runnable_step.arguments.append(file_path_cuffmerge.merged_gtf)
+            runnable_step.arguments.append(file_path_cuffmerge.temporary_gene_prediction)
+
+            # Convert the UCSC genePred into a UCSC bigGenePred file.
+
+            runnable_step = runnable_run_cuffmerge.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='gp_to_bgp',
+                    program='genePredToBigGenePred',
+                    obsolete_file_path_list=[
+                        file_path_cuffmerge.temporary_gene_prediction,
+                    ]))
+            runnable_step.arguments.append(file_path_cuffmerge.temporary_gene_prediction)
+            runnable_step.arguments.append(file_path_cuffmerge.temporary_big_gene_prediction)
+
+            # Run bedSort on the UCSC bigGenePred file to sort field 1 in lexicographic mode and 2 in numeric mode.
+
+            runnable_step = runnable_run_cuffmerge.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='bed_sort',
+                    program='bedSort',
+                    obsolete_file_path_list=[
+                        file_path_cuffmerge.temporary_big_gene_prediction,
+                    ]))
+            runnable_step.arguments.append(file_path_cuffmerge.temporary_big_gene_prediction)
+            runnable_step.arguments.append(file_path_cuffmerge.temporary_sorted_tsv)
+
+            # Convert the sorted UCSC bigGenePred into a bigBed file.
+
+            runnable_step = runnable_run_cuffmerge.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='bgp_to_bb',
+                    program='bedToBigBed',
+                    obsolete_file_path_list=[
+                        file_path_cuffmerge.temporary_sorted_tsv,
+                    ]))
+            # FIXME: It would be good to allow options with and without an equal sign.
+            # i.e. --type=bed12+8 versus --type bed12+8, which does not work.
+            # How could this work with configuration.ini files?
+            # FIXME: This needs to be configurable.
+            # Either another instance variable is required or via a generic configuration option
+            # for the RunnableStep.
+            # TODO: The location of the autoSQL file needs to be configurable.
+            runnable_step.add_switch_short(key='as=/scratch/lab_bsf/resources/UCSC/bigGenePred.as')
+            runnable_step.add_switch_short(key='tab')
+            runnable_step.add_switch_short(key='type=bed12+8')
+            runnable_step.arguments.append(file_path_cuffmerge.temporary_sorted_tsv)
+            runnable_step.arguments.append(genome_sizes)
+            runnable_step.arguments.append(file_path_cuffmerge.merged_bb)
+
+            # Add a symbolic link for the merged bigBed file, that includes a comparison name prefix.
+            runnable_run_cuffmerge.add_runnable_step(
+                runnable_step=RunnableStepLink(
+                    name='link_merged_bb',
+                    source_path=file_path_cuffmerge.merged_bb_link_source,
+                    target_path=file_path_cuffmerge.merged_bb_link_target))
+
+            # Add a symbolic link for the merged GTF file, that includes a comparison name prefix.
+            runnable_run_cuffmerge.add_runnable_step(
+                runnable_step=RunnableStepLink(
+                    name='link_merged_gtf',
+                    source_path=file_path_cuffmerge.merged_gtf_link_source,
+                    target_path=file_path_cuffmerge.merged_gtf_link_target))
 
             # Create a Cuffnorm Runnable per comparison.
 
-            prefix_cuffnorm = '_'.join((stage_run_cuffnorm.name, comparison_key))
+            prefix_run_cuffnorm = '_'.join((stage_run_cuffnorm.name, comparison_key))
 
-            file_path_cuffnorm = FilePathCuffnorm(prefix=prefix_cuffnorm)
-            # file_path_cuffnorm = {
-            #     'output_directory': prefix_cuffnorm,
-            #     'merged_gtf': file_path_cuffmerge['merged_gtf'],
-            # }
+            file_path_run_cuffnorm = FilePathCuffnorm(prefix=prefix_run_cuffnorm)
 
             runnable_run_cuffnorm = self.add_runnable(
                 runnable=Runnable(
-                    name=prefix_cuffnorm,
+                    name=prefix_run_cuffnorm,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
-                    file_path_object=file_path_cuffnorm,
+                    file_path_object=file_path_run_cuffnorm,
                     debug=self.debug))
             executable_run_cuffnorm = self.set_stage_runnable(
                 stage=stage_run_cuffnorm,
@@ -1378,55 +1400,51 @@ class Tuxedo(Analysis):
 
             # Create a new Cuffnorm RunnableStep.
 
-            cuffnorm = runnable_run_cuffnorm.add_runnable_step(
+            runnable_step_cuffnorm = runnable_run_cuffnorm.add_runnable_step(
                 runnable_step=RunnableStep(
                     name='cuffnorm',
                     program='cuffnorm'))
 
             # Set Cuffnorm options.
 
-            cuffnorm.add_option_long(
+            runnable_step_cuffnorm.add_option_long(
                 key='output-dir',
-                value=file_path_cuffnorm.output_directory)
-            cuffnorm.add_option_long(
+                value=file_path_run_cuffnorm.output_directory)
+            runnable_step_cuffnorm.add_option_long(
                 key='labels',
                 value=','.join(cuffdiff_cuffnorm_labels))
-            cuffnorm.add_option_long(
+            runnable_step_cuffnorm.add_option_long(
                 key='num-threads',
                 value=str(stage_run_cuffnorm.threads))
             if self.library_type:
-                cuffnorm.add_option_long(
+                runnable_step_cuffnorm.add_option_long(
                     key='library-type',
                     value=self.library_type)
-            cuffnorm.add_switch_long(
+            runnable_step_cuffnorm.add_switch_long(
                 key='quiet')
-            cuffnorm.add_switch_long(
+            runnable_step_cuffnorm.add_switch_long(
                 key='no-update-check')
 
             # Add the Cuffmerge GTF file as first Cuffnorm argument.
-            cuffnorm.arguments.append(file_path_cuffmerge.merged_gtf)
+            runnable_step_cuffnorm.arguments.append(file_path_cuffmerge.merged_gtf)
 
             # Add the Cuffquant abundances files per point as Cuffnorm arguments.
             for per_group_abundances_list in cuffdiff_cuffnorm_abundances:
                 assert isinstance(per_group_abundances_list, list)
-                cuffnorm.arguments.append(','.join(per_group_abundances_list))
+                runnable_step_cuffnorm.arguments.append(','.join(per_group_abundances_list))
 
             # Create a Cuffdiff Runnable per comparison.
 
-            prefix_cuffdiff = '_'.join((stage_run_cuffdiff.name, comparison_key))
+            prefix_run_cuffdiff = '_'.join((stage_run_cuffdiff.name, comparison_key))
 
-            file_path_cuffdiff = FilePathCuffdiff(prefix=prefix_cuffdiff)
-            # file_path_cuffdiff = {
-            #     'output_directory': prefix_cuffdiff,
-            #     'merged_gtf': file_path_cuffmerge['merged_gtf'],
-            # }
+            file_path_run_cuffdiff = FilePathCuffdiff(prefix=prefix_run_cuffdiff)
 
             runnable_run_cuffdiff = self.add_runnable(
                 runnable=Runnable(
-                    name=prefix_cuffdiff,
+                    name=prefix_run_cuffdiff,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
-                    file_path_object=file_path_cuffdiff,
+                    file_path_object=file_path_run_cuffdiff,
                     debug=self.debug))
             executable_run_cuffdiff = self.set_stage_runnable(
                 stage=stage_run_cuffdiff,
@@ -1441,46 +1459,46 @@ class Tuxedo(Analysis):
 
             # Create a new Cuffdiff RunnableStep.
 
-            cuffdiff = runnable_run_cuffdiff.add_runnable_step(
+            runnable_step_cuffdiff = runnable_run_cuffdiff.add_runnable_step(
                 runnable_step=RunnableStep(
                     name='cuffdiff',
                     program='cuffdiff'))
 
             # Set Cuffdiff options.
 
-            cuffdiff.add_option_long(
+            runnable_step_cuffdiff.add_option_long(
                 key='output-dir',
-                value=file_path_cuffdiff.output_directory)
-            cuffdiff.add_option_long(
+                value=file_path_run_cuffdiff.output_directory)
+            runnable_step_cuffdiff.add_option_long(
                 key='labels',
                 value=','.join(cuffdiff_cuffnorm_labels))
-            cuffdiff.add_option_long(
+            runnable_step_cuffdiff.add_option_long(
                 key='num-threads',
                 value=str(stage_run_cuffdiff.threads))
             if self.mask_gtf_path:
-                cuffdiff.add_option_long(
+                runnable_step_cuffdiff.add_option_long(
                     key='mask-file',
                     value=self.mask_gtf_path)
-            cuffdiff.add_option_long(
+            runnable_step_cuffdiff.add_option_long(
                 key='frag-bias-correct',
                 value=self.genome_fasta_path)
             if self.multi_read_correction:
-                cuffdiff.add_switch_long(
+                runnable_step_cuffdiff.add_switch_long(
                     key='multi-read-correct')
             if self.library_type:
-                cuffdiff.add_option_long(
+                runnable_step_cuffdiff.add_option_long(
                     key='library-type',
                     value=self.library_type)
             if self.no_length_correction:
-                cuffdiff.add_switch_long(
+                runnable_step_cuffdiff.add_switch_long(
                     key='no-length-correction')
-            cuffdiff.add_switch_long(
+            runnable_step_cuffdiff.add_switch_long(
                 key='quiet')
-            cuffdiff.add_switch_long(
+            runnable_step_cuffdiff.add_switch_long(
                 key='no-update-check')
 
             # Add the Cuffmerge GTF file as first Cuffdiff argument.
-            cuffdiff.arguments.append(file_path_cuffmerge.merged_gtf)
+            runnable_step_cuffdiff.arguments.append(file_path_cuffmerge.merged_gtf)
 
             # Cuffdiff seems to have a problem with Cuffquant abundances files in that the isoforms.count_tracking
             # files show ridiculously low numbers such as 1e-319 for some splice variants. Usually, other splice
@@ -1489,33 +1507,33 @@ class Tuxedo(Analysis):
                 # Add the Cuffquant abundances files per comparison group as Cuffdiff arguments.
                 for per_group_abundances_list in cuffdiff_cuffnorm_abundances:
                     assert isinstance(per_group_abundances_list, list)
-                    cuffdiff.arguments.append(','.join(per_group_abundances_list))
+                    runnable_step_cuffdiff.arguments.append(','.join(per_group_abundances_list))
             else:
                 # Add the TopHat BAM files per comparison group as Cuffdiff arguments.
                 for per_group_alignments_list in cuffdiff_cuffnorm_alignments:
                     assert isinstance(per_group_alignments_list, list)
-                    cuffdiff.arguments.append(','.join(per_group_alignments_list))
+                    runnable_step_cuffdiff.arguments.append(','.join(per_group_alignments_list))
 
             # Create a new rnaseq_process_cuffdiff Executable.
 
-            process_cuffdiff = stage_process_cuffdiff.add_executable(
+            executable_process_cuffdiff = stage_process_cuffdiff.add_executable(
                 executable=Executable(
                     name='_'.join((stage_process_cuffdiff.name, comparison_key)),
                     program='bsf_rnaseq_process_cuffdiff.R'))
-            process_cuffdiff.dependencies.append(executable_run_cuffdiff.name)
+            executable_process_cuffdiff.dependencies.append(executable_run_cuffdiff.name)
 
             # Set rnaseq_process_cuffdiff options.
-            self.set_command_configuration(command=process_cuffdiff)
-            process_cuffdiff.add_option_long(
+            self.set_command_configuration(command=executable_process_cuffdiff)
+            executable_process_cuffdiff.add_option_long(
                 key='comparison-name',
                 value=comparison_key)
-            process_cuffdiff.add_option_long(
+            executable_process_cuffdiff.add_option_long(
                 key='gtf-assembly',
                 value=file_path_cuffmerge.merged_gtf)
-            process_cuffdiff.add_option_long(
+            executable_process_cuffdiff.add_option_long(
                 key='gtf-reference',
                 value=self.transcriptome_gtf_path)
-            process_cuffdiff.add_option_long(
+            executable_process_cuffdiff.add_option_long(
                 key='genome-version',
                 value=self.genome_version)
 
@@ -1530,14 +1548,6 @@ class Tuxedo(Analysis):
         @return:
         @rtype:
         """
-
-        config_parser = self.configuration.config_parser
-        config_section = self.configuration.section_from_instance(self)
-
-        if config_parser.has_option(section=config_section, option='ucsc_location'):
-            ucsc_location = config_parser.get(section=config_section, option='ucsc_location')
-        else:
-            ucsc_location = str()
 
         # Create a symbolic link containing the project name and a UUID.
         default = Default.get_global_default()
@@ -1693,6 +1703,14 @@ class Tuxedo(Analysis):
         output_hub += 'visibility hide\n'
         output_hub += 'superTrack on\n'
         output_hub += 'group alignments\n'
+        output_hub += '\n'
+
+        output_hub += 'track Assemblies\n'
+        output_hub += 'shortLabel Assemblies\n'
+        output_hub += 'longLabel Cuffmerge transcript structures\n'
+        output_hub += 'visibility full\n'
+        output_hub += 'superTrack on\n'
+        output_hub += 'group assemblies\n'
         output_hub += '\n'
 
         output_hub += 'track Coverage\n'
@@ -1933,30 +1951,6 @@ class Tuxedo(Analysis):
                 # Cufflinks produces genes.fpkm_tracking, isoforms.fpkm_tracking,
                 # skipped.gtf and transcripts.gtf.
 
-                # UCSC options dictionary.
-
-                options_dict = {
-                    'db': self.genome_version,
-                    'hgt.customText': '{}/{}/{}/rnaseq_cufflinks_{}/transcripts.gtf'.format(
-                        Default.url_absolute_projects(),
-                        link_name,
-                        self.genome_version,
-                        paired_reads_name),
-                }
-                if ucsc_location:
-                    options_dict['position'] = ucsc_location
-
-                # UCSC track dictionary.
-
-                # track_dict = {
-                #     'name': '{}_transcripts'.format(paired_reads_name),
-                #     'description': '"{} Cufflinks RNA-Seq transcript assembly"'.format(paired_reads_name),
-                #     'track_type': 'gtf',
-                #     'visibility': 'squish',
-                #     'color': '0,0,0',
-                #     'db': self.genome_version,
-                # }
-
                 prefix = 'rnaseq_cufflinks_{}'.format(paired_reads_name)
 
                 output_html += '<tr>\n'
@@ -1964,8 +1958,8 @@ class Tuxedo(Analysis):
                                '{}' \
                                '</td>\n'.format(paired_reads_name)
                 output_html += '<td class="center">' \
-                               '<a href="{}">Transcript Assembly</a>' \
-                               '</td>\n'.format(self.ucsc_track_url(options_dict=options_dict))
+                               '<a href="{}/{}_transcripts.gtf">Transcript Assembly</a>' \
+                               '</td>\n'.format(prefix, prefix)
                 output_html += '<td class="center">' \
                                '<a href="{}/genes.fpkm_tracking">Genes FPKM</a>' \
                                '</td>\n'.format(prefix)
@@ -1992,9 +1986,6 @@ class Tuxedo(Analysis):
         output_html += '</tbody>\n'
         output_html += '</table>\n'
         output_html += '\n'
-
-        # Cuffmerge produces merged.gtf.
-        # GTF files would need converting into BED and bigBed to be compatible with UCSC Track Hubs.
 
         # Cuffdiff produces cds_exp.diff, gene_exp.diff, isoform_exp.diff
         # promoters.diff, splicing.diff and tss_group_exp.diff amongst many others.
@@ -2036,6 +2027,31 @@ class Tuxedo(Analysis):
 
         for comparison_key in comparison_keys:
             assert isinstance(comparison_key, str)
+
+            # Assemblies Super Track
+
+            output_hub += 'track {}_assembly\n'. \
+                format(comparison_key)
+            output_hub += 'type bigGenePred\n'
+            output_hub += 'shortLabel {}_assembly\n'. \
+                format(comparison_key)
+            output_hub += 'longLabel {} Cufflinks transcript assembly\n'. \
+                format(comparison_key)
+            output_hub += 'bigDataUrl rnaseq_cuffmerge_{}/merged.bb\n'. \
+                format(comparison_key)
+            output_hub += 'visibility pack\n'
+            # 'html' is missing from the common settings.
+
+            # Common optional settings.
+
+            output_hub += 'color {}\n'. \
+                format('0,0,0')
+
+            # Composite track settings.
+
+            output_hub += 'parent Assemblies\n'
+            output_hub += '\n'
+
             prefix = 'rnaseq_process_cuffdiff_{}'.format(comparison_key)
 
             # Link to comparison-specific symbolic links in the directory after cummeRbund processing.
@@ -2558,6 +2574,7 @@ class DESeq(Analysis):
             genome_fasta_path=None,
             transcriptome_gtf_path=None,
             transcriptome_index_path=None,
+            design_formula=None,
             mask_gtf_path=None,
             multi_read_correction=None,
             library_type=None,
@@ -2603,6 +2620,8 @@ class DESeq(Analysis):
         @type transcriptome_gtf_path: str | unicode
         @param transcriptome_index_path: Tophat transcriptome index path
         @type transcriptome_index_path: str | unicode
+        @param design_formula: Design formula
+        @type design_formula: str | unicode
         @param mask_gtf_path: GTF file path to mask transcripts
         @type mask_gtf_path: str | unicode
         @param multi_read_correction: Apply multi-read correction
@@ -2658,6 +2677,11 @@ class DESeq(Analysis):
             self.transcriptome_index_path = str()
         else:
             self.transcriptome_index_path = transcriptome_index_path
+
+        if design_formula is None:
+            self.design_formula = str()
+        else:
+            self.design_formula = design_formula
 
         if mask_gtf_path is None:
             self.mask_gtf_path = str()
@@ -2719,6 +2743,10 @@ class DESeq(Analysis):
         option = 'transcriptome_index'
         if configuration.config_parser.has_option(section=section, option=option):
             self.transcriptome_index_path = configuration.config_parser.get(section=section, option=option)
+
+        option = 'design_formula'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.design_formula = configuration.config_parser.get(section=section, option=option)
 
         option = 'mask_gtf'
         if configuration.config_parser.has_option(section=section, option=option):
