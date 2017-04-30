@@ -466,6 +466,24 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
 
         return self.select(statement=statement, parameters=parameters)
 
+    def select_all_by_states(self, state_list, negation=False):
+        """Select all C{bsf.drms.slurm.ProcessSLURM} objects by a list of states.
+
+        @param state_list: State
+        @type state_list: list[bsf.drms.slurm.ProcessSLURM.state]
+        @param negation: Negation i.e. SQL NOT IN
+        @type negation: bool
+        @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
+        @rtype: list[bsf.drms.slurm.ProcessSLURM]
+        """
+
+        if negation:
+            statement = self.statement_select(where_clause='state NOT IN ({})'.format(','.join('?' * len(state_list))))
+        else:
+            statement = self.statement_select(where_clause='state IN ({})'.format(','.join('?' * len(state_list))))
+
+        return self.select(statement=statement, parameters=state_list)
+
     def select_by_job_id(self, job_id):
         """Select one C{bsf.drms.slurm.ProcessSLURM} object by job_id.
 
@@ -708,10 +726,15 @@ def submit(stage, debug=0):
         if executable.stderr_path:
             command.append("2>{}".format(executable.stderr_path))
 
+        # If a process in state 'PENDING' or 'RUNNING' exists already, the Executable does not need submitting.
+
+        process_slurm_list = process_slurm_adaptor.select_all_by_job_name(name=executable.name)
+        if len(process_slurm_list) and process_slurm_list[-1].state in ('PENDING', 'RUNNING'):
+            executable.submit = False
+
         # Finally, submit this command if requested and not in debug mode.
 
         if executable.submit and debug == 0:
-
             child_process = subprocess.Popen(
                 args=command,
                 bufsize=4096,
@@ -775,10 +798,10 @@ def submit(stage, debug=0):
                 process_slurm_adaptor.insert(object_instance=process_slurm)
 
         # The commit statement should affect both insert statements above.
-        job_submission_adaptor.commit()
+        database_connection.commit()
 
     script_path = os.path.join(stage.working_directory, 'bsfpython_slurm_{}.bash'.format(stage.name))
-    script_file = open(name=script_path, mode='w')
+    script_file = open(script_path, 'w')
     script_file.write(output)
     script_file.close()
 
@@ -855,10 +878,6 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
             max_disk_write_task=row_dict['MaxDiskWriteTask'],
             average_disk_write=row_dict['AveDiskWrite'])
 
-        # Do not insert or update nascent states into the database.
-        if new_process_slurm.state in ('PENDING', 'RUNNING'):
-            continue
-
         # Check if the ProcessSLURM already exists.
         old_process_slurm = process_slurm_adaptor.select_by_job_id(job_id=new_process_slurm.job_id)
         if old_process_slurm is None:
@@ -906,9 +925,11 @@ def check_state(stage, debug=0):
     database_connection = DatabaseConnection(file_path=os.path.join(stage.working_directory, database_file_name))
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
+    process_slurm_list = list()
     # Get all Processes from the database that have no state set.
-
-    process_slurm_list = process_slurm_adaptor.select_all_by_state(state=None)
+    process_slurm_list.extend(process_slurm_adaptor.select_all_by_state(state=None))
+    # Get all processes from the database that have a state of 'PENDING' or 'RUNNING' as those need checking.
+    process_slurm_list.extend(process_slurm_adaptor.select_all_by_states(state_list=['PENDING', 'RUNNING']))
 
     # Explicitly disconnect here so that the Thread can access the database.
 
