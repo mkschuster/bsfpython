@@ -114,7 +114,7 @@ class LibraryAnnotationSheet(AnnotationSheet):
             AnnotationSheet.check_numeric,
         ],
         'barcode_sequence_1': [
-            AnnotationSheet.check_ambiguous_sequence_value,
+            AnnotationSheet.check_ambiguous_sequence,
         ],
         'barcode_sequence_2': [
             AnnotationSheet.check_ambiguous_sequence,
@@ -1026,10 +1026,13 @@ class IlluminaToBam(Analysis):
             # FINAL_CYCLE
             # FIRST_INDEX_CYCLE
             # FINAL_INDEX_CYCLE
+            # ADD_CLUSTER_INDEX_TAG defaults to 'false'.
             # SORT_OUTPUT defaults to 'false'.
             if self.sort_output:
                 runnable_step.add_itb_option(key='SORT_OUTPUT', value='true')
-            # ADD_CLUSTER_INDEX_TAG defaults to 'false'.
+            # NEXTSEQ defaults to 'false'.
+            if irf.run_parameters.get_instrument_type in ('NextSeq',):
+                runnable_step.add_itb_option(key='NEXTSEQ', value='true')
             # TMP_DIR
             runnable_step.add_itb_option(
                 key='TMP_DIR',
