@@ -625,7 +625,7 @@ class Analysis(object):
         executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
 
         # Only submit the Executable if the status file does not exist already.
-        if os.path.exists(runnable.get_absolute_status_path):
+        if os.path.exists(runnable.absolute_runnable_status_file_path(success=True)):
             executable.submit = False
 
         stage.add_executable(executable=executable)
@@ -1022,7 +1022,7 @@ class Analysis(object):
 
         file_path = os.path.join(self.genome_directory, '_'.join((prefix, 'report.html')))
 
-        file_handle = open(name=file_path, mode='w')
+        file_handle = open(file_path, 'w')
         file_handle.write(output)
         file_handle.close()
 
@@ -1132,8 +1132,6 @@ class Analysis(object):
                 try:
                     os.remove(path_name)
                 except OSError as exception:
-                    # In principle, a race condition could occur as the directory
-                    # could have been created after its existence has been checked.
                     if exception.errno != errno.ENOENT:
                         raise
                 try:
@@ -1148,8 +1146,6 @@ class Analysis(object):
                 'Create? [Y/n] '.format(link_name, self.project_directory))
 
             if not answer or answer == 'Y' or answer == 'y':
-                # In principle, a race condition could occur as the directory
-                # could have been created after its existence has been checked.
                 try:
                     os.symlink(os.path.relpath(self.project_directory, html_path), link_name)
                 except OSError as exception:
@@ -1239,7 +1235,7 @@ class Analysis(object):
         # The [prefix_]hub.txt goes into the project directory above the genome directory.
         file_path = os.path.join(self.project_directory, file_name)
 
-        file_handle = open(name=file_path, mode='w')
+        file_handle = open(file_path, 'w')
         file_handle.write(output)
         file_handle.close()
 
@@ -1277,7 +1273,7 @@ class Analysis(object):
         genome_version_dict = dict()
         if os.path.exists(file_path):
             genome_version = None
-            file_handle = open(name=file_path, mode='r')
+            file_handle = open(file_path, 'r')
             for line in file_handle:
                 line = line.strip()
                 if not line:
@@ -1313,7 +1309,7 @@ class Analysis(object):
             output += 'trackDb {}\n'.format(genome_version_dict[genome_version])
             output += '\n'
 
-        file_handle = open(name=file_path, mode='w')
+        file_handle = open(file_path, 'w')
         file_handle.write(output)
         file_handle.close()
 
@@ -1338,7 +1334,7 @@ class Analysis(object):
         # The [prefix_]trackDB.txt goes into the genome directory under the project directory.
         file_path = os.path.join(self.genome_directory, file_name)
 
-        file_handle = open(name=file_path, mode='w')
+        file_handle = open(file_path, 'w')
         file_handle.write(output)
         file_handle.close()
 
@@ -1773,9 +1769,8 @@ class Stage(object):
 
         # Dynamically import the module specific for the configured DRMS implementation.
 
-        module = importlib.import_module('.'.join((__name__, 'drms', self.implementation)))
-
-        module.check_state(stage=self, debug=debug)
+        python_module = importlib.import_module(name='.'.join((__name__, 'drms', self.implementation)))
+        python_module.check_state(stage=self, debug=debug)
 
         return
 
@@ -1790,9 +1785,8 @@ class Stage(object):
 
         # Dynamically import the module specific for the configured DRMS implementation.
 
-        module = importlib.import_module('.'.join((__name__, 'drms', self.implementation)))
-
-        module.submit(stage=self, debug=debug)
+        python_module = importlib.import_module(name='.'.join((__name__, 'drms', self.implementation)))
+        python_module.submit(stage=self, debug=debug)
 
         return
 
@@ -2030,16 +2024,6 @@ class Runnable(object):
         return '_'.join((self.name, 'cache'))
 
     @property
-    def get_relative_status_path(self):
-        """Get the relative status file path indicating successful completion of a C{bsf.Runnable}.
-
-        @return: Relative status file path (i.e. C{bsf.Runnable.name}_completed.txt)
-        @rtype: str
-        """
-
-        return '_'.join((self.name, 'completed.txt'))
-
-    @property
     def get_relative_temporary_directory_path(self):
         """Get the relative temporary directory path of a C{bsf.Runnable}.
 
@@ -2087,17 +2071,6 @@ class Runnable(object):
         return os.path.join(self.get_absolute_cache_directory_path, file_name)
 
     @property
-    def get_absolute_status_path(self):
-        """Get the absolute status file path including the C{bsf.Runnable.working_directory}.
-
-        @return: Absolute status file path
-            (i.e. C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_completed.txt)
-        @rtype: str
-        """
-
-        return os.path.join(self.working_directory, self.get_relative_status_path)
-
-    @property
     def get_absolute_temporary_directory_path(self):
         """Get the absolute temporary directory path including the C{bsf.Runnable.working_directory}.
 
@@ -2107,6 +2080,60 @@ class Runnable(object):
         """
 
         return os.path.join(self.working_directory, self.get_relative_temporary_directory_path)
+
+    def runnable_status_file_path(self, success=True):
+        """Get the status file path for a C{bsf.Runnable}.
+
+        @param success: Successful completion
+        @type success: bool
+        @return: Status file path
+        @rtype: str
+        """
+        if success:
+            return '_'.join((self.name, 'completed.txt'))
+        else:
+            return '_'.join((self.name, 'failed.txt'))
+
+    def runnable_status_file_create(self, success=True):
+        """Create an empty status file for a C{bsf.Runnable}.
+
+        This method is mainly used by C{bsf.runnable.generic} and related modules.
+
+        @param success: Successful completion
+        @type success: bool
+        @return:
+        @rtype:
+        """
+        status_path = self.runnable_status_file_path(success=success)
+        open(status_path, 'w').close()
+
+        return
+
+    def runnable_status_file_remove(self):
+        """Remove the status file for a C{bsf.Runnable}.
+
+        This method is mainly used by C{bsf.runnable.generic} and related modules.
+
+        @return:
+        @rtype:
+        """
+        # Automatically remove both status files, successful or not.
+
+        status_path = self.runnable_status_file_path(success=True)
+        try:
+            os.remove(status_path)
+        except OSError as exception:
+            if exception.errno != errno.ENOENT:
+                raise
+
+        status_path = self.runnable_status_file_path(success=False)
+        try:
+            os.remove(status_path)
+        except OSError as exception:
+            if exception.errno != errno.ENOENT:
+                raise
+
+        return
 
     def runnable_step_status_file_path(self, runnable_step, success=True):
         """Get the status file path for a C{bsf.process.RunnableStep} of a C{bsf.Runnable}.
@@ -2162,11 +2189,27 @@ class Runnable(object):
         # Automatically remove both status files, successful or not.
 
         status_path = self.runnable_step_status_file_path(runnable_step=runnable_step, success=True)
-        if os.path.exists(status_path):
+        try:
             os.remove(status_path)
+        except OSError as exception:
+            if exception.errno != errno.ENOENT:
+                raise
 
         status_path = self.runnable_step_status_file_path(runnable_step=runnable_step, success=False)
-        if os.path.exists(status_path):
+        try:
             os.remove(status_path)
+        except OSError as exception:
+            if exception.errno != errno.ENOENT:
+                raise
 
         return
+
+    def absolute_runnable_status_file_path(self, success=True):
+        """Get the absolute status file path including the C{bsf.Runnable.working_directory}.
+
+        @return: Absolute status file path
+            C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_completed.txt or
+            C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_failed.txt
+        @rtype: str
+        """
+        return os.path.join(self.working_directory, self.runnable_status_file_path(success=success))

@@ -43,6 +43,12 @@ def run(runnable):
     @rtype:
     """
 
+    # If the Runnable status file exists, there is nothing to do and
+    # this Runnable should not have been submitted in the first place.
+
+    if os.path.exists(runnable.runnable_status_file_path(success=True)):
+        return
+
     # Do the work.
 
     runnable_step = runnable.runnable_step_list[0]
@@ -56,10 +62,10 @@ def run(runnable):
         new_file_path = old_file_path
 
     collection = Collection.from_sas_path(
-            file_path='',
-            file_type='',
-            name='picard_sam_to_fastq',
-            sas_path=argument.value)
+        file_path='',
+        file_type='',
+        name='picard_sam_to_fastq',
+        sas_path=argument.value)
 
     for prf in collection.processed_run_folder_dict.itervalues():
         assert isinstance(prf, ProcessedRunFolder)
@@ -100,5 +106,10 @@ def run(runnable):
     collection.to_sas_path(name='picard_sam_to_fastq', file_path=new_file_path)
 
     runnable_step.remove_obsolete_file_paths()
+
+    # Upon success, create a Runnable-specific status file that indicates completion for the whole Runnable.
+
+    runnable.runnable_status_file_remove()
+    runnable.runnable_status_file_create(success=True)
 
     return

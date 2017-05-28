@@ -49,7 +49,7 @@ def run(runnable):
     # If the Runnable status file exists, there is nothing to do and
     # this Runnable should not have been submitted in the first place.
 
-    if os.path.exists(runnable.get_relative_status_path):
+    if os.path.exists(runnable.runnable_status_file_path(success=True)):
         return
 
     # Create a Runnable-specific cache directory if it does not exist already.
@@ -110,7 +110,9 @@ def run(runnable):
     for runnable_step in reversed(runnable.runnable_step_list):
         assert isinstance(runnable_step, RunnableStep)
         runnable_step_list.append(runnable_step)
-        if os.path.exists(path=runnable.runnable_step_status_file_path(runnable_step=runnable_step)):
+        if os.path.exists(path=runnable.runnable_step_status_file_path(
+                runnable_step=runnable_step,
+                success=True)):
             break
     runnable_step_list.reverse()
 
@@ -124,10 +126,9 @@ def run(runnable):
         assert isinstance(runnable_step_current, RunnableStep)
 
         # Check for a RunnableStep-specific status file.
-        status_path = runnable.runnable_step_status_file_path(
-            runnable_step=runnable_step_current,
-            success=True)
-        if os.path.exists(path=status_path):
+        if os.path.exists(path=runnable.runnable_step_status_file_path(
+                runnable_step=runnable_step_current,
+                success=True)):
             # If a status file exists, this RunnableStep is complete.
             # Set it as the previous RunnableStep and continue with the next RunnableStep.
             runnable_step_previous = runnable_step_current
@@ -172,23 +173,20 @@ def run(runnable):
         shutil.rmtree(path=temporary_directory_path, ignore_errors=False)
 
     if child_return_code == 0:
-        # Create a status file that indicates completion for the whole Runnable.
+        # Upon success, create a Runnable-specific status file that indicates completion for the whole Runnable.
 
-        open(runnable.get_relative_status_path, 'w').close()
+        runnable.runnable_status_file_remove()
+        runnable.runnable_status_file_create(success=True)
 
         # Remove the status file of the previous RunnableStep, if it has been defined at this stage.
 
         if runnable_step_previous is not None:
             runnable.runnable_step_status_file_remove(runnable_step=runnable_step_previous)
-
-        # Job done.
-
-        return
     else:
+        # Upon failure, create a RunnableStep-specific status file showing failure and raise an Exception.
+
         if runnable_step_current is not None:
             runnable.runnable_step_status_file_create(runnable_step=runnable_step_current, success=False)
-
-        # Upon failure, create a RunnableStep-specific status file showing failure and raise an Exception.
 
         if child_return_code > 0:
             raise Exception('[{}] Child process {}_{} failed with return code {}'.
@@ -203,4 +201,4 @@ def run(runnable):
                                    runnable_step_current.name,
                                    -child_return_code))
 
-        return
+    return
