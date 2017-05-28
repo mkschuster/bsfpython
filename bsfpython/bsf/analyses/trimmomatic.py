@@ -36,18 +36,26 @@ from bsf.standards import Configuration
 
 
 class FilePathTrimmomatic(FilePath):
+    """The C{bsf.analyses.trimmomatic.FilePathTrimmomatic} models files in a sample-specific Trimmomatic directory.
+    """
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.trimmomatic.FilePathTrimmomatic} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathTrimmomatic, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
         # Automatic GNU Zip-compression of trim log files does not work.
-        self.trim_log_tsv = prefix + 'trim_log.tsv'
-        self.summary_tsv = prefix + 'summary.tsv'  # Defined by the R script.
-        self.coverage_png = prefix + 'coverage.png'  # Defined by the R script.
-        self.frequency_png = prefix + 'frequency.png'  # Defined by the R script.
-        self.surviving_png = prefix + 'surviving.png'  # Defined by the R script.
+        self.trim_log_tsv = prefix + '_trim_log.tsv'
+        self.summary_tsv = prefix + '_summary.tsv'  # Defined by the R script.
+        self.coverage_png = prefix + '_coverage.png'  # Defined by the R script.
+        self.frequency_png = prefix + '_frequency.png'  # Defined by the R script.
+        self.surviving_png = prefix + '_surviving.png'  # Defined by the R script.
         self.reads_1p = ''
         self.reads_1u = ''
         self.reads_2p = ''
@@ -381,7 +389,9 @@ class Trimmomatic(Analysis):
                         # Update unpaired Reads information.
 
                         paired_reads.reads_1.name += 'U'
-                        paired_reads.reads_1.file_path = file_path_trimmomatic.reads_1u
+                        paired_reads.reads_1.file_path = os.path.join(
+                            self.genome_directory,
+                            file_path_trimmomatic.reads_1u)
                     else:
                         file_path_trimmomatic.reads_1p = os.path.join(
                             file_path_trimmomatic.output_directory,
@@ -406,9 +416,13 @@ class Trimmomatic(Analysis):
                         # Update paired Reads information.
 
                         paired_reads.reads_1.name += 'P'
-                        paired_reads.reads_1.file_path = file_path_trimmomatic.reads_1p
+                        paired_reads.reads_1.file_path = os.path.join(
+                            self.genome_directory,
+                            file_path_trimmomatic.reads_1p)
                         paired_reads.reads_2.name += 'P'
-                        paired_reads.reads_2.file_path = file_path_trimmomatic.reads_2p
+                        paired_reads.reads_2.file_path = os.path.join(
+                            self.genome_directory,
+                            file_path_trimmomatic.reads_2p)
 
                         # Add unpaired Reads 1 and 2 as separate PairedReads objects to this sample.
 
@@ -417,7 +431,9 @@ class Trimmomatic(Analysis):
                                 annotation_dict=paired_reads.annotation_dict,
                                 reads_1=Reads(
                                     name=paired_reads.reads_1.name[:-1] + 'U',
-                                    file_path=file_path_trimmomatic.reads_1u),
+                                    file_path=os.path.join(
+                                        self.genome_directory,
+                                        file_path_trimmomatic.reads_1u)),
                                 exclude=paired_reads.exclude,
                                 index_1=paired_reads.index_1,
                                 index_2=paired_reads.index_2,
@@ -428,7 +444,9 @@ class Trimmomatic(Analysis):
                                 annotation_dict=paired_reads.annotation_dict,
                                 reads_1=Reads(
                                     name=paired_reads.reads_2.name[:-1] + 'U',
-                                    file_path=file_path_trimmomatic.reads_2u),
+                                    file_path=os.path.join(
+                                        self.genome_directory,
+                                        file_path_trimmomatic.reads_2u)),
                                 exclude=paired_reads.exclude,
                                 index_1=paired_reads.index_1,
                                 index_2=paired_reads.index_2,
