@@ -2239,30 +2239,30 @@ class Collection(NextGenerationBase):
         @rtype: PairedReads
         """
 
-        def _is_new_reads(reads_1, reads_2):
+        def _is_new_reads(reads_new, reads_old):
             """Test whether a C{bsf.ngs.Reads} object is new.
 
             To test for object equality is not good enough here. A new C{bsf.ngs.Reads} object is encountered
             upon mismatches in the C{bsf.ngs.Reads.file_path} or C{bsf.ngs.Reads.name} instance variables.
-            @param reads_1: C{bsf.ngs.Reads}
-            @type reads_1: Reads
-            @param reads_2: C{bsf.ngs.Reads}
-            @type reads_2: Reads
+            @param reads_new: C{bsf.ngs.Reads}
+            @type reads_new: Reads
+            @param reads_old: C{bsf.ngs.Reads}
+            @type reads_old: Reads
             @return: True if C{Reads} is new
             @rtype: bool
             """
-            if reads_1 is None and reads_2 is None:
+            if reads_new is None and reads_old is None:
                 # Both Reads objects are not defined, so, nothing new.
                 is_new_reads = False
-            elif not (reads_1 or reads_2):
+            elif not (reads_new or reads_old):
                 is_new_reads = False
-            elif reads_1 is None:
+            elif reads_new is None:
                 # At least reads_2 must be defined.
                 is_new_reads = True
-            elif reads_2 is None:
+            elif reads_old is None:
                 # At least reads_1 must be defined.
                 is_new_reads = True
-            elif reads_1.name != reads_2.name or reads_1.file_path != reads_2.file_path:
+            elif reads_new.name != reads_old.name or reads_new.file_path != reads_old.file_path:
                 is_new_reads = True
             else:
                 is_new_reads = False
@@ -2292,8 +2292,15 @@ class Collection(NextGenerationBase):
                 file_type=file_type,
                 suffix='2'))
 
-        if _is_new_reads(new_paired_reads.reads_1, paired_reads.reads_1) or \
-                _is_new_reads(new_paired_reads.reads_2, paired_reads.reads_2):
+        is_new_reads_1 = _is_new_reads(reads_new=new_paired_reads.reads_1, reads_old=paired_reads.reads_1)
+        is_new_reads_2 = _is_new_reads(reads_new=new_paired_reads.reads_2, reads_old=paired_reads.reads_2)
+
+        if is_new_reads_1 or is_new_reads_2:
+            # Replace eventual unchanged Reads instances with empty Reads instances.
+            if not is_new_reads_1:
+                new_paired_reads.reads_1 = Reads()
+            if not is_new_reads_2:
+                new_paired_reads.reads_2 = Reads()
             sample.add_paired_reads(paired_reads=new_paired_reads)
         else:
             new_paired_reads = paired_reads
