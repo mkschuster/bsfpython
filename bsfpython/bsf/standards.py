@@ -80,7 +80,6 @@ class Configuration(object):
         # Expand each file_path for user and variable names.
         expanded_list = list()
         for file_path in file_path_list:
-            assert isinstance(file_path, (str, unicode))
             file_path = os.path.expanduser(path=file_path)
             file_path = os.path.expandvars(path=file_path)
             file_path = os.path.normpath(path=file_path)
@@ -342,6 +341,7 @@ class Default(object):
             directory_intervals=None,
             directory_snpeff_data=None,
             directory_vep_cache=None,
+            directory_vep_plugins=None,
             directory_vep_src=None,
             indices=None,
             operator_contact=None,
@@ -391,6 +391,8 @@ class Default(object):
         @type directory_snpeff_data: str | unicode
         @param directory_vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
         @type directory_vep_cache: str | unicode
+        @param directory_vep_plugins: Ensembl Variant Effect Predictor (VEP) plug-ins directory
+        @type directory_vep_plugins: str | unicode
         @param directory_vep_src: Ensembl Variant Effect Predictor (VEP) source directory
         @type directory_vep_src: str | unicode
         @param indices: Python C{dict} of program name key and index directory name value data
@@ -512,6 +514,11 @@ class Default(object):
         else:
             self.directory_vep_cache = directory_vep_cache
 
+        if directory_vep_plugins is None:
+            self.directory_vep_plugins = str()
+        else:
+            self.directory_vep_plugins = directory_vep_plugins
+
         if directory_vep_src is None:
             self.directory_vep_src = str()
         else:
@@ -629,6 +636,7 @@ class Default(object):
         self.directory_intervals = cp.get(section=section, option='intervals')
         self.directory_snpeff_data = cp.get(section=section, option='snpeff_data')
         self.directory_vep_cache = cp.get(section=section, option='vep_cache')
+        self.directory_vep_plugins = cp.get(section=section, option='vep_plugins')
         self.directory_vep_src = cp.get(section=section, option='vep_src')
 
         section = 'indices'
@@ -789,12 +797,12 @@ class Default(object):
         return file_path
 
     @staticmethod
-    def absolute_genomes(genome_version):
-        """Get the absolute directory path for genomes.
+    def absolute_genome_resource(genome_version):
+        """Get the absolute path to the genome resource directory.
 
         @param genome_version: The genome version (e.g. mm10, ...)
         @type genome_version: str
-        @return: Absolute path to the genomes directory
+        @return: Absolute path to the genome resource directory
         @rtype: str | unicode
         """
 
@@ -804,6 +812,45 @@ class Default(object):
             return os.path.join(default.directory_genomes, genome_version)
         else:
             return default.directory_genomes
+
+    @staticmethod
+    def absolute_genome_index(genome_version, genome_index):
+        """Get the absolute file path to a genome index.
+
+        @param genome_version: Genome version (e.g. mm10, ...)
+        @type genome_version: str
+        @param genome_index: Genome index (e.g. bowtie2, ...)
+        @type genome_index: str
+        @return: Absolute path to the genome index
+        @rtype: str | unicode
+        @raise Exception: Unknown genome index name
+        """
+
+        default = Default.get_global_default()
+
+        if genome_index not in default.indices:
+            raise Exception(
+                'Unknown genome index name {!r}.'.format(genome_index))
+
+        return os.path.join(
+            Default.absolute_genome_resource(genome_version=genome_version),
+            default.indices[genome_index],
+            genome_version)
+
+    @staticmethod
+    def absolute_genome_fasta(genome_version, genome_index):
+        """Get the absolute file path to a genome in FASTA format.
+
+        @param genome_version: Genome version (e.g. mm10, ...)
+        @type genome_version: str
+        @param genome_index: Genome index (e.g. bowtie2, ...)
+        @type genome_index: str
+        @return: Absolute path to the genome FASTA file
+        @rtype: str | unicode
+        @raise Exception: Unknown genome index name
+        """
+
+        return Default.absolute_genome_index(genome_version=genome_version, genome_index=genome_index) + '.fa'
 
     @staticmethod
     def absolute_intervals():
@@ -821,12 +868,12 @@ class Default(object):
             return os.path.join(default.directory_home, default.directory_intervals)
 
     @staticmethod
-    def absolute_transcriptomes(transcriptome_version):
-        """Get the absolute directory path for transcriptomes.
+    def absolute_transcriptome_resource(transcriptome_version):
+        """Get the absolute path to the transcriptome resource directory.
 
         @param transcriptome_version: The transcriptome version (e.g. mm10_e87, ...)
         @type transcriptome_version: str
-        @return: Absolute path to the transcriptome directory
+        @return: Absolute path to the transcriptome resource directory
         @rtype: str | unicode
         """
 
@@ -838,28 +885,45 @@ class Default(object):
             return default.directory_transcriptomes
 
     @staticmethod
-    def absolute_genome_fasta(genome_version, genome_index):
-        """Get the absolute file path to a genome in FASTA format.
+    def absolute_transcriptome_index(transcriptome_version, transcriptome_index):
+        """Get the absolute file path to a transcriptome index.
 
-        @param genome_version: Genome version (e.g. mm10, ...)
-        @type genome_version: str
-        @param genome_index: Genome index (e.g. bowtie2, ...)
-        @type genome_index: str
-        @return: Absolute path to the genome FASTA file
+        @param transcriptome_version: Transcriptome version (e.g. mm10_e87, ...)
+        @type transcriptome_version: str
+        @param transcriptome_index: Transcriptome index (e.g. tophat, ...)
+        @type transcriptome_index: str
+        @return: Absolute path to the transcriptome index
         @rtype: str | unicode
-        @raise Exception: Unknown genome index name
+        @raise Exception: Unknown transcriptome index name
         """
 
         default = Default.get_global_default()
 
-        if genome_index not in default.indices:
+        if transcriptome_index not in default.indices:
             raise Exception(
-                'Unknown genome index name {!r}.'.format(genome_index))
+                'Unknown transcriptome index name {!r}.'.format(transcriptome_index))
 
         return os.path.join(
-            Default.absolute_genomes(genome_version),
-            default.indices[genome_index],
-            genome_version + '.fa')
+            Default.absolute_transcriptome_resource(transcriptome_version=transcriptome_version),
+            default.indices[transcriptome_index],
+            transcriptome_version)
+
+    @staticmethod
+    def absolute_transcriptome_gtf(transcriptome_version, transcriptome_index):
+        """Get the absolute file path to a transcriptome in GTF format.
+        
+        @param transcriptome_version: Transcriptome version (e.g. mm10_e87, ...)
+        @type transcriptome_version: str
+        @param transcriptome_index: Transcriptome index (e.g. tophat, ...)
+        @type transcriptome_index: str
+        @return: Absolute path to the transcriptome GTF file
+        @rtype: str | unicode
+        @raise Exception: Unknown transcriptome index name
+        """
+
+        return Default.absolute_transcriptome_index(
+            transcriptome_version=transcriptome_version,
+            transcriptome_index=transcriptome_index) + '.gtf'
 
     @staticmethod
     def url_absolute_base():

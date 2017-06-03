@@ -35,25 +35,32 @@ import re
 from bsf import Analysis, FilePath, Runnable
 from bsf.analyses.star_aligner import StarAligner
 from bsf.annotation import AnnotationSheet, TuxedoSamplePairSheet
-from bsf.ngs import PairedReads, Sample
 from bsf.executables import TopHat
 from bsf.process import Executable, RunnableStep, RunnableStepLink
 from bsf.standards import Default
 
 
 class FilePathTophat(FilePath):
+    """The C{bsf.analyses.rna_seq.FilePathTophat} models files in a sample-specific TopHat directory.
+    """
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.rna_seq.FilePathTophat} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathTophat, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
         self.accepted_hits_bam = os.path.join(prefix, 'accepted_hits.bam')
         self.accepted_hits_bam_link_source = 'accepted_hits.bam'
-        self.accepted_hits_bam_link_target = os.path.join(prefix, prefix + 'accepted_hits.bam')
+        self.accepted_hits_bam_link_target = os.path.join(prefix, prefix + '_accepted_hits.bam')
         self.accepted_hits_bai = os.path.join(prefix, 'accepted_hits.bam.bai')
         self.accepted_hits_bai_link_source = 'accepted_hits.bam.bai'
-        self.accepted_hits_bai_link_target = os.path.join(prefix, prefix + 'accepted_hits.bam.bai')
+        self.accepted_hits_bai_link_target = os.path.join(prefix, prefix + '_accepted_hits.bam.bai')
         self.accepted_hits_bw = os.path.join(prefix, 'accepted_hits.bw')
         self.align_summary = os.path.join(prefix, 'align_summary.txt')
         self.deletions_bed = os.path.join(prefix, 'deletions.bed')
@@ -65,15 +72,23 @@ class FilePathTophat(FilePath):
         self.prep_reads_info = os.path.join(prefix, 'prep_reads.info')
         self.unmapped_bam = os.path.join(prefix, 'unmapped.bam')
         self.unmapped_bam_link_source = 'unmapped.bam'
-        self.unmapped_bam_link_target = os.path.join(prefix, prefix + 'unmapped.bam')
+        self.unmapped_bam_link_target = os.path.join(prefix, prefix + '_unmapped.bam')
 
         return
 
 
 class FilePathCufflinks(FilePath):
+    """The C{bsf.analyses.rna_seq.FilePathCufflinks} models files in a sample-specific Cufflinks directory.
+    """
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.rna_seq.FilePathCufflinks} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathCufflinks, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
@@ -83,18 +98,26 @@ class FilePathCufflinks(FilePath):
         self.temporary_sorted_tsv = os.path.join(prefix, 'transcripts_sorted.tsv')
         self.transcripts_bb = os.path.join(prefix, 'transcripts.bb')
         self.transcripts_gtf_link_source = 'transcripts.gtf'
-        self.transcripts_gtf_link_target = os.path.join(prefix, prefix + 'transcripts.gtf')
+        self.transcripts_gtf_link_target = os.path.join(prefix, prefix + '_transcripts.gtf')
         self.transcripts_bb_link_source = 'transcripts.bb'
-        self.transcripts_bb_link_target = os.path.join(prefix, prefix + 'transcripts.bb')
+        self.transcripts_bb_link_target = os.path.join(prefix, prefix + '_transcripts.bb')
         # TODO: Some files are missing.
 
         return
 
 
 class FilePathCuffmerge(FilePath):
+    """The C{bsf.analyses.rna_seq.FilePathCuffmerge} models files in a comparison-specific Cuffmerge directory.
+    """
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.rna_seq.FilePathCufflinks} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathCuffmerge, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
@@ -105,17 +128,25 @@ class FilePathCuffmerge(FilePath):
         self.temporary_sorted_tsv = os.path.join(prefix, 'merged_sorted.tsv')
         self.merged_bb = os.path.join(prefix, 'merged.bb')
         self.merged_gtf_link_source = 'merged.gtf'
-        self.merged_gtf_link_target = os.path.join(prefix, prefix + 'merged.gtf')
+        self.merged_gtf_link_target = os.path.join(prefix, prefix + '_merged.gtf')
         self.merged_bb_link_source = 'merged.bb'
-        self.merged_bb_link_target = os.path.join(prefix, prefix + 'merged.bb')
+        self.merged_bb_link_target = os.path.join(prefix, prefix + '_merged.bb')
 
         return
 
 
 class FilePathCuffquant(FilePath):
+    """The C{bsf.analyses.rna_seq.FilePathCuffquant} models files in a sample-specific Cuffquant directory.
+    """
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.rna_seq.FilePathCuffquant} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathCuffquant, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
@@ -128,9 +159,17 @@ class FilePathCuffquant(FilePath):
 
 
 class FilePathCuffnorm(FilePath):
+    """The C{bsf.analyses.rna_seq.FilePathCuffnorm} models files in a comparison-specific Cuffnorm directory.
+    """
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.rna_seq.FilePathCuffnorm} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathCuffnorm, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
@@ -139,9 +178,17 @@ class FilePathCuffnorm(FilePath):
 
 
 class FilePathCuffdiff(FilePath):
+    """The C{bsf.analyses.rna_seq.FilePathCuffdiff} models files in a comparison-specific Cuffdiff directory.
+    """
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.rna_seq.FilePathCuffdiff} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathCuffdiff, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
@@ -179,12 +226,16 @@ class Tuxedo(Analysis):
     @type replicate_grouping: bool
     @ivar cmp_file: Comparison file
     @type cmp_file: str | unicode
+    @ivar genome_index_path: Bowtie genome index path
+    @type genome_index_path: str | unicode
     @ivar genome_fasta_path: Reference genome sequence FASTA file path
     @type genome_fasta_path: str | unicode
-    @ivar transcriptome_gtf_path: Reference transcriptome GTF file path
-    @type transcriptome_gtf_path: str | unicode
+    @ivar transcriptome_version: Transcriptome version
+    @type transcriptome_version: str
     @ivar transcriptome_index_path: Tophat transcriptome index path
     @type transcriptome_index_path: str | unicode
+    @ivar transcriptome_gtf_path: Reference transcriptome GTF file path
+    @type transcriptome_gtf_path: str | unicode
     @ivar mask_gtf_path: GTF file path to mask transcripts
     @type mask_gtf_path: str | unicode
     @ivar multi_read_correction: Apply multi-read correction
@@ -297,9 +348,11 @@ class Tuxedo(Analysis):
             sample_list=None,
             replicate_grouping=False,
             cmp_file=None,
+            genome_index_path=None,
             genome_fasta_path=None,
-            transcriptome_gtf_path=None,
+            transcriptome_version=None,
             transcriptome_index_path=None,
+            transcriptome_gtf_path=None,
             mask_gtf_path=None,
             multi_read_correction=None,
             library_type=None,
@@ -340,12 +393,16 @@ class Tuxedo(Analysis):
         @type replicate_grouping: bool
         @param cmp_file: Comparison file
         @type cmp_file: str | unicode
+        @param genome_index_path: Bowtie genome index path
+        @type genome_index_path: str | unicode
         @param genome_fasta_path: Reference genome sequence FASTA file path
         @type genome_fasta_path: str | unicode
-        @param transcriptome_gtf_path: Reference transcriptome GTF file path
-        @type transcriptome_gtf_path: str | unicode
+        @param transcriptome_version: Transcriptome version
+        @type transcriptome_version: str
         @param transcriptome_index_path: Tophat transcriptome index path
         @type transcriptome_index_path: str | unicode
+        @param transcriptome_gtf_path: Reference transcriptome GTF file path
+        @type transcriptome_gtf_path: str | unicode
         @param mask_gtf_path: GTF file path to mask transcripts
         @type mask_gtf_path: str | unicode
         @param multi_read_correction: Apply multi-read correction
@@ -389,20 +446,30 @@ class Tuxedo(Analysis):
         else:
             self.cmp_file = cmp_file
 
+        if genome_index_path is None:
+            self.genome_index_path = str()
+        else:
+            self.genome_index_path = genome_index_path
+
         if genome_fasta_path is None:
             self.genome_fasta_path = str()
         else:
             self.genome_fasta_path = genome_fasta_path
 
-        if transcriptome_gtf_path is None:
-            self.transcriptome_gtf_path = str()
+        if transcriptome_version is None:
+            self.transcriptome_version = str()
         else:
-            self.transcriptome_gtf_path = transcriptome_gtf_path
+            self.transcriptome_version = transcriptome_version
 
         if transcriptome_index_path is None:
             self.transcriptome_index_path = str()
         else:
             self.transcriptome_index_path = transcriptome_index_path
+
+        if transcriptome_gtf_path is None:
+            self.transcriptome_gtf_path = str()
+        else:
+            self.transcriptome_gtf_path = transcriptome_gtf_path
 
         if mask_gtf_path is None:
             self.mask_gtf_path = str()
@@ -458,17 +525,25 @@ class Tuxedo(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.cmp_file = configuration.config_parser.get(section=section, option=option)
 
+        option = 'genome_index'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.genome_index_path = configuration.config_parser.get(section=section, option=option)
+
         option = 'genome_fasta'
         if configuration.config_parser.has_option(section=section, option=option):
             self.genome_fasta_path = configuration.config_parser.get(section=section, option=option)
 
-        option = 'transcriptome_gtf'
+        option = 'transcriptome_version'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.transcriptome_gtf_path = configuration.config_parser.get(section=section, option=option)
+            self.transcriptome_version = configuration.config_parser.get(section=section, option=option)
 
         option = 'transcriptome_index'
         if configuration.config_parser.has_option(section=section, option=option):
             self.transcriptome_index_path = configuration.config_parser.get(section=section, option=option)
+
+        option = 'transcriptome_gtf'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.transcriptome_gtf_path = configuration.config_parser.get(section=section, option=option)
 
         option = 'mask_gtf'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -526,7 +601,6 @@ class Tuxedo(Analysis):
 
         # TODO: Adjust by introducing a new class RNASeqComparisonSheet(AnnotationSheet) in this module?
         for row_dict in annotation_sheet.row_dicts:
-            assert isinstance(row_dict, dict)
             # In addition to defining samples, allow also the definition of groups in comparison files.
             # If the row dictionary has a 'Group' key, then the Sample in the same row gets added to the group.
             # So, 'ProcessedRunFolder', 'Project', 'Sample', 'Group' defines the groups, while ...
@@ -538,6 +612,7 @@ class Tuxedo(Analysis):
             i = -2
             key = str()
             comparison_groups = list()
+            """ @type comparison_groups: list[(str, list[bsf.ngs.Sample])] """
             while True:
                 i += 1
                 if i == -1:
@@ -551,8 +626,6 @@ class Tuxedo(Analysis):
                 # depending on 'Group' or 'Sample' column entries.
                 # In RNA-Seq experiments, entire pools of Sample objects (replicates) are compared with each other.
                 group_name, group_samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix=prefix)
-                assert isinstance(group_name, str)
-                assert isinstance(group_samples, list)
                 if group_name and len(group_samples):
                     key += group_name
                     key += '__'
@@ -560,7 +633,6 @@ class Tuxedo(Analysis):
                     # Also expand each Python list of bsf.ngs.Sample objects to get all those bsf.ngs.Sample objects
                     # that this bsf.Analysis needs considering.
                     for sample in group_samples:
-                        assert isinstance(sample, Sample)
                         if self.debug > 1:
                             print '  {} Sample name: {!r} file_path: {!r}'.format(prefix, sample.name, sample.file_path)
                             # print sample.trace(1)
@@ -589,6 +661,7 @@ class Tuxedo(Analysis):
                 key = key.rstrip('_')
 
             self.comparisons[key] = comparison_groups
+            """ @type comparisons: dic[str, (str, list[bsf.ngs.Sample])] """
 
         return
 
@@ -600,6 +673,10 @@ class Tuxedo(Analysis):
 
         super(Tuxedo, self).run()
 
+        # Get global defaults.
+
+        default = Default.get_global_default()
+
         # Method configuration with regards to Cuffquant and Cuffdiff.
         run_cuffquant_before_cuffdiff = False
 
@@ -607,6 +684,11 @@ class Tuxedo(Analysis):
 
         if not self.genome_version:
             raise Exception('A Tuxedo analysis requires a genome_version configuration option.')
+
+        # Tuxedo requires a transcriptome version.
+
+        if not self.transcriptome_version:
+            raise Exception('A Tuxedo analysis requires a transcriptome_version configuration option.')
 
         if self.cmp_file:
             # A comparison file path has been provided.
@@ -662,44 +744,48 @@ class Tuxedo(Analysis):
         # Define the reference genome FASTA file path.
         # If it does not exist, construct it from defaults.
 
-        if not self.genome_fasta_path:
-            self.genome_fasta_path = Default.absolute_genome_fasta(
-                genome_version=self.genome_version,
-                genome_index='bowtie2')
+        # Get the genome index
 
-        # Define the reference transcriptome GTF file path.
-        # Check if transcriptome_gtf is an absolute path and
-        # prepend the annotation default if not.
+        if not self.genome_index_path:
+            self.genome_index_path = os.path.join(
+                Default.absolute_genome_resource(genome_version=self.genome_version),
+                default.indices['bowtie2'],
+                self.genome_version)
+
+        if not self.genome_fasta_path:
+            self.genome_fasta_path = self.genome_index_path + '.fa'
+
+        # FIXME: For the moment use the FAI file instead of the UCSC chromosome sizes file.
+        genome_sizes_path = self.genome_fasta_path + '.fai'
+
+        if not os.path.exists(self.genome_fasta_path):
+            raise Exception("Genome FASTA file path {!r} does not exists.".format(self.genome_fasta_path))
+
+        # Define a reference transcriptome index directory or a GTF file path.
 
         if self.transcriptome_index_path:
-            # self.transcriptome_index_path = Default.get_absolute_path(
-            #     file_path=self.transcriptome_index_path,
-            #     default_path=Default.absolute_genomes(genome_version=self.genome_version))
-
-            # FIXME: Should there be a (static) method Default.get_absolute_transcriptomes()?
-            # For the moment, genomes and transcriptomes are co-located.
-            # Check if transcriptome_index_path is an absolute path.
+            # Check if the transcriptome_index_path is absolute and if not,
+            # prepend the default transcriptomes directory.
             self.transcriptome_index_path = Default.get_absolute_path(
                 file_path=self.transcriptome_index_path,
-                default_path=Default.absolute_genomes(genome_version=''))
+                default_path=Default.absolute_transcriptome_resource(transcriptome_version=''))
 
             if not os.path.isdir(self.transcriptome_index_path):
                 raise Exception("Reference transcriptome index directory {!r} does not exist.".
                                 format(self.transcriptome_index_path))
 
-            # Does a indices_for_TopHat directory exist?
-            transcriptome_index_path = os.path.join(self.transcriptome_index_path, 'indices_for_TopHat')
+            transcriptome_index = os.path.basename(self.transcriptome_index_path)
+
+            # Does an indices_for_TopHat directory exist?
+            transcriptome_index_path = os.path.join(self.transcriptome_index_path, default.indices['tophat'])
             if os.path.isdir(transcriptome_index_path):
                 self.transcriptome_index_path = transcriptome_index_path
 
-            # TopHat creates another sub-directory with the transcriptome version.
-            transcriptome_index_path = os.path.join(transcriptome_index_path, )
-            # FIXME: This needs a transcriptome_version configuration variable.
-            transcriptome_index = os.path.basename(self.transcriptome_index_path)
-
+            # Finally, set the transcriptome GTF file path.
             # The tophat --transcript-index process puts a GFF file into the index directory
             # that really is a GTF file. A symbolic link to a GTF file is needed to make the
             # process cuffdiff script work.
+            # For the moment, use the symbolic link in the indices_for_TopHat directory.
 
             self.transcriptome_gtf_path = os.path.join(
                 self.transcriptome_index_path,
@@ -710,12 +796,30 @@ class Tuxedo(Analysis):
                                 format(self.transcriptome_gtf_path))
 
         elif self.transcriptome_gtf_path:
+            # Check if transcriptome_gtf_path is absolute and if not,
+            # prepend the default transcriptomes directory.
             self.transcriptome_gtf_path = Default.get_absolute_path(
                 file_path=self.transcriptome_gtf_path,
-                default_path=Default.absolute_transcriptomes(transcriptome_version=self.genome_version))
+                default_path=Default.absolute_transcriptome_resource(transcriptome_version=self.transcriptome_version))
 
             if not os.path.exists(self.transcriptome_gtf_path):
                 raise Exception("Reference transcriptome GTF file {!r} does not exist.".
+                                format(self.transcriptome_gtf_path))
+
+        else:
+            # Neither was provided, automatically discover on the basis of the transcriptome version.
+            self.transcriptome_index_path = os.path.join(
+                Default.absolute_transcriptome_resource(transcriptome_version=self.transcriptome_version),
+                default.indices['tophat'],
+                self.transcriptome_version,  # TopHat puts the transcriptome index into a sub directory.
+                self.transcriptome_version)
+
+            self.transcriptome_gtf_path = os.path.join(
+                Default.absolute_transcriptome_resource(transcriptome_version=self.transcriptome_version),
+                default.indices['tophat'],
+                self.transcriptome_version) + '.gtf'
+            if not os.path.exists(self.transcriptome_gtf_path):
+                raise Exception("Reference transcriptome GTF file path {!r} does not exist.".
                                 format(self.transcriptome_gtf_path))
 
         if not self.transcriptome_gtf_path:
@@ -723,21 +827,9 @@ class Tuxedo(Analysis):
 
         # Read configuration options.
 
+        # TODO: Move the ConfigParser code.
         config_parser = self.configuration.config_parser
         config_section = self.configuration.section_from_instance(self)
-
-        # TODO: Move the ConfigParser code.
-        genome_sizes = config_parser.get(section=config_section, option='genome_sizes')
-        genome_sizes = os.path.expanduser(genome_sizes)
-        genome_sizes = os.path.expandvars(genome_sizes)
-
-        # Get the Bowtie2 index
-
-        if config_parser.has_option(section=config_section, option='bowtie2_index'):
-            bowtie2_index = config_parser.get(section=config_section, option='bowtie2_index')
-        else:
-            bowtie2_index = os.path.join(Default.absolute_genomes(self.genome_version),
-                                         'forBowtie2', self.genome_version)
 
         stage_run_tophat = self.get_stage(name=self.stage_name_run_tophat)
         stage_process_tophat = self.get_stage(name=self.stage_name_process_tophat)
@@ -750,6 +842,7 @@ class Tuxedo(Analysis):
         stage_process_cuffdiff = self.get_stage(name=self.stage_name_process_cuffdiff)
 
         runnable_run_cufflinks_list = list()
+        """ @type runnable_run_cufflinks_list: list[Runnable] """
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -765,8 +858,6 @@ class Tuxedo(Analysis):
             paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
             for paired_reads_name in paired_reads_name_list:
-                assert isinstance(paired_reads_name, str)
-
                 # Create a Tophat Runnable per paired_reads_name.
 
                 # TODO: Activate the new code once the bsf_run_rnaseq_tophat.py script has been retired.
@@ -843,7 +934,7 @@ class Tuxedo(Analysis):
 
                 # Set rnaseq_tophat arguments.
 
-                tophat.arguments.append(bowtie2_index)
+                tophat.arguments.append(self.genome_index_path)
 
                 # Set rnaseq_tophat arguments for reads1 and reads2.
 
@@ -851,7 +942,6 @@ class Tuxedo(Analysis):
                 reads2 = list()
 
                 for paired_reads in paired_reads_dict[paired_reads_name]:
-                    assert isinstance(paired_reads, PairedReads)
                     if self.debug > 0:
                         print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
 
@@ -893,6 +983,11 @@ class Tuxedo(Analysis):
                 executable_run_tophat.add_option_long(key='pickler_path', value=pickler_path)
                 executable_run_tophat.add_option_long(key='debug', value=str(self.debug))
 
+                # Only submit this Executable if the "align_summary.txt" file does not exist.
+                file_path_temporary = os.path.join(self.genome_directory, file_path_tophat.align_summary)
+                if os.path.exists(file_path_temporary) and os.path.getsize(file_path_temporary) > 0:
+                    executable_run_tophat.submit = False
+
                 # TODO: End of code block.
 
                 # Create a new rnaseq_process_tophat Executable.
@@ -909,7 +1004,14 @@ class Tuxedo(Analysis):
                 # Set rnaseq_process_tophat arguments.
                 self.set_command_configuration(command=executable_process_tophat)
                 executable_process_tophat.arguments.append(file_path_tophat.output_directory)
-                executable_process_tophat.arguments.append(genome_sizes)
+                executable_process_tophat.arguments.append(genome_sizes_path)
+
+                # Only submit this Executable if the "accepted_hits.bam.bai" file does not exist.
+                file_path_temporary = os.path.join(
+                    self.genome_directory,
+                    file_path_tophat.accepted_hits_bai_link_source)
+                if os.path.exists(file_path_temporary) and os.path.getsize(file_path_temporary):
+                    executable_process_tophat.submit = False
 
                 # TODO: Switch from an external Bash script to a set of Runnable and RunnableStep objects.
                 # Since the Bash script includes Perl code to reset the BED score field to 0, rather than
@@ -959,6 +1061,7 @@ class Tuxedo(Analysis):
                     runnable_step=RunnableStep(
                         name='cufflinks',
                         program='cufflinks'))
+                """ @type runnable_step: RunnableStep """
 
                 # Cufflinks has a GTF option, in which case it will not assemble
                 # novel transcripts and a GTF-guide option in which case it will
@@ -1021,6 +1124,7 @@ class Tuxedo(Analysis):
                     runnable_step=RunnableStep(
                         name='gtf_to_gp',
                         program='gtfToGenePred'))
+                """ @type runnable_step: RunnableStep """
                 runnable_step.add_switch_short(key='genePredExt')
                 runnable_step.arguments.append(file_path_cufflinks.transcripts_gtf)
                 runnable_step.arguments.append(file_path_cufflinks.temporary_gene_prediction)
@@ -1034,6 +1138,7 @@ class Tuxedo(Analysis):
                         obsolete_file_path_list=[
                             file_path_cufflinks.temporary_gene_prediction,
                         ]))
+                """ @type runnable_step: RunnableStep """
                 runnable_step.arguments.append(file_path_cufflinks.temporary_gene_prediction)
                 runnable_step.arguments.append(file_path_cufflinks.temporary_big_gene_prediction)
 
@@ -1046,6 +1151,7 @@ class Tuxedo(Analysis):
                         obsolete_file_path_list=[
                             file_path_cufflinks.temporary_big_gene_prediction,
                         ]))
+                """ @type runnable_step: RunnableStep """
                 runnable_step.arguments.append(file_path_cufflinks.temporary_big_gene_prediction)
                 runnable_step.arguments.append(file_path_cufflinks.temporary_sorted_tsv)
 
@@ -1058,6 +1164,7 @@ class Tuxedo(Analysis):
                         obsolete_file_path_list=[
                             file_path_cufflinks.temporary_sorted_tsv,
                         ]))
+                """ @type runnable_step: RunnableStep """
                 # FIXME: It would be good to allow options with and without an equal sign.
                 # i.e. --type=bed12+8 versus --type bed12+8, which does not work.
                 # How could this work with configuration.ini files?
@@ -1069,7 +1176,7 @@ class Tuxedo(Analysis):
                 runnable_step.add_switch_short(key='tab')
                 runnable_step.add_switch_short(key='type=bed12+8')
                 runnable_step.arguments.append(file_path_cufflinks.temporary_sorted_tsv)
-                runnable_step.arguments.append(genome_sizes)
+                runnable_step.arguments.append(genome_sizes_path)
                 runnable_step.arguments.append(file_path_cufflinks.transcripts_bb)
 
                 # Add a symbolic link for the transcripts bigBed file, that includes a sample name prefix.
@@ -1095,7 +1202,6 @@ class Tuxedo(Analysis):
                     program='bsf_rnaseq_process_cufflinks.R'))
             # Set dependencies on previous Runnable or Executable objects.
             for runnable_run_cufflinks in runnable_run_cufflinks_list:
-                assert isinstance(runnable_run_cufflinks, Runnable)
                 executable_process_cufflinks.dependencies.append(runnable_run_cufflinks.name)
 
             # Set process_cufflinks options.
@@ -1119,8 +1225,6 @@ class Tuxedo(Analysis):
         comparison_keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for comparison_key in comparison_keys:
-            assert isinstance(comparison_key, str)
-
             # TODO: Should the comparison prefix also include the project name or number?
             prefix_cuffmerge = self.get_prefix_rnaseq_run_cuffmerge(comparison_name=comparison_key)
 
@@ -1147,6 +1251,7 @@ class Tuxedo(Analysis):
                 runnable_step=RunnableStep(
                     name='cuffmerge',
                     program='cuffmerge'))
+            """ @type runnable_step_cuffmerge: RunnableStep """
 
             # Set rnaseq_cuffmerge options.
 
@@ -1176,20 +1281,26 @@ class Tuxedo(Analysis):
 
             # Create a Python list of Python list objects of Cuffquant abundances per comparison group.
             cuffdiff_cuffnorm_abundances = list()
+            """ @type cuffdiff_cuffnorm_abundances: list[list[str | unicode]] """
             cuffdiff_cuffnorm_alignments = list()
+            """ @type cuffdiff_cuffnorm_alignments: list[list[str | unicode]] """
             cuffdiff_cuffnorm_dependencies = list()
+            """ @type cuffdiff_cuffnorm_dependencies: list[str] """
             cuffdiff_cuffnorm_labels = list()
+            """ @type cuffdiff_cuffnorm_labels: list[str] """
 
             for group_name, group_samples in self.comparisons[comparison_key]:
-                assert isinstance(group_name, str)
-                assert isinstance(group_samples, list)
+                """ @type group_name: str """
+                """ @type group_samples: list[Sample] """
                 per_group_abundances_list = list()
+                """ @type per_group_abundances_list: list[str | unicode] """
                 per_group_alignments_list = list()
+                """ @type per_group_alignments_list: list[str | unicode] """
                 # Count samples that remain after removing excluded PairedReads objects.
                 sample_count = 0
 
                 for sample in group_samples:
-                    assert isinstance(sample, Sample)
+                    """ @type sample: bsf.ngs.Sample """
                     paired_reads_dict = sample.get_all_paired_reads(
                         replicate_grouping=self.replicate_grouping,
                         exclude=True)
@@ -1203,8 +1314,6 @@ class Tuxedo(Analysis):
                     paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
                     for paired_reads_name in paired_reads_name_list:
-                        assert isinstance(comparison_key, str)
-
                         # Add the Cufflinks assembled transcripts to the Cuffmerge manifest.
 
                         transcripts_path = os.path.join(
@@ -1245,46 +1354,47 @@ class Tuxedo(Analysis):
 
                         # Create a new cuffquant RunnableStep.
 
-                        cuffquant = runnable_run_cuffquant.add_runnable_step(
+                        runnable_step_cuffquant = runnable_run_cuffquant.add_runnable_step(
                             runnable_step=RunnableStep(
                                 name='cuffquant',
                                 program='cuffquant'))
+                        """ @type runnable_step_cuffquant: RunnableStep """
 
                         # Set Cuffquant options.
 
-                        cuffquant.add_option_long(
+                        runnable_step_cuffquant.add_option_long(
                             key='output-dir',
                             value=file_path_cuffquant.output_directory)
-                        cuffquant.add_option_long(
+                        runnable_step_cuffquant.add_option_long(
                             key='num-threads',
                             value=str(stage_run_cuffquant.threads))
                         if self.mask_gtf_path:
-                            cuffquant.add_option_long(
+                            runnable_step_cuffquant.add_option_long(
                                 key='mask-file',
                                 value=self.mask_gtf_path)
-                        cuffquant.add_option_long(
+                        runnable_step_cuffquant.add_option_long(
                             key='frag-bias-correct',
                             value=self.genome_fasta_path)
                         if self.multi_read_correction:
-                            cuffquant.add_switch_long(
+                            runnable_step_cuffquant.add_switch_long(
                                 key='multi-read-correct')
                         if self.library_type:
-                            cuffquant.add_option_long(
+                            runnable_step_cuffquant.add_option_long(
                                 key='library-type',
                                 value=self.library_type)
                         if self.no_length_correction:
-                            cuffquant.add_switch_long(
+                            runnable_step_cuffquant.add_switch_long(
                                 key='no-length-correction')
-                        cuffquant.add_switch_long(
+                        runnable_step_cuffquant.add_switch_long(
                             key='quiet')
-                        cuffquant.add_switch_long(
+                        runnable_step_cuffquant.add_switch_long(
                             key='no-update-check')
 
                         # Set Cuffquant arguments.
                         # Add the Cuffmerge GTF file and the TopHat BAM file as Cuffquant arguments.
 
-                        cuffquant.arguments.append(file_path_cuffmerge.merged_gtf)
-                        cuffquant.arguments.append(file_path_cuffquant.tophat_accepted_hits)
+                        runnable_step_cuffquant.arguments.append(file_path_cuffmerge.merged_gtf)
+                        runnable_step_cuffquant.arguments.append(file_path_cuffquant.tophat_accepted_hits)
 
                         # Add the Cuffquant abundances file to the Cuffdiff list.
 
@@ -1314,6 +1424,7 @@ class Tuxedo(Analysis):
                 runnable_step=RunnableStep(
                     name='gtf_to_gp',
                     program='gtfToGenePred'))
+            """ @type runnable_step: RunnableStep """
             runnable_step.add_switch_short(key='genePredExt')
             runnable_step.arguments.append(file_path_cuffmerge.merged_gtf)
             runnable_step.arguments.append(file_path_cuffmerge.temporary_gene_prediction)
@@ -1327,6 +1438,7 @@ class Tuxedo(Analysis):
                     obsolete_file_path_list=[
                         file_path_cuffmerge.temporary_gene_prediction,
                     ]))
+            """ @type runnable_step: RunnableStep """
             runnable_step.arguments.append(file_path_cuffmerge.temporary_gene_prediction)
             runnable_step.arguments.append(file_path_cuffmerge.temporary_big_gene_prediction)
 
@@ -1339,6 +1451,7 @@ class Tuxedo(Analysis):
                     obsolete_file_path_list=[
                         file_path_cuffmerge.temporary_big_gene_prediction,
                     ]))
+            """ @type runnable_step: RunnableStep """
             runnable_step.arguments.append(file_path_cuffmerge.temporary_big_gene_prediction)
             runnable_step.arguments.append(file_path_cuffmerge.temporary_sorted_tsv)
 
@@ -1351,6 +1464,7 @@ class Tuxedo(Analysis):
                     obsolete_file_path_list=[
                         file_path_cuffmerge.temporary_sorted_tsv,
                     ]))
+            """ @type runnable_step: RunnableStep """
             # FIXME: It would be good to allow options with and without an equal sign.
             # i.e. --type=bed12+8 versus --type bed12+8, which does not work.
             # How could this work with configuration.ini files?
@@ -1362,7 +1476,7 @@ class Tuxedo(Analysis):
             runnable_step.add_switch_short(key='tab')
             runnable_step.add_switch_short(key='type=bed12+8')
             runnable_step.arguments.append(file_path_cuffmerge.temporary_sorted_tsv)
-            runnable_step.arguments.append(genome_sizes)
+            runnable_step.arguments.append(genome_sizes_path)
             runnable_step.arguments.append(file_path_cuffmerge.merged_bb)
 
             # Add a symbolic link for the merged bigBed file, that includes a comparison name prefix.
@@ -1404,6 +1518,7 @@ class Tuxedo(Analysis):
                 runnable_step=RunnableStep(
                     name='cuffnorm',
                     program='cuffnorm'))
+            """ @type runnable_step: RunnableStep """
 
             # Set Cuffnorm options.
 
@@ -1430,7 +1545,6 @@ class Tuxedo(Analysis):
 
             # Add the Cuffquant abundances files per point as Cuffnorm arguments.
             for per_group_abundances_list in cuffdiff_cuffnorm_abundances:
-                assert isinstance(per_group_abundances_list, list)
                 runnable_step_cuffnorm.arguments.append(','.join(per_group_abundances_list))
 
             # Create a Cuffdiff Runnable per comparison.
@@ -1463,6 +1577,7 @@ class Tuxedo(Analysis):
                 runnable_step=RunnableStep(
                     name='cuffdiff',
                     program='cuffdiff'))
+            """ @type runnable_step: RunnableStep """
 
             # Set Cuffdiff options.
 
@@ -1506,12 +1621,10 @@ class Tuxedo(Analysis):
             if run_cuffquant_before_cuffdiff:
                 # Add the Cuffquant abundances files per comparison group as Cuffdiff arguments.
                 for per_group_abundances_list in cuffdiff_cuffnorm_abundances:
-                    assert isinstance(per_group_abundances_list, list)
                     runnable_step_cuffdiff.arguments.append(','.join(per_group_abundances_list))
             else:
                 # Add the TopHat BAM files per comparison group as Cuffdiff arguments.
                 for per_group_alignments_list in cuffdiff_cuffnorm_alignments:
-                    assert isinstance(per_group_alignments_list, list)
                     runnable_step_cuffdiff.arguments.append(','.join(per_group_alignments_list))
 
             # Create a new rnaseq_process_cuffdiff Executable.
@@ -1767,7 +1880,6 @@ class Tuxedo(Analysis):
             paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
             for paired_reads_name in paired_reads_name_list:
-                assert isinstance(paired_reads_name, str)
                 # TopHat produces accepted_hits.bam, deletions.bb,
                 # insertions.bb and junctions.bb files.
 
@@ -2026,8 +2138,6 @@ class Tuxedo(Analysis):
         comparison_keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for comparison_key in comparison_keys:
-            assert isinstance(comparison_key, str)
-
             # Assemblies Super Track
 
             output_hub += 'track {}_assembly\n'. \
@@ -2110,7 +2220,6 @@ class Tuxedo(Analysis):
                 sample_pair_sheet = TuxedoSamplePairSheet.from_file_path(file_path=sample_pair_path)
 
                 for row_dict in sample_pair_sheet.row_dicts:
-                    assert isinstance(row_dict, dict)
                     output_html += '<tr>\n'
                     output_html += '<td>' \
                                    '' \
@@ -2146,7 +2255,6 @@ class Tuxedo(Analysis):
         output_html += '<tbody>\n'
 
         for comparison_key in comparison_keys:
-            assert isinstance(comparison_key, str)
             prefix = 'rnaseq_process_cuffdiff_{}'.format(comparison_key)
 
             output_html += '<tr>\n'
@@ -2214,7 +2322,6 @@ class Tuxedo(Analysis):
         output_html += '<tbody>\n'
 
         for comparison_key in comparison_keys:
-            assert isinstance(comparison_key, str)
             prefix = 'rnaseq_process_cuffdiff_{}'.format(comparison_key)
 
             output_html += '<tr>\n'
@@ -2462,7 +2569,6 @@ class Tuxedo(Analysis):
                 sample_pair_sheet = TuxedoSamplePairSheet.from_file_path(file_path=sample_pair_path)
 
                 for row_dict in sample_pair_sheet.row_dicts:
-                    assert isinstance(row_dict, dict)
                     output_html += '<tr>\n'
 
                     output_html += '<td class="left"></td>\n'
@@ -2526,9 +2632,17 @@ class Tuxedo(Analysis):
 
 
 class FilePathDESeq(FilePath):
+    """The C{bsf.analyses.rna_seq.FilePathDESeq} models files in a comparison-specific DESeq directory.
+    """
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.rna_seq.FilePathDESeq} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathDESeq, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
@@ -2832,14 +2946,12 @@ class DESeq(Analysis):
             for annotation_key in filter(lambda x: x.startswith('DESeq '), sample.annotation_dict.keys()):
                 row_dict[annotation_key[6:]] = sample.annotation_dict[annotation_key][0]
 
-            for paired_reads_name in paired_reads_name_list:
-                assert isinstance(paired_reads_name, str)
-
+            # for paired_reads_name in paired_reads_name_list:
                 # Create a ??? Runnable per paired_reads_name.
 
                 # prefix_run_tophat = '_'.join((stage_run_tophat.name, paired_reads_name))
 
-                file_path_deseq = FilePathDESeq(prefix=prefix)
+                # file_path_deseq = FilePathDESeq(prefix=prefix)
 
             annotation_sheet.row_dicts.append(row_dict)
         # TODO: Create a directory for the comparison.

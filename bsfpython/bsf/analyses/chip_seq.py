@@ -589,7 +589,7 @@ class ChIPSeq(Analysis):
         # Get the BWA index.
 
         # TODO: The BWA index directory needs to be configurable.
-        bwa_genome_db = os.path.join(Default.absolute_genomes(self.genome_version),
+        bwa_genome_db = os.path.join(Default.absolute_genome_resource(self.genome_version),
                                      'forBWA_0.7.6a', self.genome_version)
 
         stage_alignment = self.get_stage(name='chipseq_alignment')
