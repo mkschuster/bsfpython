@@ -291,44 +291,55 @@ class RunInformation(object):
 
         run_info_tree = ElementTree(file=file_path)
         run_element = run_info_tree.find(path='Run')
+        """ @type run_element: Element | None """
         if run_element is None:
             raise Exception('Cannot find the <Run> element in the ElementTree of XML file {!r}.'.format(file_path))
-        assert isinstance(run_element, Element)
 
         # Parse meta-information about the Illumina run
 
         run_identifier = run_element.get(key='Id')  # e.g. 130724_SN815_0089_BC26JBACXX
+        """ @type run_identifier: str """
         run_number = run_element.get(key='Number')  # e.g. 91
+        """ @type run_number: str """
         run_identifier_components = RunInformation.parse_run_identifier(run_identifier=run_identifier)
 
         xml_flow_cell = run_element.find(path='Flowcell')
+        """ @type xml_flow_cell: Element | None """
         if xml_flow_cell is not None:
             flow_cell = xml_flow_cell.text  # e.g. C26JBACXX
+            """ @type flow_cell: str """
         else:
             flow_cell = run_identifier_components[4]
 
         xml_instrument = run_element.find(path='Instrument')
+        """ @type xml_instrument: Element | None """
         if xml_instrument is not None:
             instrument = xml_instrument.text  # e.g. SN815
+            """ @type instrument: str """
         else:
             instrument = run_identifier_components[1]
 
         xml_date = run_element.find(path='Date')
+        """ @type xml_date: Element | None """
         if xml_date is not None:
             date = xml_date.text  # e.g. 130724
+            """ @type date: str """
         else:
             date = run_identifier_components[0]
 
         xml_second_read = run_element.find(path='SecondRead')
+        """ @type xml_second_read: Element | None """
         if xml_second_read is not None:
             second_read = int(xml_second_read.get(key='FirstCycle'))
         else:
             second_read = int(0)
 
         reads = list()
+        """ @type reads: list[bsf.illumina.RunInformationRead] """
         number = int(1)
 
         for read_element in run_element.find(path='Reads'):
+            """ @type read_element: Element | None """
             assert isinstance(read_element, Element)
 
             # <ApplicationName>HiSeq Control Software</ApplicationName>
@@ -346,7 +357,7 @@ class RunInformation(object):
 
             if 'NumCycles' in read_element.keys():
                 is_index = read_element.get(key='IsIndexedRead')
-                assert isinstance(is_index, str)
+                """ @type is_index: str """
                 if is_index not in ('Y', 'N'):
                     warning = 'Unexpected value <Read IsIndexedRead="{}"> in Read element attribute IsIndexedRead '. \
                         format(read_element.get(key='IsIndexedRead'))
@@ -393,7 +404,7 @@ class RunInformation(object):
         # Get the flow cell layout if it exits.
 
         xml_flow_cell_layout = run_info_tree.find(path='Run/FlowcellLayout')
-        assert isinstance(xml_flow_cell_layout, Element)
+        """ @type xml_flow_cell_layout: Element | None """
         if xml_flow_cell_layout is not None:
             flow_cell_layout = RunInformationFlowcellLayout(
                 lane_count=int(xml_flow_cell_layout.get(key='LaneCount')),
@@ -513,7 +524,6 @@ class RunInformation(object):
         cycle_number = 0
 
         for read in self.reads:
-            assert isinstance(read, RunInformationRead)
             cycle_number += read.cycles
 
         return cycle_number
@@ -556,10 +566,11 @@ class RunInformation(object):
         """
 
         cycle_number = 0
+        """ cycle_number: int """
         read_start_list = list()
+        """ @type read_start_list: list[int] """
 
         for read in self.reads:
-            assert isinstance(read, RunInformationRead)
             read_start_list.append(cycle_number)
             cycle_number += read.cycles
 
@@ -583,7 +594,6 @@ class RunInformation(object):
         read_structure = str()
 
         for read in self.reads:
-            assert isinstance(read, RunInformationRead)
             read_structure += str(read.cycles)
             if read.index:
                 read_structure += 'B'
@@ -604,9 +614,9 @@ class RunInformation(object):
         """
 
         read_structure_list = list()
+        """ @type read_structure_list: list[str] """
 
         for read in self.reads:
-            assert isinstance(read, RunInformationRead)
             if read.index:
                 read_structure_list.append('{}I'.format(read.cycles))
             else:
@@ -663,6 +673,7 @@ class RunParameters(object):
             self.element_tree = ElementTree()
 
         self._run_parameters_version = None
+        """ @type _run_parameters_version: str | None """
 
         return
 
@@ -1090,18 +1101,21 @@ class AnalysisConfiguration(XMLConfiguration):
         super(AnalysisConfiguration, self).__init__(file_path=file_path, element_tree=element_tree)
 
         self._lane_tile_dict = dict()
+        """ @type _lane_tile_dict: dict[str, dict[str, bool]] """
 
         if self.element_tree.getroot() is None:
             return
 
         for lane_element in self.element_tree.find(path='Run/TileSelection'):
+            """ @type lane_element: Element """
             assert isinstance(lane_element, Element)
             lane_index = lane_element.get(key='Index')
-            assert isinstance(lane_index, str)
+            """ @type lane_index: str """
             if lane_index not in self._lane_tile_dict:
                 self._lane_tile_dict[lane_index] = dict()
             lane_dict = self._lane_tile_dict[lane_index]
             for tile_element in lane_element.findall(path='Tile'):
+                """ @type title_element: Element """
                 assert isinstance(tile_element, Element)
                 lane_dict[tile_element.text] = True
 
@@ -1324,7 +1338,10 @@ class RunFolder(object):
             self.base_call_analysis = BaseCallAnalysis()
 
         self._missing_base_call_tiles = dict()
+        """ @type _missing_base_call_tiles: dict[int, dict[str, bool]] """
+
         self._missing_image_analysis_tiles = dict()
+        """ @type _missing_image_analysis_tiles: dict[int, dict[str, bool]] """
 
         return
 
@@ -1487,6 +1504,7 @@ class RunFolder(object):
             return
         _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
+        """ @type _directory_dict: dict[str | unicode, int] """
 
         if debug:
             print "Processing 'IRF/Data/Intensities/BaseCalls/{}/'".format(_directory_name)
@@ -1502,6 +1520,7 @@ class RunFolder(object):
                     continue
                 lane_path = os.path.join(_directory_path, lane_name)
                 lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
+                """ @type lane_dict: dict[str | unicode, int] """
 
                 if debug:
                     print "Processing 'IRF/Data/Intensities/BaseCalls/{}/{}/'".format(_directory_name, lane_name)
@@ -1518,6 +1537,7 @@ class RunFolder(object):
                         continue
                     cycle_path = os.path.join(lane_path, cycle_name)
                     cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
+                    """ @type cycle_dict: dict[str | unicode, int] """
 
                     for surface in range(1, fcl.surface_count + 1):
                         for swath in range(1, fcl.swath_count + 1):
@@ -1626,12 +1646,12 @@ class RunFolder(object):
             return
         _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
+        """ @type _directory_dict: dict[str | unicode, int] """
 
         if debug:
             print "Processing 'IRF/Data/intensities/BaseCalls/{}/'".format(_directory_name)
 
         for ri_read in self.run_information.reads:
-            assert isinstance(ri_read, RunInformationRead)
             # Process read phasing files.
             # s_1_phasing.txt
             # s_2_phasing.txt
@@ -1737,6 +1757,7 @@ class RunFolder(object):
             return
         _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
+        """ @type _directory_dict: dict[str | unicode, int] """
 
         if debug:
             print "Processing 'IRF/Data/Intensities/{}/'".format(_directory_name)
@@ -1765,6 +1786,7 @@ class RunFolder(object):
                 continue
             lane_path = os.path.join(_directory_path, lane_name)
             lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
+            """ @type lane_dict: dict[str | unicode, int] """
 
             if debug:
                 print "Processing 'IRF/Data/Intensities/{}/{}/'".format(_directory_name, lane_name)
@@ -1812,6 +1834,7 @@ class RunFolder(object):
                         continue
                     cycle_path = os.path.join(lane_path, cycle_name)
                     cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
+                    """ @type cycle_dict: dict[str | unicode, int] """
 
                     for surface in range(1, fcl.surface_count + 1):
                         for swath in range(1, fcl.swath_count + 1):
@@ -1957,6 +1980,7 @@ class RunFolder(object):
             return
         _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
+        """ @type _directory_dict: dict[str | unicode, int] """
 
         if debug:
             print "Processing 'IRF/Data/Intensities/{}/'".format(_directory_name)
@@ -2010,15 +2034,17 @@ class RunFolder(object):
             return
         _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
+        """ @type _directory_dict: dict[str | unicode, int] """
 
         if debug:
             print "Processing 'IRF/Data/{}/'".format(_directory_name)
 
         # Build a list of cycle numbers that have no error map such as the last cycle of a read and index cycles.
         no_error_cycles = list()
+        """ @type no_error_cycles: list[int] """
+
         cycles = 1
         for ri_read in self.run_information.reads:
-            assert isinstance(ri_read, RunInformationRead)
             if ri_read.index:
                 no_error_cycles.extend(range(cycles, cycles + ri_read.cycles))
             else:
@@ -2078,6 +2104,7 @@ class RunFolder(object):
                     continue
                 lane_path = os.path.join(_directory_path, lane_name)
                 lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
+                """ @type lane_dict: dict[str | unicode, int] """
 
                 if debug:
                     print "Processing 'IRF/Data/{}/{}/'".format(_directory_name, lane_name)
@@ -2134,6 +2161,7 @@ class RunFolder(object):
                             continue
                         cycle_path = os.path.join(lane_path, cycle_name)
                         cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
+                        """ @type cycle_dict: dict[str | unicode, int] """
 
                         for surface in range(1, fcl.surface_count + 1):
                             for swath in range(1, fcl.swath_count + 1):
@@ -2261,6 +2289,7 @@ class RunFolder(object):
             return
         _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
+        """ @type _directory_dict: dict[str | unicode, int] """
 
         if debug:
             print "Processing 'IRF/Data/{}/'".format(_directory_name)
@@ -2315,6 +2344,7 @@ class RunFolder(object):
             return
         _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
+        """ @type _directory_dict: dict[str | unicode, int] """
 
         if debug:
             print "Processing 'IRF/{}/'".format(_directory_name)
@@ -2404,6 +2434,7 @@ class RunFolder(object):
             return
         _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
+        """ @type _directory_dict: dict[str | unicode, int] """
 
         _file_name_list = [
             'CorrectedIntMetricsOut.bin',
@@ -2477,6 +2508,7 @@ class RunFolder(object):
             return
         _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
+        """ @type _directory_dict: dict[str | unicode, int] """
 
         _file_name_list = [
             'Save All Thumbnails.xml'
@@ -2520,8 +2552,10 @@ class RunFolder(object):
             return
         _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
+        """ @type _directory_dict: dict[str | unicode, int] """
 
         _file_name_list = list()
+        """ @type _file_name_list: list[str | unicode] """
 
         if rta in ('1.18.54', ):
             # The MiSeq platform uses the reagent kit barcode.
@@ -2574,6 +2608,7 @@ class RunFolder(object):
         # Helper dict to map surface numbers to abbreviations.
 
         surface_dict = dict()
+        """ @type surface_dict: dict[int, str] """
         surface_dict[1] = 'bot'
         surface_dict[2] = 'top'
 
@@ -2587,6 +2622,7 @@ class RunFolder(object):
             return
         _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
+        """ @type _directory_dict: dict[str | unicode, int] """
 
         if debug:
             print "Processing 'IRF/{}/'".format(_directory_name)
@@ -2602,6 +2638,7 @@ class RunFolder(object):
                 continue
             lane_path = os.path.join(_directory_path, lane_name)
             lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
+            """ @type lane_dict: dict[str | unicode, int] """
 
             if debug:
                 print "Processing 'IRF/{}/{}/'".format(_directory_name, lane_name)
@@ -2617,6 +2654,7 @@ class RunFolder(object):
                     continue
                 cycle_path = os.path.join(lane_path, cycle_name)
                 cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
+                """ @type cycle_dict: dict[str | unicode, int] """
 
                 for surface in range(1, fcl.surface_count + 1):
                     for swath in range(1, fcl.swath_count + 1):
@@ -2719,6 +2757,7 @@ class RunFolder(object):
         _directory_name = os.path.basename(self.file_path)
         _directory_path = self.file_path
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
+        """ @type _directory_dict: dict[str | unicode, int] """
 
         # Check the IRF/Data/ directory.
 

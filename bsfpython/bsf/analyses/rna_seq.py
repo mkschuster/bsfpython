@@ -42,6 +42,46 @@ from bsf.standards import Default
 
 class FilePathTophat(FilePath):
     """The C{bsf.analyses.rna_seq.FilePathTophat} models files in a sample-specific TopHat directory.
+
+    Attributes:
+    @ivar output_directory: Output directory
+    @type output_directory: str | unicode
+    @ivar accepted_hits_bam: TopHat accepted hits BAM file
+    @type accepted_hits_bam: str | unicode
+    @ivar accepted_hits_bam_link_source: TopHat accepted hits BAM file symbolic link source
+    @type accepted_hits_bam_link_source: str | unicode
+    @ivar accepted_hits_bam_link_target: TopHat accepted hits BAM file symbolic link target
+    @type accepted_hits_bam_link_target: str | unicode
+    @ivar accepted_hits_bai: TopHat accepted hits BAI file
+    @type accepted_hits_bai: str | unicode
+    @ivar accepted_hits_bai_link_source: TopHat accepted hits BAI file symbolic link source
+    @type accepted_hits_bai_link_source: str | unicode
+    @ivar accepted_hits_bai_link_target: TopHat accepted hits BAI file symbolic link target
+    @type accepted_hits_bai_link_target: str | unicode
+    @ivar accepted_hits_bw: TopHat accepted hits bigWig file
+    @type accepted_hits_bw: str | unicode
+    @ivar align_summary: TopHat align summary file
+    @type align_summary: str | unicode
+    @ivar deletions_bb: TopHat deletions bigBed file
+    @type deletions_bb: str | unicode
+    @ivar deletions_bed: TopHat deletions BED file
+    @type deletions_bed: str | unicode
+    @ivar insertions_bb: TopHat insertions bigBed file
+    @type insertions_bb: str | unicode
+    @ivar insertions_bed: TopHat insertions BED file
+    @type insertions_bed: str | unicode
+    @ivar junctions_bb: TopHat junctions bigBed file
+    @type junctions_bb: str | unicode
+    @ivar junctions_bed: TopHat junctions BED file
+    @type junctions_bed: str | unicode
+    @ivar prep_reads_info: TopHat prepare reads information file
+    @type prep_reads_info: str | unicode
+    @ivar unmapped_bam: TopHat unmapped BAM file
+    @type unmapped_bam: str | unicode
+    @ivar unmapped_bam_link_source: TopHat unmapped BAM file symbolic link source
+    @type unmapped_bam_link_source: str | unicode
+    @ivar unmapped_bam_link_target: TopHat unmapped BAM file symbolic link target
+    @type unmapped_bam_link_target: str | unicode
     """
 
     def __init__(self, prefix):
@@ -63,12 +103,12 @@ class FilePathTophat(FilePath):
         self.accepted_hits_bai_link_target = os.path.join(prefix, prefix + '_accepted_hits.bam.bai')
         self.accepted_hits_bw = os.path.join(prefix, 'accepted_hits.bw')
         self.align_summary = os.path.join(prefix, 'align_summary.txt')
-        self.deletions_bed = os.path.join(prefix, 'deletions.bed')
         self.deletions_bb = os.path.join(prefix, 'deletions.bb')
-        self.insertions_bed = os.path.join(prefix, 'insertions.bed')
+        self.deletions_bed = os.path.join(prefix, 'deletions.bed')
         self.insertions_bb = os.path.join(prefix, 'insertions.bb')
-        self.junctions_bed = os.path.join(prefix, 'junctions.bed')
+        self.insertions_bed = os.path.join(prefix, 'insertions.bed')
         self.junctions_bb = os.path.join(prefix, 'junctions.bb')
+        self.junctions_bed = os.path.join(prefix, 'junctions.bed')
         self.prep_reads_info = os.path.join(prefix, 'prep_reads.info')
         self.unmapped_bam = os.path.join(prefix, 'unmapped.bam')
         self.unmapped_bam_link_source = 'unmapped.bam'
@@ -79,6 +119,38 @@ class FilePathTophat(FilePath):
 
 class FilePathCufflinks(FilePath):
     """The C{bsf.analyses.rna_seq.FilePathCufflinks} models files in a sample-specific Cufflinks directory.
+
+    Attributes:
+    @ivar output_directory: Output directory
+    @type output_directory: str | unicode
+    @ivar fpkm_tracking_genes_tsv: Cufflinks FPKM tracking genes tab-separated value (TSV) file
+    @type fpkm_tracking_genes_tsv: str | unicode
+    @ivar fpkm_tracking_isoforms_tsv: Cufflinks FPKM tracking isoforms tab-separated value (TSV) file
+    @type fpkm_tracking_isoforms_tsv: str | unicode
+    @ivar skipped_gtf: Cufflinks skipped regions GTF file
+    @type skipped_gtf: str | unicode
+    @ivar skipped_gtf_link_source: Cufflinks skipped regions GTF symbolic links source
+    @type skipped_gtf_link_source: str | unicode
+    @ivar skipped_gtf_link_target: Cufflinks skipped regions GTF symbolic links target
+    @type skipped_gtf_link_target: str | unicode
+    @ivar temporary_big_gene_prediction: Temporary UCSC big gene prediction (bigGenePred) file
+    @type temporary_big_gene_prediction: str | unicode
+    @ivar temporary_gene_prediction: Temporary UCSC gene prediction (genePred) file
+    @type temporary_gene_prediction: str | unicode
+    @ivar temporary_sorted_tsv: Temporary sorted tab-separated value (TSV) file
+    @type temporary_sorted_tsv: str | unicode
+    @ivar transcripts_bb: Cufflinks transcript assembly bigBed file
+    @type transcripts_bb: str | unicode
+    @ivar transcripts_bb_link_source: Cufflinks transcript assembly bigBed symbolic link source
+    @type transcripts_bb_link_source: str | unicode
+    @ivar transcripts_bb_link_target: Cufflinks transcript assembly bigBed symbolic link target
+    @type transcripts_bb_link_target: str | unicode
+    @ivar transcripts_gtf: Cufflinks transcript assembly GTF file
+    @type transcripts_gtf: str | unicode
+    @ivar transcripts_gtf_link_source: Cufflinks transcript assembly GTF symbolic links source
+    @type transcripts_gtf_link_source: str | unicode
+    @ivar transcripts_gtf_link_target: Cufflinks transcript assembly GTF symbolic links target
+    @type transcripts_gtf_link_target: str | unicode
     """
 
     def __init__(self, prefix):
@@ -92,22 +164,50 @@ class FilePathCufflinks(FilePath):
         super(FilePathCufflinks, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
-        self.transcripts_gtf = os.path.join(prefix, 'transcripts.gtf')
-        self.temporary_gene_prediction = os.path.join(prefix, 'transcripts_gene_prediction.tsv')
+        self.fpkm_tracking_genes_tsv = os.path.join(prefix, prefix + '_genes_fpkm_tracking.tsv')
+        self.fpkm_tracking_isoforms_tsv = os.path.join(prefix, prefix + '_isoforms_fpkm_tracking.tsv')
+        self.skipped_gtf = os.path.join(prefix, 'skipped.gtf')
+        self.skipped_gtf_link_source = 'skipped.gtf'
+        self.skipped_gtf_link_target = os.path.join(prefix, prefix + '_skipped.gtf')
         self.temporary_big_gene_prediction = os.path.join(prefix, 'transcripts_big_gene_prediction.tsv')
+        self.temporary_gene_prediction = os.path.join(prefix, 'transcripts_gene_prediction.tsv')
         self.temporary_sorted_tsv = os.path.join(prefix, 'transcripts_sorted.tsv')
         self.transcripts_bb = os.path.join(prefix, 'transcripts.bb')
-        self.transcripts_gtf_link_source = 'transcripts.gtf'
-        self.transcripts_gtf_link_target = os.path.join(prefix, prefix + '_transcripts.gtf')
         self.transcripts_bb_link_source = 'transcripts.bb'
         self.transcripts_bb_link_target = os.path.join(prefix, prefix + '_transcripts.bb')
-        # TODO: Some files are missing.
+        self.transcripts_gtf = os.path.join(prefix, 'transcripts.gtf')
+        self.transcripts_gtf_link_source = 'transcripts.gtf'
+        self.transcripts_gtf_link_target = os.path.join(prefix, prefix + '_transcripts.gtf')
 
         return
 
 
 class FilePathCuffmerge(FilePath):
     """The C{bsf.analyses.rna_seq.FilePathCuffmerge} models files in a comparison-specific Cuffmerge directory.
+
+    Attributes:
+    @ivar output_directory: Output directory
+    @type output_directory: str | unicode
+    @ivar assembly_txt: Assembly text file
+    @type assembly_txt: str | unicode
+    @ivar merged_bb: Cuffmerge transcript assembly bigBed file
+    @type merged_bb: str | unicode
+    @ivar merged_bb_link_source: Cuffmerge transcript assembly bigBed symbolic link source
+    @type merged_bb_link_source: str | unicode
+    @ivar merged_bb_link_target: Cuffmerge transcript assembly bigBed symbolic link target
+    @type merged_bb_link_target: str | unicode
+    @ivar merged_gtf: Cuffmerge merged GTF file
+    @type merged_gtf: str | unicode
+    @ivar merged_gtf_link_source: Cuffmerge transcript assembly GTF symbolic links source
+    @type merged_gtf_link_source: str | unicode
+    @ivar merged_gtf_link_target: Cuffmerge transcript assembly GTF symbolic links target
+    @type merged_gtf_link_target: str | unicode
+    @ivar temporary_gene_prediction: Temporary UCSC gene prediction (genePred) file
+    @type temporary_gene_prediction: str | unicode
+    @ivar temporary_big_gene_prediction: Temporary UCSC big gene prediction (bigGenePred) file
+    @type temporary_big_gene_prediction: str | unicode
+    @ivar temporary_sorted_tsv: Temporary sorted tab-separated value (TSV) file
+    @type temporary_sorted_tsv: str | unicode
     """
 
     def __init__(self, prefix):
@@ -122,21 +222,27 @@ class FilePathCuffmerge(FilePath):
 
         self.output_directory = prefix
         self.assembly_txt = '_'.join((prefix, 'assembly.txt'))
+        self.merged_bb = os.path.join(prefix, 'merged.bb')
+        self.merged_bb_link_source = 'merged.bb'
+        self.merged_bb_link_target = os.path.join(prefix, prefix + '_merged.bb')
         self.merged_gtf = os.path.join(prefix, 'merged.gtf')
+        self.merged_gtf_link_source = 'merged.gtf'
+        self.merged_gtf_link_target = os.path.join(prefix, prefix + '_merged.gtf')
         self.temporary_gene_prediction = os.path.join(prefix, 'merged_gene_prediction.tsv')
         self.temporary_big_gene_prediction = os.path.join(prefix, 'merged_big_gene_prediction.tsv')
         self.temporary_sorted_tsv = os.path.join(prefix, 'merged_sorted.tsv')
-        self.merged_bb = os.path.join(prefix, 'merged.bb')
-        self.merged_gtf_link_source = 'merged.gtf'
-        self.merged_gtf_link_target = os.path.join(prefix, prefix + '_merged.gtf')
-        self.merged_bb_link_source = 'merged.bb'
-        self.merged_bb_link_target = os.path.join(prefix, prefix + '_merged.bb')
 
         return
 
 
 class FilePathCuffquant(FilePath):
     """The C{bsf.analyses.rna_seq.FilePathCuffquant} models files in a sample-specific Cuffquant directory.
+
+    Attributes:
+    @ivar output_directory: Output directory
+    @type output_directory: str | unicode
+    @ivar abundances: Cuffquant abundances file
+    @type abundances: str | unicode
     """
 
     def __init__(self, prefix):
@@ -160,6 +266,10 @@ class FilePathCuffquant(FilePath):
 
 class FilePathCuffnorm(FilePath):
     """The C{bsf.analyses.rna_seq.FilePathCuffnorm} models files in a comparison-specific Cuffnorm directory.
+
+    Attributes:
+    @ivar output_directory: Output directory
+    @type output_directory: str | unicode
     """
 
     def __init__(self, prefix):
@@ -179,6 +289,10 @@ class FilePathCuffnorm(FilePath):
 
 class FilePathCuffdiff(FilePath):
     """The C{bsf.analyses.rna_seq.FilePathCuffdiff} models files in a comparison-specific Cuffdiff directory.
+
+    Attributes:
+    @ivar output_directory: Output directory
+    @type output_directory: str | unicode
     """
 
     def __init__(self, prefix):
@@ -386,7 +500,7 @@ class Tuxedo(Analysis):
         @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of Python C{str} (comparison name) key objects and
             Python C{tuple} value objects of C{bsf.ngs.Sample.name} and Python C{list} of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, (bsf.ngs.Sample.name, list[bsf.ngs.Sample])]
+        @type comparisons: dict[str, (str, list[bsf.ngs.Sample])]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
@@ -699,6 +813,7 @@ class Tuxedo(Analysis):
                 self.sample_list.extend(self.collection.get_all_samples())
                 # Create a global comparison by adding all sample groups.
                 comparison_groups = list()
+                """ @type comparison_groups: list[(str, list[bsf.ngs.Sample])] """
                 for key in self.collection.sample_group_dict.keys():
                     comparison_groups.append((key, self.collection.sample_group_dict[key]))
                 # Sort the list of comparison groups by group name.
@@ -711,6 +826,7 @@ class Tuxedo(Analysis):
                 self.sample_list.extend(self.collection.get_all_samples())
                 # Create a global comparison by adding all samples under their sample name as group name.
                 comparison_groups = list()
+                """ @type comparison_groups: list[(str, list[bsf.ngs.Sample])] """
                 for sample in self.sample_list:
                     # Add a tuple of group (i.e. sample) name and a Python list of the Sample object.
                     comparison_groups.append((sample.name, [sample]))
@@ -938,20 +1054,22 @@ class Tuxedo(Analysis):
 
                 # Set rnaseq_tophat arguments for reads1 and reads2.
 
-                reads1 = list()
-                reads2 = list()
+                reads_1_file_path_list = list()
+                """ @type reads_1_file_path_list: list[str | unicode] """
+                reads_2_file_path_list = list()
+                """ @type reads_2_file_path_list: list[str | unicode] """
 
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
                         print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
 
                     if paired_reads.reads_1:
-                        reads1.append(paired_reads.reads_1.file_path)
+                        reads_1_file_path_list.append(paired_reads.reads_1.file_path)
                     if paired_reads.reads_2:
-                        reads2.append(paired_reads.reads_2.file_path)
+                        reads_2_file_path_list.append(paired_reads.reads_2.file_path)
 
-                tophat.arguments.append(','.join(reads1))
-                tophat.arguments.append(','.join(reads2))
+                tophat.arguments.append(','.join(reads_1_file_path_list))
+                tophat.arguments.append(','.join(reads_2_file_path_list))
 
                 # Create a new rnaseq_run_tophat Executable.
                 # TODO: The following code block is required as long as the bsf_run_rnaseq_tophat.py script
@@ -1662,6 +1780,40 @@ class Tuxedo(Analysis):
         @rtype:
         """
 
+        def relative_anchor(prefix, suffix, text):
+            """Create a relative HTML anchor element.
+
+            <a href="prefix/prefix_suffix">text</a>
+            @param prefix: Prefix
+            @type prefix: str
+            @param suffix: Suffix
+            @type suffix: str
+            @param text: Link text
+            @type text: str
+            @return: Relative URL
+            @rtype: str
+            """
+            return '<a href="' + prefix + '/' + prefix + '_' + suffix + '">' + text + '</a>'
+
+        def relative_image(prefix, suffix, text):
+            """Create a relative HTML image element
+
+            <img alt="text" src="prefix/prefix_suffix" height="80" width="80" />
+            @param prefix: Prefix
+            @type prefix: str
+            @param suffix: Suffix
+            @type suffix: str
+            @param text: Alternative text
+            @type text: str
+            @return:
+            """
+            return '<img' + \
+                   ' alt="' + text + '"' + \
+                   ' src="' + prefix + '/' + prefix + '_' + suffix + '"' + \
+                   ' height="80"' + \
+                   ' width="80"' + \
+                   ' />'
+
         # Create a symbolic link containing the project name and a UUID.
         default = Default.get_global_default()
         link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
@@ -1669,206 +1821,210 @@ class Tuxedo(Analysis):
 
         # This code only needs the public URL.
 
-        output_hub = str()
+        hub_list = list()
+        """ @type hub_list: list[str | unicode] """
 
         # Write a HTML document.
 
-        output_html = str()
+        report_list = list()
+        """ @type report_list: list[str | unicode] """
 
-        output_html += '<h1 id="{}_analysis">{} {}</h1>\n'.format(self.prefix, self.project_name, self.name)
-        output_html += '\n'
+        report_list += '<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n'
+        report_list += '\n'
 
         # TopHat and Cufflinks table.
 
-        output_html += '<h2 id="transcriptome_browsing">Transcriptome Browsing</h2>\n'
-        output_html += '\n'
+        report_list += '<h2 id="transcriptome_browsing">Transcriptome Browsing</h2>\n'
+        report_list += '\n'
 
-        output_html += '<h3 id="read_alignments">Read Alignments</h3>\n'
-        output_html += '\n'
+        report_list += '<h3 id="read_alignments">Read Alignments</h3>\n'
+        report_list += '\n'
 
-        output_html += '<p id ="tophat">\n'
+        report_list += '<p id ="tophat">\n'
         # http://tophat.cbcb.umd.edu/manual.html
-        output_html += '<strong><a href="http://ccb.jhu.edu/software/tophat/index.shtml">TopHat</a></strong> '
-        output_html += 'aligns RNA-Seq reads to a genome in order to identify '
-        output_html += 'exon-exon splice junctions. It is built on the ultra fast\n'
-        output_html += 'short read mapping program\n'
-        output_html += '<strong>'
-        output_html += '<a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie 2</a>'
-        output_html += '</strong>.\n'
-        output_html += '</p>\n'
-        output_html += '\n'
+        report_list += '<strong><a href="http://ccb.jhu.edu/software/tophat/index.shtml">TopHat</a></strong> '
+        report_list += 'aligns RNA-Seq reads to a genome in order to identify '
+        report_list += 'exon-exon splice junctions. It is built on the ultra fast\n'
+        report_list += 'short read mapping program\n'
+        report_list += '<strong>'
+        report_list += '<a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie 2</a>'
+        report_list += '</strong>.\n'
+        report_list += '</p>\n'
+        report_list += '\n'
 
         # Construct an automatic UCSC Track Hub link.
 
         options_dict = {
             'db': self.genome_version,
-            'hubUrl': '{}/{}/rnaseq_hub.txt'.format(Default.url_absolute_projects(), link_name),
+            'hubUrl': '/'.join((Default.url_absolute_projects(), link_name, 'rnaseq_hub.txt')),
         }
 
-        output_html += '<p id="track_hub">\n'
-        output_html += 'View TopHat <strong>read alignments</strong> tracks for each sample\n'
-        output_html += 'in their genomic context via the project-specific\n'
-        output_html += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'.format(
-            self.ucsc_track_url(options_dict=options_dict),
-            self.project_name)
-        output_html += '</p>\n'
-        output_html += '\n'
+        report_list += '<p id="track_hub">\n'
+        report_list += 'View TopHat <strong>read alignments</strong> tracks for each sample\n'
+        report_list += 'in their genomic context via the project-specific\n'
+        report_list += 'UCSC Genome Browser Track Hub '
+        report_list += '<a href="' + self.ucsc_track_url(options_dict=options_dict) + '">' \
+                       + self.project_name + '</a>.\n'
+        report_list += '</p>\n'
+        report_list += '\n'
 
-        output_html += '<p>\n'
-        output_html += '<a href="rnaseq_tophat_alignment_summary.pdf"><img ' \
-                       'alt="TopHat Alignment Summary" id="tophat_alignment_summary_img"' \
+        report_list += '<p>\n'
+        report_list += '<a href="rnaseq_tophat_alignment_summary.pdf">'
+        report_list += '<img ' \
+                       'alt="TopHat Alignment Summary" ' \
+                       'id="tophat_alignment_summary_img" ' \
                        'src="rnaseq_tophat_alignment_summary.png" ' \
                        'height="80" ' \
                        'width="80" ' \
-                       '/>' \
-                       '</a>\n'
-        output_html += 'Alignment summary statistics <a href="rnaseq_tophat_alignment_summary.tsv">TSV</a>\n'
-        output_html += '</p>\n'
+                       '/>'
+        report_list += '</a>\n'
+        report_list += 'Alignment summary statistics <a href="rnaseq_tophat_alignment_summary.tsv">TSV</a>\n'
+        report_list += '</p>\n'
 
-        output_html += '<h3 id="alignment_events">Splice Junctions, Insertions and Deletions</h3>\n'
-        output_html += '\n'
+        report_list += '<h3 id="alignment_events">Splice Junctions, Insertions and Deletions</h3>\n'
+        report_list += '\n'
 
-        output_html += '<p>\n'
-        output_html += 'TopHat reports <strong>splice junctions</strong> on the basis of RNA-Seq\n'
-        output_html += 'read alignments in UCSC BED track format.\n'
-        output_html += 'Each junction consists of two connected BED blocks,\n'
-        output_html += 'where each block is as long as the maximal overhang\n'
-        output_html += 'of any read spanning the junction. The score is\n'
-        output_html += 'the number of alignments spanning the junction.\n'
-        output_html += 'UCSC BED tracks of <strong>insertions</strong> and\n'
-        output_html += '<strong>deletions</strong> are also reported by TopHat.\n'
-        output_html += '</p>\n'
+        report_list += '<p>\n'
+        report_list += 'TopHat reports <strong>splice junctions</strong> on the basis of RNA-Seq\n'
+        report_list += 'read alignments in UCSC BED track format.\n'
+        report_list += 'Each junction consists of two connected BED blocks,\n'
+        report_list += 'where each block is as long as the maximal overhang\n'
+        report_list += 'of any read spanning the junction. The score is\n'
+        report_list += 'the number of alignments spanning the junction.\n'
+        report_list += 'UCSC BED tracks of <strong>insertions</strong> and\n'
+        report_list += '<strong>deletions</strong> are also reported by TopHat.\n'
+        report_list += '</p>\n'
 
-        output_html += '<p>\n'
-        output_html += 'View the corresponding TopHat tracks for junctions, deletions and insertions\n'
-        output_html += 'for each sample in their genomic context via the project-specific\n'
-        output_html += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'.format(
-            self.ucsc_track_url(options_dict=options_dict),
-            self.project_name)
-        output_html += '</p>\n'
-        output_html += '\n'
+        report_list += '<p>\n'
+        report_list += 'View the corresponding TopHat tracks for junctions, deletions and insertions\n'
+        report_list += 'for each sample in their genomic context via the project-specific\n'
+        report_list += 'UCSC Genome Browser Track Hub '
+        report_list += '<a href="' + self.ucsc_track_url(options_dict=options_dict) + '">' + \
+                       self.project_name + '</a>.\n'
+        report_list += '</p>\n'
+        report_list += '\n'
 
-        # output += '<p>\n'
-        # output += 'Follow the links below to attach\n'
-        # output += 'Tophat junction, deletion and insertion annotation to the\n'
-        # output += 'UCSC Genome Browser. Since each file needs transferring to\n'
-        # output += 'the UCSC site, subsequent pages will take some time to load.\n'
-        # output += '</p>\n'
+        # report_list += '<p>\n'
+        # report_list += 'Follow the links below to attach\n'
+        # report_list += 'Tophat junction, deletion and insertion annotation to the\n'
+        # report_list += 'UCSC Genome Browser. Since each file needs transferring to\n'
+        # report_list += 'the UCSC site, subsequent pages will take some time to load.\n'
+        # report_list += '</p>\n'
 
-        output_html += '<h2 id="gene_expression_profiles">Gene Expression Profiles</h2>\n'
-        output_html += '\n'
+        report_list += '<h2 id="gene_expression_profiles">Gene Expression Profiles</h2>\n'
+        report_list += '\n'
 
-        output_html += '<p id="cufflinks">\n'
+        report_list += '<p id="cufflinks">\n'
         # http://cufflinks.cbcb.umd.edu/howitworks.html
-        output_html += '<strong><a href="http://cole-trapnell-lab.github.io/cufflinks/">Cufflinks</a></strong>\n'
-        output_html += 'assembles aligned RNA-Seq reads into transcripts,\n'
-        output_html += 'estimates their abundances, and tests for differential\n'
-        output_html += 'expression and regulation transcriptome-wide.\n'
-        output_html += 'It accepts aligned RNA-Seq reads and assembles the alignments into a parsimonious set of\n'
-        output_html += 'transcripts. Cufflinks then estimates the relative abundances of these transcripts based\n'
-        output_html += 'on how many reads support each one, taking into account biases in library preparation '
-        output_html += 'protocols.\n'
-        output_html += '</p>\n'
+        report_list += '<strong><a href="http://cole-trapnell-lab.github.io/cufflinks/">Cufflinks</a></strong>\n'
+        report_list += 'assembles aligned RNA-Seq reads into transcripts,\n'
+        report_list += 'estimates their abundances, and tests for differential\n'
+        report_list += 'expression and regulation transcriptome-wide.\n'
+        report_list += 'It accepts aligned RNA-Seq reads and assembles the alignments into a parsimonious set of\n'
+        report_list += 'transcripts. Cufflinks then estimates the relative abundances of these transcripts based\n'
+        report_list += 'on how many reads support each one, taking into account biases in library preparation '
+        report_list += 'protocols.\n'
+        report_list += '</p>\n'
 
-        output_html += '<p>\n'
-        output_html += 'The Cufflinks <strong>assembled transcripts</strong> can be attached to the \n'
-        output_html += 'UCSC Genome Browser, by following the "Transcript Assembly" links\n'
-        output_html += 'below.\n'
-        output_html += 'The isoforms.fpkm_tracking and genes.fpkm_tracking files\n'
-        output_html += 'contain the estimated isoform or gene expression values in the generic\n'
+        report_list += '<p>\n'
+        report_list += 'The Cufflinks <strong>assembled transcripts</strong> can be attached to the \n'
+        report_list += 'UCSC Genome Browser, by following the "Transcript Assembly" links\n'
+        report_list += 'below.\n'
+        report_list += 'The isoforms.fpkm_tracking and genes.fpkm_tracking files\n'
+        report_list += 'contain the estimated isoform or gene expression values in the generic\n'
         # http://cufflinks.cbcb.umd.edu/manual.html#fpkm_tracking_format
-        output_html += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
+        report_list += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
                        'fpkm-tracking-format">FPKM Tracking format</a>.\n'
-        output_html += 'The isoforms.count_tracking and genes.count_tracking files\n'
-        output_html += 'contain the scaled isoform or gene count values in the generic\n'
-        output_html += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
+        report_list += 'The isoforms.count_tracking and genes.count_tracking files\n'
+        report_list += 'contain the scaled isoform or gene count values in the generic\n'
+        report_list += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
                        'count-tracking-format">Count Tracking format</a>.\n'
-        output_html += '</p>\n'
+        report_list += '</p>\n'
 
-        output_html += '<p>\n'
-        output_html += 'Please see a more detailed description of\n'
+        report_list += '<p>\n'
+        report_list += 'Please see a more detailed description of\n'
         # http://cufflinks.cbcb.umd.edu/manual.html#cufflinks_output
-        output_html += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
+        report_list += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
                        'output-formats-used-in-the-cufflinks-suite">Cufflinks output</a>.\n'
-        output_html += '</p>\n'
+        report_list += '</p>\n'
 
-        output_html += '<table id="gene_expression_table">\n'
-        output_html += '<thead>\n'
-        output_html += '<tr>\n'
-        output_html += '<th>Sample</th>\n'
-        output_html += '<th>Assembled Transcripts</th>\n'
-        output_html += '<th>Gene FPKM</th>\n'
-        output_html += '<th>Transcript FPKM</th>\n'
-        output_html += '<th>Genes (Symbols)</th>\n'
-        output_html += '<th>Isoforms (Symbols)</th>\n'
-        output_html += '<th>Aligned BAM file</th>\n'
-        output_html += '<th>Aligned BAI file</th>\n'
-        output_html += '<th>Unaligned BAM file</th>\n'
-        output_html += '</tr>\n'
-        output_html += '</thead>\n'
-        output_html += '<tbody>\n'
+        report_list += '<table id="gene_expression_table">\n'
+        report_list += '<thead>\n'
+        report_list += '<tr>\n'
+        report_list += '<th>Sample</th>\n'
+        report_list += '<th>Assembled Transcripts</th>\n'
+        report_list += '<th>Gene FPKM</th>\n'
+        report_list += '<th>Transcript FPKM</th>\n'
+        report_list += '<th>Genes (Symbols)</th>\n'
+        report_list += '<th>Isoforms (Symbols)</th>\n'
+        report_list += '<th>Aligned BAM file</th>\n'
+        report_list += '<th>Aligned BAI file</th>\n'
+        report_list += '<th>Unaligned BAM file</th>\n'
+        report_list += '</tr>\n'
+        report_list += '</thead>\n'
+        report_list += '<tbody>\n'
 
         # Group via UCSC super tracks.
 
-        output_hub += 'track Alignments\n'
-        output_hub += 'shortLabel Alignments\n'
-        output_hub += 'longLabel TopHat RNA-Seq read alignments\n'
-        output_hub += 'visibility hide\n'
-        output_hub += 'superTrack on\n'
-        output_hub += 'group alignments\n'
-        output_hub += '\n'
+        hub_list += 'track Alignments\n'
+        hub_list += 'shortLabel Alignments\n'
+        hub_list += 'longLabel TopHat RNA-Seq read alignments\n'
+        hub_list += 'visibility hide\n'
+        hub_list += 'superTrack on\n'
+        hub_list += 'group alignments\n'
+        hub_list += '\n'
 
-        output_hub += 'track Assemblies\n'
-        output_hub += 'shortLabel Assemblies\n'
-        output_hub += 'longLabel Cuffmerge transcript structures\n'
-        output_hub += 'visibility full\n'
-        output_hub += 'superTrack on\n'
-        output_hub += 'group assemblies\n'
-        output_hub += '\n'
+        hub_list += 'track Assemblies\n'
+        hub_list += 'shortLabel Assemblies\n'
+        hub_list += 'longLabel Cuffmerge transcript structures\n'
+        hub_list += 'visibility full\n'
+        hub_list += 'superTrack on\n'
+        hub_list += 'group assemblies\n'
+        hub_list += '\n'
 
-        output_hub += 'track Coverage\n'
-        output_hub += 'shortLabel Coverage\n'
-        output_hub += 'longLabel TopHat RNA-Seq alignment coverage\n'
-        output_hub += 'visibility full\n'
-        output_hub += 'superTrack on\n'
-        output_hub += 'group coverage\n'
-        output_hub += '\n'
+        hub_list += 'track Coverage\n'
+        hub_list += 'shortLabel Coverage\n'
+        hub_list += 'longLabel TopHat RNA-Seq alignment coverage\n'
+        hub_list += 'visibility full\n'
+        hub_list += 'superTrack on\n'
+        hub_list += 'group coverage\n'
+        hub_list += '\n'
 
-        output_hub += 'track Deletions\n'
-        output_hub += 'shortLabel Deletions\n'
-        output_hub += 'longLabel TopHat RNA-Seq deletions\n'
-        output_hub += 'visibility hide\n'
-        output_hub += 'superTrack on\n'
-        output_hub += 'group alignments\n'
-        output_hub += '\n'
+        hub_list += 'track Deletions\n'
+        hub_list += 'shortLabel Deletions\n'
+        hub_list += 'longLabel TopHat RNA-Seq deletions\n'
+        hub_list += 'visibility hide\n'
+        hub_list += 'superTrack on\n'
+        hub_list += 'group alignments\n'
+        hub_list += '\n'
 
-        output_hub += 'track Insertions\n'
-        output_hub += 'shortLabel Insertions\n'
-        output_hub += 'longLabel TopHat RNA-Seq insertions\n'
-        output_hub += 'visibility hide\n'
-        output_hub += 'superTrack on\n'
-        output_hub += 'group alignments\n'
-        output_hub += '\n'
+        hub_list += 'track Insertions\n'
+        hub_list += 'shortLabel Insertions\n'
+        hub_list += 'longLabel TopHat RNA-Seq insertions\n'
+        hub_list += 'visibility hide\n'
+        hub_list += 'superTrack on\n'
+        hub_list += 'group alignments\n'
+        hub_list += '\n'
 
-        output_hub += 'track Junctions\n'
-        output_hub += 'shortLabel Junctions\n'
-        output_hub += 'longLabel TopHat RNA-Seq splice junctions\n'
-        output_hub += 'visibility show\n'
-        output_hub += 'superTrack on\n'
-        output_hub += 'group alignments\n'
-        output_hub += '\n'
+        hub_list += 'track Junctions\n'
+        hub_list += 'shortLabel Junctions\n'
+        hub_list += 'longLabel TopHat RNA-Seq splice junctions\n'
+        hub_list += 'visibility show\n'
+        hub_list += 'superTrack on\n'
+        hub_list += 'group alignments\n'
+        hub_list += '\n'
 
-        output_hub += 'track Transcripts\n'
-        output_hub += 'shortLabel Transcripts\n'
-        output_hub += 'longLabel Cufflinks transcript structures\n'
-        output_hub += 'visibility show\n'
-        output_hub += 'superTrack on\n'
-        output_hub += 'group transcripts\n'
-        output_hub += '\n'
+        hub_list += 'track Transcripts\n'
+        hub_list += 'shortLabel Transcripts\n'
+        hub_list += 'longLabel Cufflinks transcript structures\n'
+        hub_list += 'visibility show\n'
+        hub_list += 'superTrack on\n'
+        hub_list += 'group transcripts\n'
+        hub_list += '\n'
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
+                print repr(self) + ' Sample name: ' + sample.name
                 print sample.trace(1)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
@@ -1889,22 +2045,17 @@ class Tuxedo(Analysis):
 
                 # Common trackDb settings.
 
-                output_hub += 'track {}_alignments\n'. \
-                    format(paired_reads_name)
-                output_hub += 'type bam\n'
-                output_hub += 'shortLabel {}_alignments\n'. \
-                    format(paired_reads_name)
-                output_hub += 'longLabel {} TopHat RNA-Seq read alignments\n'. \
-                    format(paired_reads_name)
-                output_hub += 'bigDataUrl rnaseq_tophat_{}/accepted_hits.bam\n'. \
-                    format(paired_reads_name)
-                output_hub += 'visibility dense\n'
-                # track_output += 'html {}\n'.format()
+                hub_list += 'track ' + paired_reads_name + '_alignments\n'
+                hub_list += 'type bam\n'
+                hub_list += 'shortLabel ' + paired_reads_name + '_alignments\n'
+                hub_list += 'longLabel ' + paired_reads_name + ' TopHat RNA-Seq read alignments\n'
+                hub_list += 'bigDataUrl rnaseq_tophat_' + paired_reads_name + '/accepted_hits.bam\n'
+                hub_list += 'visibility dense\n'
+                # hub_list += 'html ...\n'
 
                 # Common optional settings.
 
-                output_hub += 'color {}\n'. \
-                    format('0,0,0')
+                hub_list += 'color 0,0,0\n'
 
                 # Compressed Sequence Alignment track settings.
 
@@ -1912,8 +2063,8 @@ class Tuxedo(Analysis):
 
                 # Composite track settings.
 
-                output_hub += 'parent Alignments\n'
-                output_hub += '\n'
+                hub_list += 'parent Alignments\n'
+                hub_list += '\n'
 
                 #
                 # Add a trackDB entry for each accepted_hits.bw file.
@@ -1921,218 +2072,212 @@ class Tuxedo(Analysis):
 
                 # Common trackDB settings.
 
-                output_hub += 'track {}_coverage\n'. \
-                    format(paired_reads_name)
+                hub_list += 'track ' + paired_reads_name + '_coverage\n'
                 # TODO: The bigWig type must declare the expected signal range.
                 # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
-                output_hub += 'type bigWig\n'
-                output_hub += 'shortLabel {}_coverage\n'. \
-                    format(paired_reads_name)
-                output_hub += 'longLabel {} TopHat RNA-Seq alignment coverage\n'. \
-                    format(paired_reads_name)
-                output_hub += 'bigDataUrl rnaseq_tophat_{}/accepted_hits.bw\n'. \
-                    format(paired_reads_name)
-                output_hub += 'visibility full\n'
-                # track_output += 'html {}\n'.format()
+                hub_list += 'type bigWig\n'
+                hub_list += 'shortLabel ' + paired_reads_name + '_coverage\n'
+                hub_list += 'longLabel ' + paired_reads_name + ' TopHat RNA-Seq alignment coverage\n'
+                hub_list += 'bigDataUrl rnaseq_tophat_' + paired_reads_name + '/accepted_hits.bw\n'
+                hub_list += 'visibility full\n'
+                # hub_list += 'html ...\n'
 
                 # Common optional settings.
 
-                output_hub += 'color {}\n'. \
-                    format('0,0,0')
+                hub_list += 'color 0,0,0\n'
 
                 # bigWig - Signal graphing track settings.
 
-                output_hub += 'alwaysZero on\n'
-                output_hub += 'autoScale on\n'
-                output_hub += 'graphTypeDefault bar\n'
-                output_hub += 'maxHeightPixels 100:60:20\n'
-                # track_output += 'maxWindowToQuery 10000000\n'
-                # track_output += 'smoothingWindow 5\n'
-                # track_output += 'transformFunc NONE\n'
-                # track_output += 'viewLimits 0:45\n'
-                # track_output += 'viewLimitsMax 0:50\n'
-                # track_output += 'windowingFunction maximum\n'
-                # track_output += 'yLineMark <#>\n'
-                # track_output += 'yLineOnOff on \n'
-                # track_output += 'gridDefault on\n'
+                hub_list += 'alwaysZero on\n'
+                hub_list += 'autoScale on\n'
+                hub_list += 'graphTypeDefault bar\n'
+                hub_list += 'maxHeightPixels 100:60:20\n'
+                # hub_list += 'maxWindowToQuery 10000000\n'
+                # hub_list += 'smoothingWindow 5\n'
+                # hub_list += 'transformFunc NONE\n'
+                # hub_list += 'viewLimits 0:45\n'
+                # hub_list += 'viewLimitsMax 0:50\n'
+                # hub_list += 'windowingFunction maximum\n'
+                # hub_list += 'yLineMark <#>\n'
+                # hub_list += 'yLineOnOff on \n'
+                # hub_list += 'gridDefault on\n'
 
                 # Composite track settings.
 
-                output_hub += 'parent Coverage\n'
-                output_hub += 'centerLabelsDense off\n'
-                output_hub += '\n'
+                hub_list += 'parent Coverage\n'
+                hub_list += 'centerLabelsDense off\n'
+                hub_list += '\n'
 
                 #
                 # Add a trackDB entry for each deletions.bb file.
                 #
 
-                output_hub += 'track {}_deletions\n'. \
-                    format(paired_reads_name)
-                output_hub += 'type bigBed\n'
-                output_hub += 'shortLabel {}_deletions\n'. \
-                    format(paired_reads_name)
-                output_hub += 'longLabel {} TopHat RNA-Seq deletions\n'. \
-                    format(paired_reads_name)
-                output_hub += 'bigDataUrl rnaseq_tophat_{}/deletions.bb\n'. \
-                    format(paired_reads_name)
-                output_hub += 'visibility hide\n'
+                hub_list += 'track ' + paired_reads_name + '_deletions\n'
+                hub_list += 'type bigBed\n'
+                hub_list += 'shortLabel ' + paired_reads_name + '_deletions\n'
+                hub_list += 'longLabel ' + paired_reads_name + ' TopHat RNA-Seq deletions\n'
+                hub_list += 'bigDataUrl rnaseq_tophat_' + paired_reads_name + '/deletions.bb\n'
+                hub_list += 'visibility hide\n'
+                # hub_list += 'html ...\n'
                 # 'html' is missing from the common settings.
 
                 # Common optional settings.
 
-                output_hub += 'color {}\n'. \
-                    format('0,0,0')
+                hub_list += 'color 0,0,0\n'
 
                 # Composite track settings.
 
-                output_hub += 'parent Deletions\n'
-                output_hub += '\n'
+                hub_list += 'parent Deletions\n'
+                hub_list += '\n'
 
                 # Insertions
 
-                output_hub += 'track insertions_{}\n'. \
-                    format(paired_reads_name)
-                output_hub += 'type bigBed\n'
-                output_hub += 'shortLabel {}_insertions\n'. \
-                    format(paired_reads_name)
-                output_hub += 'longLabel {} TopHat RNA-Seq insertions\n'. \
-                    format(paired_reads_name)
-                output_hub += 'bigDataUrl rnaseq_tophat_{}/insertions.bb\n'. \
-                    format(paired_reads_name)
-                output_hub += 'visibility hide\n'
+                hub_list += 'track insertions_' + paired_reads_name + '\n'
+                hub_list += 'type bigBed\n'
+                hub_list += 'shortLabel ' + paired_reads_name + '_insertions\n'
+                hub_list += 'longLabel ' + paired_reads_name + ' TopHat RNA-Seq insertions\n'
+                hub_list += 'bigDataUrl rnaseq_tophat_' + paired_reads_name + '/insertions.bb\n'
+                hub_list += 'visibility hide\n'
+                # hub_list += 'html ...\n'
                 # 'html' is missing from the common settings.
 
                 # Common optional settings.
 
-                output_hub += 'color {}\n'. \
-                    format('0,0,0')
+                hub_list += 'color 0,0,0\n'
 
                 # Composite track settings.
 
-                output_hub += 'parent Insertions\n'
-                output_hub += '\n'
+                hub_list += 'parent Insertions\n'
+                hub_list += '\n'
 
                 # Junctions
 
-                output_hub += 'track {}_junctions\n'. \
-                    format(paired_reads_name)
-                output_hub += 'type bigBed\n'
-                output_hub += 'shortLabel {}_junctions\n'. \
-                    format(paired_reads_name)
-                output_hub += 'longLabel {} TopHat RNA-Seq splice junctions\n'. \
-                    format(paired_reads_name)
-                output_hub += 'bigDataUrl rnaseq_tophat_{}/junctions.bb\n'. \
-                    format(paired_reads_name)
-                output_hub += 'visibility pack\n'
+                hub_list += 'track ' + paired_reads_name + '_junctions\n'
+                hub_list += 'type bigBed\n'
+                hub_list += 'shortLabel ' + paired_reads_name + '_junctions\n'
+                hub_list += 'longLabel ' + paired_reads_name + ' TopHat RNA-Seq splice junctions\n'
+                hub_list += 'bigDataUrl rnaseq_tophat_' + paired_reads_name + '/junctions.bb\n'
+                hub_list += 'visibility pack\n'
+                # hub_list += 'html ...\n'
                 # 'html' is missing from the common settings.
 
                 # Common optional settings.
 
-                output_hub += 'color {}\n'. \
-                    format('0,0,0')
+                hub_list += 'color 0,0,0\n'
 
                 # Composite track settings.
 
-                output_hub += 'parent Junctions\n'
-                output_hub += '\n'
+                hub_list += 'parent Junctions\n'
+                hub_list += '\n'
 
                 # Transcripts
 
-                output_hub += 'track {}_transcripts\n'. \
-                    format(paired_reads_name)
-                output_hub += 'type bigGenePred\n'
-                output_hub += 'shortLabel {}_transcripts\n'. \
-                    format(paired_reads_name)
-                output_hub += 'longLabel {} Cufflinks transcript assembly\n'. \
-                    format(paired_reads_name)
-                output_hub += 'bigDataUrl rnaseq_cufflinks_{}/transcripts.bb\n'. \
-                    format(paired_reads_name)
-                output_hub += 'visibility hide\n'
+                hub_list += 'track ' + paired_reads_name + '_transcripts\n'
+                hub_list += 'type bigGenePred\n'
+                hub_list += 'shortLabel ' + paired_reads_name + '_transcripts\n'
+                hub_list += 'longLabel ' + paired_reads_name + ' Cufflinks transcript assembly\n'
+                hub_list += 'bigDataUrl rnaseq_cufflinks_' + paired_reads_name + '/transcripts.bb\n'
+                hub_list += 'visibility hide\n'
+                # hub_list += 'html ...\n'
                 # 'html' is missing from the common settings.
 
                 # Common optional settings.
 
-                output_hub += 'color {}\n'. \
-                    format('0,0,0')
+                hub_list += 'color 0,0,0\n'
 
                 # Composite track settings.
 
-                output_hub += 'parent Transcripts\n'
-                output_hub += '\n'
+                hub_list += 'parent Transcripts\n'
+                hub_list += '\n'
 
                 # Cufflinks produces genes.fpkm_tracking, isoforms.fpkm_tracking,
                 # skipped.gtf and transcripts.gtf.
 
-                prefix = 'rnaseq_cufflinks_{}'.format(paired_reads_name)
+                path_prefix = 'rnaseq_cufflinks_' + paired_reads_name
 
-                output_html += '<tr>\n'
-                output_html += '<td class="left">' \
-                               '{}' \
-                               '</td>\n'.format(paired_reads_name)
-                output_html += '<td class="center">' \
-                               '<a href="{}/{}_transcripts.gtf">Transcript Assembly</a>' \
-                               '</td>\n'.format(prefix, prefix)
-                output_html += '<td class="center">' \
-                               '<a href="{}/genes.fpkm_tracking">Genes FPKM</a>' \
-                               '</td>\n'.format(prefix)
-                output_html += '<td class="center">' \
-                               '<a href="{}/isoforms.fpkm_tracking">Isoforms FPKM</a>' \
-                               '</td>\n'.format(prefix)
-                output_html += '<td class="center">' \
-                               '<a href="{}/{}_genes_fpkm_tracking.tsv">Genes (Symbols)</a>' \
-                               '</td>\n'.format(prefix, prefix)
-                output_html += '<td class="center">' \
-                               '<a href="{}/{}_isoforms_fpkm_tracking.tsv">Isoforms (Symbols)</a>' \
-                               '</td>\n'.format(prefix, prefix)
-                output_html += '<td class="center">' \
-                               '<a href="{}/rnaseq_tophat_{}_accepted_hits.bam">Aligned BAM</a>' \
-                               '</td>\n'.format(prefix, paired_reads_name)
-                output_html += '<td class="center">' \
-                               '<a href="{}/rnaseq_tophat_{}_accepted_hits.bam.bai">Aligned BAI</a>' \
-                               '</td>\n'.format(prefix, paired_reads_name)
-                output_html += '<td class="center">' \
-                               '<a href="{}/rnaseq_tophat_{}_unaligned.bam">Unaligned BAM</a>' \
-                               '</td>\n'.format(prefix, paired_reads_name)
-                output_html += '</tr>\n'
+                report_list += '<tr>\n'
+                report_list += '<td class="left">' + paired_reads_name + '</td>\n'
+                report_list += '<td class="center">'
+                report_list += relative_anchor(
+                    prefix=path_prefix,
+                    suffix='transcripts.gtf',
+                    text='Transcript Assembly')
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + path_prefix + '/genes.fpkm_tracking">Genes FPKM</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + path_prefix + '/isoforms.fpkm_tracking">Isoforms FPKM</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += relative_anchor(
+                    prefix=path_prefix,
+                    suffix='genes_fpkm_tracking.tsv',
+                    text='Genes (Symbols)')
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += relative_anchor(
+                    prefix=path_prefix,
+                    suffix='isoforms_fpkm_tracking.tsv',
+                    text='Isoforms (Symbols)')
 
-        output_html += '</tbody>\n'
-        output_html += '</table>\n'
-        output_html += '\n'
+                # TODO: The aligned BAM and BAI files and the unaligned BAM file are currently non standard.
+                # The files have a "rnasq_tophat_" prefix, but are in the "rnaseq_cufflinks_" directory.
+                # This will be resolved when the process topHta step gets re-engineered.
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + path_prefix + '/rnaseq_tophat_' + paired_reads_name + \
+                               '_accepted_hits.bam">Aligned BAM</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + path_prefix + '/rnaseq_tophat_' + paired_reads_name + \
+                               '_accepted_hits.bam.bai">Aligned BAI</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + path_prefix + '/rnaseq_tophat_' + paired_reads_name + \
+                               '_unmapped.bam">Unaligned BAM</a>'
+                report_list += '</td>\n'
+                report_list += '</tr>\n'
+
+        report_list += '</tbody>\n'
+        report_list += '</table>\n'
+        report_list += '\n'
 
         # Cuffdiff produces cds_exp.diff, gene_exp.diff, isoform_exp.diff
         # promoters.diff, splicing.diff and tss_group_exp.diff amongst many others.
 
-        output_html += '<h2 id="differential_expression">Differential Expression</h2>\n'
-        output_html += '\n'
+        report_list += '<h2 id="differential_expression">Differential Expression</h2>\n'
+        report_list += '\n'
 
-        output_html += '<p id="cuffdiff">\n'
-        output_html += '<strong><a href="http://cufflinks.cbcb.umd.edu/howitworks.html#diff">Cuffdiff</a></strong>\n'
-        output_html += 'finds significant changes in transcript\n'
-        output_html += 'expression, splicing, and promoter use.'
-        output_html += '</p>\n'
-        output_html += '\n'
+        report_list += '<p id="cuffdiff">\n'
+        # http://cufflinks.cbcb.umd.edu/howitworks.html#diff
+        report_list += '<strong><a href="http://cole-trapnell-lab.github.io/cufflinks/">Cufflinks</a></strong>\n'
+        report_list += 'finds significant changes in transcript\n'
+        report_list += 'expression, splicing, and promoter use.'
+        report_list += '</p>\n'
+        report_list += '\n'
 
-        output_html += '<h3 id="all_genes">All Genes</h3>\n'
+        report_list += '<h3 id="all_genes">All Genes</h3>\n'
 
-        output_html += '<table id="differential_expression_table">\n'
-        output_html += '<thead>\n'
-        output_html += '<tr>\n'
-        output_html += '<th>Comparison</th>\n'
-        output_html += '<th>Samples</th>\n'
-        output_html += '<th>Replicates</th>\n'
-        output_html += '<th>Coding Sequences</th>\n'
-        output_html += '<th>Genes</th>\n'
-        output_html += '<th>Isoforms</th>\n'
-        output_html += '<th>Promoters</th>\n'
-        output_html += '<th>Splicing</th>\n'
-        output_html += '<th>Transcription Start Sites</th>\n'
-        output_html += '<th>Gene FPKM Replicates</th>\n'
-        output_html += '<th>Gene Count Replicates</th>\n'
-        output_html += '<th>Isoform FPKM Replicates</th>\n'
-        output_html += '<th>Isoform Count Replicates</th>\n'
-        output_html += '</tr>\n'
-        output_html += '</thead>\n'
-        output_html += '<tbody>\n'
+        report_list += '<table id="differential_expression_table">\n'
+        report_list += '<thead>\n'
+        report_list += '<tr>\n'
+        report_list += '<th>Comparison</th>\n'
+        report_list += '<th>Samples</th>\n'
+        report_list += '<th>Replicates</th>\n'
+        report_list += '<th>Coding Sequences</th>\n'
+        report_list += '<th>Genes</th>\n'
+        report_list += '<th>Isoforms</th>\n'
+        report_list += '<th>Promoters</th>\n'
+        report_list += '<th>Splicing</th>\n'
+        report_list += '<th>Transcription Start Sites</th>\n'
+        report_list += '<th>Gene FPKM Replicates</th>\n'
+        report_list += '<th>Gene Count Replicates</th>\n'
+        report_list += '<th>Isoform FPKM Replicates</th>\n'
+        report_list += '<th>Isoform Count Replicates</th>\n'
+        report_list += '</tr>\n'
+        report_list += '</thead>\n'
+        report_list += '<tbody>\n'
 
         comparison_keys = self.comparisons.keys()
         comparison_keys.sort(cmp=lambda x, y: cmp(x, y))
@@ -2140,493 +2285,504 @@ class Tuxedo(Analysis):
         for comparison_key in comparison_keys:
             # Assemblies Super Track
 
-            output_hub += 'track {}_assembly\n'. \
-                format(comparison_key)
-            output_hub += 'type bigGenePred\n'
-            output_hub += 'shortLabel {}_assembly\n'. \
-                format(comparison_key)
-            output_hub += 'longLabel {} Cufflinks transcript assembly\n'. \
-                format(comparison_key)
-            output_hub += 'bigDataUrl rnaseq_cuffmerge_{}/merged.bb\n'. \
-                format(comparison_key)
-            output_hub += 'visibility pack\n'
+            hub_list += 'track ' + comparison_key + '_assembly\n'
+            hub_list += 'type bigGenePred\n'
+            hub_list += 'shortLabel ' + comparison_key + '_assembly\n'
+            hub_list += 'longLabel ' + comparison_key + ' Cufflinks transcript assembly\n'
+            hub_list += 'bigDataUrl rnaseq_cuffmerge_' + comparison_key + '/merged.bb\n'
+            hub_list += 'visibility pack\n'
+            # hub_list += 'html ...\n'
             # 'html' is missing from the common settings.
 
             # Common optional settings.
 
-            output_hub += 'color {}\n'. \
-                format('0,0,0')
+            hub_list += 'color 0,0,0\n'
 
             # Composite track settings.
 
-            output_hub += 'parent Assemblies\n'
-            output_hub += '\n'
+            hub_list += 'parent Assemblies\n'
+            hub_list += '\n'
 
-            prefix = 'rnaseq_process_cuffdiff_{}'.format(comparison_key)
+            path_prefix = 'rnaseq_process_cuffdiff_' + comparison_key
 
             # Link to comparison-specific symbolic links in the directory after cummeRbund processing.
 
-            output_html += '<tr>\n'
-            output_html += '<td class="left">' \
-                           '{}' \
-                           '</td>\n'.format(comparison_key)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_samples.tsv">Samples</a>' \
-                           '</td>\n'.format(prefix, prefix)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_replicates.tsv">Replicates</a>' \
-                           '</td>\n'.format(prefix, prefix)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_cds_exp_diff.tsv">Coding Sequences</a>' \
-                           '</td>\n'.format(prefix, prefix)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_genes_exp_diff.tsv"><strong>Genes</strong></a>' \
-                           '</td>\n'.format(prefix, prefix)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_isoforms_exp_diff.tsv">Isoforms</a>' \
-                           '</td>\n'.format(prefix, prefix)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_promoters_diff.tsv">Promoters</a>' \
-                           '</td>\n'.format(prefix, prefix)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_splicing_diff.tsv">Splicing</a>' \
-                           '</td>\n'.format(prefix, prefix)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_tss_group_exp_diff.tsv">Transcription Start Sites</a>' \
-                           '</td>\n'.format(prefix, prefix)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_genes_fpkm_replicates.tsv">Gene FPKM Replicates</a>' \
-                           '</td>\n'.format(prefix, prefix)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_genes_counts_replicates.tsv">Gene Count Replicates</a>' \
-                           '</td>\n'.format(prefix, prefix)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_isoforms_fpkm_replicates.tsv">Isoform FPKM Replicates</a>' \
-                           '</td>\n'.format(prefix, prefix)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_isoforms_counts_replicates.tsv">Isoform Count Replicates</a>' \
-                           '</td>\n'.format(prefix, prefix)
-            output_html += '</tr>\n'
+            report_list += '<tr>\n'
+            report_list += '<td class="left">' + comparison_key + '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='samples.tsv',
+                text='Samples')
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='replicates.tsv',
+                text='Replicates')
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='cds_exp_diff.tsv',
+                text='Coding Sequences')
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='genes_exp_diff.tsv',
+                text='<strong>Genes</strong>')
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='isoforms_exp_diff.tsv',
+                text='Isoforms')
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='promoters_diff.tsv',
+                text='Promoters')
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='splicing_diff.tsv',
+                text='Splicing')
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='tss_group_exp_diff.tsv',
+                text='Transcription Start Sites')
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='genes_fpkm_replicates.tsv',
+                text='Gene FPKM Replicates')
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='genes_counts_replicates.tsv',
+                text='Gene Count Replicates')
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='isoforms_fpkm_replicates.tsv',
+                text='Isoform FPKM Replicates')
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='isoforms_counts_replicates.tsv',
+                text='Isoform Count Replicates')
+            report_list += '</td>\n'
+            report_list += '</tr>\n'
 
             # Read sample pair information if available.
 
             sample_pair_path = os.path.join(
                 self.genome_directory,
-                prefix,
-                '_'.join((prefix, 'sample_pairs.tsv')))
+                path_prefix,
+                '_'.join((path_prefix, 'sample_pairs.tsv')))
 
             if os.path.exists(sample_pair_path):
 
                 sample_pair_sheet = TuxedoSamplePairSheet.from_file_path(file_path=sample_pair_path)
 
                 for row_dict in sample_pair_sheet.row_dicts:
-                    output_html += '<tr>\n'
-                    output_html += '<td>' \
-                                   '' \
-                                   '</td>\n'  # Comparison
-                    output_html += '<td class="left" colspan="3">' \
-                                   '<strong>{}</strong> versus <strong>{}</strong>' \
-                                   '</td>\n'.format(row_dict['V1'], row_dict['V2'])  # Sample
-                    output_html += '<td class="center">' \
-                                   '<a href="{}/{}_{}_{}_genes_diff.tsv"><strong>Genes</strong></a>' \
-                                   '</td>\n'.format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '<td class="center">' \
-                                   '<a href="{}/{}_{}_{}_isoforms_diff.tsv">Isoforms</a>' \
-                                   '</td>\n'.format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '<td class="left" colspan="5">' \
-                                   '' \
-                                   '</td>\n'
-                    output_html += '</tr>\n'
+                    report_list += '<tr>\n'
+                    report_list += '<td></td>\n'  # Comparison
+                    report_list += '<td class="left" colspan="3">'
+                    report_list += '<strong>' + \
+                                   row_dict['V1'] + \
+                                   '</strong> versus <strong>' + \
+                                   row_dict['V2'] + \
+                                   '</strong>'
+                    report_list += '</td>\n'  # Sample
+                    report_list += '<td class="center">'
+                    report_list += relative_anchor(
+                        prefix=path_prefix,
+                        suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_diff.tsv')),
+                        text='<strong>Genes</strong>')
+                    report_list += '</td>\n'
+                    report_list += '<td class="center">'
+                    report_list += relative_anchor(
+                        prefix=path_prefix,
+                        suffix='_'.join((row_dict['V1'], row_dict['V2'], 'isoforms_diff.tsv')),
+                        text='Isoforms')
+                    report_list += '</td>\n'
+                    report_list += '<td class="left" colspan="5"></td>\n'
+                    report_list += '</tr>\n'
 
-        output_html += '</tbody>\n'
-        output_html += '</table>\n'
-        output_html += '\n'
+        report_list += '</tbody>\n'
+        report_list += '</table>\n'
+        report_list += '\n'
 
-        output_html += '<h3 id="significant_genes">Significant Genes</h3>\n'
+        report_list += '<h3 id="significant_genes">Significant Genes</h3>\n'
 
-        output_html += '<table id="significant_genes_table">\n'
-        output_html += '<thead>\n'
-        output_html += '<tr>\n'
-        output_html += '<th>Comparison</th>\n'
-        output_html += '<th>Genes</th>\n'
-        output_html += '<th>Isoforms</th>\n'
-        output_html += '</tr>\n'
-        output_html += '</thead>\n'
-        output_html += '<tbody>\n'
+        report_list += '<table id="significant_genes_table">\n'
+        report_list += '<thead>\n'
+        report_list += '<tr>\n'
+        report_list += '<th>Comparison</th>\n'
+        report_list += '<th>Genes</th>\n'
+        report_list += '<th>Isoforms</th>\n'
+        report_list += '</tr>\n'
+        report_list += '</thead>\n'
+        report_list += '<tbody>\n'
 
         for comparison_key in comparison_keys:
-            prefix = 'rnaseq_process_cuffdiff_{}'.format(comparison_key)
+            path_prefix = 'rnaseq_process_cuffdiff_' + comparison_key
 
-            output_html += '<tr>\n'
-            output_html += '<td class="left">' \
-                           '{}' \
-                           '</td>\n'.format(comparison_key)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_genes_significance_matrix.pdf">' \
-                           '<img ' \
-                           'alt="Significance Matrix Plot - Genes - {}" ' \
-                           'src="{}/{}_genes_significance_matrix.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_isoforms_significance_matrix.pdf">' \
-                           '<img ' \
-                           'alt="Significance Matrix Plot - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_significance_matrix.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
-            output_html += '</tr>\n'
+            report_list += '<tr>\n'
+            report_list += '<td class="left">' + comparison_key + '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='genes_significance_matrix.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='genes_significance_matrix.png',
+                    text='Significance Matrix Plot - Genes - ' + comparison_key))
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='isoforms_significance_matrix.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='isoforms_significance_matrix.png',
+                    text='Significance Matrix Plot - Isoforms - ' + comparison_key))
+            report_list += '</td>\n'
+            report_list += '</tr>\n'
 
-        output_html += '</tbody>\n'
-        output_html += '</table>\n'
+        report_list += '</tbody>\n'
+        report_list += '</table>\n'
 
         # Show cummeRbund quality plots.
 
-        output_html += '<h2 id="quality_plots">Quality Plots</h2>\n'
-        output_html += '\n'
+        report_list += '<h2 id="quality_plots">Quality Plots</h2>\n'
+        report_list += '\n'
 
-        output_html += '<p>\n'
-        output_html += '</p>\n'
-        output_html += '\n'
+        report_list += '<p>\n'
+        report_list += '</p>\n'
+        report_list += '\n'
 
-        output_html += '<table id="quality_plots_table">\n'
-        output_html += '<thead>\n'
-        output_html += '<tr>\n'
-        output_html += '<th>Comparison</th>\n'
-        output_html += '<th>Dispersion Plot - Genes</th>\n'
-        output_html += '<th>Dispersion Plot - Isoforms</th>\n'
-        output_html += '<th>Squared Coefficient of Variation - Genes</th>\n'
-        output_html += '<th>Squared Coefficient of Variation - Isoforms</th>\n'
-        output_html += '<th>Density Plot without Replicates - Genes</th>\n'
-        output_html += '<th>Density Plot with Replicates - Genes</th>\n'
-        output_html += '<th>Density Plot without Replicates - Isoforms</th>\n'
-        output_html += '<th>Density Plot with Replicates - Isoforms</th>\n'
-        output_html += '<th>Box Plot without Replicates - Genes</th>\n'
-        output_html += '<th>Box Plot with Replicates - Genes</th>\n'
-        output_html += '<th>Box Plot without Replicates - Isoforms</th>\n'
-        output_html += '<th>Box Plot with Replicates - Isoforms</th>\n'
-        output_html += '<th>Scatter Matrix Plot - Genes</th>\n'
-        output_html += '<th>Scatter Matrix Plot - Isoforms</th>\n'
-        output_html += '<th>Dendrogram Plot</th>\n'
-        output_html += '<th>Volcano Matrix Plot - Genes</th>\n'
-        output_html += '<th>Multidimensional Scaling Plot - Genes</th>\n'
-        output_html += '<th>Principal Component Analysis Plot - Genes</th>\n'
-        output_html += '</tr>\n'
-        output_html += '</thead>\n'
-        output_html += '<tbody>\n'
+        report_list += '<table id="quality_plots_table">\n'
+        report_list += '<thead>\n'
+        report_list += '<tr>\n'
+        report_list += '<th>Comparison</th>\n'
+        report_list += '<th>Dispersion Plot - Genes</th>\n'
+        report_list += '<th>Dispersion Plot - Isoforms</th>\n'
+        report_list += '<th>Squared Coefficient of Variation - Genes</th>\n'
+        report_list += '<th>Squared Coefficient of Variation - Isoforms</th>\n'
+        report_list += '<th>Density Plot without Replicates - Genes</th>\n'
+        report_list += '<th>Density Plot with Replicates - Genes</th>\n'
+        report_list += '<th>Density Plot without Replicates - Isoforms</th>\n'
+        report_list += '<th>Density Plot with Replicates - Isoforms</th>\n'
+        report_list += '<th>Box Plot without Replicates - Genes</th>\n'
+        report_list += '<th>Box Plot with Replicates - Genes</th>\n'
+        report_list += '<th>Box Plot without Replicates - Isoforms</th>\n'
+        report_list += '<th>Box Plot with Replicates - Isoforms</th>\n'
+        report_list += '<th>Scatter Matrix Plot - Genes</th>\n'
+        report_list += '<th>Scatter Matrix Plot - Isoforms</th>\n'
+        report_list += '<th>Dendrogram Plot</th>\n'
+        report_list += '<th>Volcano Matrix Plot - Genes</th>\n'
+        report_list += '<th>Multidimensional Scaling Plot - Genes</th>\n'
+        report_list += '<th>Principal Component Analysis Plot - Genes</th>\n'
+        report_list += '</tr>\n'
+        report_list += '</thead>\n'
+        report_list += '<tbody>\n'
 
         for comparison_key in comparison_keys:
-            prefix = 'rnaseq_process_cuffdiff_{}'.format(comparison_key)
+            path_prefix = 'rnaseq_process_cuffdiff_' + comparison_key
 
-            output_html += '<tr>\n'
-            output_html += '<td class="left">{}</td>\n'.format(comparison_key)
+            report_list += '<tr>\n'
+            report_list += '<td class="left">' + comparison_key + '</td>\n'
 
             # Dispersion Plots for Genes and Isoforms
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_genes_dispersion.pdf">' \
-                           '<img ' \
-                           'alt="Dispersion Plot - Genes - {}" ' \
-                           'src="{}/{}_genes_dispersion.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_isoforms_dispersion.pdf">' \
-                           '<img ' \
-                           'alt="Dispersion Plot - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_dispersion.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='genes_dispersion.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='genes_dispersion.png',
+                    text='Dispersion Plot - Genes - ' + comparison_key))
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='isoforms_dispersion.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='isoforms_dispersion.png',
+                    text='Dispersion Plot - Isoforms - ' + comparison_key))
+            report_list += '</td>\n'
 
             # Squared Coefficient of Variation (SCV) Plots for Genes and Isoforms
 
             if os.path.exists(
-                    path=os.path.join(self.genome_directory, '{}/{}_genes_scv.png'.format(prefix, prefix))):
-                output_html += '<td class="center">' \
-                               '<a href="{}/{}_genes_scv.pdf">' \
-                               '<img ' \
-                               'alt="Squared Coefficient of Variation (SCV) - Genes - {}" ' \
-                               'src="{}/{}_genes_scv.png" ' \
-                               'height="80" ' \
-                               'width="80" ' \
-                               '/>' \
-                               '</a>' \
-                               '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+                    path=os.path.join(self.genome_directory, path_prefix, path_prefix + '_genes_scv.png')):
+                report_list += '<td class="center">'
+                report_list += relative_anchor(
+                    prefix=path_prefix,
+                    suffix='genes_scv.pdf',
+                    text=relative_image(
+                        prefix=path_prefix,
+                        suffix='genes_scv.png',
+                        text='Squared Coefficient of Variation (SCV) - Genes - ' + comparison_key))
+                report_list += '</td>\n'
             else:
-                output_html += '<td class="center"></td>\n'
+                report_list += '<td class="center"></td>\n'
 
             if os.path.exists(
-                    path=os.path.join(self.genome_directory, '{}/{}_isoforms_scv.png'.format(prefix, prefix))):
-                output_html += '<td class="center">' \
-                               '<a href="{}/{}_isoforms_scv.pdf">' \
-                               '<img ' \
-                               'alt="Squared Coefficient of Variation (SCV) - Isoforms - {}" ' \
-                               'src="{}/{}_isoforms_scv.png" ' \
-                               'height="80" ' \
-                               'width="80" ' \
-                               '/>' \
-                               '</a>' \
-                               '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+                    path=os.path.join(self.genome_directory, path_prefix, path_prefix + '_isoforms_scv.png')):
+                report_list += '<td class="center">'
+                report_list += relative_anchor(
+                    prefix=path_prefix,
+                    suffix='isoforms_scv.pdf',
+                    text=relative_image(
+                        prefix=path_prefix,
+                        suffix='isoforms_scv.png',
+                        text='Squared Coefficient of Variation (SCV) - Isoforms - ' + comparison_key))
+                report_list += '</td>\n'
             else:
-                output_html += '<td class="center"></td>\n'
+                report_list += '<td class="center"></td>\n'
 
             # Density Plots for Genes without and with Replicates
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_genes_density_wo_replicates.pdf">' \
-                           '<img ' \
-                           'alt="Density Plot without Replicates - Genes- {}" ' \
-                           'src="{}/{}_genes_density_wo_replicates.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='genes_density_wo_replicates.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='genes_density_wo_replicates.png',
+                    text='Density Plot without Replicates - Genes - ' + comparison_key))
+            report_list += '</td>\n'
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_genes_density_w_replicates.pdf">' \
-                           '<img ' \
-                           'alt="Density Plot with Replicates - Genes - {}" ' \
-                           'src="{}/{}_genes_density_w_replicates.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='genes_density_w_replicates.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='genes_density_w_replicates.png',
+                    text='Density Plot with Replicates - Genes - ' + comparison_key))
+            report_list += '</td>\n'
 
             # Density Plots for Isoforms without and with Replicates
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_isoforms_density_wo_replicates.pdf">' \
-                           '<img ' \
-                           'alt="Density Plot without Replicates - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_density_wo_replicates.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='isoforms_density_wo_replicates.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='isoforms_density_wo_replicates.png',
+                    text='Density Plot without Replicates - Isoforms - ' + comparison_key))
+            report_list += '</td>\n'
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_isoforms_density_w_replicates.pdf">' \
-                           '<img ' \
-                           'alt="Density Plot with Replicates - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_density_w_replicates.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='isoforms_density_w_replicates.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='isoforms_density_w_replicates.png',
+                    text='Density Plot with Replicates - Isoforms - ' + comparison_key))
+            report_list += '</td>\n'
 
             # Box Plots for Genes without and with Replicates
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_genes_box_wo_replicates.pdf">' \
-                           '<img ' \
-                           'alt="Box Plot without Replicates - Genes - {}" ' \
-                           'src="{}/{}_genes_box_wo_replicates.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='genes_box_wo_replicates.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='genes_box_wo_replicates.png',
+                    text='Box Plot without Replicates - Genes - ' + comparison_key))
+            report_list += '</td>\n'
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_genes_box_w_replicates.pdf">' \
-                           '<img ' \
-                           'alt="Box Plot with Replicates - Genes - {}" ' \
-                           'src="{}/{}_genes_box_w_replicates.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='genes_box_w_replicates.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='genes_box_w_replicates.png',
+                    text='Box Plot with Replicates - Genes - ' + comparison_key))
+            report_list += '</td>\n'
 
             # Box Plots for Isoforms with and without Replicates
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_isoforms_box_wo_replicates.pdf">' \
-                           '<img ' \
-                           'alt="Box Plot without Replicates - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_box_wo_replicates.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='isoforms_box_wo_replicates.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='isoforms_box_wo_replicates.png',
+                    text='Box Plot without Replicates - Isoforms - ' + comparison_key))
+            report_list += '</td>\n'
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_isoforms_box_w_replicates.pdf">' \
-                           '<img ' \
-                           'alt="Box Plot with Replicates - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_box_w_replicates.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='isoforms_box_w_replicates.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='isoforms_box_w_replicates.png',
+                    text='Box Plot with Replicates - Isoforms - ' + comparison_key))
+            report_list += '</td>\n'
 
             # Scatter Matrix Plot for Genes and Isoforms
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_genes_scatter_matrix.pdf">' \
-                           '<img ' \
-                           'alt="Scatter Matrix Plot - Genes - {}" ' \
-                           'src="{}/{}_genes_scatter_matrix.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='genes_scatter_matrix.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='genes_scatter_matrix.png',
+                    text='Scatter Matrix Plot - Genes - ' + comparison_key))
+            report_list += '</td>\n'
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_isoforms_scatter_matrix.pdf">' \
-                           '<img ' \
-                           'alt="Scatter Matrix Plot - Isoforms - {}" ' \
-                           'src="{}/{}_isoforms_scatter_matrix.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='isoforms_scatter_matrix.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='isoforms_scatter_matrix.png',
+                    text='Scatter Matrix Plot - Isoforms - ' + comparison_key))
+            report_list += '</td>\n'
 
             # Dendrogram Plot for Genes
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_genes_dendrogram.pdf">' \
-                           '<img ' \
-                           'alt="Dendrogram Plot - Genes - {}" ' \
-                           'src="{}/{}_genes_dendrogram.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='genes_dendrogram.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='genes_dendrogram.png',
+                    text='Dendrogram Plot - Genes - ' + comparison_key))
+            report_list += '</td>\n'
 
             # Volcano Matrix Plot for Genes
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_genes_volcano_matrix.pdf">' \
-                           '<img ' \
-                           'alt="Volcano Matrix Plot - Genes - {}" ' \
-                           'src="{}/{}_genes_volcano_matrix.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='genes_volcano_matrix.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='genes_volcano_matrix.png',
+                    text='Volcano Matrix Plot - Genes - ' + comparison_key))
+            report_list += '</td>\n'
 
             # Multidimensional Scaling Plot for Genes
 
             if os.path.exists(
-                    path=os.path.join(self.genome_directory, '{}/{}_genes_mds.png'.format(prefix, prefix))):
-                output_html += '<td class="center">' \
-                               '<a href="{}/{}_genes_mds.pdf">' \
-                               '<img ' \
-                               'alt="Multidimensional Scaling Plot - Genes - {}" ' \
-                               'src="{}/{}_genes_mds.png" ' \
-                               'height="80" ' \
-                               'width="80" ' \
-                               '/>' \
-                               '</a>' \
-                               '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+                    path=os.path.join(self.genome_directory, path_prefix, path_prefix + '_genes_mds.png')):
+                report_list += '<td class="center">'
+                report_list += relative_anchor(
+                    prefix=path_prefix,
+                    suffix='genes_mds.pdf',
+                    text=relative_image(
+                        prefix=path_prefix,
+                        suffix='genes_mds.png',
+                        text='Multidimensional Scaling Plot - Genes - ' + comparison_key))
+                report_list += '</td>\n'
             else:
-                output_html += '<td></td>\n'
+                report_list += '<td></td>\n'
 
             # Principal Component Analysis Plot for Genes
 
-            output_html += '<td class="center">' \
-                           '<a href="{}/{}_genes_pca.pdf">' \
-                           '<img ' \
-                           'alt="Principal Component Analysis Plot - Genes - {}" ' \
-                           'src="{}/{}_genes_pca.png" ' \
-                           'height="80" ' \
-                           'width="80" ' \
-                           '/>' \
-                           '</a>' \
-                           '</td>\n'.format(prefix, prefix, comparison_key, prefix, prefix)
+            report_list += '<td class="center">'
+            report_list += relative_anchor(
+                prefix=path_prefix,
+                suffix='genes_pca.pdf',
+                text=relative_image(
+                    prefix=path_prefix,
+                    suffix='genes_pca.png',
+                    text='Principal Component Analysis Plot - Genes - ' + comparison_key))
+            report_list += '</td>\n'
 
-            output_html += '</tr>\n'
+            report_list += '</tr>\n'
 
             # Read sample pair information if available.
 
-            sample_pair_path = os.path.join(self.genome_directory, prefix, '_'.join((prefix, 'sample_pairs.tsv')))
+            sample_pair_path = os.path.join(
+                self.genome_directory,
+                path_prefix,
+                '_'.join((path_prefix, 'sample_pairs.tsv')))
 
             if os.path.exists(sample_pair_path):
-
                 sample_pair_sheet = TuxedoSamplePairSheet.from_file_path(file_path=sample_pair_path)
 
                 for row_dict in sample_pair_sheet.row_dicts:
-                    output_html += '<tr>\n'
+                    report_list += '<tr>\n'
 
-                    output_html += '<td class="left"></td>\n'
-                    output_html += '<td  class="left" colspan="10">' \
-                                   '<strong>{}</strong> versus <strong>{}</strong>' \
-                                   '</td>\n'.format(row_dict['V1'], row_dict['V2'])
+                    report_list += '<td class="left"></td>\n'
+                    report_list += '<td  class="left" colspan="10">'
+                    report_list += '<strong>' + \
+                                   row_dict['V1'] + \
+                                   '</strong> versus <strong>' + \
+                                   row_dict['V2'] + \
+                                   '</strong>'
+                    report_list += '</td>\n'
 
-                    output_html += '<td class="center">'
-                    output_html += '<a href="{}/{}_{}_{}_genes_scatter.pdf">'. \
-                        format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '<img ' \
-                                   'alt="Scatter Plot on genes {} versus {}" ' \
-                                   'src="{}/{}_{}_{}_genes_scatter.png" ' \
-                                   'height="80" ' \
-                                   'width="80" ' \
-                                   '/>'. \
-                        format(row_dict['V1'], row_dict['V2'], prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '</a>'
-                    output_html += '</td>\n'
+                    report_list += '<td class="center">'
+                    report_list += relative_anchor(
+                        prefix=path_prefix,
+                        suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_scatter.pdf')),
+                        text=relative_image(
+                            prefix=path_prefix,
+                            suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_scatter.png')),
+                            text='Scatter Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2']))
+                    report_list += '</td>\n'
 
-                    output_html += '<td class="center"></td>\n'
+                    report_list += '<td class="center"></td>\n'
 
-                    output_html += '<td class="center">'
-                    output_html += '<a href="{}/{}_{}_{}_maplot.pdf">'. \
-                        format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '<img ' \
-                                   'alt="M vs A Plot on genes {} versus {}" ' \
-                                   'src="{}/{}_{}_{}_maplot.png" ' \
-                                   'height="80" ' \
-                                   'width="80" ' \
-                                   '/>'. \
-                        format(row_dict['V1'], row_dict['V2'], prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '</a>'
-                    output_html += '</td>\n'
+                    report_list += '<td class="center">'
+                    report_list += relative_anchor(
+                        prefix=path_prefix,
+                        suffix='_'.join((row_dict['V1'], row_dict['V2'], 'maplot.pdf')),
+                        text=relative_image(
+                            prefix=path_prefix,
+                            suffix='_'.join((row_dict['V1'], row_dict['V2'], 'maplot.png')),
+                            text='M vs A Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2']))
+                    report_list += '</td>\n'
 
-                    output_html += '<td class="center">'
-                    output_html += '<a href="{}/{}_{}_{}_genes_volcano.pdf">'. \
-                        format(prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '<img ' \
-                                   'alt="Volcano Plot on genes {} versus {}" ' \
-                                   'src="{}/{}_{}_{}_genes_volcano.png" ' \
-                                   'height="80" ' \
-                                   'width="80" ' \
-                                   '/>'. \
-                        format(row_dict['V1'], row_dict['V2'], prefix, prefix, row_dict['V1'], row_dict['V2'])
-                    output_html += '</a>'
-                    output_html += '</td>\n'
+                    report_list += '<td class="center">'
+                    report_list += relative_anchor(
+                        prefix=path_prefix,
+                        suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_volcano.pdf')),
+                        text=relative_image(
+                            prefix=path_prefix,
+                            suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_volcano.png')),
+                            text='Volcano Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2']))
+                    report_list += '</td>\n'
 
-                    output_html += '<td  class="center"colspan="4"></td>\n'
+                    report_list += '<td  class="center" colspan="4"></td>\n'
 
-                    output_html += '</tr>\n'
+                    report_list += '</tr>\n'
 
-        output_html += '</tbody>\n'
-        output_html += '</table>\n'
-        output_html += '\n'
+        report_list += '</tbody>\n'
+        report_list += '</table>\n'
+        report_list += '\n'
 
-        self.report_to_file(content=output_html)
-        self.ucsc_hub_to_file(content=output_hub)
+        self.report_to_file(content=report_list)
+        self.ucsc_hub_to_file(content=hub_list)
 
         return
 
@@ -2721,7 +2877,7 @@ class DESeq(Analysis):
         @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of Python C{str} (comparison name) key objects and
             Python C{tuple} value objects of C{bsf.ngs.Sample.name} and Python C{list} of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, (bsf.ngs.Sample.name, list[bsf.ngs.Sample])]
+        @type comparisons: dict[str, (str, list[bsf.ngs.Sample])]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
@@ -2917,7 +3073,8 @@ class DESeq(Analysis):
 
         # Re-index the sample group dict by sample name.
         sample_dict = dict()
-        for (group_name, sample_list) in self.collection.sample_group_dict.iteritems():
+        """ @type sample_dict: dict[str, list[str]] """
+        for group_name, sample_list in self.collection.sample_group_dict.iteritems():
             for sample in sample_list:
                 if sample.name not in sample_dict:
                     sample_dict[sample.name] = list()
@@ -2925,7 +3082,7 @@ class DESeq(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
+                print repr(self) + ' Sample name: ' + sample.name
                 print sample.trace(1)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
@@ -2937,6 +3094,7 @@ class DESeq(Analysis):
             paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
             row_dict = dict()
+            """ @type row_dict: dict[str, str | unicode] """
             # Set the group from the original Sample Annotation Sheet.
             row_dict['sample'] = sample.name
             row_dict['group'] = sample_dict[sample.name][0]
@@ -2946,7 +3104,7 @@ class DESeq(Analysis):
             for annotation_key in filter(lambda x: x.startswith('DESeq '), sample.annotation_dict.keys()):
                 row_dict[annotation_key[6:]] = sample.annotation_dict[annotation_key][0]
 
-            # for paired_reads_name in paired_reads_name_list:
+                # for paired_reads_name in paired_reads_name_list:
                 # Create a ??? Runnable per paired_reads_name.
 
                 # prefix_run_tophat = '_'.join((stage_run_tophat.name, paired_reads_name))

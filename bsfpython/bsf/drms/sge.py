@@ -33,7 +33,6 @@ import re
 import subprocess
 
 from bsf.database import DatabaseAdaptor
-from bsf.process import Executable
 
 
 output_directory_name = 'bsfpython_sge_output'
@@ -449,9 +448,8 @@ def submit(stage, debug=0):
         output += "\n"
 
     for executable in stage.executable_list:
-        assert isinstance(executable, Executable)
-
         command = list()
+        """ @type command: list[str | unicode] """
 
         command.append('qsub')
 
@@ -488,6 +486,7 @@ def submit(stage, debug=0):
                 stage.memory_free_virtual = stage.memory_limit_hard
 
         resource_list = list()
+        """ @type resource_list: list[str | unicode] """
 
         # Require physical memory to be free ...
         if stage.memory_free_mem:
@@ -632,7 +631,7 @@ def submit(stage, debug=0):
         output += "\n"
 
     script_path = os.path.join(stage.working_directory, 'bsfpython_sge_{}.bash'.format(stage.name))
-    script_file = open(name=script_path, mode='w')
+    script_file = open(script_path, 'w')
     script_file.write(output)
     script_file.close()
 

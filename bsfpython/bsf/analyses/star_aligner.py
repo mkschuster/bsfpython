@@ -35,7 +35,6 @@ import os
 import pysam
 
 from bsf import Analysis, FilePath, Runnable
-from bsf.ngs import PairedReads
 from bsf.process import RunnableStep, RunnableStepLink, RunnableStepMove, RunnableStepPicard
 from bsf.standards import Default
 
@@ -350,6 +349,7 @@ class StarAligner(Analysis):
                 print sample.trace(1)
 
             runnable_index_list = list()
+            """ @type runnable_index_list: list[bsf.Runnable] """
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
@@ -360,9 +360,7 @@ class StarAligner(Analysis):
             paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
             for paired_reads_name in paired_reads_name_list:
-                assert isinstance(paired_reads_name, str)
                 for paired_reads in paired_reads_dict[paired_reads_name]:
-                    assert isinstance(paired_reads, PairedReads)
                     if self.debug > 0:
                         print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
 
@@ -394,7 +392,7 @@ class StarAligner(Analysis):
                         runnable_step=RunnableStep(
                             name='STAR',
                             program='STAR'))
-                    assert isinstance(runnable_step, RunnableStep)
+                    """ @type runnable_step: bsf.process.RunnableStep """
                     self.set_runnable_step_configuration(runnable_step=runnable_step)
                     runnable_step.add_option_long(key='runThreadN', value=str(stage_align.threads))
                     runnable_step.add_option_long(key='genomeDir', value=self.index_directory)
@@ -418,7 +416,7 @@ class StarAligner(Analysis):
 
                             # Add the @RG line.
                             for read_group_dict in alignment_file.header['RG']:
-                                assert isinstance(read_group_dict, dict)
+                                """ @type read_group_dict: dict[str, str] """
                                 # There should also be only one read group.
                                 key_list = read_group_dict.keys()
                                 # Remove the 'ID' from the key_list, as it has to go first.
@@ -431,7 +429,7 @@ class StarAligner(Analysis):
                             # Add @PG lines.
                             # The STAR aligner allows only a single @PG line, which is not terribly helpful.
                             # for program_dict in alignment_file.header['PG']:
-                            #     assert isinstance(program_dict, dict)
+                            #     """ @type program_dict: dict[str, str] """
                             #     key_list = program_dict.keys()
                             #     program_str = ''
                             #     for key in key_list:
@@ -469,7 +467,7 @@ class StarAligner(Analysis):
                             java_heap_maximum='Xmx2G',
                             picard_classpath=self.classpath_picard,
                             picard_command='CleanSam'))
-                    assert isinstance(runnable_step, RunnableStepPicard)
+                    """ @type runnable_step: bsf.process.RunnableStepPicard """
                     runnable_step.add_picard_option(key='INPUT', value=file_path_align.aligned_sam)
                     runnable_step.add_picard_option(key='OUTPUT', value=file_path_index.cleaned_sam)
                     runnable_step.add_picard_option(
@@ -487,7 +485,7 @@ class StarAligner(Analysis):
                             java_heap_maximum='Xmx6G',
                             picard_classpath=self.classpath_picard,
                             picard_command='SortSam'))
-                    assert isinstance(runnable_step, RunnableStepPicard)
+                    """ @type runnable_step: bsf.process.RunnableStepPicard """
                     runnable_step.add_picard_option(key='INPUT', value=file_path_index.cleaned_sam)
                     runnable_step.add_picard_option(key='OUTPUT', value=file_path_index.aligned_bam)
                     runnable_step.add_picard_option(key='SORT_ORDER', value='coordinate')
@@ -526,14 +524,12 @@ class StarAligner(Analysis):
 
             # Add dependencies on Runnable objects of the indexing stage.
             for runnable_index in runnable_index_list:
-                assert isinstance(runnable_index, Runnable)
                 executable_merge.dependencies.append(runnable_index.name)
 
             if len(runnable_index_list) == 1:
                 runnable_index = runnable_index_list[0]
-                assert isinstance(runnable_index, Runnable)
                 file_path_index = runnable_index.file_path_object
-                assert isinstance(file_path_index, FilePathStarIndex)
+                """ @type file_path_index: FilePathStarIndex """
                 # For a single ReadPair, just rename the files.
                 runnable_merge.add_runnable_step(
                     RunnableStepMove(
@@ -559,11 +555,10 @@ class StarAligner(Analysis):
                         java_heap_maximum='Xmx2G',
                         picard_classpath=self.classpath_picard,
                         picard_command='MergeSamFiles'))
-                assert isinstance(runnable_step, RunnableStepPicard)
+                """ @type runnable_step: bsf.process.RunnableStepPicard """
                 for runnable_index in runnable_index_list:
-                    assert isinstance(runnable_index, Runnable)
                     file_path_index = runnable_index.file_path_object
-                    assert isinstance(file_path_index, FilePathStarIndex)
+                    """ @type file_path_index: FilePathStarIndex """
                     runnable_step.obsolete_file_path_list.append(file_path_index.aligned_bam)
                     runnable_step.obsolete_file_path_list.append(file_path_index.aligned_bai)
                     runnable_step.obsolete_file_path_list.append(file_path_index.aligned_md5)

@@ -58,7 +58,7 @@ class VULGAR(object):
     @ivar score: Score
     @type score: str
     @ivar triplet_list: List of (I{operation}, I{query_length}, I{target_length}) tuples
-    @type triplet_list: list[tuple[str, str, str]]
+    @type triplet_list: list[(str, str, str)]
     """
 
     @classmethod
@@ -110,7 +110,7 @@ class VULGAR(object):
         @param score: Score
         @type score: str
         @param triplet_list: List of (I{operation}, I{query_length}, I{target_length}) tuples
-        @type triplet_list: list[tuple[str, str, str]]
+        @type triplet_list: list[(str, str, str)]
         @return:
         @rtype:
         """
@@ -159,6 +159,7 @@ def parse_alignment_file(file_path):
     """
 
     vulgar_list = list()
+    """ @type vulgar_list: list[bsf.exonerate.VULGAR] """
 
     alignment_file = open(file_path, mode='rb')
 

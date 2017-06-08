@@ -172,7 +172,7 @@ class IlluminaRunFolderArchive(Analysis):
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param archive_directory: Archive directory
@@ -227,6 +227,7 @@ class IlluminaRunFolderArchive(Analysis):
             self.force = force
 
         self._run_name = None
+        """ @type _run_name: str | unicode | None """
 
         return
 
@@ -727,10 +728,6 @@ class IlluminaRunFolderRestore(Analysis):
     @type extract_intensities: bool
     @ivar force: Force processing of incomplete Illumina Run Folders
     @type force: bool
-    @ivar _run_directory_name: Illumina Run Folder directory name
-    @type _run_directory_name: str
-    @ivar _run_directory_path: Illumina Run Folder directory path
-    @type _run_directory_path: str
     """
 
     name = 'Illumina Run Folder Restore Analysis'
@@ -830,7 +827,7 @@ class IlluminaRunFolderRestore(Analysis):
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, bsf.ngs.Sample]
+        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param archive_directory: File path to an archive directory
@@ -893,7 +890,10 @@ class IlluminaRunFolderRestore(Analysis):
             self.force = force
 
         self._run_directory_name = None
+        """ @type _run_directory_name: str | unicode """
+
         self._run_directory_path = None
+        """ @type _run_directory_path: str | unicode """
 
         return
 

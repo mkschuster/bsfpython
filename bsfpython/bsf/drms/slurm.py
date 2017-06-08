@@ -596,9 +596,8 @@ def submit(stage, debug=0):
         output += "\n"
 
     for executable in stage.executable_list:
-        assert isinstance(executable, Executable)
-
         command = list()
+        """ @type command: list[str | unicode] """
 
         command.append('sbatch')
 
@@ -701,6 +700,7 @@ def submit(stage, debug=0):
         # Consequently, SLURM process identifiers need to be tracked here, by means of a SQLite database.
 
         process_identifier_list = list()
+        """ @type process_identifier_list: list[str | unicode] """
         for executable_name in executable.dependencies:
             process_slurm_list = process_slurm_adaptor.select_all_by_job_name(name=executable_name)
             if len(process_slurm_list):
@@ -926,6 +926,7 @@ def check_state(stage, debug=0):
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
     process_slurm_list = list()
+    """ @type process_slurm_list: list[ProcessSLURM] """
     # Get all Processes from the database that have no state set.
     process_slurm_list.extend(process_slurm_adaptor.select_all_by_state(state=None))
     # Get all processes from the database that have a state of 'PENDING' or 'RUNNING' as those need checking.

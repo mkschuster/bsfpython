@@ -218,7 +218,7 @@ class Bowtie1(Analysis):
                         name='bowtie1',
                         obsolete_file_path_list=[
                         ]))
-                assert isinstance(runnable_step, RunnableStep)
+                """ @type runnable_step: RunnableStep """
                 runnable_step.arguments.append(self.bwa_genome_db)
 
                 reads1 = list()

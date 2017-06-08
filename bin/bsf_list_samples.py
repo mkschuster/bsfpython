@@ -52,7 +52,7 @@ args = parser.parse_args()
 
 # Open the output file, create a csv.DictWriter and write a header line.
 
-csv_file = open(name=args.output_file, mode='wb')
+csv_file = open(args.output_file, 'wb')
 
 csv_fields = ['ProcessedRunFolder', 'Project', 'Sample']
 

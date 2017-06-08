@@ -82,7 +82,7 @@ class Argument(object):
         @rtype:
         """
 
-        assert isinstance(key, basestring)
+        assert isinstance(key, (str, unicode))
 
         if not key:
             raise Exception('The key argument has to be defined.')
@@ -255,7 +255,7 @@ class Option(Switch):
         @rtype:
         """
 
-        assert isinstance(value, basestring)
+        assert isinstance(value, (str, unicode))
         assert isinstance(is_pair, bool)
 
         super(Option, self).__init__(key=key, is_long=is_long)

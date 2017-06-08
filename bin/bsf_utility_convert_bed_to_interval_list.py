@@ -72,7 +72,7 @@ name_space = argument_parser.parse_args()
 if name_space.output_path is None or not name_space.output_path:
     # If the output-path option is missing, construct the output path from the BED input path.
     output_path = name_space.input_path
-    assert isinstance(output_path, basestring)
+    assert isinstance(output_path, (str, unicode))
     if output_path.endswith('.bed'):
         output_path = output_path[:-3] + 'interval_list'
     else:

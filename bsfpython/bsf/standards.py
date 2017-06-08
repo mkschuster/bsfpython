@@ -41,8 +41,6 @@ class Configuration(object):
     @type file_path_list: list[str | unicode]
     @ivar config_parser: Python C{ConfigParser.SafeConfigParser}
     @type config_parser: ConfigParser.SafeConfigParser
-    @ivar _config_path_list: C{bsf.standards.Configuration} file path
-    @type _config_path_list: list[str | unicode]
     """
 
     @staticmethod
@@ -79,6 +77,8 @@ class Configuration(object):
 
         # Expand each file_path for user and variable names.
         expanded_list = list()
+        """ @type expanded_list: list[str | unicode] """
+
         for file_path in file_path_list:
             file_path = os.path.expanduser(path=file_path)
             file_path = os.path.expandvars(path=file_path)
@@ -128,6 +128,7 @@ class Configuration(object):
             self.config_parser = config_parser
 
         self._config_path_list = None
+        """ @type _config_path_list: list[str | unicode] """
 
         return
 
@@ -177,10 +178,12 @@ class Default(object):
     @type global_default: bsf.standards.Default
     @cvar global_file_path: Global configuration file
     @type global_file_path: str | unicode
-    @ivar classpath_picard: Picard Java Archive (JAR) class path directory
-    @type classpath_picard: str | unicode
+    @ivar classpath_gatk: Genome Analysis Toolkit Java Archive (JAR) class path directory
+    @type classpath_gatk: str | unicode
     @ivar classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
     @type classpath_illumina2bam: str | unicode
+    @ivar classpath_picard: Picard Java Archive (JAR) class path directory
+    @type classpath_picard: str | unicode
     @ivar classpath_snpeff: snpEff Java Archive (JAR) class path directory
     @type classpath_snpeff: str | unicode
     @ivar directory_cache: Local cache directory on the compute node (e.g. /dev/shm)
@@ -203,10 +206,14 @@ class Default(object):
     @type directory_transcriptomes: str | unicode
     @ivar directory_gatk_bundle: Sub-directory for GATK bundle data
     @type directory_gatk_bundle: str | unicode
+    @ivar directory_intervals: Directory for interval list files
+    @type directory_intervals: str | unicode
     @ivar directory_snpeff_data: snpEff database directory
     @type directory_snpeff_data: str | unicode
     @ivar directory_vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
     @type directory_vep_cache: str | unicode
+    @ivar directory_vep_plugins: Ensembl Variant Effect Predictor (VEP) plug-ins directory
+    @type directory_vep_plugins: str | unicode
     @ivar directory_vep_src: Ensembl Variant Effect Predictor (VEP) source directory
     @type directory_vep_src: str | unicode
     @ivar indices: Python C{dict} of program name key and index directory name value data
@@ -219,6 +226,8 @@ class Default(object):
     @type operator_institution: str
     @ivar operator_sequencing_centre: BAM sequencing centre code
     @type operator_sequencing_centre: str
+    @ivar genome_aliases_ucsc_dict: Alias of genome assembly names for the UCSC Genome Browser
+    @type genome_aliases_ucsc_dict: dict[str, str]
     @ivar ucsc_protocol: UCSC Genome Browser URL protocol (i.e. http, https, ...)
     @type ucsc_protocol: str
     @ivar ucsc_host_name: UCSC Genome Browser URL host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
@@ -227,6 +236,8 @@ class Default(object):
     @type url_protocol: str
     @ivar url_host_name: URL host name
     @type url_host_name:str
+    @ivar url_relative_dna: Sub-directory for DNA sequences
+    @type url_relative_dna: str
     @ivar url_relative_projects: Sub-directory for analysis projects
     @type url_relative_projects: str
     """
@@ -313,11 +324,9 @@ class Default(object):
         @return: C{bsf.standards.Default}
         @rtype: bsf.standards.Default
         """
-
         assert isinstance(configuration, Configuration)
 
         default = cls()
-
         default.set_configuration(configuration=configuration)
 
         return default
@@ -606,7 +615,6 @@ class Default(object):
         @return:
         @rtype:
         """
-
         assert isinstance(configuration, Configuration)
 
         cp = configuration.config_parser

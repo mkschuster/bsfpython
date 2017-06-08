@@ -133,10 +133,8 @@ class Command(object):
         output += '{}  options:\n'.format(indent)
 
         for key in self.options.keys():
-            assert isinstance(key, str)
             output += '{}    key: {!r} Argument objects:\n'.format(indent, key)
             for argument in self.options[key]:
-                assert isinstance(argument, Argument)
                 output += argument.trace(level=level + 2)
 
         # List all arguments
@@ -145,7 +143,6 @@ class Command(object):
 
         i = 0
         for argument in self.arguments:
-            assert isinstance(argument, str)
             output += '{}    {:2d}: {!r}\n'.format(indent, i, argument)
             i += 1
 
@@ -164,7 +161,6 @@ class Command(object):
         @return:
         @rtype:
         """
-
         assert isinstance(argument, Argument)
         assert isinstance(override, bool)
 
@@ -175,13 +171,10 @@ class Command(object):
                     self.program),
                 UserWarning)
 
-        if argument.key in self.options:
-            arguments_list = self.options[argument.key]
-            assert isinstance(arguments_list, list)
-        else:
-            arguments_list = list()
-            self.options[argument.key] = arguments_list
+        if argument.key not in self.options:
+            self.options[argument.key] = list()
 
+        arguments_list = self.options[argument.key]
         arguments_list.append(argument)
 
         return
@@ -358,7 +351,6 @@ class Command(object):
         @return:
         @rtype:
         """
-
         assert isinstance(configuration, Configuration)
         assert isinstance(section, str)
 
@@ -390,6 +382,7 @@ class Command(object):
         """
 
         command_line = list()
+        """ @type command_line: list[str] """
 
         if self.program:
             command_line.append(self.program)
@@ -400,11 +393,8 @@ class Command(object):
         argument_key_list.sort(cmp=lambda x, y: cmp(x, y))
 
         for argument_key in argument_key_list:
-            assert isinstance(argument_key, str)
             options_list = self.options[argument_key]
-            assert isinstance(options_list, list)
             for argument in options_list:
-                assert isinstance(argument, Argument)
                 if isinstance(argument, SwitchLong):
                     command_line.append('--{}'.format(argument.key))
                 elif isinstance(argument, SwitchShort):
@@ -431,7 +421,6 @@ class Command(object):
         # Add all arguments.
 
         for argument in self.arguments:
-            assert isinstance(argument, basestring)
             command_line.append(argument)
 
         # Expand a subordinate command, if defined.
@@ -459,11 +448,8 @@ class Command(object):
         argument_key_list.sort(cmp=lambda x, y: cmp(x, y))
 
         for argument_key in argument_key_list:
-            assert isinstance(argument_key, str)
             options_list = self.options[argument_key]
-            assert isinstance(options_list, list)
             for argument in options_list:
-                assert isinstance(argument, Argument)
                 if isinstance(argument, SwitchLong):
                     command_line += ' --{}'.format(argument.key)
                 elif isinstance(argument, SwitchShort):
@@ -482,7 +468,6 @@ class Command(object):
         # Add all arguments.
 
         for argument in self.arguments:
-            assert isinstance(argument, str)
             command_line += ' '
             command_line += argument
 
@@ -756,7 +741,6 @@ class Executable(Command):
 
         i = 0
         for dependency in self.dependencies:
-            assert isinstance(dependency, str)
             output += '{}    {:2d} {!r}\n'.format(indent, i, dependency)
             i += 1
 
@@ -774,6 +758,7 @@ class Executable(Command):
         """
 
         command = list()
+        """ @type command: list[str | unicode] """
 
         command.extend(super(Executable, self).command_list())
 
@@ -1033,7 +1018,6 @@ class RunnableStep(Executable):
             return
 
         for file_path in self.obsolete_file_path_list:
-            assert isinstance(file_path, basestring)
             if os.path.exists(file_path):
                 os.remove(file_path)
 

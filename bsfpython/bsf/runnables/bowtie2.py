@@ -42,7 +42,16 @@ from bsf.standards import Default
 
 
 class ReadGroupContainer(object):
+    """The C{bsf.runnables.bowtie2.ReadGroupContainer} models a SAM or BAM read group (@RG) line.
 
+    Attributes:
+    @ivar rg_string: SAM Read Group (@RG)
+    @type rg_string: str
+    @ivar fastq_1_path: FASTQ R1 file path
+    @type fastq_1_path: str | unicode
+    @ivar fastq_2_path: FASTQ R2 file path
+    @type fastq_2_path: str | unicode
+    """
     def __init__(
             self,
             rg_string=None,
@@ -97,6 +106,7 @@ class ReadGroupContainer(object):
 
     def get_rg_elements(self):
         element_list = list()
+        """ @type element_list: list[str] """
         for element in self.rg_string.split():
             if element[:3] != 'ID:':
                 element_list.append(element)
@@ -138,7 +148,9 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
             'Could not complete the {!r} step on the BAM file for the replicate.'.format(samtools.name))
 
     sam_pg_list = list()
+    """ @type sam_pg_list: list[str] """
     sam_rg_list = list()
+    """ @type sam_rg_list: list[str] """
 
     sam_temporary_handle = open(sam_file_path, 'r')
     for line in sam_temporary_handle:
@@ -177,6 +189,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
         raise Exception('Could not complete the {!r} step.'.format(java_process.name))
 
     rgc_list = list()
+    """ @type rgc_list: list[ReadGroupContainer] """
     regular_expression = re.compile(pattern='\W')
     # Expect a FASTQ file pair for each read group.
     for sam_rg in sam_rg_list:
@@ -212,7 +225,7 @@ def run_bowtie2(runnable):
     # Put all sample-specific information into a sub-directory.
 
     file_path_read_group = runnable.file_path_object
-    assert isinstance(file_path_read_group, FilePathChIPSeq)
+    """ @type file_path_read_group: FilePathChIPSeq """
 
     if not os.path.isdir(file_path_read_group.replicate_directory):
         try:
@@ -230,7 +243,6 @@ def run_bowtie2(runnable):
     # bowtie2 = runnable.executable_dict['bowtie2']
     # The following bowtie2 definition is only a placeholder.
     bowtie2 = bsf.executables.Bowtie2(name='bowtie2', analysis=Analysis())
-    assert isinstance(bowtie2, bsf.executables.Bowtie2)
 
     # TODO: For the moment, convert only files set in the bowtie2 -U option.
     # Pop the original list of -U options off the Bowtie2 Executable object.
@@ -238,11 +250,14 @@ def run_bowtie2(runnable):
     # aligned_sam = bowtie2.stdout_path
 
     rgc_list = list()
+    """ @type rgc_list: list[ReadGroupContainer] """
     fastq_list = list()
+    """ @type fastq_list: list[str | unicode] """
 
     # Expand all BAM files into ReadGroupContainers representing FASTQ files and
 
     for option in option_list:
+        """ @type option: OptionShort """
         assert isinstance(option, OptionShort)
         for file_path in option.value.split(','):
             if file_path[-4:] == '.bam':
@@ -253,10 +268,9 @@ def run_bowtie2(runnable):
     # First, process all ReadGroupContainer objects.
 
     sam_file_path_list = list()
+    """ @type sam_file_path_list: list[str | unicode] """
 
     for rgc in rgc_list:
-
-        assert isinstance(rgc, ReadGroupContainer)
         # Clear Bowtie2 options.
         bowtie2.options.pop('U', None)
         bowtie2.options.pop('1', None)
@@ -358,7 +372,7 @@ def run(runnable):
                 raise
 
     file_path_read_group = runnable.file_path_object
-    assert isinstance(file_path_read_group, FilePathChIPSeq)
+    """ @type file_path_read_group: FilePathChIPSeq """
 
     if not os.path.isdir(file_path_read_group.replicate_directory):
         try:

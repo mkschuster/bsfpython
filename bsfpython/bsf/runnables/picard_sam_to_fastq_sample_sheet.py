@@ -52,8 +52,8 @@ def run(runnable):
     # Do the work.
 
     runnable_step = runnable.runnable_step_list[0]
-    assert isinstance(runnable_step, RunnableStep)
     argument = runnable_step.options['sas_path'][0]
+    """ @type argument: bsf.argument.OptionLong """
     assert isinstance(argument, OptionLong)
     old_file_path = argument.value
     if old_file_path.endswith('_original.csv'):
@@ -68,14 +68,11 @@ def run(runnable):
         sas_path=argument.value)
 
     for prf in collection.processed_run_folder_dict.itervalues():
-        assert isinstance(prf, ProcessedRunFolder)
         for project in prf.project_dict.itervalues():
-            assert isinstance(project, Project)
             for sample in project.sample_dict.itervalues():
-                assert isinstance(sample, Sample)
                 new_paired_reads_list = list()
+                """ @type new_paired_reads_list: list[bsf.ngs.PairedReads] """
                 for paired_reads in sample.paired_reads_list:
-                    assert isinstance(paired_reads, PairedReads)
                     paired_reads_keep = False
                     if paired_reads.reads_1 is not None:
                         if os.path.exists(paired_reads.reads_1.file_path):

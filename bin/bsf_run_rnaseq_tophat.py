@@ -112,7 +112,7 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
 
     platform_unit = str()
     for line in sam_header_rg:
-        assert isinstance(line, basestring)
+        assert isinstance(line, (str, unicode))
         for field in line.rstrip().split():
             if field.startswith('PU:'):
                 platform_unit = field[3:]

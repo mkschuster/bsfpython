@@ -91,7 +91,7 @@ if name_space.project_name:
     star_aligner.project_name = name_space.project_name
 
 if name_space.sas_file:
-    assert isinstance(name_space.sas_file, basestring)
+    assert isinstance(name_space.sas_file, (str, unicode))
     star_aligner.sas_file = name_space.sas_file
 
 annotation_sheet = star_aligner.run()

@@ -47,7 +47,6 @@ class Bowtie1(Executable):
         @return:
         @rtype:
         """
-
         assert isinstance(analysis, Analysis)
 
         super(Bowtie1, self).__init__(name=name, program='bowtie')
@@ -71,7 +70,6 @@ class Bowtie2(Executable):
         @return:
         @rtype:
         """
-
         assert isinstance(analysis, Analysis)
 
         super(Bowtie2, self).__init__(name=name, program='bsf_chipseq_run_bowtie2.bash')
@@ -101,7 +99,6 @@ class BWA(Executable):
         @return:
         @rtype:
         """
-
         assert isinstance(analysis, Analysis)
 
         super(BWA, self).__init__(name=name, program='bwa', sub_command=Command(program='mem'))
@@ -136,7 +133,6 @@ class TopHat(Executable):
         @return:
         @rtype:
         """
-
         assert isinstance(analysis, Analysis)
 
         super(TopHat, self).__init__(name=name, program='tophat2')
@@ -165,7 +161,6 @@ class Macs14(Executable):
         @return:
         @rtype:
         """
-
         assert isinstance(analysis, Analysis)
 
         super(Macs14, self).__init__(name=name, program='macs14')
@@ -196,7 +191,6 @@ class Macs2Bdgcmp(Executable):
         @return:
         @rtype:
         """
-
         assert isinstance(analysis, Analysis)
 
         super(Macs2Bdgcmp, self).__init__(
@@ -229,7 +223,6 @@ class Macs2Callpeak(Executable):
         @return:
         @rtype:
         """
-
         assert isinstance(analysis, Analysis)
 
         super(Macs2Callpeak, self).__init__(
@@ -264,7 +257,6 @@ class FastQC(Executable):
         @return:
         @rtype:
         """
-
         assert isinstance(analysis, Analysis)
 
         super(FastQC, self).__init__(name=name, program='fastqc')

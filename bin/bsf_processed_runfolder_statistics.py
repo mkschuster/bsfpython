@@ -59,7 +59,7 @@ for file_name in os.listdir(prf_path):
             mode = os.stat(file_path_2).st_mode
             match = re.search(pattern=r'([^.]+).([^.]+).output.metrics.txt', string=file_name_2)
             if stat.S_ISREG(mode) and match:
-                metrics_file = open(name=file_path_2, mode='r')
+                metrics_file = open(file_path_2, 'r')
                 for line in metrics_file:
 
                     if not line:

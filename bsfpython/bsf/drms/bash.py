@@ -55,7 +55,6 @@ def submit(stage, debug=0):
         output += "\n"
 
     for executable in stage.executable_list:
-        assert isinstance(executable, Executable)
         if not executable.submit:
             output += '# '
         output += executable.command_str()
@@ -67,7 +66,7 @@ def submit(stage, debug=0):
         output += "\n"
 
     script_path = os.path.join(stage.working_directory, 'bsfpython_bash_{}.bash'.format(stage.name))
-    script_file = open(name=script_path, mode='w')
+    script_file = open(script_path, 'w')
     script_file.write(output)
     script_file.close()
 

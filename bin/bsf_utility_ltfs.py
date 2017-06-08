@@ -42,7 +42,7 @@ class LinearTapeFileSystemDirectory(object):
     @ivar source_path: Source directory path
     @type source_path: str | unicode
     @ivar target_path: Target directory path
-    @type target_path: str |unicode
+    @type target_path: str | unicode
     @ivar source_specification: Source specification pattern including wildcard characters
     @type source_specification: str
     @ivar source_file_path_list: Python C{list} of source file paths in the directory
@@ -104,7 +104,7 @@ class LinearTapeFileSystemDirectory(object):
         if source_file_path is None:
             return
 
-        assert isinstance(source_file_path, basestring)
+        assert isinstance(source_file_path, (str, unicode))
 
         if source_file_path not in self.source_file_path_list:
             self.source_file_path_list.append(source_file_path)
@@ -355,7 +355,7 @@ class LinearTapeFileSystemCopy(object):
             ltfs_directory.source_file_path_list.sort(lambda x, y: cmp(x, y))
 
             for source_file_path in ltfs_directory.source_file_path_list:
-                assert isinstance(source_file_path, basestring)
+                assert isinstance(source_file_path, (str, unicode))
                 ltfs_source_file = xml.etree.ElementTree.Element(tag='sf')
                 ltfs_source_file.text = source_file_path
                 ltfs_file.append(element=ltfs_source_file)

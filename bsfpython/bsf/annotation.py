@@ -42,25 +42,6 @@ class AnnotationSheet(object):
     C{bsf.annotation.AnnotationSheet} sub-class in code.
 
     Attributes:
-    @cvar _regular_expression_non_alpha: Regular expression for non-alphanumeric characters
-    @type _regular_expression_non_alpha: re.RegexObject
-    @cvar _regular_expression_non_numeric: Regular expression for non-numeric characters
-    @type _regular_expression_non_numeric: re.RegexObject
-    @cvar _regular_expression_non_sequence: Regular expression for non-sequence characters
-    @type _regular_expression_non_sequence: re.RegexObject
-    @cvar _regular_expression_non_ambiguous_sequence: Regular expression for non-ambiguous sequence characters
-    @type _regular_expression_non_ambiguous_sequence: re.RegexObject
-    @cvar _regular_expression_multiple_underscore: Regular expression for multiple underscore characters
-    @type _regular_expression_multiple_underscore: re.RegexObject
-    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
-    @type _file_type: str
-    @cvar _header_line: Header line exists
-    @type _header_line: bool
-    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list[str]
-    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, list[function]]
     @ivar file_path: File path
     @type file_path: str | unicode
     @ivar file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
@@ -71,29 +52,47 @@ class AnnotationSheet(object):
     @type field_names: list[str]
     @ivar test_methods: Python C{dict} of Python C{str} (field name) key data and
         Python C{list} of Python C{function} value data
-    @type test_methods: dict[str, list[function]]
+    #type test_methods: dict[str, list[function]]
     @ivar row_dicts: Python C{list} of Python C{dict} objects
     @type row_dicts: list[dict[str, str | unicode]]
-    @ivar _csv_reader_file: CSV Reader file handle
-    @type _csv_reader_file: file
-    @ivar _csv_reader_object: CSV Dict Reader
-    @type _csv_reader_object: csv.DictReader
-    @ivar _csv_writer_file: CSV Writer file handle
-    @type _csv_writer_file: file
-    @ivar _csv_writer_object: CSV Dict Writer
-    @type _csv_writer_object: csv.DictWriter
     """
 
+    # Regular expression for non-alphanumeric characters
     _regular_expression_non_alpha = re.compile(pattern='\W')
-    _regular_expression_non_numeric = re.compile(pattern='\D')
-    _regular_expression_non_sequence = re.compile(pattern='[^ACGTacgt]')
-    _regular_expression_non_ambiguous_sequence = re.compile(pattern='[^ACGTacgtWSMKRYwsmkryBDHVbdhvNn]')
-    _regular_expression_multiple_underscore = re.compile(pattern='_{2,}')
+    """ @type _regular_expression_non_alpha: re.RegexObject """
 
+    # Regular expression for non-numeric characters
+    _regular_expression_non_numeric = re.compile(pattern='\D')
+    """ @type _regular_expression_non_numeric: re.RegexObject """
+
+    # Regular expression for non-sequence characters
+    _regular_expression_non_sequence = re.compile(pattern='[^ACGTacgt]')
+    """ @type _regular_expression_non_sequence: re.RegexObject """
+
+    # Regular expression for non-ambiguous sequence characters
+    _regular_expression_non_ambiguous_sequence = re.compile(pattern='[^ACGTacgtWSMKRYwsmkryBDHVbdhvNn]')
+    """ @type _regular_expression_non_ambiguous_sequence: re.RegexObject """
+
+    # Regular expression for multiple underscore characters
+    _regular_expression_multiple_underscore = re.compile(pattern='_{2,}')
+    """ @type _regular_expression_multiple_underscore: re.RegexObject """
+
+    # File type (i.e. "excel" or "excel-tab" defined in the csv.Dialect class)
     _file_type = 'excel'
+    """ @type _file_type: str """
+
+    # Header line exists
     _header_line = True
+    """ @type _header_line: bool """
+
+    # Python list of Python str (field name) objects
     _field_names = list()
+    """ @type _field_names: list[str] """
+
+    # Python dict of Python str (field name) key data and
+    # Python list of Python function value data
     _test_methods = dict()
+    """ #type _test_methods: dict[str, list[function]] """
 
     @classmethod
     def check_column_value(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
@@ -676,7 +675,7 @@ class AnnotationSheet(object):
         @type field_names: list[str]
         @param test_methods: Python C{dict} of Python C{str} (field name) key data and
             Python C{list} of Python C{function} value data
-        @type test_methods: dict[str, list[function]]
+        #type test_methods: dict[str, list[function]]
         @param row_dicts: Python C{list} of Python C{dict} objects
         @type row_dicts: list[dict[str, str | unicode]]
         @return:
@@ -725,10 +724,16 @@ class AnnotationSheet(object):
             self.row_dicts = row_dicts
 
         self._csv_reader_file = None
+        """ @type _csv_reader_file: file """
+
         self._csv_reader_object = None
+        """ @type _csv_reader_object: csv.DictReader """
 
         self._csv_writer_file = None
+        """ @type _csv_writer_file: file """
+
         self._csv_writer_object = None
+        """ @type _csv_writer_object: csv.DictWriter """
 
         return
 
@@ -930,15 +935,6 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
     """The C{bsf.annotation.ChIPSeqDiffBindSheet} class represents a ChIP-Seq Bioconductor DiffBind annotation sheet.
 
     Attributes:
-    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
-    @type _file_type: str
-    @cvar _header_line: Header line exists
-    @type _header_line: bool
-    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list[str]
-    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, list[function]]
     """
 
     _file_type = 'excel'
@@ -1029,13 +1025,6 @@ class TuxedoSamplePairSheet(AnnotationSheet):
     The C{bsf.ngs.Sample} pairs are defined by the C{bsf_rnaseq_process_cuffdiff.R} script.
 
     Attributes:
-    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
-    @type _file_type: str
-    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list[str]
-    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, list[function]]
     """
 
     _file_type = "excel-tab"

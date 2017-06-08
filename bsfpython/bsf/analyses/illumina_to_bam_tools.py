@@ -46,15 +46,6 @@ class BamIndexDecoderSheet(AnnotationSheet):
     C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} C{bsf.Analysis}.
 
     Attributes:
-    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
-    @type _file_type: str
-    @cvar _header_line: Header line exists
-    @type _header_line: bool
-    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list[str]
-    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, list[function]]
     """
 
     _file_type = 'excel-tab'
@@ -80,15 +71,6 @@ class LibraryAnnotationSheet(AnnotationSheet):
     library information for the C{bsf.analyses.illumina_to_bam_tools.BamIndexDecoder} C{bsf.Analysis}.
 
     Attributes:
-    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
-    @type _file_type: str
-    @cvar _header_line: Header line exists
-    @type _header_line: bool
-    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list[str]
-    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, list[function]]
     """
 
     _file_type = 'excel'
@@ -165,6 +147,8 @@ class LibraryAnnotationSheet(AnnotationSheet):
         messages += super(LibraryAnnotationSheet, self).validate()
 
         flow_cell_dict = dict()
+        # TODO: Since the Python dict holds a dict of complex types, another object would be justified.
+        # See barcode_dict: {}, sample_dict: {} amd library_name: ''
 
         row_number = 0
 
@@ -562,7 +546,7 @@ class IlluminaToBam(Analysis):
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
@@ -982,7 +966,7 @@ class IlluminaToBam(Analysis):
                     java_heap_maximum=java_heap_maximum,
                     itb_classpath=self.classpath_illumina2bam,
                     itb_command='Illumina2bam'))
-            assert isinstance(runnable_step, RunnableStepIlluminaToBam)
+            """ @type runnable_step: RunnableStepIlluminaToBam """
             if self.intensity_directory:
                 # RUN_FOLDER defaults to 'null'.
                 # Only set the RUN_FOLDER option, if a separate 'Intensities' directory has been configured.
@@ -1075,7 +1059,7 @@ class IlluminaToBam(Analysis):
                         java_heap_maximum='Xmx18G',
                         picard_classpath=self.classpath_picard,
                         picard_command='SortSam'))
-                assert isinstance(runnable_step, RunnableStepPicard)
+                """ @type runnable_step: RunnableStepPicard """
                 # INPUT is required.
                 runnable_step.add_picard_option(key='INPUT', value=file_path_lane.unsorted_bam)
                 # OUTPUT is required.
@@ -1315,7 +1299,7 @@ class BamIndexDecoder(Analysis):
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param hash_algorithm: Use a BSF-specific hashing algorithm for demultiplexing
@@ -1555,7 +1539,7 @@ class BamIndexDecoder(Analysis):
         # Load the library annotation sheet file and validate.
 
         library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=self.library_path)
-        assert isinstance(library_annotation_sheet, LibraryAnnotationSheet)
+        """ @type library_annotation_sheet: LibraryAnnotationSheet """
 
         validation_messages = library_annotation_sheet.validate(lanes=self.lanes)
 
@@ -1581,7 +1565,7 @@ class BamIndexDecoder(Analysis):
         stage_cell = self.get_stage(name=self.stage_name_cell)
 
         flow_cell_dict = dict()
-
+        """ @type flow_cell_dict: dict[str, list[dict[str, str]]] """
         for row_dict in library_annotation_sheet.row_dicts:
             if row_dict['lane'] not in flow_cell_dict:
                 flow_cell_dict[row_dict['lane']] = list()
@@ -1705,7 +1689,7 @@ class BamIndexDecoder(Analysis):
                         java_heap_maximum='Xmx4G',
                         itb_classpath=self.classpath_illumina2bam,
                         itb_command='BamIndexDecoder'))
-                assert isinstance(runnable_step, RunnableStepIlluminaToBam)
+                """ @type runnable_step: RunnableStepIlluminaToBam """
                 # INPUT is required
                 runnable_step.add_itb_option(key='INPUT', value=file_path_lane.archive_bam)
                 # OUTPUT is required, but cannot be used together with OUTPUT_FORMAT, OUTPUT_PREFIX and OUTPUT_DIR.
@@ -1794,7 +1778,7 @@ class BamIndexDecoder(Analysis):
                         java_heap_maximum='Xmx4G',
                         picard_classpath=self.classpath_picard,
                         picard_command='CollectAlignmentSummaryMetrics'))
-                assert isinstance(runnable_step, RunnableStepPicard)
+                """ @type runnable_step: RunnableStepPicard """
                 # MAX_INSERT_SIZE defaults to '100000'.
                 # ADAPTER_SEQUENCE
                 # METRIC_ACCUMULATION_LEVEL.

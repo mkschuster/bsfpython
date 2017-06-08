@@ -165,9 +165,25 @@ class RunnableStepGATK(RunnableStepJava):
 
 
 class FilePathAlignment(FilePath):
+    """The C{bsf.analyses.variant_calling.FilePathAlignment} models files in a sample-specific directory.
+
+    Attributes:
+    @ivar aligned_bam: Alignment BAM file path
+    @type aligned_bam: str | unicode
+    @ivar aligned_bai: Alignment BAI file path
+    @type aligned_bai: str | unicode
+    @ivar aligned_md5: Alignment MD5 check sum file path
+    @type aligned_md5: str | unicode
+    """
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathAlignment} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathAlignment, self).__init__(prefix=prefix)
 
         self.aligned_bam = prefix + '.bam'
@@ -178,9 +194,49 @@ class FilePathAlignment(FilePath):
 
 
 class FilePathProcessReadGroup(FilePath):
+    """The C{bsf.analyses.variant_calling.FilePathAlignment} models files in a sample-specific directory.
+
+    Attributes:
+    @ivar duplicates_marked_bam: Picard Mark Duplicates BAM file
+    @type duplicates_marked_bam: str | unicode
+    @ivar duplicates_marked_bai: Picard Mark Duplicates BAI file
+    @type duplicates_marked_bai: str | unicode
+    @ivar duplicates_marked_md5: Picard Mark Duplicates MD5 check sum file
+    @type duplicates_marked_md5: str | unicode
+    @ivar duplicate_metrics: Picard Mark Duplicates metrics file
+    @type duplicate_metrics: str | unicode
+    @ivar realigner_targets: GATK
+    @type realigner_targets: str | unicode
+    @ivar realigned_bam: Re-aligned BAM file
+    @type realigned_bam: str | unicode
+    @ivar realigned_bai: Re-aligned BAI file
+    @type realigned_bai: str | unicode
+    @ivar realigned_md5: Re-aligned MD5 check sum file
+    @type realigned_md5: str | unicode
+    @ivar recalibration_table_pre:
+    @type recalibration_table_pre: str | unicode
+    @ivar recalibration_table_post:
+    @type recalibration_table_post: str | unicode
+    @ivar recalibration_plot:
+    @type recalibration_plot: str | unicode
+    @ivar recalibrated_bam: Recalibrated BAM file
+    @type recalibrated_bam: str | unicode
+    @ivar recalibrated_bai: Recalibrated BAI file
+    @type recalibrated_bai: str | unicode
+    @ivar recalibrated_md5: Recalibrated BAM MD5 check sum file
+    @type recalibrated_md5: str | unicode
+    @ivar alignment_summary_metrics: Picard Collect Alignment Summary metrics file
+    @type alignment_summary_metrics: str | unicode
+    """
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathProcessReadGroup} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathProcessReadGroup, self).__init__(prefix=prefix)
 
         self.duplicates_marked_bam = prefix + '_duplicates_marked.bam'
@@ -205,7 +261,13 @@ class FilePathProcessReadGroup(FilePath):
 class FilePathProcessSample(FilePath):
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathProcessSample} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathProcessSample, self).__init__(prefix=prefix)
 
         self.merged_bam = prefix + '_merged.bam'
@@ -230,7 +292,13 @@ class FilePathProcessSample(FilePath):
 class FilePathDiagnoseSample(FilePath):
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathDiagnoseSample} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathDiagnoseSample, self).__init__(prefix=prefix)
 
         self.diagnose_targets_vcf = prefix + '_diagnose_targets.vcf.gz'
@@ -253,7 +321,13 @@ class FilePathDiagnoseSample(FilePath):
 class FilePathMergeCohort(FilePath):
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathMergeCohort} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathMergeCohort, self).__init__(prefix=prefix)
 
         self.combined_gvcf_vcf = prefix + '_combined.g.vcf.gz'
@@ -267,7 +341,13 @@ class FilePathMergeCohort(FilePath):
 class FilePathGenotypeCohort(FilePath):
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathGenotypeCohort} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathGenotypeCohort, self).__init__(prefix=prefix)
 
         self.genotyped_raw_vcf = prefix + '_genotyped_raw_snp_raw_indel.vcf.gz'
@@ -283,7 +363,13 @@ class FilePathGenotypeCohort(FilePath):
 class FilePathProcessCohort(FilePath):
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathProcessCohort} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathProcessCohort, self).__init__(prefix=prefix)
 
         # self.genotyped_raw_vcf = prefix + '_genotyped_raw_snp_raw_indel.vcf.gz'
@@ -321,7 +407,13 @@ class FilePathProcessCohort(FilePath):
 class FilePathSplitCohort(FilePath):
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathSplitCohort} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathSplitCohort, self).__init__(prefix=prefix)
 
         self.sample_vcf = prefix + '.vcf.gz'
@@ -334,7 +426,13 @@ class FilePathSplitCohort(FilePath):
 class FilePathSummary(FilePath):
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathSummary} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathSummary, self).__init__(prefix=prefix)
 
         self.alignment_metrics_sample_tsv = prefix + '_alignment_metrics_sample.tsv'
@@ -382,7 +480,13 @@ class FilePathSummary(FilePath):
 class FilePathSomatic(FilePath):
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathSomatic} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathSomatic, self).__init__(prefix=prefix)
 
         self.somatic_vcf = prefix + '_somatic.vcf.gz'
@@ -403,7 +507,13 @@ class FilePathSomatic(FilePath):
 class FilePathSomaticScatterGather(FilePath):
 
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathSomaticScatterGather} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathSomaticScatterGather, self).__init__(prefix=prefix)
 
         self.partial_vcf = prefix + '_somatic.vcf.gz'
@@ -494,7 +604,7 @@ class VariantCallingGATK(Analysis):
     @type replicate_grouping: bool
     @ivar bwa_genome_db: Genome sequence file path with BWA index
     @type bwa_genome_db: str | unicode
-    @ivar comparison_path: Comparison file
+    @ivar comparison_path: Comparison file path
     @type comparison_path: str | unicode
     @ivar cohort_name: Cohort name
     @type cohort_name: str
@@ -512,9 +622,11 @@ class VariantCallingGATK(Analysis):
     @ivar known_sites_recalibration: Python C{list} of Python C{str} or C{unicode} (VCF file paths)
         for recalibration
     @type known_sites_recalibration: list[str | unicode]
+    @ivar known_somatic_discovery: Cosmic VCF file path for somatic variant discovery via MuTect2
+    @type known_somatic_discovery: list[str | unicode]
     @ivar annotation_resources_dict: Python C{dict} of Python C{str} (annotation resource name) key and
         Python C{tuple} of
-        Python C{str} or C{unicode} (file path) and Python C{list} of Python C{str} (annotation) value data
+        Python C{str} (file path) and Python C{list} of Python C{str} (annotation) value data
     @type annotation_resources_dict: dict[str, (str | unicode, list[str])]
     @ivar truth_sensitivity_filter_level_indel: Truth sensitivity filter level for INDELs
     @type truth_sensitivity_filter_level_indel: str
@@ -524,6 +636,10 @@ class VariantCallingGATK(Analysis):
     @type vqsr_skip_indel: bool, None
     @ivar vqsr_skip_snp: Skip the Variant Quality Score Recalibration on SNPs
     @type vqsr_skip_snp: bool, None
+    @ivar vqsr_resources_indel_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
+    @type vqsr_resources_indel_dict: dict[str, dict[str, str | unicode]]
+    @ivar vqsr_resources_snp_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
+    @type vqsr_resources_snp_dict: dict[str, dict[str, str | unicode]]
     @ivar vqsr_annotations_indel_list: Python C{list} of Python C{str} (variant annotation) objects
     @type vqsr_annotations_indel_list: list[str]
     @ivar vqsr_annotations_snp_list: Python C{list} of Python C{str} (variant annotation) objects
@@ -1945,7 +2061,7 @@ class VariantCallingGATK(Analysis):
                 # - Picard SamToFastq
                 # - BWA MEM
 
-                bwa = BWA(name='variant_calling_bwa_{}'.format(paired_reads_name), analysis=self)
+                bwa = BWA(name='variant_calling_bwa_' + paired_reads_name, analysis=self)
                 # Instead of adding the BWA Executable to the Stage, it gets serialised into the pickler_file.
                 # stage_bwa.add_executable(executable=bwa)
 
@@ -2018,7 +2134,7 @@ class VariantCallingGATK(Analysis):
 
                 pickler_path = os.path.join(
                     self.genome_directory,
-                    '{}_{}.pkl'.format(stage_align_lane.name, paired_reads_name))
+                    stage_align_lane.name + '_' + paired_reads_name + '.pkl')
                 pickler_file = open(pickler_path, 'wb')
                 pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
                 pickler.dump(obj=pickler_dict_align_lane)
@@ -2788,8 +2904,10 @@ class VariantCallingGATK(Analysis):
                 probe_interval_list = sample.annotation_dict['Probe Intervals']
                 if len(probe_interval_list) > 1:
                     warnings.warn('More than one set of Probe Interval annotations is currently not supported.\n'
-                                  'Choosing the first one of {!r} for sample {!r}'.
-                                  format(probe_interval_list, sample.name))
+                                  'Choosing the first one of ' +
+                                  repr(probe_interval_list) +
+                                  ' for sample ' +
+                                  repr(sample.name))
                 probe_interval_path = probe_interval_list[0]
                 if probe_interval_path and not os.path.isabs(probe_interval_path):
                     probe_interval_path = Default.get_absolute_path(
@@ -3877,7 +3995,7 @@ class VariantCallingGATK(Analysis):
         key_list.sort(cmp=lambda x, y: cmp(x, y))
 
         if self.debug > 0:
-            print "Somatic variant calling: {!r}".format(key_list)
+            print 'Somatic variant calling: ' + repr(key_list)
 
         for key in key_list:
             comparison = self.comparisons[key]
@@ -4365,7 +4483,7 @@ class VariantCallingGATK(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
+                print repr(self) + ' Sample name: ' + sample.name
                 print sample.trace(1)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
@@ -4497,17 +4615,19 @@ class VariantCallingGATK(Analysis):
 
         # This code only needs the public URL.
 
-        output_hub = str()
+        hub_list = list()
+        """ @type hub_list: list[str | unicode] """
 
         # Write a HTML document.
 
-        output_html = str()
+        report_list = list()
+        """ @type report_list: list[str | unicode] """
 
-        output_html += '<h1 id="{}_analysis">{} {}</h1>\n'.format(self.prefix, self.project_name, self.name)
-        output_html += '\n'
+        report_list += '<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n'
+        report_list += '\n'
 
-        output_html += '<h2 id="genome_browsing">Genome Browsing</h2>\n'
-        output_html += '\n'
+        report_list += '<h2 id="genome_browsing">Genome Browsing</h2>\n'
+        report_list += '\n'
 
         # Resolve an eventual alias for the UCSC genome assembly name.
 
@@ -4518,62 +4638,61 @@ class VariantCallingGATK(Analysis):
 
         options_dict = {
             'db': ucsc_genome_version,
-            'hubUrl': '{}/{}/variant_calling_hub.txt'.format(Default.url_absolute_projects(), link_name),
+            'hubUrl': Default.url_absolute_projects() + '/' + link_name + '/variant_calling_hub.txt',
         }
 
         # TODO: Method defaults.web.ucsc_track_url() should be moved to Analysis.get_ucsc_track_url().
         # The above code for resolving a UCSC Genome Browser genome assembly alias could be centralised in Analysis.
-        output_html += '<p id="ucsc_track_hub">'
-        output_html += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.'.format(
-            self.ucsc_track_url(options_dict=options_dict),
-            self.project_name)
-        output_html += '</p>\n'
-        output_html += '\n'
+        report_list += '<p id="ucsc_track_hub">'
+        report_list += 'UCSC Genome Browser Track Hub '
+        report_list += '<a href="' + self.ucsc_track_url(options_dict=options_dict) + '">' + self.project_name + '</a>.'
+        report_list += '</p>\n'
+        report_list += '\n'
 
-        output_html += '<h2 id="read_group_and_sample_level">Read Group and Sample Level</h2>\n'
-        output_html += '\n'
-        output_html += '<table id="read_group_and_sample_table">\n'
-        output_html += '<thead>\n'
-        output_html += '<tr>\n'
-        output_html += '<th>Sample</th>\n'
-        output_html += '<th>Variants</th>\n'
-        output_html += '<th>Alignments</th>\n'
-        output_html += '<th>Read Group</th>\n'
-        output_html += '<th>Duplicate Metrics</th>\n'
-        output_html += '<th>Alignment Summary Metrics</th>\n'
-        output_html += '<th>Hybrid Selection Metrics</th>\n'
-        output_html += '<th>Non-Callable Loci</th>\n'
-        output_html += '<th>Non-Callable Summary</th>\n'
-        output_html += '</tr>\n'
-        output_html += '</thead>\n'
-        output_html += '<tbody>\n'
+        report_list += '<h2 id="read_group_and_sample_level">Read Group and Sample Level</h2>\n'
+        report_list += '\n'
+        report_list += '<table id="read_group_and_sample_table">\n'
+        report_list += '<thead>\n'
+        report_list += '<tr>\n'
+        report_list += '<th>Sample</th>\n'
+        report_list += '<th>Variants</th>\n'
+        report_list += '<th>Alignments</th>\n'
+        report_list += '<th>Read Group</th>\n'
+        report_list += '<th>Duplicate Metrics</th>\n'
+        report_list += '<th>Alignment Summary Metrics</th>\n'
+        report_list += '<th>Hybrid Selection Metrics</th>\n'
+        report_list += '<th>Non-Callable Loci</th>\n'
+        report_list += '<th>Non-Callable Summary</th>\n'
+        report_list += '</tr>\n'
+        report_list += '</thead>\n'
+        report_list += '<tbody>\n'
 
         # Group via UCSC super tracks.
 
-        output_hub += 'track Alignments\n'
-        output_hub += 'shortLabel Alignments\n'
-        output_hub += 'longLabel BWA NGS read alignments\n'
-        output_hub += 'superTrack on show\n'
-        output_hub += 'group alignments\n'
-        output_hub += '\n'
+        hub_list += 'track Alignments\n'
+        hub_list += 'shortLabel Alignments\n'
+        hub_list += 'longLabel BWA NGS read alignments\n'
+        hub_list += 'superTrack on show\n'
+        hub_list += 'group alignments\n'
+        hub_list += '\n'
 
-        output_hub += 'track Callable\n'
-        output_hub += 'shortLabel Callable\n'
-        output_hub += 'longLabel Callable\n'
-        output_hub += 'superTrack on show\n'
-        output_hub += 'group callable\n'
-        output_hub += '\n'
+        hub_list += 'track Callable\n'
+        hub_list += 'shortLabel Callable\n'
+        hub_list += 'longLabel Callable\n'
+        hub_list += 'superTrack on show\n'
+        hub_list += 'group callable\n'
+        hub_list += '\n'
 
-        output_hub += 'track Variants\n'
-        output_hub += 'shortLabel Variants\n'
-        output_hub += 'longLabel Variant calls\n'
-        output_hub += 'superTrack on show\n'
-        output_hub += 'group variants\n'
-        output_hub += '\n'
+        hub_list += 'track Variants\n'
+        hub_list += 'shortLabel Variants\n'
+        hub_list += 'longLabel Variant calls\n'
+        hub_list += 'superTrack on show\n'
+        hub_list += 'group variants\n'
+        hub_list += '\n'
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
+                print repr(self) + ' Sample name: ' + sample.name
                 print sample.trace(1)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
@@ -4602,22 +4721,17 @@ class VariantCallingGATK(Analysis):
             # Alignment track
             # Common settings
 
-            output_hub += 'track {}_alignments\n'. \
-                format(sample.name)
-            output_hub += 'type bam\n'
-            output_hub += 'shortLabel {}_alignments\n'. \
-                format(sample.name)
-            output_hub += 'longLabel {} BWA NGS read alignments\n'. \
-                format(sample.name)
-            output_hub += 'bigDataUrl {}\n'. \
-                format(file_path_process_sample.realigned_bam)
-            # track_output += 'html {}\n'.format()
-            output_hub += 'visibility squish\n'
+            hub_list += 'track ' + sample.name + '_alignments\n'
+            hub_list += 'type bam\n'
+            hub_list += 'shortLabel ' + sample.name + '_alignments\n'
+            hub_list += 'longLabel ' + sample.name + 'BWA NGS read alignments\n'
+            hub_list += 'bigDataUrl ' + file_path_process_sample.realigned_bam + '\n'
+            # track_output += 'html ...\n'
+            hub_list += 'visibility squish\n'
 
             # Common optional settings.
 
-            output_hub += 'color {}\n'. \
-                format('0,0,0')
+            hub_list += 'color 0,0,0\n'
 
             # Compressed Sequence Alignment track settings.
 
@@ -4625,8 +4739,8 @@ class VariantCallingGATK(Analysis):
 
             # Composite track settings.
 
-            output_hub += 'parent Alignments\n'
-            output_hub += '\n'
+            hub_list += 'parent Alignments\n'
+            hub_list += '\n'
 
             # Callable track
 
@@ -4634,37 +4748,32 @@ class VariantCallingGATK(Analysis):
                     os.path.join(
                         self.genome_directory,
                         file_path_diagnosis.callable_bb)):
-                output_hub += 'track {}_callable\n'. \
-                    format(sample.name)
-                output_hub += 'type bigBed\n'
-                output_hub += 'shortLabel {}_callable\n'. \
-                    format(sample.name)
-                output_hub += 'longLabel {} callable\n'. \
-                    format(sample.name)
-                output_hub += 'bigDataUrl {}\n'. \
-                    format(file_path_diagnosis.callable_bb)
-                # track_output += 'html {}\n'.format()
-                output_hub += 'visibility squish\n'
+                hub_list += 'track ' + sample.name + '_callable\n'
+                hub_list += 'type bigBed\n'
+                hub_list += 'shortLabel ' + sample.name + '_callable\n'
+                hub_list += 'longLabel ' + sample.name + 'callable\n'
+                hub_list += 'bigDataUrl ' + file_path_diagnosis.callable_bb + '\n'
+                # track_output += 'html ...\n'
+                hub_list += 'visibility squish\n'
 
                 # Common optional settings.
 
-                output_hub += 'color {}\n'. \
-                    format('0,0,0')
+                hub_list += 'color 0,0,0\n'
 
                 # Composite track settings.
 
-                output_hub += 'parent Callable\n'
-                output_hub += '\n'
+                hub_list += 'parent Callable\n'
+                hub_list += '\n'
 
             # Variant track
 
-            output_hub += 'track {}_variants\n'.format(sample.name)
-            output_hub += 'type vcfTabix\n'
-            output_hub += 'shortLabel {}_variants\n'.format(sample.name)
-            output_hub += 'longLabel {} variant calls\n'.format(sample.name)
-            output_hub += 'bigDataUrl {}\n'.format(file_path_split_cohort.sample_vcf)
-            # track_output += 'html {}\n'.format()
-            output_hub += 'visibility dense\n'
+            hub_list += 'track ' + sample.name + '_variants\n'
+            hub_list += 'type vcfTabix\n'
+            hub_list += 'shortLabel ' + sample.name + '_variants\n'
+            hub_list += 'longLabel ' + sample.name + ' variant calls\n'
+            hub_list += 'bigDataUrl ' + file_path_split_cohort.sample_vcf + '\n'
+            # track_output += 'html ...\n'
+            hub_list += 'visibility dense\n'
 
             # vcfTabix specific settings
 
@@ -4672,62 +4781,57 @@ class VariantCallingGATK(Analysis):
 
             # Composite track settings.
 
-            output_hub += 'parent Variants\n'
-            output_hub += '\n'
+            hub_list += 'parent Variants\n'
+            hub_list += '\n'
 
-            output_html += '<tr>\n'
-            output_html += '<td class="left">{}</td>\n'. \
-                format(sample.name)
-            output_html += '<td class="center">'
-            output_html += '<a href="{}">VCF</a>&nbsp;'. \
-                format(file_path_split_cohort.sample_vcf)
-            output_html += '<a href="{}">TBI</a>&nbsp;'. \
-                format(file_path_split_cohort.sample_idx)
-            output_html += '<a href="{}">TSV</a>'. \
-                format(file_path_split_cohort.sample_tsv)
-            output_html += '</td>\n'
-            output_html += '<td class="center">'
-            output_html += '<a href="{}">BAM</a>&nbsp;'. \
-                format(file_path_process_sample.realigned_bam)
-            output_html += '<a href="{}">BAI</a> '. \
-                format(file_path_process_sample.realigned_bai)
-            output_html += '</td>\n'
-            output_html += '<td class="left"></td>\n'  # Read Group
-            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \
-                format(file_path_process_sample.duplicate_metrics)
-            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \
-                format(file_path_process_sample.alignment_summary_metrics)
+            report_list += '<tr>\n'
+            report_list += '<td class="left">' + sample.name + '</td>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_split_cohort.sample_vcf + '">VCF</a>&nbsp;'
+            report_list += '<a href="' + file_path_split_cohort.sample_idx + '">TBI</a>&nbsp;'
+            report_list += '<a href="' + file_path_split_cohort.sample_tsv + '">TSV</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_process_sample.realigned_bam + '">BAM</a>&nbsp;'
+            report_list += '<a href="' + file_path_process_sample.realigned_bai + '">BAI</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left"></td>\n'  # Read Group
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_process_sample.duplicate_metrics + '">TSV</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_process_sample.alignment_summary_metrics + '">TSV</a>'
+            report_list += '</td>\n'
             if os.path.isfile(
                     os.path.join(
                         self.genome_directory,
                         file_path_diagnosis.hybrid_selection_metrics)):
-                output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \
-                    format(file_path_diagnosis.hybrid_selection_metrics)
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_diagnosis.hybrid_selection_metrics + '">TSV</a>'
+                report_list += '</td>\n'
             else:
-                output_html += '<td class="center"></td>\n'
-            output_html += '<td class="center">'
+                report_list += '<td class="center"></td>\n'
+            report_list += '<td class="center">'
             if os.path.isfile(
                     os.path.join(
                         self.genome_directory,
                         file_path_diagnosis.non_callable_loci_tsv)):
-                output_html += '<a href="{}">BED</a>&nbsp;'. \
-                    format(file_path_diagnosis.callable_bed)
-                output_html += '<a href="{}">BigBED</a>&nbsp;'. \
-                    format(file_path_diagnosis.callable_bb)
+                report_list += '<a href="' + file_path_diagnosis.callable_bed + '">BED</a>&nbsp;'
+                report_list += '<a href="' + file_path_diagnosis.callable_bb + '">BigBED</a>&nbsp;'
                 # Do not link the more complex file_path_diagnosis.non_callable_regions_tsv
                 # file for the moment.
-                output_html += '<a href="{}">TSV</a>'. \
-                    format(file_path_diagnosis.non_callable_regions_tsv)
-            output_html += '</td>\n'
+                report_list += '<a href="' + file_path_diagnosis.non_callable_regions_tsv + '">TSV</a>'
+            report_list += '</td>\n'
             if os.path.isfile(
                     os.path.join(
                         self.genome_directory,
                         file_path_diagnosis.non_callable_summary_tsv)):
-                output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \
-                    format(file_path_diagnosis.non_callable_summary_tsv)
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_diagnosis.non_callable_summary_tsv + '">TSV</a>'
+                report_list += '</td>\n'
             else:
-                output_html += '<td class="center"></td>\n'
-            output_html += '</tr>\n'
+                report_list += '<td class="center"></td>\n'
+            report_list += '</tr>\n'
 
             for paired_reads_name in paired_reads_name_list:
                 runnable_process_lane = self.runnable_dict[
@@ -4735,72 +4839,74 @@ class VariantCallingGATK(Analysis):
                 file_path_read_group = runnable_process_lane.file_path_object
                 """ @type file_path_read_group: FilePathProcessReadGroup """
 
-                output_html += '<tr>\n'
-                output_html += '<td class="left"></td>\n'  # Sample
-                output_html += '<td class="center"></td>\n'  # Variants VCF, TBI, TSV
-                output_html += '<td class="center"></td>\n'  # Alignments BAM, BAI
-                output_html += '<td class="left">{}</td>\n'.format(paired_reads_name)
-                output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \
-                    format(file_path_read_group.duplicate_metrics)
-                output_html += '<td class="center"><a href="{}">TSV</a></td>\n'. \
-                    format(file_path_read_group.alignment_summary_metrics)
-                output_html += '<td class="center"></td>\n'  # Hybrid Selection Metrics
-                output_html += '<td class="center"></td>\n'  # Non-Callable Loci
-                output_html += '<td class="center"></td>\n'  # Non-Callable Summary
-                output_html += '</tr>\n'
+                report_list += '<tr>\n'
+                report_list += '<td class="left"></td>\n'  # Sample
+                report_list += '<td class="center"></td>\n'  # Variants VCF, TBI, TSV
+                report_list += '<td class="center"></td>\n'  # Alignments BAM, BAI
+                report_list += '<td class="left">' + paired_reads_name + '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_read_group.duplicate_metrics + '">TSV</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_read_group.alignment_summary_metrics + '">TSV</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center"></td>\n'  # Hybrid Selection Metrics
+                report_list += '<td class="center"></td>\n'  # Non-Callable Loci
+                report_list += '<td class="center"></td>\n'  # Non-Callable Summary
+                report_list += '</tr>\n'
 
-        output_html += '</tbody>\n'
-        output_html += '</table>\n'
-        output_html += '\n'
+        report_list += '</tbody>\n'
+        report_list += '</table>\n'
+        report_list += '\n'
 
-        output_html += '<h2 id="cohort_level">Cohort Level</h2>\n'
-        output_html += '\n'
-        output_html += '<table id="cohort_table">\n'
-        output_html += '<thead>\n'
-        output_html += '<tr>\n'
-        output_html += '<th>Cohort</th>\n'
-        output_html += '<th>Information</th>\n'
-        output_html += '<th>Comment</th>\n'
-        output_html += '</tr>\n'
-        output_html += '</thead>\n'
-        output_html += '<tbody>\n'
+        report_list += '<h2 id="cohort_level">Cohort Level</h2>\n'
+        report_list += '\n'
+        report_list += '<table id="cohort_table">\n'
+        report_list += '<thead>\n'
+        report_list += '<tr>\n'
+        report_list += '<th>Cohort</th>\n'
+        report_list += '<th>Information</th>\n'
+        report_list += '<th>Comment</th>\n'
+        report_list += '</tr>\n'
+        report_list += '</thead>\n'
+        report_list += '<tbody>\n'
 
         runnable_process_cohort = self.runnable_dict[
             '_'.join((self.stage_name_process_cohort, self.cohort_name))]
         file_path_process_cohort = runnable_process_cohort.file_path_object
         """ @type file_path_process_cohort: FilePathProcessCohort """
 
-        output_html += '<tr>\n'
-        output_html += '<td class="left">{}</td>\n'. \
-            format(self.cohort_name)
-        output_html += '<td class="left"><a href="{}">snpEff Summary Statistics</a></td>\n'. \
-            format(file_path_process_cohort.snpeff_stats)
-        output_html += '<td class="left"></td>\n'
-        output_html += '</tr>\n'
+        report_list += '<tr>\n'
+        report_list += '<td class="left">' + self.cohort_name + '</td>\n'
+        report_list += '<td class="left">'
+        report_list += '<a href="' + file_path_process_cohort.snpeff_stats + '">snpEff Summary Statistics</a>'
+        report_list += '</td>\n'
+        report_list += '<td class="left"></td>\n'
+        report_list += '</tr>\n'
 
-        output_html += '<tr>\n'
-        output_html += '<td class="left">{}</td>\n'. \
-            format(self.cohort_name)
-        output_html += '<td class="left">' \
-                       'snpEff-annotated multi-sample <a href="{}">VCF</a> and <a href="{}">TBI</a>' \
-                       '</td>\n'. \
-            format(file_path_process_cohort.snpeff_vcf_bgz, file_path_process_cohort.snpeff_vcf_tbi)
-        output_html += '<td class="left">Functional annotation of all splice variants</td>\n'
-        output_html += '</tr>\n'
+        report_list += '<tr>\n'
+        report_list += '<td class="left">' + self.cohort_name + '</td>\n'
+        report_list += '<td class="left">'
+        report_list += 'snpEff-annotated multi-sample '
+        report_list += '<a href="' + file_path_process_cohort.snpeff_vcf_bgz + '">VCF</a> and '
+        report_list += '<a href="' + file_path_process_cohort.snpeff_vcf_tbi + '">TBI</a>'
+        report_list += '</td>\n'
+        report_list += '<td class="left">Functional annotation of all splice variants</td>\n'
+        report_list += '</tr>\n'
 
-        output_html += '<tr>\n'
-        output_html += '<td class="left">{}</td>\n'. \
-            format(self.cohort_name)
-        output_html += '<td class="left">' \
-                       'GATK-annotated multi-sample <a href="{}">VCF</a> and <a href="{}">TBI</a>' \
-                       '</td>\n'. \
-            format(file_path_process_cohort.annotated_vcf, file_path_process_cohort.annotated_tbi)
-        output_html += '<td class="left">Functional annotation of only the most severely affected splice variant</td>\n'
-        output_html += '</tr>\n'
+        report_list += '<tr>\n'
+        report_list += '<td class="left">' + self.cohort_name + '</td>\n'
+        report_list += '<td class="left">'
+        report_list += 'GATK-annotated multi-sample '
+        report_list += '<a href="' + file_path_process_cohort.annotated_vcf + '">VCF</a> and '
+        report_list += '<a href="' + file_path_process_cohort.annotated_tbi + '">TBI</a>'
+        report_list += '</td>\n'
+        report_list += '<td class="left">Functional annotation of only the most severely affected splice variant</td>\n'
+        report_list += '</tr>\n'
 
-        output_html += '</tbody>\n'
-        output_html += '</table>\n'
-        output_html += '\n'
+        report_list += '</tbody>\n'
+        report_list += '</table>\n'
+        report_list += '\n'
 
         # Somatic variant calling.
 
@@ -4808,52 +4914,48 @@ class VariantCallingGATK(Analysis):
         key_list.sort(cmp=lambda x, y: cmp(x, y))
 
         if len(key_list):
-            output_html += '<h2 id="somatic_variants">Somatic Variants</h2>\n'
-            output_html += '\n'
-            output_html += '<table id="somatic_variants_table">\n'
-            output_html += '<thead>\n'
-            output_html += '<tr>\n'
-            output_html += '<th>Comparison</th>\n'
-            output_html += '<th>Annotated VCF</th>\n'
-            output_html += '<th>Annotated TSV</th>\n'
-            output_html += '<th>snpEff Summary Statistics</th>\n'
-            output_html += '<th>snpEff Genes</th>\n'
-            output_html += '</tr>\n'
-            output_html += '</thead>\n'
-            output_html += '<tbody>\n'
+            report_list += '<h2 id="somatic_variants">Somatic Variants</h2>\n'
+            report_list += '\n'
+            report_list += '<table id="somatic_variants_table">\n'
+            report_list += '<thead>\n'
+            report_list += '<tr>\n'
+            report_list += '<th>Comparison</th>\n'
+            report_list += '<th>Annotated VCF</th>\n'
+            report_list += '<th>Annotated TSV</th>\n'
+            report_list += '<th>snpEff Summary Statistics</th>\n'
+            report_list += '<th>snpEff Genes</th>\n'
+            report_list += '</tr>\n'
+            report_list += '</thead>\n'
+            report_list += '<tbody>\n'
 
             for key in key_list:
                 runnable_somatic = self.runnable_dict['_'.join((self.stage_name_somatic, key))]
                 file_path_somatic = runnable_somatic.file_path_object
                 """ @type file_path_somatic: FilePathSomatic """
 
-                output_html += '<tr>\n'
-                output_html += '<td>{}</td>\n'.format(key)
-                output_html += '<td><a href="{}">VCF</a></td>\n'.format(
-                    file_path_somatic.annotated_vcf)
-                output_html += '<td><a href="{}">TSV</a></td>\n'.format(
-                    file_path_somatic.annotated_tsv)
-                output_html += '<td><a href="{}">HTML</a></td>\n'.format(
-                    file_path_somatic.snpeff_stats)
-                output_html += '<td><a href="{}">TXT</a></td>\n'.format(
-                    file_path_somatic.snpeff_genes)
-                output_html += '</tr>\n'
+                report_list += '<tr>\n'
+                report_list += '<td>' + key + '</td>\n'
+                report_list += '<td><a href="' + file_path_somatic.annotated_vcf + '">VCF</a></td>\n'
+                report_list += '<td><a href="' + file_path_somatic.annotated_tsv + '">TSV</a></td>\n'
+                report_list += '<td><a href="' + file_path_somatic.snpeff_stats + '">HTML</a></td>\n'
+                report_list += '<td><a href="' + file_path_somatic.snpeff_genes + '">TXT</a></td>\n'
+                report_list += '</tr>\n'
 
-            output_html += '</tbody>\n'
-            output_html += '</table>\n'
-            output_html += '\n'
+            report_list += '</tbody>\n'
+            report_list += '</table>\n'
+            report_list += '\n'
 
-        output_html += '<h2 id="qc_plots">QC Plots</h2>\n'
-        output_html += '\n'
-        output_html += '<table id="qc_table">\n'
-        output_html += '<thead>\n'
-        output_html += '<tr>\n'
-        output_html += '<th>Sample</th>\n'
-        output_html += '<th>Read Group</th>\n'
-        output_html += '<th>Metrics</th>\n'
-        output_html += '</tr>\n'
-        output_html += '</thead>\n'
-        output_html += '<tbody>\n'
+        report_list += '<h2 id="qc_plots">QC Plots</h2>\n'
+        report_list += '\n'
+        report_list += '<table id="qc_table">\n'
+        report_list += '<thead>\n'
+        report_list += '<tr>\n'
+        report_list += '<th>Sample</th>\n'
+        report_list += '<th>Read Group</th>\n'
+        report_list += '<th>Metrics</th>\n'
+        report_list += '</tr>\n'
+        report_list += '</thead>\n'
+        report_list += '<tbody>\n'
 
         runnable_summary = self.runnable_dict['_'.join((self.stage_name_summary, self.cohort_name))]
         file_path_summary = runnable_summary.file_path_object
@@ -4863,311 +4965,301 @@ class VariantCallingGATK(Analysis):
         if os.path.exists(os.path.join(
                 self.genome_directory,
                 file_path_summary.alignment_metrics_sample_tsv)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
-                file_path_summary.alignment_metrics_sample_tsv)
-            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
-                file_path_summary.alignment_metrics_read_group_tsv)
-            output_html += '<td class="left">' \
-                           '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html' \
-                           '#AlignmentSummaryMetrics">Alignment Summary</a>' \
-                           '</td>\n'
-            output_html += '</tr>\n'
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.alignment_metrics_sample_tsv + '">TSV</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.alignment_metrics_read_group_tsv + '">TSV</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left">'
+            report_list += '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html' \
+                           '#AlignmentSummaryMetrics">Alignment Summary</a>'
+            report_list += '</td>\n'
+            report_list += '</tr>\n'
 
         # Alignment Summary - Percent Aligned
         if os.path.exists(os.path.join(
                 self.genome_directory,
                 file_path_summary.alignment_percentage_sample_png)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.alignment_percentage_sample_pdf + '">'
+            report_list += '<img ' \
                            'alt="Alignment Summary - Percent Aligned per Sample" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.alignment_percentage_sample_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.alignment_percentage_sample_pdf,
-                                            file_path_summary.alignment_percentage_sample_png)
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.alignment_percentage_read_group_pdf + '">'
+            report_list += '<img ' \
                            'alt="Alignment Summary - Percent Aligned per Read Group" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.alignment_percentage_read_group_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.alignment_percentage_read_group_pdf,
-                                            file_path_summary.alignment_percentage_read_group_png)
-            output_html += '<td class="left">Alignment Summary - Percent Aligned</td>\n'
-            output_html += '</tr>\n'
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left">Alignment Summary - Percent Aligned</td>\n'
+            report_list += '</tr>\n'
 
         # Alignment Summary - Reads Aligned
         if os.path.exists(os.path.join(
                 self.genome_directory,
                 file_path_summary.alignment_absolute_sample_png)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.alignment_absolute_sample_pdf + '">'
+            report_list += '<img ' \
                            'alt="Alignment Summary - Reads Aligned per Sample" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.alignment_absolute_sample_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.alignment_absolute_sample_pdf,
-                                            file_path_summary.alignment_absolute_sample_png)
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.alignment_absolute_read_group_pdf + '">'
+            report_list += '<img ' \
                            'alt="Alignment Summary - Reads Aligned per Read Group" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.alignment_absolute_read_group_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.alignment_absolute_read_group_pdf,
-                                            file_path_summary.alignment_absolute_read_group_png)
-            output_html += '<td class="left">Alignment Summary - Reads Aligned</td>\n'
-            output_html += '</tr>\n'
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left">Alignment Summary - Reads Aligned</td>\n'
+            report_list += '</tr>\n'
 
         # Duplication - TSV
         if os.path.exists(os.path.join(
                 self.genome_directory,
                 file_path_summary.duplication_metrics_sample_tsv)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
-                file_path_summary.duplication_metrics_sample_tsv)
-            output_html += '<td class="center"></td>\n'
-            output_html += '<td class="left">' \
-                           '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html' \
-                           '#DuplicationMetrics">Duplication</a>' \
-                           '</td>\n'
-            output_html += '</tr>\n'
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.duplication_metrics_sample_tsv + '">TSV</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center"></td>\n'
+            report_list += '<td class="left">'
+            report_list += '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html' \
+                           '#DuplicationMetrics">Duplication</a>'
+            report_list += '</td>\n'
+            report_list += '</tr>\n'
 
         # Duplication - Fraction
         if os.path.exists(
                 os.path.join(
                     self.genome_directory,
                     file_path_summary.duplication_percentage_sample_png)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.duplication_percentage_sample_pdf + '">'
+            report_list += '<img ' \
                            'alt="Duplication - Duplicated Reads per Sample" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.duplication_percentage_sample_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.duplication_percentage_sample_pdf,
-                                            file_path_summary.duplication_percentage_sample_png)
-            output_html += '<td class="center"></td>\n'
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center"></td>\n'
             # TODO: Add duplication rate per read group.
-            output_html += '<td class="left">Duplication - Fraction</td>\n'
-            output_html += '</tr>\n'
+            report_list += '<td class="left">Duplication - Fraction</td>\n'
+            report_list += '</tr>\n'
 
         # Duplication - Levels
         if os.path.exists(
                 os.path.join(
                     self.genome_directory,
                     file_path_summary.duplication_levels_sample_png)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.duplication_levels_sample_pdf + '">'
+            report_list += '<img ' \
                            'alt="Duplication - Duplication Levels per Sample" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.duplication_levels_sample_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.duplication_levels_sample_pdf,
-                                            file_path_summary.duplication_levels_sample_png)
-            output_html += '<td class="center"></td>\n'
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center"></td>\n'
             # TODO: Add duplication rate per read group.
-            output_html += '<td class="left">Duplication - Levels</td>\n'
-            output_html += '</tr>\n'
+            report_list += '<td class="left">Duplication - Levels</td>\n'
+            report_list += '</tr>\n'
 
         # Hybrid Selection - TSV
         if os.path.exists(os.path.join(
                 self.genome_directory,
                 file_path_summary.hybrid_metrics_sample_tsv)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
-                file_path_summary.hybrid_metrics_sample_tsv)
-            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
-                file_path_summary.hybrid_metrics_read_group_tsv)
-            output_html += '<td class="left">' \
-                           '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html' \
-                           '#HsMetrics">Hybrid Selection</a>' \
-                           '</td>\n'
-            output_html += '</tr>\n'
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.hybrid_metrics_sample_tsv + '">TSV</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.hybrid_metrics_read_group_tsv + '">TSV</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left">'
+            report_list += '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html' \
+                           '#HsMetrics">Hybrid Selection</a>'
+            report_list += '</td>\n'
+            report_list += '</tr>\n'
 
         # Hybrid Selection - Target Coverage Levels
         if os.path.exists(
                 os.path.join(
                     self.genome_directory,
                     file_path_summary.hybrid_coverage_levels_sample_png)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.hybrid_coverage_levels_sample_pdf + '">'
+            report_list += '<img ' \
                            'alt="Hybrid Selection - Mean Target Coverage Levels per Sample" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.hybrid_coverage_levels_sample_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.hybrid_coverage_levels_sample_pdf,
-                                            file_path_summary.hybrid_coverage_levels_sample_png)
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.hybrid_coverage_levels_read_group_pdf + '">' \
                            '<img ' \
                            'alt="Hybrid Selection - Mean Target Coverage Levels per Read Group" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.hybrid_coverage_levels_read_group_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.hybrid_coverage_levels_read_group_pdf,
-                                            file_path_summary.hybrid_coverage_levels_read_group_png)
-            output_html += '<td class="left">Hybrid Selection - Mean Target Coverage Levels</td>\n'
-            output_html += '</tr>\n'
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left">Hybrid Selection - Mean Target Coverage Levels</td>\n'
+            report_list += '</tr>\n'
 
         # Hybrid Selection - Mean Target Coverage
         if os.path.exists(os.path.join(
                 self.genome_directory,
                 file_path_summary.hybrid_coverage_sample_png)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.hybrid_coverage_sample_pdf + '">'
+            report_list += '<img ' \
                            'alt="Hybrid Selection - Mean Target Coverage per Sample" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.hybrid_coverage_sample_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.hybrid_coverage_sample_pdf,
-                                            file_path_summary.hybrid_coverage_sample_png)
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.hybrid_coverage_read_group_pdf + '">' \
                            '<img ' \
                            'alt="Hybrid Selection - Mean Target Coverage per Read Group" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.hybrid_coverage_read_group_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.hybrid_coverage_read_group_pdf,
-                                            file_path_summary.hybrid_coverage_read_group_png)
-            output_html += '<td class="left">Hybrid Selection - Mean Target Coverage</td>\n'
-            output_html += '</tr>\n'
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left">Hybrid Selection - Mean Target Coverage</td>\n'
+            report_list += '</tr>\n'
 
         # Hybrid Selection - Excluded Bases
         if os.path.exists(os.path.join(
                 self.genome_directory,
                 file_path_summary.hybrid_excluded_bases_sample_png)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.hybrid_excluded_bases_sample_pdf + '">'
+            report_list += '<img ' \
                            'alt="Hybrid Selection - Percent Excluded Bases per Sample" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.hybrid_excluded_bases_sample_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.hybrid_excluded_bases_sample_pdf,
-                                            file_path_summary.hybrid_excluded_bases_sample_png)
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.hybrid_excluded_bases_read_group_pdf + '">'
+            report_list += '<img ' \
                            'alt="Hybrid Selection - Percent Excluded Bases per Read Group" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.hybrid_excluded_bases_read_group_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.hybrid_excluded_bases_read_group_pdf,
-                                            file_path_summary.hybrid_excluded_bases_read_group_png)
-            output_html += '<td class="left">Hybrid Selection - Percent Excluded Bases</td>\n'
-            output_html += '</tr>\n'
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left">Hybrid Selection - Percent Excluded Bases</td>\n'
+            report_list += '</tr>\n'
 
         # Hybrid Selection - Percent Unique Reads
         if os.path.exists(os.path.join(
                 self.genome_directory,
                 file_path_summary.hybrid_unique_percentage_sample_png)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.hybrid_unique_percentage_sample_pdf + '">'
+            report_list += '<img ' \
                            'alt="Hybrid Selection - Percent Unique Reads per Sample" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.hybrid_unique_percentage_sample_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.hybrid_unique_percentage_sample_pdf,
-                                            file_path_summary.hybrid_unique_percentage_sample_png)
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.hybrid_unique_percentage_read_group_pdf + '">'
+            report_list += '<img ' \
                            'alt="Hybrid Selection - Percent Unique Reads per Read Group" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.hybrid_unique_percentage_read_group_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.hybrid_unique_percentage_read_group_pdf,
-                                            file_path_summary.hybrid_unique_percentage_read_group_png)
-            output_html += '<td class="left">Hybrid Selection - Percent Unique Reads</td>\n'
-            output_html += '</tr>\n'
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left">Hybrid Selection - Percent Unique Reads</td>\n'
+            report_list += '</tr>\n'
 
         # Non-Callable Loci - TSV
         if os.path.exists(os.path.join(
                 self.genome_directory,
                 file_path_summary.non_callable_metrics_sample_tsv)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
-                file_path_summary.non_callable_metrics_sample_tsv)
-            output_html += '<td class="center"></td>\n'
-            output_html += '<td class="left">Non-Callable Loci</td>\n'
-            output_html += '</tr>\n'
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.non_callable_metrics_sample_tsv + '">TSV</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center"></td>\n'
+            report_list += '<td class="left">Non-Callable Loci</td>\n'
+            report_list += '</tr>\n'
 
         # Non-Callable Loci - Fraction
         if os.path.exists(os.path.join(
                 self.genome_directory,
                 file_path_summary.non_callable_percentage_sample_png)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.non_callable_percentage_sample_pdf + '">'
+            report_list += '<img ' \
                            'alt="Non-Callable Loci - Fraction" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.non_callable_percentage_sample_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.non_callable_percentage_sample_pdf,
-                                            file_path_summary.non_callable_percentage_sample_png)
-            output_html += '<td class="center"></td>\n'
-            output_html += '<td class="left">Non-Callable Loci - Fraction</td>\n'
-            output_html += '</tr>\n'
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center"></td>\n'
+            report_list += '<td class="left">Non-Callable Loci - Fraction</td>\n'
+            report_list += '</tr>\n'
 
         # Non-Callable Loci - Number
         if os.path.exists(os.path.join(
                 self.genome_directory,
                 file_path_summary.non_callable_absolute_sample_png)):
-            output_html += '<tr>\n'
-            output_html += '<td class="center">' \
-                           '<a href="{}">' \
-                           '<img ' \
+            report_list += '<tr>\n'
+            report_list += '<td class="center">'
+            report_list += '<a href="' + file_path_summary.non_callable_absolute_sample_pdf + '">'
+            report_list += '<img ' \
                            'alt="Non-Callable Loci - Number" ' \
-                           'src="{}" ' \
+                           'src="' + file_path_summary.non_callable_absolute_sample_png + '" ' \
                            'height="100" ' \
-                           'width="100" />' \
-                           '</a>' \
-                           '</td>\n'.format(file_path_summary.non_callable_absolute_sample_pdf,
-                                            file_path_summary.non_callable_absolute_sample_png)
-            output_html += '<td class="center"></td>\n'
-            output_html += '<td class="left">Non-Callable Loci - Number</td>\n'
-            output_html += '</tr>\n'
+                           'width="100" />'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="center"></td>\n'
+            report_list += '<td class="left">Non-Callable Loci - Number</td>\n'
+            report_list += '</tr>\n'
 
-        output_html += '</tbody>\n'
-        output_html += '</table>\n'
-        output_html += '\n'
+        report_list += '</tbody>\n'
+        report_list += '</table>\n'
+        report_list += '\n'
 
-        self.report_to_file(content=output_html)
-        self.ucsc_hub_to_file(content=output_hub)
+        self.report_to_file(content=report_list)
+        self.ucsc_hub_to_file(content=hub_list)
 
         return

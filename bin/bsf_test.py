@@ -25,96 +25,92 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-import csv
 
-from bsf.database import DatabaseConnection
-from bsf.drms.slurm import ProcessSLURM, ProcessSLURMAdaptor
-from bsf.process import Executable
+import math
+import os
+
+import pysam
 
 
-sacct = Executable(name='sacct', program='sacct', stdout_path='sacct_mschuster.csv', stderr_path='sacct_mschuster.err')
-sacct.add_option_long(key='user', value='mschuster')
-sacct.add_option_long(key='starttime', value='2014-04-19')
-sacct.add_switch_long(key='long')
-sacct.add_switch_long(key='parsable')
+genome_path = '/data/prod/ngs_resources/gatk_bundle/2.8/b37/human_g1k_v37_decoy.fasta'
 
-return_code = sacct.run()
 
-sacct.evaluate_return_code(return_code=return_code)
+def _partition_indices(tile_list, chunk_size):
+    return [tile_list[offs:offs + chunk_size] for offs in range(0, len(tile_list), chunk_size)]
 
-process_slurm_list = list()
 
-dict_file = open('sacct_mschuster.csv', 'r')
-dict_reader = csv.DictReader(f=dict_file, delimiter='|')
+def _read_sequence_dict(fasta_path, tiles=0, width=0):
 
-for row_dict in dict_reader:
-    new_process_slurm = ProcessSLURM(
-        job_id=row_dict['JobID'],
-        job_name=row_dict['JobName'],
-        partition=row_dict['Partition'],
-        max_vm_size=row_dict['MaxVMSize'],
-        max_vm_size_node=row_dict['MaxVMSizeNode'],
-        max_vm_size_task=row_dict['MaxVMSizeTask'],
-        average_vm_size=row_dict['AveVMSize'],
-        max_rss=row_dict['MaxRSS'],
-        max_rss_node=row_dict['MaxRSSNode'],
-        max_rss_task=row_dict['MaxRSSTask'],
-        average_rss=row_dict['AveRSS'],
-        max_pages=row_dict['MaxPages'],
-        max_pages_node=row_dict['MaxPagesNode'],
-        max_pages_task=row_dict['MaxPagesTask'],
-        average_pages=row_dict['AvePages'],
-        min_cpu=row_dict['MinCPU'],
-        min_cpu_node=row_dict['MinCPUNode'],
-        min_cpu_task=row_dict['MinCPUTask'],
-        average_cpu=row_dict['AveCPU'],
-        number_tasks=row_dict['NTasks'],
-        allocated_cpus=row_dict['AllocCPUS'],
-        elapsed=row_dict['Elapsed'],
-        state=row_dict['State'],
-        exit_code=row_dict['ExitCode'],
-        average_cpu_frequency=row_dict['AveCPUFreq'],
-        requested_cpu_frequency=row_dict['ReqCPUFreq'],
-        requested_memory=row_dict['ReqMem'],
-        consumed_energy=row_dict['ConsumedEnergy'],
-        max_disk_read=row_dict['MaxDiskRead'],
-        max_disk_read_node=row_dict['MaxDiskReadNode'],
-        max_disk_read_task=row_dict['MaxDiskReadTask'],
-        average_disk_read=row_dict['AveDiskRead'],
-        max_disk_write=row_dict['MaxDiskWrite'],
-        max_disk_write_node=row_dict['MaxDiskWriteNode'],
-        max_disk_write_task=row_dict['MaxDiskWriteTask'],
-        average_disk_write=row_dict['AveDiskWrite'])
+    interval_list = list()
+    total_length = 0  # int
 
-    process_slurm_list.append(new_process_slurm)
+    dict_path = os.path.splitext(fasta_path)[0] + '.dict'
+    if not os.path.exists(dict_path):
+        raise Exception("Picard sequence dictionary {!r} does not exist.".format(dict_path))
 
-dict_file.close()
+    alignment_file = pysam.AlignmentFile(dict_path, 'r')
+    # Summarise sequence lengths to get the total length.
+    for sq_entry in alignment_file.header['SQ']:
+        assert isinstance(sq_entry, dict)
+        # print repr(sq_entry)
+        total_length += sq_entry['LN']  # int
 
-print 'Number of objects on process_slurm_list: {}'.format(len(process_slurm_list))
-
-database_connection = DatabaseConnection(file_path='bsfpython_test.db')
-process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
-
-for new_process_slurm in process_slurm_list:
-    old_process_slurm = process_slurm_adaptor.select_by_job_id(new_process_slurm.job_id)
-    if old_process_slurm is None:
-        process_slurm_adaptor.insert(object_instance=new_process_slurm)
+    if tiles:
+        tile_length = float(total_length) / float(tiles)  # float
+    elif width:
+        tile_length = float(width)  # float
     else:
-        print "Stored ProcessSLURM object job_id: {} job_name: {}".format(
-            new_process_slurm.job_id,
-            new_process_slurm.job_name)
+        # The intervals are just the natural sequence regions.
+        # Thus the start coordinate is always 1 and the end coordinate is the sequence length (@SQ SL).
+        # 1 2 3 ... 7 8 9
+        # start = 1
+        # end = 9
+        # length = end - start + 1 = 9 - 1 + 1 = 9
+        for sq_entry in alignment_file.header['SQ']:
+            assert isinstance(sq_entry, dict)
+            interval_list.append((sq_entry['SN'], 1, sq_entry['LN']))
 
-process_slurm_adaptor.commit()
+        return interval_list
 
-process_slurm_list_new = process_slurm_adaptor.select_all()
+    print "Genome length: {:d} number of tiles: {:d} tile_length: {:,.3f}".format(total_length, tiles, tile_length)
 
-# process_slurm_list_new = process_slurm_adaptor.select_all_by_job_name(
-#    name='variant_calling_align_lane_BSF_0038_C274CACXX_4_AD1')
+    current_length = 0.0  # float
+    sq_list = list()
+    for sq_entry in alignment_file.header['SQ']:
+        assert isinstance(sq_entry, dict)
+        # print "SQ SN:{!r} LN:{:,d}".format(sq_entry['SN'], sq_entry['LN'])
+        sq_start = 0.0  # float
+        sq_length = float(sq_entry['LN'])
+        while sq_start < sq_length:  # float
+            # The sequence end is the minimum of the sequence start plus remaining tile length or the sequence length.
+            sq_end = min(sq_start + tile_length - current_length, sq_length)
+            sq_list.append((sq_entry['SN'], int(math.floor(sq_start + 1.0)), int(math.floor(sq_end))))
+            current_length += sq_end - sq_start
+            sq_start = sq_end
 
-for new_process_slurm in process_slurm_list_new:
-    assert isinstance(new_process_slurm, ProcessSLURM)
-    print "Job identifier: {!r} name: {!r}".format(
-        new_process_slurm.job_id,
-        new_process_slurm.job_name)
+            if math.floor(current_length) >= math.floor(tile_length):
+                # If a tile is complete, append the sequence list to the interval list and reset both list and length.
+                interval_list.append(sq_list)
+                sq_list = []
+                current_length = 0.0
 
-database_connection.disconnect()
+    if len(sq_list):
+        interval_list.append(sq_list)
+
+    # For gathering ...
+
+    _partition_indices(tile_list=range(0, len(interval_list)), chunk_size=25)
+
+    return interval_list
+
+
+intervals = _read_sequence_dict(fasta_path=genome_path, tiles=100)
+print "Interval list length {:d}".format(len(intervals))
+for index in range(0, len(intervals)):
+    print "{:d} {!r}".format(index, intervals[index])
+    interval_length = 0
+    for sq_region in intervals[index]:
+        interval_length += sq_region[2] - sq_region[1] + 1
+        print "   {!r} length {:,d}".format(sq_region, sq_region[2] - sq_region[1] + 1)
+
+    print "  Length: {:,d}".format(interval_length)

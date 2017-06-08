@@ -151,7 +151,7 @@ class PicardIlluminaRunFolder(Analysis):
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
@@ -220,6 +220,7 @@ class PicardIlluminaRunFolder(Analysis):
             self.force = force
 
         self._irf = None
+        """ @type _irf: bsf.illumina.RunFolder | None """
 
         return
 
@@ -378,15 +379,6 @@ class ExtractIlluminaBarcodesSheet(AnnotationSheet):
     C{bsf.analyses.picard.ExtractIlluminaBarcodes} C{bsf.Analysis}.
 
     Attributes:
-    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
-    @type _file_type: str
-    @cvar _header_line: Header line exists
-    @type _header_line: bool
-    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list[str]
-    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, list[function]]
     """
 
     _file_type = 'excel-tab'
@@ -409,15 +401,6 @@ class IlluminaBasecallsToSamSheet(AnnotationSheet):
     C{bsf.analyses.picard.ExtractIlluminaBarcodes} C{bsf.Analysis}.
 
     Attributes:
-    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
-    @type _file_type: str
-    @cvar _header_line: Header line exists
-    @type _header_line: bool
-    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list[str]
-    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, list[function]]
     """
 
     _file_type = 'excel-tab'
@@ -561,7 +544,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
@@ -819,6 +802,8 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                                 format(self.library_path, validation_messages))
 
         flow_cell_dict = dict()
+        """ @type flow_cell_dict: dict[str, list[dict[str, str | unicode]]] """
+
         for row_dict in library_annotation_sheet.row_dicts:
             if row_dict['lane'] not in flow_cell_dict:
                 flow_cell_dict[row_dict['lane']] = list()
@@ -843,8 +828,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         keys.sort(cmp=lambda x, y: cmp(x, y))
 
         for key in keys:
-            assert isinstance(key, str)
-
             # The key represents the lane number as a Python str.
             prefix_lane = '_'.join((self.project_name, key))
 
@@ -863,11 +846,9 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             # Sort each lane by sample name.
             flow_cell_dict_list = flow_cell_dict[key]
-            assert isinstance(flow_cell_dict_list, list)
             flow_cell_dict_list.sort(cmp=lambda x, y: cmp(x['sample_name'], y['sample_name']))
 
             for row_dict in flow_cell_dict_list:
-                assert isinstance(row_dict, dict)
                 # Determine and check the length of the barcode sequences.
                 for index in range(0, 1 + 1):
                     if len(bc_length_list) == index:
@@ -952,7 +933,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             read_structure = str()
             index_read_index = 0  # Number of index reads.
-            assert isinstance(self._irf, RunFolder)
             # Instantiate and sort a new list of RunInformationRead objects.
             run_information_read_list = list(self._irf.run_information.reads)
             run_information_read_list.sort(cmp=lambda x, y: cmp(x.number, y.number))
@@ -1024,7 +1004,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                         java_heap_maximum='Xmx2G',
                         picard_classpath=self.classpath_picard,
                         picard_command='ExtractIlluminaBarcodes'))
-                assert isinstance(runnable_step, RunnableStepPicard)
+                """ @type runnable_step: RunnableStepPicard """
                 runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
                 runnable_step.add_picard_option(key='OUTPUT_DIR', value=file_path_lane.output_directory)
                 runnable_step.add_picard_option(key='LANE', value=key)
@@ -1072,7 +1052,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     java_heap_maximum='Xmx2G',
                     picard_classpath=self.classpath_picard,
                     picard_command='IlluminaBasecallsToSam'))
-            assert isinstance(runnable_step, RunnableStepPicard)
+            """ @type runnable_step: RunnableStepPicard """
             runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
             if index_read_index > 0:
                 runnable_step.add_picard_option(key='BARCODES_DIR', value=file_path_lane.output_directory)
@@ -1270,7 +1250,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
                     java_heap_maximum='Xmx4G',
                     picard_classpath=self.classpath_picard,
                     picard_command='CollectHiSeqXPfFailMetrics'))
-            assert isinstance(runnable_step, RunnableStepPicard)
+            """ @type runnable_step: RunnableStepPicard """
             # BASECALLS_DIR is required.
             runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
             # OUTPUT is required.
@@ -1355,7 +1335,7 @@ class DownsampleSam(Analysis):
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -1505,7 +1485,7 @@ class DownsampleSam(Analysis):
                             java_heap_maximum='Xmx2G',
                             picard_classpath=self.classpath_picard,
                             picard_command='DownsampleSam'))
-                    assert isinstance(runnable_step, RunnableStepPicard)
+                    """ @type runnable_step: RunnableStepPicard """
                     runnable_step.add_picard_option(key='INPUT', value=bam_file_path)
                     runnable_step.add_picard_option(
                         key='OUTPUT',
@@ -1616,7 +1596,7 @@ class SamToFastq(Analysis):
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -1750,6 +1730,7 @@ class SamToFastq(Analysis):
                         alignment_file = pysam.AlignmentFile(reads.file_path, 'rb', check_sq=False)
 
                         for read_group_dict in alignment_file.header['RG']:
+                            """ @type read_group_dict: dict[str, str] """
                             assert isinstance(read_group_dict, dict)
                             # The makeFileNameSafe() method of htsjdk.samtools.util.IOUtil uses the following pattern:
                             # [\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]
@@ -1849,7 +1830,7 @@ class SamToFastq(Analysis):
                                 java_heap_maximum='Xmx2G',
                                 picard_classpath=self.classpath_picard,
                                 picard_command='SamToFastq'))
-                        assert isinstance(runnable_step, RunnableStepPicard)
+                        """ @type runnable_step: RunnableStepPicard """
                         runnable_step.add_picard_option(key='INPUT', value=bam_file_path)
                         runnable_step.add_picard_option(key='OUTPUT_PER_RG', value='true')
                         runnable_step.add_picard_option(

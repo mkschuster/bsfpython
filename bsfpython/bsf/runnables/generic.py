@@ -107,8 +107,8 @@ def run(runnable):
     # If a RunnableStep is complete, it will be the first one on the list to become the previous RunnableStep.
 
     runnable_step_list = list()
+    """ @type runnable_step_list: list[bsf.process.RunnableStep] """
     for runnable_step in reversed(runnable.runnable_step_list):
-        assert isinstance(runnable_step, RunnableStep)
         runnable_step_list.append(runnable_step)
         if os.path.exists(path=runnable.runnable_step_status_file_path(
                 runnable_step=runnable_step,
@@ -123,8 +123,6 @@ def run(runnable):
     runnable_step_previous = None
 
     for runnable_step_current in runnable_step_list:
-        assert isinstance(runnable_step_current, RunnableStep)
-
         # Check for a RunnableStep-specific status file.
         if os.path.exists(path=runnable.runnable_step_status_file_path(
                 runnable_step=runnable_step_current,

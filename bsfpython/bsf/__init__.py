@@ -108,6 +108,7 @@ class Analysis(object):
         """
 
         file_path_list = list()
+        """ @type file_path_list: list[str | unicode] """
         file_path_list.append(Default.global_file_path)
         if not os.path.samefile(Default.global_file_path, config_path):
             file_path_list.append(config_path)
@@ -328,16 +329,13 @@ class Analysis(object):
         runnable_name_list = self.runnable_dict.keys()
         runnable_name_list.sort(cmp=lambda x, y: cmp(x, y))
         for runnable_name in runnable_name_list:
-            assert isinstance(runnable_name, str)
             output += '{}    Key: {!r} Runnable: {!r}\n'.format(
                 indent, runnable_name, self.runnable_dict[runnable_name])
             runnable = self.runnable_dict[runnable_name]
-            assert isinstance(runnable, Runnable)
             output += runnable.trace(level=level + 2)
 
         output += '{}  Python List of Sample objects:\n'.format(indent)
         for sample in self.sample_list:
-            assert isinstance(sample, Sample)
             output += '{}    Sample name: {!r} file_path: {!r}\n'.format(indent, sample.name, sample.file_path)
 
         if self.collection:
@@ -730,7 +728,6 @@ class Analysis(object):
 
     # @staticmethod
     # def escape_url(url):
-    #     assert isinstance(url, basestring)
     #     url = url.replace(' ', '%20')
     #     url = url.replace('&', '%26')
     #     url = url.replace('+', '%2B')
@@ -741,7 +738,6 @@ class Analysis(object):
     #
     # @staticmethod
     # def escape_html(html):
-    #     assert isinstance(html, basestring)
     #     html = html.replace('&', '&amp;')
     #     html = html.replace('<', '&lt;')
     #     html = html.replace('>', '&gt;')
@@ -749,7 +745,6 @@ class Analysis(object):
     #
     # @staticmethod
     # def escape_space(text):
-    #     assert isinstance(text, basestring)
     #     return text.replace(' ', '%20')
 
     def get_html_header(
@@ -772,8 +767,8 @@ class Analysis(object):
         @param title: Title element value,
             defaults to a concatenation of C{bsf.Analysis.project_name} and C{bsf.Analysis.report_name}
         @type title: str
-        @return: XHTML 1.0 header section as multi-line string
-        @rtype: str
+        @return: XHTML 1.0 header section as Python C{list} of Python C{str} or C{unicode} objects
+        @rtype: list[str | unicode]
         """
 
         default = Default.get_global_default()
@@ -789,7 +784,8 @@ class Analysis(object):
         if title is None or not title:
             title = ' '.join((self.project_name, self.name))
 
-        output = str()
+        output = list()
+        """ @type output: list[str | unicode] """
 
         if strict:
             output += '<!DOCTYPE html PUBLIC ' \
@@ -843,7 +839,7 @@ class Analysis(object):
         @param title: Title element value,
             defaults to a concatenation of C{bsf.Analysis.project_name} and C{bsf.Analysis.report_name}
         @type title: str
-        @return: XHTML 1.0 footer section as multi-line string
+        @return: XHTML 1.0 footer section as Python C{list} of Python C{str} or C{unicode} objects
         @rtype: str
         """
 
@@ -864,7 +860,8 @@ class Analysis(object):
         if title is None or not title:
             title = ' '.join((self.project_name, self.name))
 
-        output = str()
+        output = list()
+        """ @type output: list[str | unicode] """
 
         output += '<hr class="footer" />\n'
         output += '<p class="footer">\n'
@@ -912,7 +909,7 @@ class Analysis(object):
         the XHTML footer C{bsf.Analysis.get_html_footer} before returning the report.
 
         @param content: XHTML 1.0 content
-        @type content: str
+        @type content: list[str | unicode]
         @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional Document Type Declaration,
             defaults to XHTML 1.0 Strict
         @type strict: bool
@@ -937,10 +934,11 @@ class Analysis(object):
         @param url_host_name: The host name section of the institution URL (e.g. biomedical-sequencing.at),
             defaults to C{bsf.standards.Default.url_host_name}
         @type url_host_name: str
-        @return: XHTML 1.0 report as multi-line string
-        @rtype: str
+        @return: XHTML 1.0 report as Python C{list} of Python C{str} or C{unicode} objects
+        @rtype: list[str | unicode]
         """
-        output = str()
+        output = list()
+        """ @type output: list[str | unicode] """
 
         output += self.get_html_header(
             strict=strict,
@@ -975,7 +973,7 @@ class Analysis(object):
         the XHTML footer C{bsf.Analysis.get_html_footer} before writing the file.
 
         @param content: XHTML 1.0 content
-        @type content: str
+        @type content: list[str | unicode]
         @param prefix: A file name prefix (e.g. chipseq, rnaseq, ...), defaults to C{bsf.Analysis.prefix}
         @type prefix: str
         @param strict: XHTML 1.0 Strict or XHTML 1.0 Transitional Document Type Declaration,
@@ -1023,7 +1021,7 @@ class Analysis(object):
         file_path = os.path.join(self.genome_directory, '_'.join((prefix, 'report.html')))
 
         file_handle = open(file_path, 'w')
-        file_handle.write(output)
+        file_handle.writelines(output)
         file_handle.close()
 
         return
@@ -1215,7 +1213,8 @@ class Analysis(object):
         @rtype:
         """
 
-        output = str()
+        output = list()
+        """ @type output: list[str | unicode] """
 
         if prefix is None or not prefix:
             file_name = 'hub.txt'
@@ -1236,7 +1235,7 @@ class Analysis(object):
         file_path = os.path.join(self.project_directory, file_name)
 
         file_handle = open(file_path, 'w')
-        file_handle.write(output)
+        file_handle.writelines(output)
         file_handle.close()
 
         return
@@ -1271,6 +1270,7 @@ class Analysis(object):
 
         # If the file exists, read it first to retain any other genome assembly entries.
         genome_version_dict = dict()
+        """ @type genome_version_dict: dict[str, str] """
         if os.path.exists(file_path):
             genome_version = None
             file_handle = open(file_path, 'r')
@@ -1301,7 +1301,9 @@ class Analysis(object):
         else:
             genome_version_dict[ucsc_genome_version] = '{}/{}_trackDB.txt'.format(self.genome_version, prefix)
 
-        output = str()
+        output = list()
+        """ @type output: list[str | unicode] """
+
         genome_version_list = genome_version_dict.keys()
         genome_version_list.sort(cmp=lambda x, y: cmp(x, y))
         for genome_version in genome_version_list:
@@ -1310,7 +1312,7 @@ class Analysis(object):
             output += '\n'
 
         file_handle = open(file_path, 'w')
-        file_handle.write(output)
+        file_handle.writelines(output)
         file_handle.close()
 
         return
@@ -1319,7 +1321,7 @@ class Analysis(object):
         """Write a UCSC Track Hub I{prefix_trackDB.txt} file into the C{bsf.Analysis.genome_directory}.
 
         @param output: Content
-        @type output: str
+        @type output: list[str | unicode]
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
         @return:
@@ -1335,7 +1337,7 @@ class Analysis(object):
         file_path = os.path.join(self.genome_directory, file_name)
 
         file_handle = open(file_path, 'w')
-        file_handle.write(output)
+        file_handle.writelines(output)
         file_handle.close()
 
         return
@@ -1348,7 +1350,7 @@ class Analysis(object):
         I{prefix_trackDB.txt} file into the C{bsf.Analysis.genome_directory}.
 
         @param content: Content of the track database file
-        @type content: str
+        @type content: list[str | unicode]
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...), defaults to C{bsf.Analysis.prefix}
         @type prefix: str
         @return:
@@ -1370,7 +1372,6 @@ class Analysis(object):
         @rtype:
         """
         for stage in self.stage_list:
-            assert isinstance(stage, Stage)
             stage.check_state(debug=self.debug)
 
         return
@@ -1389,16 +1390,14 @@ class Analysis(object):
 
         # Pickle all Runnable objects.
 
-        for runnable_name in self.runnable_dict.keys():
-            assert isinstance(runnable_name, str)
-            self.runnable_dict[runnable_name].to_pickler_path()
+        for runnable in self.runnable_dict.values():
+            runnable.to_pickler_path()
 
         # Submit all Executable objects of all Stage objects.
 
         submit = 0
 
         for stage in self.stage_list:
-            assert isinstance(stage, Stage)
             if name:
                 if name == stage.name:
                     submit += 1
@@ -1648,7 +1647,6 @@ class Stage(object):
         output += '{}  executable_list:\n'.format(indent)
 
         for executable in self.executable_list:
-            assert isinstance(executable, Executable)
             output += executable.trace(level=level + 2)
 
         return output
@@ -1942,12 +1940,10 @@ class Runnable(object):
         key_list = self.cache_path_dict.keys()
         key_list.sort(cmp=lambda x, y: cmp(x, y))
         for key in key_list:
-            assert isinstance(key, str)
             output += '{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.cache_path_dict[key])
 
         output += '{}  Python list of RunnableStep objects:\n'.format(indent)
         for runnable_step in self.runnable_step_list:
-            assert isinstance(runnable_step, RunnableStep)
             output += runnable_step.trace(level=level + 1)
 
         return output
@@ -2007,8 +2003,10 @@ class Runnable(object):
         pickler_file = open(file_path, 'rb')
         unpickler = Unpickler(file=pickler_file)
         runnable = unpickler.load()
+        """ @type runnable: bsf.Runnable """
         pickler_file.close()
 
+        # Did the Unpickler really return a Runnable object?
         assert isinstance(runnable, Runnable)
 
         return runnable

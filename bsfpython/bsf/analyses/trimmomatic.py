@@ -37,6 +37,28 @@ from bsf.standards import Configuration
 
 class FilePathTrimmomatic(FilePath):
     """The C{bsf.analyses.trimmomatic.FilePathTrimmomatic} models files in a sample-specific Trimmomatic directory.
+
+    Attributes:
+    @ivar output_directory: Output directory
+    @type output_directory: str | unicode
+    @ivar trim_log_tsv: Trimmomatic trim log Tab-Separated Value (TSV) file path
+    @type trim_log_tsv: str | unicode
+    @ivar summary_tsv: Summary Tab-Separated Value (TSV) file path
+    @type summary_tsv: str | unicode
+    @ivar coverage_png: Coverage Portable Network Graphics (PNG) file path
+    @type coverage_png: str | unicode
+    @ivar frequency_png: Frequency Portable Network Graphics (PNG) file path
+    @type frequency_png: str | unicode
+    @ivar surviving_png: Surviving Portable Network Graphics (PNG) file path
+    @type surviving_png: str | unicode
+    @ivar reads_1p: First Reads paired
+    @type reads_1p: str | unicode
+    @ivar reads_1u: First Reads unpaired
+    @type reads_1u: str | unicode
+    @ivar reads_2p: Second Reads paired
+    @type reads_2p: str | unicode
+    @ivar reads_2u: Second Reads unpaired
+    @type reads_2u: str | unicode
     """
 
     def __init__(self, prefix):
@@ -137,7 +159,7 @@ class Trimmomatic(Analysis):
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, tuple[bsf.ngs.Sample]]
+        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param adapter_path: Adapter file path
@@ -304,6 +326,7 @@ class Trimmomatic(Analysis):
                 print sample.trace(level=1)
 
             sample_step_list = list()
+            """ @type sample_step_list: list[str | unicode] """
             if 'Trimmomatic Steps' in sample.annotation_dict:
                 for trimming_step in sample.annotation_dict['Trimmomatic Steps']:
                     sample_step_list.extend(
@@ -368,6 +391,7 @@ class Trimmomatic(Analysis):
                             java_temporary_path=runnable_trimmomatic.get_relative_temporary_directory_path,
                             java_heap_maximum='Xmx4G',
                             java_jar_path=self.classpath_trimmomatic))
+                    """ @type runnable_step_trimmomatic: bsf.process.RunnableStepJava """
 
                     if paired_reads.reads_2 is None:
                         runnable_step_trimmomatic.sub_command.sub_command = Command(program='SE')
@@ -473,7 +497,7 @@ class Trimmomatic(Analysis):
                             obsolete_file_path_list=[
                                 file_path_trimmomatic.trim_log_tsv,
                             ]))
-
+                    """ @type runnable_step_trimmomatic_summary: bsf.process.RunnableStep """
                     runnable_step_trimmomatic_summary.add_option_long(
                         key='file_path',
                         value=file_path_trimmomatic.trim_log_tsv)
@@ -508,24 +532,25 @@ class Trimmomatic(Analysis):
 
         # Write a HTML document.
 
-        output_html = str()
+        report_list = list()
+        """ @type report_list: list[str | unicode] """
 
-        output_html += '<h1 id="{}_analysis">{} {}</h1>\n'.format(self.prefix, self.project_name, self.name)
-        output_html += '\n'
+        report_list += '<h1 id="{}_analysis">{} {}</h1>\n'.format(self.prefix, self.project_name, self.name)
+        report_list += '\n'
 
-        output_html += '<h2 id="aliquot_and_sample_level">Aliquot and Sample Level</h2>\n'
-        output_html += '\n'
-        output_html += '<table id="aliquot_and_sample_table">\n'
-        output_html += '<thead>\n'
-        output_html += '<tr>\n'
-        output_html += '<th>Sample</th>\n'
-        output_html += '<th>Aliquot</th>\n'
-        output_html += '<th>Coverage</th>\n'
-        output_html += '<th>Frequency</th>\n'
-        output_html += '<th>Summary</th>\n'
-        output_html += '</tr>\n'
-        output_html += '</thead>\n'
-        output_html += '<tbody>\n'
+        report_list += '<h2 id="aliquot_and_sample_level">Aliquot and Sample Level</h2>\n'
+        report_list += '\n'
+        report_list += '<table id="aliquot_and_sample_table">\n'
+        report_list += '<thead>\n'
+        report_list += '<tr>\n'
+        report_list += '<th>Sample</th>\n'
+        report_list += '<th>Aliquot</th>\n'
+        report_list += '<th>Coverage</th>\n'
+        report_list += '<th>Frequency</th>\n'
+        report_list += '<th>Summary</th>\n'
+        report_list += '</tr>\n'
+        report_list += '</thead>\n'
+        report_list += '<tbody>\n'
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -547,13 +572,13 @@ class Trimmomatic(Analysis):
             paired_reads_name_list = dict(map(lambda x: (x[:-1], True), paired_reads_name_list)).keys()
             paired_reads_name_list.sort()
 
-            output_html += '<tr>\n'
-            output_html += '<td class="left">{}</td>\n'.format(sample.name)
-            output_html += '<td class="left"></td>\n'  # Aliquot
-            output_html += '<td class="center"></td>\n'  # Coverage PNG
-            output_html += '<td class="center"></td>\n'  # Frequency PNG
-            output_html += '<td class="center"></td>\n'  # Summary TSV
-            output_html += '</tr>\n'
+            report_list += '<tr>\n'
+            report_list += '<td class="left">{}</td>\n'.format(sample.name)
+            report_list += '<td class="left"></td>\n'  # Aliquot
+            report_list += '<td class="center"></td>\n'  # Coverage PNG
+            report_list += '<td class="center"></td>\n'  # Frequency PNG
+            report_list += '<td class="center"></td>\n'  # Summary TSV
+            report_list += '</tr>\n'
 
             for paired_reads_name in paired_reads_name_list:
                 # The second read may still not be there.
@@ -563,15 +588,15 @@ class Trimmomatic(Analysis):
                 runnable_trimmomatic = self.runnable_dict[
                     '_'.join((self.stage_name_trimmomatic, paired_reads_name))]
                 file_path_trimmomatic = runnable_trimmomatic.file_path_object
-                assert isinstance(file_path_trimmomatic, FilePathTrimmomatic)
+                """ @type file_path_trimmomatic: FilePathTrimmomatic """
 
-                output_html += '<tr>\n'
+                report_list += '<tr>\n'
                 # Sample
-                output_html += '<td class="left"></td>\n'
+                report_list += '<td class="left"></td>\n'
                 # Aliquot
-                output_html += '<td class="left">{}</td>\n'.format(paired_reads_name)
+                report_list += '<td class="left">{}</td>\n'.format(paired_reads_name)
                 # Coverage
-                output_html += '<td class="center">' \
+                report_list += '<td class="center">' \
                                '<a href="{}">' \
                                '<img alt="Coverage {}" src="{}" height="100" width="100" />' \
                                '</a>' \
@@ -579,18 +604,18 @@ class Trimmomatic(Analysis):
                                                 runnable_trimmomatic.name,
                                                 file_path_trimmomatic.coverage_png)
                 # Frequency
-                output_html += '<td class="center"><a href="{}">PNG</a></td>\n'.format(
+                report_list += '<td class="center"><a href="{}">PNG</a></td>\n'.format(
                     file_path_trimmomatic.frequency_png)
                 # The frequency plots provide little information that does not necessarily justify
                 # adding another set of images onto the HTML report.
-                output_html += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
+                report_list += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
                     file_path_trimmomatic.summary_tsv)
-                output_html += '</tr>\n'
+                report_list += '</tr>\n'
 
-        output_html += '</tbody>\n'
-        output_html += '</table>\n'
-        output_html += '\n'
+        report_list += '</tbody>\n'
+        report_list += '</table>\n'
+        report_list += '\n'
 
-        self.report_to_file(content=output_html)
+        self.report_to_file(content=report_list)
 
         return

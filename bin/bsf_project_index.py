@@ -95,9 +95,9 @@ argument_parser.add_argument('--project', required=True, help='Project identifie
 name_space = argument_parser.parse_args()
 
 project_name = name_space.project
-assert isinstance(project_name, basestring)
+assert isinstance(project_name, (str, unicode))
 project_directory = name_space.project
-assert isinstance(project_directory, basestring)
+assert isinstance(project_directory, (str, unicode))
 
 if not os.path.isabs(project_directory):
 

@@ -35,8 +35,6 @@ class DatabaseConnection(object):
 
     @ivar file_path: File path
     @type file_path: str | unicode
-    @ivar _connection: C{sqlite3.Connection}
-    @type _connection: sqlite3.Connection
     """
 
     def __init__(
@@ -61,6 +59,7 @@ class DatabaseConnection(object):
             self.file_path = file_path
 
         self._connection = None
+        """ @type connection: sqlite3.Connection | None """
 
         return
 
@@ -169,7 +168,6 @@ class DatabaseAdaptor(object):
         @return:
         @rtype:
         """
-
         assert isinstance(database_connection, DatabaseConnection)
         assert isinstance(object_type, type)
 
@@ -487,7 +485,6 @@ class DatabaseAdaptor(object):
         @return:
         @rtype:
         """
-
         assert isinstance(object_instance, self.object_type)
 
         # Get the list of values by using the column definition and reading attributes of the same name
@@ -530,7 +527,6 @@ class DatabaseAdaptor(object):
         @return:
         @rtype:
         """
-
         assert isinstance(object_instance, self.object_type)
         # Get the list of values by using the column definition and reading attributes of the same name
         # from the Python object.

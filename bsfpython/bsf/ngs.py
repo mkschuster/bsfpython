@@ -391,7 +391,6 @@ class Reads(NextGenerationBase):
         @return: True if both objects match, False otherwise
         @rtype: bool
         """
-
         assert isinstance(reads, Reads)
 
         # Quick test first - if the objects are identical, the rest has to match.
@@ -433,7 +432,6 @@ class Reads(NextGenerationBase):
         @return: C{True} if both objects match, C{False} otherwise
         @rtype: bool
         """
-
         assert isinstance(reads, Reads)
 
         if self.file_type == 'CASAVA':
@@ -871,7 +869,6 @@ class Sample(NextGenerationBase):
         @return: C{bsf.ngs.Sample}
         @rtype: bsf.ngs.Sample
         """
-
         assert isinstance(sample1, Sample)
         assert isinstance(sample2, Sample)
 
@@ -1019,14 +1016,12 @@ class Sample(NextGenerationBase):
         @return:
         @rtype:
         """
-
         assert isinstance(paired_reads, PairedReads)
 
         # Iterate through the Python list of PairedReads objects.
         # The PairedReads object must not match.
 
         for old_paired_reads in self.paired_reads_list:
-            assert isinstance(old_paired_reads, PairedReads)
             if old_paired_reads.match(paired_reads=paired_reads):
                 break
         else:
@@ -1045,7 +1040,6 @@ class Sample(NextGenerationBase):
         @return:
         @rtype:
         """
-
         assert isinstance(reads, Reads)
 
         # Iterate through the Python list of PairedReads objects
@@ -1054,7 +1048,6 @@ class Sample(NextGenerationBase):
         # The read must fit
 
         for paired_reads in self.paired_reads_list:
-            assert isinstance(paired_reads, PairedReads)
             if paired_reads.add_reads(reads=reads):
                 break
         else:
@@ -1087,6 +1080,7 @@ class Sample(NextGenerationBase):
         """
 
         paired_reads_dict = dict()
+        """ @type paired_reads_dict: dict[str, list[bsf.ngs.PairedReads]] """
 
         for paired_reads in self.paired_reads_list:
             if exclude and paired_reads.exclude:
@@ -1215,7 +1209,6 @@ class Project(NextGenerationBase):
             self.sample_dict = sample_dict
             # Set this bsf.ngs.Project as weak reference for each bsf.ngs.Sample in the dict.
             for sample in self.sample_dict.itervalues():
-                assert isinstance(sample, Sample)
                 sample.weak_reference_project = weakref.ReferenceType(self)
 
         self.weak_reference_prf = weak_reference_prf  # Can be None.
@@ -1256,7 +1249,6 @@ class Project(NextGenerationBase):
         @return: C{bsf.ngs.Sample}
         @rtype: bsf.ngs.Sample
         """
-
         assert isinstance(sample, Sample)
         # Delete an eventual bsf.ngs.Sample stored under the same bsf.ngs.Sample.name to remove the weak reference.
         self.del_sample(name=sample.name)
@@ -1292,6 +1284,7 @@ class Project(NextGenerationBase):
         """
 
         sample_list = list()
+        """ @type sample_list: list[bsf.ngs.Sample] """
 
         sample_name_list = self.sample_dict.keys()
         sample_name_list.sort(cmp=lambda x, y: cmp(x, y))
@@ -1476,7 +1469,6 @@ class ProcessedRunFolder(NextGenerationBase):
             self.project_dict = project_dict
             # Set this bsf.ngs.ProcessedRunFolder as weak reference for each bsf.ngs.Project in the dict.
             for project in self.project_dict.itervalues():
-                assert isinstance(project, Project)
                 project.weak_reference_prf = weakref.ReferenceType(self)
 
         self.weak_reference_collection = weak_reference_collection  # Can be None.
@@ -1520,7 +1512,6 @@ class ProcessedRunFolder(NextGenerationBase):
         @return: C{bsf.ngs.Project}
         @rtype: bsf.ngs.Project
         """
-
         assert isinstance(project, Project)
         # Delete an eventual bsf.ngs.Project that is stored under the same bsf.ngs.Project.name.
         self.del_project(name=project.name)
@@ -1556,6 +1547,7 @@ class ProcessedRunFolder(NextGenerationBase):
         """
 
         project_list = list()
+        """ @type project_list: list[bsf.ngs.Project] """
 
         project_name_list = self.project_dict.keys()
         project_name_list.sort(cmp=lambda x, y: cmp(x, y))
@@ -1714,13 +1706,10 @@ class Collection(NextGenerationBase):
 
         for prf_name in collection.processed_run_folder_dict.keys():
             prf = collection.processed_run_folder_dict[prf_name]
-            assert isinstance(prf, ProcessedRunFolder)
             for project_name in prf.project_dict.keys():
                 project = prf.project_dict[project_name]
-                assert isinstance(project, Project)
                 for sample_name in project.sample_dict.keys():
                     sample = project.sample_dict[sample_name]
-                    assert isinstance(sample, Sample)
                     if sample.name == Sample.default_name and not len(sample.paired_reads_list):
                         project.del_sample(name=sample.name)
                 if project.name == Project.default_name and not len(project.sample_dict):
@@ -1823,7 +1812,6 @@ class Collection(NextGenerationBase):
         @return: C{bsf.ngs.ProcessedRunFolder}
         @rtype: bsf.ngs.ProcessedRunFolder
         """
-
         assert isinstance(prf, ProcessedRunFolder)
         # Delete an eventual bsf.ngs.ProcessedRunFolder that may exist under the same bsf.ngs.ProcessedRunFolder.name.
         self.del_processed_run_folder(name=prf.name)
@@ -1887,6 +1875,7 @@ class Collection(NextGenerationBase):
         """
 
         processed_run_folder_list = list()
+        """ @type processed_run_folder_list: list[bsf.ngs.ProcessedRunFolder] """
 
         processed_run_folder_name_list = self.processed_run_folder_dict.keys()
         processed_run_folder_name_list.sort(cmp=lambda x, y: cmp(x, y))
@@ -1904,6 +1893,7 @@ class Collection(NextGenerationBase):
         """
 
         project_list = list()
+        """ @type project_list: list[bsf.ngs.Project] """
 
         for processed_run_folder in self.get_all_processed_run_folders():
             project_list.extend(processed_run_folder.get_all_projects())
@@ -1918,6 +1908,7 @@ class Collection(NextGenerationBase):
         """
 
         sample_list = list()
+        """ @type sample_list: list[bsf.ngs.Sample] """
 
         for project in self.get_all_projects():
             sample_list.extend(project.get_all_samples())
@@ -2413,6 +2404,8 @@ class Collection(NextGenerationBase):
         """
 
         sample_list = list()
+        """ @type sample_list: list[bsf.ngs.Sample] """
+
         value = str()
 
         if not prefix:
@@ -2458,28 +2451,24 @@ class Collection(NextGenerationBase):
         # Scan the Collection and its contained objects for additional (annotation) field names.
 
         for prf in self.processed_run_folder_dict.itervalues():
-            assert isinstance(prf, ProcessedRunFolder)
             if prf.annotation_dict is not None:
                 for prf_annotation_key in prf.annotation_dict.iterkeys():
                     prf_annotation_field = ' '.join(('ProcessedRunFolder', prf_annotation_key))
                     if prf_annotation_field not in sas.field_names:
                         sas.field_names.append(prf_annotation_field)
             for project in prf.project_dict.itervalues():
-                assert isinstance(project, Project)
                 if project.annotation_dict is not None:
                     for project_annotation_key in project.annotation_dict.iterkeys():
                         project_annotation_field = ' '.join(('Project', project_annotation_key))
                         if project_annotation_field not in sas.field_names:
                             sas.field_names.append(project_annotation_field)
                 for sample in project.sample_dict.itervalues():
-                    assert isinstance(sample, Sample)
                     if sample.annotation_dict is not None:
                         for sample_annotation_key in sample.annotation_dict.iterkeys():
                             sample_annotation_field = ' '.join(('Sample', sample_annotation_key))
                             if sample_annotation_field not in sas.field_names:
                                 sas.field_names.append(sample_annotation_field)
                     for paired_reads in sample.paired_reads_list:
-                        assert isinstance(paired_reads, PairedReads)
                         if paired_reads.annotation_dict is not None:
                             for paired_reads_annotation_key in paired_reads.annotation_dict.iterkeys():
                                 paired_reads_annotation_field = ' '.join(('PairedReads', paired_reads_annotation_key))
@@ -2514,7 +2503,6 @@ class Collection(NextGenerationBase):
         prf_name_list.sort(cmp=lambda x, y: cmp(x, y))
         for prf_name in prf_name_list:
             prf = self.processed_run_folder_dict[prf_name]
-            assert isinstance(prf, ProcessedRunFolder)
             sas.row_dicts.append({
                 'ProcessedRunFolder Name': prf.name,
             })
@@ -2530,7 +2518,6 @@ class Collection(NextGenerationBase):
             project_name_list.sort(cmp=lambda x, y: cmp(x, y))
             for project_name in project_name_list:
                 project = prf.project_dict[project_name]
-                assert isinstance(project, Project)
                 sas.row_dicts.append({
                     'Project Name': project.name,
                 })
@@ -2546,7 +2533,6 @@ class Collection(NextGenerationBase):
                 sample_name_list.sort(cmp=lambda x, y: cmp(x, y))
                 for sample_name in sample_name_list:
                     sample = project.sample_dict[sample_name]
-                    assert isinstance(sample, Sample)
                     sas.row_dicts.append({
                         'Sample Name': sample.name
                     })
@@ -2559,7 +2545,6 @@ class Collection(NextGenerationBase):
                             for annotation in sample_annotation_list:
                                 sas.row_dicts.append({sample_annotation_field: annotation})
                     for paired_reads in sample.paired_reads_list:
-                        assert isinstance(paired_reads, PairedReads)
                         row_dict = {
                             'PairedReads Exclude': '{}'.format(paired_reads.exclude).lower(),
                             'PairedReads Index 1': paired_reads.index_1,
@@ -2653,7 +2638,6 @@ class SampleGroup(object):
         @return:
         @rtype:
         """
-
         assert isinstance(sample, Sample)
         if sample not in self.sample_list:
             self.sample_list.append(sample)
@@ -2674,6 +2658,7 @@ class SampleGroup(object):
         """
 
         group_dict = dict()
+        """ @type group_dict: dict[str, list[bsf.ngs.PairedReads]] """
 
         for sample in self.sample_list:
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping)
@@ -2695,15 +2680,6 @@ class SampleAnnotationSheet(AnnotationSheet):
     after running the C{bsf.analyses.illumina_to_bam_tools.IlluminaToBamTools.BamIndexDecoder} C{bsf.Analysis}.
 
     Attributes:
-    @cvar _file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
-    @type _file_type: str
-    @cvar _header_line: Header line exists
-    @type _header_line: bool
-    @cvar _field_names: Python C{list} of Python C{str} (field name) objects
-    @type _field_names: list[str]
-    @cvar _test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{function} value data
-    @type _test_methods: dict[str, list[function]]
     """
 
     _file_type = 'excel'
