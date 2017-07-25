@@ -380,13 +380,6 @@ class FilePathProcessCohort(FilePath):
         self.recalibrated_snp_recalibrated_indel_idx = prefix + '_recalibrated_snp_recalibrated_indel.vcf.gz.tbi'
         self.multi_sample_vcf = prefix + '_multi_sample.vcf.gz'
         self.multi_sample_idx = prefix + '_multi_sample.vcf.gz.tbi'
-        self.ensembl_vep_vcf = prefix + '_vep.vcf'
-        self.ensembl_vep_vcf_bgz = prefix + '_vep.vcf.gz'
-        self.ensembl_vep_vcf_tbi = prefix + '_vep.vcf.gz.tbi'
-        self.ensembl_vep_statistics = prefix + '_vep_statistics.html'
-        self.ensembl_filtered_vcf = prefix + '_vep_filtered.vcf'
-        self.ensembl_filtered_vcf_bgz = prefix + '_vep_filtered.vcf.gz'
-        self.ensembl_filtered_vcf_tbi = prefix + '_vep_filtered.vcf.gz.tbi'
         self.snpeff_vcf = prefix + '_snpeff.vcf'
         self.snpeff_idx = prefix + '_snpeff.vcf.idx'
         self.snpeff_vcf_bgz = prefix + '_snpeff.vcf.gz'
@@ -400,6 +393,36 @@ class FilePathProcessCohort(FilePath):
         self.tranches_snp = prefix + '_recalibration_snp.tranches'
         self.plots_indel = prefix + '_recalibration_indel.R'
         self.plots_snp = prefix + '_recalibration_snp.R'
+
+        return
+
+
+class FilePathAnnotateCohort(FilePath):
+
+    def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathAnnotateCohort} object
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
+        super(FilePathAnnotateCohort, self).__init__(prefix=prefix)
+
+        self.vep_statistics = prefix + '_vep_statistics.html'
+        # Complete VEP set raw
+        self.vep_complete_raw_vcf = prefix + '_vep_complete_raw.vcf'
+        self.vep_complete_raw_vcf_bgz = prefix + '_vep_complete_raw.vcf.gz'
+        self.vep_complete_raw_vcf_tbi = prefix + '_vep_complete_raw.vcf.gz.tbi'
+        # Filtered VEP set raw
+        self.vep_filtered_raw_vcf = prefix + '_vep_filtered_raw.vcf'
+        self.vep_filtered_raw_vcf_bgz = prefix + '_vep_filtered_raw.vcf.gz'
+        self.vep_filtered_raw_vcf_tbi = prefix + '_vep_filtered_raw.vcf.gz.tbi'
+        # VCF.Filter-converted set
+        self.vep_complete_vcf_bgz = prefix + '_vep_complete.vcf.gz'
+        self.vep_complete_vcf_tbi = prefix + '_vep_complete.vcf.gz.tbi'
+        self.vep_filtered_vcf_bgz = prefix + '_vep_filtered.vcf.gz'
+        self.vep_filtered_vcf_tbi = prefix + '_vep_filtered.vcf.gz.tbi'
 
         return
 
@@ -594,6 +617,8 @@ class VariantCallingGATK(Analysis):
     @type stage_name_diagnose_sample: str
     @cvar stage_name_process_cohort: C{bsf.Stage.name} for the cohort processing stage
     @type stage_name_process_cohort: str
+    @cvar stage_name_annotate_cohort: C{bsf.Stage.name} for the cohort annotation stage
+    @type stage_name_annotate_cohort: str
     @cvar stage_name_split_cohort: C{bsf.Stage.name} for the cohort splitting stage
     @type stage_name_split_cohort: str
     @cvar stage_name_summary: C{bsf.Stage.name} for the summary stage
@@ -676,6 +701,8 @@ class VariantCallingGATK(Analysis):
     @type classpath_picard: str | unicode
     @ivar classpath_snpeff: snpEff tool Java Archive (JAR) class path directory
     @type classpath_snpeff: str | unicode
+    @ivar classpath_vcf_filter: VCF.Filter tool Java Archive (JAR) class path directory
+    @type classpath_vcf_filter: str | unicode
     """
 
     name = 'Variant Calling Analysis'
@@ -687,6 +714,7 @@ class VariantCallingGATK(Analysis):
     stage_name_diagnose_sample = '_'.join((prefix, 'diagnose_sample'))
     stage_name_merge_cohort = '_'.join((prefix, 'merge_cohort'))
     stage_name_process_cohort = '_'.join((prefix, 'process_cohort'))
+    stage_name_annotate_cohort = '_'.join((prefix, 'annotate_cohort'))
     stage_name_split_cohort = '_'.join((prefix, 'split_cohort'))
     stage_name_summary = '_'.join((prefix, 'summary'))
     stage_name_somatic = '_'.join((prefix, 'somatic'))
@@ -741,7 +769,8 @@ class VariantCallingGATK(Analysis):
             genome_annotation_gtf=None,
             classpath_gatk=None,
             classpath_picard=None,
-            classpath_snpeff=None):
+            classpath_snpeff=None,
+            classpath_vcf_filter=None):
         """Initialise a C{bsf.analyses.variant_calling.VariantCallingGATK}.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -850,6 +879,8 @@ class VariantCallingGATK(Analysis):
         @type classpath_picard: str | unicode
         @param classpath_snpeff: snpEff tool Java Archive (JAR) class path directory
         @type classpath_snpeff: str | unicode
+        @param classpath_vcf_filter: VCF.Filter tool Java Archive (JAR) class path directory
+        @type classpath_vcf_filter: str | unicode
         @return:
         @rtype:
         """
@@ -1043,6 +1074,11 @@ class VariantCallingGATK(Analysis):
             self.classpath_snpeff = str()
         else:
             self.classpath_snpeff = classpath_snpeff
+
+        if classpath_vcf_filter is None:
+            self.classpath_vcf_filter = str()
+        else:
+            self.classpath_vcf_filter = classpath_vcf_filter
 
         self._cache_path_dict = None
         """ @type _cache_path_dict: dict[str, str | unicode] """
@@ -1446,6 +1482,12 @@ class VariantCallingGATK(Analysis):
         option = 'classpath_snpeff'
         if config_parser.has_option(section=section, option=option):
             self.classpath_snpeff = config_parser.get(section=section, option=option)
+
+        # Get the VCF.Filter tool Java Archive (JAR) class path directory.
+
+        option = 'classpath_vcf_filter'
+        if config_parser.has_option(section=section, option=option):
+            self.classpath_vcf_filter = config_parser.get(section=section, option=option)
 
         return
 
@@ -1874,6 +1916,9 @@ class VariantCallingGATK(Analysis):
         if not self.classpath_snpeff:
             self.classpath_snpeff = default.classpath_snpeff
 
+        if not self.classpath_vcf_filter:
+            self.classpath_vcf_filter = default.classpath_vcf_filter
+
         # Check for absolute paths and adjust if required before checking for existence.
 
         self.bwa_genome_db = Default.get_absolute_path(
@@ -2018,6 +2063,7 @@ class VariantCallingGATK(Analysis):
         stage_diagnose_sample = self.get_stage(name=self.stage_name_diagnose_sample)
         stage_merge_cohort = self.get_stage(name=self.stage_name_merge_cohort)
         stage_process_cohort = self.get_stage(name=self.stage_name_process_cohort)
+        stage_annotate_cohort = self.get_stage(name=self.stage_name_annotate_cohort)
         stage_split_cohort = self.get_stage(name=self.stage_name_split_cohort)
         stage_summary = self.get_stage(name=self.stage_name_summary)
         stage_somatic = self.get_stage(name=self.stage_name_somatic)
@@ -3733,99 +3779,169 @@ class VariantCallingGATK(Analysis):
         runnable_step.add_gatk_option(key='snpEffFile', value=file_path_process_cohort.snpeff_vcf_bgz)
         runnable_step.add_gatk_option(key='out', value=file_path_process_cohort.annotated_vcf)
 
-        if not os.path.exists(os.path.join(self.genome_directory, file_path_process_cohort.ensembl_vep_vcf_tbi)):
-            # Run the Ensembl Variant Effect Predictor in parallel.
+        ################################
+        # Step 7: Annotate the cohort. #
+        ################################
+        #
+        # Ensembl Variant Effect Predictor (annotate_cohort_ensembl_vep)
+        # Bgzip                            (annotate_cohort_ensembl_vep_bgzip)
+        # Tabix                            (annotate_cohort_ensembl_vep_tabix)
+        # Ensembl Variant Effect Filter    (annotate_cohort_ensembl_filter)
+        # Bgzip                            (annotate_cohort_ensembl_filter_bgzip)
+        # Tabix                            (annotate_cohort_ensembl_filter_tabix)
+        # VCF.Filter                       (annotate_cohort_vcf_filter_complete)
+        # VCF.Filter                       (annotate_cohort_vcf_filter_filtered)
 
-            runnable_step = runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='process_cohort_ensembl_vep',
-                    program='perl',
-                    sub_command=Command()))
-            """ @type runnable_step: RunnableStep """
-            self.set_runnable_step_configuration(runnable_step=runnable_step)
-            runnable_step.arguments.append(os.path.join(default.directory_vep_src, 'vep'))
-            sub_command = runnable_step.sub_command
-            sub_command.add_switch_long(key='no_progress')
-            sub_command.add_switch_long(key='everything')
-            sub_command.add_option_long(key='species', value='homo_sapiens')  # TODO: Has to be configurable
-            sub_command.add_option_long(key='assembly', value='GRCh37')  # TODO: Has to be configurable
-            sub_command.add_option_long(key='input_file', value=file_path_process_cohort.multi_sample_vcf)
-            sub_command.add_option_long(key='format', value='vcf')  # Input file format
-            sub_command.add_option_long(key='output_file', value=file_path_process_cohort.ensembl_vep_vcf)
-            sub_command.add_option_long(key='stats_file', value=file_path_process_cohort.ensembl_vep_statistics)
-            sub_command.add_switch_long(key='force_overwrite')
-            sub_command.add_switch_long(key='dont_skip')
-            sub_command.add_switch_long(key='cache')
-            sub_command.add_option_long(key='dir_cache', value=default.directory_vep_cache)
-            sub_command.add_option_long(key='dir_plugins', value=default.directory_vep_plugins)
-            sub_command.add_option_long(key='failed', value='1')
-            sub_command.add_switch_long(key='vcf')
-            sub_command.add_switch_long(key='allele_number')
-            # sub_command.add_switch_long(key='no_escape')  # Do not percent escape HGVS strings
-            sub_command.add_switch_long(key='allow_non_variant')
-            sub_command.add_option_long(key='port', value='3337')
-            sub_command.add_switch_long(key='gencode_basic')
-            # sub_command.add_switch_long(key='write_cache')
-            sub_command.add_option_long(
-                key='plugin',
-                value='CADD,/scratch/lab_bsf/resources/CADD/b37/whole_genome_SNVs.tsv.gz')
-            sub_command.add_option_long(
-                key='tmpdir',
-                value=runnable_process_cohort.get_relative_temporary_directory_path)
+        prefix_annotate_cohort = '_'.join((stage_annotate_cohort.name, self.cohort_name))
 
-            runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='process_cohort_ensembl_vep_bgzip',
-                    program='bgzip',
-                    arguments=[file_path_process_cohort.ensembl_vep_vcf]))
+        file_path_annotate_cohort = FilePathAnnotateCohort(prefix=prefix_annotate_cohort)
 
-            runnable_step = runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='process_cohort_ensembl_vep_tabix',
-                    program='tabix',
-                    arguments=[file_path_process_cohort.ensembl_vep_vcf_bgz]))
-            """ @type runnable_step: RunnableStep """
-            runnable_step.add_option_long(key='preset', value='vcf')
+        runnable_annotate_cohort = self.add_runnable(
+            runnable=Runnable(
+                name=prefix_annotate_cohort,
+                code_module='bsf.runnables.generic',
+                working_directory=self.genome_directory,
+                cache_directory=self.cache_directory,
+                cache_path_dict=self._cache_path_dict,
+                file_path_object=file_path_annotate_cohort,
+                debug=self.debug))
+        executable_annotate_cohort = self.set_stage_runnable(
+            stage=stage_annotate_cohort,
+            runnable=runnable_annotate_cohort)
+        # Set dependencies on preceding Runnable.name or Executable.name objects.
+        executable_annotate_cohort.dependencies.append(runnable_process_cohort.name)
 
-        if not os.path.exists(os.path.join(self.genome_directory, file_path_process_cohort.ensembl_filtered_vcf_tbi)):
-            # Run the Ensembl Variant Effect Predictor filter script.
+        # reference_annotate_cohort = runnable_annotate_cohort.get_absolute_cache_file_path(
+        #     file_path=self.bwa_genome_db)
 
-            runnable_step = runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='process_cohort_ensembl_filter',
-                    program='perl',
-                    sub_command=Command()))
-            """ @type runnable_step: RunnableStep """
-            self.set_runnable_step_configuration(runnable_step=runnable_step)
-            runnable_step.arguments.append(os.path.join(default.directory_vep_src, 'filter_vep'))
-            sub_command = runnable_step.sub_command
-            sub_command.add_option_long(key='input_file', value=file_path_process_cohort.ensembl_vep_vcf_bgz)
-            sub_command.add_option_long(key='format', value='vcf')
-            sub_command.add_option_long(key='output_file', value=file_path_process_cohort.ensembl_filtered_vcf)
-            sub_command.add_switch_long(key='only_matched')
-            sub_command.add_option_long(key='filter', value='Consequence ne upstream_gene_variant', override=True)
-            sub_command.add_option_long(key='filter', value='Consequence ne downstream_gene_variant', override=True)
-            sub_command.add_option_long(key='filter', value='Consequence ne intron_variant', override=True)
-            sub_command.add_option_long(key='filter', value='BIOTYPE ne processed_transcript', override=True)
-            sub_command.add_option_long(key='filter', value='CANONICAL eq YES', override=True)
-            sub_command.add_switch_long(key='force_overwrite')
+        # if not os.path.exists(os.path.join(self.genome_directory, file_path_annotate_cohort.vep_complete_vcf_tbi)):
+        # Run the Ensembl Variant Effect Predictor script.
 
-            runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='process_cohort_ensembl_filtered_bgzip',
-                    program='bgzip',
-                    arguments=[file_path_process_cohort.ensembl_filtered_vcf]))
+        runnable_step = runnable_annotate_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='annotate_cohort_ensembl_vep',
+                program='perl',
+                sub_command=Command()))
+        """ @type runnable_step: RunnableStep """
+        # self.set_runnable_step_configuration(runnable_step=runnable_step)
+        runnable_step.arguments.append(os.path.join(default.directory_vep_src, 'vep'))
+        sub_command = runnable_step.sub_command
+        sub_command.add_switch_long(key='no_progress')
+        sub_command.add_switch_long(key='everything')
+        sub_command.add_option_long(key='species', value='homo_sapiens')  # TODO: Has to be configurable
+        sub_command.add_option_long(key='assembly', value='GRCh37')  # TODO: Has to be configurable
+        sub_command.add_option_long(key='input_file', value=file_path_process_cohort.multi_sample_vcf)
+        sub_command.add_option_long(key='format', value='vcf')  # Input file format
+        sub_command.add_option_long(key='output_file', value=file_path_annotate_cohort.vep_complete_raw_vcf)
+        sub_command.add_option_long(key='stats_file', value=file_path_annotate_cohort.vep_statistics)
+        sub_command.add_switch_long(key='force_overwrite')
+        sub_command.add_switch_long(key='dont_skip')
+        sub_command.add_switch_long(key='cache')
+        sub_command.add_option_long(key='dir_cache', value=default.directory_vep_cache)
+        sub_command.add_option_long(key='dir_plugins', value=default.directory_vep_plugins)
+        sub_command.add_option_long(key='failed', value='1')
+        sub_command.add_switch_long(key='vcf')
+        sub_command.add_switch_long(key='allele_number')
+        # sub_command.add_switch_long(key='no_escape')  # Do not percent escape HGVS strings
+        sub_command.add_switch_long(key='allow_non_variant')
+        sub_command.add_switch_long(key='flag_pick_allele_gene')
+        sub_command.add_option_long(key='port', value='3337')
+        sub_command.add_switch_long(key='gencode_basic')
+        # sub_command.add_switch_long(key='write_cache')
+        sub_command.add_option_long(  # TODO: Has to be configurable
+            key='plugin',
+            value='CADD,/scratch/lab_bsf/resources/CADD/b37/whole_genome_SNVs.tsv.gz')
+        sub_command.add_option_long(
+            key='tmpdir',
+            value=runnable_annotate_cohort.get_relative_temporary_directory_path)
 
-            runnable_step = runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='process_cohort_ensembl_filtered_tabix',
-                    program='tabix',
-                    arguments=[file_path_process_cohort.ensembl_filtered_vcf_bgz]))
-            """ @type runnable_step: RunnableStep """
-            runnable_step.add_option_long(key='preset', value='vcf')
+        runnable_annotate_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='annotate_cohort_ensembl_vep_bgzip',
+                program='bgzip',
+                arguments=[file_path_annotate_cohort.vep_complete_raw_vcf]))
+
+        runnable_step = runnable_annotate_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='annotate_cohort_ensembl_vep_tabix',
+                program='tabix',
+                arguments=[file_path_annotate_cohort.vep_complete_raw_vcf_bgz]))
+        """ @type runnable_step: RunnableStep """
+        runnable_step.add_option_long(key='preset', value='vcf')
+
+        # if not os.path.exists(os.path.join(self.genome_directory, file_path_annotate_cohort.vep_filtered_vcf_tbi)):
+        # Run the Ensembl Variant Effect Filter script.
+
+        runnable_step = runnable_annotate_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='annotate_cohort_ensembl_filter',
+                program='perl',
+                sub_command=Command()))
+        """ @type runnable_step: RunnableStep """
+        # self.set_runnable_step_configuration(runnable_step=runnable_step)
+        runnable_step.arguments.append(os.path.join(default.directory_vep_src, 'filter_vep'))
+        sub_command = runnable_step.sub_command
+        sub_command.add_option_long(key='input_file', value=file_path_annotate_cohort.vep_complete_raw_vcf_bgz)
+        sub_command.add_option_long(key='format', value='vcf')
+        sub_command.add_option_long(key='output_file', value=file_path_annotate_cohort.vep_filtered_raw_vcf)
+        sub_command.add_switch_long(key='only_matched')
+        sub_command.add_option_long(key='filter', value='Consequence ne upstream_gene_variant', override=True)
+        sub_command.add_option_long(key='filter', value='Consequence ne downstream_gene_variant', override=True)
+        sub_command.add_option_long(key='filter', value='Consequence ne intron_variant', override=True)
+        sub_command.add_option_long(key='filter', value='BIOTYPE ne processed_transcript', override=True)
+        # sub_command.add_option_long(key='filter', value='CANONICAL eq YES', override=True)
+        sub_command.add_switch_long(key='force_overwrite')
+
+        runnable_annotate_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='annotate_cohort_ensembl_filter_bgzip',
+                program='bgzip',
+                arguments=[file_path_annotate_cohort.vep_filtered_raw_vcf]))
+
+        runnable_step = runnable_annotate_cohort.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='annotate_cohort_ensembl_filter_tabix',
+                program='tabix',
+                arguments=[file_path_annotate_cohort.vep_filtered_raw_vcf_bgz]))
+        """ @type runnable_step: RunnableStep """
+        runnable_step.add_option_long(key='preset', value='vcf')
+
+        # Run the VCF Filter on the complete VEP set to convert (re-model) the CSQ field into
+        # a set of independent INFO fields.
+
+        runnable_step = runnable_annotate_cohort.add_runnable_step(
+            runnable_step=RunnableStepJava(
+                name='annotate_cohort_vcf_filter_complete',
+                sub_command=Command(program='at.ac.oeaw.cemm.bsf.vcffilter.vep.vep2vcf'),
+                java_temporary_path=runnable_annotate_cohort.get_relative_temporary_directory_path,
+                java_heap_maximum='Xmx2G'))
+        """ @type runnable_step: RunnableStepJava """
+        runnable_step.add_option_short(
+            key='classpath',
+            value=os.path.join(self.classpath_vcf_filter, 'VCFFilter.jar'))
+        sub_command = runnable_step.sub_command
+        sub_command.add_option_pair(key='INPUT', value=file_path_annotate_cohort.vep_complete_raw_vcf_bgz)
+        sub_command.add_option_pair(key='OUTPUT', value=file_path_annotate_cohort.vep_complete_vcf_bgz)
+
+        # Run the VCF Filter on the filtered VEP set to convert (re-model) the CSQ field into
+        # a set of independent INFO fields.
+
+        runnable_step = runnable_annotate_cohort.add_runnable_step(
+            runnable_step=RunnableStepJava(
+                name='annotate_cohort_vcf_filter_filtered',
+                sub_command=Command(program='at.ac.oeaw.cemm.bsf.vcffilter.vep.vep2vcf'),
+                java_temporary_path=runnable_annotate_cohort.get_relative_temporary_directory_path,
+                java_heap_maximum='Xmx2G'))
+        """ @type runnable_step: RunnableStepJava """
+        runnable_step.add_option_short(
+            key='classpath',
+            value=os.path.join(self.classpath_vcf_filter, 'VCFFilter.jar'))
+        sub_command = runnable_step.sub_command
+        sub_command.add_option_pair(key='INPUT', value=file_path_annotate_cohort.vep_filtered_raw_vcf_bgz)
+        sub_command.add_option_pair(key='OUTPUT', value=file_path_annotate_cohort.vep_filtered_vcf_bgz)
 
         ######################################################
-        # Step 7: Re-process and split the cohort by sample. #
+        # Step 8: Re-process and split the cohort by sample. #
         ######################################################
         #
         # GATK SelectVariants   (split_cohort_gatk_select_variants)
@@ -3946,7 +4062,7 @@ class VariantCallingGATK(Analysis):
                             override=True)
 
         ###################################################
-        # Step 8: Summarise the variant calling analysis. #
+        # Step 9: Summarise the variant calling analysis. #
         ###################################################
         #
         # bsfR bsf_variant_calling_summary.R    (summary)
@@ -3982,9 +4098,9 @@ class VariantCallingGATK(Analysis):
         """ @type runnable_step: RunnableStep """
         runnable_step.add_option_long(key='prefix', value=prefix_summary)
 
-        ####################################
-        # Step 9: Somatic variant calling. #
-        ####################################
+        #####################################
+        # Step 10: Somatic variant calling. #
+        #####################################
         #
         # GATK MuTect2          (somatic_gatk_mutect2)
         # snpEff                (somatic_snpeff)
@@ -4422,7 +4538,7 @@ class VariantCallingGATK(Analysis):
         """
 
         def _create_directory(path):
-            """Private static method to create a directory avoiding race conditions.
+            """Private function to create a directory avoiding race conditions.
 
             @param path: Path
             @type path: str | unicode
@@ -4439,7 +4555,7 @@ class VariantCallingGATK(Analysis):
             return path
 
         def _create_symbolic_link(source_path, target_path):
-            """Private static method to set symbolic links.
+            """Private function to set symbolic links.
 
             @param source_path: Source path
             @type source_path: str | unicode
@@ -4641,7 +4757,6 @@ class VariantCallingGATK(Analysis):
             'hubUrl': Default.url_absolute_projects() + '/' + link_name + '/variant_calling_hub.txt',
         }
 
-        # TODO: Method defaults.web.ucsc_track_url() should be moved to Analysis.get_ucsc_track_url().
         # The above code for resolving a UCSC Genome Browser genome assembly alias could be centralised in Analysis.
         report_list += '<p id="ucsc_track_hub">'
         report_list += 'UCSC Genome Browser Track Hub '
@@ -5061,7 +5176,6 @@ class VariantCallingGATK(Analysis):
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="center"></td>\n'
-            # TODO: Add duplication rate per read group.
             report_list += '<td class="left">Duplication - Fraction</td>\n'
             report_list += '</tr>\n'
 
@@ -5081,7 +5195,6 @@ class VariantCallingGATK(Analysis):
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="center"></td>\n'
-            # TODO: Add duplication rate per read group.
             report_list += '<td class="left">Duplication - Levels</td>\n'
             report_list += '</tr>\n'
 
