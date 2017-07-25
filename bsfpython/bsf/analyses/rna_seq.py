@@ -2391,7 +2391,6 @@ class Tuxedo(Analysis):
                 '_'.join((path_prefix, 'sample_pairs.tsv')))
 
             if os.path.exists(sample_pair_path):
-
                 sample_pair_sheet = TuxedoSamplePairSheet.from_file_path(file_path=sample_pair_path)
 
                 for row_dict in sample_pair_sheet.row_dicts:
@@ -2841,14 +2840,12 @@ class DESeq(Analysis):
             sample_list=None,
             replicate_grouping=False,
             cmp_file=None,
+            ctr_file=None,
             genome_fasta_path=None,
             transcriptome_gtf_path=None,
             transcriptome_index_path=None,
             design_formula=None,
-            mask_gtf_path=None,
-            multi_read_correction=None,
-            library_type=None,
-            no_length_correction=False):
+            library_type=None):
         """Initialise a C{bsf.analyses.rna_seq.DESeq} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -2884,6 +2881,8 @@ class DESeq(Analysis):
         @type replicate_grouping: bool
         @param cmp_file: Comparison file
         @type cmp_file: str | unicode
+        @param ctr_file: Contrast file
+        @type ctr_file: str | unicode
         @param genome_fasta_path: Reference genome sequence FASTA file path
         @type genome_fasta_path: str | unicode
         @param transcriptome_gtf_path: Reference transcriptome GTF file path
@@ -2892,15 +2891,9 @@ class DESeq(Analysis):
         @type transcriptome_index_path: str | unicode
         @param design_formula: Design formula
         @type design_formula: str | unicode
-        @param mask_gtf_path: GTF file path to mask transcripts
-        @type mask_gtf_path: str | unicode
-        @param multi_read_correction: Apply multi-read correction
-        @type multi_read_correction: bool
         @param library_type: Library type
             Cuffquant and Cuffdiff I{fr-unstranded} (default), I{fr-firststrand} or I{fr-secondstrand}
         @type library_type: str
-        @param no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
-        @type no_length_correction: bool
         @return:
         @rtype:
         """
@@ -2933,6 +2926,11 @@ class DESeq(Analysis):
         else:
             self.cmp_file = cmp_file
 
+        if ctr_file is None:
+            self.ctr_file = str()
+        else:
+            self.ctr_file = ctr_file
+
         if genome_fasta_path is None:
             self.genome_fasta_path = str()
         else:
@@ -2953,27 +2951,10 @@ class DESeq(Analysis):
         else:
             self.design_formula = design_formula
 
-        if mask_gtf_path is None:
-            self.mask_gtf_path = str()
-        else:
-            self.mask_gtf_path = mask_gtf_path
-
-        if multi_read_correction is None:
-            self.multi_read_correction = False
-        else:
-            assert isinstance(multi_read_correction, bool)
-            self.multi_read_correction = multi_read_correction
-
         if library_type is None:
             self.library_type = str()
         else:
             self.library_type = library_type
-
-        if no_length_correction is None:
-            self.no_length_correction = False
-        else:
-            assert isinstance(no_length_correction, bool)
-            self.no_length_correction = no_length_correction
 
         return
 
@@ -3002,6 +2983,10 @@ class DESeq(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.cmp_file = configuration.config_parser.get(section=section, option=option)
 
+        option = 'ctr_file'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.ctr_file = configuration.config_parser.get(section=section, option=option)
+
         option = 'genome_fasta'
         if configuration.config_parser.has_option(section=section, option=option):
             self.genome_fasta_path = configuration.config_parser.get(section=section, option=option)
@@ -3018,110 +3003,121 @@ class DESeq(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.design_formula = configuration.config_parser.get(section=section, option=option)
 
-        option = 'mask_gtf'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.mask_gtf_path = configuration.config_parser.get(section=section, option=option)
-
-        option = 'multi_read_correction'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.multi_read_correction = configuration.config_parser.getboolean(section=section, option=option)
-
         option = 'library_type'
         if configuration.config_parser.has_option(section=section, option=option):
             self.library_type = configuration.config_parser.get(section=section, option=option)
 
-        option = 'no_length_correction'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.no_length_correction = configuration.config_parser.getboolean(section=section, option=option)
-
         return
 
     def run(self):
-        """Run this C{bsf.analyses.rna_seq.Tuxedo} analysis.
+        """Run this C{bsf.analyses.rna_seq.DESeq} analysis.
         @return:
         @rtype:
         """
 
         super(DESeq, self).run()
 
-        # Tuxedo requires a genome version.
+        # DESeq requires a genome version.
 
         if not self.genome_version:
-            raise Exception('A Tuxedo analysis requires a genome_version configuration option.')
+            raise Exception('A DESeq analysis requires a genome_version configuration option.')
 
         # For DESeq, all samples need adding to the Analysis regardless.
-        # TODO: Sort out the comparison issue.
         for sample in self.collection.get_all_samples():
             self.add_sample(sample=sample)
 
-        prefix = 'rnaseq_deseq_global'
+        # Read the designs (comparison) file.
 
-        comparison_directory = os.path.join(self.genome_directory, prefix)
+        self.cmp_file = os.path.expanduser(path=self.cmp_file)
+        self.cmp_file = os.path.expandvars(path=self.cmp_file)
+        if not os.path.isabs(self.cmp_file) and not os.path.exists(path=self.cmp_file):
+            self.cmp_file = os.path.join(self.project_directory, self.cmp_file)
 
-        if not os.path.isdir(comparison_directory):
-            try:
-                os.makedirs(comparison_directory)
-            except OSError as exception:
-                if exception.errno != errno.EEXIST:
-                    raise
+        design_sheet = AnnotationSheet.from_file_path(
+            file_path=self.cmp_file,
+            file_type='excel',
+            name='DESeq Design Table')
+        # Convert the CSV configuration table into a TSV analysis table.
+        design_sheet.file_type = 'excel-tab'
 
-        annotation_sheet = AnnotationSheet(
-            file_path=os.path.join(comparison_directory, prefix + '_comparisons.tsv'),
-            file_type='excel-tab',
-            name='DESeq Annotation',
-            header=True)
+        # Read the contrasts file.
 
-        # Re-index the sample group dict by sample name.
-        sample_dict = dict()
-        """ @type sample_dict: dict[str, list[str]] """
-        for group_name, sample_list in self.collection.sample_group_dict.iteritems():
-            for sample in sample_list:
-                if sample.name not in sample_dict:
-                    sample_dict[sample.name] = list()
-                sample_dict[sample.name].append(group_name)
+        self.ctr_file = os.path.expanduser(path=self.ctr_file)
+        self.ctr_file = os.path.expandvars(path=self.ctr_file)
+        if not os.path.isabs(self.cmp_file) and not os.path.exists(path=self.cmp_file):
+            self.cmp_file = os.path.join(self.project_directory, self.cmp_file)
 
-        for sample in self.sample_list:
-            if self.debug > 0:
-                print repr(self) + ' Sample name: ' + sample.name
-                print sample.trace(1)
+        contrast_sheet = AnnotationSheet.from_file_path(
+            file_path=self.ctr_file,
+            file_type='excel',
+            name='DESeq Contrast Table')
+        # Convert the CSV configuration table into a TSV analysis table.
+        contrast_sheet.file_type = 'excel-tab'
 
-            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
+        # TODO: Adjust by introducing a new class RNASeqComparisonSheet(AnnotationSheet) in this module?
+        for design_row_dict in design_sheet.row_dicts:
+            design_name = design_row_dict['design']
 
-            paired_reads_name_list = paired_reads_dict.keys()
-            if not len(paired_reads_name_list):
-                # Skip Sample objects, which PairedReads objects have all been excluded.
-                continue
-            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+            prefix = '_'.join((self.stage_name_deseq, design_name))
 
-            row_dict = dict()
-            """ @type row_dict: dict[str, str | unicode] """
-            # Set the group from the original Sample Annotation Sheet.
-            row_dict['sample'] = sample.name
-            row_dict['group'] = sample_dict[sample.name][0]
-            row_dict['bam_path'] = StarAligner.get_prefix_star_aligner_merge(sample_name=sample.name) + '.bam'
-            row_dict['bai_path'] = StarAligner.get_prefix_star_aligner_merge(sample_name=sample.name) + '.bai'
-            # Set additional columns from the Sample Annotation Sheet prefixed with "Sample DESeq ".
-            for annotation_key in filter(lambda x: x.startswith('DESeq '), sample.annotation_dict.keys()):
-                row_dict[annotation_key[6:]] = sample.annotation_dict[annotation_key][0]
+            comparison_directory = os.path.join(self.genome_directory, prefix)
 
-                # for paired_reads_name in paired_reads_name_list:
-                # Create a ??? Runnable per paired_reads_name.
+            if not os.path.isdir(comparison_directory):
+                try:
+                    os.makedirs(comparison_directory)
+                except OSError as exception:
+                    if exception.errno != errno.EEXIST:
+                        raise
 
-                # prefix_run_tophat = '_'.join((stage_run_tophat.name, paired_reads_name))
+            annotation_sheet = AnnotationSheet(
+                file_path=os.path.join(comparison_directory, prefix + '_samples.tsv'),
+                file_type='excel-tab',
+                # file_type='excel',
+                name='DESeq Sample Annotation',
+                header=True)
 
-                # file_path_deseq = FilePathDESeq(prefix=prefix)
+            for sample in self.sample_list:
+                if self.debug > 0:
+                    print repr(self) + ' Sample name: ' + sample.name
+                    print sample.trace(1)
 
-            annotation_sheet.row_dicts.append(row_dict)
-        # TODO: Create a directory for the comparison.
-        # TODO: Write a data frame defining the experiment for DESeq2.
+                paired_reads_dict = sample.get_all_paired_reads(
+                    replicate_grouping=self.replicate_grouping,
+                    exclude=True)
 
-        # Process all row_dict objects to get the superset of field names.
-        for row_dict in annotation_sheet.row_dicts:
-            for key in row_dict.iterkeys():
-                if key not in annotation_sheet.field_names:
-                    annotation_sheet.field_names.append(key)
+                paired_reads_name_list = paired_reads_dict.keys()
+                if not len(paired_reads_name_list):
+                    # Skip Sample objects, which PairedReads objects have all been excluded.
+                    continue
+                paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-        # Write the Annotation Sheet to disk.
-        annotation_sheet.to_file_path()
+                row_dict = {
+                    "sample": sample.name,
+                    "bam_path": StarAligner.get_prefix_star_aligner_merge(sample_name=sample.name) + '.bam',
+                    "bai_path": StarAligner.get_prefix_star_aligner_merge(sample_name=sample.name) + '.bai',
+                }
+                """ @type row_dict: dict[str, str | unicode] """
+                # Set additional columns from the Sample Annotation Sheet prefixed with "Sample DESeq *".
+                for annotation_key in filter(lambda x: x.startswith('DESeq '), sample.annotation_dict.keys()):
+                    row_dict[annotation_key[6:]] = sample.annotation_dict[annotation_key][0]
+
+                annotation_sheet.row_dicts.append(row_dict)
+
+            # Process all row_dict objects to get the superset of field names.
+            for row_dict in annotation_sheet.row_dicts:
+                for key in row_dict.iterkeys():
+                    if key not in annotation_sheet.field_names:
+                        annotation_sheet.field_names.append(key)
+
+            # Write the DESeq Sample Annotation Sheet to disk.
+            annotation_sheet.to_file_path()
+
+            # Write the DESeq Design Annotation Sheet to disk.
+            design_sheet.file_path = os.path.join(comparison_directory, prefix + '_designs.tsv')
+            design_sheet.to_file_path()
+
+            # Write the DESeq Contrast Annotation Sheet to disk.
+            contrast_sheet.file_path = os.path.join(comparison_directory, prefix + '_contrasts.tsv')
+            contrast_sheet.to_file_path()
 
         return
