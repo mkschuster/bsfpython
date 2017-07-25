@@ -186,6 +186,8 @@ class Default(object):
     @type classpath_picard: str | unicode
     @ivar classpath_snpeff: snpEff Java Archive (JAR) class path directory
     @type classpath_snpeff: str | unicode
+    @ivar classpath_vcf_filter: VCF.Filter Java Archive (JAR) class path directory
+    @type classpath_vcf_filter: str | unicode
     @ivar directory_cache: Local cache directory on the compute node (e.g. /dev/shm)
     @type directory_cache: str | unicode
     @ivar directory_home: Home directory for all data
@@ -337,6 +339,7 @@ class Default(object):
             classpath_illumina2bam=None,
             classpath_picard=None,
             classpath_snpeff=None,
+            classpath_vcf_filter=None,
             directory_cache=None,
             directory_home=None,
             directory_runs_illumina=None,
@@ -374,6 +377,8 @@ class Default(object):
         @type classpath_picard: str | unicode
         @param classpath_snpeff: snpEff Java Archive (JAR) class path directory
         @type classpath_snpeff: str | unicode
+        @param classpath_vcf_filter: VCF.Filter Java Archive (JAR) class path directory
+        @type classpath_vcf_filter: str | unicode
         @param directory_cache: Local cache directory on the compute node (e.g. /dev/shm)
         @type directory_cache: str | unicode
         @param directory_home: Home directory for all data
@@ -455,6 +460,11 @@ class Default(object):
             self.classpath_snpeff = str()
         else:
             self.classpath_snpeff = classpath_snpeff
+
+        if classpath_vcf_filter is None:
+            self.classpath_vcf_filter = str()
+        else:
+            self.classpath_vcf_filter = classpath_vcf_filter
 
         # Set directory information.
 
@@ -628,6 +638,7 @@ class Default(object):
         self.classpath_illumina2bam = cp.get(section=section, option='illumina2bam')
         self.classpath_picard = cp.get(section=section, option='picard')
         self.classpath_snpeff = cp.get(section=section, option='snpeff')
+        self.classpath_vcf_filter = cp.get(section=section, option='vcf_filter')
 
         section = 'directories'
 
