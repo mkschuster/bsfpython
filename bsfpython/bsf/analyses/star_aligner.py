@@ -35,6 +35,7 @@ import os
 import pysam
 
 from bsf import Analysis, FilePath, Runnable
+from bsf.annotation import AnnotationSheet
 from bsf.process import RunnableStep, RunnableStepLink, RunnableStepMove, RunnableStepPicard
 from bsf.standards import Default
 
@@ -46,6 +47,7 @@ class FilePathStarAlign(FilePath):
         super(FilePathStarAlign, self).__init__(prefix=prefix)
 
         self.aligned_sam = prefix + '_Aligned.out.sam'
+        self.splice_junctions_tsv = prefix + '_SJ.out.tab'
 
         return
 
@@ -80,6 +82,17 @@ class FilePathStarMerge(FilePath):
         return
 
 
+class FilePathStarSummary(FilePath):
+
+    def __init__(self, prefix):
+
+        super(FilePathStarSummary, self).__init__(prefix=prefix)
+
+        self.read_group_to_sample_tsv = prefix + '_read_group_to_sample.tsv'
+
+        return
+
+
 class StarAligner(Analysis):
     """STAR Aligner C{bsf.Analysis} sub-class.
 
@@ -94,6 +107,8 @@ class StarAligner(Analysis):
     @type stage_name_index: str
     @cvar stage_name_merge: C{bsf.Stage.name} for the merging stage
     @type stage_name_merge: str
+    @cvar stage_name_summary: C{bsf.Stage.name} for the summary stage
+    @type stage_name_summary: str
     @ivar replicate_grouping: Group all replicates into a single STAR process
     @type replicate_grouping: bool
     @ivar index_directory: Genome directory with STAR indices
@@ -112,6 +127,7 @@ class StarAligner(Analysis):
     stage_name_align = '_'.join((prefix, 'align'))
     stage_name_index = '_'.join((prefix, 'index'))
     stage_name_merge = '_'.join((prefix, 'merge'))
+    stage_name_summary = '_'.join((prefix, 'summary'))
 
     @classmethod
     def get_prefix_star_aligner_align(cls, paired_reads_name):
@@ -145,6 +161,17 @@ class StarAligner(Analysis):
         @rtype: str
         """
         return '_'.join((cls.stage_name_merge, sample_name))
+
+    @classmethod
+    def get_prefix_star_aligner_summary(cls, sample_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param sample_name: Sample name
+        @type sample_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.stage_name_summary, sample_name))
 
     def __init__(
             self,
@@ -342,6 +369,23 @@ class StarAligner(Analysis):
         stage_align = self.get_stage(name=self.stage_name_align)
         stage_index = self.get_stage(name=self.stage_name_index)
         stage_merge = self.get_stage(name=self.stage_name_merge)
+        stage_summary = self.get_stage(name=self.stage_name_summary)
+
+        prefix_summary = stage_summary.name
+
+        file_path_summary = FilePathStarSummary(prefix=prefix_summary)
+
+        # Create an annotation sheet linking sample name and read group name, which is required for the
+        # summary script.
+
+        annotation_sheet = AnnotationSheet(
+            file_path=os.path.join(self.genome_directory, file_path_summary.read_group_to_sample_tsv),
+            file_type='excel-tab',
+            name='star_aligner_read_group',
+            field_names=['sample', 'read_group'])
+
+        runnable_merge_list = list()
+        """ @type runnable_merge_list: list[bsf.Runnable] """
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -436,6 +480,8 @@ class StarAligner(Analysis):
                             #         program_str += ' "{}:{}"'.format(key, program_dict[key])
                             #     runnable_step.add_option_long(key='outSAMheaderPG', value=program_str)
 
+                    annotation_sheet.row_dicts.append({'sample': sample.name, 'read_group': paired_reads.get_name()})
+
                     #####################
                     # 2. Indexing Stage #
                     #####################
@@ -460,7 +506,7 @@ class StarAligner(Analysis):
                     runnable_index_list.append(runnable_index)
 
                     runnable_step = runnable_index.add_runnable_step(
-                        RunnableStepPicard(
+                        runnable_step=RunnableStepPicard(
                             name='picard_clean_sam',
                             obsolete_file_path_list=[file_path_align.aligned_sam],
                             java_temporary_path=runnable_index.get_relative_temporary_directory_path,
@@ -478,7 +524,7 @@ class StarAligner(Analysis):
                     runnable_step.add_picard_option(key='VALIDATION_STRINGENCY', value='STRICT')
 
                     runnable_step = runnable_index.add_runnable_step(
-                        RunnableStepPicard(
+                        runnable_step=RunnableStepPicard(
                             name='picard_sort_sam',
                             obsolete_file_path_list=[file_path_index.cleaned_sam],
                             java_temporary_path=runnable_index.get_relative_temporary_directory_path,
@@ -499,6 +545,16 @@ class StarAligner(Analysis):
                     runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
                     runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
                     runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+
+                    # Run GNU Zip over the rather large splice junction table.
+
+                    runnable_step = runnable_index.add_runnable_step(
+                        runnable_step=RunnableStep(
+                            name='gzip',
+                            program='gzip'))
+                    """ @type runnable_step: bsf.process.RunnableStep """
+                    runnable_step.add_switch_long(key='best')
+                    runnable_step.arguments.append(file_path_align.splice_junctions_tsv)
 
             ####################
             # 3. Merging Stage #
@@ -522,6 +578,8 @@ class StarAligner(Analysis):
                 stage=stage_merge,
                 runnable=runnable_merge)
 
+            runnable_merge_list.append(runnable_merge)
+
             # Add dependencies on Runnable objects of the indexing stage.
             for runnable_index in runnable_index_list:
                 executable_merge.dependencies.append(runnable_index.name)
@@ -532,24 +590,24 @@ class StarAligner(Analysis):
                 """ @type file_path_index: FilePathStarIndex """
                 # For a single ReadPair, just rename the files.
                 runnable_merge.add_runnable_step(
-                    RunnableStepMove(
+                    runnable_step=RunnableStepMove(
                         name='move_bam',
                         source_path=file_path_index.aligned_bam,
                         target_path=file_path_merge.merged_bam))
                 runnable_merge.add_runnable_step(
-                    RunnableStepMove(
+                    runnable_step=RunnableStepMove(
                         name='move_bai',
                         source_path=file_path_index.aligned_bai,
                         target_path=file_path_merge.merged_bai))
                 runnable_merge.add_runnable_step(
-                    RunnableStepMove(
+                    runnable_step=RunnableStepMove(
                         name='move_md5',
                         source_path=file_path_index.aligned_md5,
                         target_path=file_path_merge.merged_md5))
             else:
                 # Run Picard MergeSamFiles on each BAM file.
                 runnable_step = runnable_merge.add_runnable_step(
-                    RunnableStepPicard(
+                    runnable_step=RunnableStepPicard(
                         name='picard_merge_sam_files',
                         java_temporary_path=runnable_merge.get_relative_temporary_directory_path,
                         java_heap_maximum='Xmx2G',
@@ -617,5 +675,33 @@ class StarAligner(Analysis):
                 runnable_step.add_option_long(key='maxqual', value='42')
 
                 runnable_step.arguments.append(file_path_merge.merged_bam)
+
+        # Write the AnnotationSheet to disk.
+
+        annotation_sheet.to_file_path()
+
+        # Create a Runnable and Executable for the STAR summary.
+
+        runnable_summary = self.add_runnable(
+            runnable=Runnable(
+                name=prefix_summary,
+                code_module='bsf.runnables.generic',
+                working_directory=self.genome_directory,
+                cache_directory=self.cache_directory,
+                file_path_object=file_path_summary,
+                debug=self.debug))
+        executable_summary = self.set_stage_runnable(
+            stage=stage_summary,
+            runnable=runnable_summary)
+
+        # Add dependencies on Runnable objects of the merging stage.
+        for runnable_merge in runnable_merge_list:
+            executable_summary.dependencies.append(runnable_merge.name)
+
+        runnable_summary.add_runnable_step(
+            runnable_step=RunnableStep(
+                name='summary',
+                program='bsf_star_aligner_summary.R'))
+        """ @type runnable_step: bsf.process.RunnableStep """
 
         return
