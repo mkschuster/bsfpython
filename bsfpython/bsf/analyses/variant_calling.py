@@ -259,7 +259,6 @@ class FilePathProcessReadGroup(FilePath):
 
 
 class FilePathProcessSample(FilePath):
-
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.variant_calling.FilePathProcessSample} object
 
@@ -290,7 +289,6 @@ class FilePathProcessSample(FilePath):
 
 
 class FilePathDiagnoseSample(FilePath):
-
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.variant_calling.FilePathDiagnoseSample} object
 
@@ -319,7 +317,6 @@ class FilePathDiagnoseSample(FilePath):
 
 
 class FilePathMergeCohort(FilePath):
-
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.variant_calling.FilePathMergeCohort} object
 
@@ -339,7 +336,6 @@ class FilePathMergeCohort(FilePath):
 
 
 class FilePathGenotypeCohort(FilePath):
-
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.variant_calling.FilePathGenotypeCohort} object
 
@@ -361,7 +357,6 @@ class FilePathGenotypeCohort(FilePath):
 
 
 class FilePathProcessCohort(FilePath):
-
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.variant_calling.FilePathProcessCohort} object
 
@@ -398,7 +393,6 @@ class FilePathProcessCohort(FilePath):
 
 
 class FilePathAnnotateCohort(FilePath):
-
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.variant_calling.FilePathAnnotateCohort} object
 
@@ -428,7 +422,6 @@ class FilePathAnnotateCohort(FilePath):
 
 
 class FilePathSplitCohort(FilePath):
-
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.variant_calling.FilePathSplitCohort} object
 
@@ -447,7 +440,6 @@ class FilePathSplitCohort(FilePath):
 
 
 class FilePathSummary(FilePath):
-
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.variant_calling.FilePathSummary} object
 
@@ -501,7 +493,6 @@ class FilePathSummary(FilePath):
 
 
 class FilePathSomatic(FilePath):
-
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.variant_calling.FilePathSomatic} object
 
@@ -528,7 +519,6 @@ class FilePathSomatic(FilePath):
 
 
 class FilePathSomaticScatterGather(FilePath):
-
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.variant_calling.FilePathSomaticScatterGather} object
 
@@ -683,10 +673,14 @@ class VariantCallingGATK(Analysis):
     @type include_intervals_list: list[str]
     @ivar interval_padding: Interval padding
     @type interval_padding: int
-    @ivar number_of_tiles: Number of genomic tiles for scattering
-    @type number_of_tiles: int
-    @ivar number_of_chunks: Number of chunks for gathering
-    @type number_of_chunks: int
+    @ivar number_of_tiles_cohort: Number of genomic tiles for scattering in stage variant_calling_process_cohort
+    @type number_of_tiles_cohort: int
+    @ivar number_of_chunks_cohort: Number of chunks for gathering in stage variant_calling_process_cohort
+    @type number_of_chunks_cohort: int
+    @ivar number_of_tiles_somatic: Number of genomic tiles for scattering in stage variant_calling_somatic
+    @type number_of_tiles_somatic: int
+    @ivar number_of_chunks_somatic: Number of chunks for gathering in stage variant_calling_somatic
+    @type number_of_chunks_somatic: int
     @ivar downsample_to_fraction: Down-sample to fraction
     @type downsample_to_fraction: str
     @ivar gatk_bundle_version: GATK resource bundle version
@@ -761,8 +755,10 @@ class VariantCallingGATK(Analysis):
             exclude_intervals_list=None,
             include_intervals_list=None,
             interval_padding=None,
-            number_of_tiles=None,
-            number_of_chunks=None,
+            number_of_tiles_cohort=None,
+            number_of_chunks_cohort=None,
+            number_of_tiles_somatic=None,
+            number_of_chunks_somatic=None,
             downsample_to_fraction=None,
             gatk_bundle_version=None,
             snpeff_genome_version=None,
@@ -861,10 +857,14 @@ class VariantCallingGATK(Analysis):
         @type include_intervals_list: list[str]
         @param interval_padding: Interval padding
         @type interval_padding: int
-        @param number_of_tiles: Number of genomic tiles for scattering
-        @type number_of_tiles: int
-        @param number_of_chunks: Number of chunks for gathering
-        @type number_of_chunks: int
+        @param number_of_tiles_cohort: Number of genomic tiles for scattering in stage variant_calling_process_cohort
+        @type number_of_tiles_cohort: int
+        @param number_of_chunks_cohort: Number of chunks for gathering in stage variant_calling_process_cohort
+        @type number_of_chunks_cohort: int
+        @param number_of_tiles_somatic: Number of genomic tiles for scattering in stage variant_calling_somatic
+        @type number_of_tiles_somatic: int
+        @param number_of_chunks_somatic: Number of chunks for gathering in stage variant_calling_somatic
+        @type number_of_chunks_somatic: int
         @param downsample_to_fraction: Down-sample to fraction
         @type downsample_to_fraction: str
         @param gatk_bundle_version: GATK resource bundle version
@@ -1028,17 +1028,29 @@ class VariantCallingGATK(Analysis):
             assert isinstance(interval_padding, int)
             self.interval_padding = interval_padding
 
-        if number_of_tiles is None:
-            self.number_of_tiles = 0
+        if number_of_tiles_cohort is None:
+            self.number_of_tiles_cohort = 0
         else:
-            assert isinstance(number_of_tiles, int)
-            self.number_of_tiles = number_of_tiles
+            assert isinstance(number_of_tiles_cohort, int)
+            self.number_of_tiles_cohort = number_of_tiles_cohort
 
-        if number_of_chunks is None:
-            self.number_of_chunks = 0
+        if number_of_chunks_cohort is None:
+            self.number_of_chunks_cohort = 0
         else:
-            assert isinstance(number_of_chunks, int)
-            self.number_of_chunks = number_of_chunks
+            assert isinstance(number_of_chunks_cohort, int)
+            self.number_of_chunks_cohort = number_of_chunks_cohort
+
+        if number_of_tiles_somatic is None:
+            self.number_of_tiles_somatic = 0
+        else:
+            assert isinstance(number_of_tiles_somatic, int)
+            self.number_of_tiles_somatic = number_of_tiles_somatic
+
+        if number_of_chunks_somatic is None:
+            self.number_of_chunks_somatic = 0
+        else:
+            assert isinstance(number_of_chunks_somatic, int)
+            self.number_of_chunks_somatic = number_of_chunks_somatic
 
         if downsample_to_fraction is None:
             self.downsample_to_fraction = str()
@@ -1085,8 +1097,11 @@ class VariantCallingGATK(Analysis):
 
         # Initialise the Python list of genome tile regions with an empty region to run a single process by default.
 
-        self._tile_region_list = [[('', 0, 0)]]
-        """ @type _tile_region_list: list[list[(str, int, int)]] """
+        self._tile_region_cohort_list = [[('', 0, 0)]]
+        """ @type _tile_region_cohort_list: list[list[(str, int, int)]] """
+
+        self._tile_region_somatic_list = [[('', 0, 0)]]
+        """ @type _tile_region_somatic_list: list[list[(str, int, int)]] """
 
         return
 
@@ -1117,7 +1132,7 @@ class VariantCallingGATK(Analysis):
         @rtype:
         """
 
-        def _read_vqsr_configuration(vqsr_resources_dict, variation_type):
+        def set_vqsr_configuration(vqsr_resources_dict, variation_type):
             """Private function to read variant quality score recalibration (VQSR) configuration information.
 
             Configuration options I{vqsr_resources_indel} and I{vqsr_resources_snp} provide a comma-separated list of
@@ -1174,7 +1189,7 @@ class VariantCallingGATK(Analysis):
 
             return
 
-        def _read_annotation_configuration(annotation_resources_dict):
+        def set_annotation_configuration(annotation_resources_dict):
             """Private function to read variant annotation configuration information.
 
             @param annotation_resources_dict: Python dict of Python str (annotation resource name) key and
@@ -1351,17 +1366,17 @@ class VariantCallingGATK(Analysis):
         if config_parser.has_option(section=section, option=option):
             self.vqsr_max_gaussians_pos_snp = config_parser.getint(section=section, option=option)
 
-        # Read VQSR resources and corresponding configuration sections for INDELs.
+        # Set VQSR resources and corresponding configuration sections for INDELs.
 
-        _read_vqsr_configuration(vqsr_resources_dict=self.vqsr_resources_indel_dict, variation_type='indel')
+        set_vqsr_configuration(vqsr_resources_dict=self.vqsr_resources_indel_dict, variation_type='indel')
 
-        # Read VQSR resources and corresponding configuration sections for SNPs.
+        # Set VQSR resources and corresponding configuration sections for SNPs.
 
-        _read_vqsr_configuration(vqsr_resources_dict=self.vqsr_resources_snp_dict, variation_type='snp')
+        set_vqsr_configuration(vqsr_resources_dict=self.vqsr_resources_snp_dict, variation_type='snp')
 
-        # Read additionally requested annotation resources for the GATK AnnotateVariants step.
+        # Set additionally requested annotation resources for the GATK AnnotateVariants step.
 
-        _read_annotation_configuration(annotation_resources_dict=self.annotation_resources_dict)
+        set_annotation_configuration(annotation_resources_dict=self.annotation_resources_dict)
 
         # Single VCF file of known sites for the
         # GATK HaplotypeCaller and GenotypeGVCFs steps.
@@ -1429,17 +1444,29 @@ class VariantCallingGATK(Analysis):
         if config_parser.has_option(section=section, option=option):
             self.interval_padding = config_parser.getint(section=section, option=option)
 
-        # Get the number of tiles.
+        # Get the number of tiles for variant_calling_process_cohort.
 
-        option = 'number_of_tiles'
+        option = 'number_of_tiles_cohort'
         if config_parser.has_option(section=section, option=option):
-            self.number_of_tiles = config_parser.getint(section=section, option=option)
+            self.number_of_tiles_cohort = config_parser.getint(section=section, option=option)
 
-        # Get the number of chunks.
+        # Get the number of chunks for variant_calling_process_cohort.
 
-        option = 'number_of_chunks'
+        option = 'number_of_chunks_cohort'
         if config_parser.has_option(section=section, option=option):
-            self.number_of_chunks = config_parser.getint(section=section, option=option)
+            self.number_of_chunks_cohort = config_parser.getint(section=section, option=option)
+
+        # Get the number of tiles for variant_calling_somatic.
+
+        option = 'number_of_tiles_cohort'
+        if config_parser.has_option(section=section, option=option):
+            self.number_of_tiles_cohort = config_parser.getint(section=section, option=option)
+
+        # Get the number of chunks for variant_calling_somatic.
+
+        option = 'number_of_chunks_cohort'
+        if config_parser.has_option(section=section, option=option):
+            self.number_of_chunks_cohort = config_parser.getint(section=section, option=option)
 
         # Get the down-sample to fraction information.
 
@@ -1495,18 +1522,18 @@ class VariantCallingGATK(Analysis):
         """Read a C{bsf.annotation.AnnotationSheet} CSV file from disk.
 
             - Column headers for CASAVA folders:
-                - Treatment/Control ProcessedRunFolder:
+                - Normal/Tumor ProcessedRunFolder:
                     - CASAVA processed run folder name or
                     - C{bsf.Analysis.input_directory} by default
-                - Treatment/Control Project:
+                - Normal/Tumor Project:
                     - CASAVA Project name or
                     - C{bsf.Analysis.project_name} by default
-                - Treatment/Control Sample:
+                - Normal/Tumor Sample:
                     - CASAVA Sample name, no default
             - Column headers for independent samples:
-                - Treatment/Control Sample:
-                - Treatment/Control Reads:
-                - Treatment/Control File:
+                - Normal/Tumor Sample:
+                - Normal/Tumor Reads:
+                - Normal/Tumor File:
             - PON Path:
                 - File path to a Panel-Of-Normal (PON) VCF file
         @param comparison_path: Comparison file path
@@ -1553,336 +1580,339 @@ class VariantCallingGATK(Analysis):
 
         return
 
-    def _create_genome_tiles(self, tiles=1, width=0):
-        """Private method to create genomic tiles for scattering and a partitioned list of indices for gathering.
-
-        The tiles are created on the basis of a Picard sequence dictionary accompanying the genome FASTA file.
-        If both tiles and width are 0, then the sequence regions serve as natural tiles.
-        @param tiles: Number of tiles for scattering
-        @type tiles: int
-        @param width: Tile width for scattering
-        @type width: int
-        @return:
-        @rtype:
-        """
-        # Do this only once.
-        if len(self._tile_region_list) > 1:
-            return
-
-        self._tile_region_list = list()
-        """ @type _tile_region_list: list[list[(str, int, int)]] """
-        total_length = 0
-        """ @type total_length: int """
-
-        dict_path = os.path.splitext(self.bwa_genome_db)[0] + '.dict'
-        if not os.path.exists(dict_path):
-            raise Exception("Picard sequence dictionary {!r} does not exist.".format(dict_path))
-
-        alignment_file = pysam.AlignmentFile(dict_path, 'r')
-        # Summarise sequence lengths to get the total length.
-        for sq_entry in alignment_file.header['SQ']:
-            """ @type sq_entry: dict"""
-            total_length += int(sq_entry['LN'])
-
-        if tiles:
-            tile_length = float(total_length) / float(tiles)
-        elif width:
-            tile_length = float(width)
-        else:
-            # The intervals are just the natural sequence regions.
-            # Thus the start coordinate is always 1 and the end coordinate is the sequence length (@SQ SL).
-            # 1 2 3 ... 7 8 9
-            # start = 1
-            # end = 9
-            # length = end - start + 1 = 9 - 1 + 1 = 9
-            for sq_entry in alignment_file.header['SQ']:
-                self._tile_region_list.append([(str(sq_entry['SN']), 1, int(sq_entry['LN']))])
-
-            return
-
-        current_length = 0.0
-        """ @type current_length: float """
-        sq_list = list()
-        """ @type sq_list: list[(str, int, int)] """
-        for sq_entry in alignment_file.header['SQ']:
-            sq_start = 0.0
-            """ @type sq_start: float """
-            sq_length = float(sq_entry['LN'])
-            """ @type sq_length: float """
-            while sq_start < sq_length:  # float
-                # The sequence end is the minimum of the sequence start plus remaining tile length or
-                # the sequence length.
-                sq_end = min(sq_start + tile_length - current_length, sq_length)
-                """ @type seq_end: float """
-                sq_list.append((sq_entry['SN'], int(math.floor(sq_start + 1.0)), int(math.floor(sq_end))))
-                current_length += sq_end - sq_start
-                sq_start = sq_end
-
-                if math.floor(current_length) >= math.floor(tile_length):
-                    # If a tile is complete, append the sequence list to the interval list and reset both
-                    # list and length.
-                    self._tile_region_list.append(sq_list)
-                    sq_list = []
-                    current_length = 0.0
-
-        if len(sq_list):
-            self._tile_region_list.append(sq_list)
-
-        return
-
-    def _merge_cohort_scatter_gather(self, analysis_stage, cohort_runnable_dict, cohort_name):
-        """Private method to hierarchically merge samples into cohorts using a scatter gather approach.
-
-        This method merges GVCF file paths from individual process_sample Runnable objects or an accessory cohort.
-        @param analysis_stage: C{Analysis} C{Stage}
-        @type analysis_stage: bsf.Stage
-        @param cohort_runnable_dict: Python C{dict} of Python C{str} key and Python C{list} of
-            C{Runnable} object value data
-        @type cohort_runnable_dict: dict[str, list[Runnable]]
-        @param cohort_name: Cohort name to select a Python list of C{Runnable} objects from the I{cohort_runnable_dict}
-            Python C{dict}
-        @type cohort_name: str
-        @return: Final C{Runnable} of the gather stage
-        @rtype: Runnable
-        """
-
-        prefix_merge_cohort = '_'.join((analysis_stage.name, cohort_name))
-
-        file_path_merge_cohort = FilePathMergeCohort(prefix=prefix_merge_cohort)
-
-        # If the cohort index file already exists, create the Runnable objects, but do not submit their
-        # corresponding Executable objects.
-
-        if os.path.exists(os.path.join(self.genome_directory, file_path_merge_cohort.combined_gvcf_tbi)):
-            submit_runnable = False
-        else:
-            submit_runnable = True
-
-        # The cohort_object_list contains either Runnable objects from the process_sample stage or
-        # Python str | unicode (GVCF file path) objects for accessory cohorts to be merged.
-        cohort_object_list = cohort_runnable_dict[cohort_name]
-
-        vc_runnable_merge_cohort_scatter_list = list()
-        """ @type vc_runnable_merge_cohort_scatter_list: list[Runnable] """
-
-        # Scatter by the number of genomic tiles.
-        # Create a Runnable and Executable for each GATK CombineGVCFs from its Sample objects.
-        runnable_merge_cohort_scatter = None
-        for tile_index in range(0, len(self._tile_region_list)):
-            prefix_merge_cohort_scatter = '_'.join((analysis_stage.name, cohort_name, 'scatter', str(tile_index)))
-
-            file_path_merge_cohort_scatter = FilePathMergeCohort(prefix=prefix_merge_cohort_scatter)
-
-            runnable_merge_cohort_scatter = self.add_runnable(
-                runnable=Runnable(
-                    name=prefix_merge_cohort_scatter,
-                    code_module='bsf.runnables.generic',
-                    working_directory=self.genome_directory,
-                    cache_directory=self.cache_directory,
-                    cache_path_dict=self._cache_path_dict,
-                    file_path_object=file_path_merge_cohort_scatter,
-                    debug=self.debug))
-            executable_merge_cohort_scatter = self.set_stage_runnable(
-                stage=analysis_stage,
-                runnable=runnable_merge_cohort_scatter)
-            # Submit the Executable only, if the cohort index file does not exist.
-            executable_merge_cohort_scatter.submit = submit_runnable
-            for cohort_component in cohort_object_list:
-                # Set dependencies on preceding Runnable.name or Executable.name objects.
-                # Set them only for Runnable objects, but not for Python str | unicode (file path) objects.
-                if isinstance(cohort_component, Runnable):
-                    executable_merge_cohort_scatter.dependencies.append(cohort_component.name)
-
-            vc_runnable_merge_cohort_scatter_list.append(runnable_merge_cohort_scatter)
-
-            reference_merge_cohort_scatter = runnable_merge_cohort_scatter.get_absolute_cache_file_path(
-                file_path=self.bwa_genome_db)
-
-            runnable_step = runnable_merge_cohort_scatter.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='merge_cohort_gatk_combine_gvcfs',
-                    java_temporary_path=runnable_merge_cohort_scatter.get_relative_temporary_directory_path,
-                    java_heap_maximum='Xmx4G',
-                    gatk_classpath=self.classpath_gatk))
-            """ @type runnable_step: RunnableStepGATK """
-            runnable_step.add_gatk_option(key='analysis_type', value='CombineGVCFs')
-            runnable_step.add_gatk_option(key='reference_sequence', value=reference_merge_cohort_scatter)
-            for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-            # for interval in self.include_intervals_list:
-            #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-            # if self.interval_padding:
-            #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            for region_tuple in self._tile_region_list[tile_index]:
-                # The list of tiles is initialised to an empty tile to trigger at least one process.
-                # Do not assign an interval in such cases.
-                if region_tuple[0]:
-                    runnable_step.add_gatk_option(
-                        key='intervals',
-                        value='{:s}:{:d}-{:d}'.format(region_tuple[0], region_tuple[1], region_tuple[2]),
-                        override=True)
-            for cohort_component in cohort_object_list:
-                if isinstance(cohort_component, Runnable):
-                    # Variant GVCF file paths are stored under
-                    # the 'raw_variants_gvcf_vcf' attribute for the 'process_sample' stage or under
-                    # the 'combined_gvcf_vcf' attribute for the 'merge_cohort' stage.
-                    variant_path = ''
-                    for variant_key in ('raw_variants_gvcf_vcf', 'combined_gvcf_vcf'):
-                        try:
-                            variant_path = getattr(cohort_component.file_path_object, variant_key)
-                        except AttributeError:
-                            pass
-                    runnable_step.add_gatk_option(key='variant', value=variant_path, override=True)
-                elif isinstance(cohort_component, (str, unicode)):
-                    runnable_step.add_gatk_option(key='variant', value=cohort_component, override=True)
-                else:
-                    raise Exception('Unexpected object type on merge_cohort list.')
-            runnable_step.add_gatk_option(
-                key='out',
-                value=file_path_merge_cohort_scatter.partial_gvcf_vcf)
-
-        # If there is only one tile, no need to gather, just rename file paths and return the (scatter) Runnable.
-
-        if len(self._tile_region_list) == 1:
-            file_path_merge_cohort_scatter = runnable_merge_cohort_scatter.file_path_object
-            """ @type file_path_merge_cohort_scatter: FilePathMergeCohort """
-            # Add the final, cohort-specific keys to the FilePathMergeCohort for the final (scatter) Runnable.
-            file_path_merge_cohort_scatter.combined_gvcf_vcf = file_path_merge_cohort.combined_gvcf_vcf
-            file_path_merge_cohort_scatter.combined_gvcf_tbi = file_path_merge_cohort.combined_gvcf_tbi
-
-            runnable_merge_cohort_scatter.add_runnable_step(
-                RunnableStepMove(
-                    name='merge_cohort_gather_move_vcf',
-                    source_path=file_path_merge_cohort_scatter.partial_gvcf_vcf,
-                    target_path=file_path_merge_cohort_scatter.combined_gvcf_vcf))
-
-            runnable_merge_cohort_scatter.add_runnable_step(
-                RunnableStepMove(
-                    name='merge_cohort_gather_move_tbi',
-                    source_path=file_path_merge_cohort_scatter.partial_gvcf_tbi,
-                    target_path=file_path_merge_cohort_scatter.combined_gvcf_tbi))
-
-            return runnable_merge_cohort_scatter
-
-        # Second, gather by the number of chunks on the partitioned genome tile index list.
-
-        # Second, Merge chunks hierarchically.
-        # Initialise a list of Runnable objects and indices for the hierarchical merge.
-        vc_runnable_merge_cohort_gather_list = vc_runnable_merge_cohort_scatter_list
-        vc_merge_cohort_gather_index_list = range(0, len(self._tile_region_list))
-        # Global variable to keep and return the last Runnable.
-        runnable_merge_cohort_gather = None
-        """ @type runnable_merge_cohort_gather: Runnable """
-        level = 0
-        while len(vc_merge_cohort_gather_index_list) > 1:
-            temporary_gather_runnable_list = list()
-            """ @type temporary_gather_runnable_list: list[Runnable] """
-            temporary_gather_index_list = list()
-            """ @type temporary_gather_index_list: list[int] """
-            # Partition the index list into chunks of given size.
-            partition_list = [vc_merge_cohort_gather_index_list[offset:offset + self.number_of_chunks]
-                              for offset in range(0, len(vc_merge_cohort_gather_index_list), self.number_of_chunks)]
-
-            for partition_index in range(0, len(partition_list)):
-                chunk_index_list = partition_list[partition_index]
-                # The file prefix includes the level and partition index.
-                prefix_merge_cohort_gather = '_'.join(
-                    (analysis_stage.name, cohort_name, 'gather', str(level), str(partition_index)))
-
-                file_path_merge_cohort_gather = FilePathMergeCohort(prefix=prefix_merge_cohort_gather)
-
-                runnable_merge_cohort_gather = self.add_runnable(
-                    runnable=Runnable(
-                        name=prefix_merge_cohort_gather,
-                        code_module='bsf.runnables.generic',
-                        working_directory=self.genome_directory,
-                        cache_directory=self.cache_directory,
-                        cache_path_dict=self._cache_path_dict,
-                        file_path_object=file_path_merge_cohort_gather,
-                        debug=self.debug))
-                executable_merge_cohort_gather = self.set_stage_runnable(
-                    stage=analysis_stage,
-                    runnable=runnable_merge_cohort_gather)
-                # Submit the Executable only, if the cohort index file does not exist.
-                executable_merge_cohort_gather.submit = submit_runnable
-                # Dependencies on scatter processes are set based on genome tile indices below.
-                temporary_gather_runnable_list.append(runnable_merge_cohort_gather)
-                temporary_gather_index_list.append(partition_index)
-
-                reference_merge_cohort_gather = runnable_merge_cohort_gather.get_absolute_cache_file_path(
-                    file_path=self.bwa_genome_db)
-
-                # GATK CatVariants bypasses the GATK engine and thus requires a completely different command line.
-                runnable_step = runnable_merge_cohort_gather.add_runnable_step(
-                    runnable_step=RunnableStepJava(
-                        name='merge_cohort_gatk_cat_variants',
-                        sub_command=Command(program='org.broadinstitute.gatk.tools.CatVariants'),
-                        java_temporary_path=runnable_merge_cohort_gather.get_relative_temporary_directory_path,
-                        java_heap_maximum='Xmx4G'))
-                """ @type runnable_step: RunnableStepJava """
-                runnable_step.add_option_short(
-                    key='classpath',
-                    value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
-                sub_command = runnable_step.sub_command
-                # Add the 'reference' not 'reference_sequence' option.
-                sub_command.add_option_long(
-                    key='reference',
-                    value=reference_merge_cohort_gather)
-                sub_command.add_option_long(
-                    key='outputFile',
-                    value=file_path_merge_cohort_gather.partial_gvcf_vcf)
-                sub_command.add_switch_long(key='assumeSorted')
-                # Finally, process per chunk index.
-                for chunk_index in chunk_index_list:
-                    runnable_object = vc_runnable_merge_cohort_gather_list[chunk_index]
-                    file_path_object = runnable_object.file_path_object
-                    """ @type file_path_object: FilePathMergeCohort """
-                    # Set GATK option variant
-                    sub_command.add_option_long(
-                        key='variant',
-                        value=file_path_object.partial_gvcf_vcf,
-                        override=True)
-                    # Delete the *.g.vcf.gz file.
-                    runnable_step.obsolete_file_path_list.append(file_path_object.partial_gvcf_vcf)
-                    # Delete the *.g.vcf.gz.tbi file.
-                    runnable_step.obsolete_file_path_list.append(file_path_object.partial_gvcf_tbi)
-                    # Set dependencies on preceding Runnable.name or Executable.name objects.
-                    # Depend on the Runnable.name of the corresponding Runnable of the scattering above.
-                    executable_merge_cohort_gather.dependencies.append(runnable_object.name)
-
-            # Set the temporary index list as the new list and increment the merge level.
-            vc_runnable_merge_cohort_gather_list = temporary_gather_runnable_list
-            vc_merge_cohort_gather_index_list = temporary_gather_index_list
-            level += 1
-        else:
-            # For the last instance, additionally rename the final file.
-            file_path_merge_cohort_gather = runnable_merge_cohort_gather.file_path_object
-            """ @type file_path_merge_cohort_gather: FilePathMergeCohort """
-
-            # Add cohort-specific keys to the file path dictionary.
-            file_path_merge_cohort_gather.combined_gvcf_vcf = file_path_merge_cohort.combined_gvcf_vcf
-            file_path_merge_cohort_gather.combined_gvcf_tbi = file_path_merge_cohort.combined_gvcf_tbi
-
-            runnable_merge_cohort_gather.add_runnable_step(
-                RunnableStepMove(
-                    name='merge_cohort_gather_move_vcf',
-                    source_path=file_path_merge_cohort_gather.partial_gvcf_vcf,
-                    target_path=file_path_merge_cohort_gather.combined_gvcf_vcf))
-
-            runnable_merge_cohort_gather.add_runnable_step(
-                RunnableStepMove(
-                    name='merge_cohort_gather_move_tbi',
-                    source_path=file_path_merge_cohort_gather.partial_gvcf_tbi,
-                    target_path=file_path_merge_cohort_gather.combined_gvcf_tbi))
-
-        return runnable_merge_cohort_gather
-
     def run(self):
         """Run a C{bsf.analyses.variant_calling.VariantCallingGATK} analysis.
 
         @return:
         @rtype:
         """
+
+        def run_create_genome_tiles(tiles=1, width=0):
+            """Private function to create genomic tiles for scattering and a partitioned list of indices for gathering.
+
+            The tiles are created on the basis of a Picard sequence dictionary accompanying the genome FASTA file.
+            If both tiles and width are 0, then the sequence regions serve as natural tiles.
+            @param tiles: Number of tiles for scattering
+            @type tiles: int
+            @param width: Tile width for scattering
+            @type width: int
+            @return: Python C{list} of Python C{list} (tiles) of Python C{tuple} (tile region) of
+                Python C{str} (sequence region), Python C{int} (start) and Python C{int} (end)
+            @rtype: list[list[(str, int, int)]]
+            """
+            tile_region_list = list()
+            """ @type tile_region_list: list[list[(str, int, int)]] """
+            total_length = 0
+            """ @type total_length: int """
+
+            dict_path = os.path.splitext(self.bwa_genome_db)[0] + '.dict'
+            if not os.path.exists(dict_path):
+                raise Exception("Picard sequence dictionary {!r} does not exist.".format(dict_path))
+
+            alignment_file = pysam.AlignmentFile(dict_path, 'r')
+            # Summarise sequence lengths to get the total length.
+            for sq_entry in alignment_file.header['SQ']:
+                """ @type sq_entry: dict"""
+                total_length += int(sq_entry['LN'])
+
+            if tiles:
+                tile_length = float(total_length) / float(tiles)
+            elif width:
+                tile_length = float(width)
+            else:
+                # The intervals are just the natural sequence regions.
+                # Thus the start coordinate is always 1 and the end coordinate is the sequence length (@SQ SL).
+                # 1 2 3 ... 7 8 9
+                # start = 1
+                # end = 9
+                # length = end - start + 1 = 9 - 1 + 1 = 9
+                for sq_entry in alignment_file.header['SQ']:
+                    tile_region_list.append([(str(sq_entry['SN']), 1, int(sq_entry['LN']))])
+
+                return tile_region_list
+
+            current_length = 0.0
+            """ @type current_length: float """
+            sq_list = list()
+            """ @type sq_list: list[(str, int, int)] """
+            for sq_entry in alignment_file.header['SQ']:
+                sq_start = 0.0
+                """ @type sq_start: float """
+                sq_length = float(sq_entry['LN'])
+                """ @type sq_length: float """
+                while sq_start < sq_length:  # float
+                    # The sequence end is the minimum of the sequence start plus remaining tile length or
+                    # the sequence length.
+                    sq_end = min(sq_start + tile_length - current_length, sq_length)
+                    """ @type seq_end: float """
+                    sq_list.append((sq_entry['SN'], int(math.floor(sq_start + 1.0)), int(math.floor(sq_end))))
+                    current_length += sq_end - sq_start
+                    sq_start = sq_end
+
+                    if math.floor(current_length) >= math.floor(tile_length):
+                        # If a tile is complete, append the sequence list to the interval list and reset both
+                        # list and length.
+                        tile_region_list.append(sq_list)
+                        sq_list = []
+                        current_length = 0.0
+
+            if len(sq_list):
+                tile_region_list.append(sq_list)
+
+            return tile_region_list
+
+        def run_merge_cohort_scatter_gather(analysis_stage, cohort_runnable_dict, cohort_name):
+            """Private method to hierarchically merge samples into cohorts using a scatter gather approach.
+
+            This method merges GVCF file paths from individual process_sample Runnable objects or an accessory cohort.
+            @param analysis_stage: C{Analysis} C{Stage}
+            @type analysis_stage: bsf.Stage
+            @param cohort_runnable_dict: Python C{dict} of Python C{str} key and Python C{list} of
+                C{Runnable} object value data
+            @type cohort_runnable_dict: dict[str, list[Runnable]]
+            @param cohort_name: Cohort name to select a Python list of C{Runnable} objects from the
+                I{cohort_runnable_dict} Python C{dict}
+            @type cohort_name: str
+            @return: Final C{Runnable} of the gather stage
+            @rtype: Runnable
+            """
+
+            # Private variables are prefixed with an underscore to avoid clashes with variables in the run() method.
+
+            prefix_merge_cohort = '_'.join((analysis_stage.name, cohort_name))
+
+            _file_path_merge_cohort = FilePathMergeCohort(prefix=prefix_merge_cohort)
+
+            # If the cohort index file already exists, create the Runnable objects, but do not submit their
+            # corresponding Executable objects.
+
+            if os.path.exists(os.path.join(self.genome_directory, _file_path_merge_cohort.combined_gvcf_tbi)):
+                _submit_runnable = False
+            else:
+                _submit_runnable = True
+
+            # The cohort_object_list contains either Runnable objects from the process_sample stage or
+            # Python str | unicode (GVCF file path) objects for accessory cohorts to be merged.
+            cohort_object_list = cohort_runnable_dict[cohort_name]
+
+            vc_runnable_merge_cohort_scatter_list = list()
+            """ @type vc_runnable_merge_cohort_scatter_list: list[Runnable] """
+
+            # Scatter by the number of genomic tiles.
+            # Create a Runnable and Executable for each GATK CombineGVCFs from its Sample objects.
+            runnable_merge_cohort_scatter = None
+            for _tile_index in range(0, len(self._tile_region_cohort_list)):
+                prefix_merge_cohort_scatter = '_'.join((analysis_stage.name, cohort_name, 'scatter', str(_tile_index)))
+
+                file_path_merge_cohort_scatter = FilePathMergeCohort(prefix=prefix_merge_cohort_scatter)
+
+                runnable_merge_cohort_scatter = self.add_runnable(
+                    runnable=Runnable(
+                        name=prefix_merge_cohort_scatter,
+                        code_module='bsf.runnables.generic',
+                        working_directory=self.genome_directory,
+                        cache_directory=self.cache_directory,
+                        cache_path_dict=self._cache_path_dict,
+                        file_path_object=file_path_merge_cohort_scatter,
+                        debug=self.debug))
+                executable_merge_cohort_scatter = self.set_stage_runnable(
+                    stage=analysis_stage,
+                    runnable=runnable_merge_cohort_scatter)
+                # Submit the Executable only, if the cohort index file does not exist.
+                executable_merge_cohort_scatter.submit = _submit_runnable
+                for cohort_component in cohort_object_list:
+                    # Set dependencies on preceding Runnable.name or Executable.name objects.
+                    # Set them only for Runnable objects, but not for Python str | unicode (file path) objects.
+                    if isinstance(cohort_component, Runnable):
+                        executable_merge_cohort_scatter.dependencies.append(cohort_component.name)
+
+                vc_runnable_merge_cohort_scatter_list.append(runnable_merge_cohort_scatter)
+
+                reference_merge_cohort_scatter = runnable_merge_cohort_scatter.get_absolute_cache_file_path(
+                    file_path=self.bwa_genome_db)
+
+                _runnable_step = runnable_merge_cohort_scatter.add_runnable_step(
+                    runnable_step=RunnableStepGATK(
+                        name='merge_cohort_gatk_combine_gvcfs',
+                        java_temporary_path=runnable_merge_cohort_scatter.get_relative_temporary_directory_path,
+                        java_heap_maximum='Xmx4G',
+                        gatk_classpath=self.classpath_gatk))
+                """ @type _runnable_step: RunnableStepGATK """
+                _runnable_step.add_gatk_option(key='analysis_type', value='CombineGVCFs')
+                _runnable_step.add_gatk_option(key='reference_sequence', value=reference_merge_cohort_scatter)
+                for _interval in self.exclude_intervals_list:
+                    _runnable_step.add_gatk_option(key='excludeIntervals', value=_interval, override=True)
+                # for _interval in self.include_intervals_list:
+                #     _runnable_step.add_gatk_option(key='intervals', value=_interval, override=True)
+                # if self.interval_padding:
+                #     _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                for _region_tuple in self._tile_region_cohort_list[_tile_index]:
+                    # The list of tiles is initialised to an empty tile to trigger at least one process.
+                    # Do not assign an interval in such cases.
+                    if _region_tuple[0]:
+                        _runnable_step.add_gatk_option(
+                            key='intervals',
+                            value='{:s}:{:d}-{:d}'.format(_region_tuple[0], _region_tuple[1], _region_tuple[2]),
+                            override=True)
+                for cohort_component in cohort_object_list:
+                    if isinstance(cohort_component, Runnable):
+                        # Variant GVCF file paths are stored under
+                        # the 'raw_variants_gvcf_vcf' attribute for the 'process_sample' stage or under
+                        # the 'combined_gvcf_vcf' attribute for the 'merge_cohort' stage.
+                        variant_path = ''
+                        for variant_key in ('raw_variants_gvcf_vcf', 'combined_gvcf_vcf'):
+                            try:
+                                variant_path = getattr(cohort_component.file_path_object, variant_key)
+                            except AttributeError:
+                                pass
+                        _runnable_step.add_gatk_option(key='variant', value=variant_path, override=True)
+                    elif isinstance(cohort_component, (str, unicode)):
+                        _runnable_step.add_gatk_option(key='variant', value=cohort_component, override=True)
+                    else:
+                        raise Exception('Unexpected object type on merge_cohort list.')
+                _runnable_step.add_gatk_option(
+                    key='out',
+                    value=file_path_merge_cohort_scatter.partial_gvcf_vcf)
+
+            # If there is only one tile, no need to gather, just rename file paths and return the (scatter) Runnable.
+
+            if len(self._tile_region_cohort_list) == 1:
+                file_path_merge_cohort_scatter = runnable_merge_cohort_scatter.file_path_object
+                """ @type file_path_merge_cohort_scatter: FilePathMergeCohort """
+                # Add the final, cohort-specific keys to the FilePathMergeCohort for the final (scatter) Runnable.
+                file_path_merge_cohort_scatter.combined_gvcf_vcf = _file_path_merge_cohort.combined_gvcf_vcf
+                file_path_merge_cohort_scatter.combined_gvcf_tbi = _file_path_merge_cohort.combined_gvcf_tbi
+
+                runnable_merge_cohort_scatter.add_runnable_step(
+                    runnable_step=RunnableStepMove(
+                        name='merge_cohort_gather_move_vcf',
+                        source_path=file_path_merge_cohort_scatter.partial_gvcf_vcf,
+                        target_path=file_path_merge_cohort_scatter.combined_gvcf_vcf))
+
+                runnable_merge_cohort_scatter.add_runnable_step(
+                    runnable_step=RunnableStepMove(
+                        name='merge_cohort_gather_move_tbi',
+                        source_path=file_path_merge_cohort_scatter.partial_gvcf_tbi,
+                        target_path=file_path_merge_cohort_scatter.combined_gvcf_tbi))
+
+                return runnable_merge_cohort_scatter
+
+            # Second, gather by the number of chunks on the partitioned genome tile index list.
+
+            # Second, Merge chunks hierarchically.
+            # Initialise a list of Runnable objects and indices for the hierarchical merge.
+            vc_runnable_merge_cohort_gather_list = vc_runnable_merge_cohort_scatter_list
+            vc_merge_cohort_gather_index_list = range(0, len(self._tile_region_cohort_list))
+            # Global variable to keep and return the last Runnable.
+            runnable_merge_cohort_gather = None
+            """ @type runnable_merge_cohort_gather: Runnable """
+            _level = 0
+            while len(vc_merge_cohort_gather_index_list) > 1:
+                _temporary_gather_runnable_list = list()
+                """ @type _temporary_gather_runnable_list: list[Runnable] """
+                _temporary_gather_index_list = list()
+                """ @type _temporary_gather_index_list: list[int] """
+                # Partition the index list into chunks of given size.
+                _partition_list = [vc_merge_cohort_gather_index_list[_offset:_offset + self.number_of_chunks_cohort]
+                                   for _offset in range(0,
+                                                        len(vc_merge_cohort_gather_index_list),
+                                                        self.number_of_chunks_cohort)]
+
+                for _partition_index in range(0, len(_partition_list)):
+                    _chunk_index_list = _partition_list[_partition_index]
+                    # The file prefix includes the level and partition index.
+                    prefix_merge_cohort_gather = '_'.join(
+                        (analysis_stage.name, cohort_name, 'gather', str(_level), str(_partition_index)))
+
+                    file_path_merge_cohort_gather = FilePathMergeCohort(prefix=prefix_merge_cohort_gather)
+
+                    runnable_merge_cohort_gather = self.add_runnable(
+                        runnable=Runnable(
+                            name=prefix_merge_cohort_gather,
+                            code_module='bsf.runnables.generic',
+                            working_directory=self.genome_directory,
+                            cache_directory=self.cache_directory,
+                            cache_path_dict=self._cache_path_dict,
+                            file_path_object=file_path_merge_cohort_gather,
+                            debug=self.debug))
+                    executable_merge_cohort_gather = self.set_stage_runnable(
+                        stage=analysis_stage,
+                        runnable=runnable_merge_cohort_gather)
+                    # Submit the Executable only, if the cohort index file does not exist.
+                    executable_merge_cohort_gather.submit = _submit_runnable
+                    # Dependencies on scatter processes are set based on genome tile indices below.
+                    _temporary_gather_runnable_list.append(runnable_merge_cohort_gather)
+                    _temporary_gather_index_list.append(_partition_index)
+
+                    reference_merge_cohort_gather = runnable_merge_cohort_gather.get_absolute_cache_file_path(
+                        file_path=self.bwa_genome_db)
+
+                    # GATK CatVariants bypasses the GATK engine and thus requires a completely different command line.
+                    _runnable_step = runnable_merge_cohort_gather.add_runnable_step(
+                        runnable_step=RunnableStepJava(
+                            name='merge_cohort_gatk_cat_variants',
+                            sub_command=Command(program='org.broadinstitute.gatk.tools.CatVariants'),
+                            java_temporary_path=runnable_merge_cohort_gather.get_relative_temporary_directory_path,
+                            java_heap_maximum='Xmx4G'))
+                    """ @type _runnable_step: RunnableStepJava """
+                    _runnable_step.add_option_short(
+                        key='classpath',
+                        value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+                    _sub_command = _runnable_step.sub_command
+                    # Add the 'reference' not 'reference_sequence' option.
+                    _sub_command.add_option_long(
+                        key='reference',
+                        value=reference_merge_cohort_gather)
+                    _sub_command.add_option_long(
+                        key='outputFile',
+                        value=file_path_merge_cohort_gather.partial_gvcf_vcf)
+                    _sub_command.add_switch_long(key='assumeSorted')
+                    # Finally, process per chunk index.
+                    for _chunk_index in _chunk_index_list:
+                        _runnable_object = vc_runnable_merge_cohort_gather_list[_chunk_index]
+                        _file_path_object = _runnable_object.file_path_object
+                        """ @type _file_path_object: FilePathMergeCohort """
+                        # Set GATK option variant
+                        _sub_command.add_option_long(
+                            key='variant',
+                            value=_file_path_object.partial_gvcf_vcf,
+                            override=True)
+                        # Delete the *.g.vcf.gz file.
+                        _runnable_step.obsolete_file_path_list.append(_file_path_object.partial_gvcf_vcf)
+                        # Delete the *.g.vcf.gz.tbi file.
+                        _runnable_step.obsolete_file_path_list.append(_file_path_object.partial_gvcf_tbi)
+                        # Set dependencies on preceding Runnable.name or Executable.name objects.
+                        # Depend on the Runnable.name of the corresponding Runnable of the scattering above.
+                        executable_merge_cohort_gather.dependencies.append(_runnable_object.name)
+
+                # Set the temporary index list as the new list and increment the merge level.
+                vc_runnable_merge_cohort_gather_list = _temporary_gather_runnable_list
+                vc_merge_cohort_gather_index_list = _temporary_gather_index_list
+                _level += 1
+            else:
+                # For the last instance, additionally rename the final file.
+                file_path_merge_cohort_gather = runnable_merge_cohort_gather.file_path_object
+                """ @type file_path_merge_cohort_gather: FilePathMergeCohort """
+
+                # Add cohort-specific keys to the file path dictionary.
+                file_path_merge_cohort_gather.combined_gvcf_vcf = _file_path_merge_cohort.combined_gvcf_vcf
+                file_path_merge_cohort_gather.combined_gvcf_tbi = _file_path_merge_cohort.combined_gvcf_tbi
+
+                runnable_merge_cohort_gather.add_runnable_step(
+                    runnable_step=RunnableStepMove(
+                        name='merge_cohort_gather_move_vcf',
+                        source_path=file_path_merge_cohort_gather.partial_gvcf_vcf,
+                        target_path=file_path_merge_cohort_gather.combined_gvcf_vcf))
+
+                runnable_merge_cohort_gather.add_runnable_step(
+                    runnable_step=RunnableStepMove(
+                        name='merge_cohort_gather_move_tbi',
+                        source_path=file_path_merge_cohort_gather.partial_gvcf_tbi,
+                        target_path=file_path_merge_cohort_gather.combined_gvcf_tbi))
+
+            return runnable_merge_cohort_gather
+
+        # Start of the run() method body.
 
         super(VariantCallingGATK, self).run()
 
@@ -2048,8 +2078,11 @@ class VariantCallingGATK(Analysis):
         self._read_comparisons(comparison_path=self.comparison_path)
 
         # Create genomic tiles for scatter gather approaches.
-        if self.number_of_tiles:
-            self._create_genome_tiles(tiles=self.number_of_tiles)
+        if self.number_of_tiles_cohort:
+            self._tile_region_cohort_list = run_create_genome_tiles(tiles=self.number_of_tiles_cohort, width=0)
+
+        if self.number_of_tiles_somatic:
+            self._tile_region_somatic_list = run_create_genome_tiles(tiles=self.number_of_tiles_somatic, width=0)
 
         # Experimentally, sort the Python list of Sample objects by the Sample name.
         # This cannot be done in the super-class, because Samples are only put into the Analysis.samples list
@@ -3196,7 +3229,7 @@ class VariantCallingGATK(Analysis):
 
         for cohort_key in vc_runnable_process_sample_dict.keys():
             vc_runnable_merge_cohort_list.append(
-                self._merge_cohort_scatter_gather(
+                run_merge_cohort_scatter_gather(
                     analysis_stage=stage_merge_cohort,
                     cohort_runnable_dict=vc_runnable_process_sample_dict,
                     cohort_name=cohort_key))
@@ -3207,7 +3240,7 @@ class VariantCallingGATK(Analysis):
             # If the cohort-specific Runnable list has only one component, the merge has already been completed.
             runnable_merge_cohort = vc_runnable_merge_cohort_list[-1]
         elif len(vc_runnable_merge_cohort_list) > 1:
-            runnable_merge_cohort = self._merge_cohort_scatter_gather(
+            runnable_merge_cohort = run_merge_cohort_scatter_gather(
                 analysis_stage=stage_merge_cohort,
                 cohort_runnable_dict=vc_runnable_merge_cohort_dict,
                 cohort_name=self.cohort_name)
@@ -3219,14 +3252,14 @@ class VariantCallingGATK(Analysis):
         if len(self.accessory_cohort_gvcfs):
             # If accessory cohorts are defined, initialise a new Python dict of Python str cohort name key and
             # Python list of Runnable value data. Initialise the list with teh last Runnable object and
-            # extend with the the list of accessory cohort file names. The _merge_cohort_scatter_gather() method
+            # extend with the the list of accessory cohort file names. The run_merge_cohort_scatter_gather() method
             # can cope with Runnable or str | unicode objects.
             cohort_key = '_'.join((self.cohort_name, 'accessory'))
             vc_runnable_merge_cohort_dict = {cohort_key: [runnable_merge_cohort]}
             vc_runnable_merge_cohort_list = vc_runnable_merge_cohort_dict[cohort_key]
             vc_runnable_merge_cohort_list.extend(self.accessory_cohort_gvcfs)
 
-            runnable_merge_cohort = self._merge_cohort_scatter_gather(
+            runnable_merge_cohort = run_merge_cohort_scatter_gather(
                 analysis_stage=stage_merge_cohort,
                 cohort_runnable_dict=vc_runnable_merge_cohort_dict,
                 cohort_name=cohort_key)
@@ -3249,9 +3282,9 @@ class VariantCallingGATK(Analysis):
         # snpEff                                (process_cohort_snpeff)
         # GATK VariantAnnotator                 (process_cohort_gatk_variant_annotator)
 
-        prefix_cohort = '_'.join((stage_process_cohort.name, self.cohort_name))
+        prefix_process_cohort = '_'.join((stage_process_cohort.name, self.cohort_name))
 
-        file_path_genotype_cohort = FilePathGenotypeCohort(prefix=prefix_cohort)
+        file_path_genotype_cohort = FilePathGenotypeCohort(prefix=prefix_process_cohort)
 
         # Run GATK GenotypeGVCFs in a scatter and gather approach.
 
@@ -3264,7 +3297,7 @@ class VariantCallingGATK(Analysis):
         """ @type vc_runnable_process_cohort_scatter_list: list[Runnable] """
         runnable_process_cohort_scatter = None
         """ @type runnable_process_cohort_scatter: Runnable """
-        for tile_index in range(0, len(self._tile_region_list)):
+        for tile_index in range(0, len(self._tile_region_cohort_list)):
             prefix_process_cohort_scatter = '_'.join((
                 stage_process_cohort.name, self.cohort_name, 'scatter', str(tile_index)))
 
@@ -3308,7 +3341,7 @@ class VariantCallingGATK(Analysis):
             #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             # if self.interval_padding:
             #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            for region_tuple in self._tile_region_list[tile_index]:
+            for region_tuple in self._tile_region_cohort_list[tile_index]:
                 # The list of tiles is initialised to an empty tile to trigger at least one process.
                 # Do not assign an interval in such cases.
                 if region_tuple[0]:
@@ -3327,7 +3360,7 @@ class VariantCallingGATK(Analysis):
 
         # If there is only one tile, no need to gather, just rename the file and return the Runnable.
 
-        if len(self._tile_region_list) == 1:
+        if len(self._tile_region_cohort_list) == 1:
             file_path_genotype_cohort_scatter = runnable_process_cohort_scatter.file_path_object
             """ @type file_path_genotype_cohort_scatter: FilePathGenotypeCohort """
             # Add cohort-specific keys to the file path dictionary.
@@ -3335,13 +3368,13 @@ class VariantCallingGATK(Analysis):
             file_path_genotype_cohort_scatter.genotyped_raw_tbi = file_path_genotype_cohort.genotyped_raw_tbi
 
             runnable_process_cohort_scatter.add_runnable_step(
-                RunnableStepMove(
+                runnable_step=RunnableStepMove(
                     name='process_cohort_gather_move_vcf',
                     source_path=file_path_genotype_cohort_scatter.partial_vcf,
                     target_path=file_path_genotype_cohort_scatter.genotyped_raw_vcf))
 
             runnable_process_cohort_scatter.add_runnable_step(
-                RunnableStepMove(
+                runnable_step=RunnableStepMove(
                     name='process_cohort_gather_move_tbi',
                     source_path=file_path_genotype_cohort_scatter.partial_tbi,
                     target_path=file_path_genotype_cohort_scatter.genotyped_raw_vcf))
@@ -3354,7 +3387,7 @@ class VariantCallingGATK(Analysis):
             # Second, Merge chunks hierarchically.
             # Initialise a list of Runnable objects and indices for the hierarchical merge.
             vc_runnable_process_cohort_gather_list = vc_runnable_process_cohort_scatter_list
-            vc_process_cohort_gather_index_list = range(0, len(self._tile_region_list))
+            vc_process_cohort_gather_index_list = range(0, len(self._tile_region_cohort_list))
             runnable_process_cohort_gather = None  # Global variable to keep and return the last Runnable.
             """ @type runnable_process_cohort_gather: Runnable """
             level = 0
@@ -3364,10 +3397,10 @@ class VariantCallingGATK(Analysis):
                 temporary_gather_index_list = list()
                 """ @type temporary_gather_index_list: list[int] """
                 # Partition the index list into chunks of given size.
-                partition_list = [vc_process_cohort_gather_index_list[offset:offset + self.number_of_chunks]
+                partition_list = [vc_process_cohort_gather_index_list[offset:offset + self.number_of_chunks_cohort]
                                   for offset in range(0,
                                                       len(vc_process_cohort_gather_index_list),
-                                                      self.number_of_chunks)]
+                                                      self.number_of_chunks_cohort)]
 
                 for partition_index in range(0, len(partition_list)):
                     chunk_index_list = partition_list[partition_index]
@@ -3446,26 +3479,26 @@ class VariantCallingGATK(Analysis):
                 file_path_genotype_cohort_gather.genotyped_raw_tbi = file_path_genotype_cohort.genotyped_raw_tbi
 
                 runnable_process_cohort_gather.add_runnable_step(
-                    RunnableStepMove(
+                    runnable_step=RunnableStepMove(
                         name='process_cohort_gather_move_vcf',
                         source_path=file_path_genotype_cohort_gather.partial_vcf,
                         target_path=file_path_genotype_cohort_gather.genotyped_raw_vcf))
 
                 runnable_process_cohort_gather.add_runnable_step(
-                    RunnableStepMove(
+                    runnable_step=RunnableStepMove(
                         name='process_cohort_gather_move_tbi',
                         source_path=file_path_genotype_cohort_gather.partial_tbi,
                         target_path=file_path_genotype_cohort_gather.genotyped_raw_tbi))
 
                 # return runnable_process_cohort_gather
 
-        file_path_process_cohort = FilePathProcessCohort(prefix=prefix_cohort)
+        file_path_process_cohort = FilePathProcessCohort(prefix=prefix_process_cohort)
 
         # Create a Runnable and Executable for processing the cohort.
 
         runnable_process_cohort = self.add_runnable(
             runnable=Runnable(
-                name=prefix_cohort,
+                name=prefix_process_cohort,
                 code_module='bsf.runnables.generic',
                 working_directory=self.genome_directory,
                 cache_directory=self.cache_directory,
@@ -3480,31 +3513,6 @@ class VariantCallingGATK(Analysis):
 
         reference_process_cohort = runnable_process_cohort.get_absolute_cache_file_path(
             file_path=self.bwa_genome_db)
-
-        # Run the GATK GenotypeGVCFs analysis.
-
-        if False:
-            # The GATK GenotypeGVCFs analysis is run in a scatter and gather approach above.
-            runnable_step = runnable_process_cohort.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='process_cohort_gatk_genotype_gvcfs',
-                    java_temporary_path=runnable_process_cohort.get_relative_temporary_directory_path,
-                    java_heap_maximum='Xmx12G',
-                    gatk_classpath=self.classpath_gatk))
-            """ @type runnable_step: RunnableStepGATK """
-            runnable_step.add_gatk_option(key='analysis_type', value='GenotypeGVCFs')
-            runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_cohort)
-            for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-            for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-            if self.interval_padding:
-                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
-            if self.known_sites_discovery:
-                runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
-            runnable_step.add_gatk_option(key='variant', value=file_path_merge_cohort.combined_gvcf_vcf)
-            runnable_step.add_gatk_option(key='out', value=file_path_genotype_cohort.genotyped_raw_vcf)
 
         # Run the VQSR procedure on SNPs.
 
@@ -3533,12 +3541,12 @@ class VariantCallingGATK(Analysis):
             # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             runnable_step.add_gatk_option(key='mode', value='SNP')
             for resource in self.vqsr_resources_snp_dict.keys():
-                resource_option = 'resource:{},known={},training={},truth={},prior={}'. \
-                    format(resource,
-                           self.vqsr_resources_snp_dict[resource]['known'],
-                           self.vqsr_resources_snp_dict[resource]['training'],
-                           self.vqsr_resources_snp_dict[resource]['truth'],
-                           self.vqsr_resources_snp_dict[resource]['prior'])
+                resource_option = 'resource:{},known={},training={},truth={},prior={}'.format(
+                    resource,
+                    self.vqsr_resources_snp_dict[resource]['known'],
+                    self.vqsr_resources_snp_dict[resource]['training'],
+                    self.vqsr_resources_snp_dict[resource]['truth'],
+                    self.vqsr_resources_snp_dict[resource]['prior'])
                 runnable_step.add_gatk_option(
                     key=resource_option,
                     value=self.vqsr_resources_snp_dict[resource]['file_path'])
@@ -3609,12 +3617,12 @@ class VariantCallingGATK(Analysis):
             # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             runnable_step.add_gatk_option(key='mode', value='INDEL')
             for resource in self.vqsr_resources_indel_dict.keys():
-                resource_option = 'resource:{},known={},training={},truth={},prior={}'. \
-                    format(resource,
-                           self.vqsr_resources_indel_dict[resource]['known'],
-                           self.vqsr_resources_indel_dict[resource]['training'],
-                           self.vqsr_resources_indel_dict[resource]['truth'],
-                           self.vqsr_resources_indel_dict[resource]['prior'])
+                resource_option = 'resource:{},known={},training={},truth={},prior={}'.format(
+                    resource,
+                    self.vqsr_resources_indel_dict[resource]['known'],
+                    self.vqsr_resources_indel_dict[resource]['training'],
+                    self.vqsr_resources_indel_dict[resource]['truth'],
+                    self.vqsr_resources_indel_dict[resource]['prior'])
                 runnable_step.add_gatk_option(
                     key=resource_option,
                     value=self.vqsr_resources_indel_dict[resource]['file_path'])
@@ -4137,7 +4145,7 @@ class VariantCallingGATK(Analysis):
                 submit_runnable = True
 
             runnable_somatic_scatter = None
-            for tile_index in range(0, len(self._tile_region_list)):
+            for tile_index in range(0, len(self._tile_region_somatic_list)):
                 prefix_somatic_scatter = '_'.join((
                     stage_somatic.name, key, 'scatter', str(tile_index)))
 
@@ -4184,7 +4192,7 @@ class VariantCallingGATK(Analysis):
                 #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
                 # if self.interval_padding:
                 #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-                for region_tuple in self._tile_region_list[tile_index]:
+                for region_tuple in self._tile_region_somatic_list[tile_index]:
                     # The list of tiles is initialised to an empty tile to trigger at least one process.
                     # Do not assign an interval in such cases.
                     if region_tuple[0]:
@@ -4221,7 +4229,7 @@ class VariantCallingGATK(Analysis):
 
             # If there is only one tile, no need to gather, just rename the file and return the Runnable.
 
-            if len(self._tile_region_list) == 1:
+            if len(self._tile_region_somatic_list) == 1:
                 file_path_somatic_scatter = runnable_somatic_scatter.file_path_object
                 """ @type file_path_somatic_scatter: FilePathSomaticScatterGather """
                 # Add sample-specific keys to the file path dictionary.
@@ -4229,13 +4237,13 @@ class VariantCallingGATK(Analysis):
                 file_path_somatic_scatter.somatic_idx = file_path_somatic.somatic_idx
 
                 runnable_somatic_scatter.add_runnable_step(
-                    RunnableStepMove(
+                    runnable_step=RunnableStepMove(
                         name='somatic_gather_move_vcf',
                         source_path=file_path_somatic_scatter.partial_vcf,
                         target_path=file_path_somatic_scatter.somatic_vcf))
 
                 runnable_somatic_scatter.add_runnable_step(
-                    RunnableStepMove(
+                    runnable_step=RunnableStepMove(
                         name='somatic_gather_move_tbi',
                         source_path=file_path_somatic_scatter.partial_tbi,
                         target_path=file_path_somatic_scatter.somatic_idx))
@@ -4248,7 +4256,7 @@ class VariantCallingGATK(Analysis):
                 # Second, Merge chunks hierarchically.
                 # Initialise a list of Runnable objects and indices for the hierarchical merge.
                 vc_runnable_somatic_gather_list = vc_runnable_somatic_scatter_list
-                vc_somatic_gather_index_list = range(0, len(self._tile_region_list))
+                vc_somatic_gather_index_list = range(0, len(self._tile_region_somatic_list))
                 runnable_somatic_gather = None  # Global variable to keep and return the last Runnable.
                 level = 0
                 while len(vc_somatic_gather_index_list) > 1:
@@ -4257,10 +4265,10 @@ class VariantCallingGATK(Analysis):
                     temporary_gather_index_list = list()
                     """ @type temporary_gather_index_list: list[int] """
                     # Partition the index list into chunks of given size.
-                    partition_list = [vc_somatic_gather_index_list[offset:offset + self.number_of_chunks]
+                    partition_list = [vc_somatic_gather_index_list[offset:offset + self.number_of_chunks_cohort]
                                       for offset in range(0,
                                                           len(vc_somatic_gather_index_list),
-                                                          self.number_of_chunks)]
+                                                          self.number_of_chunks_cohort)]
 
                     for partition_index in range(0, len(partition_list)):
                         chunk_index_list = partition_list[partition_index]
@@ -4342,13 +4350,13 @@ class VariantCallingGATK(Analysis):
                     file_path_somatic_gather.somatic_idx = file_path_somatic.somatic_idx
 
                     runnable_somatic_gather.add_runnable_step(
-                        RunnableStepMove(
+                        runnable_step=RunnableStepMove(
                             name='somatic_gather_move_vcf',
                             source_path=file_path_somatic_gather.partial_vcf,
                             target_path=file_path_somatic_gather.somatic_vcf))
 
                     runnable_somatic_gather.add_runnable_step(
-                        RunnableStepMove(
+                        runnable_step=RunnableStepMove(
                             name='somatic_gather_move_tbi',
                             source_path=file_path_somatic_gather.partial_tbi,
                             target_path=file_path_somatic_gather.somatic_idx))
@@ -4530,14 +4538,15 @@ class VariantCallingGATK(Analysis):
 
         return
 
-    def _link(self):
-        """Private method to create a result directory and two trees of symbolic links by sample and by type.
+    def report(self):
+        """Create a C{bsf.analyses.variant_calling.VariantCallingGATK} report in HTML format and a
+        UCSC Genome Browser Track Hub.
 
         @return:
         @rtype:
         """
 
-        def _create_directory(path):
+        def report_create_directory(path):
             """Private function to create a directory avoiding race conditions.
 
             @param path: Path
@@ -4554,7 +4563,7 @@ class VariantCallingGATK(Analysis):
 
             return path
 
-        def _create_symbolic_link(source_path, target_path):
+        def report_create_symbolic_link(source_path, target_path):
             """Private function to set symbolic links.
 
             @param source_path: Source path
@@ -4578,23 +4587,23 @@ class VariantCallingGATK(Analysis):
 
             return
 
-        # Start of _link() method body.
+        # Create simpler symbolic links in structured sub-directoreies to facilitate file system browsing.
 
         # Create a result directory as concatenation of bsf.Analysis.genome_version and bsf.Analysis.prefix.
 
-        directory_results = _create_directory(
+        directory_results = report_create_directory(
             path=os.path.join(self.project_directory, '_'.join((self.genome_version, self.prefix))))
 
-        directory_results_by_cohort = _create_directory(
+        directory_results_by_cohort = report_create_directory(
             path=os.path.join(directory_results, 'by_cohort'))
 
-        directory_results_by_pair = _create_directory(
+        directory_results_by_pair = report_create_directory(
             path=os.path.join(directory_results, 'by_pair'))
 
-        directory_results_by_sample = _create_directory(
+        directory_results_by_sample = report_create_directory(
             path=os.path.join(directory_results, 'by_sample'))
 
-        directory_results_by_type = _create_directory(
+        directory_results_by_type = report_create_directory(
             path=os.path.join(directory_results, 'by_type'))
 
         for sample in self.sample_list:
@@ -4625,14 +4634,14 @@ class VariantCallingGATK(Analysis):
             file_path_split_cohort = runnable_split_cohort.file_path_object
             """ @type file_path_split_cohort: FilePathSplitCohort """
 
-            directory_sample = _create_directory(
+            directory_sample = report_create_directory(
                 path=os.path.join(directory_results_by_sample, sample.name))
 
             for key, extension in (
                     ('realigned_bam', '.bam'),
                     ('realigned_bai', '.bam.bai'),
                     ('realigned_md5', '.bam.md5')):
-                _create_symbolic_link(
+                report_create_symbolic_link(
                     source_path=os.path.relpath(
                         os.path.join(self.genome_directory, getattr(file_path_process_sample, key)),
                         directory_sample),
@@ -4642,33 +4651,33 @@ class VariantCallingGATK(Analysis):
                     ('sample_vcf', '.vcf.gz'),
                     ('sample_idx', '.vcf.gz.tbi'),
                     ('sample_tsv', '.tsv')):
-                _create_symbolic_link(
+                report_create_symbolic_link(
                     source_path=os.path.relpath(
                         os.path.join(self.genome_directory, getattr(file_path_split_cohort, key)),
                         directory_sample),
                     target_path=os.path.join(directory_sample, sample.name + extension))
 
-            directory_alignments = _create_directory(
+            directory_alignments = report_create_directory(
                 path=os.path.join(directory_results_by_type, 'alignments'))
 
             for key, extension in (
                     ('realigned_bam', '.bam'),
                     ('realigned_bai', '.bam.bai'),
                     ('realigned_md5', '.bam.md5')):
-                _create_symbolic_link(
+                report_create_symbolic_link(
                     source_path=os.path.relpath(
                         os.path.join(self.genome_directory, getattr(file_path_process_sample, key)),
                         directory_alignments),
                     target_path=os.path.join(directory_alignments, sample.name + extension))
 
-            directory_variants = _create_directory(
+            directory_variants = report_create_directory(
                 path=os.path.join(directory_results_by_type, 'variants'))
 
             for key, extension in (
                     ('sample_vcf', '.vcf.gz'),
                     ('sample_idx', '.vcf.gz.tbi'),
                     ('sample_tsv', '.tsv')):
-                _create_symbolic_link(
+                report_create_symbolic_link(
                     source_path=os.path.relpath(
                         os.path.join(self.genome_directory, getattr(file_path_split_cohort, key)),
                         directory_variants),
@@ -4685,7 +4694,7 @@ class VariantCallingGATK(Analysis):
                 ('snpeff_vcf_bgz', '_snpeff.vcf.gz'),
                 ('snpeff_vcf_tbi', '_snpeff.vcf.gz.tbi'),
                 ('snpeff_stats', '_snpeff_summary.html')):
-            _create_symbolic_link(
+            report_create_symbolic_link(
                 source_path=os.path.relpath(
                     os.path.join(self.genome_directory, getattr(file_path_process_cohort, key)),
                     directory_results_by_cohort),
@@ -4706,23 +4715,11 @@ class VariantCallingGATK(Analysis):
                     ('annotated_vcf', '_annotated.vcf.gz'),
                     ('annotated_tbi', '_annotated.vcf.gz.tbi'),
                     ('annotated_tsv', '_annotated.tsv')):
-                _create_symbolic_link(
+                report_create_symbolic_link(
                     source_path=os.path.relpath(
                         os.path.join(self.genome_directory, getattr(file_path_somatic, key)),
                         directory_results_by_pair),
                     target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
-
-        return
-
-    def report(self):
-        """Create a C{bsf.analyses.variant_calling.VariantCallingGATK} report in HTML format and a
-        UCSC Genome Browser Track Hub.
-
-        @return:
-        @rtype:
-        """
-
-        self._link()
 
         # Create a symbolic link containing the project name and a UUID.
         default = Default.get_global_default()
@@ -5100,20 +5097,16 @@ class VariantCallingGATK(Analysis):
             report_list += '<tr>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.alignment_percentage_sample_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Alignment Summary - Percent Aligned per Sample" ' \
-                           'src="' + file_path_summary.alignment_percentage_sample_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Alignment Summary - Percent Aligned per Sample"'
+            report_list += ' src="' + file_path_summary.alignment_percentage_sample_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.alignment_percentage_read_group_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Alignment Summary - Percent Aligned per Read Group" ' \
-                           'src="' + file_path_summary.alignment_percentage_read_group_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Alignment Summary - Percent Aligned per Read Group"'
+            report_list += ' src="' + file_path_summary.alignment_percentage_read_group_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="left">Alignment Summary - Percent Aligned</td>\n'
@@ -5126,20 +5119,16 @@ class VariantCallingGATK(Analysis):
             report_list += '<tr>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.alignment_absolute_sample_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Alignment Summary - Reads Aligned per Sample" ' \
-                           'src="' + file_path_summary.alignment_absolute_sample_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Alignment Summary - Reads Aligned per Sample"'
+            report_list += ' src="' + file_path_summary.alignment_absolute_sample_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.alignment_absolute_read_group_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Alignment Summary - Reads Aligned per Read Group" ' \
-                           'src="' + file_path_summary.alignment_absolute_read_group_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Alignment Summary - Reads Aligned per Read Group"'
+            report_list += ' src="' + file_path_summary.alignment_absolute_read_group_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="left">Alignment Summary - Reads Aligned</td>\n'
@@ -5168,11 +5157,9 @@ class VariantCallingGATK(Analysis):
             report_list += '<tr>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.duplication_percentage_sample_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Duplication - Duplicated Reads per Sample" ' \
-                           'src="' + file_path_summary.duplication_percentage_sample_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Duplication - Duplicated Reads per Sample"'
+            report_list += ' src="' + file_path_summary.duplication_percentage_sample_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="center"></td>\n'
@@ -5187,11 +5174,9 @@ class VariantCallingGATK(Analysis):
             report_list += '<tr>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.duplication_levels_sample_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Duplication - Duplication Levels per Sample" ' \
-                           'src="' + file_path_summary.duplication_levels_sample_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Duplication - Duplication Levels per Sample"'
+            report_list += ' src="' + file_path_summary.duplication_levels_sample_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="center"></td>\n'
@@ -5223,20 +5208,16 @@ class VariantCallingGATK(Analysis):
             report_list += '<tr>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.hybrid_coverage_levels_sample_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Hybrid Selection - Mean Target Coverage Levels per Sample" ' \
-                           'src="' + file_path_summary.hybrid_coverage_levels_sample_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Hybrid Selection - Mean Target Coverage Levels per Sample"'
+            report_list += ' src="' + file_path_summary.hybrid_coverage_levels_sample_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.hybrid_coverage_levels_read_group_pdf + '">' \
-                           '<img ' \
-                           'alt="Hybrid Selection - Mean Target Coverage Levels per Read Group" ' \
-                           'src="' + file_path_summary.hybrid_coverage_levels_read_group_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<a href="' + file_path_summary.hybrid_coverage_levels_read_group_pdf + '">'
+            report_list += '<img alt="Hybrid Selection - Mean Target Coverage Levels per Read Group"'
+            report_list += ' src="' + file_path_summary.hybrid_coverage_levels_read_group_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="left">Hybrid Selection - Mean Target Coverage Levels</td>\n'
@@ -5249,20 +5230,16 @@ class VariantCallingGATK(Analysis):
             report_list += '<tr>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.hybrid_coverage_sample_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Hybrid Selection - Mean Target Coverage per Sample" ' \
-                           'src="' + file_path_summary.hybrid_coverage_sample_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Hybrid Selection - Mean Target Coverage per Sample"'
+            report_list += ' src="' + file_path_summary.hybrid_coverage_sample_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.hybrid_coverage_read_group_pdf + '">' \
-                           '<img ' \
-                           'alt="Hybrid Selection - Mean Target Coverage per Read Group" ' \
-                           'src="' + file_path_summary.hybrid_coverage_read_group_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<a href="' + file_path_summary.hybrid_coverage_read_group_pdf + '">'
+            report_list += '<img alt="Hybrid Selection - Mean Target Coverage per Read Group"'
+            report_list += ' src="' + file_path_summary.hybrid_coverage_read_group_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="left">Hybrid Selection - Mean Target Coverage</td>\n'
@@ -5275,20 +5252,16 @@ class VariantCallingGATK(Analysis):
             report_list += '<tr>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.hybrid_excluded_bases_sample_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Hybrid Selection - Percent Excluded Bases per Sample" ' \
-                           'src="' + file_path_summary.hybrid_excluded_bases_sample_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Hybrid Selection - Percent Excluded Bases per Sample"'
+            report_list += ' src="' + file_path_summary.hybrid_excluded_bases_sample_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.hybrid_excluded_bases_read_group_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Hybrid Selection - Percent Excluded Bases per Read Group" ' \
-                           'src="' + file_path_summary.hybrid_excluded_bases_read_group_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Hybrid Selection - Percent Excluded Bases per Read Group"'
+            report_list += ' src="' + file_path_summary.hybrid_excluded_bases_read_group_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="left">Hybrid Selection - Percent Excluded Bases</td>\n'
@@ -5301,20 +5274,16 @@ class VariantCallingGATK(Analysis):
             report_list += '<tr>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.hybrid_unique_percentage_sample_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Hybrid Selection - Percent Unique Reads per Sample" ' \
-                           'src="' + file_path_summary.hybrid_unique_percentage_sample_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Hybrid Selection - Percent Unique Reads per Sample"'
+            report_list += ' src="' + file_path_summary.hybrid_unique_percentage_sample_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.hybrid_unique_percentage_read_group_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Hybrid Selection - Percent Unique Reads per Read Group" ' \
-                           'src="' + file_path_summary.hybrid_unique_percentage_read_group_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Hybrid Selection - Percent Unique Reads per Read Group"'
+            report_list += ' src="' + file_path_summary.hybrid_unique_percentage_read_group_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="left">Hybrid Selection - Percent Unique Reads</td>\n'
@@ -5339,11 +5308,9 @@ class VariantCallingGATK(Analysis):
             report_list += '<tr>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.non_callable_percentage_sample_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Non-Callable Loci - Fraction" ' \
-                           'src="' + file_path_summary.non_callable_percentage_sample_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Non-Callable Loci - Fraction"'
+            report_list += ' src="' + file_path_summary.non_callable_percentage_sample_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="center"></td>\n'
@@ -5357,11 +5324,9 @@ class VariantCallingGATK(Analysis):
             report_list += '<tr>\n'
             report_list += '<td class="center">'
             report_list += '<a href="' + file_path_summary.non_callable_absolute_sample_pdf + '">'
-            report_list += '<img ' \
-                           'alt="Non-Callable Loci - Number" ' \
-                           'src="' + file_path_summary.non_callable_absolute_sample_png + '" ' \
-                           'height="100" ' \
-                           'width="100" />'
+            report_list += '<img alt="Non-Callable Loci - Number"'
+            report_list += ' src="' + file_path_summary.non_callable_absolute_sample_png + '"'
+            report_list += ' height="100" width="100" />'
             report_list += '</a>'
             report_list += '</td>\n'
             report_list += '<td class="center"></td>\n'
