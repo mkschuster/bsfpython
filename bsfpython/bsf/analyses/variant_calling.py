@@ -279,11 +279,11 @@ class FilePathProcessSample(FilePath):
         self.realigner_targets = prefix + '_realigner.intervals'
         self.realigned_bam = prefix + '_realigned.bam'
         self.realigned_bai = prefix + '_realigned.bai'
-        self.realigned_md5 = prefix + '_realigned_bam.md5'
+        self.realigned_md5 = prefix + '_realigned.bam.md5'
         self.realigned_bam_bai = prefix + '_realigned.bam.bai'
         self.alignment_summary_metrics = prefix + '_alignment_summary_metrics.tsv'
         self.raw_variants_gvcf_vcf = prefix + '_raw_variants.g.vcf.gz'
-        self.raw_variants_gvcf_idx = prefix + '_raw_variants.g.vcf.gz.tbi'
+        self.raw_variants_gvcf_tbi = prefix + '_raw_variants.g.vcf.gz.tbi'
 
         return
 
@@ -300,7 +300,7 @@ class FilePathDiagnoseSample(FilePath):
         super(FilePathDiagnoseSample, self).__init__(prefix=prefix)
 
         self.diagnose_targets_vcf = prefix + '_diagnose_targets.vcf.gz'
-        self.diagnose_targets_idx = prefix + '_diagnose_targets.vcf.gz.tbi'
+        self.diagnose_targets_tbi = prefix + '_diagnose_targets.vcf.gz.tbi'
         self.missing_intervals = prefix + '_missing.intervals'
         self.missing_report = prefix + '_missing.gatkreport'
         self.callable_bed = prefix + '_callable_loci.bed'
@@ -329,8 +329,6 @@ class FilePathMergeCohort(FilePath):
 
         self.combined_gvcf_vcf = prefix + '_combined.g.vcf.gz'
         self.combined_gvcf_tbi = prefix + '_combined.g.vcf.gz.tbi'
-        self.partial_gvcf_vcf = prefix + '_partial.g.vcf.gz'
-        self.partial_gvcf_tbi = prefix + '_partial.g.vcf.gz.tbi'
 
         return
 
@@ -348,10 +346,6 @@ class FilePathGenotypeCohort(FilePath):
 
         self.genotyped_raw_vcf = prefix + '_genotyped_raw_snp_raw_indel.vcf.gz'
         self.genotyped_raw_tbi = prefix + '_genotyped_raw_snp_raw_indel.vcf.gz.tbi'
-        # self.combined_vcf = prefix + '_combined.vcf.gz'
-        # self.combined_tbi = prefix + '_combined.vcf.gz.tbi'
-        self.partial_vcf = prefix + '_partial.vcf.gz'
-        self.partial_tbi = prefix + '_partial.vcf.gz.tbi'
 
         return
 
@@ -367,21 +361,12 @@ class FilePathProcessCohort(FilePath):
         """
         super(FilePathProcessCohort, self).__init__(prefix=prefix)
 
-        # self.genotyped_raw_vcf = prefix + '_genotyped_raw_snp_raw_indel.vcf.gz'
-        # self.genotyped_raw_tbi = prefix + '_genotyped_raw_snp_raw_indel.vcf.gz.tbi'
         self.recalibrated_snp_raw_indel_vcf = prefix + '_recalibrated_snp_raw_indel.vcf.gz'
-        self.recalibrated_snp_raw_indel_idx = prefix + '_recalibrated_snp_raw_indel.vcf.gz.tbi'
+        self.recalibrated_snp_raw_indel_tbi = prefix + '_recalibrated_snp_raw_indel.vcf.gz.tbi'
         self.recalibrated_snp_recalibrated_indel_vcf = prefix + '_recalibrated_snp_recalibrated_indel.vcf.gz'
-        self.recalibrated_snp_recalibrated_indel_idx = prefix + '_recalibrated_snp_recalibrated_indel.vcf.gz.tbi'
+        self.recalibrated_snp_recalibrated_indel_tbi = prefix + '_recalibrated_snp_recalibrated_indel.vcf.gz.tbi'
         self.multi_sample_vcf = prefix + '_multi_sample.vcf.gz'
-        self.multi_sample_idx = prefix + '_multi_sample.vcf.gz.tbi'
-        self.snpeff_vcf = prefix + '_snpeff.vcf'
-        self.snpeff_idx = prefix + '_snpeff.vcf.idx'
-        self.snpeff_vcf_bgz = prefix + '_snpeff.vcf.gz'
-        self.snpeff_vcf_tbi = prefix + '_snpeff.vcf.gz.tbi'
-        self.snpeff_stats = prefix + '_snpeff_summary.html'
-        self.annotated_vcf = prefix + '_annotated.vcf.gz'
-        self.annotated_tbi = prefix + '_annotated.vcf.gz.tbi'
+        self.multi_sample_tbi = prefix + '_multi_sample.vcf.gz.tbi'
         self.recalibration_indel = prefix + '_recalibration_indel.recal'
         self.recalibration_snp = prefix + '_recalibration_snp.recal'
         self.tranches_indel = prefix + '_recalibration_indel.tranches'
@@ -392,16 +377,38 @@ class FilePathProcessCohort(FilePath):
         return
 
 
-class FilePathAnnotateCohort(FilePath):
+class FilePathAnnotateSnpEff(FilePath):
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.variant_calling.FilePathAnnotateCohort} object
+        """Initialise a C{bsf.analyses.variant_calling.FilePathAnnotateSnpEff} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
         @rtype
         """
-        super(FilePathAnnotateCohort, self).__init__(prefix=prefix)
+        super(FilePathAnnotateSnpEff, self).__init__(prefix=prefix)
+
+        self.snpeff_vcf = prefix + '_snpeff.vcf'
+        self.snpeff_vcf_bgz = prefix + '_snpeff.vcf.gz'
+        self.snpeff_vcf_tbi = prefix + '_snpeff.vcf.gz.tbi'
+        self.snpeff_genes = prefix + '_snpeff_summary.genes.txt'
+        self.snpeff_stats = prefix + '_snpeff_summary.html'
+        self.annotated_vcf = prefix + '_annotated.vcf.gz'
+        self.annotated_tbi = prefix + '_annotated.vcf.gz.tbi'
+
+        return
+
+
+class FilePathAnnotateVEP(FilePath):
+    def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathAnnotateVEP} object
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
+        super(FilePathAnnotateVEP, self).__init__(prefix=prefix)
 
         self.vep_statistics = prefix + '_vep_statistics.html'
         # Complete VEP set raw
@@ -412,9 +419,10 @@ class FilePathAnnotateCohort(FilePath):
         self.vep_filtered_raw_vcf = prefix + '_vep_filtered_raw.vcf'
         self.vep_filtered_raw_vcf_bgz = prefix + '_vep_filtered_raw.vcf.gz'
         self.vep_filtered_raw_vcf_tbi = prefix + '_vep_filtered_raw.vcf.gz.tbi'
-        # VCF.Filter-converted set
+        # Complete VEP set VCF.Filter-converted
         self.vep_complete_vcf_bgz = prefix + '_vep_complete.vcf.gz'
         self.vep_complete_vcf_tbi = prefix + '_vep_complete.vcf.gz.tbi'
+        # Filtered VEP set VCF.Filter-converted
         self.vep_filtered_vcf_bgz = prefix + '_vep_filtered.vcf.gz'
         self.vep_filtered_vcf_tbi = prefix + '_vep_filtered.vcf.gz.tbi'
 
@@ -433,7 +441,7 @@ class FilePathSplitCohort(FilePath):
         super(FilePathSplitCohort, self).__init__(prefix=prefix)
 
         self.sample_vcf = prefix + '.vcf.gz'
-        self.sample_idx = prefix + '.vcf.gz.tbi'
+        self.sample_tbi = prefix + '.vcf.gz.tbi'
         self.sample_tsv = prefix + '.tsv'
 
         return
@@ -504,16 +512,7 @@ class FilePathSomatic(FilePath):
         super(FilePathSomatic, self).__init__(prefix=prefix)
 
         self.somatic_vcf = prefix + '_somatic.vcf.gz'
-        self.somatic_idx = prefix + '_somatic.vcf.gz.tbi'
-        self.snpeff_vcf = prefix + '_snpeff.vcf'
-        self.snpeff_idx = prefix + '_snpeff.vcf.idx'
-        self.snpeff_vcf_bgz = prefix + '_snpeff.vcf.gz'
-        self.snpeff_vcf_tbi = prefix + '_snpeff.vcf.gz.tbi'
-        self.snpeff_stats = prefix + '_snpeff_summary.html'
-        self.snpeff_genes = prefix + '_snpeff_summary.genes.txt'
-        self.annotated_vcf = prefix + '_annotated.vcf.gz'
-        self.annotated_tbi = prefix + '_annotated.vcf.gz.tbi'
-        self.annotated_tsv = prefix + '_annotated.tsv'
+        self.somatic_tbi = prefix + '_somatic.vcf.gz.tbi'
 
         return
 
@@ -529,8 +528,24 @@ class FilePathSomaticScatterGather(FilePath):
         """
         super(FilePathSomaticScatterGather, self).__init__(prefix=prefix)
 
-        self.partial_vcf = prefix + '_somatic.vcf.gz'
-        self.partial_tbi = prefix + '_somatic.vcf.gz.tbi'
+        self.somatic_vcf = prefix + '_somatic.vcf.gz'
+        self.somatic_tbi = prefix + '_somatic.vcf.gz.tbi'
+
+        return
+
+
+class FilePathSplitSomatic(FilePath):
+    def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.variant_calling.FilePathSplitSomatic} object
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype:
+        """
+        super(FilePathSplitSomatic, self).__init__(prefix=prefix)
+
+        self.comparison_tsv = prefix + '.tsv'
 
         return
 
@@ -607,14 +622,26 @@ class VariantCallingGATK(Analysis):
     @type stage_name_diagnose_sample: str
     @cvar stage_name_process_cohort: C{bsf.Stage.name} for the cohort processing stage
     @type stage_name_process_cohort: str
-    @cvar stage_name_annotate_cohort: C{bsf.Stage.name} for the cohort annotation stage
-    @type stage_name_annotate_cohort: str
-    @cvar stage_name_split_cohort: C{bsf.Stage.name} for the cohort splitting stage
-    @type stage_name_split_cohort: str
+    @cvar stage_name_annotate_cohort_snpeff: C{bsf.Stage.name} for the snpEff cohort annotation stage
+    @type stage_name_annotate_cohort_snpeff: str
+    @cvar stage_name_annotate_cohort_vep: C{bsf.Stage.name} for the Ensembl VEP cohort annotation stage
+    @type stage_name_annotate_cohort_vep: str
+    @cvar stage_name_split_cohort_snpeff: C{bsf.Stage.name} for the snpEff cohort splitting stage
+    @type stage_name_split_cohort_snpeff: str
+    @cvar stage_name_split_cohort_vep: C{bsf.Stage.name} for the Ensembl VEP cohort splitting stage
+    @type stage_name_split_cohort_vep: str
     @cvar stage_name_summary: C{bsf.Stage.name} for the summary stage
     @type stage_name_summary: str
     @cvar stage_name_somatic: C{bsf.Stage.name} for the somatic stage
     @type stage_name_somatic: str
+    @cvar stage_name_annotate_somatic_snpeff: C{bsf.Stage.name} for the snpEff somatic annotation stage
+    @type stage_name_annotate_somatic_snpeff: str
+    @cvar stage_name_annotate_somatic_vep: C{bsf.Stage.name} for the Ensembl VEP somatic annotation stage
+    @type stage_name_annotate_somatic_vep: str
+    @cvar stage_name_split_somatic_snpeff: C{bsf.Stage.name} for the snpEff somatic splitting stage
+    @type stage_name_split_somatic_snpeff: str
+    @cvar stage_name_split_somatic_vep: C{bsf.Stage.name} for the Ensembl VEP somatic splitting stage
+    @type stage_name_split_somatic_vep: str
     @ivar replicate_grouping: Group individual C{bsf.ngs.PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool
     @ivar bwa_genome_db: Genome sequence file path with BWA index
@@ -689,6 +716,12 @@ class VariantCallingGATK(Analysis):
     @type snpeff_genome_version: str
     @ivar genome_annotation_gtf: Genome annotation Gene Transfer Format (GTF) file path
     @type genome_annotation_gtf: str | unicode
+    @ivar directory_vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
+    @type directory_vep_cache: str | unicode
+    @ivar directory_vep_plugins: Ensembl Variant Effect Predictor (VEP) plugins directory
+    @type directory_vep_plugins: str | unicode
+    @ivar directory_vep_src: Ensembl Variant Effect Predictor (VEP) source directory
+    @type directory_vep_src: str | unicode
     @ivar classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
     @type classpath_gatk: str | unicode
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -708,10 +741,16 @@ class VariantCallingGATK(Analysis):
     stage_name_diagnose_sample = '_'.join((prefix, 'diagnose_sample'))
     stage_name_merge_cohort = '_'.join((prefix, 'merge_cohort'))
     stage_name_process_cohort = '_'.join((prefix, 'process_cohort'))
-    stage_name_annotate_cohort = '_'.join((prefix, 'annotate_cohort'))
-    stage_name_split_cohort = '_'.join((prefix, 'split_cohort'))
+    stage_name_annotate_cohort_snpeff = '_'.join((prefix, 'annotate_cohort_snpeff'))
+    stage_name_annotate_cohort_vep = '_'.join((prefix, 'annotate_cohort_vep'))
+    stage_name_split_cohort_snpeff = '_'.join((prefix, 'split_cohort_snpeff'))
+    stage_name_split_cohort_vep = '_'.join((prefix, 'split_cohort_vep'))
     stage_name_summary = '_'.join((prefix, 'summary'))
     stage_name_somatic = '_'.join((prefix, 'somatic'))
+    stage_name_annotate_somatic_snpeff = '_'.join((prefix, 'annotate_somatic_snpeff'))
+    stage_name_annotate_somatic_vep = '_'.join((prefix, 'annotate_somatic_vep'))
+    stage_name_split_somatic_snpeff = '_'.join((prefix, 'split_somatic_snpeff'))
+    stage_name_split_somatic_vep = '_'.join((prefix, 'split_somatic_vep'))
 
     def __init__(
             self,
@@ -763,6 +802,9 @@ class VariantCallingGATK(Analysis):
             gatk_bundle_version=None,
             snpeff_genome_version=None,
             genome_annotation_gtf=None,
+            directory_vep_cache=None,
+            directory_vep_plugins=None,
+            directory_vep_src=None,
             classpath_gatk=None,
             classpath_picard=None,
             classpath_snpeff=None,
@@ -873,6 +915,12 @@ class VariantCallingGATK(Analysis):
         @type snpeff_genome_version: str
         @param genome_annotation_gtf: Genome annotation Gene Transfer Format (GTF) file path
         @type genome_annotation_gtf: str | unicode
+        @param directory_vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
+        @type directory_vep_cache: str | unicode
+        @param directory_vep_plugins: Ensembl Variant Effect Predictor (VEP) plugins directory
+        @type directory_vep_plugins: str | unicode
+        @param directory_vep_src: Ensembl Variant Effect Predictor (VEP) source directory
+        @type directory_vep_src: str | unicode
         @param classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
         @type classpath_gatk: str | unicode
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -1071,6 +1119,21 @@ class VariantCallingGATK(Analysis):
             self.genome_annotation_gtf = str()
         else:
             self.genome_annotation_gtf = genome_annotation_gtf
+
+        if directory_vep_cache is None:
+            self.directory_vep_cache = str()
+        else:
+            self.directory_vep_cache = directory_vep_cache
+
+        if directory_vep_plugins is None:
+            self.directory_vep_plugins = str()
+        else:
+            self.directory_vep_plugins = directory_vep_plugins
+
+        if directory_vep_src is None:
+            self.directory_vep_src = str()
+        else:
+            self.directory_vep_src = directory_vep_src
 
         if classpath_gatk is None:
             self.classpath_gatk = str()
@@ -1458,15 +1521,15 @@ class VariantCallingGATK(Analysis):
 
         # Get the number of tiles for variant_calling_somatic.
 
-        option = 'number_of_tiles_cohort'
+        option = 'number_of_tiles_somatic'
         if config_parser.has_option(section=section, option=option):
-            self.number_of_tiles_cohort = config_parser.getint(section=section, option=option)
+            self.number_of_tiles_somatic = config_parser.getint(section=section, option=option)
 
         # Get the number of chunks for variant_calling_somatic.
 
-        option = 'number_of_chunks_cohort'
+        option = 'number_of_chunks_somatic'
         if config_parser.has_option(section=section, option=option):
-            self.number_of_chunks_cohort = config_parser.getint(section=section, option=option)
+            self.number_of_chunks_somatic = config_parser.getint(section=section, option=option)
 
         # Get the down-sample to fraction information.
 
@@ -1491,6 +1554,18 @@ class VariantCallingGATK(Analysis):
         option = 'genome_annotation_gtf'
         if config_parser.has_option(section=section, option=option):
             self.genome_annotation_gtf = config_parser.get(section=section, option=option)
+
+        option = 'directory_vep_cache'
+        if config_parser.has_option(section=section, option=option):
+            self.directory_vep_cache = config_parser.get(section=section, option=option)
+
+        option = 'directory_vep_plugins'
+        if config_parser.has_option(section=section, option=option):
+            self.directory_vep_plugins = config_parser.get(section=section, option=option)
+
+        option = 'directory_vep_src'
+        if config_parser.has_option(section=section, option=option):
+            self.directory_vep_src = config_parser.get(section=section, option=option)
 
         # Get the Genome Analysis Tool Kit (GATK) Java Archive (JAR) class path directory.
 
@@ -1587,6 +1662,109 @@ class VariantCallingGATK(Analysis):
         @rtype:
         """
 
+        variants_to_table_fields = {
+            'fixed': ('CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER'),
+            'haplotype_caller': {
+                'info': ('AC', 'AF', 'AN', 'DB', 'DP', 'QD', 'VQSLOD', 'culprit'),
+                'format': (
+                    'AD', 'DP', 'GQ', 'GT', 'MIN_DP', 'PGT', 'PID', 'PL', 'RGQ', 'SB',
+                ),
+            },
+            'mutect2': {
+                'info': ('DB', 'MAX_ED', 'MIN_ED', 'NLOD', 'PON', 'RPA', 'RU', 'STR', 'TLOD'),
+                'format': (
+                    'AD', 'AF', 'ALT_F1R2', 'ALT_F2R1', 'DP', 'FOXOG', 'GQ', 'GT', 'PGT', 'PID', 'PL',
+                    'QSS', 'REF_F1R2', 'REF_F2R1',
+                ),
+            },
+            'snpeff': (
+                'SNPEFF_EFFECT',
+                'SNPEFF_IMPACT',
+                'SNPEFF_FUNCTIONAL_CLASS',
+                'SNPEFF_CODON_CHANGE',
+                'SNPEFF_AMINO_ACID_CHANGE',
+                'SNPEFF_GENE_NAME',
+                'SNPEFF_GENE_BIOTYPE',
+                'SNPEFF_TRANSCRIPT_ID',
+                'SNPEFF_EXON_ID',
+            ),
+            'vep': (
+                'VEP_AA_AF',
+                'VEP_AF',
+                'VEP_AFR_AF',
+                'VEP_ALLELE_NUM',
+                'VEP_AMR_AF',
+                'VEP_APPRIS',
+                'VEP_Allele',
+                'VEP_Amino_acids',
+                'VEP_BIOTYPE',
+                'VEP_CADD_PHRED',
+                'VEP_CADD_RAW',
+                'VEP_CANONICAL',
+                'VEP_CCDS',
+                'VEP_CDS_position',
+                'VEP_CLIN_SIG',
+                'VEP_Codons',
+                'VEP_Consequence',
+                'VEP_DISTANCE',
+                'VEP_DOMAINS',
+                'VEP_EAS_AF',
+                'VEP_EA_AF',
+                'VEP_ENSP',
+                'VEP_EUR_AF',
+                'VEP_EXON_AFFECTED',
+                'VEP_EXON_TOTAL',
+                'VEP_ExAC_AF',
+                'VEP_ExAC_AFR_AF',
+                'VEP_ExAC_AMR_AF',
+                'VEP_ExAC_Adj_AF',
+                'VEP_ExAC_EAS_AF',
+                'VEP_ExAC_FIN_AF',
+                'VEP_ExAC_NFE_AF',
+                'VEP_ExAC_OTH_AF',
+                'VEP_ExAC_SAS_AF',
+                'VEP_Existing_variation',
+                'VEP_FLAGS',
+                'VEP_Feature',
+                'VEP_Feature_type',
+                'VEP_GENE_PHENO',
+                'VEP_Gene',
+                'VEP_HGNC_ID',
+                'VEP_HGVS_OFFSET',
+                'VEP_HGVSc',
+                'VEP_HGVSp',
+                'VEP_HIGH_INF_POS',
+                'VEP_IMPACT',
+                'VEP_INTRON_AFFECTED',
+                'VEP_INTRON_TOTAL',
+                'VEP_MAX_AF',
+                'VEP_MAX_AF_POPS',
+                'VEP_MOTIF_NAME',
+                'VEP_MOTIF_POS',
+                'VEP_MOTIF_SCORE_CHANGE',
+                'VEP_PHENO',
+                'VEP_PICK',
+                'VEP_PUBMED',
+                'VEP_PolyPhen',
+                'VEP_Protein_position',
+                'VEP_SAS_AF',
+                'VEP_SIFT',
+                'VEP_SOMATIC',
+                'VEP_STRAND',
+                'VEP_SWISSPROT',
+                'VEP_SYMBOL',
+                'VEP_SYMBOL_SOURCE',
+                'VEP_TREMBL',
+                'VEP_TSL',
+                'VEP_UNIPARC',
+                'VEP_VARIANT_CLASS',
+                'VEP_cDNA_position_end',
+                'VEP_cDNA_position_start',
+                'VQSLOD',
+                'culprit',
+            ),
+        }
+
         def run_create_genome_tiles(tiles=1, width=0):
             """Private function to create genomic tiles for scattering and a partitioned list of indices for gathering.
 
@@ -1668,8 +1846,8 @@ class VariantCallingGATK(Analysis):
             @param analysis_stage: C{Analysis} C{Stage}
             @type analysis_stage: bsf.Stage
             @param cohort_runnable_dict: Python C{dict} of Python C{str} key and Python C{list} of
-                C{Runnable} object value data
-            @type cohort_runnable_dict: dict[str, list[Runnable]]
+                C{Runnable}, Python C{str} of Python C{unicode} object value data
+            @type cohort_runnable_dict: dict[str, list[Runnable | str | unicode]]
             @param cohort_name: Cohort name to select a Python list of C{Runnable} objects from the
                 I{cohort_runnable_dict} Python C{dict}
             @type cohort_name: str
@@ -1679,34 +1857,36 @@ class VariantCallingGATK(Analysis):
 
             # Private variables are prefixed with an underscore to avoid clashes with variables in the run() method.
 
-            prefix_merge_cohort = '_'.join((analysis_stage.name, cohort_name))
+            prefix_merge_cohort_final = '_'.join((analysis_stage.name, cohort_name))
 
-            _file_path_merge_cohort = FilePathMergeCohort(prefix=prefix_merge_cohort)
+            file_path_merge_cohort_final = FilePathMergeCohort(prefix=prefix_merge_cohort_final)
 
-            # If the cohort index file already exists, create the Runnable objects, but do not submit their
+            # If the final TBI index file already exists, create the Runnable objects, but do not submit their
             # corresponding Executable objects.
 
-            if os.path.exists(os.path.join(self.genome_directory, _file_path_merge_cohort.combined_gvcf_tbi)):
-                _submit_runnable = False
+            if os.path.exists(os.path.join(self.genome_directory, file_path_merge_cohort_final.combined_gvcf_tbi)):
+                final_index_exists = False
             else:
-                _submit_runnable = True
+                final_index_exists = True
 
             # The cohort_object_list contains either Runnable objects from the process_sample stage or
             # Python str | unicode (GVCF file path) objects for accessory cohorts to be merged.
             cohort_object_list = cohort_runnable_dict[cohort_name]
 
-            vc_runnable_merge_cohort_scatter_list = list()
-            """ @type vc_runnable_merge_cohort_scatter_list: list[Runnable] """
+            # Scatter
+            runnable_scatter = None
+            """ @type runnable_scatter: Runnable """
+            runnable_scatter_list = list()
+            """ @type runnable_scatter_list: list[Runnable] """
 
-            # Scatter by the number of genomic tiles.
-            # Create a Runnable and Executable for each GATK CombineGVCFs from its Sample objects.
-            runnable_merge_cohort_scatter = None
-            for _tile_index in range(0, len(self._tile_region_cohort_list)):
-                prefix_merge_cohort_scatter = '_'.join((analysis_stage.name, cohort_name, 'scatter', str(_tile_index)))
+            tile_index_list = range(0, len(self._tile_region_cohort_list))
+
+            for tile_index in tile_index_list:
+                prefix_merge_cohort_scatter = '_'.join((analysis_stage.name, cohort_name, 'scatter', str(tile_index)))
 
                 file_path_merge_cohort_scatter = FilePathMergeCohort(prefix=prefix_merge_cohort_scatter)
 
-                runnable_merge_cohort_scatter = self.add_runnable(
+                runnable_scatter = self.add_runnable(
                     runnable=Runnable(
                         name=prefix_merge_cohort_scatter,
                         code_module='bsf.runnables.generic',
@@ -1715,44 +1895,47 @@ class VariantCallingGATK(Analysis):
                         cache_path_dict=self._cache_path_dict,
                         file_path_object=file_path_merge_cohort_scatter,
                         debug=self.debug))
-                executable_merge_cohort_scatter = self.set_stage_runnable(
+                executable_scatter = self.set_stage_runnable(
                     stage=analysis_stage,
-                    runnable=runnable_merge_cohort_scatter)
-                # Submit the Executable only, if the cohort index file does not exist.
-                executable_merge_cohort_scatter.submit = _submit_runnable
+                    runnable=runnable_scatter)
+                # Submit the Executable only, if the final TBI index file does not exist,
+                # but do not override the state set by the Analysis.set_stage_runnable() method.
+                if not final_index_exists:
+                    executable_scatter.submit = False
                 for cohort_component in cohort_object_list:
                     # Set dependencies on preceding Runnable.name or Executable.name objects.
                     # Set them only for Runnable objects, but not for Python str | unicode (file path) objects.
                     if isinstance(cohort_component, Runnable):
-                        executable_merge_cohort_scatter.dependencies.append(cohort_component.name)
+                        executable_scatter.dependencies.append(cohort_component.name)
 
-                vc_runnable_merge_cohort_scatter_list.append(runnable_merge_cohort_scatter)
+                runnable_scatter_list.append(runnable_scatter)
 
-                reference_merge_cohort_scatter = runnable_merge_cohort_scatter.get_absolute_cache_file_path(
-                    file_path=self.bwa_genome_db)
+                reference_scatter = runnable_scatter.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
 
-                _runnable_step = runnable_merge_cohort_scatter.add_runnable_step(
+                # Run GATK CombineGVCFs
+
+                _runnable_step = runnable_scatter.add_runnable_step(
                     runnable_step=RunnableStepGATK(
                         name='merge_cohort_gatk_combine_gvcfs',
-                        java_temporary_path=runnable_merge_cohort_scatter.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_scatter.get_relative_temporary_directory_path,
                         java_heap_maximum='Xmx4G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type _runnable_step: RunnableStepGATK """
                 _runnable_step.add_gatk_option(key='analysis_type', value='CombineGVCFs')
-                _runnable_step.add_gatk_option(key='reference_sequence', value=reference_merge_cohort_scatter)
+                _runnable_step.add_gatk_option(key='reference_sequence', value=reference_scatter)
                 for _interval in self.exclude_intervals_list:
                     _runnable_step.add_gatk_option(key='excludeIntervals', value=_interval, override=True)
                 # for _interval in self.include_intervals_list:
                 #     _runnable_step.add_gatk_option(key='intervals', value=_interval, override=True)
                 # if self.interval_padding:
                 #     _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-                for _region_tuple in self._tile_region_cohort_list[_tile_index]:
+                for region_tuple in self._tile_region_cohort_list[tile_index]:
                     # The list of tiles is initialised to an empty tile to trigger at least one process.
                     # Do not assign an interval in such cases.
-                    if _region_tuple[0]:
+                    if region_tuple[0]:
                         _runnable_step.add_gatk_option(
                             key='intervals',
-                            value='{:s}:{:d}-{:d}'.format(_region_tuple[0], _region_tuple[1], _region_tuple[2]),
+                            value='{:s}:{:d}-{:d}'.format(region_tuple[0], region_tuple[1], region_tuple[2]),
                             override=True)
                 for cohort_component in cohort_object_list:
                     if isinstance(cohort_component, Runnable):
@@ -1772,145 +1955,864 @@ class VariantCallingGATK(Analysis):
                         raise Exception('Unexpected object type on merge_cohort list.')
                 _runnable_step.add_gatk_option(
                     key='out',
-                    value=file_path_merge_cohort_scatter.partial_gvcf_vcf)
+                    value=file_path_merge_cohort_scatter.combined_gvcf_vcf)
 
-            # If there is only one tile, no need to gather, just rename file paths and return the (scatter) Runnable.
+            # Gather
+            runnable_gather = None
+            """ @type runnable_gather: Runnable """
 
             if len(self._tile_region_cohort_list) == 1:
-                file_path_merge_cohort_scatter = runnable_merge_cohort_scatter.file_path_object
-                """ @type file_path_merge_cohort_scatter: FilePathMergeCohort """
-                # Add the final, cohort-specific keys to the FilePathMergeCohort for the final (scatter) Runnable.
-                file_path_merge_cohort_scatter.combined_gvcf_vcf = _file_path_merge_cohort.combined_gvcf_vcf
-                file_path_merge_cohort_scatter.combined_gvcf_tbi = _file_path_merge_cohort.combined_gvcf_tbi
-
-                runnable_merge_cohort_scatter.add_runnable_step(
-                    runnable_step=RunnableStepMove(
-                        name='merge_cohort_gather_move_vcf',
-                        source_path=file_path_merge_cohort_scatter.partial_gvcf_vcf,
-                        target_path=file_path_merge_cohort_scatter.combined_gvcf_vcf))
-
-                runnable_merge_cohort_scatter.add_runnable_step(
-                    runnable_step=RunnableStepMove(
-                        name='merge_cohort_gather_move_tbi',
-                        source_path=file_path_merge_cohort_scatter.partial_gvcf_tbi,
-                        target_path=file_path_merge_cohort_scatter.combined_gvcf_tbi))
-
-                return runnable_merge_cohort_scatter
-
-            # Second, gather by the number of chunks on the partitioned genome tile index list.
-
-            # Second, Merge chunks hierarchically.
-            # Initialise a list of Runnable objects and indices for the hierarchical merge.
-            vc_runnable_merge_cohort_gather_list = vc_runnable_merge_cohort_scatter_list
-            vc_merge_cohort_gather_index_list = range(0, len(self._tile_region_cohort_list))
-            # Global variable to keep and return the last Runnable.
-            runnable_merge_cohort_gather = None
-            """ @type runnable_merge_cohort_gather: Runnable """
-            _level = 0
-            while len(vc_merge_cohort_gather_index_list) > 1:
-                _temporary_gather_runnable_list = list()
-                """ @type _temporary_gather_runnable_list: list[Runnable] """
-                _temporary_gather_index_list = list()
-                """ @type _temporary_gather_index_list: list[int] """
-                # Partition the index list into chunks of given size.
-                _partition_list = [vc_merge_cohort_gather_index_list[_offset:_offset + self.number_of_chunks_cohort]
-                                   for _offset in range(0,
-                                                        len(vc_merge_cohort_gather_index_list),
-                                                        self.number_of_chunks_cohort)]
-
-                for _partition_index in range(0, len(_partition_list)):
-                    _chunk_index_list = _partition_list[_partition_index]
-                    # The file prefix includes the level and partition index.
-                    prefix_merge_cohort_gather = '_'.join(
-                        (analysis_stage.name, cohort_name, 'gather', str(_level), str(_partition_index)))
-
-                    file_path_merge_cohort_gather = FilePathMergeCohort(prefix=prefix_merge_cohort_gather)
-
-                    runnable_merge_cohort_gather = self.add_runnable(
-                        runnable=Runnable(
-                            name=prefix_merge_cohort_gather,
-                            code_module='bsf.runnables.generic',
-                            working_directory=self.genome_directory,
-                            cache_directory=self.cache_directory,
-                            cache_path_dict=self._cache_path_dict,
-                            file_path_object=file_path_merge_cohort_gather,
-                            debug=self.debug))
-                    executable_merge_cohort_gather = self.set_stage_runnable(
-                        stage=analysis_stage,
-                        runnable=runnable_merge_cohort_gather)
-                    # Submit the Executable only, if the cohort index file does not exist.
-                    executable_merge_cohort_gather.submit = _submit_runnable
-                    # Dependencies on scatter processes are set based on genome tile indices below.
-                    _temporary_gather_runnable_list.append(runnable_merge_cohort_gather)
-                    _temporary_gather_index_list.append(_partition_index)
-
-                    reference_merge_cohort_gather = runnable_merge_cohort_gather.get_absolute_cache_file_path(
-                        file_path=self.bwa_genome_db)
-
-                    # GATK CatVariants bypasses the GATK engine and thus requires a completely different command line.
-                    _runnable_step = runnable_merge_cohort_gather.add_runnable_step(
-                        runnable_step=RunnableStepJava(
-                            name='merge_cohort_gatk_cat_variants',
-                            sub_command=Command(program='org.broadinstitute.gatk.tools.CatVariants'),
-                            java_temporary_path=runnable_merge_cohort_gather.get_relative_temporary_directory_path,
-                            java_heap_maximum='Xmx4G'))
-                    """ @type _runnable_step: RunnableStepJava """
-                    _runnable_step.add_option_short(
-                        key='classpath',
-                        value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
-                    _sub_command = _runnable_step.sub_command
-                    # Add the 'reference' not 'reference_sequence' option.
-                    _sub_command.add_option_long(
-                        key='reference',
-                        value=reference_merge_cohort_gather)
-                    _sub_command.add_option_long(
-                        key='outputFile',
-                        value=file_path_merge_cohort_gather.partial_gvcf_vcf)
-                    _sub_command.add_switch_long(key='assumeSorted')
-                    # Finally, process per chunk index.
-                    for _chunk_index in _chunk_index_list:
-                        _runnable_object = vc_runnable_merge_cohort_gather_list[_chunk_index]
-                        _file_path_object = _runnable_object.file_path_object
-                        """ @type _file_path_object: FilePathMergeCohort """
-                        # Set GATK option variant
-                        _sub_command.add_option_long(
-                            key='variant',
-                            value=_file_path_object.partial_gvcf_vcf,
-                            override=True)
-                        # Delete the *.g.vcf.gz file.
-                        _runnable_step.obsolete_file_path_list.append(_file_path_object.partial_gvcf_vcf)
-                        # Delete the *.g.vcf.gz.tbi file.
-                        _runnable_step.obsolete_file_path_list.append(_file_path_object.partial_gvcf_tbi)
-                        # Set dependencies on preceding Runnable.name or Executable.name objects.
-                        # Depend on the Runnable.name of the corresponding Runnable of the scattering above.
-                        executable_merge_cohort_gather.dependencies.append(_runnable_object.name)
-
-                # Set the temporary index list as the new list and increment the merge level.
-                vc_runnable_merge_cohort_gather_list = _temporary_gather_runnable_list
-                vc_merge_cohort_gather_index_list = _temporary_gather_index_list
-                _level += 1
+                # If there is only one tile, no need to gather.
+                # Assign the sole scatter Runnable to the sole gather Runnable.
+                runnable_gather = runnable_scatter
             else:
-                # For the last instance, additionally rename the final file.
-                file_path_merge_cohort_gather = runnable_merge_cohort_gather.file_path_object
-                """ @type file_path_merge_cohort_gather: FilePathMergeCohort """
+                # Gather by hierarchically merging by the number of chunks on the partitioned genome tile index list.
+                # Initialise a list of Runnable objects and indices for the hierarchical merge.
+                runnable_gather_list = runnable_scatter_list
+                gather_level = 0
+                while len(tile_index_list) > 1:
+                    temporary_runnable_gather_list = list()
+                    """ @type temporary_runnable_gather_list: list[Runnable] """
+                    temporary_tile_index_list = list()
+                    """ @type temporary_tile_index_list: list[int] """
+                    # Partition the index list into chunks of given size.
+                    partition_list = [tile_index_list[offset:offset + self.number_of_chunks_cohort]
+                                      for offset in range(0, len(tile_index_list), self.number_of_chunks_cohort)]
 
-                # Add cohort-specific keys to the file path dictionary.
-                file_path_merge_cohort_gather.combined_gvcf_vcf = _file_path_merge_cohort.combined_gvcf_vcf
-                file_path_merge_cohort_gather.combined_gvcf_tbi = _file_path_merge_cohort.combined_gvcf_tbi
+                    for partition_index in range(0, len(partition_list)):
+                        chunk_index_list = partition_list[partition_index]
+                        # The file prefix includes the level and partition index.
+                        prefix_merge_cohort_gather = '_'.join((
+                            analysis_stage.name,
+                            cohort_name,
+                            'gather',
+                            str(gather_level),
+                            str(partition_index)))
 
-                runnable_merge_cohort_gather.add_runnable_step(
-                    runnable_step=RunnableStepMove(
-                        name='merge_cohort_gather_move_vcf',
-                        source_path=file_path_merge_cohort_gather.partial_gvcf_vcf,
-                        target_path=file_path_merge_cohort_gather.combined_gvcf_vcf))
+                        file_path_merge_cohort_gather = FilePathMergeCohort(prefix=prefix_merge_cohort_gather)
 
-                runnable_merge_cohort_gather.add_runnable_step(
-                    runnable_step=RunnableStepMove(
-                        name='merge_cohort_gather_move_tbi',
-                        source_path=file_path_merge_cohort_gather.partial_gvcf_tbi,
-                        target_path=file_path_merge_cohort_gather.combined_gvcf_tbi))
+                        runnable_gather = self.add_runnable(
+                            runnable=Runnable(
+                                name=prefix_merge_cohort_gather,
+                                code_module='bsf.runnables.generic',
+                                working_directory=self.genome_directory,
+                                cache_directory=self.cache_directory,
+                                cache_path_dict=self._cache_path_dict,
+                                file_path_object=file_path_merge_cohort_gather,
+                                debug=self.debug))
+                        executable_gather = self.set_stage_runnable(
+                            stage=analysis_stage,
+                            runnable=runnable_gather)
+                        # Submit the Executable only, if the final TBI index file does not exist,
+                        # but do not override the state set by the Analysis.set_stage_runnable() method.
+                        if not final_index_exists:
+                            executable_gather.submit = False
+                        # Dependencies on scatter processes are set based on genome tile indices below.
+                        temporary_runnable_gather_list.append(runnable_gather)
+                        temporary_tile_index_list.append(partition_index)
 
-            return runnable_merge_cohort_gather
+                        reference_gather = runnable_gather.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
+
+                        # GATK CatVariants bypasses the GATK engine and thus requires a completely different
+                        # command line.
+                        _runnable_step = runnable_gather.add_runnable_step(
+                            runnable_step=RunnableStepJava(
+                                name='merge_cohort_gatk_cat_variants',
+                                sub_command=Command(program='org.broadinstitute.gatk.tools.CatVariants'),
+                                java_temporary_path=runnable_gather.get_relative_temporary_directory_path,
+                                java_heap_maximum='Xmx4G'))
+                        """ @type _runnable_step: RunnableStepJava """
+                        _runnable_step.add_option_short(
+                            key='classpath',
+                            value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+                        _sub_command = _runnable_step.sub_command
+                        # Add the 'reference' not 'reference_sequence' option.
+                        _sub_command.add_option_long(key='reference', value=reference_gather)
+                        _sub_command.add_option_long(
+                            key='outputFile',
+                            value=file_path_merge_cohort_gather.combined_gvcf_vcf)
+                        _sub_command.add_switch_long(key='assumeSorted')
+                        # Finally, process per chunk index.
+                        for chunk_index in chunk_index_list:
+                            _runnable_object = runnable_gather_list[chunk_index]
+                            _file_path_object = _runnable_object.file_path_object
+                            """ @type _file_path_object: FilePathMergeCohort """
+                            # Set GATK option variant
+                            _sub_command.add_option_long(
+                                key='variant',
+                                value=_file_path_object.combined_gvcf_vcf,
+                                override=True)
+                            # Delete the *.g.vcf.gz file.
+                            _runnable_step.obsolete_file_path_list.append(_file_path_object.combined_gvcf_vcf)
+                            # Delete the *.g.vcf.gz.tbi file.
+                            _runnable_step.obsolete_file_path_list.append(_file_path_object.combined_gvcf_tbi)
+                            # Set dependencies on preceding Runnable.name or Executable.name objects.
+                            # Depend on the Runnable.name of the corresponding Runnable of the scattering above.
+                            executable_gather.dependencies.append(_runnable_object.name)
+
+                    # Set the temporary index list as the new list and increment the merge level.
+                    runnable_gather_list = temporary_runnable_gather_list
+                    tile_index_list = temporary_tile_index_list
+                    gather_level += 1
+
+            # For the last gather Runnable, move (rename) file paths to the top-level prefix and
+            # adjust the FilePath object accordingly.
+            file_path_merge_cohort_gather = runnable_gather.file_path_object
+            """ @type file_path_merge_cohort_gather: FilePathMergeCohort """
+
+            runnable_gather.add_runnable_step(
+                runnable_step=RunnableStepMove(
+                    name='merge_cohort_gather_move_vcf',
+                    source_path=file_path_merge_cohort_gather.combined_gvcf_vcf,
+                    target_path=file_path_merge_cohort_final.combined_gvcf_vcf))
+
+            runnable_gather.add_runnable_step(
+                runnable_step=RunnableStepMove(
+                    name='merge_cohort_gather_move_tbi',
+                    source_path=file_path_merge_cohort_gather.combined_gvcf_tbi,
+                    target_path=file_path_merge_cohort_final.combined_gvcf_tbi))
+
+            file_path_merge_cohort_gather.combined_gvcf_vcf = file_path_merge_cohort_final.combined_gvcf_vcf
+            file_path_merge_cohort_gather.combined_gvcf_tbi = file_path_merge_cohort_final.combined_gvcf_tbi
+
+            return runnable_gather
+
+        def run_genotype_cohort_scatter_gather():
+            """Private function to genotype a cohort in a scatter and gather approach.
+
+            @return: Final C{Runnable} of the gather stage
+            @rtype: Runnable
+            """
+
+            prefix_process_cohort_final = '_'.join((stage_process_cohort.name, self.cohort_name))
+
+            file_path_genotype_cohort_final = FilePathGenotypeCohort(prefix=prefix_process_cohort_final)
+
+            # If the final TBI index file already exists, create the Runnable objects, but do not submit their
+            # corresponding Executable objects.
+
+            if os.path.exists(os.path.join(self.genome_directory, file_path_genotype_cohort_final.genotyped_raw_tbi)):
+                final_index_exists = False
+            else:
+                final_index_exists = True
+
+            runnable_scatter = None
+            """ @type runnable_scatter: Runnable """
+            runnable_scatter_list = list()
+            """ @type runnable_scatter_list: list[Runnable] """
+
+            tile_index_list = range(0, len(self._tile_region_cohort_list))
+
+            for tile_index in tile_index_list:
+                prefix_process_cohort_scatter = '_'.join((
+                    stage_process_cohort.name, self.cohort_name, 'scatter', str(tile_index)))
+
+                file_path_genotype_cohort_scatter = FilePathGenotypeCohort(prefix=prefix_process_cohort_scatter)
+
+                runnable_scatter = self.add_runnable(
+                    runnable=Runnable(
+                        name=prefix_process_cohort_scatter,
+                        code_module='bsf.runnables.generic',
+                        working_directory=self.genome_directory,
+                        cache_directory=self.cache_directory,
+                        cache_path_dict=self._cache_path_dict,
+                        file_path_object=file_path_genotype_cohort_scatter,
+                        debug=self.debug))
+                executable_scatter = self.set_stage_runnable(
+                    stage=stage_process_cohort,
+                    runnable=runnable_scatter)
+                # Submit the Executable only, if the final TBI index file does not exist,
+                # but do not override the state set by the Analysis.set_stage_runnable() method.
+                if not final_index_exists:
+                    executable_scatter.submit = False
+                # Set dependencies on preceding Runnable.name or Executable.name objects.
+                executable_scatter.dependencies.append(runnable_merge_cohort.name)
+
+                runnable_scatter_list.append(runnable_scatter)
+
+                reference_scatter = runnable_scatter.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
+
+                # Run the GATK GenotypeGVCFs analysis.
+
+                _runnable_step = runnable_scatter.add_runnable_step(
+                    runnable_step=RunnableStepGATK(
+                        name='process_cohort_gatk_genotype_gvcfs_scatter',
+                        java_temporary_path=runnable_scatter.get_relative_temporary_directory_path,
+                        java_heap_maximum='Xmx12G',
+                        gatk_classpath=self.classpath_gatk))
+                """ @type _runnable_step: RunnableStepGATK """
+                _runnable_step.add_gatk_option(key='analysis_type', value='GenotypeGVCFs')
+                _runnable_step.add_gatk_option(key='reference_sequence', value=reference_scatter)
+                for _interval in self.exclude_intervals_list:
+                    _runnable_step.add_gatk_option(key='excludeIntervals', value=_interval, override=True)
+                # for _interval in self.include_intervals_list:
+                #     _runnable_step.add_gatk_option(key='intervals', value=_interval, override=True)
+                # if self.interval_padding:
+                #     _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                for region_tuple in self._tile_region_cohort_list[tile_index]:
+                    # The list of tiles is initialised to an empty tile to trigger at least one process.
+                    # Do not assign an interval in such cases.
+                    if region_tuple[0]:
+                        _runnable_step.add_gatk_option(
+                            key='intervals',
+                            value='{:s}:{:d}-{:d}'.format(region_tuple[0], region_tuple[1], region_tuple[2]),
+                            override=True)
+                if self.known_sites_discovery:
+                    _runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
+                _runnable_step.add_gatk_option(key='variant', value=file_path_merge_cohort.combined_gvcf_vcf)
+                _runnable_step.add_gatk_option(key='out', value=file_path_genotype_cohort_scatter.genotyped_raw_vcf)
+
+            # Gather
+            runnable_gather = None
+            """ @type runnable_gather: Runnable """
+
+            if len(self._tile_region_cohort_list) == 1:
+                # If there is only one tile, no need to gather.
+                # Assign the sole scatter Runnable to the sole gather Runnable.
+                runnable_gather = runnable_scatter
+            else:
+                # Gather by hierarchically merging by the number of chunks on the partitioned genome tile index list.
+                # Initialise a list of Runnable objects and indices for the hierarchical merge.
+                runnable_gather_list = runnable_scatter_list
+                gather_level = 0
+                while len(tile_index_list) > 1:
+                    temporary_runnable_gather_list = list()
+                    """ @type temporary_runnable_gather_list: list[Runnable] """
+                    temporary_tile_index_list = list()
+                    """ @type temporary_tile_index_list: list[int] """
+                    # Partition the index list into chunks of given size.
+                    partition_list = [tile_index_list[offset:offset + self.number_of_chunks_cohort]
+                                      for offset in range(0, len(tile_index_list), self.number_of_chunks_cohort)]
+
+                    for partition_index in range(0, len(partition_list)):
+                        chunk_index_list = partition_list[partition_index]
+                        # The file prefix includes the level and partition index.
+                        prefix_process_cohort_gather = '_'.join(
+                            (stage_process_cohort.name,
+                             self.cohort_name,
+                             'gather',
+                             str(gather_level),
+                             str(partition_index)))
+
+                        file_path_genotype_cohort_gather = FilePathGenotypeCohort(prefix=prefix_process_cohort_gather)
+
+                        runnable_gather = self.add_runnable(
+                            runnable=Runnable(
+                                name=prefix_process_cohort_gather,
+                                code_module='bsf.runnables.generic',
+                                working_directory=self.genome_directory,
+                                cache_directory=self.cache_directory,
+                                cache_path_dict=self._cache_path_dict,
+                                file_path_object=file_path_genotype_cohort_gather,
+                                debug=self.debug))
+                        executable_gather = self.set_stage_runnable(
+                            stage=stage_process_cohort,
+                            runnable=runnable_gather)
+                        # Submit the Executable only, if the final TBI index file does not exist,
+                        # but do not override the state set by the Analysis.set_stage_runnable() method.
+                        if not final_index_exists:
+                            executable_gather.submit = False
+                        # Dependencies on scatter processes are set based on genome tile indices below.
+                        temporary_runnable_gather_list.append(runnable_gather)
+                        temporary_tile_index_list.append(partition_index)
+
+                        reference_gather = runnable_gather.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
+
+                        # GATK CatVariants by-passes the GATK engine and thus requires a completely different
+                        # command line.
+                        _runnable_step = runnable_gather.add_runnable_step(
+                            runnable_step=RunnableStepJava(
+                                name='merge_cohort_gatk_cat_variants',
+                                sub_command=Command(program='org.broadinstitute.gatk.tools.CatVariants'),
+                                java_temporary_path=runnable_gather.get_relative_temporary_directory_path,
+                                java_heap_maximum='Xmx4G'))
+                        """ @type _runnable_step: RunnableStepJava """
+                        _runnable_step.add_option_short(
+                            key='classpath',
+                            value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+                        _sub_command = _runnable_step.sub_command
+                        # Add the 'reference' not 'reference_sequence' option.
+                        _sub_command.add_option_long(key='reference', value=reference_gather)
+                        _sub_command.add_option_long(
+                            key='outputFile',
+                            value=file_path_genotype_cohort_gather.genotyped_raw_vcf)
+                        _sub_command.add_switch_long(key='assumeSorted')
+                        # Finally, add RunnableStep options, obsolete files and Executable dependencies per chunk index.
+                        for chunk_index in chunk_index_list:
+                            runnable_object = runnable_gather_list[chunk_index]
+                            file_path_object = runnable_object.file_path_object
+                            """ @type file_path_object: FilePathGenotypeCohort """
+                            # Set GATK option variant
+                            _sub_command.add_option_long(
+                                key='variant',
+                                value=file_path_object.genotyped_raw_vcf,
+                                override=True)
+                            # Delete the *.g.vcf.gz file.
+                            _runnable_step.obsolete_file_path_list.append(file_path_object.genotyped_raw_vcf)
+                            # Delete the *.g.vcf.gz.tbi file.
+                            _runnable_step.obsolete_file_path_list.append(file_path_object.genotyped_raw_tbi)
+                            # Set dependencies on preceding Runnable.name or Executable.name objects.
+                            executable_gather.dependencies.append(runnable_object.name)
+
+                    # Set the temporary index list as the new list and increment the merge level.
+                    runnable_gather_list = temporary_runnable_gather_list
+                    tile_index_list = temporary_tile_index_list
+                    gather_level += 1
+
+            # For the last gather Runnable, move (rename) file paths to the top-level prefix and
+            # adjust the FilePath object accordingly.
+            file_path_genotype_cohort_gather = runnable_gather.file_path_object
+            """ @type file_path_genotype_cohort_gather: FilePathGenotypeCohort """
+
+            runnable_gather.add_runnable_step(
+                runnable_step=RunnableStepMove(
+                    name='process_cohort_gather_move_vcf',
+                    source_path=file_path_genotype_cohort_gather.genotyped_raw_vcf,
+                    target_path=file_path_genotype_cohort_final.genotyped_raw_vcf))
+
+            runnable_gather.add_runnable_step(
+                runnable_step=RunnableStepMove(
+                    name='process_cohort_gather_move_tbi',
+                    source_path=file_path_genotype_cohort_gather.genotyped_raw_tbi,
+                    target_path=file_path_genotype_cohort_final.genotyped_raw_tbi))
+
+            file_path_genotype_cohort_gather.genotyped_raw_vcf = file_path_genotype_cohort_final.genotyped_raw_vcf
+            file_path_genotype_cohort_gather.genotyped_raw_tbi = file_path_genotype_cohort_final.genotyped_raw_tbi
+
+            return runnable_gather
+
+        def run_somatic_scatter_gather(comparison_key):
+            """Private method to run somatic variant calling in a scatter and gather approach.
+
+            @param comparison_key: C{VariantCallingGATKComparison} name
+            @type comparison_key: str
+            @return: Final C{Runnable} of the gather stage
+            @rtype: Runnable
+            """
+
+            # Private variables are prefixed with an underscore to avoid clashes with variables in the run() method.
+
+            prefix_somatic_final = '_'.join((stage_somatic.name, comparison_key))
+
+            file_path_somatic_final = FilePathSomatic(prefix=prefix_somatic_final)
+
+            # If the final TBI index file already exists, create the Runnable objects, but do not submit their
+            # corresponding Executable objects.
+
+            if os.path.exists(os.path.join(self.genome_directory, file_path_somatic_final.somatic_tbi)):
+                final_index_exists = False
+            else:
+                final_index_exists = True
+
+            comparison = self.comparisons[comparison_key]
+            """ @type comparison: VariantCallingGATKComparison """
+
+            # Scatter
+            runnable_scatter = None
+            """ @type runnable_scatter: Runnable """
+            runnable_scatter_list = list()
+            """ @type runnable_scatter_list: list[Runnable] """
+
+            tile_index_list = range(0, len(self._tile_region_somatic_list))
+
+            for tile_index in tile_index_list:
+                prefix_somatic_scatter = '_'.join((stage_somatic.name, comparison_key, 'scatter', str(tile_index)))
+
+                file_path_somatic_scatter = FilePathSomaticScatterGather(prefix=prefix_somatic_scatter)
+
+                runnable_scatter = self.add_runnable(
+                    runnable=Runnable(
+                        name=prefix_somatic_scatter,
+                        code_module='bsf.runnables.generic',
+                        working_directory=self.genome_directory,
+                        cache_directory=self.cache_directory,
+                        cache_path_dict=self._cache_path_dict,
+                        file_path_object=file_path_somatic_scatter,
+                        debug=self.debug))
+                executable_scatter = self.set_stage_runnable(
+                    stage=stage_somatic,
+                    runnable=runnable_scatter)
+                # Submit the Executable only, if the final TBI index file does not exist,
+                # but do not override the state set by the Analysis.set_stage_runnable() method.
+                if not final_index_exists:
+                    executable_scatter.submit = False
+                # Set dependencies on preceding Runnable.name or Executable.name objects.
+                if comparison.normal_sample is not None:
+                    executable_scatter.dependencies.append(
+                        '_'.join((stage_process_sample.name, comparison.normal_sample.name)))
+                if comparison.tumor_sample is not None:
+                    executable_scatter.dependencies.append(
+                        '_'.join((stage_process_sample.name, comparison.tumor_sample.name)))
+
+                runnable_scatter_list.append(runnable_scatter)
+
+                reference_scatter = runnable_scatter.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
+
+                # Run GATK MuTect2
+
+                _runnable_step = runnable_scatter.add_runnable_step(
+                    runnable_step=RunnableStepGATK(
+                        name='somatic_gatk_mutect2_scatter',
+                        java_temporary_path=runnable_scatter.get_relative_temporary_directory_path,
+                        java_heap_maximum='Xmx4G',
+                        gatk_classpath=self.classpath_gatk))
+                """ @type _runnable_step: RunnableStepGATK """
+                _runnable_step.add_gatk_option(key='analysis_type', value='MuTect2')
+                _runnable_step.add_gatk_option(key='reference_sequence', value=reference_scatter)
+                for _interval in self.exclude_intervals_list:
+                    _runnable_step.add_gatk_option(key='excludeIntervals', value=_interval, override=True)
+                # for interval in self.include_intervals_list:
+                #     _runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                # if self.interval_padding:
+                #     _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                for region_tuple in self._tile_region_somatic_list[tile_index]:
+                    # The list of tiles is initialised to an empty tile to trigger at least one process.
+                    # Do not assign an interval in such cases.
+                    if region_tuple[0]:
+                        _runnable_step.add_gatk_option(
+                            key='intervals',
+                            value='{:s}:{:d}-{:d}'.format(region_tuple[0], region_tuple[1], region_tuple[2]),
+                            override=True)
+                if self.known_sites_discovery:
+                    _runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
+                for _file_path in self.known_somatic_discovery:
+                    _runnable_step.add_gatk_option(key='cosmic', value=_file_path, override=True)
+
+                # Find and add the FilePathProcessSample object for the 'normal' Sample object.
+                if comparison.normal_sample is not None:
+                    file_path_object = self.runnable_dict['_'.join((
+                        stage_process_sample.name,
+                        comparison.normal_sample.name))].file_path_object
+                    """ @type file_path_object: FilePathProcessSample """
+                    _runnable_step.add_gatk_option(key='input_file:normal', value=file_path_object.realigned_bam)
+                elif comparison.panel_of_normal_path is not None:
+                    _runnable_step.add_gatk_option(key='normal_panel', value=comparison.panel_of_normal_path)
+
+                # Find and add the FilePathProcessSample object for the 'tumor' Sample object.
+                if comparison.tumor_sample is not None:
+                    file_path_object = self.runnable_dict['_'.join((
+                        stage_process_sample.name,
+                        comparison.tumor_sample.name))].file_path_object
+                    """ @type file_path_object: FilePathProcessSample """
+                    _runnable_step.add_gatk_option(key='input_file:tumor', value=file_path_object.realigned_bam)
+
+                _runnable_step.add_gatk_option(key='out', value=file_path_somatic_scatter.somatic_vcf)
+
+            # Gather
+            runnable_gather = None
+            """ @type runnable_gather: Runnable """
+
+            if len(self._tile_region_somatic_list) == 1:
+                # If there is only one tile, no need to gather.
+                # Assign the sole scatter Runnable to the sole gather Runnable.
+                runnable_gather = runnable_scatter
+            else:
+                # Gather by hierarchically merging by the number of chunks on the partitioned genome tile index list.
+                # Initialise a list of Runnable objects and indices for the hierarchical merge.
+                runnable_gather_list = runnable_scatter_list
+                gather_level = 0
+                while len(tile_index_list) > 1:
+                    temporary_runnable_gather_list = list()
+                    """ @type temporary_runnable_gather_list: list[Runnable] """
+                    temporary_tile_index_list = list()
+                    """ @type temporary_tile_index_list: list[int] """
+                    # Partition the index list into chunks of given size.
+                    partition_list = [tile_index_list[offset:offset + self.number_of_chunks_cohort]
+                                      for offset in range(0, len(tile_index_list), self.number_of_chunks_cohort)]
+
+                    for partition_index in range(0, len(partition_list)):
+                        chunk_index_list = partition_list[partition_index]
+                        # The file prefix includes the level and partition index.
+                        prefix_somatic_gather = '_'.join((
+                            stage_somatic.name,
+                            comparison_key,
+                            'gather',
+                            str(gather_level),
+                            str(partition_index)))
+
+                        file_path_somatic_gather = FilePathSomaticScatterGather(prefix=prefix_somatic_gather)
+
+                        runnable_gather = self.add_runnable(
+                            runnable=Runnable(
+                                name=prefix_somatic_gather,
+                                code_module='bsf.runnables.generic',
+                                working_directory=self.genome_directory,
+                                cache_directory=self.cache_directory,
+                                cache_path_dict=self._cache_path_dict,
+                                file_path_object=file_path_somatic_gather,
+                                debug=self.debug))
+                        executable_gather = self.set_stage_runnable(
+                            stage=stage_somatic,
+                            runnable=runnable_gather)
+                        # Submit the Executable only, if the final TBI index file does not exist,
+                        # but do not override the state set by the Analysis.set_stage_runnable() method.
+                        if not final_index_exists:
+                            executable_gather.submit = False
+                        # Dependencies on scatter processes are set based on genome tile indices below.
+                        temporary_runnable_gather_list.append(runnable_gather)
+                        temporary_tile_index_list.append(partition_index)
+
+                        reference_gather = runnable_gather.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
+
+                        # GATK CatVariants by-passes the GATK engine and thus requires a completely different
+                        # command line.
+                        _runnable_step = runnable_gather.add_runnable_step(
+                            runnable_step=RunnableStepJava(
+                                name='somatic_gatk_cat_variants',
+                                sub_command=Command(program='org.broadinstitute.gatk.tools.CatVariants'),
+                                java_temporary_path=runnable_gather.get_relative_temporary_directory_path,
+                                java_heap_maximum='Xmx4G'))
+                        """ @type _runnable_step: RunnableStepJava """
+                        _runnable_step.add_option_short(
+                            key='classpath',
+                            value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
+                        _sub_command = _runnable_step.sub_command
+                        # Add the 'reference' not 'reference_sequence' option.
+                        _sub_command.add_option_long(key='reference', value=reference_gather)
+                        _sub_command.add_option_long(
+                            key='outputFile',
+                            value=file_path_somatic_gather.somatic_vcf)
+                        _sub_command.add_switch_long(key='assumeSorted')
+                        # Finally, add RunnableStep options, obsolete files and Executable dependencies per chunk index.
+                        for chunk_index in chunk_index_list:
+                            runnable_object = runnable_gather_list[chunk_index]
+                            file_path_object = runnable_object.file_path_object
+                            """ @type file_path_object: FilePathSomaticScatterGather """
+                            # Set GATK option variant
+                            _sub_command.add_option_long(
+                                key='variant',
+                                value=file_path_object.somatic_vcf,
+                                override=True)
+                            # Delete the *.g.vcf.gz file.
+                            _runnable_step.obsolete_file_path_list.append(file_path_object.somatic_vcf)
+                            # Delete the *.g.vcf.gz.tbi file.
+                            _runnable_step.obsolete_file_path_list.append(file_path_object.somatic_tbi)
+                            # Set dependencies on preceding Runnable.name or Executable.name objects.
+                            executable_gather.dependencies.append(runnable_object.name)
+
+                    # Set the temporary index list as the new list and increment the merge level.
+                    runnable_gather_list = temporary_runnable_gather_list
+                    tile_index_list = temporary_tile_index_list
+                    gather_level += 1
+
+            # For the last gather Runnable, move (rename) file paths to the top-level prefix and
+            # adjust the FilePath object accordingly.
+            file_path_somatic_gather = runnable_gather.file_path_object
+            """ @type file_path_somatic_gather: FilePathSomaticScatterGather """
+
+            runnable_gather.add_runnable_step(
+                runnable_step=RunnableStepMove(
+                    name='somatic_gather_move_vcf',
+                    source_path=file_path_somatic_gather.somatic_vcf,
+                    target_path=file_path_somatic_final.somatic_vcf))
+
+            runnable_gather.add_runnable_step(
+                runnable_step=RunnableStepMove(
+                    name='somatic_gather_move_tbi',
+                    source_path=file_path_somatic_gather.somatic_tbi,
+                    target_path=file_path_somatic_final.somatic_tbi))
+
+            file_path_somatic_gather.somatic_vcf = file_path_somatic_final.somatic_vcf
+            file_path_somatic_gather.somatic_tbi = file_path_somatic_final.somatic_tbi
+
+            return runnable_gather
+
+        def run_annotate_snpeff(prefix, vcf_file_path):
+            """Private function to annotate a VCF file via the snpEff tool.
+
+            This function is used in both, cohort and somatic variant calling annotation.
+            @param prefix: Prefix
+            @type prefix: str
+            @param vcf_file_path: VCF file path
+            @type vcf_file_path: str | unicode
+            @return: C{Runnable}
+            @rtype: bsf.Runnable
+            """
+            # snpEff                  (snpeff)
+            # Bgzip                   (snpeff_bgzip)
+            # Tabix                   (snpeff_tabix)
+            # GATK VariantAnnotator   (gatk_variant_annotator)
+
+            prefix_annotate = prefix
+
+            file_path_annotate = FilePathAnnotateSnpEff(prefix=prefix_annotate)
+
+            runnable_annotate = self.add_runnable(
+                runnable=Runnable(
+                    name=prefix_annotate,
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.genome_directory,
+                    cache_directory=self.cache_directory,
+                    cache_path_dict=self._cache_path_dict,
+                    file_path_object=file_path_annotate,
+                    debug=self.debug))
+
+            reference_annotate = runnable_annotate.get_absolute_cache_file_path(
+                file_path=self.bwa_genome_db)
+
+            # Run the snpEff tool for functional variant annotation.
+
+            _runnable_step = runnable_annotate.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='snpeff',
+                    program='java',
+                    sub_command=Command(program='eff')))
+            """ @type _runnable_step: RunnableStep """
+
+            _runnable_step.add_switch_short(
+                key='d64')
+            _runnable_step.add_option_short(
+                key='jar',
+                value=os.path.join(self.classpath_snpeff, 'snpEff.jar'))
+            _runnable_step.add_switch_short(
+                key='Xmx6G')
+            _runnable_step.add_option_pair(
+                key='-Djava.io.tmpdir',
+                value=runnable_annotate.get_relative_temporary_directory_path)
+            _runnable_step.stdout_path = file_path_annotate.snpeff_vcf
+
+            _sub_command = _runnable_step.sub_command
+            _sub_command.add_switch_short(key='download')
+            _sub_command.add_option_short(key='o', value='gatk')
+            _sub_command.add_option_short(key='stats', value=file_path_annotate.snpeff_stats)
+            _sub_command.add_option_short(key='config', value=os.path.join(self.classpath_snpeff, 'snpEff.config'))
+
+            _sub_command.arguments.append(self.snpeff_genome_version)
+            _sub_command.arguments.append(vcf_file_path)
+
+            # Automatically compress and index the snpEff VCF file with bgzip and tabix, respectively.
+
+            runnable_annotate.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='snpeff_bgzip',
+                    program='bgzip',
+                    arguments=[file_path_annotate.snpeff_vcf]))
+
+            _runnable_step = runnable_annotate.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='snpeff_tabix',
+                    program='tabix',
+                    arguments=[file_path_annotate.snpeff_vcf_bgz]))
+            """ @type _runnable_step: RunnableStep """
+            _runnable_step.add_option_long(key='preset', value='vcf')
+
+            # Run the GATK VariantAnnotator analysis.
+
+            _runnable_step = runnable_annotate.add_runnable_step(
+                runnable_step=RunnableStepGATK(
+                    name='gatk_variant_annotator',
+                    java_temporary_path=runnable_annotate.get_relative_temporary_directory_path,
+                    java_heap_maximum='Xmx4G',
+                    gatk_classpath=self.classpath_gatk))
+            """ @type _runnable_step: RunnableStepGATK """
+            _runnable_step.add_gatk_option(key='analysis_type', value='VariantAnnotator')
+            _runnable_step.add_gatk_option(key='reference_sequence', value=reference_annotate)
+            for _interval in self.exclude_intervals_list:
+                _runnable_step.add_gatk_option(key='excludeIntervals', value=_interval, override=True)
+            for _interval in self.include_intervals_list:
+                _runnable_step.add_gatk_option(key='intervals', value=_interval, override=True)
+            if self.interval_padding:
+                _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+            if self.known_sites_discovery:
+                _runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
+
+            # Add annotation resources and their corresponding expression options.
+            for _annotation_resource in self.annotation_resources_dict.keys():
+                if len(self.annotation_resources_dict[_annotation_resource][0]) \
+                        and len(self.annotation_resources_dict[_annotation_resource][1]):
+                    _runnable_step.add_gatk_option(
+                        key=':'.join(('resource', _annotation_resource)),
+                        value=self.annotation_resources_dict[_annotation_resource][0])
+                    for _annotation in self.annotation_resources_dict[_annotation_resource][1]:
+                        _runnable_step.add_gatk_option(
+                            key='expression',
+                            value='.'.join((_annotation_resource, _annotation)),
+                            override=True)
+
+            _runnable_step.add_gatk_option(key='variant', value=vcf_file_path)
+            # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
+            # _runnable_step.add_gatk_option(key='annotation', value='AlleleBalanceBySample')
+            _runnable_step.add_gatk_option(key='annotation', value='SnpEff')
+            _runnable_step.add_gatk_option(key='snpEffFile', value=file_path_annotate.snpeff_vcf_bgz)
+            _runnable_step.add_gatk_option(key='out', value=file_path_annotate.annotated_vcf)
+
+            return runnable_annotate
+
+        def run_annotate_vep(prefix, vcf_file_path):
+            """Private function to annotate a VCF file via the Ensembl Variant Effect Predictor (VEP).
+
+            This function is used in both, cohort and somatic variant calling annotation.
+            @param prefix: Prefix
+            @type prefix: str
+            @param vcf_file_path: VCF file path
+            @type vcf_file_path: str | unicode
+            @return: C{Runnable}
+            @rtype: bsf.Runnable
+            """
+            # Ensembl Variant Effect Predictor (ensembl_vep)
+            # Bgzip                            (ensembl_vep_bgzip)
+            # Tabix                            (ensembl_vep_tabix)
+            # Ensembl Variant Effect Filter    (ensembl_filter)
+            # Bgzip                            (ensembl_filter_bgzip)
+            # Tabix                            (ensembl_filter_tabix)
+            # VCF.Filter                       (vcf_filter_complete)
+            # VCF.Filter                       (vcf_filter_filtered)
+
+            prefix_annotate = prefix
+
+            file_path_annotate = FilePathAnnotateVEP(prefix=prefix_annotate)
+
+            runnable_annotate = self.add_runnable(
+                runnable=Runnable(
+                    name=prefix_annotate,
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.genome_directory,
+                    cache_directory=self.cache_directory,
+                    cache_path_dict=self._cache_path_dict,
+                    file_path_object=file_path_annotate,
+                    debug=self.debug))
+
+            # reference_annotate = runnable_annotate.get_absolute_cache_file_path(
+            #     file_path=self.bwa_genome_db)
+
+            # if not os.path.exists(os.path.join(self.genome_directory, file_path_annotate.vep_complete_vcf_tbi)):
+            # Run the Ensembl Variant Effect Predictor script.
+
+            _runnable_step = runnable_annotate.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='ensembl_vep',
+                    program='perl',
+                    sub_command=Command()))
+            """ @type _runnable_step: RunnableStep """
+            # self.set_runnable_step_configuration(runnable_step=_runnable_step)
+            _runnable_step.arguments.append(os.path.join(self.directory_vep_src, 'vep'))
+            _sub_command = _runnable_step.sub_command
+            # Basic options
+            _sub_command.add_switch_long(key='everything')
+            # Input options
+            _sub_command.add_option_long(key='species', value='homo_sapiens')  # TODO: Has to be configurable
+            _sub_command.add_option_long(key='assembly', value='GRCh37')  # TODO: Has to be configurable
+            _sub_command.add_option_long(key='input_file', value=vcf_file_path)
+            _sub_command.add_option_long(key='format', value='vcf')  # Input file format
+            _sub_command.add_option_long(key='output_file', value=file_path_annotate.vep_complete_raw_vcf)
+            _sub_command.add_switch_long(key='force_overwrite')
+            _sub_command.add_option_long(key='stats_file', value=file_path_annotate.vep_statistics)
+            # Cache options
+            _sub_command.add_switch_long(key='cache')
+            _sub_command.add_option_long(key='dir_cache', value=self.directory_vep_cache)
+            _sub_command.add_option_long(key='dir_plugins', value=self.directory_vep_plugins)
+            # Other annotation sources
+            _sub_command.add_option_long(  # TODO: Has to be configurable
+                key='plugin',
+                value='CADD,/scratch/lab_bsf/resources/CADD/b37/whole_genome_SNVs.tsv.gz')
+            # Output options
+            _sub_command.add_switch_long(key='allele_number')
+            _sub_command.add_switch_long(key='no_escape')  # Do not percent escape HGVS strings
+            # Identifiers
+            _sub_command.add_switch_long(key='hgvsg')
+            # Co-located variants
+            _sub_command.add_option_long(key='failed', value='1')
+            # Data format options
+            _sub_command.add_switch_long(key='vcf')
+            # Filtering and QC options
+            _sub_command.add_switch_long(key='gencode_basic')
+            _sub_command.add_switch_long(key='dont_skip')
+            _sub_command.add_switch_long(key='allow_non_variant')
+            _sub_command.add_switch_long(key='flag_pick_allele_gene')
+            # Database options
+            _sub_command.add_option_long(key='port', value='3337')
+            # Undocumented options
+            _sub_command.add_switch_long(key='no_progress')
+            _sub_command.add_option_long(
+                key='tmpdir',
+                value=runnable_annotate.get_relative_temporary_directory_path)
+
+            runnable_annotate.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='ensembl_vep_bgzip',
+                    program='bgzip',
+                    arguments=[file_path_annotate.vep_complete_raw_vcf]))
+
+            _runnable_step = runnable_annotate.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='ensembl_vep_tabix',
+                    program='tabix',
+                    arguments=[file_path_annotate.vep_complete_raw_vcf_bgz]))
+            """ @type _runnable_step: RunnableStep """
+            _runnable_step.add_option_long(key='preset', value='vcf')
+
+            # if not os.path.exists(os.path.join(self.genome_directory, file_path_annotate.vep_filtered_vcf_tbi)):
+            # Run the Ensembl Variant Effect Filter script.
+
+            _runnable_step = runnable_annotate.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='ensembl_filter',
+                    program='perl',
+                    sub_command=Command()))
+            """ @type _runnable_step: RunnableStep """
+            # self.set_runnable_step_configuration(runnable_step=_runnable_step)
+            _runnable_step.arguments.append(os.path.join(self.directory_vep_src, 'filter_vep'))
+            _sub_command = _runnable_step.sub_command
+            _sub_command.add_option_long(key='input_file', value=file_path_annotate.vep_complete_raw_vcf_bgz)
+            _sub_command.add_option_long(key='format', value='vcf')
+            _sub_command.add_option_long(key='output_file', value=file_path_annotate.vep_filtered_raw_vcf)
+            _sub_command.add_switch_long(key='only_matched')
+            _sub_command.add_option_long(key='filter', value='Consequence ne upstream_gene_variant', override=True)
+            _sub_command.add_option_long(key='filter', value='Consequence ne downstream_gene_variant', override=True)
+            _sub_command.add_option_long(key='filter', value='Consequence ne intron_variant', override=True)
+            _sub_command.add_option_long(key='filter', value='BIOTYPE ne processed_transcript', override=True)
+            # _sub_command.add_option_long(key='filter', value='CANONICAL eq YES', override=True)
+            _sub_command.add_switch_long(key='force_overwrite')
+
+            runnable_annotate.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='ensembl_filter_bgzip',
+                    program='bgzip',
+                    arguments=[file_path_annotate.vep_filtered_raw_vcf]))
+
+            _runnable_step = runnable_annotate.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='ensembl_filter_tabix',
+                    program='tabix',
+                    arguments=[file_path_annotate.vep_filtered_raw_vcf_bgz]))
+            """ @type _runnable_step: RunnableStep """
+            _runnable_step.add_option_long(key='preset', value='vcf')
+
+            # Run the VCF Filter on the complete VEP set to convert (re-model) the CSQ field into
+            # a set of independent INFO fields.
+
+            _runnable_step = runnable_annotate.add_runnable_step(
+                runnable_step=RunnableStepJava(
+                    name='vcf_filter_complete',
+                    sub_command=Command(program='at.ac.oeaw.cemm.bsf.vcffilter.vep.vep2vcf'),
+                    java_temporary_path=runnable_annotate.get_relative_temporary_directory_path,
+                    java_heap_maximum='Xmx2G'))
+            """ @type _runnable_step: RunnableStepJava """
+            _runnable_step.add_option_short(
+                key='classpath',
+                value=os.path.join(self.classpath_vcf_filter, 'VCFFilter.jar'))
+            _sub_command = _runnable_step.sub_command
+            _sub_command.add_option_pair(key='INPUT', value=file_path_annotate.vep_complete_raw_vcf_bgz)
+            _sub_command.add_option_pair(key='OUTPUT', value=file_path_annotate.vep_complete_vcf_bgz)
+
+            # Run the VCF Filter on the filtered VEP set to convert (re-model) the CSQ field into
+            # a set of independent INFO fields.
+
+            _runnable_step = runnable_annotate.add_runnable_step(
+                runnable_step=RunnableStepJava(
+                    name='vcf_filter_filtered',
+                    sub_command=Command(program='at.ac.oeaw.cemm.bsf.vcffilter.vep.vep2vcf'),
+                    java_temporary_path=runnable_annotate.get_relative_temporary_directory_path,
+                    java_heap_maximum='Xmx2G'))
+            """ @type _runnable_step: RunnableStepJava """
+            _runnable_step.add_option_short(
+                key='classpath',
+                value=os.path.join(self.classpath_vcf_filter, 'VCFFilter.jar'))
+            _sub_command = _runnable_step.sub_command
+            _sub_command.add_option_pair(key='INPUT', value=file_path_annotate.vep_filtered_raw_vcf_bgz)
+            _sub_command.add_option_pair(key='OUTPUT', value=file_path_annotate.vep_filtered_vcf_bgz)
+
+            return runnable_annotate
 
         # Start of the run() method body.
 
@@ -1936,6 +2838,15 @@ class VariantCallingGATK(Analysis):
 
         if not self.snpeff_genome_version:
             raise Exception("A 'VariantCallingGATK' analysis requires a 'snpeff_genome_version' configuration option.")
+
+        if not self.directory_vep_cache:
+            self.directory_vep_cache = default.directory_vep_cache
+
+        if not self.directory_vep_plugins:
+            self.directory_vep_plugins = default.directory_vep_plugins
+
+        if not self.directory_vep_src:
+            self.directory_vep_src = default.directory_vep_src
 
         if not self.classpath_gatk:
             self.classpath_gatk = default.classpath_gatk
@@ -2096,21 +3007,27 @@ class VariantCallingGATK(Analysis):
         stage_diagnose_sample = self.get_stage(name=self.stage_name_diagnose_sample)
         stage_merge_cohort = self.get_stage(name=self.stage_name_merge_cohort)
         stage_process_cohort = self.get_stage(name=self.stage_name_process_cohort)
-        stage_annotate_cohort = self.get_stage(name=self.stage_name_annotate_cohort)
-        stage_split_cohort = self.get_stage(name=self.stage_name_split_cohort)
+        stage_annotate_cohort_snpeff = self.get_stage(name=self.stage_name_annotate_cohort_snpeff)
+        stage_annotate_cohort_vep = self.get_stage(name=self.stage_name_annotate_cohort_vep)
+        stage_split_cohort_snpeff = self.get_stage(name=self.stage_name_split_cohort_snpeff)
+        stage_split_cohort_vep = self.get_stage(name=self.stage_name_split_cohort_vep)
         stage_summary = self.get_stage(name=self.stage_name_summary)
         stage_somatic = self.get_stage(name=self.stage_name_somatic)
+        stage_annotate_somatic_snpeff = self.get_stage(name=self.stage_name_annotate_somatic_snpeff)
+        stage_annotate_somatic_vep = self.get_stage(name=self.stage_name_annotate_somatic_vep)
+        stage_split_somatic_snpeff = self.get_stage(name=self.stage_name_split_somatic_snpeff)
+        stage_split_somatic_vep = self.get_stage(name=self.stage_name_split_somatic_vep)
 
         # Create a Python dict of Python str (cohort name) key and Python list of process_sample Runnable object
         # value data. This dictionary is required by the merge_cohort stage to hierarchically merge cohorts.
 
-        vc_runnable_process_sample_dict = dict()
-        """ @type vc_runnable_process_sample_dict: dict[str, list[Runnable]] """
+        runnable_process_sample_dict = dict()
+        """ @type runnable_process_sample_dict: dict[str, list[Runnable]] """
 
         # Create a Python list of diagnose_sample Runnable objects.
 
-        vc_runnable_diagnose_sample_list = list()
-        """ @type vc_runnable_diagnose_sample_list: list[Runnable] """
+        runnable_diagnose_sample_list = list()
+        """ @type runnable_diagnose_sample_list: list[Runnable] """
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -2124,8 +3041,8 @@ class VariantCallingGATK(Analysis):
                 continue
             paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            vc_runnable_process_read_group_list = list()
-            """ @type vc_runnable_process_read_group_list: list[Runnable] """
+            runnable_process_read_group_list = list()
+            """ @type runnable_process_read_group_list: list[Runnable] """
 
             for paired_reads_name in paired_reads_name_list:
                 if not len(paired_reads_dict[paired_reads_name]):
@@ -2278,7 +3195,7 @@ class VariantCallingGATK(Analysis):
                 # Set dependencies on preceding Runnable.name or Executable.name objects.
                 executable_process_lane.dependencies.append(run_bwa.name)
                 # Set dependencies for succeeding Runnable or Executable objects.
-                vc_runnable_process_read_group_list.append(runnable_process_lane)
+                runnable_process_read_group_list.append(runnable_process_lane)
 
                 reference_process_lane = runnable_process_lane.get_absolute_cache_file_path(
                     file_path=self.bwa_genome_db)
@@ -2597,16 +3514,16 @@ class VariantCallingGATK(Analysis):
                 stage=stage_process_sample,
                 runnable=runnable_process_sample)
             # Set dependencies on preceding Runnable.name or Executable.name objects.
-            for runnable_process_lane in vc_runnable_process_read_group_list:
+            for runnable_process_lane in runnable_process_read_group_list:
                 executable_process_sample.dependencies.append(runnable_process_lane.name)
 
             reference_process_sample = runnable_process_sample.get_absolute_cache_file_path(
                 file_path=self.bwa_genome_db)
 
-            if len(vc_runnable_process_read_group_list) == 1:
+            if len(runnable_process_read_group_list) == 1:
                 # If there is only one read group, sample-level read processing can be skipped.
                 # Rename files on the basis of the first and only list component.
-                runnable_process_lane = vc_runnable_process_read_group_list[0]
+                runnable_process_lane = runnable_process_read_group_list[0]
                 file_path_process_read_group = runnable_process_lane.file_path_object
                 """ @type file_path_process_read_group: FilePathProcessReadGroup """
 
@@ -2657,7 +3574,7 @@ class VariantCallingGATK(Analysis):
                         picard_command='MergeSamFiles'))
                 """ @type runnable_step: RunnableStepPicard """
                 runnable_step.add_picard_option(key='COMMENT', value='Merged from the following files:')
-                for runnable_process_lane in vc_runnable_process_read_group_list:
+                for runnable_process_lane in runnable_process_read_group_list:
                     file_path_process_read_group = runnable_process_lane.file_path_object
                     """ @type file_path_process_read_group: FilePathProcessReadGroup """
                     runnable_step.add_picard_option(
@@ -2936,9 +3853,9 @@ class VariantCallingGATK(Analysis):
             else:
                 cohort_key = self.cohort_name
 
-            if cohort_key not in vc_runnable_process_sample_dict:
-                vc_runnable_process_sample_dict[cohort_key] = list()
-            _runnable_process_sample_list = vc_runnable_process_sample_dict[cohort_key]
+            if cohort_key not in runnable_process_sample_dict:
+                runnable_process_sample_dict[cohort_key] = list()
+            _runnable_process_sample_list = runnable_process_sample_dict[cohort_key]
             _runnable_process_sample_list.append(runnable_process_sample)
 
             ################################
@@ -3010,7 +3927,7 @@ class VariantCallingGATK(Analysis):
             # Set dependencies on preceding Runnable.name or Executable.name objects.
             executable_diagnose_sample.dependencies.append(runnable_process_sample.name)
             # Set dependencies for succeding Runnable or Executable objects.
-            vc_runnable_diagnose_sample_list.append(runnable_diagnose_sample)
+            runnable_diagnose_sample_list.append(runnable_diagnose_sample)
 
             reference_diagnose_sample = runnable_diagnose_sample.get_absolute_cache_file_path(
                 file_path=self.bwa_genome_db)
@@ -3221,28 +4138,28 @@ class VariantCallingGATK(Analysis):
         # Create a Python dict of Python str (cohort name) key and Python list of Runnable value data.
         # Initialise a single key with the final cohort name and an empty list for merging the final cohort.
 
-        vc_runnable_merge_cohort_dict = {self.cohort_name: []}
-        vc_runnable_merge_cohort_list = vc_runnable_merge_cohort_dict[self.cohort_name]
+        runnable_merge_cohort_dict = {self.cohort_name: []}
+        runnable_merge_cohort_list = runnable_merge_cohort_dict[self.cohort_name]
 
         # Run the GATK CombineGVCFs analysis for each cohort and Sample defined in this project to build up
         # cohort-specific GVCF files.
 
-        for cohort_key in vc_runnable_process_sample_dict.keys():
-            vc_runnable_merge_cohort_list.append(
+        for cohort_key in runnable_process_sample_dict.keys():
+            runnable_merge_cohort_list.append(
                 run_merge_cohort_scatter_gather(
                     analysis_stage=stage_merge_cohort,
-                    cohort_runnable_dict=vc_runnable_process_sample_dict,
+                    cohort_runnable_dict=runnable_process_sample_dict,
                     cohort_name=cohort_key))
 
         # Run the GATK CombineGVCF analysis once more to merge all cohort-specific GVCF files defined in this project.
 
-        if len(vc_runnable_merge_cohort_list) == 1:
+        if len(runnable_merge_cohort_list) == 1:
             # If the cohort-specific Runnable list has only one component, the merge has already been completed.
-            runnable_merge_cohort = vc_runnable_merge_cohort_list[-1]
-        elif len(vc_runnable_merge_cohort_list) > 1:
+            runnable_merge_cohort = runnable_merge_cohort_list[-1]
+        elif len(runnable_merge_cohort_list) > 1:
             runnable_merge_cohort = run_merge_cohort_scatter_gather(
                 analysis_stage=stage_merge_cohort,
-                cohort_runnable_dict=vc_runnable_merge_cohort_dict,
+                cohort_runnable_dict=runnable_merge_cohort_dict,
                 cohort_name=self.cohort_name)
         else:
             raise Exception("Unexpected number of Runnable objects on the merge_cohort list.")
@@ -3255,13 +4172,13 @@ class VariantCallingGATK(Analysis):
             # extend with the the list of accessory cohort file names. The run_merge_cohort_scatter_gather() method
             # can cope with Runnable or str | unicode objects.
             cohort_key = '_'.join((self.cohort_name, 'accessory'))
-            vc_runnable_merge_cohort_dict = {cohort_key: [runnable_merge_cohort]}
-            vc_runnable_merge_cohort_list = vc_runnable_merge_cohort_dict[cohort_key]
-            vc_runnable_merge_cohort_list.extend(self.accessory_cohort_gvcfs)
+            runnable_merge_cohort_dict = {cohort_key: [runnable_merge_cohort]}
+            runnable_merge_cohort_list = runnable_merge_cohort_dict[cohort_key]
+            runnable_merge_cohort_list.extend(self.accessory_cohort_gvcfs)
 
             runnable_merge_cohort = run_merge_cohort_scatter_gather(
                 analysis_stage=stage_merge_cohort,
-                cohort_runnable_dict=vc_runnable_merge_cohort_dict,
+                cohort_runnable_dict=runnable_merge_cohort_dict,
                 cohort_name=cohort_key)
 
         # Specify the final FilePathMergeCohort object from the final Runnable object.
@@ -3286,211 +4203,7 @@ class VariantCallingGATK(Analysis):
 
         file_path_genotype_cohort = FilePathGenotypeCohort(prefix=prefix_process_cohort)
 
-        # Run GATK GenotypeGVCFs in a scatter and gather approach.
-
-        if os.path.exists(os.path.join(self.genome_directory, file_path_genotype_cohort.genotyped_raw_tbi)):
-            submit_runnable = False
-        else:
-            submit_runnable = True
-
-        vc_runnable_process_cohort_scatter_list = list()
-        """ @type vc_runnable_process_cohort_scatter_list: list[Runnable] """
-        runnable_process_cohort_scatter = None
-        """ @type runnable_process_cohort_scatter: Runnable """
-        for tile_index in range(0, len(self._tile_region_cohort_list)):
-            prefix_process_cohort_scatter = '_'.join((
-                stage_process_cohort.name, self.cohort_name, 'scatter', str(tile_index)))
-
-            file_path_genotype_cohort_scatter = FilePathGenotypeCohort(prefix=prefix_process_cohort_scatter)
-
-            runnable_process_cohort_scatter = self.add_runnable(
-                runnable=Runnable(
-                    name=prefix_process_cohort_scatter,
-                    code_module='bsf.runnables.generic',
-                    working_directory=self.genome_directory,
-                    cache_directory=self.cache_directory,
-                    cache_path_dict=self._cache_path_dict,
-                    file_path_object=file_path_genotype_cohort_scatter,
-                    debug=self.debug))
-            executable_process_cohort_scatter = self.set_stage_runnable(
-                stage=stage_process_cohort,
-                runnable=runnable_process_cohort_scatter)
-            executable_process_cohort_scatter.submit = submit_runnable
-            # Set dependencies on preceding Runnable.name or Executable.name objects.
-            executable_process_cohort_scatter.dependencies.append(runnable_merge_cohort.name)
-
-            vc_runnable_process_cohort_scatter_list.append(runnable_process_cohort_scatter)
-
-            reference_process_cohort_scatter = runnable_process_cohort_scatter.get_absolute_cache_file_path(
-                file_path=self.bwa_genome_db)
-
-            # Run the GATK GenotypeGVCFs analysis.
-
-            runnable_step = runnable_process_cohort_scatter.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='process_cohort_gatk_genotype_gvcfs_scatter',
-                    java_temporary_path=runnable_process_cohort_scatter.get_relative_temporary_directory_path,
-                    java_heap_maximum='Xmx12G',
-                    gatk_classpath=self.classpath_gatk))
-            """ @type runnable_step: RunnableStepGATK """
-            runnable_step.add_gatk_option(key='analysis_type', value='GenotypeGVCFs')
-            runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_cohort_scatter)
-            for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-            # for interval in self.include_intervals_list:
-            #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-            # if self.interval_padding:
-            #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            for region_tuple in self._tile_region_cohort_list[tile_index]:
-                # The list of tiles is initialised to an empty tile to trigger at least one process.
-                # Do not assign an interval in such cases.
-                if region_tuple[0]:
-                    runnable_step.add_gatk_option(
-                        key='intervals',
-                        value='{:s}:{:d}-{:d}'.format(region_tuple[0], region_tuple[1], region_tuple[2]),
-                        override=True)
-            # Scatter gather is more robust than GATK multi-threading.
-            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
-            if self.known_sites_discovery:
-                runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
-            runnable_step.add_gatk_option(key='variant', value=file_path_merge_cohort.combined_gvcf_vcf)
-            runnable_step.add_gatk_option(key='out', value=file_path_genotype_cohort_scatter.partial_vcf)
-
-        # Gather
-
-        # If there is only one tile, no need to gather, just rename the file and return the Runnable.
-
-        if len(self._tile_region_cohort_list) == 1:
-            file_path_genotype_cohort_scatter = runnable_process_cohort_scatter.file_path_object
-            """ @type file_path_genotype_cohort_scatter: FilePathGenotypeCohort """
-            # Add cohort-specific keys to the file path dictionary.
-            file_path_genotype_cohort_scatter.genotyped_raw_vcf = file_path_genotype_cohort.genotyped_raw_vcf
-            file_path_genotype_cohort_scatter.genotyped_raw_tbi = file_path_genotype_cohort.genotyped_raw_tbi
-
-            runnable_process_cohort_scatter.add_runnable_step(
-                runnable_step=RunnableStepMove(
-                    name='process_cohort_gather_move_vcf',
-                    source_path=file_path_genotype_cohort_scatter.partial_vcf,
-                    target_path=file_path_genotype_cohort_scatter.genotyped_raw_vcf))
-
-            runnable_process_cohort_scatter.add_runnable_step(
-                runnable_step=RunnableStepMove(
-                    name='process_cohort_gather_move_tbi',
-                    source_path=file_path_genotype_cohort_scatter.partial_tbi,
-                    target_path=file_path_genotype_cohort_scatter.genotyped_raw_vcf))
-
-            # return runnable_merge_cohort_scatter
-            runnable_process_cohort_gather = runnable_process_cohort_scatter
-        else:
-            # Second, gather by the number of chunks on the partitioned genome tile index list.
-
-            # Second, Merge chunks hierarchically.
-            # Initialise a list of Runnable objects and indices for the hierarchical merge.
-            vc_runnable_process_cohort_gather_list = vc_runnable_process_cohort_scatter_list
-            vc_process_cohort_gather_index_list = range(0, len(self._tile_region_cohort_list))
-            runnable_process_cohort_gather = None  # Global variable to keep and return the last Runnable.
-            """ @type runnable_process_cohort_gather: Runnable """
-            level = 0
-            while len(vc_process_cohort_gather_index_list) > 1:
-                temporary_gather_runnable_list = list()
-                """ @type temporary_gather_runnable_list: list[Runnable] """
-                temporary_gather_index_list = list()
-                """ @type temporary_gather_index_list: list[int] """
-                # Partition the index list into chunks of given size.
-                partition_list = [vc_process_cohort_gather_index_list[offset:offset + self.number_of_chunks_cohort]
-                                  for offset in range(0,
-                                                      len(vc_process_cohort_gather_index_list),
-                                                      self.number_of_chunks_cohort)]
-
-                for partition_index in range(0, len(partition_list)):
-                    chunk_index_list = partition_list[partition_index]
-                    # The file prefix includes the level and partition index.
-                    prefix_process_cohort_gather = '_'.join(
-                        (stage_process_cohort.name, self.cohort_name, 'gather', str(level), str(partition_index)))
-
-                    file_path_genotype_cohort_gather = FilePathGenotypeCohort(prefix=prefix_process_cohort_gather)
-
-                    runnable_process_cohort_gather = self.add_runnable(
-                        runnable=Runnable(
-                            name=prefix_process_cohort_gather,
-                            code_module='bsf.runnables.generic',
-                            working_directory=self.genome_directory,
-                            cache_directory=self.cache_directory,
-                            cache_path_dict=self._cache_path_dict,
-                            file_path_object=file_path_genotype_cohort_gather,
-                            debug=self.debug))
-                    executable_process_cohort_gather = self.set_stage_runnable(
-                        stage=stage_process_cohort,
-                        runnable=runnable_process_cohort_gather)
-                    executable_process_cohort_gather.submit = submit_runnable
-
-                    # Dependencies on scatter processes are set based on genome tile indices below.
-                    temporary_gather_runnable_list.append(runnable_process_cohort_gather)
-                    temporary_gather_index_list.append(partition_index)
-
-                    reference_process_cohort_gather = runnable_process_cohort_gather.get_absolute_cache_file_path(
-                        file_path=self.bwa_genome_db)
-
-                    # GATK CatVariants by-passes the GATK engine and thus requires a completely different command line.
-                    runnable_step = runnable_process_cohort_gather.add_runnable_step(
-                        runnable_step=RunnableStepJava(
-                            name='merge_cohort_gatk_cat_variants',
-                            sub_command=Command(program='org.broadinstitute.gatk.tools.CatVariants'),
-                            java_temporary_path=runnable_process_cohort_gather.get_relative_temporary_directory_path,
-                            java_heap_maximum='Xmx4G'))
-                    """ @type runnable_step: RunnableStepJava """
-                    runnable_step.add_option_short(
-                        key='classpath',
-                        value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
-                    sub_command = runnable_step.sub_command
-                    # Add the 'reference' not 'reference_sequence' option.
-                    sub_command.add_option_long(
-                        key='reference',
-                        value=reference_process_cohort_gather)
-                    sub_command.add_option_long(
-                        key='outputFile',
-                        value=file_path_genotype_cohort_gather.partial_vcf)
-                    sub_command.add_switch_long(key='assumeSorted')
-                    # Finally, process per chunk index.
-                    for chunk_index in chunk_index_list:
-                        runnable_object = vc_runnable_process_cohort_gather_list[chunk_index]
-                        file_path_object = runnable_object.file_path_object
-                        """ @type file_path_object: FilePathGenotypeCohort """
-                        # Set GATK option variant
-                        sub_command.add_option_long(key='variant', value=file_path_object.partial_vcf, override=True)
-                        # Delete the *.g.vcf.gz file.
-                        runnable_step.obsolete_file_path_list.append(file_path_object.partial_vcf)
-                        # Delete the *.g.vcf.gz.tbi file.
-                        runnable_step.obsolete_file_path_list.append(file_path_object.partial_tbi)
-                        # Set dependencies on preceding Runnable.name or Executable.name objects.
-                        executable_process_cohort_gather.dependencies.append(runnable_object.name)
-
-                # Set the temporary index list as the new list and increment the merge level.
-                vc_runnable_process_cohort_gather_list = temporary_gather_runnable_list
-                vc_process_cohort_gather_index_list = temporary_gather_index_list
-                level += 1
-            else:
-                # For the last instance, additionally rename the final file.
-                file_path_genotype_cohort_gather = runnable_process_cohort_gather.file_path_object
-                """ @type file_path_genotype_cohort_gather: FilePathGenotypeCohort """
-
-                # Add cohort-specific keys to the file path dictionary.
-                file_path_genotype_cohort_gather.genotyped_raw_vcf = file_path_genotype_cohort.genotyped_raw_vcf
-                file_path_genotype_cohort_gather.genotyped_raw_tbi = file_path_genotype_cohort.genotyped_raw_tbi
-
-                runnable_process_cohort_gather.add_runnable_step(
-                    runnable_step=RunnableStepMove(
-                        name='process_cohort_gather_move_vcf',
-                        source_path=file_path_genotype_cohort_gather.partial_vcf,
-                        target_path=file_path_genotype_cohort_gather.genotyped_raw_vcf))
-
-                runnable_process_cohort_gather.add_runnable_step(
-                    runnable_step=RunnableStepMove(
-                        name='process_cohort_gather_move_tbi',
-                        source_path=file_path_genotype_cohort_gather.partial_tbi,
-                        target_path=file_path_genotype_cohort_gather.genotyped_raw_tbi))
-
-                # return runnable_process_cohort_gather
+        runnable_process_cohort_gather = run_genotype_cohort_scatter_gather()
 
         file_path_process_cohort = FilePathProcessCohort(prefix=prefix_process_cohort)
 
@@ -3518,7 +4231,7 @@ class VariantCallingGATK(Analysis):
 
         if self.vqsr_skip_snp:
             file_path_process_cohort.recalibrated_snp_raw_indel_vcf = file_path_genotype_cohort.genotyped_raw_vcf
-            file_path_process_cohort.recalibrated_snp_raw_indel_idx = file_path_genotype_cohort.genotyped_raw_tbi
+            file_path_process_cohort.recalibrated_snp_raw_indel_tbi = file_path_genotype_cohort.genotyped_raw_tbi
         else:
 
             # Run the GATK VariantRecalibrator analysis on SNPs.
@@ -3593,8 +4306,8 @@ class VariantCallingGATK(Analysis):
         if self.vqsr_skip_indel:
             file_path_process_cohort.recalibrated_snp_recalibrated_indel_vcf = \
                 file_path_process_cohort.recalibrated_snp_raw_indel_vcf
-            file_path_process_cohort.recalibrated_snp_recalibrated_indel_idx = \
-                file_path_process_cohort.recalibrated_snp_raw_indel_idx
+            file_path_process_cohort.recalibrated_snp_recalibrated_indel_tbi = \
+                file_path_process_cohort.recalibrated_snp_raw_indel_tbi
         else:
 
             # Run the GATK VariantRecalibrator analysis on INDELs.
@@ -3696,264 +4409,53 @@ class VariantCallingGATK(Analysis):
         else:
             file_path_process_cohort.multi_sample_vcf = \
                 file_path_process_cohort.recalibrated_snp_recalibrated_indel_vcf
-            file_path_process_cohort.multi_sample_idx = \
-                file_path_process_cohort.recalibrated_snp_recalibrated_indel_idx
-
-        # Run the snpEff tool for functional variant annotation.
-
-        runnable_step = runnable_process_cohort.add_runnable_step(
-            runnable_step=RunnableStep(
-                name='process_cohort_snpeff',
-                program='java',
-                sub_command=Command(program='eff')))
-        """ @type runnable_step: RunnableStep """
-
-        runnable_step.add_switch_short(
-            key='d64')
-        runnable_step.add_option_short(
-            key='jar',
-            value=os.path.join(self.classpath_snpeff, 'snpEff.jar'))
-        runnable_step.add_switch_short(
-            key='Xmx6G')
-        runnable_step.add_option_pair(
-            key='-Djava.io.tmpdir',
-            value=runnable_process_cohort.get_relative_temporary_directory_path)
-        runnable_step.stdout_path = file_path_process_cohort.snpeff_vcf
-
-        sub_command = runnable_step.sub_command
-        sub_command.add_switch_short(key='download')
-        sub_command.add_option_short(key='o', value='gatk')
-        sub_command.add_option_short(key='stats', value=file_path_process_cohort.snpeff_stats)
-        sub_command.add_option_short(key='config', value=os.path.join(self.classpath_snpeff, 'snpEff.config'))
-
-        sub_command.arguments.append(self.snpeff_genome_version)
-        sub_command.arguments.append(file_path_process_cohort.multi_sample_vcf)
-
-        # Automatically compress and index the snpEff VCF file with bgzip and tabix, respectively.
-        # TODO: It would be better for the file system, if output could be directly piped into bgzip.
-
-        runnable_process_cohort.add_runnable_step(
-            runnable_step=RunnableStep(
-                name='snpeff_bgzip',
-                program='bgzip',
-                arguments=[file_path_process_cohort.snpeff_vcf]))
-
-        runnable_step = runnable_process_cohort.add_runnable_step(
-            runnable_step=RunnableStep(
-                name='snpeff_tabix',
-                program='tabix',
-                arguments=[file_path_process_cohort.snpeff_vcf_bgz]))
-        """ @type runnable_step: RunnableStep """
-        runnable_step.add_option_long(key='preset', value='vcf')
-
-        # Run the GATK VariantAnnotator analysis.
-
-        runnable_step = runnable_process_cohort.add_runnable_step(
-            runnable_step=RunnableStepGATK(
-                name='process_cohort_gatk_variant_annotator',
-                java_temporary_path=runnable_process_cohort.get_relative_temporary_directory_path,
-                java_heap_maximum='Xmx4G',
-                gatk_classpath=self.classpath_gatk))
-        """ @type runnable_step: RunnableStepGATK """
-        runnable_step.add_gatk_option(key='analysis_type', value='VariantAnnotator')
-        runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_cohort)
-        for interval in self.exclude_intervals_list:
-            runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-        for interval in self.include_intervals_list:
-            runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-        if self.interval_padding:
-            runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-        # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
-        if self.known_sites_discovery:
-            runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
-
-        # Add annotation resources and their corresponding expression options.
-        for annotation_resource in self.annotation_resources_dict.keys():
-            if len(self.annotation_resources_dict[annotation_resource][0]) \
-                    and len(self.annotation_resources_dict[annotation_resource][1]):
-                runnable_step.add_gatk_option(
-                    key=':'.join(('resource', annotation_resource)),
-                    value=self.annotation_resources_dict[annotation_resource][0])
-                for annotation in self.annotation_resources_dict[annotation_resource][1]:
-                    runnable_step.add_gatk_option(
-                        key='expression',
-                        value='.'.join((annotation_resource, annotation)),
-                        override=True)
-
-        runnable_step.add_gatk_option(key='variant', value=file_path_process_cohort.multi_sample_vcf)
-        # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
-        # runnable_step.add_gatk_option(key='annotation', value='AlleleBalanceBySample')
-        runnable_step.add_gatk_option(key='annotation', value='SnpEff')
-        runnable_step.add_gatk_option(key='snpEffFile', value=file_path_process_cohort.snpeff_vcf_bgz)
-        runnable_step.add_gatk_option(key='out', value=file_path_process_cohort.annotated_vcf)
+            file_path_process_cohort.multi_sample_tbi = \
+                file_path_process_cohort.recalibrated_snp_recalibrated_indel_tbi
 
         ################################
         # Step 7: Annotate the cohort. #
         ################################
-        #
-        # Ensembl Variant Effect Predictor (annotate_cohort_ensembl_vep)
-        # Bgzip                            (annotate_cohort_ensembl_vep_bgzip)
-        # Tabix                            (annotate_cohort_ensembl_vep_tabix)
-        # Ensembl Variant Effect Filter    (annotate_cohort_ensembl_filter)
-        # Bgzip                            (annotate_cohort_ensembl_filter_bgzip)
-        # Tabix                            (annotate_cohort_ensembl_filter_tabix)
-        # VCF.Filter                       (annotate_cohort_vcf_filter_complete)
-        # VCF.Filter                       (annotate_cohort_vcf_filter_filtered)
 
-        prefix_annotate_cohort = '_'.join((stage_annotate_cohort.name, self.cohort_name))
+        # Run snpEff annotation.
 
-        file_path_annotate_cohort = FilePathAnnotateCohort(prefix=prefix_annotate_cohort)
+        prefix_annotate_cohort_snpeff = '_'.join((stage_annotate_cohort_snpeff.name, self.cohort_name))
 
-        runnable_annotate_cohort = self.add_runnable(
-            runnable=Runnable(
-                name=prefix_annotate_cohort,
-                code_module='bsf.runnables.generic',
-                working_directory=self.genome_directory,
-                cache_directory=self.cache_directory,
-                cache_path_dict=self._cache_path_dict,
-                file_path_object=file_path_annotate_cohort,
-                debug=self.debug))
-        executable_annotate_cohort = self.set_stage_runnable(
-            stage=stage_annotate_cohort,
-            runnable=runnable_annotate_cohort)
+        runnable_annotate_cohort_snpeff = run_annotate_snpeff(
+            prefix=prefix_annotate_cohort_snpeff,
+            vcf_file_path=file_path_process_cohort.multi_sample_vcf)
+        executable_annotate_cohort_snpeff = self.set_stage_runnable(
+            stage=stage_annotate_cohort_snpeff,
+            runnable=runnable_annotate_cohort_snpeff)
         # Set dependencies on preceding Runnable.name or Executable.name objects.
-        executable_annotate_cohort.dependencies.append(runnable_process_cohort.name)
+        executable_annotate_cohort_snpeff.dependencies.append(runnable_process_cohort.name)
 
-        # reference_annotate_cohort = runnable_annotate_cohort.get_absolute_cache_file_path(
-        #     file_path=self.bwa_genome_db)
+        # Run Ensembl Variant Effect Predictor (VEP) annotation.
 
-        # if not os.path.exists(os.path.join(self.genome_directory, file_path_annotate_cohort.vep_complete_vcf_tbi)):
-        # Run the Ensembl Variant Effect Predictor script.
+        prefix_annotate_cohort_vep = '_'.join((stage_annotate_cohort_vep.name, self.cohort_name))
 
-        runnable_step = runnable_annotate_cohort.add_runnable_step(
-            runnable_step=RunnableStep(
-                name='annotate_cohort_ensembl_vep',
-                program='perl',
-                sub_command=Command()))
-        """ @type runnable_step: RunnableStep """
-        # self.set_runnable_step_configuration(runnable_step=runnable_step)
-        runnable_step.arguments.append(os.path.join(default.directory_vep_src, 'vep'))
-        sub_command = runnable_step.sub_command
-        sub_command.add_switch_long(key='no_progress')
-        sub_command.add_switch_long(key='everything')
-        sub_command.add_option_long(key='species', value='homo_sapiens')  # TODO: Has to be configurable
-        sub_command.add_option_long(key='assembly', value='GRCh37')  # TODO: Has to be configurable
-        sub_command.add_option_long(key='input_file', value=file_path_process_cohort.multi_sample_vcf)
-        sub_command.add_option_long(key='format', value='vcf')  # Input file format
-        sub_command.add_option_long(key='output_file', value=file_path_annotate_cohort.vep_complete_raw_vcf)
-        sub_command.add_option_long(key='stats_file', value=file_path_annotate_cohort.vep_statistics)
-        sub_command.add_switch_long(key='force_overwrite')
-        sub_command.add_switch_long(key='dont_skip')
-        sub_command.add_switch_long(key='cache')
-        sub_command.add_option_long(key='dir_cache', value=default.directory_vep_cache)
-        sub_command.add_option_long(key='dir_plugins', value=default.directory_vep_plugins)
-        sub_command.add_option_long(key='failed', value='1')
-        sub_command.add_switch_long(key='vcf')
-        sub_command.add_switch_long(key='allele_number')
-        # sub_command.add_switch_long(key='no_escape')  # Do not percent escape HGVS strings
-        sub_command.add_switch_long(key='allow_non_variant')
-        sub_command.add_switch_long(key='flag_pick_allele_gene')
-        sub_command.add_option_long(key='port', value='3337')
-        sub_command.add_switch_long(key='gencode_basic')
-        # sub_command.add_switch_long(key='write_cache')
-        sub_command.add_option_long(  # TODO: Has to be configurable
-            key='plugin',
-            value='CADD,/scratch/lab_bsf/resources/CADD/b37/whole_genome_SNVs.tsv.gz')
-        sub_command.add_option_long(
-            key='tmpdir',
-            value=runnable_annotate_cohort.get_relative_temporary_directory_path)
-
-        runnable_annotate_cohort.add_runnable_step(
-            runnable_step=RunnableStep(
-                name='annotate_cohort_ensembl_vep_bgzip',
-                program='bgzip',
-                arguments=[file_path_annotate_cohort.vep_complete_raw_vcf]))
-
-        runnable_step = runnable_annotate_cohort.add_runnable_step(
-            runnable_step=RunnableStep(
-                name='annotate_cohort_ensembl_vep_tabix',
-                program='tabix',
-                arguments=[file_path_annotate_cohort.vep_complete_raw_vcf_bgz]))
-        """ @type runnable_step: RunnableStep """
-        runnable_step.add_option_long(key='preset', value='vcf')
-
-        # if not os.path.exists(os.path.join(self.genome_directory, file_path_annotate_cohort.vep_filtered_vcf_tbi)):
-        # Run the Ensembl Variant Effect Filter script.
-
-        runnable_step = runnable_annotate_cohort.add_runnable_step(
-            runnable_step=RunnableStep(
-                name='annotate_cohort_ensembl_filter',
-                program='perl',
-                sub_command=Command()))
-        """ @type runnable_step: RunnableStep """
-        # self.set_runnable_step_configuration(runnable_step=runnable_step)
-        runnable_step.arguments.append(os.path.join(default.directory_vep_src, 'filter_vep'))
-        sub_command = runnable_step.sub_command
-        sub_command.add_option_long(key='input_file', value=file_path_annotate_cohort.vep_complete_raw_vcf_bgz)
-        sub_command.add_option_long(key='format', value='vcf')
-        sub_command.add_option_long(key='output_file', value=file_path_annotate_cohort.vep_filtered_raw_vcf)
-        sub_command.add_switch_long(key='only_matched')
-        sub_command.add_option_long(key='filter', value='Consequence ne upstream_gene_variant', override=True)
-        sub_command.add_option_long(key='filter', value='Consequence ne downstream_gene_variant', override=True)
-        sub_command.add_option_long(key='filter', value='Consequence ne intron_variant', override=True)
-        sub_command.add_option_long(key='filter', value='BIOTYPE ne processed_transcript', override=True)
-        # sub_command.add_option_long(key='filter', value='CANONICAL eq YES', override=True)
-        sub_command.add_switch_long(key='force_overwrite')
-
-        runnable_annotate_cohort.add_runnable_step(
-            runnable_step=RunnableStep(
-                name='annotate_cohort_ensembl_filter_bgzip',
-                program='bgzip',
-                arguments=[file_path_annotate_cohort.vep_filtered_raw_vcf]))
-
-        runnable_step = runnable_annotate_cohort.add_runnable_step(
-            runnable_step=RunnableStep(
-                name='annotate_cohort_ensembl_filter_tabix',
-                program='tabix',
-                arguments=[file_path_annotate_cohort.vep_filtered_raw_vcf_bgz]))
-        """ @type runnable_step: RunnableStep """
-        runnable_step.add_option_long(key='preset', value='vcf')
-
-        # Run the VCF Filter on the complete VEP set to convert (re-model) the CSQ field into
-        # a set of independent INFO fields.
-
-        runnable_step = runnable_annotate_cohort.add_runnable_step(
-            runnable_step=RunnableStepJava(
-                name='annotate_cohort_vcf_filter_complete',
-                sub_command=Command(program='at.ac.oeaw.cemm.bsf.vcffilter.vep.vep2vcf'),
-                java_temporary_path=runnable_annotate_cohort.get_relative_temporary_directory_path,
-                java_heap_maximum='Xmx2G'))
-        """ @type runnable_step: RunnableStepJava """
-        runnable_step.add_option_short(
-            key='classpath',
-            value=os.path.join(self.classpath_vcf_filter, 'VCFFilter.jar'))
-        sub_command = runnable_step.sub_command
-        sub_command.add_option_pair(key='INPUT', value=file_path_annotate_cohort.vep_complete_raw_vcf_bgz)
-        sub_command.add_option_pair(key='OUTPUT', value=file_path_annotate_cohort.vep_complete_vcf_bgz)
-
-        # Run the VCF Filter on the filtered VEP set to convert (re-model) the CSQ field into
-        # a set of independent INFO fields.
-
-        runnable_step = runnable_annotate_cohort.add_runnable_step(
-            runnable_step=RunnableStepJava(
-                name='annotate_cohort_vcf_filter_filtered',
-                sub_command=Command(program='at.ac.oeaw.cemm.bsf.vcffilter.vep.vep2vcf'),
-                java_temporary_path=runnable_annotate_cohort.get_relative_temporary_directory_path,
-                java_heap_maximum='Xmx2G'))
-        """ @type runnable_step: RunnableStepJava """
-        runnable_step.add_option_short(
-            key='classpath',
-            value=os.path.join(self.classpath_vcf_filter, 'VCFFilter.jar'))
-        sub_command = runnable_step.sub_command
-        sub_command.add_option_pair(key='INPUT', value=file_path_annotate_cohort.vep_filtered_raw_vcf_bgz)
-        sub_command.add_option_pair(key='OUTPUT', value=file_path_annotate_cohort.vep_filtered_vcf_bgz)
+        runnable_annotate_cohort_vep = run_annotate_vep(
+            prefix=prefix_annotate_cohort_vep,
+            vcf_file_path=file_path_process_cohort.multi_sample_vcf)
+        executable_annotate_cohort_vep = self.set_stage_runnable(
+            stage=stage_annotate_cohort_vep,
+            runnable=runnable_annotate_cohort_vep)
+        # Set dependencies on preceding Runnable.name or Executable.name objects.
+        executable_annotate_cohort_vep.dependencies.append(runnable_process_cohort.name)
 
         ######################################################
         # Step 8: Re-process and split the cohort by sample. #
         ######################################################
         #
-        # GATK SelectVariants   (split_cohort_gatk_select_variants)
-        # GATK VariantsToTable  (split_cohort_gatk_variants_to_table)
+        # GATK SelectVariants   (split_cohort_snpeff_gatk_select_variants_snpeff)
+        # GATK VariantsToTable  (split_cohort_snpeff_gatk_variants_to_table_snpeff)
+        # GATK SelectVariants   (split_cohort_gatk_select_variants_vep)
+        # GATK VariantsToTable  (split_cohort_gatk_variants_to_table_vep)
+
+        file_path_annotate_cohort_snpeff = runnable_annotate_cohort_snpeff.file_path_object
+        """ @type file_path_annotate_cohort_snpeff: FilePathAnnotateSnpEff """
+
+        file_path_annotate_cohort_vep = runnable_annotate_cohort_vep.file_path_object
+        """ @type file_path_annotate_cohort_vep: FilePathAnnotateVEP """
 
         for sample in self.sample_list:
             # Get all PairedReads objects solely to exclude samples without any.
@@ -3962,103 +4464,85 @@ class VariantCallingGATK(Analysis):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
 
-            prefix_split_cohort = '_'.join((stage_split_cohort.name, sample.name))
+            # Split the snpEff-annotated multi-sample VCF file.
 
-            file_path_split_cohort = FilePathSplitCohort(prefix=prefix_split_cohort)
+            prefix_split_cohort_snpeff = '_'.join((stage_split_cohort_snpeff.name, sample.name))
 
-            runnable_split_cohort = self.add_runnable(
+            file_path_split_cohort_snpeff = FilePathSplitCohort(prefix=prefix_split_cohort_snpeff)
+
+            runnable_split_cohort_snpeff = self.add_runnable(
                 runnable=Runnable(
-                    name=prefix_split_cohort,
+                    name=prefix_split_cohort_snpeff,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
-                    file_path_object=file_path_split_cohort,
+                    file_path_object=file_path_split_cohort_snpeff,
                     debug=self.debug))
-            executable_split_cohort = self.set_stage_runnable(
-                stage=stage_split_cohort,
-                runnable=runnable_split_cohort)
+            executable_split_cohort_snpeff = self.set_stage_runnable(
+                stage=stage_split_cohort_snpeff,
+                runnable=runnable_split_cohort_snpeff)
             # Set dependencies on preceding Runnable.name or Executable.name objects.
-            executable_split_cohort.dependencies.append(runnable_process_cohort.name)
+            executable_split_cohort_snpeff.dependencies.append(runnable_annotate_cohort_snpeff.name)
 
-            reference_split_cohort = runnable_split_cohort.get_absolute_cache_file_path(
+            reference_split_cohort_snpeff = runnable_split_cohort_snpeff.get_absolute_cache_file_path(
                 file_path=self.bwa_genome_db)
 
             # Run the GATK SelectVariants analysis to split multi-sample VCF files into one per sample.
 
-            runnable_step = runnable_split_cohort.add_runnable_step(
+            runnable_step = runnable_split_cohort_snpeff.add_runnable_step(
                 runnable_step=RunnableStepGATK(
-                    name='split_cohort_gatk_select_variants',
-                    java_temporary_path=runnable_split_cohort.get_relative_temporary_directory_path,
+                    name='split_cohort_snpeff_gatk_select_variants_snpeff',
+                    java_temporary_path=runnable_split_cohort_snpeff.get_relative_temporary_directory_path,
                     java_heap_maximum='Xmx2G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
             runnable_step.add_gatk_option(key='analysis_type', value='SelectVariants')
-            runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_cohort)
+            runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_cohort_snpeff)
             for interval in self.exclude_intervals_list:
                 runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
             for interval in self.include_intervals_list:
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
-            runnable_step.add_gatk_option(key='variant', value=file_path_process_cohort.annotated_vcf)
-            runnable_step.add_gatk_option(key='out', value=file_path_split_cohort.sample_vcf)
+            runnable_step.add_gatk_option(key='variant', value=file_path_annotate_cohort_snpeff.annotated_vcf)
+            runnable_step.add_gatk_option(key='out', value=file_path_split_cohort_snpeff.sample_vcf)
             runnable_step.add_gatk_option(key='sample_name', value=sample.name)
             runnable_step.add_gatk_switch(key='excludeNonVariants')
 
             # Run the GATK VariantsToTable analysis.
 
-            runnable_step = runnable_split_cohort.add_runnable_step(
+            runnable_step = runnable_split_cohort_snpeff.add_runnable_step(
                 runnable_step=RunnableStepGATK(
-                    name='split_cohort_gatk_variants_to_table',
-                    java_temporary_path=runnable_split_cohort.get_relative_temporary_directory_path,
+                    name='split_cohort_snpeff_gatk_variants_to_table_snpeff',
+                    java_temporary_path=runnable_split_cohort_snpeff.get_relative_temporary_directory_path,
                     java_heap_maximum='Xmx2G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
             runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
-            runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_cohort)
+            runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_cohort_snpeff)
             for interval in self.exclude_intervals_list:
                 runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
             for interval in self.include_intervals_list:
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            runnable_step.add_gatk_option(key='variant', value=file_path_split_cohort.sample_vcf)
-            runnable_step.add_gatk_option(key='out', value=file_path_split_cohort.sample_tsv)
+            runnable_step.add_gatk_option(key='variant', value=file_path_split_cohort_snpeff.sample_vcf)
+            runnable_step.add_gatk_option(key='out', value=file_path_split_cohort_snpeff.sample_tsv)
             runnable_step.add_gatk_switch(key='allowMissingData')
             runnable_step.add_gatk_switch(key='showFiltered')
-            # Set of standard VCF fields.
-            runnable_step.add_gatk_option(key='fields', value='CHROM', override=True)
-            runnable_step.add_gatk_option(key='fields', value='POS', override=True)
-            runnable_step.add_gatk_option(key='fields', value='ID', override=True)
-            runnable_step.add_gatk_option(key='fields', value='REF', override=True)
-            runnable_step.add_gatk_option(key='fields', value='ALT', override=True)
-            runnable_step.add_gatk_option(key='fields', value='QUAL', override=True)
-            runnable_step.add_gatk_option(key='fields', value='FILTER', override=True)
-            #
-            runnable_step.add_gatk_option(key='fields', value='AF', override=True)
-            runnable_step.add_gatk_option(key='fields', value='VQSLOD', override=True)
-            runnable_step.add_gatk_option(key='fields', value='culprit', override=True)
-            # GATK Haplotype Caller genotype fields: GT:AD:DP:GQ:PL
-            runnable_step.add_gatk_option(key='genotypeFields', value='AD', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='DP', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='GQ', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='GT', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='PGT', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='PID', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='PL', override=True)
-            # Set of snpEff fields.
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_EFFECT', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_IMPACT', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_FUNCTIONAL_CLASS', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_CODON_CHANGE', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_AMINO_ACID_CHANGE', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_GENE_NAME', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_GENE_BIOTYPE', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_TRANSCRIPT_ID', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_EXON_ID', override=True)
-
+            # Set of fixed VCF fields.
+            for field_name in variants_to_table_fields['fixed']:
+                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+            # Set of GATK Haplotype Caller-specific INFO fields.
+            for field_name in variants_to_table_fields['haplotype_caller']['info']:
+                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+            # Set of GATK Haplotype Caller-specific genotype fields.
+            for field_name in variants_to_table_fields['haplotype_caller']['format']:
+                runnable_step.add_gatk_option(key='genotypeFields', value=field_name, override=True)
+            # Set of snpEff-specific INFO fields.
+            for field_name in variants_to_table_fields['snpeff']:
+                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
             # Automatically add all fields defined for the Variant Annotator resources, above.
             for annotation_resource in self.annotation_resources_dict.keys():
                 if len(self.annotation_resources_dict[annotation_resource][0]) \
@@ -4068,6 +4552,86 @@ class VariantCallingGATK(Analysis):
                             key='fields',
                             value='.'.join((annotation_resource, annotation)),
                             override=True)
+
+            # Split the Ensembl Variant Effect Predictor-annotated multi-sample VCF file.
+
+            prefix_split_cohort_vep = '_'.join((stage_split_cohort_vep.name, sample.name))
+
+            file_path_split_cohort_vep = FilePathSplitCohort(prefix=prefix_split_cohort_vep)
+
+            runnable_split_cohort_vep = self.add_runnable(
+                runnable=Runnable(
+                    name=prefix_split_cohort_vep,
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.genome_directory,
+                    cache_directory=self.cache_directory,
+                    cache_path_dict=self._cache_path_dict,
+                    file_path_object=file_path_split_cohort_vep,
+                    debug=self.debug))
+            executable_split_cohort_vep = self.set_stage_runnable(
+                stage=stage_split_cohort_vep,
+                runnable=runnable_split_cohort_vep)
+            # Set dependencies on preceding Runnable.name or Executable.name objects.
+            executable_split_cohort_vep.dependencies.append(runnable_annotate_cohort_vep.name)
+
+            reference_split_cohort_vep = runnable_split_cohort_vep.get_absolute_cache_file_path(
+                file_path=self.bwa_genome_db)
+
+            # Run the GATK SelectVariants analysis to split multi-sample VCF files into one per sample.
+
+            runnable_step = runnable_split_cohort_vep.add_runnable_step(
+                runnable_step=RunnableStepGATK(
+                    name='split_cohort_vep_gatk_select_variants_vep',
+                    java_temporary_path=runnable_split_cohort_vep.get_relative_temporary_directory_path,
+                    java_heap_maximum='Xmx2G',
+                    gatk_classpath=self.classpath_gatk))
+            """ @type runnable_step: RunnableStepGATK """
+            runnable_step.add_gatk_option(key='analysis_type', value='SelectVariants')
+            runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_cohort_vep)
+            for interval in self.exclude_intervals_list:
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+            for interval in self.include_intervals_list:
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+            if self.interval_padding:
+                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+            runnable_step.add_gatk_option(key='variant', value=file_path_annotate_cohort_vep.vep_complete_vcf_bgz)
+            runnable_step.add_gatk_option(key='out', value=file_path_split_cohort_vep.sample_vcf)
+            runnable_step.add_gatk_option(key='sample_name', value=sample.name)
+            runnable_step.add_gatk_switch(key='excludeNonVariants')
+
+            # Run the GATK VariantsToTable analysis.
+
+            runnable_step = runnable_split_cohort_vep.add_runnable_step(
+                runnable_step=RunnableStepGATK(
+                    name='split_cohort_vep_gatk_variants_to_table_vep',
+                    java_temporary_path=runnable_split_cohort_vep.get_relative_temporary_directory_path,
+                    java_heap_maximum='Xmx2G',
+                    gatk_classpath=self.classpath_gatk))
+            """ @type runnable_step: RunnableStepGATK """
+            runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
+            runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_cohort_vep)
+            for interval in self.exclude_intervals_list:
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+            for interval in self.include_intervals_list:
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+            if self.interval_padding:
+                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+            runnable_step.add_gatk_option(key='variant', value=file_path_split_cohort_vep.sample_vcf)
+            runnable_step.add_gatk_option(key='out', value=file_path_split_cohort_vep.sample_tsv)
+            runnable_step.add_gatk_switch(key='allowMissingData')
+            runnable_step.add_gatk_switch(key='showFiltered')
+            # Set of fixed VCF fields.
+            for field_name in variants_to_table_fields['fixed']:
+                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+            # Set of GATK Haplotype Caller-specific INFO fields.
+            for field_name in variants_to_table_fields['haplotype_caller']['info']:
+                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+            # Set of GATK Haplotype Caller-specific genotype fields.
+            for field_name in variants_to_table_fields['haplotype_caller']['format']:
+                runnable_step.add_gatk_option(key='genotypeFields', value=field_name, override=True)
+            # Set of Ensembl VEP-specific INFO fields.
+            for field_name in variants_to_table_fields['vep']:
+                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
 
         ###################################################
         # Step 9: Summarise the variant calling analysis. #
@@ -4094,7 +4658,7 @@ class VariantCallingGATK(Analysis):
             stage=stage_summary,
             runnable=runnable_summary)
         # Set dependencies on preceding Runnable.name or Executable.name objects.
-        for runnable_diagnose_sample in vc_runnable_diagnose_sample_list:
+        for runnable_diagnose_sample in runnable_diagnose_sample_list:
             executable_summary.dependencies.append(runnable_diagnose_sample.name)
 
         # Run the bsfR script to summarise the variant calling procedure.
@@ -4115,253 +4679,22 @@ class VariantCallingGATK(Analysis):
         # GATK VariantAnnotator (somatic_gatk_variant_annotator)
         # GATK VariantsToTable  (somatic_gatk_variants_to_table)
 
-        key_list = self.comparisons.keys()
-        key_list.sort(cmp=lambda x, y: cmp(x, y))
+        comparison_list = self.comparisons.keys()
+        comparison_list.sort(cmp=lambda x, y: cmp(x, y))
 
         if self.debug > 0:
-            print 'Somatic variant calling: ' + repr(key_list)
+            print 'Somatic variant calling: ' + repr(comparison_list)
 
-        for key in key_list:
-            comparison = self.comparisons[key]
-            """ @type comparison: VariantCallingGATKComparison """
-
-            prefix_somatic = '_'.join((stage_somatic.name, key))
+        for comparison_name in comparison_list:
+            prefix_somatic = '_'.join((stage_somatic.name, comparison_name))
 
             # Somatic variant calling-specific file paths
 
             file_path_somatic = FilePathSomatic(prefix=prefix_somatic)
 
-            # Run the GATK MuTect2 analysis to characterise somatic variants in a scatter gather approach.
+            runnable_somatic_gather = run_somatic_scatter_gather(comparison_key=comparison_name)
 
-            vc_runnable_somatic_scatter_list = list()
-            """ @type vc_runnable_somatic_scatter_list: list[Runnable] """
-
-            # If the somatic index file already exists, create the Runnable objects, but do not submit their
-            # corresponding Executable objects.
-
-            if os.path.exists(os.path.join(self.genome_directory, file_path_somatic.annotated_tbi)):
-                submit_runnable = False
-            else:
-                submit_runnable = True
-
-            runnable_somatic_scatter = None
-            for tile_index in range(0, len(self._tile_region_somatic_list)):
-                prefix_somatic_scatter = '_'.join((
-                    stage_somatic.name, key, 'scatter', str(tile_index)))
-
-                file_path_somatic_scatter = FilePathSomaticScatterGather(prefix=prefix_somatic_scatter)
-
-                runnable_somatic_scatter = self.add_runnable(
-                    runnable=Runnable(
-                        name=prefix_somatic_scatter,
-                        code_module='bsf.runnables.generic',
-                        working_directory=self.genome_directory,
-                        cache_directory=self.cache_directory,
-                        cache_path_dict=self._cache_path_dict,
-                        file_path_object=file_path_somatic_scatter,
-                        debug=self.debug))
-                executable_somatic_scatter = self.set_stage_runnable(
-                    stage=stage_somatic,
-                    runnable=runnable_somatic_scatter)
-                # Set dependencies on preceding Runnable.name or Executable.name objects.
-                if comparison.normal_sample is not None:
-                    executable_somatic_scatter.dependencies.append(
-                        '_'.join((stage_process_sample.name, comparison.normal_sample.name)))
-                if comparison.tumor_sample is not None:
-                    executable_somatic_scatter.dependencies.append(
-                        '_'.join((stage_process_sample.name, comparison.tumor_sample.name)))
-                executable_somatic_scatter.submit = submit_runnable
-
-                vc_runnable_somatic_scatter_list.append(runnable_somatic_scatter)
-
-                reference_somatic_scatter = runnable_somatic_scatter.get_absolute_cache_file_path(
-                    file_path=self.bwa_genome_db)
-
-                runnable_step = runnable_somatic_scatter.add_runnable_step(
-                    runnable_step=RunnableStepGATK(
-                        name='somatic_gatk_mutect2_scatter',
-                        java_temporary_path=runnable_somatic_scatter.get_relative_temporary_directory_path,
-                        java_heap_maximum='Xmx4G',
-                        gatk_classpath=self.classpath_gatk))
-                """ @type runnable_step: RunnableStepGATK """
-                runnable_step.add_gatk_option(key='analysis_type', value='MuTect2')
-                runnable_step.add_gatk_option(key='reference_sequence', value=reference_somatic_scatter)
-                for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                # for interval in self.include_intervals_list:
-                #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                # if self.interval_padding:
-                #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-                for region_tuple in self._tile_region_somatic_list[tile_index]:
-                    # The list of tiles is initialised to an empty tile to trigger at least one process.
-                    # Do not assign an interval in such cases.
-                    if region_tuple[0]:
-                        runnable_step.add_gatk_option(
-                            key='intervals',
-                            value='{:s}:{:d}-{:d}'.format(region_tuple[0], region_tuple[1], region_tuple[2]),
-                            override=True)
-                if self.known_sites_discovery:
-                    runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
-                for file_path in self.known_somatic_discovery:
-                    runnable_step.add_gatk_option(key='cosmic', value=file_path, override=True)
-
-                # Find and add the FilePathProcessSample object for the 'normal' Sample object.
-                if comparison.normal_sample is not None:
-                    file_path_object = self.runnable_dict['_'.join((
-                        stage_process_sample.name,
-                        comparison.normal_sample.name))].file_path_object
-                    """ @type file_path_object: FilePathProcessSample """
-                    runnable_step.add_gatk_option(key='input_file:normal', value=file_path_object.realigned_bam)
-                elif comparison.panel_of_normal_path is not None:
-                    runnable_step.add_gatk_option(key='normal_panel', value=comparison.panel_of_normal_path)
-
-                # Find and add the FilePathProcessSample object for the 'tumor' Sample object.
-                if comparison.tumor_sample is not None:
-                    file_path_object = self.runnable_dict['_'.join((
-                        stage_process_sample.name,
-                        comparison.tumor_sample.name))].file_path_object
-                    """ @type file_path_object: FilePathProcessSample """
-                    runnable_step.add_gatk_option(key='input_file:tumor', value=file_path_object.realigned_bam)
-
-                runnable_step.add_gatk_option(key='out', value=file_path_somatic_scatter.partial_vcf)
-
-            # Gather
-
-            # If there is only one tile, no need to gather, just rename the file and return the Runnable.
-
-            if len(self._tile_region_somatic_list) == 1:
-                file_path_somatic_scatter = runnable_somatic_scatter.file_path_object
-                """ @type file_path_somatic_scatter: FilePathSomaticScatterGather """
-                # Add sample-specific keys to the file path dictionary.
-                file_path_somatic_scatter.somatic_vcf = file_path_somatic.somatic_vcf
-                file_path_somatic_scatter.somatic_idx = file_path_somatic.somatic_idx
-
-                runnable_somatic_scatter.add_runnable_step(
-                    runnable_step=RunnableStepMove(
-                        name='somatic_gather_move_vcf',
-                        source_path=file_path_somatic_scatter.partial_vcf,
-                        target_path=file_path_somatic_scatter.somatic_vcf))
-
-                runnable_somatic_scatter.add_runnable_step(
-                    runnable_step=RunnableStepMove(
-                        name='somatic_gather_move_tbi',
-                        source_path=file_path_somatic_scatter.partial_tbi,
-                        target_path=file_path_somatic_scatter.somatic_idx))
-
-                # return runnable_somatic_scatter
-                runnable_somatic_gather = runnable_somatic_scatter
-            else:
-                # Second, gather by the number of chunks on the partitioned genome tile index list.
-
-                # Second, Merge chunks hierarchically.
-                # Initialise a list of Runnable objects and indices for the hierarchical merge.
-                vc_runnable_somatic_gather_list = vc_runnable_somatic_scatter_list
-                vc_somatic_gather_index_list = range(0, len(self._tile_region_somatic_list))
-                runnable_somatic_gather = None  # Global variable to keep and return the last Runnable.
-                level = 0
-                while len(vc_somatic_gather_index_list) > 1:
-                    temporary_gather_runnable_list = list()
-                    """ @type temporary_gather_runnable_list: list[Runnable] """
-                    temporary_gather_index_list = list()
-                    """ @type temporary_gather_index_list: list[int] """
-                    # Partition the index list into chunks of given size.
-                    partition_list = [vc_somatic_gather_index_list[offset:offset + self.number_of_chunks_cohort]
-                                      for offset in range(0,
-                                                          len(vc_somatic_gather_index_list),
-                                                          self.number_of_chunks_cohort)]
-
-                    for partition_index in range(0, len(partition_list)):
-                        chunk_index_list = partition_list[partition_index]
-                        # The file prefix includes the level and partition index.
-                        prefix_somatic_gather = '_'.join(
-                            (stage_somatic.name, key, 'gather', str(level), str(partition_index)))
-
-                        file_path_somatic_gather = FilePathSomaticScatterGather(prefix=prefix_somatic_gather)
-
-                        runnable_somatic_gather = self.add_runnable(
-                            runnable=Runnable(
-                                name=prefix_somatic_gather,
-                                code_module='bsf.runnables.generic',
-                                working_directory=self.genome_directory,
-                                cache_directory=self.cache_directory,
-                                cache_path_dict=self._cache_path_dict,
-                                file_path_object=file_path_somatic_gather,
-                                debug=self.debug))
-                        executable_somatic_gather = self.set_stage_runnable(
-                            stage=stage_somatic,
-                            runnable=runnable_somatic_gather)
-                        executable_somatic_gather.submit = submit_runnable
-                        # Dependencies on scatter processes are set based on genome tile indices below.
-                        temporary_gather_runnable_list.append(runnable_somatic_gather)
-                        temporary_gather_index_list.append(partition_index)
-
-                        reference_somatic_gather = runnable_somatic_gather.get_absolute_cache_file_path(
-                            file_path=self.bwa_genome_db)
-
-                        # GATK CatVariants by-passes the GATK engine and thus requires a completely different
-                        # command line.
-                        runnable_step = runnable_somatic_gather.add_runnable_step(
-                            runnable_step=RunnableStepJava(
-                                name='somatic_gatk_cat_variants',
-                                sub_command=Command(program='org.broadinstitute.gatk.tools.CatVariants'),
-                                java_temporary_path=runnable_somatic_gather.get_relative_temporary_directory_path,
-                                java_heap_maximum='Xmx4G'))
-                        """ @type runnable_step: RunnableStepJava """
-                        runnable_step.add_option_short(
-                            key='classpath',
-                            value=os.path.join(self.classpath_gatk, 'GenomeAnalysisTK.jar'))
-                        sub_command = runnable_step.sub_command
-                        # Add the 'reference' not 'reference_sequence' option.
-                        sub_command.add_option_long(
-                            key='reference',
-                            value=reference_somatic_gather)
-                        sub_command.add_option_long(
-                            key='outputFile',
-                            value=file_path_somatic_gather.partial_vcf)
-                        sub_command.add_switch_long(key='assumeSorted')
-                        # Finally, add RunnableStep options, obsolete files and Executable dependencies per chunk index.
-                        for chunk_index in chunk_index_list:
-                            runnable_object = vc_runnable_somatic_gather_list[chunk_index]
-                            file_path_object = runnable_object.file_path_object
-                            """ @type file_path_object: FilePathSomaticScatterGather """
-                            # Set GATK option variant
-                            sub_command.add_option_long(
-                                key='variant',
-                                value=file_path_object.partial_vcf,
-                                override=True)
-                            # Delete the *.g.vcf.gz file.
-                            runnable_step.obsolete_file_path_list.append(file_path_object.partial_vcf)
-                            # Delete the *.g.vcf.gz.tbi file.
-                            runnable_step.obsolete_file_path_list.append(file_path_object.partial_tbi)
-                            # Set dependencies on preceding Runnable.name or Executable.name objects.
-                            executable_somatic_gather.dependencies.append(runnable_object.name)
-
-                    # Set the temporary index list as the new list and increment the merge level.
-                    vc_runnable_somatic_gather_list = temporary_gather_runnable_list
-                    vc_somatic_gather_index_list = temporary_gather_index_list
-                    level += 1
-                else:
-                    # For the last instance, additionally rename the final file.
-                    file_path_somatic_gather = runnable_somatic_gather.file_path_object
-                    """ @type file_path_somatic_gather: FilePathSomaticScatterGather """
-
-                    # Add sample-specific keys to the file path dictionary.
-                    file_path_somatic_gather.somatic_vcf = file_path_somatic.somatic_vcf
-                    file_path_somatic_gather.somatic_idx = file_path_somatic.somatic_idx
-
-                    runnable_somatic_gather.add_runnable_step(
-                        runnable_step=RunnableStepMove(
-                            name='somatic_gather_move_vcf',
-                            source_path=file_path_somatic_gather.partial_vcf,
-                            target_path=file_path_somatic_gather.somatic_vcf))
-
-                    runnable_somatic_gather.add_runnable_step(
-                        runnable_step=RunnableStepMove(
-                            name='somatic_gather_move_tbi',
-                            source_path=file_path_somatic_gather.partial_tbi,
-                            target_path=file_path_somatic_gather.somatic_idx))
-
-                    # return runnable_somatic_gather
+            # Create a Runnable for processing the somatic calls.
 
             runnable_somatic = self.add_runnable(
                 runnable=Runnable(
@@ -4377,155 +4710,111 @@ class VariantCallingGATK(Analysis):
                 runnable=runnable_somatic)
             # Set dependencies on preceding Runnable.name or Executable.name objects.
             executable_somatic.dependencies.append(runnable_somatic_gather.name)
+            # For the moment, this Runnable has no RunnableStep objects assigned.
+            # It is purely needed for accessing FilePath objects in the report() method below.
+            # Never submit the corresponding executable.
+            executable_somatic.submit = False
 
-            reference_somatic = runnable_somatic.get_absolute_cache_file_path(
+            # reference_somatic = runnable_somatic.get_absolute_cache_file_path(
+            #     file_path=self.bwa_genome_db)
+
+            ############################################
+            # Step 11: Annotate somatic variant calls. #
+            ############################################
+
+            # Run snpEff annotation.
+
+            prefix_annotate_somatic_snpeff = '_'.join((stage_annotate_somatic_snpeff.name, comparison_name))
+
+            runnable_annotate_somatic_snpeff = run_annotate_snpeff(
+                prefix=prefix_annotate_somatic_snpeff,
+                vcf_file_path=file_path_somatic.somatic_vcf)
+            executable_annotate_somatic_snpeff = self.set_stage_runnable(
+                stage=stage_annotate_somatic_snpeff,
+                runnable=runnable_annotate_somatic_snpeff)
+            # Set dependencies on preceding Runnable.name or Executable.name objects.
+            executable_annotate_somatic_snpeff.dependencies.append(runnable_somatic_gather.name)
+
+            file_path_annotate_somatic_snpeff = runnable_annotate_somatic_snpeff.file_path_object
+            """ @type file_path_annotate_somatic_snpeff: FilePathAnnotateSnpEff """
+
+            # Run Ensembl Variant Effect Predictor (VEP) annotation.
+
+            prefix_annotate_somatic_vep = '_'.join((stage_annotate_somatic_vep.name, comparison_name))
+
+            runnable_annotate_somatic_vep = run_annotate_vep(
+                prefix=prefix_annotate_somatic_vep,
+                vcf_file_path=file_path_somatic.somatic_vcf)
+            executable_annotate_somatic_vep = self.set_stage_runnable(
+                stage=stage_annotate_somatic_vep,
+                runnable=runnable_annotate_somatic_vep)
+            # Set dependencies on preceding Runnable.name or Executable.name objects.
+            executable_annotate_somatic_vep.dependencies.append(runnable_somatic_gather.name)
+
+            file_path_annotate_somatic_vep = runnable_annotate_somatic_vep.file_path_object
+            """ @type file_path_annotate_somatic_vep: FilePathAnnotateVEP """
+
+            #########################################
+            # Step 12: Split somatic variant calls. #
+            #########################################
+
+            # Split the somatic snpEff-annotated VCF file into a TSV file.
+
+            prefix_split_somatic_snpeff = '_'.join((stage_split_somatic_snpeff.name, comparison_name))
+
+            file_path_split_somatic_snpeff = FilePathSplitSomatic(prefix=prefix_split_somatic_snpeff)
+
+            runnable_split_somatic_snpeff = self.add_runnable(
+                runnable=Runnable(
+                    name=prefix_split_somatic_snpeff,
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.genome_directory,
+                    cache_directory=self.cache_directory,
+                    cache_path_dict=self._cache_path_dict,
+                    file_path_object=file_path_split_somatic_snpeff,
+                    debug=self.debug))
+            executable_split_somatic_snpeff = self.set_stage_runnable(
+                stage=stage_split_somatic_snpeff,
+                runnable=runnable_split_somatic_snpeff)
+            # Set dependencies on preceding Runnable.name or Executable.name objects.
+            executable_split_somatic_snpeff.dependencies.append(runnable_annotate_somatic_snpeff.name)
+
+            reference_split_somatic_snpeff = runnable_split_somatic_snpeff.get_absolute_cache_file_path(
                 file_path=self.bwa_genome_db)
-
-            # Run the snpEff tool for functional variant annotation.
-
-            runnable_step = runnable_somatic.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='somatic_snpeff',
-                    program='java',
-                    sub_command=Command(program='eff')))
-            """ @type runnable_step: RunnableStep """
-            runnable_step.add_switch_short(
-                key='d64')
-            runnable_step.add_option_short(
-                key='jar',
-                value=os.path.join(self.classpath_snpeff, 'snpEff.jar'))
-            runnable_step.add_switch_short(
-                key='Xmx4G')
-            runnable_step.add_option_pair(
-                key='-Djava.io.tmpdir',
-                value=runnable_somatic.get_relative_temporary_directory_path)
-            runnable_step.stdout_path = file_path_somatic.snpeff_vcf
-
-            sub_command = runnable_step.sub_command
-            sub_command.add_switch_short(key='download')
-            sub_command.add_option_short(key='o', value='gatk')
-            sub_command.add_option_short(key='stats', value=file_path_somatic.snpeff_stats)
-            sub_command.add_option_short(key='config', value=os.path.join(self.classpath_snpeff, 'snpEff.config'))
-
-            sub_command.arguments.append(self.snpeff_genome_version)
-            sub_command.arguments.append(file_path_somatic.somatic_vcf)
-
-            # Automatically compress and index the snpEff VCF file with bgzip and tabix, respectively.
-            # TODO: It would be better for the file system, if output could be directly piped into bgzip.
-
-            runnable_somatic.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='snpeff_bgzip',
-                    program='bgzip',
-                    arguments=[file_path_somatic.snpeff_vcf]))
-
-            runnable_step = runnable_somatic.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='snpeff_tabix',
-                    program='tabix',
-                    arguments=[file_path_somatic.snpeff_vcf_bgz]))
-            """ @type runnable_step: RunnableStep """
-            runnable_step.add_option_long(key='preset', value='vcf')
-
-            # Run the GATK VariantAnnotator analysis.
-
-            runnable_step = runnable_somatic.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='somatic_gatk_variant_annotator',
-                    java_temporary_path=runnable_somatic.get_relative_temporary_directory_path,
-                    java_heap_maximum='Xmx4G',
-                    gatk_classpath=self.classpath_gatk))
-            """ @type runnable_step: RunnableStepGATK """
-            runnable_step.add_gatk_option(key='analysis_type', value='VariantAnnotator')
-            runnable_step.add_gatk_option(key='reference_sequence', value=reference_somatic)
-            for interval in self.exclude_intervals_list:
-                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-            for interval in self.include_intervals_list:
-                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-            if self.interval_padding:
-                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_somatic.threads))
-            if self.known_sites_discovery:
-                runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
-
-            # Add annotation resources and their corresponding expression options.
-            for annotation_resource in self.annotation_resources_dict.keys():
-                if len(self.annotation_resources_dict[annotation_resource][0]) \
-                        and len(self.annotation_resources_dict[annotation_resource][1]):
-                    runnable_step.add_gatk_option(
-                        key=':'.join(('resource', annotation_resource)),
-                        value=self.annotation_resources_dict[annotation_resource][0])
-                    for annotation in self.annotation_resources_dict[annotation_resource][1]:
-                        runnable_step.add_gatk_option(
-                            key='expression',
-                            value='.'.join((annotation_resource, annotation)),
-                            override=True)
-
-            runnable_step.add_gatk_option(key='variant', value=file_path_somatic.somatic_vcf)
-            # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
-            # runnable_step.add_gatk_option(key='annotation', value='AlleleBalanceBySample')
-            runnable_step.add_gatk_option(key='annotation', value='SnpEff')
-            runnable_step.add_gatk_option(key='snpEffFile', value=file_path_somatic.snpeff_vcf_bgz)
-            runnable_step.add_gatk_option(key='out', value=file_path_somatic.annotated_vcf)
 
             # Run the GATK VariantsToTable analysis.
 
-            runnable_step = runnable_somatic.add_runnable_step(
+            runnable_step = runnable_split_somatic_snpeff.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='somatic_gatk_variants_to_table',
-                    java_temporary_path=runnable_somatic.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_split_somatic_snpeff.get_relative_temporary_directory_path,
                     java_heap_maximum='Xmx2G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
             runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
-            runnable_step.add_gatk_option(key='reference_sequence', value=reference_somatic)
+            runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_somatic_snpeff)
             for interval in self.exclude_intervals_list:
                 runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
             for interval in self.include_intervals_list:
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            runnable_step.add_gatk_option(key='variant', value=file_path_somatic.annotated_vcf)
-            runnable_step.add_gatk_option(key='out', value=file_path_somatic.annotated_tsv)
+            runnable_step.add_gatk_option(key='variant', value=file_path_annotate_somatic_snpeff.annotated_vcf)
+            runnable_step.add_gatk_option(key='out', value=file_path_split_somatic_snpeff.comparison_tsv)
             runnable_step.add_gatk_switch(key='allowMissingData')
             runnable_step.add_gatk_switch(key='showFiltered')
-            # Set of standard VCF fields.
-            runnable_step.add_gatk_option(key='fields', value='CHROM', override=True)
-            runnable_step.add_gatk_option(key='fields', value='POS', override=True)
-            runnable_step.add_gatk_option(key='fields', value='ID', override=True)
-            runnable_step.add_gatk_option(key='fields', value='REF', override=True)
-            runnable_step.add_gatk_option(key='fields', value='ALT', override=True)
-            runnable_step.add_gatk_option(key='fields', value='QUAL', override=True)
-            runnable_step.add_gatk_option(key='fields', value='FILTER', override=True)
-            # GATK MuTect2 info fields.
-            runnable_step.add_gatk_option(key='fields', value='NLOD', override=True)
-            runnable_step.add_gatk_option(key='fields', value='TLOD', override=True)
-            # GATK MuTect2 genotype fields: GT:AD:AF:ALT_F1R2:ALT_F2R1:FOXOG:QSS:REF_F1R2:REF_F2R1
-            runnable_step.add_gatk_option(key='genotypeFields', value='AD', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='AF', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='ALT_F1R2', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='ALT_F2R1', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='DP', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='FOXOG', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='GQ', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='GT', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='PGT', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='PID', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='PL', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='QSS', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='REF_F1R2', override=True)
-            runnable_step.add_gatk_option(key='genotypeFields', value='REF_F2R1', override=True)
-            # Set of snpEff fields.
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_EFFECT', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_IMPACT', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_FUNCTIONAL_CLASS', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_CODON_CHANGE', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_AMINO_ACID_CHANGE', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_GENE_NAME', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_GENE_BIOTYPE', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_TRANSCRIPT_ID', override=True)
-            runnable_step.add_gatk_option(key='fields', value='SNPEFF_EXON_ID', override=True)
-
+            # Set of fixed VCF fields.
+            for field_name in variants_to_table_fields['fixed']:
+                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+            # Set of GATK MuTect2 INFO fields.
+            for field_name in variants_to_table_fields['mutect2']['info']:
+                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+            # Set of GATK MuTect2 FORMAT fields.
+            for field_name in variants_to_table_fields['mutect2']['format']:
+                runnable_step.add_gatk_option(key='genotypeFields', value=field_name, override=True)
+            # Set of snpEff INFO fields.
+            for field_name in variants_to_table_fields['snpeff']:
+                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
             # Automatically add all fields defined for the Variant Annotator resources, above.
             for annotation_resource in self.annotation_resources_dict.keys():
                 if len(self.annotation_resources_dict[annotation_resource][0]) \
@@ -4535,6 +4824,64 @@ class VariantCallingGATK(Analysis):
                             key='fields',
                             value='.'.join((annotation_resource, annotation)),
                             override=True)
+
+            # Split the somatic Ensembl VEP-annotated VCF file into a TSV file.
+
+            prefix_split_somatic_vep = '_'.join((stage_split_somatic_vep.name, comparison_name))
+
+            file_path_split_somatic_vep = FilePathSplitSomatic(prefix=prefix_split_somatic_vep)
+
+            runnable_split_somatic_vep = self.add_runnable(
+                runnable=Runnable(
+                    name=prefix_split_somatic_vep,
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.genome_directory,
+                    cache_directory=self.cache_directory,
+                    cache_path_dict=self._cache_path_dict,
+                    file_path_object=file_path_split_somatic_vep,
+                    debug=self.debug))
+            executable_split_somatic_vep = self.set_stage_runnable(
+                stage=stage_split_somatic_vep,
+                runnable=runnable_split_somatic_vep)
+            # Set dependencies on preceding Runnable.name or Executable.name objects.
+            executable_split_somatic_vep.dependencies.append(runnable_annotate_somatic_vep.name)
+
+            reference_split_somatic_vep = runnable_split_somatic_vep.get_absolute_cache_file_path(
+                file_path=self.bwa_genome_db)
+
+            # Run the GATK VariantsToTable analysis.
+
+            runnable_step = runnable_split_somatic_vep.add_runnable_step(
+                runnable_step=RunnableStepGATK(
+                    name='somatic_gatk_variants_to_table',
+                    java_temporary_path=runnable_split_somatic_vep.get_relative_temporary_directory_path,
+                    java_heap_maximum='Xmx2G',
+                    gatk_classpath=self.classpath_gatk))
+            """ @type runnable_step: RunnableStepGATK """
+            runnable_step.add_gatk_option(key='analysis_type', value='VariantsToTable')
+            runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_somatic_vep)
+            for interval in self.exclude_intervals_list:
+                runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+            for interval in self.include_intervals_list:
+                runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+            if self.interval_padding:
+                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+            runnable_step.add_gatk_option(key='variant', value=file_path_annotate_somatic_vep.vep_complete_vcf_bgz)
+            runnable_step.add_gatk_option(key='out', value=file_path_split_somatic_vep.comparison_tsv)
+            runnable_step.add_gatk_switch(key='allowMissingData')
+            runnable_step.add_gatk_switch(key='showFiltered')
+            # Set of fixed VCF fields.
+            for field_name in variants_to_table_fields['fixed']:
+                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+            # Set of GATK MuTect2 INFO fields.
+            for field_name in variants_to_table_fields['mutect2']['info']:
+                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
+            # Set of GATK MuTect2 FORMAT fields.
+            for field_name in variants_to_table_fields['mutect2']['format']:
+                runnable_step.add_gatk_option(key='genotypeFields', value=field_name, override=True)
+            # Set of Ensembl VEP-specific INFO fields.
+            for field_name in variants_to_table_fields['vep']:
+                runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
 
         return
 
@@ -4587,757 +4934,1101 @@ class VariantCallingGATK(Analysis):
 
             return
 
-        # Create simpler symbolic links in structured sub-directoreies to facilitate file system browsing.
-
-        # Create a result directory as concatenation of bsf.Analysis.genome_version and bsf.Analysis.prefix.
-
-        directory_results = report_create_directory(
-            path=os.path.join(self.project_directory, '_'.join((self.genome_version, self.prefix))))
-
-        directory_results_by_cohort = report_create_directory(
-            path=os.path.join(directory_results, 'by_cohort'))
-
-        directory_results_by_pair = report_create_directory(
-            path=os.path.join(directory_results, 'by_pair'))
-
-        directory_results_by_sample = report_create_directory(
-            path=os.path.join(directory_results, 'by_sample'))
-
-        directory_results_by_type = report_create_directory(
-            path=os.path.join(directory_results, 'by_type'))
-
-        for sample in self.sample_list:
-            if self.debug > 0:
-                print repr(self) + ' Sample name: ' + sample.name
-                print sample.trace(1)
-
-            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
-
-            paired_reads_name_list = paired_reads_dict.keys()
-            if not len(paired_reads_name_list):
-                # Skip Sample objects, which PairedReads objects have all been excluded.
-                continue
-            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            runnable_process_sample = self.runnable_dict[
-                '_'.join((self.stage_name_process_sample, sample.name))]
-            file_path_process_sample = runnable_process_sample.file_path_object
-            """ @type file_path_process_sample: FilePathProcessSample """
-
-            # runnable_diagnose_sample = self.runnable_dict[
-            #     '_'.join((self.stage_name_diagnose_sample, sample.name))]
-            # file_path_diagnose_sample = runnable_diagnose_sample.file_path_object
-            """ @type file_path_diagnose_sample: FilePathDiagnoseSample """
-
-            runnable_split_cohort = self.runnable_dict[
-                '_'.join((self.stage_name_split_cohort, sample.name))]
-            file_path_split_cohort = runnable_split_cohort.file_path_object
-            """ @type file_path_split_cohort: FilePathSplitCohort """
-
-            directory_sample = report_create_directory(
-                path=os.path.join(directory_results_by_sample, sample.name))
-
-            for key, extension in (
-                    ('realigned_bam', '.bam'),
-                    ('realigned_bai', '.bam.bai'),
-                    ('realigned_md5', '.bam.md5')):
-                report_create_symbolic_link(
-                    source_path=os.path.relpath(
-                        os.path.join(self.genome_directory, getattr(file_path_process_sample, key)),
-                        directory_sample),
-                    target_path=os.path.join(directory_sample, sample.name + extension))
-
-            for key, extension in (
-                    ('sample_vcf', '.vcf.gz'),
-                    ('sample_idx', '.vcf.gz.tbi'),
-                    ('sample_tsv', '.tsv')):
-                report_create_symbolic_link(
-                    source_path=os.path.relpath(
-                        os.path.join(self.genome_directory, getattr(file_path_split_cohort, key)),
-                        directory_sample),
-                    target_path=os.path.join(directory_sample, sample.name + extension))
-
-            directory_alignments = report_create_directory(
-                path=os.path.join(directory_results_by_type, 'alignments'))
-
-            for key, extension in (
-                    ('realigned_bam', '.bam'),
-                    ('realigned_bai', '.bam.bai'),
-                    ('realigned_md5', '.bam.md5')):
-                report_create_symbolic_link(
-                    source_path=os.path.relpath(
-                        os.path.join(self.genome_directory, getattr(file_path_process_sample, key)),
-                        directory_alignments),
-                    target_path=os.path.join(directory_alignments, sample.name + extension))
-
-            directory_variants = report_create_directory(
-                path=os.path.join(directory_results_by_type, 'variants'))
-
-            for key, extension in (
-                    ('sample_vcf', '.vcf.gz'),
-                    ('sample_idx', '.vcf.gz.tbi'),
-                    ('sample_tsv', '.tsv')):
-                report_create_symbolic_link(
-                    source_path=os.path.relpath(
-                        os.path.join(self.genome_directory, getattr(file_path_split_cohort, key)),
-                        directory_variants),
-                    target_path=os.path.join(directory_variants, sample.name + extension))
-
-        runnable_process_cohort = self.runnable_dict[
-            '_'.join((self.stage_name_process_cohort, self.cohort_name))]
-        file_path_process_cohort = runnable_process_cohort.file_path_object
-        """ @type file_path_process_cohort: FilePathProcessCohort """
-
-        for key, extension in (
-                ('annotated_vcf', '_annotated.vcf.gz'),
-                ('annotated_tbi', '_annotated.vcf.gz.tbi'),
-                ('snpeff_vcf_bgz', '_snpeff.vcf.gz'),
-                ('snpeff_vcf_tbi', '_snpeff.vcf.gz.tbi'),
-                ('snpeff_stats', '_snpeff_summary.html')):
-            report_create_symbolic_link(
-                source_path=os.path.relpath(
-                    os.path.join(self.genome_directory, getattr(file_path_process_cohort, key)),
-                    directory_results_by_cohort),
-                target_path=os.path.join(directory_results_by_cohort, self.cohort_name + extension))
-
-        for comparison_name in self.comparisons.keys():
-            runnable_somatic = self.runnable_dict['_'.join((self.stage_name_somatic, comparison_name))]
-            file_path_somatic = runnable_somatic.file_path_object
-            """ @type file_path_somatic: FilePathSomatic """
-
-            for key, extension in (
-                    ('somatic_vcf', '.vcf.gz'),
-                    ('somatic_idx', '.vcf.gz.tbi'),
-                    ('snpeff_vcf_bgz', '_snpeff.vcf.gz'),
-                    ('snpeff_vcf_tbi', '_snpeff.vcf.gz.tbi'),
-                    ('snpeff_genes', '_snpeff_summary.genes.txt'),
-                    ('snpeff_stats', '_snpeff_summary.html'),
-                    ('annotated_vcf', '_annotated.vcf.gz'),
-                    ('annotated_tbi', '_annotated.vcf.gz.tbi'),
-                    ('annotated_tsv', '_annotated.tsv')):
-                report_create_symbolic_link(
-                    source_path=os.path.relpath(
-                        os.path.join(self.genome_directory, getattr(file_path_somatic, key)),
-                        directory_results_by_pair),
-                    target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
-
-        # Create a symbolic link containing the project name and a UUID.
-        default = Default.get_global_default()
-        link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
-        link_name = os.path.basename(link_path.rstrip('/'))
-
-        # This code only needs the public URL.
-
-        hub_list = list()
-        """ @type hub_list: list[str | unicode] """
-
-        # Write a HTML document.
-
-        report_list = list()
-        """ @type report_list: list[str | unicode] """
-
-        report_list += '<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n'
-        report_list += '\n'
-
-        report_list += '<h2 id="genome_browsing">Genome Browsing</h2>\n'
-        report_list += '\n'
-
-        # Resolve an eventual alias for the UCSC genome assembly name.
-
-        if default.genome_aliases_ucsc_dict is not None and self.genome_version in default.genome_aliases_ucsc_dict:
-            ucsc_genome_version = default.genome_aliases_ucsc_dict[self.genome_version]
-        else:
-            ucsc_genome_version = self.genome_version
-
-        options_dict = {
-            'db': ucsc_genome_version,
-            'hubUrl': Default.url_absolute_projects() + '/' + link_name + '/variant_calling_hub.txt',
-        }
-
-        # The above code for resolving a UCSC Genome Browser genome assembly alias could be centralised in Analysis.
-        report_list += '<p id="ucsc_track_hub">'
-        report_list += 'UCSC Genome Browser Track Hub '
-        report_list += '<a href="' + self.ucsc_track_url(options_dict=options_dict) + '">' + self.project_name + '</a>.'
-        report_list += '</p>\n'
-        report_list += '\n'
-
-        report_list += '<h2 id="read_group_and_sample_level">Read Group and Sample Level</h2>\n'
-        report_list += '\n'
-        report_list += '<table id="read_group_and_sample_table">\n'
-        report_list += '<thead>\n'
-        report_list += '<tr>\n'
-        report_list += '<th>Sample</th>\n'
-        report_list += '<th>Variants</th>\n'
-        report_list += '<th>Alignments</th>\n'
-        report_list += '<th>Read Group</th>\n'
-        report_list += '<th>Duplicate Metrics</th>\n'
-        report_list += '<th>Alignment Summary Metrics</th>\n'
-        report_list += '<th>Hybrid Selection Metrics</th>\n'
-        report_list += '<th>Non-Callable Loci</th>\n'
-        report_list += '<th>Non-Callable Summary</th>\n'
-        report_list += '</tr>\n'
-        report_list += '</thead>\n'
-        report_list += '<tbody>\n'
-
-        # Group via UCSC super tracks.
-
-        hub_list += 'track Alignments\n'
-        hub_list += 'shortLabel Alignments\n'
-        hub_list += 'longLabel BWA NGS read alignments\n'
-        hub_list += 'superTrack on show\n'
-        hub_list += 'group alignments\n'
-        hub_list += '\n'
-
-        hub_list += 'track Callable\n'
-        hub_list += 'shortLabel Callable\n'
-        hub_list += 'longLabel Callable\n'
-        hub_list += 'superTrack on show\n'
-        hub_list += 'group callable\n'
-        hub_list += '\n'
-
-        hub_list += 'track Variants\n'
-        hub_list += 'shortLabel Variants\n'
-        hub_list += 'longLabel Variant calls\n'
-        hub_list += 'superTrack on show\n'
-        hub_list += 'group variants\n'
-        hub_list += '\n'
-
-        for sample in self.sample_list:
-            if self.debug > 0:
-                print repr(self) + ' Sample name: ' + sample.name
-                print sample.trace(1)
-
-            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
-
-            paired_reads_name_list = paired_reads_dict.keys()
-            if not len(paired_reads_name_list):
-                # Skip Sample objects, which PairedReads objects have all been excluded.
-                continue
-            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            runnable_process_sample = self.runnable_dict[
-                '_'.join((self.stage_name_process_sample, sample.name))]
-            file_path_process_sample = runnable_process_sample.file_path_object
-            """ @type file_path_process_sample: FilePathProcessSample """
-
-            runnable_diagnose_sample = self.runnable_dict[
-                '_'.join((self.stage_name_diagnose_sample, sample.name))]
-            file_path_diagnosis = runnable_diagnose_sample.file_path_object
-            """ @type file_path_diagnosis: FilePathDiagnoseSample """
-
-            runnable_split_cohort = self.runnable_dict[
-                '_'.join((self.stage_name_split_cohort, sample.name))]
-            file_path_split_cohort = runnable_split_cohort.file_path_object
-            """ @type file_path_split_cohort: FilePathSplitCohort """
-
-            # Alignment track
-            # Common settings
-
-            hub_list += 'track ' + sample.name + '_alignments\n'
-            hub_list += 'type bam\n'
-            hub_list += 'shortLabel ' + sample.name + '_alignments\n'
-            hub_list += 'longLabel ' + sample.name + 'BWA NGS read alignments\n'
-            hub_list += 'bigDataUrl ' + file_path_process_sample.realigned_bam + '\n'
-            # track_output += 'html ...\n'
-            hub_list += 'visibility squish\n'
-
-            # Common optional settings.
-
-            hub_list += 'color 0,0,0\n'
-
-            # Compressed Sequence Alignment track settings.
-
-            # None so far.
-
-            # Composite track settings.
-
-            hub_list += 'parent Alignments\n'
-            hub_list += '\n'
-
-            # Callable track
-
-            if os.path.isfile(
-                    os.path.join(
-                        self.genome_directory,
-                        file_path_diagnosis.callable_bb)):
-                hub_list += 'track ' + sample.name + '_callable\n'
-                hub_list += 'type bigBed\n'
-                hub_list += 'shortLabel ' + sample.name + '_callable\n'
-                hub_list += 'longLabel ' + sample.name + 'callable\n'
-                hub_list += 'bigDataUrl ' + file_path_diagnosis.callable_bb + '\n'
-                # track_output += 'html ...\n'
-                hub_list += 'visibility squish\n'
-
-                # Common optional settings.
-
-                hub_list += 'color 0,0,0\n'
-
-                # Composite track settings.
-
-                hub_list += 'parent Callable\n'
-                hub_list += '\n'
-
-            # Variant track
-
-            hub_list += 'track ' + sample.name + '_variants\n'
-            hub_list += 'type vcfTabix\n'
-            hub_list += 'shortLabel ' + sample.name + '_variants\n'
-            hub_list += 'longLabel ' + sample.name + ' variant calls\n'
-            hub_list += 'bigDataUrl ' + file_path_split_cohort.sample_vcf + '\n'
-            # track_output += 'html ...\n'
-            hub_list += 'visibility dense\n'
-
-            # vcfTabix specific settings
-
-            # None so far.
-
-            # Composite track settings.
-
-            hub_list += 'parent Variants\n'
-            hub_list += '\n'
-
-            report_list += '<tr>\n'
-            report_list += '<td class="left">' + sample.name + '</td>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_split_cohort.sample_vcf + '">VCF</a>&nbsp;'
-            report_list += '<a href="' + file_path_split_cohort.sample_idx + '">TBI</a>&nbsp;'
-            report_list += '<a href="' + file_path_split_cohort.sample_tsv + '">TSV</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_process_sample.realigned_bam + '">BAM</a>&nbsp;'
-            report_list += '<a href="' + file_path_process_sample.realigned_bai + '">BAI</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="left"></td>\n'  # Read Group
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_process_sample.duplicate_metrics + '">TSV</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_process_sample.alignment_summary_metrics + '">TSV</a>'
-            report_list += '</td>\n'
-            if os.path.isfile(
-                    os.path.join(
-                        self.genome_directory,
-                        file_path_diagnosis.hybrid_selection_metrics)):
-                report_list += '<td class="center">'
-                report_list += '<a href="' + file_path_diagnosis.hybrid_selection_metrics + '">TSV</a>'
-                report_list += '</td>\n'
-            else:
-                report_list += '<td class="center"></td>\n'
-            report_list += '<td class="center">'
-            if os.path.isfile(
-                    os.path.join(
-                        self.genome_directory,
-                        file_path_diagnosis.non_callable_loci_tsv)):
-                report_list += '<a href="' + file_path_diagnosis.callable_bed + '">BED</a>&nbsp;'
-                report_list += '<a href="' + file_path_diagnosis.callable_bb + '">BigBED</a>&nbsp;'
-                # Do not link the more complex file_path_diagnosis.non_callable_regions_tsv
-                # file for the moment.
-                report_list += '<a href="' + file_path_diagnosis.non_callable_regions_tsv + '">TSV</a>'
-            report_list += '</td>\n'
-            if os.path.isfile(
-                    os.path.join(
-                        self.genome_directory,
-                        file_path_diagnosis.non_callable_summary_tsv)):
-                report_list += '<td class="center">'
-                report_list += '<a href="' + file_path_diagnosis.non_callable_summary_tsv + '">TSV</a>'
-                report_list += '</td>\n'
-            else:
-                report_list += '<td class="center"></td>\n'
-            report_list += '</tr>\n'
-
-            for paired_reads_name in paired_reads_name_list:
-                runnable_process_lane = self.runnable_dict[
-                    '_'.join((self.stage_name_process_lane, paired_reads_name))]
-                file_path_read_group = runnable_process_lane.file_path_object
-                """ @type file_path_read_group: FilePathProcessReadGroup """
-
-                report_list += '<tr>\n'
-                report_list += '<td class="left"></td>\n'  # Sample
-                report_list += '<td class="center"></td>\n'  # Variants VCF, TBI, TSV
-                report_list += '<td class="center"></td>\n'  # Alignments BAM, BAI
-                report_list += '<td class="left">' + paired_reads_name + '</td>\n'
-                report_list += '<td class="center">'
-                report_list += '<a href="' + file_path_read_group.duplicate_metrics + '">TSV</a>'
-                report_list += '</td>\n'
-                report_list += '<td class="center">'
-                report_list += '<a href="' + file_path_read_group.alignment_summary_metrics + '">TSV</a>'
-                report_list += '</td>\n'
-                report_list += '<td class="center"></td>\n'  # Hybrid Selection Metrics
-                report_list += '<td class="center"></td>\n'  # Non-Callable Loci
-                report_list += '<td class="center"></td>\n'  # Non-Callable Summary
-                report_list += '</tr>\n'
-
-        report_list += '</tbody>\n'
-        report_list += '</table>\n'
-        report_list += '\n'
-
-        report_list += '<h2 id="cohort_level">Cohort Level</h2>\n'
-        report_list += '\n'
-        report_list += '<table id="cohort_table">\n'
-        report_list += '<thead>\n'
-        report_list += '<tr>\n'
-        report_list += '<th>Cohort</th>\n'
-        report_list += '<th>Information</th>\n'
-        report_list += '<th>Comment</th>\n'
-        report_list += '</tr>\n'
-        report_list += '</thead>\n'
-        report_list += '<tbody>\n'
-
-        runnable_process_cohort = self.runnable_dict[
-            '_'.join((self.stage_name_process_cohort, self.cohort_name))]
-        file_path_process_cohort = runnable_process_cohort.file_path_object
-        """ @type file_path_process_cohort: FilePathProcessCohort """
-
-        report_list += '<tr>\n'
-        report_list += '<td class="left">' + self.cohort_name + '</td>\n'
-        report_list += '<td class="left">'
-        report_list += '<a href="' + file_path_process_cohort.snpeff_stats + '">snpEff Summary Statistics</a>'
-        report_list += '</td>\n'
-        report_list += '<td class="left"></td>\n'
-        report_list += '</tr>\n'
-
-        report_list += '<tr>\n'
-        report_list += '<td class="left">' + self.cohort_name + '</td>\n'
-        report_list += '<td class="left">'
-        report_list += 'snpEff-annotated multi-sample '
-        report_list += '<a href="' + file_path_process_cohort.snpeff_vcf_bgz + '">VCF</a> and '
-        report_list += '<a href="' + file_path_process_cohort.snpeff_vcf_tbi + '">TBI</a>'
-        report_list += '</td>\n'
-        report_list += '<td class="left">Functional annotation of all splice variants</td>\n'
-        report_list += '</tr>\n'
-
-        report_list += '<tr>\n'
-        report_list += '<td class="left">' + self.cohort_name + '</td>\n'
-        report_list += '<td class="left">'
-        report_list += 'GATK-annotated multi-sample '
-        report_list += '<a href="' + file_path_process_cohort.annotated_vcf + '">VCF</a> and '
-        report_list += '<a href="' + file_path_process_cohort.annotated_tbi + '">TBI</a>'
-        report_list += '</td>\n'
-        report_list += '<td class="left">Functional annotation of only the most severely affected splice variant</td>\n'
-        report_list += '</tr>\n'
-
-        report_list += '</tbody>\n'
-        report_list += '</table>\n'
-        report_list += '\n'
-
-        # Somatic variant calling.
-
-        key_list = self.comparisons.keys()
-        key_list.sort(cmp=lambda x, y: cmp(x, y))
-
-        if len(key_list):
-            report_list += '<h2 id="somatic_variants">Somatic Variants</h2>\n'
+        def report_link():
+            """Private function to create simpler symbolic links in structured sub-directories.
+
+            The simplified symbolic links facilitate file system browsing.
+            @return:
+            @rtype:
+            """
+            # Create a result directory as concatenation of bsf.Analysis.genome_version and bsf.Analysis.prefix.
+
+            directory_results = report_create_directory(
+                path=os.path.join(self.project_directory, '_'.join((self.genome_version, self.prefix))))
+
+            directory_results_by_cohort = report_create_directory(
+                path=os.path.join(directory_results, 'by_cohort'))
+
+            directory_results_by_pair = report_create_directory(
+                path=os.path.join(directory_results, 'by_pair'))
+
+            directory_results_by_sample = report_create_directory(
+                path=os.path.join(directory_results, 'by_sample'))
+
+            directory_results_by_type = report_create_directory(
+                path=os.path.join(directory_results, 'by_type'))
+
+            # Process per sample.
+
+            for sample in self.sample_list:
+                if self.debug > 0:
+                    print repr(self) + ' Sample name: ' + sample.name
+                    print sample.trace(1)
+
+                paired_reads_dict = sample.get_all_paired_reads(
+                    replicate_grouping=self.replicate_grouping,
+                    exclude=True)
+
+                paired_reads_name_list = paired_reads_dict.keys()
+                if not len(paired_reads_name_list):
+                    # Skip Sample objects, which PairedReads objects have all been excluded.
+                    continue
+                # paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+                runnable_process_sample = self.runnable_dict[
+                    '_'.join((self.stage_name_process_sample, sample.name))]
+                file_path_process_sample = runnable_process_sample.file_path_object
+                """ @type file_path_process_sample: FilePathProcessSample """
+
+                # runnable_diagnose_sample = self.runnable_dict[
+                #     '_'.join((self.stage_name_diagnose_sample, sample.name))]
+                # file_path_diagnose_sample = runnable_diagnose_sample.file_path_object
+                """ @type file_path_diagnose_sample: FilePathDiagnoseSample """
+
+                runnable_annotate_cohort_snpeff = self.runnable_dict[
+                    '_'.join((self.stage_name_annotate_cohort_snpeff, self.cohort_name))]
+                file_path_annotate_cohort_snpeff = runnable_annotate_cohort_snpeff.file_path_object
+                """ @type file_path_annotate_cohort_snpeff: FilePathAnnotateSnpEff """
+
+                runnable_annotate_cohort_vep = self.runnable_dict[
+                    '_'.join((self.stage_name_annotate_cohort_vep, self.cohort_name))]
+                file_path_annotate_cohort_vep = runnable_annotate_cohort_vep.file_path_object
+                """ @type file_path_annotate_cohort_vep: FilePathAnnotateVep """
+
+                runnable_split_cohort_snpeff = self.runnable_dict[
+                    '_'.join((self.stage_name_split_cohort_snpeff, sample.name))]
+                file_path_split_cohort_snpeff = runnable_split_cohort_snpeff.file_path_object
+                """ @type file_path_split_cohort_snpeff: FilePathSplitCohort """
+
+                runnable_split_cohort_vep = self.runnable_dict[
+                    '_'.join((self.stage_name_split_cohort_vep, sample.name))]
+                file_path_split_cohort_vep = runnable_split_cohort_vep.file_path_object
+                """ @type file_path_split_cohort_vep: FilePathSplitCohort """
+
+                # Create a sample-specific directory and add symbolic links to it.
+
+                directory_sample = report_create_directory(
+                    path=os.path.join(directory_results_by_sample, sample.name))
+
+                for attribute, extension in (
+                        ('realigned_bam', '.bam'),
+                        ('realigned_bai', '.bam.bai'),
+                        ('realigned_md5', '.bam.md5')):
+                    report_create_symbolic_link(
+                        source_path=os.path.relpath(
+                            os.path.join(self.genome_directory, getattr(file_path_process_sample, attribute)),
+                            directory_sample),
+                        target_path=os.path.join(directory_sample, sample.name + extension))
+
+                for attribute, extension in (
+                        ('sample_vcf', '_snpeff.vcf.gz'),
+                        ('sample_tbi', '_snpeff.vcf.gz.tbi'),
+                        ('sample_tsv', '_snpeff.tsv')):
+                    report_create_symbolic_link(
+                        source_path=os.path.relpath(
+                            os.path.join(self.genome_directory, getattr(file_path_split_cohort_snpeff, attribute)),
+                            directory_sample),
+                        target_path=os.path.join(directory_sample, sample.name + extension))
+
+                for attribute, extension in (
+                        ('sample_vcf', '_vep.vcf.gz'),
+                        ('sample_tbi', '_vep.vcf.gz.tbi'),
+                        ('sample_tsv', '_vep.tsv')):
+                    report_create_symbolic_link(
+                        source_path=os.path.relpath(
+                            os.path.join(self.genome_directory, getattr(file_path_split_cohort_vep, attribute)),
+                            directory_sample),
+                        target_path=os.path.join(directory_sample, sample.name + extension))
+
+                # Create an alignment-specific directory and add symbolic links to it.
+
+                directory_alignments = report_create_directory(
+                    path=os.path.join(directory_results_by_type, 'alignments'))
+
+                for attribute, extension in (
+                        ('realigned_bam', '.bam'),
+                        ('realigned_bai', '.bam.bai'),
+                        ('realigned_md5', '.bam.md5')):
+                    report_create_symbolic_link(
+                        source_path=os.path.relpath(
+                            os.path.join(self.genome_directory, getattr(file_path_process_sample, attribute)),
+                            directory_alignments),
+                        target_path=os.path.join(directory_alignments, sample.name + extension))
+
+                # Create a variant-specific directory and add symbolic links to it.
+
+                directory_variants = report_create_directory(
+                    path=os.path.join(directory_results_by_type, 'variants'))
+
+                directory_variants_snpeff = report_create_directory(
+                    path=os.path.join(directory_variants, 'snpeff'))
+
+                for attribute, extension in (
+                        ('sample_vcf', '_snpeff.vcf.gz'),
+                        ('sample_tbi', '_snpeff.vcf.gz.tbi'),
+                        ('sample_tsv', '_snpeff.tsv')):
+                    report_create_symbolic_link(
+                        source_path=os.path.relpath(
+                            os.path.join(self.genome_directory, getattr(file_path_split_cohort_snpeff, attribute)),
+                            directory_variants_snpeff),
+                        target_path=os.path.join(directory_variants_snpeff, sample.name + extension))
+
+                directory_variants_vep = report_create_directory(
+                    path=os.path.join(directory_variants, 'vep'))
+
+                for attribute, extension in (
+                        ('sample_vcf', '_vep.vcf.gz'),
+                        ('sample_tbi', '_vep.vcf.gz.tbi'),
+                        ('sample_tsv', '_vep.tsv')):
+                    report_create_symbolic_link(
+                        source_path=os.path.relpath(
+                            os.path.join(self.genome_directory, getattr(file_path_split_cohort_vep, attribute)),
+                            directory_variants_vep),
+                        target_path=os.path.join(directory_variants_vep, sample.name + extension))
+
+                for attribute, extension in (
+                        ('annotated_vcf', '_annotated.vcf.gz'),
+                        ('annotated_tbi', '_annotated.vcf.gz.tbi'),
+                        ('snpeff_vcf_bgz', '_snpeff.vcf.gz'),
+                        ('snpeff_vcf_tbi', '_snpeff.vcf.gz.tbi'),
+                        ('snpeff_stats', '_snpeff_summary.html')):
+                    report_create_symbolic_link(
+                        source_path=os.path.relpath(
+                            os.path.join(self.genome_directory, getattr(file_path_annotate_cohort_snpeff, attribute)),
+                            directory_results_by_cohort),
+                        target_path=os.path.join(directory_results_by_cohort, self.cohort_name + extension))
+
+                for attribute, extension in (
+                        ('vep_complete_vcf_bgz', '_vep.vcf.gz'),
+                        ('vep_complete_vcf_tbi', '_vep.vcf.gz.tbi')):
+                    report_create_symbolic_link(
+                        source_path=os.path.relpath(
+                            os.path.join(self.genome_directory, getattr(file_path_annotate_cohort_vep, attribute)),
+                            directory_results_by_cohort),
+                        target_path=os.path.join(directory_results_by_cohort, self.cohort_name + extension))
+
+            # Process per (somatic) comparison
+
+            for comparison_name in self.comparisons.keys():
+                runnable_somatic = self.runnable_dict[
+                    '_'.join((self.stage_name_somatic, comparison_name))]
+                file_path_somatic = runnable_somatic.file_path_object
+                """ @type file_path_somatic: FilePathSomatic """
+
+                for attribute, extension in (
+                        ('somatic_vcf', '.vcf.gz'),
+                        ('somatic_tbi', '.vcf.gz.tbi')):
+                    report_create_symbolic_link(
+                        source_path=os.path.relpath(
+                            os.path.join(self.genome_directory, getattr(file_path_somatic, attribute)),
+                            directory_results_by_pair),
+                        target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
+
+                runnable_annotate_somatic_snpeff = self.runnable_dict[
+                    '_'.join((self.stage_name_annotate_somatic_snpeff, comparison_name))]
+                file_path_annotate_somatic_snpeff = runnable_annotate_somatic_snpeff.file_path_object
+                """ @type file_path_annotate_somatic_snpeff: FilePathAnnotateSnpEff"""
+
+                for attribute, extension in (
+                        ('snpeff_vcf_bgz', '_snpeff.vcf.gz'),
+                        ('snpeff_vcf_tbi', '_snpeff.vcf.gz.tbi'),
+                        ('snpeff_genes', '_snpeff_summary.genes.txt'),
+                        ('snpeff_stats', '_snpeff_summary.html'),
+                        ('annotated_vcf', '_annotated.vcf.gz'),
+                        ('annotated_tbi', '_annotated.vcf.gz.tbi')):
+                    report_create_symbolic_link(
+                        source_path=os.path.relpath(
+                            os.path.join(self.genome_directory, getattr(file_path_annotate_somatic_snpeff, attribute)),
+                            directory_results_by_pair),
+                        target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
+
+                runnable_split_somatic_snpeff = self.runnable_dict[
+                    '_'.join((self.stage_name_split_somatic_snpeff, comparison_name))]
+                file_path_split_somatic_snpeff = runnable_split_somatic_snpeff.file_path_object
+                """ @type file_path_split_somatic_snpeff: FilePathSplitSomatic"""
+
+                for attribute, extension in (
+                        ('comparison_tsv', '_vep.tsv'),):
+                    report_create_symbolic_link(
+                        source_path=os.path.relpath(
+                            os.path.join(self.genome_directory, getattr(file_path_split_somatic_snpeff, attribute)),
+                            directory_results_by_pair),
+                        target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
+
+                runnable_annotate_somatic_vep = self.runnable_dict[
+                    '_'.join((self.stage_name_annotate_somatic_vep, comparison_name))]
+                file_path_annotate_somatic_vep = runnable_annotate_somatic_vep.file_path_object
+                """ @type file_path_annotate_somatic_vep: FilePathAnnotateVEP"""
+
+                for attribute, extension in (
+                        ('vep_complete_vcf_bgz', '_vep.vcf.gz'),
+                        ('vep_complete_vcf_tbi', '_vep.vcf.gz.tbi')):
+                    report_create_symbolic_link(
+                        source_path=os.path.relpath(
+                            os.path.join(self.genome_directory, getattr(file_path_annotate_somatic_vep, attribute)),
+                            directory_results_by_pair),
+                        target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
+
+                runnable_split_somatic_vep = self.runnable_dict[
+                    '_'.join((self.stage_name_split_somatic_vep, comparison_name))]
+                file_path_split_somatic_vep = runnable_split_somatic_vep.file_path_object
+                """ @type file_path_split_somatic_vep: FilePathSplitSomatic"""
+
+                for attribute, extension in (
+                        ('comparison_tsv', '_vep.tsv'),):
+                    report_create_symbolic_link(
+                        source_path=os.path.relpath(
+                            os.path.join(self.genome_directory, getattr(file_path_split_somatic_vep, attribute)),
+                            directory_results_by_pair),
+                        target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
+
+            return
+
+        def report_html():
+            """Private function to create a HTML report.
+
+            @return:
+            @rtype:
+            """
+            # Create a symbolic link containing the project name and a UUID.
+            default = Default.get_global_default()
+            link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
+            link_name = os.path.basename(link_path.rstrip('/'))
+
+            # This code only needs the public URL.
+
+            # Write a HTML document.
+
+            report_list = list()
+            """ @type report_list: list[str | unicode] """
+
+            report_list += '<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n'
             report_list += '\n'
-            report_list += '<table id="somatic_variants_table">\n'
+
+            report_list += '<h2 id="genome_browsing">Genome Browsing</h2>\n'
+            report_list += '\n'
+
+            # Resolve an eventual alias for the UCSC genome assembly name.
+
+            if default.genome_aliases_ucsc_dict is not None and self.genome_version in default.genome_aliases_ucsc_dict:
+                ucsc_genome_version = default.genome_aliases_ucsc_dict[self.genome_version]
+            else:
+                ucsc_genome_version = self.genome_version
+
+            options_dict = {
+                'db': ucsc_genome_version,
+                'hubUrl': Default.url_absolute_projects() + '/' + link_name + '/variant_calling_hub.txt',
+            }
+
+            # TODO: Centralise in Analysis.
+            # The above code for resolving a UCSC Genome Browser genome assembly alias
+            # could be centralised in Analysis.
+            report_list += '<p id="ucsc_track_hub">'
+            report_list += 'UCSC Genome Browser Track Hub '
+            report_list += '<a href="' + self.ucsc_track_url(options_dict=options_dict) + '">'
+            report_list += self.project_name
+            report_list += '</a>.'
+            report_list += '</p>\n'
+            report_list += '\n'
+
+            report_list += '<h2 id="read_group_and_sample_level">Read Group and Sample Level</h2>\n'
+            report_list += '\n'
+            report_list += '<table id="read_group_and_sample_table">\n'
             report_list += '<thead>\n'
             report_list += '<tr>\n'
-            report_list += '<th>Comparison</th>\n'
-            report_list += '<th>Annotated VCF</th>\n'
-            report_list += '<th>Annotated TSV</th>\n'
-            report_list += '<th>snpEff Summary Statistics</th>\n'
-            report_list += '<th>snpEff Genes</th>\n'
+            report_list += '<th>Sample</th>\n'
+            report_list += '<th>Variants<br />snpEff<br />Ensembl&nbsp;VEP</th>\n'
+            report_list += '<th>Alignments</th>\n'
+            report_list += '<th>Read Group</th>\n'
+            report_list += '<th>Duplicate Metrics</th>\n'
+            report_list += '<th>Alignment Summary Metrics</th>\n'
+            report_list += '<th>Hybrid Selection Metrics</th>\n'
+            report_list += '<th>Non-Callable Loci</th>\n'
+            report_list += '<th>Non-Callable Summary</th>\n'
             report_list += '</tr>\n'
             report_list += '</thead>\n'
             report_list += '<tbody>\n'
 
-            for key in key_list:
-                runnable_somatic = self.runnable_dict['_'.join((self.stage_name_somatic, key))]
-                file_path_somatic = runnable_somatic.file_path_object
-                """ @type file_path_somatic: FilePathSomatic """
+            for sample in self.sample_list:
+                if self.debug > 0:
+                    print repr(self) + ' Sample name: ' + sample.name
+                    print sample.trace(1)
+
+                paired_reads_dict = sample.get_all_paired_reads(
+                    replicate_grouping=self.replicate_grouping,
+                    exclude=True)
+
+                paired_reads_name_list = paired_reads_dict.keys()
+                if not len(paired_reads_name_list):
+                    # Skip Sample objects, which PairedReads objects have all been excluded.
+                    continue
+                paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+                runnable_process_sample = self.runnable_dict[
+                    '_'.join((self.stage_name_process_sample, sample.name))]
+                file_path_process_sample = runnable_process_sample.file_path_object
+                """ @type file_path_process_sample: FilePathProcessSample """
+
+                runnable_diagnose_sample = self.runnable_dict[
+                    '_'.join((self.stage_name_diagnose_sample, sample.name))]
+                file_path_diagnosis = runnable_diagnose_sample.file_path_object
+                """ @type file_path_diagnosis: FilePathDiagnoseSample """
+
+                runnable_split_cohort_snpeff = self.runnable_dict[
+                    '_'.join((self.stage_name_split_cohort_snpeff, sample.name))]
+                file_path_split_cohort_snpeff = runnable_split_cohort_snpeff.file_path_object
+                """ @type file_path_split_cohort_snpeff: FilePathSplitCohort """
+
+                runnable_split_cohort_vep = self.runnable_dict[
+                    '_'.join((self.stage_name_split_cohort_vep, sample.name))]
+                file_path_split_cohort_vep = runnable_split_cohort_vep.file_path_object
+                """ @type file_path_split_cohort_vep: FilePathSplitCohort """
 
                 report_list += '<tr>\n'
-                report_list += '<td>' + key + '</td>\n'
-                report_list += '<td><a href="' + file_path_somatic.annotated_vcf + '">VCF</a></td>\n'
-                report_list += '<td><a href="' + file_path_somatic.annotated_tsv + '">TSV</a></td>\n'
-                report_list += '<td><a href="' + file_path_somatic.snpeff_stats + '">HTML</a></td>\n'
-                report_list += '<td><a href="' + file_path_somatic.snpeff_genes + '">TXT</a></td>\n'
+                report_list += '<td class="left">' + sample.name + '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_split_cohort_snpeff.sample_vcf + '">'
+                report_list += '<abbr title="Variant Calling Format">VCF</abbr>'
+                report_list += '</a>&nbsp;'
+                report_list += '<a href="' + file_path_split_cohort_snpeff.sample_tbi + '">'
+                report_list += '<abbr title="Tabix Index">TBI</abbr>'
+                report_list += '</a>&nbsp;'
+                report_list += '<a href="' + file_path_split_cohort_snpeff.sample_tsv + '">'
+                report_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+                report_list += '</a><br />'
+                report_list += '<a href="' + file_path_split_cohort_vep.sample_vcf + '">'
+                report_list += '<strong><abbr title="Variant Calling Format">VCF</abbr></strong>'
+                report_list += '</a>&nbsp;'
+                report_list += '<a href="' + file_path_split_cohort_vep.sample_tbi + '">'
+                report_list += '<abbr title="Tabix Index">TBI</abbr>'
+                report_list += '</a>&nbsp;'
+                report_list += '<a href="' + file_path_split_cohort_vep.sample_tsv + '">'
+                report_list += '<strong><abbr title="Tab-Separated Value">TSV</abbr></strong>'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_process_sample.realigned_bam + '">'
+                report_list += '<abbr title="Binary Alignment/Map">BAM</abbr>'
+                report_list += '</a>&nbsp;'
+                report_list += '<a href="' + file_path_process_sample.realigned_bai + '">'
+                report_list += '<abbr title="Binary Alignment/Map Index">BAI</abbr>'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="left"></td>\n'  # Read Group
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_process_sample.duplicate_metrics + '">'
+                report_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_process_sample.alignment_summary_metrics + '">'
+                report_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                if os.path.isfile(
+                        os.path.join(
+                            self.genome_directory,
+                            file_path_diagnosis.hybrid_selection_metrics)):
+                    report_list += '<td class="center">'
+                    report_list += '<a href="' + file_path_diagnosis.hybrid_selection_metrics + '">'
+                    report_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+                    report_list += '</a>'
+                    report_list += '</td>\n'
+                else:
+                    report_list += '<td class="center"></td>\n'
+                report_list += '<td class="center">'
+                if os.path.isfile(
+                        os.path.join(
+                            self.genome_directory,
+                            file_path_diagnosis.non_callable_loci_tsv)):
+                    report_list += '<a href="' + file_path_diagnosis.callable_bed + '">'
+                    report_list += '<abbr title="Browser Extensible Data">BED</abbr>'
+                    report_list += '</a>&nbsp;'
+                    report_list += '<a href="' + file_path_diagnosis.callable_bb + '">'
+                    report_list += '<abbr title="Big Browser Extensible Data">BigBED</abbr>'
+                    report_list += '</a>&nbsp;'
+                    # Do not link the more complex file_path_diagnosis.non_callable_regions_tsv
+                    # file for the moment.
+                    report_list += '<a href="' + file_path_diagnosis.non_callable_regions_tsv + '">'
+                    report_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+                    report_list += '</a>'
+                report_list += '</td>\n'
+                if os.path.isfile(
+                        os.path.join(
+                            self.genome_directory,
+                            file_path_diagnosis.non_callable_summary_tsv)):
+                    report_list += '<td class="center">'
+                    report_list += '<a href="' + file_path_diagnosis.non_callable_summary_tsv + '">'
+                    report_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+                    report_list += '</a>'
+                    report_list += '</td>\n'
+                else:
+                    report_list += '<td class="center"></td>\n'
+                report_list += '</tr>\n'
+
+                for paired_reads_name in paired_reads_name_list:
+                    runnable_process_lane = self.runnable_dict[
+                        '_'.join((self.stage_name_process_lane, paired_reads_name))]
+                    file_path_read_group = runnable_process_lane.file_path_object
+                    """ @type file_path_read_group: FilePathProcessReadGroup """
+
+                    report_list += '<tr>\n'
+                    report_list += '<td class="left"></td>\n'  # Sample
+                    report_list += '<td class="center"></td>\n'  # Variants VCF, TBI, TSV
+                    report_list += '<td class="center"></td>\n'  # Alignments BAM, BAI
+                    report_list += '<td class="left">' + paired_reads_name + '</td>\n'
+                    report_list += '<td class="center">'
+                    report_list += '<a href="' + file_path_read_group.duplicate_metrics + '">'
+                    report_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+                    report_list += '</a>'
+                    report_list += '</td>\n'
+                    report_list += '<td class="center">'
+                    report_list += '<a href="' + file_path_read_group.alignment_summary_metrics + '">'
+                    report_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+                    report_list += '</a>'
+                    report_list += '</td>\n'
+                    report_list += '<td class="center"></td>\n'  # Hybrid Selection Metrics
+                    report_list += '<td class="center"></td>\n'  # Non-Callable Loci
+                    report_list += '<td class="center"></td>\n'  # Non-Callable Summary
+                    report_list += '</tr>\n'
+
+            report_list += '</tbody>\n'
+            report_list += '</table>\n'
+            report_list += '\n'
+
+            report_list += '<h2 id="cohort_level">Cohort Level</h2>\n'
+            report_list += '\n'
+            report_list += '<table id="cohort_table">\n'
+            report_list += '<thead>\n'
+            report_list += '<tr>\n'
+            report_list += '<th>Cohort</th>\n'
+            report_list += '<th>Information</th>\n'
+            report_list += '<th>Comment</th>\n'
+            report_list += '</tr>\n'
+            report_list += '</thead>\n'
+            report_list += '<tbody>\n'
+
+            runnable_annotate_cohort_snpeff = self.runnable_dict[
+                '_'.join((self.stage_name_annotate_cohort_snpeff, self.cohort_name))]
+            file_path_annotate_cohort_snpeff = runnable_annotate_cohort_snpeff.file_path_object
+            """ @type file_path_annotate_cohort_snpeff: FilePathAnnotateSnpEff """
+
+            report_list += '<tr>\n'
+            report_list += '<td class="left">' + self.cohort_name + '</td>\n'
+            report_list += '<td class="left">'
+            report_list += '<a href="' + file_path_annotate_cohort_snpeff.snpeff_stats + '">'
+            report_list += 'snpEff Summary Statistics'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left">'
+            report_list += '<a href="' + file_path_annotate_cohort_snpeff.snpeff_genes + '">'
+            report_list += 'snpEff Summary Genes'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '</tr>\n'
+
+            report_list += '<tr>\n'
+            report_list += '<td class="left">' + self.cohort_name + '</td>\n'
+            report_list += '<td class="left">'
+            report_list += 'snpEff-annotated multi-sample '
+            report_list += '<a href="' + file_path_annotate_cohort_snpeff.snpeff_vcf_bgz + '">'
+            report_list += '<abbr title="Variant Calling Format">VCF</abbr>'
+            report_list += '</a> and '
+            report_list += '<a href="' + file_path_annotate_cohort_snpeff.snpeff_vcf_tbi + '">'
+            report_list += '<abbr title="Tabix Index">TBI</abbr>'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left">Functional annotation of all splice variants</td>\n'
+            report_list += '</tr>\n'
+
+            report_list += '<tr>\n'
+            report_list += '<td class="left">' + self.cohort_name + '</td>\n'
+            report_list += '<td class="left">'
+            report_list += 'GATK-annotated multi-sample '
+            report_list += '<a href="' + file_path_annotate_cohort_snpeff.annotated_vcf + '">'
+            report_list += '<abbr title="Variant Calling Format">VCF</abbr>'
+            report_list += '</a> and '
+            report_list += '<a href="' + file_path_annotate_cohort_snpeff.annotated_tbi + '">'
+            report_list += '<abbr title="Tabix Index">TBI</abbr>'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left">'
+            report_list += 'Functional annotation of only the most severely affected splice variant'
+            report_list += '</td>\n'
+            report_list += '</tr>\n'
+
+            runnable_annotate_cohort_vep = self.runnable_dict[
+                '_'.join((self.stage_name_annotate_cohort_vep, self.cohort_name))]
+            file_path_annotate_cohort_vep = runnable_annotate_cohort_vep.file_path_object
+            """ @type file_path_annotate_cohort_vep: FilePathAnnotateVEP """
+
+            report_list += '<tr>\n'
+            report_list += '<td class="left">' + self.cohort_name + '</td>\n'
+            report_list += '<td class="left">'
+            report_list += '<a href="' + file_path_annotate_cohort_vep.vep_statistics + '">'
+            report_list += 'Ensembl Variant Effect Predictor Summary Statistics'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left">'
+            report_list += '</td>\n'
+            report_list += '</tr>\n'
+
+            report_list += '<tr>\n'
+            report_list += '<td class="left">' + self.cohort_name + '</td>\n'
+            report_list += '<td class="left">'
+            report_list += 'Ensembl VEP-annotated multi-sample '
+            report_list += '<a href="' + file_path_annotate_cohort_vep.vep_complete_vcf_bgz + '">'
+            report_list += '<abbr title="Variant Calling Format">VCF</abbr>'
+            report_list += '</a> and '
+            report_list += '<a href="' + file_path_annotate_cohort_vep.vep_complete_vcf_tbi + '">'
+            report_list += '<abbr title="Tabix Index">TBI</abbr>'
+            report_list += '</a>'
+            report_list += '</td>\n'
+            report_list += '<td class="left">Functional annotation of all Ensembl splice variants</td>\n'
+            report_list += '</tr>\n'
+
+            report_list += '</tbody>\n'
+            report_list += '</table>\n'
+            report_list += '\n'
+
+            # Somatic variant calling.
+
+            comparison_list = self.comparisons.keys()
+            comparison_list.sort(cmp=lambda x, y: cmp(x, y))
+
+            if len(comparison_list):
+                report_list += '<h2 id="somatic_variants">Somatic Variants</h2>\n'
+                report_list += '\n'
+                report_list += '<table id="somatic_variants_table">\n'
+                report_list += '<thead>\n'
+                report_list += '<tr>\n'
+                report_list += '<th>Comparison</th>\n'
+                report_list += '<th>Variants<br />snpEff<br />VEP</th>\n'
+                report_list += '<th>Summary&nbsp;Statistics<br />snpEff<br />VEP</th>\n'
+                report_list += '</tr>\n'
+                report_list += '</thead>\n'
+                report_list += '<tbody>\n'
+
+                for comparison_name in comparison_list:
+                    # runnable_somatic = self.runnable_dict[
+                    #     '_'.join((self.stage_name_somatic, comparison_name))]
+                    # file_path_somatic = runnable_somatic.file_path_object
+                    # """ @type file_path_somatic: FilePathSomatic """
+
+                    # Add snpEff annotation
+
+                    runnable_annotate_somatic_snpeff = self.runnable_dict[
+                        '_'.join((self.stage_name_annotate_somatic_snpeff, comparison_name))]
+                    file_path_annotate_somatic_snpeff = runnable_annotate_somatic_snpeff.file_path_object
+                    """ @type file_path_annotate_somatic_snpeff: FilePathAnnotateSnpEff"""
+
+                    runnable_split_somatic_snpeff = self.runnable_dict[
+                        '_'.join((self.stage_name_split_somatic_snpeff, comparison_name))]
+                    file_path_split_somatic_snpeff = runnable_split_somatic_snpeff.file_path_object
+                    """ @type file_path_split_somatic_snpeff: FilePathSplitSomatic"""
+
+                    # Add VEP annotation
+
+                    runnable_annotate_somatic_vep = self.runnable_dict[
+                        '_'.join((self.stage_name_annotate_somatic_vep, comparison_name))]
+                    file_path_annotate_somatic_vep = runnable_annotate_somatic_vep.file_path_object
+                    """ @type file_path_annotate_somatic_vep: FilePathAnnotateVEP"""
+
+                    runnable_split_somatic_vep = self.runnable_dict[
+                        '_'.join((self.stage_name_split_somatic_vep, comparison_name))]
+                    file_path_split_somatic_vep = runnable_split_somatic_vep.file_path_object
+                    """ @type file_path_split_somatic_vep: FilePathSplitSomatic"""
+
+                    report_list += '<tr>\n'
+
+                    # Comparison
+                    report_list += '<td class="left">' + comparison_name + '</td>\n'
+
+                    # Variants
+                    report_list += '<td class="center">'
+                    report_list += '<a href="' + file_path_annotate_somatic_snpeff.annotated_vcf + '">'
+                    report_list += '<abbr title="Variant Calling Format">VCF</abbr>'
+                    report_list += '</a>&nbsp;'
+                    report_list += '<a href="' + file_path_annotate_somatic_snpeff.annotated_tbi + '">'
+                    report_list += '<abbr title="Tabix Index">TBI</abbr>'
+                    report_list += '</a>&nbsp;'
+                    report_list += '<a href="' + file_path_split_somatic_snpeff.comparison_tsv + '">'
+                    report_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+                    report_list += '</a><br />'
+                    report_list += '<a href="' + file_path_annotate_somatic_vep.vep_complete_vcf_bgz + '">'
+                    report_list += '<strong><abbr title="Variant Calling Format">VCF</abbr></strong>'
+                    report_list += '</a>&nbsp;'
+                    report_list += '<a href="' + file_path_annotate_somatic_vep.vep_complete_vcf_tbi + '">'
+                    report_list += '<abbr title="Tabix Index">TBI</abbr>'
+                    report_list += '</a>&nbsp;'
+                    report_list += '<a href="' + file_path_split_somatic_vep.comparison_tsv + '">'
+                    report_list += '<strong><abbr title="Tab-Separated Value">TSV</abbr></strong>'
+                    report_list += '</a>'
+                    report_list += '</td>\n'
+
+                    # Summary Statistics
+                    report_list += '<td class="center">'
+                    report_list += '<a href="' + file_path_annotate_somatic_snpeff.snpeff_stats + '">'
+                    report_list += '<abbr title="Hyper Text Markup Language">HTML</abbr>'
+                    report_list += '</a>&nbsp;'
+                    report_list += '<a href="' + file_path_annotate_somatic_snpeff.snpeff_genes + '">'
+                    report_list += '<abbr title="Text">TXT</abbr>'
+                    report_list += '</a><br />'
+                    report_list += '<a href="' + file_path_annotate_somatic_vep.vep_statistics + '">'
+                    report_list += '<strong><abbr title="Hyper Text Markup Language">HTML</abbr></strong>'
+                    report_list += '</a>'
+                    report_list += '</td>\n'
+
+                    report_list += '</tr>\n'
+
+                report_list += '</tbody>\n'
+                report_list += '</table>\n'
+                report_list += '\n'
+
+            report_list += '<h2 id="qc_plots">QC Plots</h2>\n'
+            report_list += '\n'
+            report_list += '<table id="qc_table">\n'
+            report_list += '<thead>\n'
+            report_list += '<tr>\n'
+            report_list += '<th>Sample</th>\n'
+            report_list += '<th>Read Group</th>\n'
+            report_list += '<th>Metrics</th>\n'
+            report_list += '</tr>\n'
+            report_list += '</thead>\n'
+            report_list += '<tbody>\n'
+
+            runnable_summary = self.runnable_dict['_'.join((self.stage_name_summary, self.cohort_name))]
+            file_path_summary = runnable_summary.file_path_object
+            """ @type file_path_summary: FilePathSummary """
+
+            # Alignment Summary - TSV
+            if os.path.exists(os.path.join(
+                    self.genome_directory,
+                    file_path_summary.alignment_metrics_sample_tsv)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.alignment_metrics_sample_tsv + '">TSV</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.alignment_metrics_read_group_tsv + '">TSV</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="left">'
+                report_list += '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html' \
+                               '#AlignmentSummaryMetrics">Alignment Summary</a>'
+                report_list += '</td>\n'
+                report_list += '</tr>\n'
+
+            # Alignment Summary - Percent Aligned
+            if os.path.exists(os.path.join(
+                    self.genome_directory,
+                    file_path_summary.alignment_percentage_sample_png)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.alignment_percentage_sample_pdf + '">'
+                report_list += '<img alt="Alignment Summary - Percent Aligned per Sample"'
+                report_list += ' src="' + file_path_summary.alignment_percentage_sample_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.alignment_percentage_read_group_pdf + '">'
+                report_list += '<img alt="Alignment Summary - Percent Aligned per Read Group"'
+                report_list += ' src="' + file_path_summary.alignment_percentage_read_group_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="left">Alignment Summary - Percent Aligned</td>\n'
+                report_list += '</tr>\n'
+
+            # Alignment Summary - Reads Aligned
+            if os.path.exists(os.path.join(
+                    self.genome_directory,
+                    file_path_summary.alignment_absolute_sample_png)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.alignment_absolute_sample_pdf + '">'
+                report_list += '<img alt="Alignment Summary - Reads Aligned per Sample"'
+                report_list += ' src="' + file_path_summary.alignment_absolute_sample_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.alignment_absolute_read_group_pdf + '">'
+                report_list += '<img alt="Alignment Summary - Reads Aligned per Read Group"'
+                report_list += ' src="' + file_path_summary.alignment_absolute_read_group_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="left">Alignment Summary - Reads Aligned</td>\n'
+                report_list += '</tr>\n'
+
+            # Duplication - TSV
+            if os.path.exists(os.path.join(
+                    self.genome_directory,
+                    file_path_summary.duplication_metrics_sample_tsv)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.duplication_metrics_sample_tsv + '">TSV</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center"></td>\n'
+                report_list += '<td class="left">'
+                report_list += '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html' \
+                               '#DuplicationMetrics">Duplication</a>'
+                report_list += '</td>\n'
+                report_list += '</tr>\n'
+
+            # Duplication - Fraction
+            if os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.duplication_percentage_sample_png)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.duplication_percentage_sample_pdf + '">'
+                report_list += '<img alt="Duplication - Duplicated Reads per Sample"'
+                report_list += ' src="' + file_path_summary.duplication_percentage_sample_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center"></td>\n'
+                report_list += '<td class="left">Duplication - Fraction</td>\n'
+                report_list += '</tr>\n'
+
+            # Duplication - Levels
+            if os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.duplication_levels_sample_png)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.duplication_levels_sample_pdf + '">'
+                report_list += '<img alt="Duplication - Duplication Levels per Sample"'
+                report_list += ' src="' + file_path_summary.duplication_levels_sample_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center"></td>\n'
+                report_list += '<td class="left">Duplication - Levels</td>\n'
+                report_list += '</tr>\n'
+
+            # Hybrid Selection - TSV
+            if os.path.exists(os.path.join(
+                    self.genome_directory,
+                    file_path_summary.hybrid_metrics_sample_tsv)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.hybrid_metrics_sample_tsv + '">TSV</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.hybrid_metrics_read_group_tsv + '">TSV</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="left">'
+                report_list += '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html' \
+                               '#HsMetrics">Hybrid Selection</a>'
+                report_list += '</td>\n'
+                report_list += '</tr>\n'
+
+            # Hybrid Selection - Target Coverage Levels
+            if os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.hybrid_coverage_levels_sample_png)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.hybrid_coverage_levels_sample_pdf + '">'
+                report_list += '<img alt="Hybrid Selection - Mean Target Coverage Levels per Sample"'
+                report_list += ' src="' + file_path_summary.hybrid_coverage_levels_sample_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.hybrid_coverage_levels_read_group_pdf + '">'
+                report_list += '<img alt="Hybrid Selection - Mean Target Coverage Levels per Read Group"'
+                report_list += ' src="' + file_path_summary.hybrid_coverage_levels_read_group_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="left">Hybrid Selection - Mean Target Coverage Levels</td>\n'
+                report_list += '</tr>\n'
+
+            # Hybrid Selection - Mean Target Coverage
+            if os.path.exists(os.path.join(
+                    self.genome_directory,
+                    file_path_summary.hybrid_coverage_sample_png)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.hybrid_coverage_sample_pdf + '">'
+                report_list += '<img alt="Hybrid Selection - Mean Target Coverage per Sample"'
+                report_list += ' src="' + file_path_summary.hybrid_coverage_sample_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.hybrid_coverage_read_group_pdf + '">'
+                report_list += '<img alt="Hybrid Selection - Mean Target Coverage per Read Group"'
+                report_list += ' src="' + file_path_summary.hybrid_coverage_read_group_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="left">Hybrid Selection - Mean Target Coverage</td>\n'
+                report_list += '</tr>\n'
+
+            # Hybrid Selection - Excluded Bases
+            if os.path.exists(os.path.join(
+                    self.genome_directory,
+                    file_path_summary.hybrid_excluded_bases_sample_png)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.hybrid_excluded_bases_sample_pdf + '">'
+                report_list += '<img alt="Hybrid Selection - Percent Excluded Bases per Sample"'
+                report_list += ' src="' + file_path_summary.hybrid_excluded_bases_sample_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.hybrid_excluded_bases_read_group_pdf + '">'
+                report_list += '<img alt="Hybrid Selection - Percent Excluded Bases per Read Group"'
+                report_list += ' src="' + file_path_summary.hybrid_excluded_bases_read_group_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="left">Hybrid Selection - Percent Excluded Bases</td>\n'
+                report_list += '</tr>\n'
+
+            # Hybrid Selection - Percent Unique Reads
+            if os.path.exists(os.path.join(
+                    self.genome_directory,
+                    file_path_summary.hybrid_unique_percentage_sample_png)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.hybrid_unique_percentage_sample_pdf + '">'
+                report_list += '<img alt="Hybrid Selection - Percent Unique Reads per Sample"'
+                report_list += ' src="' + file_path_summary.hybrid_unique_percentage_sample_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.hybrid_unique_percentage_read_group_pdf + '">'
+                report_list += '<img alt="Hybrid Selection - Percent Unique Reads per Read Group"'
+                report_list += ' src="' + file_path_summary.hybrid_unique_percentage_read_group_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="left">Hybrid Selection - Percent Unique Reads</td>\n'
+                report_list += '</tr>\n'
+
+            # Non-Callable Loci - TSV
+            if os.path.exists(os.path.join(
+                    self.genome_directory,
+                    file_path_summary.non_callable_metrics_sample_tsv)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.non_callable_metrics_sample_tsv + '">TSV</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center"></td>\n'
+                report_list += '<td class="left">Non-Callable Loci</td>\n'
+                report_list += '</tr>\n'
+
+            # Non-Callable Loci - Fraction
+            if os.path.exists(os.path.join(
+                    self.genome_directory,
+                    file_path_summary.non_callable_percentage_sample_png)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.non_callable_percentage_sample_pdf + '">'
+                report_list += '<img alt="Non-Callable Loci - Fraction"'
+                report_list += ' src="' + file_path_summary.non_callable_percentage_sample_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center"></td>\n'
+                report_list += '<td class="left">Non-Callable Loci - Fraction</td>\n'
+                report_list += '</tr>\n'
+
+            # Non-Callable Loci - Number
+            if os.path.exists(os.path.join(
+                    self.genome_directory,
+                    file_path_summary.non_callable_absolute_sample_png)):
+                report_list += '<tr>\n'
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_summary.non_callable_absolute_sample_pdf + '">'
+                report_list += '<img alt="Non-Callable Loci - Number"'
+                report_list += ' src="' + file_path_summary.non_callable_absolute_sample_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
+                report_list += '<td class="center"></td>\n'
+                report_list += '<td class="left">Non-Callable Loci - Number</td>\n'
                 report_list += '</tr>\n'
 
             report_list += '</tbody>\n'
             report_list += '</table>\n'
             report_list += '\n'
 
-        report_list += '<h2 id="qc_plots">QC Plots</h2>\n'
-        report_list += '\n'
-        report_list += '<table id="qc_table">\n'
-        report_list += '<thead>\n'
-        report_list += '<tr>\n'
-        report_list += '<th>Sample</th>\n'
-        report_list += '<th>Read Group</th>\n'
-        report_list += '<th>Metrics</th>\n'
-        report_list += '</tr>\n'
-        report_list += '</thead>\n'
-        report_list += '<tbody>\n'
+            self.report_to_file(content=report_list)
 
-        runnable_summary = self.runnable_dict['_'.join((self.stage_name_summary, self.cohort_name))]
-        file_path_summary = runnable_summary.file_path_object
-        """ @type file_path_summary: FilePathSummary """
+        def report_hub():
+            """Private function to create a UCSC Track Hub.
 
-        # Alignment Summary - TSV
-        if os.path.exists(os.path.join(
-                self.genome_directory,
-                file_path_summary.alignment_metrics_sample_tsv)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.alignment_metrics_sample_tsv + '">TSV</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.alignment_metrics_read_group_tsv + '">TSV</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="left">'
-            report_list += '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html' \
-                           '#AlignmentSummaryMetrics">Alignment Summary</a>'
-            report_list += '</td>\n'
-            report_list += '</tr>\n'
+            @return:
+            @rtype:
+            """
 
-        # Alignment Summary - Percent Aligned
-        if os.path.exists(os.path.join(
-                self.genome_directory,
-                file_path_summary.alignment_percentage_sample_png)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.alignment_percentage_sample_pdf + '">'
-            report_list += '<img alt="Alignment Summary - Percent Aligned per Sample"'
-            report_list += ' src="' + file_path_summary.alignment_percentage_sample_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.alignment_percentage_read_group_pdf + '">'
-            report_list += '<img alt="Alignment Summary - Percent Aligned per Read Group"'
-            report_list += ' src="' + file_path_summary.alignment_percentage_read_group_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="left">Alignment Summary - Percent Aligned</td>\n'
-            report_list += '</tr>\n'
+            hub_list = list()
+            """ @type hub_list: list[str | unicode] """
 
-        # Alignment Summary - Reads Aligned
-        if os.path.exists(os.path.join(
-                self.genome_directory,
-                file_path_summary.alignment_absolute_sample_png)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.alignment_absolute_sample_pdf + '">'
-            report_list += '<img alt="Alignment Summary - Reads Aligned per Sample"'
-            report_list += ' src="' + file_path_summary.alignment_absolute_sample_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.alignment_absolute_read_group_pdf + '">'
-            report_list += '<img alt="Alignment Summary - Reads Aligned per Read Group"'
-            report_list += ' src="' + file_path_summary.alignment_absolute_read_group_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="left">Alignment Summary - Reads Aligned</td>\n'
-            report_list += '</tr>\n'
+            # Group via UCSC super tracks.
 
-        # Duplication - TSV
-        if os.path.exists(os.path.join(
-                self.genome_directory,
-                file_path_summary.duplication_metrics_sample_tsv)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.duplication_metrics_sample_tsv + '">TSV</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center"></td>\n'
-            report_list += '<td class="left">'
-            report_list += '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html' \
-                           '#DuplicationMetrics">Duplication</a>'
-            report_list += '</td>\n'
-            report_list += '</tr>\n'
+            hub_list += 'track Alignments\n'
+            hub_list += 'shortLabel Alignments\n'
+            hub_list += 'longLabel BWA NGS read alignments\n'
+            hub_list += 'superTrack on show\n'
+            hub_list += 'group alignments\n'
+            hub_list += '\n'
 
-        # Duplication - Fraction
-        if os.path.exists(
-                os.path.join(
-                    self.genome_directory,
-                    file_path_summary.duplication_percentage_sample_png)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.duplication_percentage_sample_pdf + '">'
-            report_list += '<img alt="Duplication - Duplicated Reads per Sample"'
-            report_list += ' src="' + file_path_summary.duplication_percentage_sample_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center"></td>\n'
-            report_list += '<td class="left">Duplication - Fraction</td>\n'
-            report_list += '</tr>\n'
+            hub_list += 'track Callable\n'
+            hub_list += 'shortLabel Callable\n'
+            hub_list += 'longLabel Callable\n'
+            hub_list += 'superTrack on show\n'
+            hub_list += 'group callable\n'
+            hub_list += '\n'
 
-        # Duplication - Levels
-        if os.path.exists(
-                os.path.join(
-                    self.genome_directory,
-                    file_path_summary.duplication_levels_sample_png)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.duplication_levels_sample_pdf + '">'
-            report_list += '<img alt="Duplication - Duplication Levels per Sample"'
-            report_list += ' src="' + file_path_summary.duplication_levels_sample_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center"></td>\n'
-            report_list += '<td class="left">Duplication - Levels</td>\n'
-            report_list += '</tr>\n'
+            hub_list += 'track Variants\n'
+            hub_list += 'shortLabel Variants\n'
+            hub_list += 'longLabel Variant calls\n'
+            hub_list += 'superTrack on show\n'
+            hub_list += 'group variants\n'
+            hub_list += '\n'
 
-        # Hybrid Selection - TSV
-        if os.path.exists(os.path.join(
-                self.genome_directory,
-                file_path_summary.hybrid_metrics_sample_tsv)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.hybrid_metrics_sample_tsv + '">TSV</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.hybrid_metrics_read_group_tsv + '">TSV</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="left">'
-            report_list += '<a href="http://broadinstitute.github.io/picard/picard-metric-definitions.html' \
-                           '#HsMetrics">Hybrid Selection</a>'
-            report_list += '</td>\n'
-            report_list += '</tr>\n'
+            # Sample-specific tracks
 
-        # Hybrid Selection - Target Coverage Levels
-        if os.path.exists(
-                os.path.join(
-                    self.genome_directory,
-                    file_path_summary.hybrid_coverage_levels_sample_png)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.hybrid_coverage_levels_sample_pdf + '">'
-            report_list += '<img alt="Hybrid Selection - Mean Target Coverage Levels per Sample"'
-            report_list += ' src="' + file_path_summary.hybrid_coverage_levels_sample_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.hybrid_coverage_levels_read_group_pdf + '">'
-            report_list += '<img alt="Hybrid Selection - Mean Target Coverage Levels per Read Group"'
-            report_list += ' src="' + file_path_summary.hybrid_coverage_levels_read_group_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="left">Hybrid Selection - Mean Target Coverage Levels</td>\n'
-            report_list += '</tr>\n'
+            for sample in self.sample_list:
+                paired_reads_dict = sample.get_all_paired_reads(
+                    replicate_grouping=self.replicate_grouping,
+                    exclude=True)
 
-        # Hybrid Selection - Mean Target Coverage
-        if os.path.exists(os.path.join(
-                self.genome_directory,
-                file_path_summary.hybrid_coverage_sample_png)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.hybrid_coverage_sample_pdf + '">'
-            report_list += '<img alt="Hybrid Selection - Mean Target Coverage per Sample"'
-            report_list += ' src="' + file_path_summary.hybrid_coverage_sample_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.hybrid_coverage_read_group_pdf + '">'
-            report_list += '<img alt="Hybrid Selection - Mean Target Coverage per Read Group"'
-            report_list += ' src="' + file_path_summary.hybrid_coverage_read_group_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="left">Hybrid Selection - Mean Target Coverage</td>\n'
-            report_list += '</tr>\n'
+                paired_reads_name_list = paired_reads_dict.keys()
+                if not len(paired_reads_name_list):
+                    # Skip Sample objects, which PairedReads objects have all been excluded.
+                    continue
+                # paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-        # Hybrid Selection - Excluded Bases
-        if os.path.exists(os.path.join(
-                self.genome_directory,
-                file_path_summary.hybrid_excluded_bases_sample_png)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.hybrid_excluded_bases_sample_pdf + '">'
-            report_list += '<img alt="Hybrid Selection - Percent Excluded Bases per Sample"'
-            report_list += ' src="' + file_path_summary.hybrid_excluded_bases_sample_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.hybrid_excluded_bases_read_group_pdf + '">'
-            report_list += '<img alt="Hybrid Selection - Percent Excluded Bases per Read Group"'
-            report_list += ' src="' + file_path_summary.hybrid_excluded_bases_read_group_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="left">Hybrid Selection - Percent Excluded Bases</td>\n'
-            report_list += '</tr>\n'
+                runnable_process_sample = self.runnable_dict[
+                    '_'.join((self.stage_name_process_sample, sample.name))]
+                file_path_process_sample = runnable_process_sample.file_path_object
+                """ @type file_path_process_sample: FilePathProcessSample """
 
-        # Hybrid Selection - Percent Unique Reads
-        if os.path.exists(os.path.join(
-                self.genome_directory,
-                file_path_summary.hybrid_unique_percentage_sample_png)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.hybrid_unique_percentage_sample_pdf + '">'
-            report_list += '<img alt="Hybrid Selection - Percent Unique Reads per Sample"'
-            report_list += ' src="' + file_path_summary.hybrid_unique_percentage_sample_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.hybrid_unique_percentage_read_group_pdf + '">'
-            report_list += '<img alt="Hybrid Selection - Percent Unique Reads per Read Group"'
-            report_list += ' src="' + file_path_summary.hybrid_unique_percentage_read_group_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="left">Hybrid Selection - Percent Unique Reads</td>\n'
-            report_list += '</tr>\n'
+                runnable_diagnose_sample = self.runnable_dict[
+                    '_'.join((self.stage_name_diagnose_sample, sample.name))]
+                file_path_diagnose_sample = runnable_diagnose_sample.file_path_object
+                """ @type file_path_diagnose_sample: FilePathDiagnoseSample """
 
-        # Non-Callable Loci - TSV
-        if os.path.exists(os.path.join(
-                self.genome_directory,
-                file_path_summary.non_callable_metrics_sample_tsv)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.non_callable_metrics_sample_tsv + '">TSV</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center"></td>\n'
-            report_list += '<td class="left">Non-Callable Loci</td>\n'
-            report_list += '</tr>\n'
+                runnable_split_cohort_snpeff = self.runnable_dict[
+                    '_'.join((self.stage_name_split_cohort_snpeff, sample.name))]
+                file_path_split_cohort_snpeff = runnable_split_cohort_snpeff.file_path_object
+                """ @type file_path_split_cohort_snpeff: FilePathSplitCohort """
 
-        # Non-Callable Loci - Fraction
-        if os.path.exists(os.path.join(
-                self.genome_directory,
-                file_path_summary.non_callable_percentage_sample_png)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.non_callable_percentage_sample_pdf + '">'
-            report_list += '<img alt="Non-Callable Loci - Fraction"'
-            report_list += ' src="' + file_path_summary.non_callable_percentage_sample_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center"></td>\n'
-            report_list += '<td class="left">Non-Callable Loci - Fraction</td>\n'
-            report_list += '</tr>\n'
+                runnable_split_cohort_vep = self.runnable_dict[
+                    '_'.join((self.stage_name_split_cohort_vep, sample.name))]
+                file_path_split_cohort_vep = runnable_split_cohort_vep.file_path_object
+                """ @type file_path_split_cohort_vep: FilePathSplitCohort """
 
-        # Non-Callable Loci - Number
-        if os.path.exists(os.path.join(
-                self.genome_directory,
-                file_path_summary.non_callable_absolute_sample_png)):
-            report_list += '<tr>\n'
-            report_list += '<td class="center">'
-            report_list += '<a href="' + file_path_summary.non_callable_absolute_sample_pdf + '">'
-            report_list += '<img alt="Non-Callable Loci - Number"'
-            report_list += ' src="' + file_path_summary.non_callable_absolute_sample_png + '"'
-            report_list += ' height="100" width="100" />'
-            report_list += '</a>'
-            report_list += '</td>\n'
-            report_list += '<td class="center"></td>\n'
-            report_list += '<td class="left">Non-Callable Loci - Number</td>\n'
-            report_list += '</tr>\n'
+                #
+                #  Alignments track
+                #
+                # Common settings
+                hub_list += 'track ' + sample.name + '_alignments\n'
+                hub_list += 'type bam\n'
+                hub_list += 'shortLabel ' + sample.name + '_alignments\n'
+                hub_list += 'longLabel ' + sample.name + 'BWA NGS read alignments\n'
+                hub_list += 'bigDataUrl ' + file_path_process_sample.realigned_bam + '\n'
+                # track_output += 'html ...\n'
+                hub_list += 'visibility squish\n'
 
-        report_list += '</tbody>\n'
-        report_list += '</table>\n'
-        report_list += '\n'
+                # Common optional settings
+                hub_list += 'color 0,0,0\n'
 
-        self.report_to_file(content=report_list)
-        self.ucsc_hub_to_file(content=hub_list)
+                # bam/cram - Compressed Sequence Alignment track settings
+                # None
+
+                # Composite track settings
+                hub_list += 'parent Alignments\n'
+                hub_list += '\n'
+
+                if os.path.isfile(
+                        os.path.join(
+                            self.genome_directory,
+                            file_path_diagnose_sample.callable_bb)):
+                    #
+                    #  Callable track
+                    #
+                    # Common settings
+                    hub_list += 'track ' + sample.name + '_callable\n'
+                    hub_list += 'type bigBed\n'
+                    hub_list += 'shortLabel ' + sample.name + '_callable\n'
+                    hub_list += 'longLabel ' + sample.name + 'callable\n'
+                    hub_list += 'bigDataUrl ' + file_path_diagnose_sample.callable_bb + '\n'
+                    # track_output += 'html ...\n'
+                    hub_list += 'visibility squish\n'
+
+                    # Common optional settings
+                    hub_list += 'color 0,0,0\n'
+
+                    # bigBed - Item or region track settings
+                    # None
+
+                    # Composite track settings
+                    hub_list += 'parent Callable\n'
+                    hub_list += '\n'
+
+                #
+                # snpEff Variants track
+                #
+                # Common settings
+                hub_list += 'track ' + sample.name + '_snpeff\n'
+                hub_list += 'type vcfTabix\n'
+                hub_list += 'shortLabel ' + sample.name + '_snpeff\n'
+                hub_list += 'longLabel ' + sample.name + ' snpEff-annotated variant calls\n'
+                hub_list += 'bigDataUrl ' + file_path_split_cohort_snpeff.sample_vcf + '\n'
+                # track_output += 'html ...\n'
+                hub_list += 'visibility dense\n'
+
+                # Common optional settings
+
+                # vcfTabix specific settings
+
+                # Composite track settings
+                hub_list += 'parent Variants\n'
+                hub_list += '\n'
+
+                #
+                # Ensembl VEP Variants track
+                #
+                # Common settings
+                hub_list += 'track ' + sample.name + '_vep\n'
+                hub_list += 'type vcfTabix\n'
+                hub_list += 'shortLabel ' + sample.name + '_vep\n'
+                hub_list += 'longLabel ' + sample.name + ' Ensembl VEP-annotated variant calls\n'
+                hub_list += 'bigDataUrl ' + file_path_split_cohort_vep.sample_vcf + '\n'
+                # track_output += 'html ...\n'
+                hub_list += 'visibility dense\n'
+
+                # Common optional settings
+
+                # vcfTabix specific settings
+
+                # Composite track settings
+                hub_list += 'parent Variants\n'
+                hub_list += '\n'
+
+            # Comparison-specific tracks
+
+            self.ucsc_hub_to_file(content=hub_list)
+
+            return
+
+        report_link()
+        report_html()
+        report_hub()
 
         return
