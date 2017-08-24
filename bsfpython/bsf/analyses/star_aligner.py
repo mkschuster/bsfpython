@@ -89,6 +89,28 @@ class FilePathStarSummary(FilePath):
         super(FilePathStarSummary, self).__init__(prefix=prefix)
 
         self.read_group_to_sample_tsv = prefix + '_read_group_to_sample.tsv'
+        self.alignment_read_group_pdf = prefix + '_alignment_read_group.pdf'
+        self.alignment_read_group_png = prefix + '_alignment_read_group.png'
+        self.alignment_sample_png = prefix + '_alignment_sample.png'
+        self.alignment_sample_pdf = prefix + '_alignment_sample.pdf'
+        self.junction_fraction_read_group_pdf = prefix + '_junction_fraction_read_group.pdf'
+        self.junction_fraction_read_group_png = prefix + '_junction_fraction_read_group.png'
+        self.junction_fraction_sample_pdf = prefix + '_junction_fraction_sample.pdf'
+        self.junction_fraction_sample_png = prefix + '_junction_fraction_sample.png'
+        self.junction_number_read_group_pdf = prefix + '_junction_number_read_group.pdf'
+        self.junction_number_read_group_png = prefix + '_junction_number_read_group.png'
+        self.junction_number_sample_pdf = prefix + '_junction_number_sample.pdf'
+        self.junction_number_sample_png = prefix + '_junction_number_sample.png'
+        self.mapped_fraction_read_group_pdf = prefix + '_mapped_fraction_read_group.pdf'
+        self.mapped_fraction_read_group_png = prefix + '_mapped_fraction_read_group.png'
+        self.mapped_fraction_sample_png = prefix + '_mapped_fraction_sample.png'
+        self.mapped_fraction_sample_pdf = prefix + '_mapped_fraction_sample.pdf'
+        self.mapped_number_read_group_pdf = prefix + '_mapped_number_read_group.pdf'
+        self.mapped_number_read_group_png = prefix + '_mapped_number_read_group.png'
+        self.mapped_number_sample_png = prefix + '_mapped_number_sample.png'
+        self.mapped_number_sample_pdf = prefix + '_mapped_number_sample.pdf'
+        self.table_read_group = prefix + '_table_read_group.tsv'
+        self.table_sample = prefix + '_table_sample.tsv'
 
         return
 
@@ -703,5 +725,230 @@ class StarAligner(Analysis):
                 name='summary',
                 program='bsf_star_aligner_summary.R'))
         """ @type runnable_step: bsf.process.RunnableStep """
+
+        return
+
+    def report(self):
+        """Create a report.
+
+        @return:
+        @rtype:
+        """
+
+        def report_html():
+            """Private function to create a HTML report.
+
+            @return:
+            @rtype:
+            """
+            # Create a symbolic link containing the project name and a UUID.
+            # default = Default.get_global_default()
+            # link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
+            # link_name = os.path.basename(link_path.rstrip('/'))
+
+            # This code only needs the public URL.
+
+            # Write a HTML document.
+
+            str_list = list()
+            """ @type str_list: list[str | unicode] """
+
+            str_list += '<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n'
+            str_list += '\n'
+
+            str_list += '<h2 id="sample_section">Sample Table</h2>\n'
+            str_list += '\n'
+            str_list += '<table id="sample_table">\n'
+            str_list += '<thead>\n'
+            str_list += '<tr>\n'
+            str_list += '<th>Sample</th>\n'
+            str_list += '<th>BAM</th>\n'
+            str_list += '<th>BAI</th>\n'
+            str_list += '<th>MD5</th>\n'
+            str_list += '</tr>\n'
+            str_list += '</thead>\n'
+            str_list += '<tbody>\n'
+
+            for sample in self.sample_list:
+                if self.debug > 0:
+                    print repr(self) + ' Sample name: ' + sample.name
+                    print sample.trace(1)
+
+                paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping,
+                                                                exclude=True)
+
+                paired_reads_name_list = paired_reads_dict.keys()
+                if not len(paired_reads_name_list):
+                    # Skip Sample objects, which PairedReads objects have all been excluded.
+                    continue
+                # paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+                runnable_merge = self.runnable_dict[
+                    '_'.join((self.stage_name_merge, sample.name))]
+                file_path_merge = runnable_merge.file_path_object
+                """ @type file_path_merge: FilePathStarMerge """
+
+                str_list += '<tr>\n'
+                # Sample
+                str_list += '<td class="left">' + sample.name + '</td>\n'
+                # BAM
+                str_list += '<td class="center">'
+                str_list += '<a href="' + file_path_merge.merged_bam + '">'
+                str_list += '<abbr title="Binary Alignment/Map">BAM</abbr>'
+                str_list += '</a>'
+                str_list += '</td>\n'
+                # BAI
+                str_list += '<td class="center">'
+                str_list += '<a href="' + file_path_merge.merged_bai + '">'
+                str_list += '<abbr title="Binary Alignment/Map Index">BAI</abbr>'
+                str_list += '</a>'
+                str_list += '</td>\n'
+                # MD5
+                str_list += '<td class="center">'
+                str_list += '<a href="' + file_path_merge.merged_md5 + '">'
+                str_list += '<abbr title="Message Digest 5 Checksum">MD5</abbr>'
+                str_list += '</a>'
+                str_list += '</td>\n'
+                str_list += '</tr>\n'
+
+            str_list += '</tbody>\n'
+            str_list += '</table>\n'
+            str_list += '\n'
+
+            str_list += '<h2 id="qc_plots">QC Plots</h2>\n'
+            str_list += '\n'
+            str_list += '<table id="qc_table">\n'
+            str_list += '<thead>\n'
+            str_list += '<tr>\n'
+            str_list += '<th>Sample</th>\n'
+            str_list += '<th>Read Group</th>\n'
+            str_list += '<th>Metrics</th>\n'
+            str_list += '</tr>\n'
+            str_list += '</thead>\n'
+            str_list += '<tbody>\n'
+
+            runnable_summary = self.runnable_dict[self.stage_name_summary]
+            file_path_summary = runnable_summary.file_path_object
+            """ @type file_path_summary: FilePathStarSummary """
+
+            # Alignment Summary Plots
+            str_list += '<tr>\n'
+            str_list += '<td class="center">'
+            str_list += '<a href="' + file_path_summary.alignment_sample_pdf + '">'
+            str_list += '<img alt="Mapped - Sample"'
+            str_list += ' src="' + file_path_summary.alignment_sample_png + '"'
+            str_list += ' height="100" width="100" />'
+            str_list += '</a>'
+            str_list += '</td>\n'
+            str_list += '<td class="center">'
+            str_list += '<a href="' + file_path_summary.alignment_read_group_pdf + '">'
+            str_list += '<img alt="Mapped - Read Group"'
+            str_list += ' src="' + file_path_summary.alignment_read_group_png + '"'
+            str_list += ' height="100" width="100" />'
+            str_list += '</a>'
+            str_list += '</td>\n'
+            str_list += '<td class="left">Mapped</td>\n'
+            str_list += '</tr>\n'
+
+            # Mapped Fraction Plots
+            str_list += '<tr>\n'
+            str_list += '<td class="center">'
+            str_list += '<a href="' + file_path_summary.mapped_fraction_sample_pdf + '">'
+            str_list += '<img alt="Mapped Fraction - Sample"'
+            str_list += ' src="' + file_path_summary.mapped_fraction_sample_png + '"'
+            str_list += ' height="100" width="100" />'
+            str_list += '</a>'
+            str_list += '</td>\n'
+            str_list += '<td class="center">'
+            str_list += '<a href="' + file_path_summary.mapped_fraction_read_group_pdf + '">'
+            str_list += '<img alt="Mapped Fraction - Read Group"'
+            str_list += ' src="' + file_path_summary.mapped_fraction_read_group_png + '"'
+            str_list += ' height="100" width="100" />'
+            str_list += '</a>'
+            str_list += '</td>\n'
+            str_list += '<td class="left">Mapped Fraction</td>\n'
+            str_list += '</tr>\n'
+
+            # Mapped Number Plots
+            str_list += '<tr>\n'
+            str_list += '<td class="center">'
+            str_list += '<a href="' + file_path_summary.mapped_number_sample_pdf + '">'
+            str_list += '<img alt="Mapped Number - Sample"'
+            str_list += ' src="' + file_path_summary.mapped_number_sample_png + '"'
+            str_list += ' height="100" width="100" />'
+            str_list += '</a>'
+            str_list += '</td>\n'
+            str_list += '<td class="center">'
+            str_list += '<a href="' + file_path_summary.mapped_number_read_group_pdf + '">'
+            str_list += '<img alt="Mapped Number - Read Group"'
+            str_list += ' src="' + file_path_summary.mapped_number_read_group_png + '"'
+            str_list += ' height="100" width="100" />'
+            str_list += '</a>'
+            str_list += '</td>\n'
+            str_list += '<td class="left">Mapped Number</td>\n'
+            str_list += '</tr>\n'
+
+            # Junction Fraction Plots
+            str_list += '<tr>\n'
+            str_list += '<td class="center">'
+            str_list += '<a href="' + file_path_summary.junction_fraction_sample_pdf + '">'
+            str_list += '<img alt="Junction Fraction - Sample"'
+            str_list += ' src="' + file_path_summary.junction_fraction_sample_png + '"'
+            str_list += ' height="100" width="100" />'
+            str_list += '</a>'
+            str_list += '</td>\n'
+            str_list += '<td class="center">'
+            str_list += '<a href="' + file_path_summary.junction_fraction_read_group_pdf + '">'
+            str_list += '<img alt="Junction Fraction - Read Group"'
+            str_list += ' src="' + file_path_summary.junction_fraction_read_group_png + '"'
+            str_list += ' height="100" width="100" />'
+            str_list += '</a>'
+            str_list += '</td>\n'
+            str_list += '<td class="left">Junction Fraction</td>\n'
+            str_list += '</tr>\n'
+
+            # Junction Number Plots
+            str_list += '<tr>\n'
+            str_list += '<td class="center">'
+            str_list += '<a href="' + file_path_summary.junction_number_sample_pdf + '">'
+            str_list += '<img alt="Junction Number - Sample"'
+            str_list += ' src="' + file_path_summary.junction_number_sample_png + '"'
+            str_list += ' height="100" width="100" />'
+            str_list += '</a>'
+            str_list += '</td>\n'
+            str_list += '<td class="center">'
+            str_list += '<a href="' + file_path_summary.junction_number_read_group_pdf + '">'
+            str_list += '<img alt="Junction Number - Read Group"'
+            str_list += ' src="' + file_path_summary.junction_number_read_group_png + '"'
+            str_list += ' height="100" width="100" />'
+            str_list += '</a>'
+            str_list += '</td>\n'
+            str_list += '<td class="left">Junction Number</td>\n'
+            str_list += '</tr>\n'
+
+            # Summary Tables
+            str_list += '<tr>\n'
+            str_list += '<td class="center">'
+            str_list += '<a href="' + file_path_summary.table_sample + '">'
+            str_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+            str_list += '</a>'
+            str_list += '</td>\n'
+            str_list += '<td class="center">'
+            str_list += '<a href="' + file_path_summary.table_read_group + '">'
+            str_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+            str_list += '</a>'
+            str_list += '</td>\n'
+            str_list += '<td class="left">Summary</td>\n'
+            str_list += '</tr>\n'
+
+            str_list += '</tbody>\n'
+            str_list += '</table>\n'
+            str_list += '\n'
+
+            self.report_to_file(content=str_list)
+
+            return
+
+        report_html()
 
         return
