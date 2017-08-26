@@ -3,7 +3,7 @@
 # BSF Python script to drive the Tuxedo suite-based RNA-Seq analysis pipeline.
 #
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2017 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -31,7 +31,7 @@ from bsf.analyses.rna_seq import Tuxedo
 
 
 argument_parser = argparse.ArgumentParser(
-    description='RNA-Seq analysis driver script.')
+    description='RNA-Seq Tuxedo Analysis driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -41,35 +41,38 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--stage',
-    dest='stage',
     help='limit job submission to a particular Analysis stage',
-    required=False)
+    required=False,
+    type=str)
 
 argument_parser.add_argument(
     'configuration',
-    help='configuration (*.ini) file path')
+    help='configuration (*.ini) file path',
+    type=str)
 
 name_space = argument_parser.parse_args()
 
 # Create a Tuxedo analysis and run it.
 
-tuxedo = Tuxedo.from_config_file_path(config_path=name_space.configuration)
+analysis = Tuxedo.from_config_file_path(config_path=name_space.configuration)
+""" @type analysis: bsf.analyses.rna_seq.Tuxedo """
 
 if name_space.debug:
-    tuxedo.debug = name_space.debug
+    assert isinstance(name_space.debug, int)
+    analysis.debug = name_space.debug
 
-tuxedo.run()
-tuxedo.check_state()
-tuxedo.submit(name=name_space.stage)
+analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
-print 'RNA-Seq Analysis'
-print 'Project name:      ', tuxedo.project_name
-print 'Genome version:    ', tuxedo.genome_version
-print 'Input directory:   ', tuxedo.input_directory
-print 'Output directory:  ', tuxedo.output_directory
-print 'Project directory: ', tuxedo.project_directory
-print 'Genome directory:  ', tuxedo.genome_directory
+print 'Tuxedo Analysis'
+print 'Project name:      ', analysis.project_name
+print 'Genome version:    ', analysis.genome_version
+print 'Input directory:   ', analysis.input_directory
+print 'Output directory:  ', analysis.output_directory
+print 'Project directory: ', analysis.project_directory
+print 'Genome directory:  ', analysis.genome_directory
 
-if tuxedo.debug >= 2:
-    print '{!r} final trace:'.format(tuxedo)
-    print tuxedo.trace(level=1)
+if analysis.debug >= 2:
+    print '{!r} final trace:'.format(analysis)
+    print analysis.trace(level=1)

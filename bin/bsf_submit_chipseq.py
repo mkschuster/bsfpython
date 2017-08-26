@@ -3,7 +3,7 @@
 # BSF Python script to drive the ChIPSeq analysis.
 #
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2017 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -31,7 +31,7 @@ from bsf.analyses.chip_seq import ChIPSeq
 
 
 argument_parser = ArgumentParser(
-    description='ChIPSeq analysis driver script.')
+    description='ChIPSeq Analysis driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -54,20 +54,26 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
-chipseq = ChIPSeq.from_config_file_path(config_path=name_space.configuration)
+analysis = ChIPSeq.from_config_file_path(config_path=name_space.configuration)
+""" @type analysis: bsf.analyses.chip_seq.ChIPSeq """
 
 # Set arguments that override the configuration file.
 
 if name_space.debug:
-    chipseq.debug = name_space.debug
+    assert isinstance(name_space.debug, int)
+    analysis.debug = name_space.debug
 
 # Do the work.
 
-chipseq.run()
-chipseq.check_state()
-chipseq.submit(name=name_space.stage)
+analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
 print 'ChIPSeq Analysis'
-print 'Project name:      ', chipseq.project_name
-print 'Input directory:   ', chipseq.input_directory
-print 'Project directory: ', chipseq.project_directory
+print 'Project name:      ', analysis.project_name
+print 'Input directory:   ', analysis.input_directory
+print 'Project directory: ', analysis.project_directory
+
+if analysis.debug >= 2:
+    print '{!r} final trace:'.format(analysis)
+    print analysis.trace(level=1)

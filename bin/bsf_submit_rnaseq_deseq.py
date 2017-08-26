@@ -25,14 +25,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-
 import argparse
 
 from bsf.analyses.rna_seq import DESeq
 
 
 argument_parser = argparse.ArgumentParser(
-    description='RNA-Seq analysis driver script.')
+    description='RNA-Seq DESeq Analysis driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -42,35 +41,38 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--stage',
-    dest='stage',
     help='limit job submission to a particular Analysis stage',
-    required=False)
+    required=False,
+    type=str)
 
 argument_parser.add_argument(
     'configuration',
-    help='configuration (*.ini) file path')
+    help='configuration (*.ini) file path',
+    type=str)
 
 name_space = argument_parser.parse_args()
 
-# Create a DESeq analysis and run it.
+# Create a DESeq Analysis and run it.
 
-deseq = DESeq.from_config_file_path(config_path=name_space.configuration)
+analysis = DESeq.from_config_file_path(config_path=name_space.configuration)
+""" @type analysis: bsf.analyses.rna_seq.DESeq """
 
 if name_space.debug:
-    deseq.debug = name_space.debug
+    assert isinstance(name_space.debug, int)
+    analysis.debug = name_space.debug
 
-deseq.run()
-deseq.check_state()
-deseq.submit(name=name_space.stage)
+analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
-print 'RNA-Seq Analysis'
-print 'Project name:      ', deseq.project_name
-print 'Genome version:    ', deseq.genome_version
-print 'Input directory:   ', deseq.input_directory
-print 'Output directory:  ', deseq.output_directory
-print 'Project directory: ', deseq.project_directory
-print 'Genome directory:  ', deseq.genome_directory
+print 'DESeq Analysis'
+print 'Project name:      ', analysis.project_name
+print 'Genome version:    ', analysis.genome_version
+print 'Input directory:   ', analysis.input_directory
+print 'Output directory:  ', analysis.output_directory
+print 'Project directory: ', analysis.project_directory
+print 'Genome directory:  ', analysis.genome_directory
 
-if deseq.debug >= 2:
-    print '{!r} final trace:'.format(deseq)
-    print deseq.trace(level=1)
+if analysis.debug >= 2:
+    print '{!r} final trace:'.format(analysis)
+    print analysis.trace(level=1)

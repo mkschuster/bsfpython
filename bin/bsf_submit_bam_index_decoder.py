@@ -3,7 +3,7 @@
 # BSF Python script to drive the IlluminaToBamTools BamIndexDecoder analysis.
 #
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2017 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -33,7 +33,7 @@ from bsf.standards import Default
 
 
 argument_parser = ArgumentParser(
-    description='IlluminaToBamTools BamIndexDecoder analysis driver script.')
+    description='IlluminaToBamTools BamIndexDecoder Analysis driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -91,51 +91,60 @@ if name_space.configuration == Default.global_file_path:
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
-bid = BamIndexDecoder.from_config_file_path(config_path=name_space.configuration)
-assert isinstance(bid, BamIndexDecoder)
+analysis = BamIndexDecoder.from_config_file_path(config_path=name_space.configuration)
+""" @type analysis: bsf.analyses.illumina_to_bam_tools.BamIndexDecoder """
 
 # Set arguments that override the configuration file.
 
 if name_space.debug:
-    bid.debug = name_space.debug
+    assert isinstance(name_space.debug, int)
+    analysis.debug = name_space.debug
 
 if name_space.project_name:
-    bid.project_name = name_space.project_name
+    assert isinstance(name_space.project_name, str)
+    analysis.project_name = name_space.project_name
 
 if name_space.mode:
+    assert isinstance(name_space.mode, str)
     if name_space.mode == 'high':
-        bid.lanes = 8
+        analysis.lanes = 8
     elif name_space.mode == 'rapid':
-        bid.lanes = 2
+        analysis.lanes = 2
     elif name_space.mode == 'miseq':
-        bid.lanes = 1
+        analysis.lanes = 1
     elif name_space.mode == 'nextseq':
-        bid.lanes = 4
+        analysis.lanes = 4
     else:
         raise Exception("Unknown output mode " + name_space.mode)
 
 if name_space.force:
-    bid.force = name_space.force
+    assert isinstance(name_space.force, bool)
+    analysis.force = name_space.force
 
 if name_space.library_path:
-    bid.library_path = name_space.library_path
+    assert isinstance(name_space.library_path, (str, unicode))
+    analysis.library_path = name_space.library_path
 
 # If a library file has not been defined so far, check,
 # if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
 
-if not bid.library_path:
-    library_path = '_'.join((bid.project_name, 'libraries.csv'))
+if not analysis.library_path:
+    library_path = '_'.join((analysis.project_name, 'libraries.csv'))
     if os.path.exists(path=library_path):
-        bid.library_path = library_path
+        analysis.library_path = library_path
 
 # Do the work.
 
-bid.run()
-bid.check_state()
-bid.submit(name=name_space.stage)
+analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
 print 'IlluminaToBamTools BamIndexDecoder Analysis'
-print 'Project name:         ', bid.project_name
-print 'Project directory:    ', bid.project_directory
-print 'Sequences directory:  ', bid.sequences_directory
-print 'Experiment directory: ', bid.experiment_directory
+print 'Project name:         ', analysis.project_name
+print 'Project directory:    ', analysis.project_directory
+print 'Sequences directory:  ', analysis.sequences_directory
+print 'Experiment directory: ', analysis.experiment_directory
+
+if analysis.debug >= 2:
+    print '{!r} final trace:'.format(analysis)
+    print analysis.trace(level=1)

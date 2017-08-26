@@ -3,7 +3,7 @@
 # BSF Python script to drive the Picard DownsampleSam analysis.
 #
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2017 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -32,7 +32,7 @@ from bsf.standards import Default
 
 
 argument_parser = argparse.ArgumentParser(
-    description='Picard DownsampleSam analysis driver script.')
+    description='Picard DownsampleSam Analysis driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -80,32 +80,33 @@ if name_space.configuration == Default.global_file_path:
 
 # Create a Picard DownsampleSam analysis and run it.
 
-dss = DownsampleSam.from_config_file_path(config_path=name_space.configuration)
+analysis = DownsampleSam.from_config_file_path(config_path=name_space.configuration)
+""" @type analysis: bsf.analyses.picard.DownsampleSam """
 
 if name_space.debug:
     assert isinstance(name_space.debug, int)
-    dss.debug = name_space.debug
+    analysis.debug = name_space.debug
 
 if name_space.project_name:
     assert isinstance(name_space.project_name, str)
-    dss.project_name = name_space.project_name
+    analysis.project_name = name_space.project_name
 
 if name_space.sas_file:
     assert isinstance(name_space.sas_file, (str, unicode))
-    dss.sas_file = name_space.sas_file
+    analysis.sas_file = name_space.sas_file
 
-annotation_sheet = dss.run()
-dss.check_state()
-dss.submit(name=name_space.stage)
+annotation_sheet = analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
 print 'Picard DownsampleSam Analysis'
-print 'Project name:      ', dss.project_name
-print 'Genome version:    ', dss.genome_version
-print 'Input directory:   ', dss.input_directory
-print 'Output directory:  ', dss.output_directory
-print 'Project directory: ', dss.project_directory
-print 'Genome directory:  ', dss.genome_directory
+print 'Project name:      ', analysis.project_name
+print 'Genome version:    ', analysis.genome_version
+print 'Input directory:   ', analysis.input_directory
+print 'Output directory:  ', analysis.output_directory
+print 'Project directory: ', analysis.project_directory
+print 'Genome directory:  ', analysis.genome_directory
 
-if dss.debug >= 2:
-    print '{!r} final trace:'.format(dss)
-    print dss.trace(level=1)
+if analysis.debug >= 2:
+    print '{!r} final trace:'.format(analysis)
+    print analysis.trace(level=1)

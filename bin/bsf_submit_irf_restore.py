@@ -3,7 +3,7 @@
 # BSF Python script to restore an Illumina Run Folder (IRF) from a magnetic tape library.
 #
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2017 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -84,31 +84,41 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF IlluminaRunFolderRestore analysis, run and submit it.
 
-irf_restore = IlluminaRunFolderRestore.from_config_file_path(config_path=name_space.configuration)
+analysis = IlluminaRunFolderRestore.from_config_file_path(config_path=name_space.configuration)
+""" @type analysis: bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore """
 
 # Set arguments that override the configuration file.
 
 if name_space.debug:
-    irf_restore.debug = name_space.debug
+    assert isinstance(name_space.debug, int)
+    analysis.debug = name_space.debug
 
 if name_space.project_name:
-    irf_restore.project_name = name_space.project_name
+    assert isinstance(name_space.project_name, str)
+    analysis.project_name = name_space.project_name
 
 if name_space.archive_directory:
-    irf_restore.archive_directory = name_space.archive_directory
+    assert isinstance(name_space.archive_directory, (str, unicode))
+    analysis.archive_directory = name_space.archive_directory
 
 if name_space.extract_intensities:
-    irf_restore.extract_intensities = name_space.extract_intensities
+    assert isinstance(name_space.extract_intensities, (str, unicode))
+    analysis.extract_intensities = name_space.extract_intensities
 
 if name_space.force:
-    irf_restore.force = name_space.force
+    assert isinstance(name_space.force, bool)
+    analysis.force = name_space.force
 
-irf_restore.run()
-irf_restore.check_state()
-irf_restore.submit(name=name_space.stage)
+analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
 print 'IlluminaRunFolderRestore Analysis'
-print 'Project name:           ', irf_restore.project_name
-print 'Project directory:      ', irf_restore.project_directory
-print 'Illumina run directory: ', irf_restore.illumina_directory
-print 'Archive directory:      ', irf_restore.archive_directory
+print 'Project name:           ', analysis.project_name
+print 'Project directory:      ', analysis.project_directory
+print 'Illumina run directory: ', analysis.illumina_directory
+print 'Archive directory:      ', analysis.archive_directory
+
+if analysis.debug >= 2:
+    print '{!r} final trace:'.format(analysis)
+    print analysis.trace(level=1)

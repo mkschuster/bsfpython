@@ -3,7 +3,7 @@
 # BSF Python script to drive the Variant Calling analysis pipeline.
 #
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2017 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -31,40 +31,48 @@ from bsf.analyses.variant_calling import VariantCallingGATK
 
 
 argument_parser = argparse.ArgumentParser(
-    description='Variant Calling analysis driver script.')
+    description='VariantCallingGATK Analysis driver script.')
 
 argument_parser.add_argument(
     '--debug',
+    help='debug level',
     required=False,
-    type=int,
-    help='debug level')
+    type=int)
 
 argument_parser.add_argument(
     '--stage',
+    help='limit job submission to a particular Analysis stage',
     required=False,
-    help='limit job submission to a particular Analysis stage')
+    type=str)
 
 argument_parser.add_argument(
     'configuration',
-    help='configuration (*.ini) file path')
+    help='configuration (*.ini) file path',
+    type=str)
 
 name_space = argument_parser.parse_args()
 
-# Create a BSF Variant Calling analysis and run it.
+# Create a VariantCallingGATK Analysis and run it.
 
-variant_calling = VariantCallingGATK.from_config_file_path(config_path=name_space.configuration)
+analysis = VariantCallingGATK.from_config_file_path(config_path=name_space.configuration)
+""" @type analysis: bsf.analyses.variant_calling.VariantCallingGATK """
 
 if name_space.debug:
-    variant_calling.debug = name_space.debug
+    assert isinstance(name_space.debug, int)
+    analysis.debug = name_space.debug
 
-variant_calling.run()
-variant_calling.check_state()
-variant_calling.submit(name=name_space.stage)
+analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
-print 'Variant Calling Analysis'
-print 'Project name:      ', variant_calling.project_name
-print 'Genome version:    ', variant_calling.genome_version
-print 'Input directory:   ', variant_calling.input_directory
-print 'Output directory:  ', variant_calling.output_directory
-print 'Project directory: ', variant_calling.project_directory
-print 'Genome directory:  ', variant_calling.genome_directory
+print 'VariantCallingGATK Analysis'
+print 'Project name:      ', analysis.project_name
+print 'Genome version:    ', analysis.genome_version
+print 'Input directory:   ', analysis.input_directory
+print 'Output directory:  ', analysis.output_directory
+print 'Project directory: ', analysis.project_directory
+print 'Genome directory:  ', analysis.genome_directory
+
+if analysis.debug >= 2:
+    print '{!r} final trace:'.format(analysis)
+    print analysis.trace(level=1)

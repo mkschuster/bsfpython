@@ -3,7 +3,7 @@
 # BSF Python script to drive the Trimmomatic analysis pipeline.
 #
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2017 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -32,7 +32,7 @@ from bsf.standards import Default
 
 
 argument_parser = argparse.ArgumentParser(
-    description='Trimmomatic analysis driver script.')
+    description='Trimmomatic Analysis driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -42,9 +42,9 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--stage',
-    dest='stage',
     help='limit job submission to a particular Analysis stage',
-    required=False)
+    required=False,
+    type=str)
 
 argument_parser.add_argument(
     '--configuration',
@@ -78,34 +78,35 @@ if name_space.configuration == Default.global_file_path:
     if name_space.sas_file is None:
         raise Exception("argument --sas-file is required if --configuration is not set")
 
-# Create a Picard SamToFastq analysis and run it.
+# Create a Trimmomatic Analysis and run it.
 
-trimmomatic = Trimmomatic.from_config_file_path(config_path=name_space.configuration)
+analysis = Trimmomatic.from_config_file_path(config_path=name_space.configuration)
+""" @type analysis: bsf.analyses.trimmomatic.Trimmomatic """
 
 if name_space.debug:
     assert isinstance(name_space.debug, int)
-    trimmomatic.debug = name_space.debug
+    analysis.debug = name_space.debug
 
 if name_space.project_name:
     assert isinstance(name_space.project_name, str)
-    trimmomatic.project_name = name_space.project_name
+    analysis.project_name = name_space.project_name
 
 if name_space.sas_file:
     assert isinstance(name_space.sas_file, (str, unicode))
-    trimmomatic.sas_file = name_space.sas_file
+    analysis.sas_file = name_space.sas_file
 
-annotation_sheet = trimmomatic.run()
-trimmomatic.check_state()
-trimmomatic.submit(name=name_space.stage)
+analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
 print 'Trimmomatic Analysis'
-print 'Project name:      ', trimmomatic.project_name
-print 'Genome version:    ', trimmomatic.genome_version
-print 'Input directory:   ', trimmomatic.input_directory
-print 'Output directory:  ', trimmomatic.output_directory
-print 'Project directory: ', trimmomatic.project_directory
-print 'Genome directory:  ', trimmomatic.genome_directory
+print 'Project name:      ', analysis.project_name
+print 'Genome version:    ', analysis.genome_version
+print 'Input directory:   ', analysis.input_directory
+print 'Output directory:  ', analysis.output_directory
+print 'Project directory: ', analysis.project_directory
+print 'Genome directory:  ', analysis.genome_directory
 
-if trimmomatic.debug >= 2:
-    print '{!r} final trace:'.format(trimmomatic)
-    print trimmomatic.trace(level=1)
+if analysis.debug >= 2:
+    print '{!r} final trace:'.format(analysis)
+    print analysis.trace(level=1)

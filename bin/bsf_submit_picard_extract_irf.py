@@ -3,7 +3,7 @@
 # BSF Python script to drive the Picard ExtractIlluminaRunFolder analysis.
 #
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2017 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -32,7 +32,7 @@ from bsf.standards import Default
 
 
 argument_parser = ArgumentParser(
-    description='Picard ExtractIlluminaRunFolder analysis driver script.')
+    description='Picard ExtractIlluminaRunFolder Analysis driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -74,38 +74,47 @@ name_space = argument_parser.parse_args()
 
 # Create a ExtractIlluminaRunFolder analysis, run and submit it.
 
-eirf = ExtractIlluminaRunFolder.from_config_file_path(config_path=name_space.configuration)
+analysis = ExtractIlluminaRunFolder.from_config_file_path(config_path=name_space.configuration)
+""" @type analysis: bsf.analyses.picard.ExtractIlluminaRunFolder """
 
 # Set arguments that override the configuration file.
 
 if name_space.debug:
-    eirf.debug = name_space.debug
+    assert isinstance(name_space.debug, int)
+    analysis.debug = name_space.debug
 
 if name_space.irf:
-    eirf.run_directory = name_space.irf
+    assert isinstance(name_space.irf, (str, unicode))
+    analysis.run_directory = name_space.irf
 
 if name_space.mode:
+    assert isinstance(name_space.mode, str)
     if name_space.mode == 'high':
-        eirf.lanes = 8
+        analysis.lanes = 8
     elif name_space.mode == 'rapid':
-        eirf.lanes = 2
+        analysis.lanes = 2
     elif name_space.mode == 'miseq':
-        eirf.lanes = 1
+        analysis.lanes = 1
     elif name_space.mode == 'nextseq':
-        eirf.lanes = 4
+        analysis.lanes = 4
     else:
         raise Exception("Unknown output mode " + name_space.mode)
 
 if name_space.force:
-    eirf.force = name_space.force
+    assert isinstance(name_space.force, bool)
+    analysis.force = name_space.force
 
 # Do the work.
 
-eirf.run()
-eirf.check_state()
-eirf.submit(name=name_space.stage)
+analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
 print 'Picard ExtractIlluminaRunFolder Analysis'
-print 'Project name:           ', eirf.project_name
-print 'Project directory:      ', eirf.project_directory
-print 'Illumina run directory: ', eirf.run_directory
+print 'Project name:           ', analysis.project_name
+print 'Project directory:      ', analysis.project_directory
+print 'Illumina run directory: ', analysis.run_directory
+
+if analysis.debug >= 2:
+    print '{!r} final trace:'.format(analysis)
+    print analysis.trace(level=1)

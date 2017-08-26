@@ -3,7 +3,7 @@
 # BSF Python script to drive the STAR Aligner analysis.
 #
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2017 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -28,11 +28,10 @@
 import argparse
 
 from bsf.analyses.star_aligner import StarAligner
-from bsf.standards import Default
 
 
 argument_parser = argparse.ArgumentParser(
-    description='STAR aligner analysis driver script.')
+    description='StarAligner Analysis driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -42,70 +41,38 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--stage',
-    dest='stage',
     help='limit job submission to a particular Analysis stage',
-    required=False)
+    required=False,
+    type=str)
 
 argument_parser.add_argument(
-    '--configuration',
-    default=Default.global_file_path,
+    'configuration',
     help='configuration (*.ini) file path',
-    required=False,
     type=str)
-
-argument_parser.add_argument(
-    '--project-name',
-    dest='project_name',
-    help='project name',
-    required=False,
-    type=str)
-
-argument_parser.add_argument(
-    '--sas-file',
-    dest='sas_file',
-    help='sample annotation sheet (*.csv) file path',
-    required=False,
-    type=unicode)
 
 name_space = argument_parser.parse_args()
 
-# This analysis requires either a non-default --configuration argument or a
-# --project-name and --sas-file argument.
+# Create a StarAligner Analysis and run it.
 
-if name_space.configuration == Default.global_file_path:
-    if name_space.project_name is None:
-        raise Exception("argument --project-name is required if --configuration is not set")
-    if name_space.sas_file is None:
-        raise Exception("argument --sas-file is required if --configuration is not set")
-
-# Create a STAR Aligner analysis and run it.
-
-star_aligner = StarAligner.from_config_file_path(config_path=name_space.configuration)
+analysis = StarAligner.from_config_file_path(config_path=name_space.configuration)
+""" @type analysis: bsf.analyses.star_aligner.StarAligner """
 
 if name_space.debug:
     assert isinstance(name_space.debug, int)
-    star_aligner.debug = name_space.debug
+    analysis.debug = name_space.debug
 
-if name_space.project_name:
-    assert isinstance(name_space.project_name, str)
-    star_aligner.project_name = name_space.project_name
+analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
-if name_space.sas_file:
-    assert isinstance(name_space.sas_file, (str, unicode))
-    star_aligner.sas_file = name_space.sas_file
+print 'StarAligner Analysis'
+print 'Project name:      ', analysis.project_name
+print 'Genome version:    ', analysis.genome_version
+print 'Input directory:   ', analysis.input_directory
+print 'Output directory:  ', analysis.output_directory
+print 'Project directory: ', analysis.project_directory
+print 'Genome directory:  ', analysis.genome_directory
 
-annotation_sheet = star_aligner.run()
-star_aligner.check_state()
-star_aligner.submit(name=name_space.stage)
-
-print 'STAR Aligner Analysis'
-print 'Project name:      ', star_aligner.project_name
-print 'Genome version:    ', star_aligner.genome_version
-print 'Input directory:   ', star_aligner.input_directory
-print 'Output directory:  ', star_aligner.output_directory
-print 'Project directory: ', star_aligner.project_directory
-print 'Genome directory:  ', star_aligner.genome_directory
-
-if star_aligner.debug >= 2:
-    print '{!r} final trace:'.format(star_aligner)
-    print star_aligner.trace(level=1)
+if analysis.debug >= 2:
+    print '{!r} final trace:'.format(analysis)
+    print analysis.trace(level=1)

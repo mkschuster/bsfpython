@@ -3,7 +3,7 @@
 # BSF Python script to drive the IlluminaToBamTools IlluminaToBam analysis.
 #
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2017 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -32,7 +32,7 @@ from bsf.standards import Default
 
 
 argument_parser = ArgumentParser(
-    description='IlluminaToBamTools Illumina2bam analysis driver script.')
+    description='IlluminaToBamTools Illumina2bam Analysis driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -47,15 +47,15 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
-    '--irf',
-    help='Illumina Run Folder name or file path',
+    '--configuration',
+    default=Default.global_file_path,
+    help='configuration (*.ini) file path',
     required=False,
     type=str)
 
 argument_parser.add_argument(
-    '--configuration',
-    default=Default.global_file_path,
-    help='configuration (*.ini) file path',
+    '--irf',
+    help='Illumina Run Folder name or file path',
     required=False,
     type=str)
 
@@ -68,27 +68,35 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF IlluminaToBam analysis, run and submit it.
 
-itb = IlluminaToBam.from_config_file_path(config_path=name_space.configuration)
+analysis = IlluminaToBam.from_config_file_path(config_path=name_space.configuration)
+""" @type analysis: bsf.analyses.illumina_to_bam_tools.IlluminaToBam """
 
 # Set arguments that override the configuration file.
 
 if name_space.debug:
-    itb.debug = name_space.debug
+    assert isinstance(name_space.debug, int)
+    analysis.debug = name_space.debug
 
 if name_space.irf:
-    itb.run_directory = name_space.irf
+    assert isinstance(name_space.irf, (str, unicode))
+    analysis.run_directory = name_space.irf
 
 if name_space.force:
-    itb.force = name_space.force
+    assert isinstance(name_space.force, bool)
+    analysis.force = name_space.force
 
 # Do the work.
 
-itb.run()
-itb.check_state()
-itb.submit(name=name_space.stage)
+analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
 print 'IlluminaToBamTools IlluminaToBam Analysis'
-print 'Project name:           ', itb.project_name
-print 'Project directory:      ', itb.project_directory
-print 'Illumina run directory: ', itb.run_directory
-print 'Experiment directory:   ', itb.experiment_directory
+print 'Project name:           ', analysis.project_name
+print 'Project directory:      ', analysis.project_directory
+print 'Illumina run directory: ', analysis.run_directory
+print 'Experiment directory:   ', analysis.experiment_directory
+
+if analysis.debug >= 2:
+    print '{!r} final trace:'.format(analysis)
+    print analysis.trace(level=1)

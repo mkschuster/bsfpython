@@ -3,7 +3,7 @@
 # BSF Python script to archive an Illumina Run Folder (IRF) from a magnetic tape library.
 #
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2017 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -83,31 +83,41 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF IlluminaRunFolderRestore analysis, run and submit it.
 
-irf_archive = IlluminaRunFolderArchive.from_config_file_path(config_path=name_space.configuration)
+analysis = IlluminaRunFolderArchive.from_config_file_path(config_path=name_space.configuration)
+""" @type analysis: bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive """
 
 # Set arguments that override the configuration file.
 
 if name_space.debug:
-    irf_archive.debug = name_space.debug
+    assert isinstance(name_space.debug, int)
+    analysis.debug = name_space.debug
 
 if name_space.project_name:
-    irf_archive.project_name = name_space.project_name
+    assert isinstance(name_space.project_name, str)
+    analysis.project_name = name_space.project_name
 
 if name_space.archive_directory:
-    irf_archive.archive_directory = name_space.archive_directory
+    assert isinstance(name_space.archive_directory, (str, unicode))
+    analysis.archive_directory = name_space.archive_directory
 
 if name_space.irf:
-    irf_archive.run_directory = name_space.irf
+    assert isinstance(name_space.irf, (str, unicode))
+    analysis.run_directory = name_space.irf
 
 if name_space.force:
-    irf_archive.force = name_space.force
+    assert isinstance(name_space.force, bool)
+    analysis.force = name_space.force
 
-irf_archive.run()
-irf_archive.check_state()
-irf_archive.submit(name=name_space.stage)
+analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
 print 'IlluminaRunFolderArchive Analysis'
-print 'Project name:           ', irf_archive.project_name
-print 'Project directory:      ', irf_archive.project_directory
-print 'Illumina run directory: ', irf_archive.run_directory
-print 'Archive directory:      ', irf_archive.archive_directory
+print 'Project name:           ', analysis.project_name
+print 'Project directory:      ', analysis.project_directory
+print 'Illumina run directory: ', analysis.run_directory
+print 'Archive directory:      ', analysis.archive_directory
+
+if analysis.debug >= 2:
+    print '{!r} final trace:'.format(analysis)
+    print analysis.trace(level=1)
