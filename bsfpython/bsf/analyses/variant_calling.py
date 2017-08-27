@@ -5191,9 +5191,7 @@ class VariantCallingGATK(Analysis):
             @rtype:
             """
             # Create a symbolic link containing the project name and a UUID.
-            default = Default.get_global_default()
-            link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
-            link_name = os.path.basename(link_path.rstrip('/'))
+            link_path = self.create_public_project_link()
 
             # This code only needs the public URL.
 
@@ -5208,26 +5206,8 @@ class VariantCallingGATK(Analysis):
             str_list += '<h2 id="genome_browsing">Genome Browsing</h2>\n'
             str_list += '\n'
 
-            # Resolve an eventual alias for the UCSC genome assembly name.
-
-            if default.genome_aliases_ucsc_dict is not None and self.genome_version in default.genome_aliases_ucsc_dict:
-                ucsc_genome_version = default.genome_aliases_ucsc_dict[self.genome_version]
-            else:
-                ucsc_genome_version = self.genome_version
-
-            options_dict = {
-                'db': ucsc_genome_version,
-                'hubUrl': Default.url_absolute_projects() + '/' + link_name + '/variant_calling_hub.txt',
-            }
-
-            # TODO: Centralise in Analysis.
-            # The above code for resolving a UCSC Genome Browser genome assembly alias
-            # could be centralised in Analysis.
             str_list += '<p id="ucsc_track_hub">'
-            str_list += 'UCSC Genome Browser Track Hub '
-            str_list += '<a href="' + self.ucsc_track_url(options_dict=options_dict) + '">'
-            str_list += self.project_name
-            str_list += '</a>.'
+            str_list += self.ucsc_hub_html_anchor(link_path=link_path)
             str_list += '</p>\n'
             str_list += '\n'
 

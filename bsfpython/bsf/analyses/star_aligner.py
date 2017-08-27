@@ -742,9 +742,7 @@ class StarAligner(Analysis):
             @rtype:
             """
             # Create a symbolic link containing the project name and a UUID.
-            # default = Default.get_global_default()
-            # link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
-            # link_name = os.path.basename(link_path.rstrip('/'))
+            link_path = self.create_public_project_link()
 
             # This code only needs the public URL.
 
@@ -754,6 +752,11 @@ class StarAligner(Analysis):
             """ @type str_list: list[str | unicode] """
 
             str_list += '<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n'
+            str_list += '\n'
+
+            str_list += '<p id="ucsc_track_hub">'
+            str_list += self.ucsc_hub_html_anchor(link_path=link_path)
+            str_list += '</p>\n'
             str_list += '\n'
 
             str_list += '<h2 id="sample_section">Sample Table</h2>\n'
@@ -949,6 +952,71 @@ class StarAligner(Analysis):
 
             return
 
+        def report_hub():
+            """Private function to create a UCSC Track Hub.
+
+            @return:
+            @rtype:
+            """
+
+            str_list = list()
+            """ @type str_list: list[str | unicode] """
+
+            # Group via UCSC super tracks.
+
+            str_list += 'track Alignments\n'
+            str_list += 'shortLabel Alignments\n'
+            str_list += 'longLabel STAR alignments\n'
+            str_list += 'visibility hide\n'
+            str_list += 'superTrack on\n'
+            str_list += 'group alignments\n'
+            str_list += '\n'
+
+            # Sample-specific tracks
+
+            for sample in self.sample_list:
+                paired_reads_dict = sample.get_all_paired_reads(
+                    replicate_grouping=self.replicate_grouping,
+                    exclude=True)
+
+                paired_reads_name_list = paired_reads_dict.keys()
+                if not len(paired_reads_name_list):
+                    # Skip Sample objects, which PairedReads objects have all been excluded.
+                    continue
+                # paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+                runnable_merge = self.runnable_dict[
+                    '_'.join((self.stage_name_merge, sample.name))]
+                file_path_merge = runnable_merge.file_path_object
+                """ @type file_path_merge: FilePathStarMerge """
+
+                #
+                # Add a trackDB entry for each Tophat accepted_hits.bam file.
+                #
+                # Common settings
+                str_list += 'track ' + sample.name + '_alignments\n'
+                str_list += 'type bam\n'
+                str_list += 'shortLabel ' + sample.name + '_alignments\n'
+                str_list += 'longLabel ' + sample.name + ' STAR alignments\n'
+                str_list += 'bigDataUrl ' + file_path_merge.merged_bam + '\n'
+                # str_list += 'html ...\n'
+                str_list += 'visibility dense\n'
+
+                # Common optional settings
+                str_list += 'color 0,0,0\n'
+
+                # bam/cram - Compressed Sequence Alignment track settings
+                # None
+
+                # Composite track settings
+                str_list += 'parent Alignments\n'
+                str_list += '\n'
+
+            self.ucsc_hub_to_file(content=str_list)
+
+            return
+
         report_html()
+        report_hub()
 
         return

@@ -63,6 +63,12 @@ class Analysis(object):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
+    @cvar ucsc_name_hub: UCSC Genome Browser Track Hub "hub" file name
+    @type ucsc_name_hub: str
+    @cvar ucsc_name_genomes: UCSC Genome Browser Track Hub "genomes" file name
+    @type ucsc_name_genomes: str
+    @cvar ucsc_name_tracks: UCSC Genome Browser Track Hub "tracks" file name
+    @type ucsc_name_tracks: str
     @ivar configuration: C{bsf.standards.Configuration}
     @type configuration: bsf.standards.Configuration
     @ivar debug: Debug level
@@ -93,6 +99,10 @@ class Analysis(object):
 
     name = 'Analysis'
     prefix = 'analysis'
+
+    ucsc_name_hub = 'hub.txt'
+    ucsc_name_genomes = 'genomes.txt'
+    ucsc_name_tracks = 'tracks.txt'
 
     @classmethod
     def from_config_file_path(cls, config_path):
@@ -784,36 +794,36 @@ class Analysis(object):
         if title is None or not title:
             title = ' '.join((self.project_name, self.name))
 
-        output = list()
-        """ @type output: list[str | unicode] """
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
 
         if strict:
-            output += '<!DOCTYPE html PUBLIC ' \
-                      '"-//W3C//DTD XHTML 1.0 Strict//EN" ' \
-                      '"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n'
+            str_list += '<!DOCTYPE html PUBLIC '
+            str_list += '"-//W3C//DTD XHTML 1.0 Strict//EN" '
+            str_list += '"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n'
         else:
-            output += '<!DOCTYPE html PUBLIC ' \
-                      '"-//W3C//DTD XHTML 1.0 Transitional//EN" ' \
-                      '"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n'
+            str_list += '<!DOCTYPE html PUBLIC '
+            str_list += '"-//W3C//DTD XHTML 1.0 Transitional//EN" '
+            str_list += '"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n'
 
-        output += '\n'
-        output += '<html xmlns="http://www.w3.org/1999/xhtml">\n'
-        output += '<head>\n'
-        output += '<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />\n'
-        output += '<link rel="stylesheet" href="/{}/bsfpython.css" type="text/css" />\n'.format(
+        str_list += '\n'
+        str_list += '<html xmlns="http://www.w3.org/1999/xhtml">\n'
+        str_list += '<head>\n'
+        str_list += '<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />\n'
+        str_list += '<link rel="stylesheet" href="/{}/bsfpython.css" type="text/css" />\n'.format(
             urllib.quote(s=default.url_relative_projects))
-        output += '<link rel="schema.DC" href="http://purl.org/DC/elements/1.0/" />\n'
-        output += '<meta name="DC.Creator" content="{}" />\n'.format(cgi.escape(s=creator, quote=True))
-        output += '<meta name="DC.Date" content="{}" />\n'.format(datetime.datetime.now().isoformat())
-        output += '<meta name="DC.Source" content="{}" />\n'.format(cgi.escape(s=source, quote=True))
-        output += '<meta name="DC.Title" content="{}" />\n'.format(cgi.escape(s=title, quote=True))
-        output += '<title>{}</title>\n'.format(cgi.escape(s=title, quote=True))
-        output += '</head>\n'
-        output += '\n'
-        output += '<body>\n'
-        output += '\n'
+        str_list += '<link rel="schema.DC" href="http://purl.org/DC/elements/1.0/" />\n'
+        str_list += '<meta name="DC.Creator" content="{}" />\n'.format(cgi.escape(s=creator, quote=True))
+        str_list += '<meta name="DC.Date" content="{}" />\n'.format(datetime.datetime.now().isoformat())
+        str_list += '<meta name="DC.Source" content="{}" />\n'.format(cgi.escape(s=source, quote=True))
+        str_list += '<meta name="DC.Title" content="{}" />\n'.format(cgi.escape(s=title, quote=True))
+        str_list += '<title>{}</title>\n'.format(cgi.escape(s=title, quote=True))
+        str_list += '</head>\n'
+        str_list += '\n'
+        str_list += '<body>\n'
+        str_list += '\n'
 
-        return output
+        return str_list
 
     def get_html_footer(
             self,
@@ -840,7 +850,7 @@ class Analysis(object):
             defaults to a concatenation of C{bsf.Analysis.project_name} and C{bsf.Analysis.report_name}
         @type title: str
         @return: XHTML 1.0 footer section as Python C{list} of Python C{str} or C{unicode} objects
-        @rtype: str
+        @rtype: list[str | unicode]
         """
 
         default = Default.get_global_default()
@@ -860,37 +870,37 @@ class Analysis(object):
         if title is None or not title:
             title = ' '.join((self.project_name, self.name))
 
-        output = list()
-        """ @type output: list[str | unicode] """
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
 
-        output += '<hr class="footer" />\n'
-        output += '<p class="footer">\n'
-        output += 'This report was generated by {}\n'.format(cgi.escape(s=institution, quote=True))
+        str_list += '<hr class="footer" />\n'
+        str_list += '<p class="footer">\n'
+        str_list += 'This report was generated by {}\n'.format(cgi.escape(s=institution, quote=True))
 
         # Method bsf.standards.Default.url_absolute_base() would also return the default URL.
         if url_protocol:
-            output += '<a href="{}://{}/">{}</a>.\n'.format(
+            str_list += '<a href="{}://{}/">{}</a>.\n'.format(
                 url_protocol,
                 url_host_name,
                 cgi.escape(s=url_host_name, quote=True))
         else:
-            output += '<a href="//{}/">{}</a>.\n'.format(
+            str_list += '<a href="//{}/">{}</a>.\n'.format(
                 url_host_name,
                 cgi.escape(s=url_host_name, quote=True))
 
-        output += '<br class="footer" />\n'
-        output += 'Contact: <a href="mailto:{}?subject={}">{}</a>'.format(
+        str_list += '<br class="footer" />\n'
+        str_list += 'Contact: <a href="mailto:{}?subject={}">{}</a>'.format(
             # After URL quoting, nothing critical needing HTML escaping should be left.
             urllib.quote(s=contact),
             urllib.quote(s=title),
             # The e-mail address outside of an URL still needs HTML quoting.
             cgi.escape(s=contact, quote=True))
-        output += '</p>\n'
-        output += '</body>\n'
-        output += '</html>\n'
-        output += '\n'
+        str_list += '</p>\n'
+        str_list += '</body>\n'
+        str_list += '</html>\n'
+        str_list += '\n'
 
-        return output
+        return str_list
 
     def get_html_report(
             self,
@@ -937,23 +947,23 @@ class Analysis(object):
         @return: XHTML 1.0 report as Python C{list} of Python C{str} or C{unicode} objects
         @rtype: list[str | unicode]
         """
-        output = list()
-        """ @type output: list[str | unicode] """
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
 
-        output += self.get_html_header(
+        str_list += self.get_html_header(
             strict=strict,
             creator=creator,
             source=source,
             title=title)
-        output += content
-        output += self.get_html_footer(
+        str_list += content
+        str_list += self.get_html_footer(
             contact=contact,
             institution=institution,
             url_protocol=url_protocol,
             url_host_name=url_host_name,
             title=title)
 
-        return output
+        return str_list
 
     def report_to_file(
             self,
@@ -1004,24 +1014,21 @@ class Analysis(object):
         @rtype:
         """
 
-        output = self.get_html_report(
-            content=content,
-            strict=strict,
-            title=title,
-            creator=creator,
-            source=source,
-            contact=contact,
-            institution=institution,
-            url_protocol=url_protocol,
-            url_host_name=url_host_name)
-
         if prefix is None or not prefix:
             prefix = self.prefix
 
-        file_path = os.path.join(self.genome_directory, '_'.join((prefix, 'report.html')))
-
-        file_handle = open(file_path, 'w')
-        file_handle.writelines(output)
+        file_handle = open(os.path.join(self.genome_directory, '_'.join((prefix, 'report.html'))), 'w')
+        file_handle.writelines(
+            self.get_html_report(
+                content=content,
+                strict=strict,
+                title=title,
+                creator=creator,
+                source=source,
+                contact=contact,
+                institution=institution,
+                url_protocol=url_protocol,
+                url_host_name=url_host_name))
         file_handle.close()
 
         return
@@ -1054,10 +1061,11 @@ class Analysis(object):
         return
 
     def create_public_project_link(self, sub_directory=None):
-        """Create a symbolic link from the web directory to the project directory if not already there.
+        """Create a symbolic link from the public HTML directory to the project directory if not already there.
 
-        The link will be placed in the sub directory and contain
+        The link will be placed in the specified sub directory and contain
         the project name followed by a 128 bit hexadecimal UUID string.
+        If not specified, the sub directory defaults to the Default.url_relative_projects instance variable.
 
         @param sub_directory: C{bsf.Analysis}-specific directory
         @type sub_directory: str
@@ -1065,20 +1073,18 @@ class Analysis(object):
         @rtype: str
         @raise Exception: Public HTML path does not exist
         """
+        default = Default.get_global_default()
 
-        # The html_path consists of the absolute public_html directory and
-        # the analysis-specific sub-directory.
+        if sub_directory is None:
+            sub_directory = default.url_relative_projects
 
-        html_path = Default.absolute_public_html()
-
-        if sub_directory:
-            html_path = os.path.join(html_path, sub_directory)
+        html_path = os.path.join(default.absolute_public_html(), sub_directory)
 
         # As a safety measure, to prevent creation of rogue directory paths, the html_path directory has to exist.
 
         if not os.path.isdir(html_path):
             raise Exception(
-                "The public HTML path {!r} does not exist.\n"
+                "The public HTML directory path {!r} does not exist.\n"
                 "Please check the optional sub-directory name {!r}.".format(html_path, sub_directory))
 
         # The link_name consists of the absolute public_html directory,
@@ -1115,7 +1121,8 @@ class Analysis(object):
                 if os.path.samefile(target_name, self.project_directory):
                     link_exists = True
                     link_final = path_name  # Reset link_final to the already existing path_name.
-                    break
+                    # break
+                    # Do not break out here to discover all dangling symbolic links.
 
         if link_exists:
             # Ask the user to re-create the symbolic link.
@@ -1155,9 +1162,14 @@ class Analysis(object):
 
         return link_final
 
-    @staticmethod
-    def ucsc_track_url(options_dict, browser_dict=None, track_dict=None, ucsc_protocol=None, ucsc_host_name=None):
-        """Return a UCSC Genome Browser track URL.
+    def ucsc_track_url(
+            self,
+            options_dict=None,
+            browser_dict=None,
+            track_dict=None,
+            ucsc_protocol=None,
+            ucsc_host_name=None):
+        """Return a URL to automatically attach a UCSC Genome Browser track.
 
         @param options_dict: Python C{dict} of Python C{str} URL option key value pairs
         @type options_dict: dict[str, str]
@@ -1176,31 +1188,82 @@ class Analysis(object):
 
         default = Default.get_global_default()
 
+        if options_dict is None:
+            options_dict = dict()
+
+        if 'db' not in options_dict:
+            options_dict['db'] = default.genome_alias_ucsc(genome_version=self.genome_version)
+
+        # UCSC "browser" configuration dictionary.
+
         if browser_dict:
             pass
 
-        if track_dict:
-            options_dict['hgct_customText'] = 'track'
+        # UCSC "track" configuration dictionary.
 
+        if track_dict:
             key_list = track_dict.keys()
             key_list.sort(cmp=lambda x, y: cmp(x, y))
 
+            options_dict['hgct_customText'] = 'track'
             for key in key_list:
                 options_dict['hgct_customText'] += ' {}={}'.format(key, track_dict[key])
 
+        # UCSC protocol
+
         if ucsc_protocol is None or not ucsc_protocol:
             ucsc_protocol = default.ucsc_protocol
+
+        # UCSC host name
 
         if ucsc_host_name is None or not ucsc_host_name:
             ucsc_host_name = default.ucsc_host_name
 
         # Strip leading colons to support protocol-independent URLs.
-        primary_url = '{}://{}/cgi-bin/hgTracks?{}'.format(
-            urllib.quote(s=ucsc_protocol),
-            urllib.quote(s=ucsc_host_name),
-            urllib.urlencode(query=options_dict)).lstrip(':')
+        return cgi.escape(
+            s='{}://{}/cgi-bin/hgTracks?{}'.format(
+                urllib.quote(s=ucsc_protocol),
+                urllib.quote(s=ucsc_host_name),
+                urllib.urlencode(query=options_dict)).lstrip(':'),
+            quote=True)
 
-        return cgi.escape(s=primary_url, quote=True)
+    def ucsc_hub_url(self, link_path, options_dict=None):
+        """Return a URL to automatically attach a UCSC Genome Browser Track Hub.
+
+        @param link_path: Symbolic link path in the public HTML directory including project name and a UUID
+        @type link_path: str | unicode
+        @param options_dict: Python C{dict} of Python C{str} URL option key value pairs
+        @type options_dict: dict[str, str]
+        @return: A URL to automatically attach a UCSC Genome Browser Track Hub
+        @rtype: str
+        """
+        if options_dict is None:
+            options_dict = dict()
+
+        if 'hubUrl' not in options_dict:
+            # The track hub URL requires the link name, i.e. the link path base name, to be inserted.
+            link_name = os.path.basename(link_path.rstrip('/'))
+            options_dict['hubUrl'] = '/'.join((
+                Default.url_absolute_projects(),
+                link_name,
+                '_'.join((self.prefix, self.ucsc_name_hub))))
+
+        return self.ucsc_track_url(options_dict=options_dict)
+
+    def ucsc_hub_html_anchor(self, link_path):
+        """Return a XHTML 1.0 anchor element to automatically attach a UCSC Genome Browser Track Hub.
+
+        @param link_path: Symbolic link path in the public HTML directory including project name and a UUID
+        @type link_path: str | unicode
+        @see: C{bsf.Analysis.create_public_project_link}
+        @return: XHTML 1.0 anchor element as Python C{list} of Python C{str} or C{unicode} objects
+        @rtype: list[str | unicode]
+        """
+        str_list = list()
+        str_list += 'UCSC Genome Browser Track Hub '
+        str_list += '<a href="' + self.ucsc_hub_url(link_path=link_path) + '">' + self.project_name + '</a>'
+
+        return str_list
 
     def ucsc_hub_write_hub(self, prefix=None):
         """Write a UCSC Track Hub I{prefix_hub.txt} file into the C{bsf.Analysis.project_directory}.
@@ -1213,29 +1276,20 @@ class Analysis(object):
         @rtype:
         """
 
-        output = list()
-        """ @type output: list[str | unicode] """
-
         if prefix is None or not prefix:
-            file_name = 'hub.txt'
-            output += 'hub {}\n'.format(self.project_name)
-            output += 'shortLabel {}\n'.format(self.project_name)
-            output += 'longLabel Project {}\n'.format(self.project_name)
-            output += 'genomesFile genomes.txt\n'
-        else:
-            file_name = '{}_hub.txt'.format(prefix)
-            output += 'hub {}_{}\n'.format(self.project_name, prefix)
-            output += 'shortLabel {}_{}\n'.format(self.project_name, prefix)
-            output += 'longLabel Project {}_{}\n'.format(self.project_name, prefix)
-            output += 'genomesFile {}_genomes.txt\n'.format(prefix)
+            prefix = self.prefix
 
-        output += 'email {}\n'.format(self.e_mail)
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
 
-        # The [prefix_]hub.txt goes into the project directory above the genome directory.
-        file_path = os.path.join(self.project_directory, file_name)
+        str_list += 'hub {}_{}\n'.format(self.project_name, prefix)
+        str_list += 'shortLabel {}_{}\n'.format(self.project_name, prefix)
+        str_list += 'longLabel Project {}_{}\n'.format(self.project_name, prefix)
+        str_list += 'genomesFile {}_{}\n'.format(prefix, self.ucsc_name_genomes)
+        str_list += 'email {}\n'.format(self.e_mail)
 
-        file_handle = open(file_path, 'w')
-        file_handle.writelines(output)
+        file_handle = open(os.path.join(self.project_directory, '_'.join((prefix, self.ucsc_name_hub))), 'w')
+        file_handle.writelines(str_list)
         file_handle.close()
 
         return
@@ -1250,23 +1304,10 @@ class Analysis(object):
         @return:
         @rtype:
         """
-
-        default = Default.get_global_default()
-
-        # Resolve an eventual alias for the UCSC genome assembly name.
-
-        if default.genome_aliases_ucsc_dict is not None and self.genome_version in default.genome_aliases_ucsc_dict:
-            ucsc_genome_version = default.genome_aliases_ucsc_dict[self.genome_version]
-        else:
-            ucsc_genome_version = self.genome_version
-
         if prefix is None or not prefix:
-            file_name = 'genomes.txt'
-        else:
-            file_name = '_'.join((prefix, 'genomes.txt'))
+            prefix = self.prefix
 
-        # The [prefix_]genomes.txt goes into the project directory above the genome directory.
-        file_path = os.path.join(self.project_directory, file_name)
+        file_path = os.path.join(self.project_directory, '_'.join((prefix, self.ucsc_name_genomes)))
 
         # If the file exists, read it first to retain any other genome assembly entries.
         genome_version_dict = dict()
@@ -1281,47 +1322,46 @@ class Analysis(object):
                 line_list = line.split()
                 if len(line_list) != 2:
                     warnings.warn('Malformed line {!r} in UCSC genomes file {!r}\n'
-                                  'Expected exactly two components after line splitting.'.format(line, file_name))
+                                  'Expected exactly two components after line splitting.'.format(line, file_path))
                 if line_list[0] == 'genome':
                     if genome_version is not None:
                         warnings.warn('Malformed line {!r} in UCSC genomes file {!r}'
-                                      'Got more than one genomes lines in succession.'.format(line, file_name))
+                                      'Got more than one genomes lines in succession.'.format(line, file_path))
                     genome_version = line_list[1]
                 if line_list[0] == 'trackDb':
                     if genome_version is None:
                         warnings.warn('Malformed line {!r} in UCSC genomes file {!r}'
-                                      'Got a trackDb line without a preceding genomes line.'.format(line, file_name))
+                                      'Got a trackDb line without a preceding genomes line.'.format(line, file_path))
                     else:
                         genome_version_dict[genome_version] = line_list[1]
                         genome_version = None
             file_handle.close()
 
-        if prefix is None or not prefix:
-            genome_version_dict[ucsc_genome_version] = '{}/trackDB.txt'.format(self.genome_version)
-        else:
-            genome_version_dict[ucsc_genome_version] = '{}/{}_trackDB.txt'.format(self.genome_version, prefix)
+        # Resolve an eventual alias for the UCSC genome assembly name in "genome_version/prefix_tracks.txt".
+        genome_version_dict[Default.genome_alias_ucsc(genome_version=self.genome_version)] = \
+            '/'.join((self.genome_version, '_'.join((prefix, self.ucsc_name_tracks))))
 
-        output = list()
-        """ @type output: list[str | unicode] """
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
 
         genome_version_list = genome_version_dict.keys()
         genome_version_list.sort(cmp=lambda x, y: cmp(x, y))
         for genome_version in genome_version_list:
-            output += 'genome {}\n'.format(genome_version)
-            output += 'trackDb {}\n'.format(genome_version_dict[genome_version])
-            output += '\n'
+            str_list += 'genome {}\n'.format(genome_version)
+            str_list += 'trackDb {}\n'.format(genome_version_dict[genome_version])
+            str_list += '\n'
 
         file_handle = open(file_path, 'w')
-        file_handle.writelines(output)
+        file_handle.writelines(str_list)
         file_handle.close()
 
         return
 
-    def ucsc_hub_write_tracks(self, output, prefix=None):
-        """Write a UCSC Track Hub I{prefix_trackDB.txt} file into the C{bsf.Analysis.genome_directory}.
+    def ucsc_hub_write_tracks(self, content, prefix=None):
+        """Write a UCSC Track Hub I{prefix_tracks.txt} file into the C{bsf.Analysis.genome_directory}.
 
-        @param output: Content
-        @type output: list[str | unicode]
+        @param content: Content
+        @type content: list[str | unicode]
         @param prefix: A hub prefix (e.g. chipseq, rnaseq, ...)
         @type prefix: str
         @return:
@@ -1329,15 +1369,10 @@ class Analysis(object):
         """
 
         if prefix is None or not prefix:
-            file_name = 'trackDB.txt'
-        else:
-            file_name = '_'.join((prefix, 'trackDB.txt'))
+            prefix = self.prefix
 
-        # The [prefix_]trackDB.txt goes into the genome directory under the project directory.
-        file_path = os.path.join(self.genome_directory, file_name)
-
-        file_handle = open(file_path, 'w')
-        file_handle.writelines(output)
+        file_handle = open(os.path.join(self.genome_directory, '_'.join((prefix, self.ucsc_name_tracks))), 'w')
+        file_handle.writelines(content)
         file_handle.close()
 
         return
@@ -1347,7 +1382,7 @@ class Analysis(object):
 
         The method writes a I{prefix_hub.txt} and a I{prefix_genomes.txt} file into the
         C{bsf.Analysis.project_directory}, above the C{bsf.Analysis.genome_directory}, as well as a
-        I{prefix_trackDB.txt} file into the C{bsf.Analysis.genome_directory}.
+        I{prefix_tracks.txt} file into the C{bsf.Analysis.genome_directory}.
 
         @param content: Content of the track database file
         @type content: list[str | unicode]
@@ -1361,7 +1396,7 @@ class Analysis(object):
 
         self.ucsc_hub_write_hub(prefix=prefix)
         self.ucsc_hub_write_genomes(prefix=prefix)
-        self.ucsc_hub_write_tracks(output=content, prefix=prefix)
+        self.ucsc_hub_write_tracks(content=content, prefix=prefix)
 
         return
 

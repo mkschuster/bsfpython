@@ -523,12 +523,7 @@ class Trimmomatic(Analysis):
         """
 
         # Create a symbolic link containing the project name and a UUID.
-        default = Default.get_global_default()
-        link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
-        link_name = os.path.basename(link_path.rstrip('/'))
-
-        if link_name:
-            pass  # Just make link_name used.
+        self.create_public_project_link()
 
         # Write a HTML document.
 

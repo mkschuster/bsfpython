@@ -1329,9 +1329,7 @@ class ChIPSeq(Analysis):
         """
 
         # Create a symbolic link containing the project name and a UUID.
-        default = Default.get_global_default()
-        link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
-        link_name = os.path.basename(link_path.rstrip('/'))
+        link_path = self.create_public_project_link()
 
         hub_list = list()
         """ @type hub_list: list[str | unicode] """
@@ -1355,18 +1353,11 @@ class ChIPSeq(Analysis):
 
         # Construct an automatic UCSC Track Hub link.
 
-        options_dict = dict()
-        """ @type options_dict: dict[str, str] """
-        options_dict['db'] = self.genome_version
-        options_dict['hubUrl'] = '{}/{}/chipseq_hub.txt'. \
-            format(Default.url_absolute_projects(), link_name)
-
         report_list += '<p id="ucsc_track_hub">\n'
         report_list += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
         report_list += 'in their genomic context via the project-specific\n'
-        report_list += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'. \
-            format(self.ucsc_track_url(options_dict=options_dict),
-                   self.project_name)
+        report_list += self.ucsc_hub_html_anchor(link_path=link_path)
+        report_list += '.'
         report_list += '</p>\n'
         report_list += '\n'
 
@@ -1561,9 +1552,7 @@ class ChIPSeq(Analysis):
         # contrast_field_names = ["", "Group1", "Members1", "Group2", "Members2", "DB.edgeR"]
 
         # Create a symbolic link containing the project name and a UUID.
-        default = Default.get_global_default()
-        link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
-        link_name = os.path.basename(link_path.rstrip('/'))
+        link_path = self.create_public_project_link()
 
         hub_list = list()
         """ @type hub_list: list[str | unicode] """
@@ -1587,18 +1576,11 @@ class ChIPSeq(Analysis):
 
         # Construct an automatic UCSC Track Hub link.
 
-        options_dict = dict()
-        """ @type options_dict: dict[str, str] """
-        options_dict['db'] = self.genome_version
-        options_dict['hubUrl'] = '{}/{}/chipseq_hub.txt'. \
-            format(Default.url_absolute_projects(), link_name)
-
         report_list += '<p id="ucsc_track_hub">\n'
         report_list += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
         report_list += 'in their genomic context via the project-specific\n'
-        report_list += 'UCSC Genome Browser Track Hub <a href="{}">{}</a>.\n'. \
-            format(self.ucsc_track_url(options_dict=options_dict),
-                   self.project_name)
+        report_list += self.ucsc_hub_html_anchor(link_path=link_path)
+        report_list += '.'
         report_list += '</p>\n'
         report_list += '\n'
 

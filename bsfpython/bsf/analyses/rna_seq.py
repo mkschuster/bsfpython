@@ -1821,9 +1821,7 @@ class Tuxedo(Analysis):
             @rtype:
             """
             # Create a symbolic link containing the project name and a UUID.
-            default = Default.get_global_default()
-            link_path = self.create_public_project_link(sub_directory=default.url_relative_projects)
-            link_name = os.path.basename(link_path.rstrip('/'))
+            link_path = self.create_public_project_link()
 
             # This code only needs the public URL.
 
@@ -1855,20 +1853,11 @@ class Tuxedo(Analysis):
             str_list += '</p>\n'
             str_list += '\n'
 
-            # Construct an automatic UCSC Track Hub link.
-
-            options_dict = {
-                'db': self.genome_version,
-                'hubUrl': '/'.join((Default.url_absolute_projects(), link_name, 'rnaseq_hub.txt')),
-            }
-
             str_list += '<p id="track_hub">'
             str_list += 'View TopHat <strong>read alignments</strong> tracks for each sample\n'
             str_list += 'in their genomic context via the project-specific '
-            str_list += 'UCSC Genome Browser Track Hub\n'
-            str_list += '<a href="' + self.ucsc_track_url(options_dict=options_dict) + '">'
-            str_list += self.project_name
-            str_list += '</a>.'
+            str_list += self.ucsc_hub_html_anchor(link_path=link_path)
+            str_list += '.'
             str_list += '</p>\n'
             str_list += '\n'
 
@@ -1902,10 +1891,8 @@ class Tuxedo(Analysis):
             str_list += '<p>'
             str_list += 'View the corresponding TopHat tracks for junctions, deletions and insertions\n'
             str_list += 'for each sample in their genomic context via the project-specific\n'
-            str_list += 'UCSC Genome Browser Track Hub '
-            str_list += '<a href="' + self.ucsc_track_url(options_dict=options_dict) + '">'
-            str_list += self.project_name
-            str_list += '</a>.'
+            str_list += self.ucsc_hub_html_anchor(link_path=link_path)
+            str_list += '.'
             str_list += '</p>\n'
             str_list += '\n'
 
