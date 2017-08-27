@@ -980,3 +980,20 @@ class Default(object):
         default = Default.get_global_default()
 
         return '/'.join((default.url_absolute_base(), default.url_relative_projects))
+
+    @staticmethod
+    def genome_alias_ucsc(genome_version):
+        """Resolve a genome version to an eventual, UCSC-specific alias.
+
+        If an alias has not been defined the original genome version will be returned.
+        @param genome_version: Genome version
+        @type genome_version: str
+        @return: UCSC genome version
+        @rtype: str
+        """
+        default = Default.get_global_default()
+
+        if default.genome_aliases_ucsc_dict is not None and genome_version in default.genome_aliases_ucsc_dict:
+            return default.genome_aliases_ucsc_dict[genome_version]
+        else:
+            return genome_version
