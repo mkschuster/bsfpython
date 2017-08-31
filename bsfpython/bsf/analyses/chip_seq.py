@@ -33,7 +33,7 @@ from pickle import Pickler, HIGHEST_PROTOCOL
 import warnings
 
 from bsf import Analysis, defaults, FilePath, Runnable
-from bsf.annotation import AnnotationSheet, ChIPSeqDiffBindSheet
+from bsf.annotation import AnnotationSheet
 from bsf.ngs import Sample
 from bsf.executables import BWA, Macs14
 from bsf.process import Command, Executable, RunnableStep, RunnableStepPicard
@@ -163,9 +163,14 @@ class ChIPSeqComparison(object):
 
 
 class FilePathChIPSeq(FilePath):
-
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.chip_seq.FilePathChIPSeq} object
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathChIPSeq, self).__init__(prefix=prefix)
 
         self.replicate_directory = prefix
@@ -175,6 +180,92 @@ class FilePathChIPSeq(FilePath):
         self.aligned_bam = os.path.join(prefix, '_'.join((prefix, '.bam')))
         self.aligned_bai = os.path.join(prefix, '_'.join((prefix, '.bai')))
         self.aligned_md5 = os.path.join(prefix, '_'.join((prefix, '.bam.md5')))
+
+        return
+
+
+class ChIPSeqDiffBindSheet(AnnotationSheet):
+    """ChIP-Seq Bioconductor DiffBind annotation sheet class.
+
+    Attributes:
+    """
+
+    _file_type = 'excel'
+
+    _header_line = True
+
+    _field_names = [
+        'SampleID',
+        'Tissue',
+        'Factor',
+        'Condition',
+        'Treatment',
+        'Replicate',
+        'bamReads',
+        'bamControl',
+        'ControlID',
+        'Peaks',
+        'PeakCaller',
+        'PeakFormat',
+    ]
+
+    _test_methods = {
+        'SampleID': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        'Tissue': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        'Factor': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        'Condition': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        'Treatment': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        'Replicate': [
+            AnnotationSheet.check_numeric,
+        ],
+        'ControlID': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        'PeakCaller': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+        'PeakFormat': [
+            AnnotationSheet.check_alphanumeric,
+        ],
+    }
+
+    def sort(self):
+        """Sort by columns I{Tissue}, I{Factor}, I{Condition}, I{Treatment} and I{Replicate}.
+
+        @return:
+        @rtype:
+        """
+        self.row_dicts.sort(
+            cmp=lambda x, y:
+            cmp(x['Tissue'], y['Tissue']) or
+            cmp(x['Factor'], y['Factor']) or
+            cmp(x['Condition'], y['Condition']) or
+            cmp(x['Treatment'], y['Treatment']) or
+            cmp(int(x['Replicate']), int(y['Replicate'])))
+
+        return
+
+    def to_file_path(self):
+        """Write a C{bsf.analyses.ChIPSeqDiffBindSheet} to a file.
+
+        @return:
+        @rtype:
+        """
+
+        # Override the method from the super-class to automatically sort before writing to a file.
+
+        self.sort()
+        super(ChIPSeqDiffBindSheet, self).to_file_path()
 
         return
 
@@ -482,15 +573,12 @@ class ChIPSeq(Analysis):
             # The second-level dict stores Treatment Sample key data and int value data.
 
             if 'Replicate' in row_dict:
-
                 value = row_dict['Replicate']
 
-                if value in level_1_dict:
-                    level_2_dict = level_1_dict[value]
-                else:
-                    level_2_dict = dict()
-                    level_1_dict[value] = level_2_dict
+                if value not in level_1_dict:
+                    level_1_dict[value] = dict()
 
+                level_2_dict = level_1_dict[value]
                 level_2_dict[comparison_key] = 0
 
             self.comparisons[comparison_key] = ChIPSeqComparison(
@@ -505,21 +593,20 @@ class ChIPSeq(Analysis):
                 replicate=0,
                 diff_bind=diff_bind)
 
-        # Sort the comparison keys alphabetically and assign replicate numbers into ChiPSeqComparison objects.
+        # Sort the comparison keys alphabetically and assign replicate numbers into ChIPSeqComparison objects.
 
-        for key1 in level_1_dict.keys():
+        for key_1 in level_1_dict.keys():
+            level_2_dict = level_1_dict[key_1]
 
-            level_2_dict = level_1_dict[key1]
-
-            keys2 = level_2_dict.keys()
-            keys2.sort(cmp=lambda x, y: cmp(x, y))
+            key_2_list = level_2_dict.keys()
+            key_2_list.sort(cmp=lambda x, y: cmp(x, y))
 
             i = 1
-            for key2 in keys2:
-                if not self.comparisons[key2].diff_bind:
+            for key_2 in key_2_list:
+                if not self.comparisons[key_2].diff_bind:
                     continue
-                level_2_dict[key2] = i
-                self.comparisons[key2].replicate = i
+                level_2_dict[key_2] = i
+                self.comparisons[key_2].replicate = i
                 i += 1
 
         return
@@ -732,20 +819,8 @@ class ChIPSeq(Analysis):
 
         stage_alignment = self.get_stage(name='chipseq_alignment')
 
-        # stage_bowtie2 = self.add_stage(
-        #     stage=Stage.from_analysis(
-        #         name='chipseq_bowtie2',
-        #         working_directory=self.genome_directory,
-        #         analysis=self))
-
         # Use the bsf_sam2bam.sh script to convert aligned SAM into
         # aligned, sorted, indexed BAM files.
-
-        # stage_sam2bam = self.add_stage(
-        #     stage=Stage.from_analysis(
-        #         name='sam2bam',
-        #         working_directory=self.genome_directory,
-        #         analysis=self))
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -864,7 +939,7 @@ class ChIPSeq(Analysis):
         return
 
     def _create_macs14_jobs(self):
-        """Create Macs14 peak caller jobs.
+        """Create MACS14 peak caller jobs.
 
         @return:
         @rtype:
@@ -878,8 +953,9 @@ class ChIPSeq(Analysis):
 
         for key in keys:
             chipseq_comparison = self.comparisons[key]
-            assert isinstance(chipseq_comparison, ChIPSeqComparison)
+            """ @type: chipseq_comparison: ChIPSeqComparison """
             factor = chipseq_comparison.factor.upper()
+
             for t_sample in chipseq_comparison.t_samples:
                 t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
@@ -918,13 +994,13 @@ class ChIPSeq(Analysis):
                                 value=os.path.join(
                                     self.genome_directory,
                                     'chipseq_bowtie2_{}'.format(t_paired_reads_name),
-                                    '{}.aligned.sorted.bam'.format(t_paired_reads_name)))
+                                    '{}.bam'.format(t_paired_reads_name)))
                             macs14.add_option_long(
                                 key='control',
                                 value=os.path.join(
                                     self.genome_directory,
                                     'chipseq_bowtie2_{}'.format(c_paired_reads_name),
-                                    '{}.aligned.sorted.bam'.format(c_paired_reads_name)))
+                                    '{}.bam'.format(c_paired_reads_name)))
 
                             # TODO: Experimentally prepend a chipseq_macs14 directory
                             # MACS14 can hopefully also cope with directories specified in the --name option, but
@@ -998,7 +1074,7 @@ class ChIPSeq(Analysis):
         return
 
     def _create_macs2_jobs(self):
-        """Create Macs2 peak caller jobs.
+        """Create MACS2 peak caller jobs.
 
         @return:
         @rtype:
@@ -1073,14 +1149,14 @@ class ChIPSeq(Analysis):
                                 value=os.path.join(
                                     self.genome_directory,
                                     'chipseq_bowtie2_{}'.format(t_paired_reads_name),
-                                    '{}.aligned.sorted.bam'.format(t_paired_reads_name)))
+                                    '{}.bam'.format(t_paired_reads_name)))
 
                             mc2.add_option_long(
                                 key='control',
                                 value=os.path.join(
                                     self.genome_directory,
                                     'chipseq_bowtie2_{}'.format(c_paired_reads_name),
-                                    '{}.aligned.sorted.bam'.format(c_paired_reads_name)))
+                                    '{}.bam'.format(c_paired_reads_name)))
 
                             # TODO: Experimentally prepend a chipseq_macs2 directory.
                             # MACS2 can cope with directories specified in the --name option, but
@@ -1187,6 +1263,11 @@ class ChIPSeq(Analysis):
                             process_macs2.arguments.append('{}__{}'.format(t_paired_reads_name, c_paired_reads_name))
                             process_macs2.arguments.append(self.genome_sizes_path)
 
+                            if os.path.exists(os.path.join(prefix, '{}_peaks.bb'.format(prefix))):
+                                macs2_call_peak.submit = False
+                                macs2_bdg_cmp.submit = False
+                                process_macs2.submit = False
+
         return
 
     def _create_diffbind_jobs(self):
@@ -1248,6 +1329,9 @@ class ChIPSeq(Analysis):
 
             for chipseq_comparison in factor_list:
                 assert isinstance(chipseq_comparison, ChIPSeqComparison)
+                if not chipseq_comparison.diff_bind:
+                    continue
+
                 for t_sample in chipseq_comparison.t_samples:
                     t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
@@ -1264,7 +1348,7 @@ class ChIPSeq(Analysis):
 
                             for c_paired_reads_name in c_paired_reads_name_list:
                                 row_dict = dict()
-                                """ @type row_dict: dict[str, str | unicode]"""
+                                """ @type row_dict: dict[str, str | unicode] """
 
                                 row_dict['SampleID'] = t_paired_reads_name
                                 row_dict['Tissue'] = chipseq_comparison.tissue
@@ -1275,11 +1359,11 @@ class ChIPSeq(Analysis):
                                 row_dict['bamReads'] = os.path.join(
                                     self.genome_directory,
                                     'chipseq_bowtie2_{}'.format(t_paired_reads_name),
-                                    '{}.aligned.sorted.bam'.format(t_paired_reads_name))
+                                    '{}.bam'.format(t_paired_reads_name))
                                 row_dict['bamControl'] = os.path.join(
                                     self.genome_directory,
                                     'chipseq_bowtie2_{}'.format(c_paired_reads_name),
-                                    '{}.aligned.sorted.bam'.format(c_paired_reads_name))
+                                    '{}.bam'.format(c_paired_reads_name))
                                 row_dict['ControlID'] = c_paired_reads_name
                                 row_dict['Peaks'] = os.path.join(
                                     self.genome_directory,
@@ -1319,6 +1403,11 @@ class ChIPSeq(Analysis):
             diffbind.add_option_long(key='genome-directory', value=self.genome_directory)
             diffbind.add_option_long(key='sample-annotation', value=file_path)
 
+            if os.path.exists(os.path.join(
+                    factor_directory,
+                    'chipseq_diffbind_{}_correlation_read_counts.png'.format(key))):
+                diffbind.submit = False
+
         return
 
     def _report_macs14(self):
@@ -1328,217 +1417,255 @@ class ChIPSeq(Analysis):
         @rtype:
         """
 
-        # Create a symbolic link containing the project name and a UUID.
-        link_path = self.create_public_project_link()
+        def report_html():
+            """Private function to create a HTML report.
 
-        hub_list = list()
-        """ @type hub_list: list[str | unicode] """
+            @return:
+            @rtype:
+            """
+            # Create a symbolic link containing the project name and a UUID.
+            link_path = self.create_public_project_link()
 
-        # Write a HTML document.
+            # Write a HTML document.
 
-        report_list = list()
-        """ @type report_list: list[str | unicode] """
+            str_list = list()
+            """ @type str_list: list[str | unicode] """
 
-        report_list += '<h1 id="chip_seq_analysis">{} {}</h1>\n'.format(self.project_name, self.name)
-        report_list += '\n'
+            str_list += '<h1 id="chip_seq_analysis">{} {}</h1>\n'.format(self.project_name, self.name)
+            str_list += '\n'
 
-        report_list += '<p>\n'
-        report_list += 'Next-Generation Sequencing reads are aligned with the short read aligner\n'
-        report_list += '<strong><a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie2</a></strong>,\n'
-        report_list += 'before peaks are called with '
-        report_list += '<a href="http://liulab.dfci.harvard.edu/MACS/index.html">MACS 1.4</a>\n'
-        report_list += 'on a treatment and control sample pair.\n'
-        report_list += '</p>\n'
-        report_list += '\n'
+            str_list += '<p>\n'
+            str_list += 'Next-Generation Sequencing reads are aligned with the short read aligner\n'
+            str_list += '<strong>'
+            str_list += '<a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie2</a>'
+            str_list += '</strong>,\n'
+            str_list += 'before peaks are called with '
+            str_list += '<a href="http://liulab.dfci.harvard.edu/MACS/index.html">MACS 1.4</a>\n'
+            str_list += 'on a treatment and control sample pair.\n'
+            str_list += '</p>\n'
+            str_list += '\n'
 
-        # Construct an automatic UCSC Track Hub link.
+            # Construct an automatic UCSC Track Hub link.
 
-        report_list += '<p id="ucsc_track_hub">\n'
-        report_list += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
-        report_list += 'in their genomic context via the project-specific\n'
-        report_list += self.ucsc_hub_html_anchor(link_path=link_path)
-        report_list += '.'
-        report_list += '</p>\n'
-        report_list += '\n'
+            str_list += '<p id="ucsc_track_hub">\n'
+            str_list += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
+            str_list += 'in their genomic context via the project-specific\n'
+            str_list += self.ucsc_hub_html_anchor(link_path=link_path)
+            str_list += '.'
+            str_list += '</p>\n'
+            str_list += '\n'
 
-        report_list += '<table id="peak_calling_table">\n'
-        report_list += '\n'
+            str_list += '<table id="peak_calling_table">\n'
+            str_list += '<thead>\n'
 
-        report_list += '<tr>\n'
-        report_list += '<th>Peaks</th>\n'
-        report_list += '<th>Negative Peaks</th>\n'
-        report_list += '<th>R Model</th>\n'
-        report_list += '</tr>\n'
-        report_list += '\n'
+            str_list += '<tr>\n'
+            str_list += '<th>Peaks</th>\n'
+            str_list += '<th>Negative Peaks</th>\n'
+            str_list += '<th>R Model</th>\n'
+            str_list += '</tr>\n'
+            str_list += '</thead>\n'
+            str_list += '<tbody>\n'
 
-        keys = self.comparisons.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
+            comparison_name_list = self.comparisons.keys()
+            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-        for key in keys:
-            chipseq_comparison = self.comparisons[key]
-            assert isinstance(chipseq_comparison, ChIPSeqComparison)
-            for t_sample in chipseq_comparison.t_samples:
-                t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+            for comparison_name in comparison_name_list:
+                chipseq_comparison = self.comparisons[comparison_name]
+                """ @type chipseq_comparison: ChIPSeqComparison"""
+                for t_sample in chipseq_comparison.t_samples:
+                    t_paired_reads_dict = t_sample.get_all_paired_reads(
+                        replicate_grouping=self.replicate_grouping)
 
-                t_paired_reads_name_list = t_paired_reads_dict.keys()
-                t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+                    t_paired_reads_name_list = t_paired_reads_dict.keys()
+                    t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                for t_paired_reads_name in t_paired_reads_name_list:
-                    for c_sample in chipseq_comparison.c_samples:
-                        c_paired_reads_dict = c_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+                    for t_paired_reads_name in t_paired_reads_name_list:
+                        for c_sample in chipseq_comparison.c_samples:
+                            c_paired_reads_dict = c_sample.get_all_paired_reads(
+                                replicate_grouping=self.replicate_grouping)
 
-                        c_paired_reads_name_list = c_paired_reads_dict.keys()
-                        c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+                            c_paired_reads_name_list = c_paired_reads_dict.keys()
+                            c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                        for c_paired_reads_name in c_paired_reads_name_list:
-                            # prefix = 'chipseq_macs14_{}__{}'.format(t_paired_reads_name, c_paired_reads_name)
+                            for c_paired_reads_name in c_paired_reads_name_list:
+                                # prefix = 'chipseq_macs14_{}__{}'.format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += '<tr>\n'
+                                # if treatment and absolute:
+                                # str_list += '<td><strong>{}</strong></td>\n'.format(t_paired_reads_name)
+                                # if not treatment and absolute:
+                                # str_list += '<td><strong>{}</strong></td>\n'.format(c_paired_reads_name)
 
-                            # Add UCSC trackDB entries for each treatment/control and absolute/normalised pair.
+                                # Peaks
+                                str_list += '<td><a href="{}__{}_peaks.xls">Peaks {} versus {}</a></td>\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name,
+                                           t_paired_reads_name, c_paired_reads_name)
+                                # Negative Peaks
+                                str_list += '<td>'
+                                str_list += '<a href="{}__{}_negative_peaks.xls">Negative peaks {} versus {}</a>'. \
+                                    format(t_paired_reads_name, c_paired_reads_name,
+                                           t_paired_reads_name, c_paired_reads_name)
+                                str_list += '</td>\n'
+                                # R Model
+                                str_list += '<td><a href="{}__{}_model.r">R model</a></td>\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name,
+                                           t_paired_reads_name, c_paired_reads_name)
 
-                            for treatment in [True, False]:
-                                if treatment:
-                                    state = 'treat'
-                                else:
-                                    state = 'control'
+                                str_list += '</tr>\n'
+                                str_list += '\n'
 
-                                for absolute in [True, False]:
-                                    if absolute:
-                                        scaling = 'absolute'
+            str_list += '</tbody>\n'
+            str_list += '</table>\n'
+            str_list += '\n'
+
+            self.report_to_file(content=str_list)
+
+            return
+
+        def report_hub():
+            """Private function to create a UCSC Track Hub.
+
+            @return:
+            @rtype:
+            """
+
+            str_list = list()
+            """ @type str_list: list[str | unicode] """
+
+            comparison_name_list = self.comparisons.keys()
+            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+            for comparison_name in comparison_name_list:
+                chipseq_comparison = self.comparisons[comparison_name]
+                """ @type chipseq_comparison: ChIPSeqComparison"""
+                for t_sample in chipseq_comparison.t_samples:
+                    t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+
+                    t_paired_reads_name_list = t_paired_reads_dict.keys()
+                    t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+                    for t_paired_reads_name in t_paired_reads_name_list:
+                        for c_sample in chipseq_comparison.c_samples:
+                            c_paired_reads_dict = c_sample.get_all_paired_reads(
+                                replicate_grouping=self.replicate_grouping)
+
+                            c_paired_reads_name_list = c_paired_reads_dict.keys()
+                            c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+                            for c_paired_reads_name in c_paired_reads_name_list:
+                                # prefix = 'chipseq_macs14_{}__{}'.format(t_paired_reads_name, c_paired_reads_name)
+
+                                # Add UCSC trackDB entries for each treatment/control and absolute/normalised pair.
+
+                                for treatment in [True, False]:
+                                    if treatment:
+                                        state = 'treat'
                                     else:
-                                        scaling = 'normalised'
+                                        state = 'control'
 
-                                    # Add a UCSC trackDB entry.
+                                    for absolute in [True, False]:
+                                        if absolute:
+                                            scaling = 'absolute'
+                                        else:
+                                            scaling = 'normalised'
 
-                                    # Common trackDb settings.
+                                        #
+                                        # Add a UCSC trackDB entry for each bigWig file
+                                        #
+                                        # Common settings
+                                        str_list += 'track ChIP_{}__{}_{}_{}\n'. \
+                                            format(t_paired_reads_name, c_paired_reads_name, state, scaling)
+                                        str_list += 'type bigWig\n'
+                                        str_list += 'shortLabel ChIP_{}__{}_{}_{}\n'. \
+                                            format(t_paired_reads_name, c_paired_reads_name, state, scaling)
+                                        str_list += 'longLabel {} ChIP-Seq read counts for {} of {} versus {}\n'. \
+                                            format(scaling.capitalize(), state, t_paired_reads_name,
+                                                   c_paired_reads_name)
+                                        str_list += 'bigDataUrl '
+                                        str_list += '{}__{}_MACS_wiggle/{}/{}__{}_{}_afterfiting_all.bw\n'. \
+                                            format(t_paired_reads_name, c_paired_reads_name, state,
+                                                   t_paired_reads_name, c_paired_reads_name, state)
+                                        # str_list += 'html ...\n'
+                                        if treatment and not absolute:
+                                            str_list += 'visibility full\n'
+                                        else:
+                                            str_list += 'visibility hide\n'
 
-                                    hub_list += 'track ChIP_{}__{}_{}_{}\n'. \
-                                        format(t_paired_reads_name, c_paired_reads_name, state, scaling)
-                                    hub_list += 'type bigWig\n'
-                                    hub_list += 'shortLabel ChIP_{}__{}_{}_{}\n'. \
-                                        format(t_paired_reads_name, c_paired_reads_name, state, scaling)
-                                    hub_list += 'longLabel {} ChIP-Seq read counts for {} of {} versus {}\n'. \
-                                        format(scaling.capitalize(), state, t_paired_reads_name, c_paired_reads_name)
-                                    hub_list += 'bigDataUrl '
-                                    hub_list += '{}__{}_MACS_wiggle/{}/{}__{}_{}_afterfiting_all.bw\n'. \
-                                        format(t_paired_reads_name, c_paired_reads_name, state,
-                                               t_paired_reads_name, c_paired_reads_name, state)
-                                    if treatment and not absolute:
-                                        hub_list += 'visibility full\n'
-                                    else:
-                                        hub_list += 'visibility hide\n'
-                                        # 'html' is missing from the common settings.
+                                        # Common optional settings
+                                        str_list += 'color {}\n'. \
+                                            format(defaults.web.get_chipseq_colour(factor=chipseq_comparison.factor))
 
-                                    # Common optional settings.
+                                        # bigWig - Signal graphing track settings
+                                        str_list += 'graphTypeDefault bar\n'
+                                        str_list += 'maxHeightPixels 100:60:20\n'
+                                        str_list += 'smoothingWindow off\n'
+                                        if absolute:
+                                            # Track with absolute scaling.
+                                            str_list += 'autoScale on\n'
+                                        else:
+                                            # Track with relative scaling.
+                                            str_list += 'autoScale off\n'
+                                            str_list += 'viewLimits 0:40\n'
 
-                                    hub_list += 'color {}\n'. \
-                                        format(defaults.web.get_chipseq_colour(factor=chipseq_comparison.factor))
+                                        str_list += '\n'
 
-                                    # bigWig - Signal graphing track settings.
+                                #
+                                # Add a UCSC trackDB entry for each bigBed peaks file
+                                #
+                                # Common settings
+                                str_list += 'track Peaks_{}__{}\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'type bigBed\n'
+                                str_list += 'shortLabel Peaks_{}__{}\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'longLabel ChIP-Seq peaks for {} versus {}\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'bigDataUrl {}__{}_peaks.bb\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                # str_list += 'html ...\n'
+                                str_list += 'visibility pack\n'
 
-                                    hub_list += 'graphTypeDefault bar\n'
-                                    hub_list += 'maxHeightPixels 100:60:20\n'
-                                    hub_list += 'smoothingWindow off\n'
+                                # Common optional settings
+                                str_list += 'color {}\n'. \
+                                    format(defaults.web.get_chipseq_colour(factor=chipseq_comparison.factor))
 
-                                    if absolute:
-                                        # Track with absolute scaling.
-                                        hub_list += 'autoScale on\n'
-                                    else:
-                                        # Track with relative scaling.
-                                        hub_list += 'autoScale off\n'
-                                        hub_list += 'viewLimits 0:40\n'
+                                str_list += '\n'
 
-                                    hub_list += '\n'
+            # Add UCSC trackDB entries for each Bowtie2 BAM file.
 
-                            # Add a UCSC trackDB entry for each bigBed peaks file.
+            for sample in self.sample_list:
+                paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                            hub_list += 'track Peaks_{}__{}\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'type bigBed\n'
-                            hub_list += 'shortLabel Peaks_{}__{}\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'longLabel ChIP-Seq peaks for {} versus {}\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'bigDataUrl {}__{}_peaks.bb\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'visibility pack\n'
-                            # 'html' is missing from the common settings.
+                paired_reads_name_list = paired_reads_dict.keys()
+                paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                            # Common optional settings.
-                            hub_list += 'color {}\n'. \
-                                format(defaults.web.get_chipseq_colour(factor=chipseq_comparison.factor))
+                for paired_reads_name in paired_reads_name_list:
+                    #
+                    # Add a UCSC trackDB entry.
+                    #
+                    # Common settings
+                    str_list += 'track Alignment_{}\n'.format(paired_reads_name)
+                    str_list += 'type bam\n'
+                    str_list += 'shortLabel Alignment_{}\n'.format(paired_reads_name)
+                    str_list += 'longLabel Bowtie2 alignment of {}\n'. \
+                        format(paired_reads_name)
+                    str_list += 'bigDataUrl {}.bam\n'. \
+                        format(paired_reads_name)
+                    # str_list += 'html ...\n'
+                    str_list += 'visibility hide\n'
 
-                            hub_list += '\n'
+                    # Common optional settings
+                    # str_list += 'color {}\n'.format(Defaults.web.chipseq_colours[comparison[2].upper()])
 
-                            # Add web content.
+                    # bam - Compressed Sequence Alignment track settings.
 
-                            report_list += '<tr>\n'
+                    str_list += '\n'
 
-                            # if treatment and absolute:
-                            # output += '<td><strong>{}</strong></td>\n'.format(t_paired_reads_name)
-                            # if not treatment and absolute:
-                            # output += '<td><strong>{}</strong></td>\n'.format(c_paired_reads_name)
+            self.ucsc_hub_to_file(content=str_list)
 
-                            report_list += '<td><a href="{}__{}_peaks.xls">Peaks {} versus {}</a></td>\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name,
-                                       t_paired_reads_name, c_paired_reads_name)
+            return
 
-                            report_list += '<td>'
-                            report_list += '<a href="{}__{}_negative_peaks.xls">Negative peaks {} versus {}</a>'. \
-                                format(t_paired_reads_name, c_paired_reads_name,
-                                       t_paired_reads_name, c_paired_reads_name)
-                            report_list += '</td>\n'
-
-                            report_list += '<td><a href="{}__{}_model.r">R model</a></td>\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name,
-                                       t_paired_reads_name, c_paired_reads_name)
-
-                            report_list += '</tr>\n'
-                            report_list += '\n'
-
-        report_list += '</table>\n'
-        report_list += '\n'
-
-        # Add UCSC trackDB entries for each Bowtie2 BAM file.
-
-        for sample in self.sample_list:
-            if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
-                print sample.trace(1)
-
-            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
-
-            paired_reads_name_list = paired_reads_dict.keys()
-            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for paired_reads_name in paired_reads_name_list:
-                # Add a UCSC trackDB entry.
-
-                # Common trackDb settings.
-
-                hub_list += 'track Alignment_{}\n'.format(paired_reads_name)
-                hub_list += 'type bam\n'
-                hub_list += 'shortLabel Alignment_{}\n'.format(paired_reads_name)
-                hub_list += 'longLabel Bowtie2 alignment of {}\n'. \
-                    format(paired_reads_name)
-                hub_list += 'bigDataUrl {}.aligned.sorted.bam\n'. \
-                    format(paired_reads_name)
-                hub_list += 'visibility hide\n'
-                # TODO: The 'html' option is missing.
-
-                # Common optional settings.
-
-                # track_output += 'color {}\n'.format(Defaults.web.chipseq_colours[comparison[2].upper()])
-
-                # bam - Compressed Sequence Alignment track settings.
-
-                hub_list += '\n'
-
-                # TODO: Including FastQC results would require rearranging the above HTML code.
-                # output += '{}__{}_fastqc/fastqc_report.html'. \
-                # format(t_paired_reads_name, c_paired_reads_name)
-
-        self.report_to_file(content=report_list)
-        self.ucsc_hub_to_file(content=hub_list)
+        report_html()
+        report_hub()
 
         return
 
@@ -1551,579 +1678,589 @@ class ChIPSeq(Analysis):
 
         # contrast_field_names = ["", "Group1", "Members1", "Group2", "Members2", "DB.edgeR"]
 
-        # Create a symbolic link containing the project name and a UUID.
-        link_path = self.create_public_project_link()
-
-        hub_list = list()
-        """ @type hub_list: list[str | unicode] """
-
-        # Write a HTML document.
-
-        report_list = list()
-        """ @type report_list: list[str | unicode] """
-
-        report_list += '<h1 id="chip_seq_analysis">{} {}</h1>\n'.format(self.project_name, self.name)
-        report_list += '\n'
-
-        report_list += '<p>\n'
-        report_list += 'Next-Generation Sequencing reads are aligned with the short read aligner\n'
-        report_list += '<strong><a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie2</a></strong>,\n'
-        report_list += 'before peaks are called with '
-        report_list += '<a href="http://liulab.dfci.harvard.edu/MACS/index.html">MACS 2</a>\n'
-        report_list += 'on an enrichment and background sample pair.\n'
-        report_list += '</p>\n'
-        report_list += '\n'
-
-        # Construct an automatic UCSC Track Hub link.
-
-        report_list += '<p id="ucsc_track_hub">\n'
-        report_list += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
-        report_list += 'in their genomic context via the project-specific\n'
-        report_list += self.ucsc_hub_html_anchor(link_path=link_path)
-        report_list += '.'
-        report_list += '</p>\n'
-        report_list += '\n'
-
-        report_list += '<table id="peak_calling_table">\n'
-        report_list += '\n'
-
-        report_list += '<tr>\n'
-        report_list += '<th>Peaks</th>\n'
-        report_list += '<th>R Model</th>\n'
-        report_list += '</tr>\n'
-        report_list += '\n'
-
-        # Group via UCSC super tracks.
-
-        hub_list += 'track Alignment\n'
-        hub_list += 'shortLabel QC Alignment\n'
-        hub_list += 'longLabel ChIP Read Alignment\n'
-        hub_list += 'visibility hide\n'
-        hub_list += 'superTrack on\n'
-        hub_list += 'group alignment\n'
-        hub_list += '\n'
-
-        hub_list += 'track Background\n'
-        hub_list += 'shortLabel QC Background\n'
-        hub_list += 'longLabel ChIP Background Signal\n'
-        hub_list += 'visibility hide\n'
-        hub_list += 'superTrack on\n'
-        hub_list += 'group background\n'
-        hub_list += '\n'
-
-        hub_list += 'track Enrichment\n'
-        hub_list += 'shortLabel QC Enrichment\n'
-        hub_list += 'longLabel ChIP Enrichment Signal\n'
-        hub_list += 'visibility hide\n'
-        hub_list += 'superTrack on\n'
-        hub_list += 'group enrichment\n'
-        hub_list += '\n'
-
-        hub_list += 'track Comparison\n'
-        hub_list += 'shortLabel ChIP Intensity\n'
-        hub_list += 'longLabel ChIP Intensity\n'
-        hub_list += 'visibility full\n'
-        hub_list += 'superTrack on\n'
-        hub_list += 'group comparison\n'
-        hub_list += '\n'
-
-        hub_list += 'track Peaks\n'
-        hub_list += 'shortLabel ChIP Peaks\n'
-        hub_list += 'longLabel ChIP Peaks\n'
-        hub_list += 'visibility hide\n'
-        hub_list += 'superTrack on\n'
-        hub_list += 'group peaks\n'
-        hub_list += '\n'
-
-        hub_list += 'track Summits\n'
-        hub_list += 'shortLabel ChIP Summits\n'
-        hub_list += 'longLabel ChIP Summits\n'
-        hub_list += 'visibility hide\n'
-        hub_list += 'superTrack on\n'
-        hub_list += 'group summits\n'
-        hub_list += '\n'
-
-        # Group via UCSC composite tracks.
-
-        composite_groups = dict()
-        """ @type composite_groups: dict[str, int] """
-
-        keys = self.comparisons.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
-
-        for key in keys:
-            chipseq_comparison = self.comparisons[key]
-            assert isinstance(chipseq_comparison, ChIPSeqComparison)
-            factor = chipseq_comparison.factor.upper()
-            for t_sample in chipseq_comparison.t_samples:
-                t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
-
-                t_paired_reads_name_list = t_paired_reads_dict.keys()
-                t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                for t_paired_reads_name in t_paired_reads_name_list:
-                    for c_sample in chipseq_comparison.c_samples:
-                        c_paired_reads_dict = c_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
-
-                        c_paired_reads_name_list = c_paired_reads_dict.keys()
-                        c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                        for c_paired_reads_name in c_paired_reads_name_list:
-                            prefix = 'chipseq_macs2_{}__{}'.format(t_paired_reads_name, c_paired_reads_name)
-
-                            # Add UCSC trackDB entries for each treatment/control and absolute/normalised pair.
-                            # NAME_control_lambda.bw
-                            # NAME_treat_pileup.bw
-                            # NAME_bdgcmp.bw
-
-                            #
-                            # Add a UCSC trackDB entry for each NAME_control_lambda.bw file.
-                            #
-
-                            composite_group = '{}_background'.format(factor)
-                            if composite_group not in composite_groups:
-                                composite_groups[composite_group] = 1
-                                hub_list += 'track {}\n'.format(composite_group)
-                                hub_list += 'type bigWig\n'
-                                hub_list += 'shortLabel {}\n'.format(composite_group)
-                                hub_list += 'longLabel ChIP background signal for factor {!r}\n'. \
-                                    format(factor)
-                                hub_list += 'visibility dense\n'
-                                hub_list += 'compositeTrack on\n'
-                                hub_list += 'parent Background\n'
-                                hub_list += 'allButtonPair on\n'
-                                hub_list += 'centerLabelsDense on\n'
-                                hub_list += '\n'
-
-                            # Common trackDb settings.
-
-                            hub_list += 'track {}__{}_background\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            # TODO: The bigWig type must declare the expected signal range.
-                            # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
-                            hub_list += 'type bigWig\n'
-                            hub_list += 'shortLabel {}__{}_bkg\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'longLabel ChIP background signal {} versus {}\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'bigDataUrl {}/{}_control_lambda.bw\n'. \
-                                format(prefix, prefix)
-                            hub_list += 'visibility dense\n'
-                            # track_output += 'html {}\n'.format()
-
-                            # Common optional settings.
-
-                            hub_list += 'color {}\n'. \
-                                format(defaults.web.get_chipseq_colour(factor=factor))
-
-                            # bigWig - Signal graphing track settings.
-
-                            hub_list += 'alwaysZero off\n'
-                            hub_list += 'autoScale off\n'
-                            hub_list += 'graphTypeDefault bar\n'
-                            hub_list += 'maxHeightPixels 100:60:20\n'
-                            # track_output += 'maxWindowToQuery 10000000\n'
-                            hub_list += 'smoothingWindow 5\n'
-                            # track_output += 'transformFunc NONE\n'
-                            hub_list += 'viewLimits 0:15\n'
-                            hub_list += 'viewLimitsMax 0:40\n'
-                            hub_list += 'windowingFunction maximum\n'
-                            # track_output += 'yLineMark <#>\n'
-                            # track_output += 'yLineOnOff on \n'
-                            # track_output += 'gridDefault on\n'
-
-                            # Composite track settings.
-
-                            hub_list += 'parent {} on\n'.format(composite_group)
-                            hub_list += 'centerLabelsDense off\n'
-                            hub_list += '\n'
-
-                            #
-                            # Add a UCSC trackDB entry for each NAME_treat_pileup.bw file.
-                            #
-
-                            composite_group = '{}_enrichment'.format(factor)
-                            if composite_group not in composite_groups:
-                                composite_groups[composite_group] = 1
-                                hub_list += 'track {}\n'.format(composite_group)
-                                hub_list += 'type bigWig\n'
-                                hub_list += 'shortLabel {}_enrichment\n'.format(factor)
-                                hub_list += 'longLabel ChIP enrichment signal for factor {!r}\n'. \
-                                    format(factor)
-                                hub_list += 'visibility dense\n'
-                                hub_list += 'compositeTrack on\n'
-                                hub_list += 'parent Enrichment\n'
-                                hub_list += 'allButtonPair on\n'
-                                hub_list += 'centerLabelsDense on\n'
-                                hub_list += '\n'
-
-                            # Common trackDb settings.
-
-                            hub_list += 'track {}__{}_enrichment\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            # TODO: The bigWig type must declare the expected signal range.
-                            hub_list += 'type bigWig\n'
-                            hub_list += 'shortLabel {}__{}_enr\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'longLabel ChIP enrichment signal {} versus {}\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'bigDataUrl {}/{}_treat_pileup.bw\n'. \
-                                format(prefix, prefix)
-                            hub_list += 'visibility dense\n'
-                            # track_output += 'html {}\n'.format()
-
-                            # Common optional settings.
-
-                            hub_list += 'color {}\n'. \
-                                format(defaults.web.get_chipseq_colour(factor=factor))
-
-                            # bigWig - Signal graphing track settings.
-
-                            hub_list += 'alwaysZero off\n'
-                            hub_list += 'autoScale off\n'
-                            hub_list += 'graphTypeDefault bar\n'
-                            hub_list += 'maxHeightPixels 100:60:20\n'
-                            # track_output += 'maxWindowToQuery 10000000\n'
-                            hub_list += 'smoothingWindow 5\n'
-                            # track_output += 'transformFunc NONE\n'
-                            hub_list += 'viewLimits 0:15\n'
-                            hub_list += 'viewLimitsMax 0:40\n'
-                            hub_list += 'windowingFunction maximum\n'
-                            # track_output += 'yLineMark <#>\n'
-                            # track_output += 'yLineOnOff on \n'
-                            # track_output += 'gridDefault on\n'
-
-                            # Composite track settings.
-
-                            hub_list += 'parent {} on\n'.format(composite_group)
-                            hub_list += 'centerLabelsDense off\n'
-                            hub_list += '\n'
-
-                            #
-                            # Add a UCSC trackDB entry for each NAME_bdgcmp.bw file.
-                            #
-
-                            composite_group = '{}_intensity'.format(factor)
-                            if composite_group not in composite_groups:
-                                composite_groups[composite_group] = 1
-                                hub_list += 'track {}\n'.format(composite_group)
-                                hub_list += 'type bigWig\n'
-                                hub_list += 'shortLabel {}\n'.format(composite_group)
-                                hub_list += 'longLabel ChIP intensity for factor {!r}\n'. \
-                                    format(factor)
-                                hub_list += 'visibility full\n'
-                                hub_list += 'compositeTrack on\n'
-                                hub_list += 'parent Comparison\n'
-                                hub_list += 'allButtonPair on\n'
-                                hub_list += 'centerLabelsDense on\n'
-                                hub_list += '\n'
-
-                            # Common trackDb settings.
-
-                            hub_list += 'track {}__{}_intensity\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            # TODO: The bigWig type must declare the expected signal range.
-                            hub_list += 'type bigWig\n'
-                            hub_list += 'shortLabel {}__{}_int\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'longLabel ChIP intensity {} versus {}\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'bigDataUrl {}/{}_bdgcmp.bw\n'. \
-                                format(prefix, prefix)
-                            hub_list += 'visibility full\n'
-                            # track_output += 'html {}\n'.format()
-
-                            # Common optional settings.
-
-                            hub_list += 'color {}\n'. \
-                                format(defaults.web.get_chipseq_colour(factor=factor))
-
-                            # bigWig - Signal graphing track settings.
-
-                            hub_list += 'alwaysZero off\n'
-                            hub_list += 'autoScale off\n'
-                            hub_list += 'graphTypeDefault bar\n'
-                            hub_list += 'maxHeightPixels 100:60:20\n'
-                            # track_output += 'maxWindowToQuery 10000000\n'
-                            hub_list += 'smoothingWindow 5\n'
-                            # track_output += 'transformFunc NONE\n'
-                            hub_list += 'viewLimits 0:15\n'
-                            hub_list += 'viewLimitsMax 0:40\n'
-                            hub_list += 'windowingFunction maximum\n'
-                            # track_output += 'yLineMark <#>\n'
-                            # track_output += 'yLineOnOff on \n'
-                            # track_output += 'gridDefault on\n'
-
-                            # Composite track settings.
-
-                            hub_list += 'parent {} on\n'.format(composite_group)
-                            hub_list += 'centerLabelsDense off\n'
-                            hub_list += '\n'
-
-                            #
-                            # Add a UCSC trackDB entry for each NAME_peaks.bb file.
-                            #
-
-                            # Common trackDb settings.
-
-                            hub_list += 'track {}__{}_peaks\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'type bigBed\n'
-                            hub_list += 'shortLabel {}__{}_peaks\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'longLabel ChIP peaks {} versus {}\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'bigDataUrl {}/{}_peaks.bb\n'. \
-                                format(prefix, prefix)
-                            hub_list += 'visibility pack\n'
-                            # track_output += 'html {}\n'.format()
-
-                            # Common optional settings.
-
-                            hub_list += 'color {}\n'. \
-                                format(defaults.web.get_chipseq_colour(factor=factor))
-
-                            # bigBed - Item or region track settings.
-
-                            # Supertrack settings.
-
-                            hub_list += 'parent Peaks\n'
-                            hub_list += '\n'
-
-                            #
-                            # Add a UCSC trackDB entry for each NAME_summits.bb file.
-                            #
-
-                            # Common trackDb settings.
-
-                            hub_list += 'track {}__{}_summits\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'type bigBed\n'
-                            hub_list += 'shortLabel {}__{}_summits\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'longLabel ChIP summits {} versus {}\n'. \
-                                format(t_paired_reads_name, c_paired_reads_name)
-                            hub_list += 'bigDataUrl {}/{}_summits.bb\n'. \
-                                format(prefix, prefix)
-                            hub_list += 'visibility pack\n'
-                            # track_output += 'html {}\n'.format()
-
-                            # Common optional settings.
-
-                            hub_list += 'color {}\n'. \
-                                format(defaults.web.get_chipseq_colour(factor=factor))
-
-                            # Supertrack settings.
-
-                            hub_list += 'parent Summits\n'
-                            hub_list += '\n'
-
-                            #
-                            # Add web content.
-                            #
-
-                            report_list += '<tr>\n'
-
-                            report_list += '<td><a href="{}/{}_peaks.xls">Peaks {} versus {}</a></td>\n'. \
-                                format(prefix, prefix, t_paired_reads_name, c_paired_reads_name)
-
-                            report_list += '<td><a href="{}/{}_model.r">R model</a></td>\n'. \
-                                format(prefix, prefix)
-
-                            report_list += '</tr>\n'
-                            report_list += '\n'
-
-        report_list += '</table>\n'
-        report_list += '\n'
-
-        # Add UCSC trackDB entries for each Bowtie2 BAM file.
-
-        for sample in self.sample_list:
-            if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
-                print sample.trace(1)
-
-            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
-
-            paired_reads_name_list = paired_reads_dict.keys()
-            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for paired_reads_name in paired_reads_name_list:
-                #
-                # Add a UCSC trackDB entry for each NAME.aligned.sorted.bam file.
-                #
-
-                # Common trackDb settings.
-
-                hub_list += 'track {}_alignment\n'.format(paired_reads_name)
-                hub_list += 'type bam\n'
-                hub_list += 'shortLabel {}_alignment\n'.format(paired_reads_name)
-                hub_list += 'longLabel {} ChIP read alignment\n'. \
-                    format(paired_reads_name)
-                hub_list += 'bigDataUrl chipseq_bowtie2_{}/{}.aligned.sorted.bam\n'. \
-                    format(paired_reads_name, paired_reads_name)
-                hub_list += 'visibility hide\n'
-                # track_output += 'html {}\n'.format()
-
-                # Common optional settings.
-
-                # track_output += 'color {}\n'.format(Defaults.web.chipseq_colours[comparison[2].upper()])
-
-                # bam - Compressed Sequence Alignment track settings.
-
-                # Supertrack settings.
-
-                hub_list += 'parent Alignment\n'
-                hub_list += '\n'
-
-        # Differential binding analysis.
-
-        report_list += '<h2 id="differential_binding">Differential Binding Analysis</h2>\n'
-        report_list += '\n'
-
-        report_list += '<table id="differential_binding_table">\n'
-        report_list += '\n'
-
-        report_list += '<tr>\n'
-        report_list += '<th>Factor and Contrast</th>\n'
-        report_list += '<th>Correlation Peak Caller</th>\n'
-        report_list += '<th>Correlation Peak Counts</th>\n'
-        report_list += '<th>Correlation Analysis</th>\n'
-        report_list += '<th>MA Plot</th>\n'
-        report_list += '<th>Scatter Plot</th>\n'
-        report_list += '<th>PCA Plot</th>\n'
-        report_list += '<th>Box Plot</th>\n'
-        report_list += '<th>DiffBind Report</th>\n'
-        report_list += '</tr>\n'
-
-        keys = self._factor_dict.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
-
-        for key in keys:
-
-            prefix = 'chipseq_diffbind_{}'.format(key)
-
-            report_list += '<tr>\n'
-
-            # ChIP Factor
-
-            report_list += '<td><strong>{}</strong></td>\n'.format(key)
-
-            # Correlation heat map of peak caller scores.
-
-            report_list += '<td>'
-            report_list += '<a href="{}/{}_correlation_peak_caller_score.png">'. \
-                format(prefix, prefix)
-            report_list += '<img alt="DiffBind correlation analysis for factor {}" ' \
-                           'src="{}/{}_correlation_peak_caller_score.png" height="80" width="80">'. \
-                format(key, prefix, prefix)
-            report_list += '</a>'
-            report_list += '</td>\n'
-
-            # Correlation heat map of counts.
-
-            report_list += '<td>'
-            report_list += '<a href="{}/{}_correlation_read_counts.png">'. \
-                format(prefix, prefix)
-            report_list += '<img alt="DiffBind correlation analysis for factor {}" ' \
-                           'src="{}/{}_correlation_read_counts.png" height="80" width="80">'. \
-                format(key, prefix, prefix)
-            report_list += '</a>'
-            report_list += '</td>\n'
-
-            # Correlation heat map of differential binding analysis.
-
-            report_list += '<td>'
-            report_list += '<a href="{}/{}_correlation_analysis.png">'. \
-                format(prefix, prefix)
-            report_list += '<img alt="DiffBind correlation analysis for factor {}" ' \
-                           'src="{}/{}_correlation_analysis.png" height="80" width="80">'. \
-                format(key, prefix, prefix)
-            report_list += '</a>'
-            report_list += '</td>\n'
-
-            report_list += '<td></td>\n'  # MA Plot
-            report_list += '<td></td>\n'  # Scatter Plot
-            report_list += '<td></td>\n'  # PCA Plot
-            report_list += '<td></td>\n'  # Box Plot
-            report_list += '<td></td>\n'  # DiffBin Report
-
-            report_list += '</tr>\n'
-
-            # Read the file of contrasts ...
-
-            file_path = os.path.join(self.genome_directory, prefix, '{}_contrasts.csv'.format(prefix))
-
-            if not os.path.exists(path=file_path):
-                warnings.warn(
-                    'File {!r} does not exist.'.format(file_path),
-                    UserWarning)
-                continue
-
-            sas = AnnotationSheet.from_file_path(file_path=file_path)
-
-            for row_dict in sas.row_dicts:
-                suffix = '{}__{}'.format(row_dict['Group1'], row_dict['Group2'])
-
-                report_list += '<tr>\n'
-
-                report_list += '<td>{}</td>\n'.format(suffix)
-                report_list += '<td></td>\n'  # Correlation heat map of peak caller scores.
-                report_list += '<td></td>\n'  # Correlation heat map of counts.
-                report_list += '<td></td>\n'  # Correlation heat map of differential binding analysis.
-
-                # MA Plot
-
-                report_list += '<td>'
-                report_list += '<a href="{}/{}_ma_plot_{}.png">'.format(prefix, prefix, suffix)
-                report_list += '<img alt="DiffBind MA plot for factor {}" ' \
-                               'src="{}/{}_ma_plot_{}.png" height="80" width="80">'. \
-                    format(key, prefix, prefix, suffix)
-                report_list += '</a>'
-                report_list += '</td>\n'
-
-                # Scatter Plot
-
-                report_list += '<td>'
-                report_list += '<a href="{}/{}_scatter_plot_{}.png">'.format(prefix, prefix, suffix)
-                report_list += '<img alt="DiffBind scatter plot for factor {}" ' \
-                               'src="{}/{}_scatter_plot_{}.png" height="80" width="80">'. \
-                    format(key, prefix, prefix, suffix)
-                report_list += '</a>'
-                report_list += '</td>\n'
-
-                # Principal Component Analysis Plot
-
-                report_list += '<td>'
-                report_list += '<a href="{}/{}_pca_plot_{}.png">'.format(prefix, prefix, suffix)
-                report_list += '<img alt="DiffBind PCA plot for factor {}" ' \
-                               'src="{}/{}_pca_plot_{}.png" height="80" width="80">'. \
-                    format(key, prefix, prefix, suffix)
-                report_list += '</a>'
-                report_list += '</td>\n'
-
-                # Box Plot
-
-                report_list += '<td>'
-                report_list += '<a href="{}/{}_box_plot_{}.png">'.format(prefix, prefix, suffix)
-                report_list += '<img alt="DiffBind Box plot for factor {}" ' \
-                               'src="{}/{}_box_plot_{}.png" height="80" width="80">'. \
-                    format(key, prefix, prefix, suffix)
-                report_list += '</a>'
-                report_list += '</td>\n'
-
-                # DiffBind report
-
-                report_list += '<td><a href="{}/DBA_{}_report_{}.csv">DBA_{}_report_{}</a></td>\n'. \
-                    format(prefix, key, suffix, key, suffix)
-
-                report_list += '</tr>\n'
-
-        report_list += '\n'
-        report_list += '</table>\n'
-        report_list += '\n'
-
-        self.report_to_file(content=report_list)
-        self.ucsc_hub_to_file(content=hub_list)
+        def report_html():
+            """Private function to create a HTML report.
+
+            @return:
+            @rtype:
+            """
+            # Create a symbolic link containing the project name and a UUID.
+            link_path = self.create_public_project_link()
+
+            # Write a HTML document.
+
+            str_list = list()
+            """ @type str_list: list[str | unicode] """
+
+            str_list += '<h1 id="chip_seq_analysis">{} {}</h1>\n'.format(self.project_name, self.name)
+            str_list += '\n'
+
+            str_list += '<p>\n'
+            str_list += 'Next-Generation Sequencing reads are aligned with the short read aligner\n'
+            str_list += '<strong>'
+            str_list += '<a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">Bowtie2</a>'
+            str_list += '</strong>,\n'
+            str_list += 'before peaks are called with '
+            str_list += '<a href="http://liulab.dfci.harvard.edu/MACS/index.html">MACS 2</a>\n'
+            str_list += 'on an enrichment and background sample pair.\n'
+            str_list += '</p>\n'
+            str_list += '\n'
+
+            # Construct an automatic UCSC Track Hub link.
+
+            str_list += '<p id="ucsc_track_hub">\n'
+            str_list += 'View Bowtie2 <strong>read alignment</strong> tracks for each sample\n'
+            str_list += 'in their genomic context via the project-specific\n'
+            str_list += self.ucsc_hub_html_anchor(link_path=link_path)
+            str_list += '.'
+            str_list += '</p>\n'
+            str_list += '\n'
+
+            str_list += '<table id="peak_calling_table">\n'
+            str_list += '<thead>\n'
+            str_list += '<tr>\n'
+            str_list += '<th>Peaks</th>\n'
+            str_list += '<th>R Model</th>\n'
+            str_list += '</tr>\n'
+            str_list += '</thead>\n'
+            str_list += '<tbody>\n'
+
+            comparison_name_list = self.comparisons.keys()
+            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+            for comparison_name in comparison_name_list:
+                chipseq_comparison = self.comparisons[comparison_name]
+                """ @type chipseq_comparison: ChIPSeqComparison"""
+                for t_sample in chipseq_comparison.t_samples:
+                    t_paired_reads_dict = t_sample.get_all_paired_reads(
+                        replicate_grouping=self.replicate_grouping)
+
+                    t_paired_reads_name_list = t_paired_reads_dict.keys()
+                    t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+                    for t_paired_reads_name in t_paired_reads_name_list:
+                        for c_sample in chipseq_comparison.c_samples:
+                            c_paired_reads_dict = c_sample.get_all_paired_reads(
+                                replicate_grouping=self.replicate_grouping)
+
+                            c_paired_reads_name_list = c_paired_reads_dict.keys()
+                            c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+                            for c_paired_reads_name in c_paired_reads_name_list:
+                                prefix = 'chipseq_macs2_{}__{}'.format(t_paired_reads_name, c_paired_reads_name)
+
+                                str_list += '<tr>\n'
+                                # Peaks
+                                str_list += '<td><a href="{}/{}_peaks.xls">Peaks {} versus {}</a></td>\n'. \
+                                    format(prefix, prefix, t_paired_reads_name, c_paired_reads_name)
+                                # R Model
+                                str_list += '<td><a href="{}/{}_model.r">R model</a></td>\n'. \
+                                    format(prefix, prefix)
+                                str_list += '</tr>\n'
+                                str_list += '\n'
+
+            str_list += '</tbody>\n'
+            str_list += '</table>\n'
+            str_list += '\n'
+
+            # Differential binding analysis.
+
+            str_list += '<h2 id="differential_binding">Differential Binding Analysis</h2>\n'
+            str_list += '\n'
+
+            str_list += '<table id="differential_binding_table">\n'
+            str_list += '<thead>\n'
+            str_list += '<tr>\n'
+            str_list += '<th>Factor and Contrast</th>\n'
+            str_list += '<th>Correlation Peak Caller</th>\n'
+            str_list += '<th>Correlation Peak Counts</th>\n'
+            str_list += '<th>Correlation Analysis</th>\n'
+            str_list += '<th>MA Plot</th>\n'
+            str_list += '<th>Scatter Plot</th>\n'
+            str_list += '<th>PCA Plot</th>\n'
+            str_list += '<th>Box Plot</th>\n'
+            str_list += '<th>DiffBind Report</th>\n'
+            str_list += '</tr>\n'
+            str_list += '</thead>\n'
+            str_list += '<tbody>\n'
+
+            factor_name_list = self._factor_dict.keys()
+            factor_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+            for factor_name in factor_name_list:
+                prefix = 'chipseq_diffbind_{}'.format(factor_name)
+
+                str_list += '<tr>\n'
+
+                # ChIP Factor
+                str_list += '<td><strong>{}</strong></td>\n'.format(factor_name)
+                # Correlation heat map of peak caller scores
+                str_list += '<td>'
+                str_list += '<a href="{}/{}_correlation_peak_caller_score.png">'. \
+                    format(prefix, prefix)
+                str_list += '<img alt="DiffBind correlation analysis for factor {}" ' \
+                            'src="{}/{}_correlation_peak_caller_score.png" height="80" width="80">'. \
+                    format(factor_name, prefix, prefix)
+                str_list += '</a>'
+                str_list += '</td>\n'
+
+                # Correlation heat map of counts
+                str_list += '<td>'
+                str_list += '<a href="{}/{}_correlation_read_counts.png">'. \
+                    format(prefix, prefix)
+                str_list += '<img alt="DiffBind correlation analysis for factor {}" ' \
+                            'src="{}/{}_correlation_read_counts.png" height="80" width="80">'. \
+                    format(factor_name, prefix, prefix)
+                str_list += '</a>'
+                str_list += '</td>\n'
+
+                # Correlation heat map of differential binding analysis
+                str_list += '<td>'
+                str_list += '<a href="{}/{}_correlation_analysis.png">'. \
+                    format(prefix, prefix)
+                str_list += '<img alt="DiffBind correlation analysis for factor {}" ' \
+                            'src="{}/{}_correlation_analysis.png" height="80" width="80">'. \
+                    format(factor_name, prefix, prefix)
+                str_list += '</a>'
+                str_list += '</td>\n'
+
+                str_list += '<td></td>\n'  # MA Plot
+                str_list += '<td></td>\n'  # Scatter Plot
+                str_list += '<td></td>\n'  # PCA Plot
+                str_list += '<td></td>\n'  # Box Plot
+                str_list += '<td></td>\n'  # DiffBin Report
+
+                str_list += '</tr>\n'
+
+                # Read the file of contrasts ...
+
+                file_path = os.path.join(self.genome_directory, prefix, '{}_contrasts.csv'.format(prefix))
+
+                if not os.path.exists(path=file_path):
+                    warnings.warn(
+                        'File {!r} does not exist.'.format(file_path),
+                        UserWarning)
+                    continue
+
+                annotation_sheet = AnnotationSheet.from_file_path(file_path=file_path, file_type='excel')
+
+                for row_dict in annotation_sheet.row_dicts:
+                    suffix = '{}__{}'.format(row_dict['Group1'], row_dict['Group2'])
+
+                    str_list += '<tr>\n'
+
+                    str_list += '<td>{}</td>\n'.format(suffix)
+                    str_list += '<td></td>\n'  # Correlation heat map of peak caller scores
+                    str_list += '<td></td>\n'  # Correlation heat map of counts
+                    str_list += '<td></td>\n'  # Correlation heat map of differential binding analysis
+
+                    # MA Plot
+                    str_list += '<td>'
+                    str_list += '<a href="{}/{}_ma_plot_{}.png">'.format(prefix, prefix, suffix)
+                    str_list += '<img alt="DiffBind MA plot for factor {}" ' \
+                                'src="{}/{}_ma_plot_{}.png" height="80" width="80">'. \
+                        format(factor_name, prefix, prefix, suffix)
+                    str_list += '</a>'
+                    str_list += '</td>\n'
+
+                    # Scatter Plot
+                    str_list += '<td>'
+                    str_list += '<a href="{}/{}_scatter_plot_{}.png">'.format(prefix, prefix, suffix)
+                    str_list += '<img alt="DiffBind scatter plot for factor {}" ' \
+                                'src="{}/{}_scatter_plot_{}.png" height="80" width="80">'. \
+                        format(factor_name, prefix, prefix, suffix)
+                    str_list += '</a>'
+                    str_list += '</td>\n'
+
+                    # Principal Component Analysis Plot
+                    str_list += '<td>'
+                    str_list += '<a href="{}/{}_pca_plot_{}.png">'.format(prefix, prefix, suffix)
+                    str_list += '<img alt="DiffBind PCA plot for factor {}" ' \
+                                'src="{}/{}_pca_plot_{}.png" height="80" width="80">'. \
+                        format(factor_name, prefix, prefix, suffix)
+                    str_list += '</a>'
+                    str_list += '</td>\n'
+
+                    # Box Plot
+                    str_list += '<td>'
+                    str_list += '<a href="{}/{}_box_plot_{}.png">'.format(prefix, prefix, suffix)
+                    str_list += '<img alt="DiffBind Box plot for factor {}" ' \
+                                'src="{}/{}_box_plot_{}.png" height="80" width="80">'. \
+                        format(factor_name, prefix, prefix, suffix)
+                    str_list += '</a>'
+                    str_list += '</td>\n'
+
+                    # DiffBind report
+                    str_list += '<td><a href="{}/DBA_{}_report_{}.csv">DBA_{}_report_{}</a></td>\n'. \
+                        format(prefix, factor_name, suffix, factor_name, suffix)
+
+                    str_list += '</tr>\n'
+
+            str_list += '</tbody>\n'
+            str_list += '</table>\n'
+            str_list += '\n'
+
+            self.report_to_file(content=str_list)
+
+            return
+
+        def report_hub():
+            """Private function to create a UCSC Track Hub.
+
+            @return:
+            @rtype:
+            """
+            str_list = list()
+            """ @type str_list: list[str | unicode] """
+
+            # Group via UCSC super tracks.
+
+            str_list += 'track Alignment\n'
+            str_list += 'shortLabel QC Alignment\n'
+            str_list += 'longLabel ChIP Read Alignment\n'
+            str_list += 'visibility hide\n'
+            str_list += 'superTrack on\n'
+            str_list += 'group alignment\n'
+            str_list += '\n'
+
+            str_list += 'track Background\n'
+            str_list += 'shortLabel QC Background\n'
+            str_list += 'longLabel ChIP Background Signal\n'
+            str_list += 'visibility hide\n'
+            str_list += 'superTrack on\n'
+            str_list += 'group background\n'
+            str_list += '\n'
+
+            str_list += 'track Enrichment\n'
+            str_list += 'shortLabel QC Enrichment\n'
+            str_list += 'longLabel ChIP Enrichment Signal\n'
+            str_list += 'visibility hide\n'
+            str_list += 'superTrack on\n'
+            str_list += 'group enrichment\n'
+            str_list += '\n'
+
+            str_list += 'track Comparison\n'
+            str_list += 'shortLabel ChIP Intensity\n'
+            str_list += 'longLabel ChIP Intensity\n'
+            str_list += 'visibility full\n'
+            str_list += 'superTrack on\n'
+            str_list += 'group comparison\n'
+            str_list += '\n'
+
+            str_list += 'track Peaks\n'
+            str_list += 'shortLabel ChIP Peaks\n'
+            str_list += 'longLabel ChIP Peaks\n'
+            str_list += 'visibility hide\n'
+            str_list += 'superTrack on\n'
+            str_list += 'group peaks\n'
+            str_list += '\n'
+
+            str_list += 'track Summits\n'
+            str_list += 'shortLabel ChIP Summits\n'
+            str_list += 'longLabel ChIP Summits\n'
+            str_list += 'visibility hide\n'
+            str_list += 'superTrack on\n'
+            str_list += 'group summits\n'
+            str_list += '\n'
+
+            # Group via UCSC composite tracks.
+
+            composite_groups = dict()
+            """ @type composite_groups: dict[str, bool] """
+            comparison_name_list = self.comparisons.keys()
+            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+            for comparison_name in comparison_name_list:
+                chipseq_comparison = self.comparisons[comparison_name]
+                """ @type chipseq_comparison: ChIPSeqComparison"""
+                factor = chipseq_comparison.factor.upper()
+                for t_sample in chipseq_comparison.t_samples:
+                    t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+
+                    t_paired_reads_name_list = t_paired_reads_dict.keys()
+                    t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+                    for t_paired_reads_name in t_paired_reads_name_list:
+                        for c_sample in chipseq_comparison.c_samples:
+                            c_paired_reads_dict = c_sample.get_all_paired_reads(
+                                replicate_grouping=self.replicate_grouping)
+
+                            c_paired_reads_name_list = c_paired_reads_dict.keys()
+                            c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+                            for c_paired_reads_name in c_paired_reads_name_list:
+                                prefix = 'chipseq_macs2_{}__{}'.format(t_paired_reads_name, c_paired_reads_name)
+
+                                # Add UCSC trackDB entries for each treatment/control and absolute/normalised pair.
+                                # NAME_control_lambda.bw
+                                # NAME_treat_pileup.bw
+                                # NAME_bdgcmp.bw
+
+                                #
+                                # Add a factor-specific "background" composite track once
+                                #
+                                composite_group = '{}_background'.format(factor)
+                                if composite_group not in composite_groups:
+                                    composite_groups[composite_group] = True
+                                    str_list += 'track {}\n'.format(composite_group)
+                                    str_list += 'type bigWig\n'
+                                    str_list += 'shortLabel {}\n'.format(composite_group)
+                                    str_list += 'longLabel ChIP background signal for factor {!r}\n'. \
+                                        format(factor)
+                                    str_list += 'visibility dense\n'
+                                    str_list += 'compositeTrack on\n'
+                                    str_list += 'parent Background\n'
+                                    str_list += 'allButtonPair on\n'
+                                    str_list += 'centerLabelsDense on\n'
+                                    str_list += '\n'
+
+                                #
+                                # Add a UCSC trackDB entry for each NAME_control_lambda.bw file.
+                                #
+                                # Common settings
+                                str_list += 'track {}__{}_background\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                # TODO: The bigWig type must declare the expected signal range.
+                                # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
+                                str_list += 'type bigWig\n'
+                                str_list += 'shortLabel {}__{}_bkg\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'longLabel ChIP background signal {} versus {}\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'bigDataUrl {}/{}_control_lambda.bw\n'. \
+                                    format(prefix, prefix)
+                                # str_list += 'html {}\n'.format()
+                                str_list += 'visibility dense\n'
+
+                                # Common optional settings
+                                str_list += 'color {}\n'. \
+                                    format(defaults.web.get_chipseq_colour(factor=factor))
+
+                                # bigWig - Signal graphing track settings
+                                str_list += 'alwaysZero off\n'
+                                str_list += 'autoScale off\n'
+                                str_list += 'graphTypeDefault bar\n'
+                                str_list += 'maxHeightPixels 100:60:20\n'
+                                # str_list += 'maxWindowToQuery 10000000\n'
+                                str_list += 'smoothingWindow 5\n'
+                                # str_list += 'transformFunc NONE\n'
+                                str_list += 'viewLimits 0:15\n'
+                                str_list += 'viewLimitsMax 0:40\n'
+                                str_list += 'windowingFunction maximum\n'
+                                # str_list += 'yLineMark <#>\n'
+                                # str_list += 'yLineOnOff on \n'
+                                # str_list += 'gridDefault on\n'
+
+                                # Composite track settings
+                                str_list += 'parent {} on\n'.format(composite_group)
+                                str_list += 'centerLabelsDense off\n'
+                                str_list += '\n'
+
+                                #
+                                # Add a factor-specific "enrichment" composite track once
+                                #
+                                composite_group = '{}_enrichment'.format(factor)
+                                if composite_group not in composite_groups:
+                                    composite_groups[composite_group] = True
+                                    str_list += 'track {}\n'.format(composite_group)
+                                    str_list += 'type bigWig\n'
+                                    str_list += 'shortLabel {}_enrichment\n'.format(factor)
+                                    str_list += 'longLabel ChIP enrichment signal for factor {!r}\n'. \
+                                        format(factor)
+                                    str_list += 'visibility dense\n'
+                                    str_list += 'compositeTrack on\n'
+                                    str_list += 'parent Enrichment\n'
+                                    str_list += 'allButtonPair on\n'
+                                    str_list += 'centerLabelsDense on\n'
+                                    str_list += '\n'
+
+                                #
+                                # Add a UCSC trackDB entry for each NAME_treat_pileup.bw file.
+                                #
+                                # Common settings
+                                str_list += 'track {}__{}_enrichment\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                # TODO: The bigWig type must declare the expected signal range.
+                                str_list += 'type bigWig\n'
+                                str_list += 'shortLabel {}__{}_enr\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'longLabel ChIP enrichment signal {} versus {}\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'bigDataUrl {}/{}_treat_pileup.bw\n'. \
+                                    format(prefix, prefix)
+                                # str_list += 'html {}\n'.format()
+                                str_list += 'visibility dense\n'
+
+                                # Common optional settings
+                                str_list += 'color {}\n'. \
+                                    format(defaults.web.get_chipseq_colour(factor=factor))
+
+                                # bigWig - Signal graphing track settings
+                                str_list += 'alwaysZero off\n'
+                                str_list += 'autoScale off\n'
+                                str_list += 'graphTypeDefault bar\n'
+                                str_list += 'maxHeightPixels 100:60:20\n'
+                                # str_list += 'maxWindowToQuery 10000000\n'
+                                str_list += 'smoothingWindow 5\n'
+                                # str_list += 'transformFunc NONE\n'
+                                str_list += 'viewLimits 0:15\n'
+                                str_list += 'viewLimitsMax 0:40\n'
+                                str_list += 'windowingFunction maximum\n'
+                                # str_list += 'yLineMark <#>\n'
+                                # str_list += 'yLineOnOff on \n'
+                                # str_list += 'gridDefault on\n'
+
+                                # Composite track settings
+                                str_list += 'parent {} on\n'.format(composite_group)
+                                str_list += 'centerLabelsDense off\n'
+                                str_list += '\n'
+
+                                #
+                                # Add a factor-specific "intensity" composite track once
+                                #
+                                composite_group = '{}_intensity'.format(factor)
+                                if composite_group not in composite_groups:
+                                    composite_groups[composite_group] = True
+                                    str_list += 'track {}\n'.format(composite_group)
+                                    str_list += 'type bigWig\n'
+                                    str_list += 'shortLabel {}\n'.format(composite_group)
+                                    str_list += 'longLabel ChIP intensity for factor {!r}\n'. \
+                                        format(factor)
+                                    str_list += 'visibility full\n'
+                                    str_list += 'compositeTrack on\n'
+                                    str_list += 'parent Comparison\n'
+                                    str_list += 'allButtonPair on\n'
+                                    str_list += 'centerLabelsDense on\n'
+                                    str_list += '\n'
+
+                                #
+                                # Add a UCSC trackDB entry for each NAME_bdgcmp.bw file.
+                                #
+                                # Common settings
+                                str_list += 'track {}__{}_intensity\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                # TODO: The bigWig type must declare the expected signal range.
+                                str_list += 'type bigWig\n'
+                                str_list += 'shortLabel {}__{}_int\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'longLabel ChIP intensity {} versus {}\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'bigDataUrl {}/{}_bdgcmp.bw\n'. \
+                                    format(prefix, prefix)
+                                # str_list += 'html {}\n'.format()
+                                str_list += 'visibility full\n'
+
+                                # Common optional settings
+                                str_list += 'color {}\n'. \
+                                    format(defaults.web.get_chipseq_colour(factor=factor))
+
+                                # bigWig - Signal graphing track settings
+                                str_list += 'alwaysZero off\n'
+                                str_list += 'autoScale off\n'
+                                str_list += 'graphTypeDefault bar\n'
+                                str_list += 'maxHeightPixels 100:60:20\n'
+                                # str_list += 'maxWindowToQuery 10000000\n'
+                                str_list += 'smoothingWindow 5\n'
+                                # str_list += 'transformFunc NONE\n'
+                                str_list += 'viewLimits 0:15\n'
+                                str_list += 'viewLimitsMax 0:40\n'
+                                str_list += 'windowingFunction maximum\n'
+                                # str_list += 'yLineMark <#>\n'
+                                # str_list += 'yLineOnOff on \n'
+                                # str_list += 'gridDefault on\n'
+
+                                # Composite track settings
+                                str_list += 'parent {} on\n'.format(composite_group)
+                                str_list += 'centerLabelsDense off\n'
+                                str_list += '\n'
+
+                                #
+                                # Add a UCSC trackDB entry for each NAME_peaks.bb file.
+                                #
+                                # Common settings
+                                str_list += 'track {}__{}_peaks\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'type bigBed\n'
+                                str_list += 'shortLabel {}__{}_peaks\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'longLabel ChIP peaks {} versus {}\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'bigDataUrl {}/{}_peaks.bb\n'. \
+                                    format(prefix, prefix)
+                                # str_list += 'html {}\n'.format()
+                                str_list += 'visibility pack\n'
+
+                                # Common optional settings
+                                str_list += 'color {}\n'. \
+                                    format(defaults.web.get_chipseq_colour(factor=factor))
+
+                                # bigBed - Item or region track settings.
+
+                                # Supertrack settings
+                                str_list += 'parent Peaks\n'
+                                str_list += '\n'
+
+                                #
+                                # Add a UCSC trackDB entry for each NAME_summits.bb file.
+                                #
+                                # Common settings
+                                str_list += 'track {}__{}_summits\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'type bigBed\n'
+                                str_list += 'shortLabel {}__{}_summits\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'longLabel ChIP summits {} versus {}\n'. \
+                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'bigDataUrl {}/{}_summits.bb\n'. \
+                                    format(prefix, prefix)
+                                # str_list += 'html {}\n'.format()
+                                str_list += 'visibility pack\n'
+
+                                # Common optional settings
+                                str_list += 'color {}\n'. \
+                                    format(defaults.web.get_chipseq_colour(factor=factor))
+
+                                # Supertrack settings
+                                str_list += 'parent Summits\n'
+                                str_list += '\n'
+
+            # Add UCSC trackDB entries for each Bowtie2 BAM file.
+
+            for sample in self.sample_list:
+                paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
+
+                paired_reads_name_list = paired_reads_dict.keys()
+                paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
+
+                for paired_reads_name in paired_reads_name_list:
+                    #
+                    # Add a UCSC trackDB entry for each NAME.bam file.
+                    #
+                    # Common settings
+                    str_list += 'track {}_alignment\n'.format(paired_reads_name)
+                    str_list += 'type bam\n'
+                    str_list += 'shortLabel {}_alignment\n'.format(paired_reads_name)
+                    str_list += 'longLabel {} ChIP read alignment\n'. \
+                        format(paired_reads_name)
+                    str_list += 'bigDataUrl chipseq_bowtie2_{}/{}.bam\n'. \
+                        format(paired_reads_name, paired_reads_name)
+                    # str_list += 'html {}\n'.format()
+                    str_list += 'visibility hide\n'
+
+                    # Common optional settings
+                    # str_list += 'color {}\n'.format(Defaults.web.chipseq_colours[comparison[2].upper()])
+
+                    # bam - Compressed Sequence Alignment track settings
+
+                    # Supertrack settings
+                    str_list += 'parent Alignment\n'
+                    str_list += '\n'
+
+            self.ucsc_hub_to_file(content=str_list)
+
+            return
+
+        report_html()
+        report_hub()
 
         return
