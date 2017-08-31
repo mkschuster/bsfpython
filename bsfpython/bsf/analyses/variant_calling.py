@@ -5301,9 +5301,14 @@ class VariantCallingGATK(Analysis):
                 str_list += '<td class="left"></td>\n'
                 # Duplicate Metrics
                 str_list += '<td class="center">'
-                str_list += '<a href="' + file_path_process_sample.duplicate_metrics + '">'
-                str_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
-                str_list += '</a>'
+                # This can be a sample-specific file or a symbolic link to the read group-specific file.
+                if os.path.exists(
+                        os.path.join(
+                            self.genome_directory,
+                            file_path_process_sample.duplicate_metrics)):
+                    str_list += '<a href="' + file_path_process_sample.duplicate_metrics + '">'
+                    str_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+                    str_list += '</a>'
                 str_list += '</td>\n'
                 # Alignment Summary Metrics
                 str_list += '<td class="center">'
@@ -5354,8 +5359,8 @@ class VariantCallingGATK(Analysis):
                 for paired_reads_name in paired_reads_name_list:
                     runnable_process_lane = self.runnable_dict[
                         '_'.join((self.stage_name_process_lane, paired_reads_name))]
-                    file_path_read_group = runnable_process_lane.file_path_object
-                    """ @type file_path_read_group: FilePathProcessReadGroup """
+                    file_path_process_read_group = runnable_process_lane.file_path_object
+                    """ @type file_path_process_read_group: FilePathProcessReadGroup """
 
                     str_list += '<tr>\n'
                     # Sample
@@ -5368,13 +5373,17 @@ class VariantCallingGATK(Analysis):
                     str_list += '<td class="left">' + paired_reads_name + '</td>\n'
                     # Duplicate Metrics
                     str_list += '<td class="center">'
-                    str_list += '<a href="' + file_path_read_group.duplicate_metrics + '">'
-                    str_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
-                    str_list += '</a>'
+                    if os.path.isfile(
+                            os.path.join(
+                                self.genome_directory,
+                                file_path_process_read_group.duplicate_metrics)):
+                        str_list += '<a href="' + file_path_process_read_group.duplicate_metrics + '">'
+                        str_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+                        str_list += '</a>'
                     str_list += '</td>\n'
                     # Alignment Summary Metrics
                     str_list += '<td class="center">'
-                    str_list += '<a href="' + file_path_read_group.alignment_summary_metrics + '">'
+                    str_list += '<a href="' + file_path_process_read_group.alignment_summary_metrics + '">'
                     str_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
                     str_list += '</a>'
                     str_list += '</td>\n'
