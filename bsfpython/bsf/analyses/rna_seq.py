@@ -34,7 +34,7 @@ import re
 
 from bsf import Analysis, FilePath, Runnable
 from bsf.analyses.star_aligner import StarAligner
-from bsf.annotation import AnnotationSheet, TuxedoSamplePairSheet
+from bsf.annotation import AnnotationSheet
 from bsf.executables import TopHat
 from bsf.process import Executable, RunnableStep, RunnableStepLink
 from bsf.standards import Default
@@ -308,6 +308,24 @@ class FilePathCuffdiff(FilePath):
         self.output_directory = prefix
 
         return
+
+
+class TuxedoSamplePairSheet(AnnotationSheet):
+    """The C{bsf.annotation.TuxedoSamplePairSheet} class represents C{bsf.ngs.Sample} pairs.
+
+    The C{bsf.ngs.Sample} pairs are defined by the C{bsf_rnaseq_process_cuffdiff.R} script.
+
+    Attributes:
+    """
+
+    _file_type = "excel-tab"
+
+    _field_names = [
+        "V1",
+        "V2",
+    ]
+
+    _test_methods = dict()
 
 
 class Tuxedo(Analysis):
