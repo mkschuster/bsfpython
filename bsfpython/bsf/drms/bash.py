@@ -29,8 +29,6 @@ A package of methods supporting the GNU Bourne-Again Shell (Bash).
 
 import os
 
-from bsf.process import Executable
-
 
 def submit(stage, debug=0):
     """Submit each C{bsf.process.Executable} of a C{bsf.Stage}.

@@ -104,8 +104,6 @@ class LinearTapeFileSystemDirectory(object):
         if source_file_path is None:
             return
 
-        assert isinstance(source_file_path, (str, unicode))
-
         if source_file_path not in self.source_file_path_list:
             self.source_file_path_list.append(source_file_path)
 
@@ -237,8 +235,6 @@ class LinearTapeFileSystemCopy(object):
         if ltfs_directory is None:
             return
 
-        assert isinstance(ltfs_directory, LinearTapeFileSystemDirectory)
-
         if ltfs_directory.source_path in self.ltfs_directory_dict:
             return self.ltfs_directory_dict[ltfs_directory.source_path]
         else:
@@ -331,7 +327,6 @@ class LinearTapeFileSystemCopy(object):
 
         for source_path in source_path_list:
             ltfs_directory = self.ltfs_directory_dict[source_path]
-            assert isinstance(ltfs_directory, LinearTapeFileSystemDirectory)
 
             ltfs_file = xml.etree.ElementTree.Element(tag='file')
             ltfs_data.append(element=ltfs_file)
@@ -355,7 +350,6 @@ class LinearTapeFileSystemCopy(object):
             ltfs_directory.source_file_path_list.sort(lambda x, y: cmp(x, y))
 
             for source_file_path in ltfs_directory.source_file_path_list:
-                assert isinstance(source_file_path, (str, unicode))
                 ltfs_source_file = xml.etree.ElementTree.Element(tag='sf')
                 ltfs_source_file.text = source_file_path
                 ltfs_file.append(element=ltfs_source_file)

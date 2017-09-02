@@ -72,7 +72,9 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
 
     # SAM header lines that need propagating around FASTQ files. Sigh!
     sam_header_pg = list()
+    """ @type sam_header_pg: list[str | unicode] """
     sam_header_rg = list()
+    """ @type sam_header_rg: list[str | unicode] """
 
     sam_temporary_handle = open(path_temporary_sam, 'r')
     for line in sam_temporary_handle:
@@ -112,7 +114,6 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
 
     platform_unit = str()
     for line in sam_header_rg:
-        assert isinstance(line, (str, unicode))
         for field in line.rstrip().split():
             if field.startswith('PU:'):
                 platform_unit = field[3:]

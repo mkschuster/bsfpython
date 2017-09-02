@@ -76,8 +76,6 @@ profile_array = numpy.zeros(shape=(array_length, 5), dtype=numpy.int32)
 print "Profile Array shape:", profile_array.shape
 
 for vulgar in vulgar_list:
-    assert isinstance(vulgar, bsf.exonerate.VULGAR)
-
     # Fetch the corresponding SeqRecord object.
     q_record = record_dict[vulgar.q_name]
     assert isinstance(q_record, SeqRecord)

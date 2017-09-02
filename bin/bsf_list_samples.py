@@ -31,7 +31,7 @@ import csv
 import os
 import re
 
-from bsf.ngs import ProcessedRunFolder, Project, Sample, PairedReads
+from bsf.ngs import ProcessedRunFolder
 from bsf.standards import Default
 
 
@@ -73,22 +73,18 @@ project_name_list = prf.project_dict.keys()
 project_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
 for project_name in project_name_list:
-
     project = prf.project_dict[project_name]
-    assert isinstance(project, Project)
 
     sample_name_list = project.sample_dict.keys()
     sample_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
     for sample_name in sample_name_list:
         sample = project.sample_dict[sample_name]
-        assert isinstance(sample, Sample)
 
         row_dict = {'ProcessedRunFolder': prf.name, 'Project': project.name, 'Sample': sample.name}
 
         if args.full:
             for paired_reads in sample.paired_reads_list:
-                assert isinstance(paired_reads, PairedReads)
                 if paired_reads.reads_1:
                     row_dict['File1'] = paired_reads.reads_1.file_path
                     # row_dict['Reads1'] = paired_reads.reads1.name

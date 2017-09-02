@@ -30,8 +30,7 @@ A package of classes and methods to clean a sample sheet for the Picard SamToFas
 import os
 
 from bsf.argument import OptionLong
-from bsf.ngs import Collection, ProcessedRunFolder, Project, Sample, PairedReads
-from bsf.process import RunnableStep
+from bsf.ngs import Collection
 
 
 def run(runnable):
