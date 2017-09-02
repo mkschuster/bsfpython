@@ -238,7 +238,8 @@ if name_space.mode:
     else:
         raise Exception("Unknown output mode " + name_space.mode)
 else:
-    analysis_bid.lanes = RunFolder.from_file_path(file_path=analysis_itb.run_directory).run_information.flow_cell_layout.lane_count
+    analysis_bid.lanes = \
+        RunFolder.from_file_path(file_path=analysis_itb.run_directory).run_information.flow_cell_layout.lane_count
 
 if name_space.no_validation:
     assert isinstance(name_space.no_validation, bool)
