@@ -208,7 +208,6 @@ class StarAligner(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             replicate_grouping=False,
             index_directory=None,
@@ -241,9 +240,6 @@ class StarAligner(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{str} (comparison name) key objects and
-            Python C{tuple} value objects of C{bsf.ngs.Sample.name} and Python C{list} of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, (bsf.ngs.Sample.name, list[bsf.ngs.Sample])]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @param replicate_grouping: Group all replicates into a single STAR process
         @type replicate_grouping: bool
@@ -269,7 +265,6 @@ class StarAligner(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         # Sub-class specific ...
@@ -343,12 +338,6 @@ class StarAligner(Analysis):
 
         return
 
-    def _read_comparisons(self):
-
-        self.sample_list.extend(self.collection.get_all_samples())
-
-        return
-
     def run(self):
         """Run this C{bsf.analyses.rna_seq.Tuxedo} analysis.
 
@@ -357,6 +346,22 @@ class StarAligner(Analysis):
         @return:
         @rtype:
         """
+
+        def run_read_comparisons():
+            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
+
+            This implementation just adds all C{bsf.ngs.Sample} objects from the
+            C{bsf.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
+            C{bsf.Analysis.sample_list} instance variable.
+            @return:
+            @rtype:
+            """
+
+            self.sample_list.extend(self.collection.get_all_samples())
+
+            return
+
+        # Start of the run() method body.
 
         super(StarAligner, self).run()
 
@@ -386,7 +391,7 @@ class StarAligner(Analysis):
         if not self.classpath_picard:
             self.classpath_picard = default.classpath_picard
 
-        self._read_comparisons()
+        run_read_comparisons()
 
         stage_align = self.get_stage(name=self.stage_name_align)
         stage_index = self.get_stage(name=self.stage_name_index)

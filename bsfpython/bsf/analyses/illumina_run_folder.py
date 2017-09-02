@@ -33,7 +33,7 @@ import os
 from bsf import Analysis, FilePath, Runnable
 from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.process import Command, RunnableStep, RunnableStepSleep
-from bsf.standards import Configuration, Default
+from bsf.standards import Default
 
 
 class IlluminaRunFolderArchive(Analysis):
@@ -139,7 +139,6 @@ class IlluminaRunFolderArchive(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             archive_directory=None,
             run_directory=None,
@@ -171,8 +170,6 @@ class IlluminaRunFolderArchive(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param archive_directory: Archive directory
@@ -200,7 +197,6 @@ class IlluminaRunFolderArchive(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         # Sub-class specific ...
@@ -257,9 +253,6 @@ class IlluminaRunFolderArchive(Analysis):
         @return:
         @rtype:
         """
-
-        assert isinstance(configuration, Configuration)
-        assert isinstance(section, str)
 
         super(IlluminaRunFolderArchive, self).set_configuration(configuration=configuration, section=section)
 
@@ -793,7 +786,6 @@ class IlluminaRunFolderRestore(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             archive_directory=None,
             illumina_directory=None,
@@ -826,8 +818,6 @@ class IlluminaRunFolderRestore(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param archive_directory: File path to an archive directory
@@ -857,7 +847,6 @@ class IlluminaRunFolderRestore(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         # Sub-class specific ...
@@ -937,9 +926,6 @@ class IlluminaRunFolderRestore(Analysis):
         @return:
         @rtype:
         """
-
-        assert isinstance(configuration, Configuration)
-        assert isinstance(section, str)
 
         super(IlluminaRunFolderRestore, self).set_configuration(configuration=configuration, section=section)
 

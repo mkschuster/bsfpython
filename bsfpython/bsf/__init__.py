@@ -91,8 +91,6 @@ class Analysis(object):
     @type runnable_dict: dict[bsf.Runnable.name, bsf.Runnable]
     @ivar collection: C{bsf.ngs.Collection}
     @type collection: bsf.ngs.Collection
-    @ivar comparisons: Python C{dict} of comparisons
-    @type comparisons: dict[str, Any]
     @ivar sample_list: Python C{list} of C{bsf.ngs.Sample} objects
     @type sample_list: list[bsf.ngs.Sample]
     """
@@ -169,7 +167,6 @@ class Analysis(object):
             stage_list=None,
             runnable_dict=None,
             collection=None,
-            comparisons=None,
             sample_list=None):
         """Initialise a C{bsf.Analysis}.
 
@@ -206,9 +203,6 @@ class Analysis(object):
         @type runnable_dict: dict[bsf.Runnable.name, bsf.Runnable]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of C{bsf.Analysis}-specific objects
-            (i.e. Python tuple for RNA-Seq and ChIPSeqComparison for ChIPSeq)
-        @type comparisons: dict[str, Any]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @return:
@@ -295,11 +289,6 @@ class Analysis(object):
             assert isinstance(collection, Collection)
             self.collection = collection
 
-        if comparisons is None:
-            self.comparisons = dict()
-        else:
-            self.comparisons = comparisons
-
         if sample_list is None:
             self.sample_list = list()
         else:
@@ -332,7 +321,6 @@ class Analysis(object):
         output += '{}  stage_list: {!r}\n'.format(indent, self.stage_list)
         output += '{}  runnable_dict: {!r}\n'.format(indent, self.runnable_dict)
         output += '{}  collection: {!r}\n'.format(indent, self.collection)
-        output += '{}  comparisons: {!r}\n'.format(indent, self.comparisons)
         output += '{}  sample_list: {!r}\n'.format(indent, self.sample_list)
 
         output += '{}  Python dict of Runnable objects:\n'.format(indent)

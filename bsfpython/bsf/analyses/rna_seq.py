@@ -311,7 +311,7 @@ class FilePathCuffdiff(FilePath):
 
 
 class TuxedoSamplePairSheet(AnnotationSheet):
-    """The C{bsf.annotation.TuxedoSamplePairSheet} class represents C{bsf.ngs.Sample} pairs.
+    """The C{bsf.analyses.rna_seq.TuxedoSamplePairSheet} class represents C{bsf.ngs.Sample} pairs.
 
     The C{bsf.ngs.Sample} pairs are defined by the C{bsf_rnaseq_process_cuffdiff.R} script.
 
@@ -326,6 +326,36 @@ class TuxedoSamplePairSheet(AnnotationSheet):
     ]
 
     _test_methods = dict()
+
+
+class TuxedoComparison(object):
+    """The C{bsf.analyses.rna_seq.TuxedoComparison} class models RNA-seq comparisons.
+
+    Attributes:
+    @ivar name: Name
+    @type name: str
+    @ivar sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+    @type sample_list: list[bsf.ngs.Sample]
+    """
+
+    def __init__(self, name, sample_list=None):
+        """Initialise a C{bsf.analyses.rna_seq.TuxedoComparison} object.
+
+        @param name: Name
+        @type name: str
+        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
+        @type sample_list: list[bsf.ngs.Sample]
+        @return:
+        @rtype:
+        """
+        self.name = name  # Can be None
+
+        if sample_list is None:
+            self.sample_list = list()
+        else:
+            self.sample_list = sample_list
+
+        return
 
 
 class Tuxedo(Analysis):
@@ -356,8 +386,8 @@ class Tuxedo(Analysis):
     @type stage_name_process_cuffdiff: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
-    @ivar cmp_file: Comparison file
-    @type cmp_file: str | unicode
+    @ivar comparison_path: Comparison file path
+    @type comparison_path: str | unicode
     @ivar genome_index_path: Bowtie genome index path
     @type genome_index_path: str | unicode
     @ivar genome_fasta_path: Reference genome sequence FASTA file path
@@ -476,10 +506,9 @@ class Tuxedo(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             replicate_grouping=False,
-            cmp_file=None,
+            comparison_path=None,
             genome_index_path=None,
             genome_fasta_path=None,
             transcriptome_version=None,
@@ -516,15 +545,12 @@ class Tuxedo(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{str} (comparison name) key objects and
-            Python C{tuple} value objects of C{bsf.ngs.Sample.name} and Python C{list} of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, (str, list[bsf.ngs.Sample])]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
         @type replicate_grouping: bool
-        @param cmp_file: Comparison file
-        @type cmp_file: str | unicode
+        @param comparison_path: Comparison file path
+        @type comparison_path: str | unicode
         @param genome_index_path: Bowtie genome index path
         @type genome_index_path: str | unicode
         @param genome_fasta_path: Reference genome sequence FASTA file path
@@ -562,7 +588,6 @@ class Tuxedo(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         # Sub-class specific ...
@@ -573,10 +598,10 @@ class Tuxedo(Analysis):
             assert isinstance(replicate_grouping, bool)
             self.replicate_grouping = replicate_grouping
 
-        if cmp_file is None:
-            self.cmp_file = str()
+        if comparison_path is None:
+            self.comparison_path = str()
         else:
-            self.cmp_file = cmp_file
+            self.comparison_path = comparison_path
 
         if genome_index_path is None:
             self.genome_index_path = str()
@@ -630,6 +655,9 @@ class Tuxedo(Analysis):
             assert isinstance(no_length_correction, bool)
             self.no_length_correction = no_length_correction
 
+        self._comparison_dict = dict()
+        """ @type _comparison_dict: dict[str, list[bsf.analyses.rna_seq.TuxedoComparison]] """
+
         return
 
     def set_configuration(self, configuration, section):
@@ -655,7 +683,7 @@ class Tuxedo(Analysis):
 
         option = 'cmp_file'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.cmp_file = configuration.config_parser.get(section=section, option=option)
+            self.comparison_path = configuration.config_parser.get(section=section, option=option)
 
         option = 'genome_index'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -699,109 +727,151 @@ class Tuxedo(Analysis):
 
         return
 
-    def _read_comparisons(self, cmp_file):
-        """Read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
-
-        All C{bsf.ngs.Sample} objects referenced in a comparison are added from the C{bsf.ngs.Collection} to the
-        C{bsf.Analysis} object.
-
-            - Column headers for CASAVA folders:
-                - Treatment/Control/Point N ProcessedRunFolder:
-                    - CASAVA processed run folder name or
-                    - C{bsf.Analysis.input_directory} by default
-                - Treatment/Control/Point N Project:
-                    - CASAVA Project name or
-                    - C{bsf.Analysis.project_name} by default
-                - Treatment/Control/Point N Sample:
-                    - CASAVA Sample name, no default
-            - Column headers for independent samples:
-                - Treatment/Control/Point N Sample:
-                - Treatment/Control/Point N Reads:
-                - Treatment/Control/Point N File:
-        @param cmp_file: Comparisons file path
-        @type cmp_file: str | unicode
-        @return:
-        @rtype:
-        """
-
-        if self.debug > 1:
-            print '{!r} method _read_comparisons:'.format(self)
-
-        regular_expression = re.compile(pattern='\W')
-
-        annotation_sheet = AnnotationSheet.from_file_path(file_path=cmp_file)
-
-        # TODO: Adjust by introducing a new class RNASeqComparisonSheet(AnnotationSheet) in this module?
-        for row_dict in annotation_sheet.row_dicts:
-            # In addition to defining samples, allow also the definition of groups in comparison files.
-            # If the row dictionary has a 'Group' key, then the Sample in the same row gets added to the group.
-            # So, 'ProcessedRunFolder', 'Project', 'Sample', 'Group' defines the groups, while ...
-            # 'Control Group','Treatment Group' defines a comparison, as does ...
-            # 'Control Group','Treatment ProcessedRunFolder','Treatment Project','Treatment Sample'
-
-            # Get Sample objects for classical 'Control' and 'Treatment' keys,
-            # before looking up a series of 'Point N' keys.
-            i = -2
-            key = str()
-            comparison_groups = list()
-            """ @type comparison_groups: list[(str, list[bsf.ngs.Sample])] """
-            while True:
-                i += 1
-                if i == -1:
-                    prefix = 'Control'
-                elif i == 0:
-                    prefix = 'Treatment'
-                else:
-                    prefix = 'Point {}'.format(i)
-                # Get Sample objects for 'Point N' keys for as long as they are defined.
-                # The Collection.get_sample_from_row_dict method can return one or more Sample objects,
-                # depending on 'Group' or 'Sample' column entries.
-                # In RNA-Seq experiments, entire pools of Sample objects (replicates) are compared with each other.
-                group_name, group_samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix=prefix)
-                if group_name and len(group_samples):
-                    key += group_name
-                    key += '__'
-                    comparison_groups.append((group_name, group_samples))
-                    # Also expand each Python list of bsf.ngs.Sample objects to get all those bsf.ngs.Sample objects
-                    # that this bsf.Analysis needs considering.
-                    for sample in group_samples:
-                        if self.debug > 1:
-                            print '  {} Sample name: {!r} file_path: {!r}'.format(prefix, sample.name, sample.file_path)
-                            # print sample.trace(1)
-                        self.add_sample(sample=sample)
-                elif i < 1:
-                    # A Control and Treatment prefix is not required.
-                    continue
-                else:
-                    # Only break if there is no further 'Point N' prefix.
-                    break
-
-            # For a successful comparison, more than one Sample (pool) has to be defined.
-
-            if len(comparison_groups) < 2:
-                if self.debug > 1:
-                    print 'Comparison line with less than two Sample or Group keys. {!r}'. \
-                        format(row_dict)
-                continue
-
-            if 'Comparison Name' in row_dict and row_dict['Comparison Name']:
-                # For ridiculously large comparisons involving loads of groups or samples a comparison name can be
-                # explicitly specified. Any non-word characters get replaced by underscore characters.
-                key = re.sub(pattern=regular_expression, repl='_', string=row_dict['Comparison Name'])
-            else:
-                # Truncate the last '__' separator off the key string.
-                key = key.rstrip('_')
-
-            self.comparisons[key] = comparison_groups
-            """ @type comparisons: dic[str, (str, list[bsf.ngs.Sample])] """
-
-        return
-
     def run(self):
         """Run this C{bsf.analyses.rna_seq.Tuxedo} analysis.
         @return:
         @rtype:
         """
+
+        def run_read_comparisons():
+            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
+
+            All C{bsf.ngs.Sample} objects referenced in a comparison are added from the C{bsf.ngs.Collection} to the
+            C{bsf.Analysis} object.
+
+                - Column headers for CASAVA folders:
+                    - Treatment/Control/Point N ProcessedRunFolder:
+                        - CASAVA processed run folder name or
+                        - C{bsf.Analysis.input_directory} by default
+                    - Treatment/Control/Point N Project:
+                        - CASAVA Project name or
+                        - C{bsf.Analysis.project_name} by default
+                    - Treatment/Control/Point N Sample:
+                        - CASAVA Sample name, no default
+                - Column headers for independent samples:
+                    - Treatment/Control/Point N Sample:
+                    - Treatment/Control/Point N Reads:
+                    - Treatment/Control/Point N File:
+            @return:
+            @rtype:
+            """
+            if self.comparison_path:
+                # A comparison file path was provided.
+                _comparison_list = list()
+                """ @type _comparison_list: list[bsf.analyses.rna_seq.TuxedoComparison] """
+                _comparison_name = None
+                """ @type _comparison_name: str """
+                if self.comparison_path == '*groups*':
+                    # The special file name *groups* creates TuxedoComparison objects on the basis of an
+                    # all-against-all group comparison.
+                    # Without a comparison file path, simply add all Sample objects from the Collection.
+                    self.sample_list.extend(self.collection.get_all_samples())
+                    # Create a global comparison by adding all sample groups.
+                    for _group_name in self.collection.sample_group_dict.keys():
+                        _comparison_list.append(TuxedoComparison(
+                            name=_group_name,
+                            sample_list=self.collection.sample_group_dict[_group_name]))
+                    # Set the comparison name to 'global'.
+                    _comparison_name = 'global'
+                elif self.comparison_path == '*samples*':
+                    # The special file name *samples* creates TuxedoComparison objects on the basis of an
+                    # all-against-all sample comparison.
+                    # Without a comparison file path, simply add all Sample objects from the Collection.
+                    self.sample_list.extend(self.collection.get_all_samples())
+                    # Create a global comparison by adding all samples under their sample name as group name.
+                    for _sample in self.sample_list:
+                        _comparison_list.append(TuxedoComparison(name=_sample.name, sample_list=[_sample]))
+                    # Set the comparison name to 'global'.
+                    _comparison_name = 'global'
+                else:
+                    # A comparison file path was provided.
+                    # Expand an eventual user part i.e. on UNIX ~ or ~user and
+                    # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+                    self.comparison_path = os.path.expanduser(path=self.comparison_path)
+                    self.comparison_path = os.path.expandvars(path=self.comparison_path)
+                    # Read and process the comparison file, which includes adding only those Sample objects,
+                    # which are referenced in a comparison.
+                    annotation_sheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
+                    regular_expression = re.compile(pattern='\W')
+
+                    for row_dict in annotation_sheet.row_dicts:
+                        # In addition to defining samples, allow also the definition of groups in comparison files.
+                        # If the row dictionary has a 'Group' key, then the Sample in the same row gets added to
+                        # the group. So,
+                        # 'ProcessedRunFolder', 'Project', 'Sample', 'Group' defines the groups, while ...
+                        # 'Control Group','Treatment Group' defines a comparison, as does ...
+                        # 'Control Group','Treatment ProcessedRunFolder','Treatment Project','Treatment Sample'
+
+                        # Get Sample objects for classical 'Control' and 'Treatment' keys,
+                        # before looking up a series of 'Point N' keys.
+                        i = -2
+                        _comparison_name = str()
+                        while True:
+                            i += 1
+                            if i == -1:
+                                prefix = 'Control'
+                            elif i == 0:
+                                prefix = 'Treatment'
+                            else:
+                                prefix = 'Point {}'.format(i)
+                            # Get Sample objects for 'Point N' keys for as long as they are defined.
+                            # The Collection.get_sample_from_row_dict method can return one or more Sample objects,
+                            # depending on 'Group' or 'Sample' column entries.
+                            # In RNA-Seq experiments, entire pools of Sample objects (replicates) are compared
+                            # with each other.
+                            _group_name, _group_sample_list = self.collection.get_samples_from_row_dict(
+                                row_dict=row_dict,
+                                prefix=prefix)
+
+                            if _group_name and len(_group_sample_list):
+                                _comparison_name += _group_name + '__'
+                                _comparison_list.append(TuxedoComparison(
+                                    name=_group_name,
+                                    sample_list=_group_sample_list))
+                                # Also expand each Python list of bsf.ngs.Sample objects to get all those
+                                # bsf.ngs.Sample objects that this bsf.Analysis needs considering.
+                                for _sample in _group_sample_list:
+                                    self.add_sample(sample=_sample)
+                                    if self.debug > 1:
+                                        print '  {} Sample name: {!r} file_path: {!r}'.format(
+                                            prefix, _sample.name, _sample.file_path)
+                                    if self.debug > 2:
+                                        print sample.trace(1)
+                            elif i < 1:
+                                # A Control and Treatment prefix is not required.
+                                continue
+                            else:
+                                # Only break if there is no further 'Point N' prefix.
+                                break
+
+                        # For a successful comparison, more than one Sample (pool) has to be defined.
+                        if len(_comparison_list) < 2:
+                            if self.debug > 1:
+                                print 'Comparison line with less than two Sample or Group keys. {!r}'. \
+                                    format(row_dict)
+                            continue
+
+                        if 'Comparison Name' in row_dict and row_dict['Comparison Name']:
+                            # For ridiculously large comparisons involving loads of groups or samples a
+                            # comparison name can be explicitly specified.
+                            # Any non-word characters get replaced by underscore characters.
+                            _comparison_name = re.sub(pattern=regular_expression, repl='_',
+                                                      string=row_dict['Comparison Name'])
+                        else:
+                            # Truncate the last '__' separator off the key string.
+                            _comparison_name = _comparison_name.rstrip('_')
+
+                # Sort the list of comparison groups by group name.
+                _comparison_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+                self._comparison_dict[_comparison_name] = _comparison_list
+            else:
+                # Without a comparison file path, simply add all Sample objects from the Collection.
+                # This means that only the initial pipeline stages, but not the comparison stage gets run.
+                self.sample_list.extend(self.collection.get_all_samples())
+
+            return
+
+        # Start of the run() method body.
 
         super(Tuxedo, self).run()
 
@@ -822,58 +892,7 @@ class Tuxedo(Analysis):
         if not self.transcriptome_version:
             raise Exception('A Tuxedo analysis requires a transcriptome_version configuration option.')
 
-        if self.cmp_file:
-            # A comparison file path has been provided.
-            if self.cmp_file == '*groups*':
-                # The special file name *groups* creates the comparisons on the basis of an
-                # all-against-all group comparison.
-                # Without a comparison file path, simply add all Sample objects from the Collection.
-                self.sample_list.extend(self.collection.get_all_samples())
-                # Create a global comparison by adding all sample groups.
-                comparison_groups = list()
-                """ @type comparison_groups: list[(str, list[bsf.ngs.Sample])] """
-                for key in self.collection.sample_group_dict.keys():
-                    comparison_groups.append((key, self.collection.sample_group_dict[key]))
-                # Sort the list of comparison groups by group name.
-                comparison_groups.sort(cmp=lambda x, y: cmp(x[0], y[0]))
-                self.comparisons['global'] = comparison_groups
-            elif self.cmp_file == '*samples*':
-                # The special file name *samples* creates the comparisons on the basis of an
-                # all-against-all sample comparison.
-                # Without a comparison file path, simply add all Sample objects from the Collection.
-                self.sample_list.extend(self.collection.get_all_samples())
-                # Create a global comparison by adding all samples under their sample name as group name.
-                comparison_groups = list()
-                """ @type comparison_groups: list[(str, list[bsf.ngs.Sample])] """
-                for sample in self.sample_list:
-                    # Add a tuple of group (i.e. sample) name and a Python list of the Sample object.
-                    comparison_groups.append((sample.name, [sample]))
-                # Sort the list of comparison groups by Sample.name.
-                comparison_groups.sort(cmp=lambda x, y: cmp(x[0], y[0]))
-                self.comparisons['global'] = comparison_groups
-            else:
-                # A comparison file path has been provided.
-                # Expand an eventual user part i.e. on UNIX ~ or ~user and
-                # expand any environment variables i.e. on UNIX ${NAME} or $NAME
-                # Check if an absolute path has been provided, if not,
-                # automatically prepend standard directory paths.
-                self.cmp_file = os.path.expanduser(path=self.cmp_file)
-                self.cmp_file = os.path.expandvars(path=self.cmp_file)
-                if not os.path.isabs(self.cmp_file) and not os.path.exists(path=self.cmp_file):
-                    self.cmp_file = os.path.join(self.project_directory, self.cmp_file)
-                # Read and process the comparison file, which includes adding only those sample objects,
-                # which are referenced in a comparison.
-                self._read_comparisons(cmp_file=self.cmp_file)
-        else:
-            # Without a comparison file path, simply add all Sample objects from the Collection.
-            # This means that only the initial pipeline stages, but not the comparison stage gets run.
-            self.sample_list.extend(self.collection.get_all_samples())
-
-        # Experimentally, sort the Python list of Sample objects by the Sample name.
-        # This cannot be done in the super-class, because Sample objects are only put into the
-        # bsf.Analysis.samples list by the _read_comparisons method.
-
-        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        run_read_comparisons()
 
         # Define the reference genome FASTA file path.
         # If it does not exist, construct it from defaults.
@@ -928,7 +947,6 @@ class Tuxedo(Analysis):
             if not os.path.exists(self.transcriptome_gtf_path):
                 raise Exception("Reference transcriptome GTF file {!r} does not exist.".
                                 format(self.transcriptome_gtf_path))
-
         elif self.transcriptome_gtf_path:
             # Check if transcriptome_gtf_path is absolute and if not,
             # prepend the default transcriptomes directory.
@@ -939,7 +957,6 @@ class Tuxedo(Analysis):
             if not os.path.exists(self.transcriptome_gtf_path):
                 raise Exception("Reference transcriptome GTF file {!r} does not exist.".
                                 format(self.transcriptome_gtf_path))
-
         else:
             # Neither was provided, automatically discover on the basis of the transcriptome version.
             self.transcriptome_index_path = os.path.join(
@@ -977,6 +994,10 @@ class Tuxedo(Analysis):
 
         runnable_run_cufflinks_list = list()
         """ @type runnable_run_cufflinks_list: list[Runnable] """
+
+        # Sort the Python list of Sample objects by the Sample.name.
+
+        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -1357,12 +1378,12 @@ class Tuxedo(Analysis):
         # TODO: Report this to the Cufflinks author.
         previous_cuffmerge_name = str()
 
-        comparison_keys = self.comparisons.keys()
-        comparison_keys.sort(cmp=lambda x, y: cmp(x, y))
+        comparison_name_list = self._comparison_dict.keys()
+        comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-        for comparison_key in comparison_keys:
+        for comparison_name in comparison_name_list:
             # TODO: Should the comparison prefix also include the project name or number?
-            prefix_cuffmerge = self.get_prefix_rnaseq_run_cuffmerge(comparison_name=comparison_key)
+            prefix_cuffmerge = self.get_prefix_rnaseq_run_cuffmerge(comparison_name=comparison_name)
 
             file_path_cuffmerge = FilePathCuffmerge(prefix=prefix_cuffmerge)
 
@@ -1425,9 +1446,7 @@ class Tuxedo(Analysis):
             cuffdiff_cuffnorm_labels = list()
             """ @type cuffdiff_cuffnorm_labels: list[str] """
 
-            for group_name, group_samples in self.comparisons[comparison_key]:
-                """ @type group_name: str """
-                """ @type group_samples: list[Sample] """
+            for comparison in self._comparison_dict[comparison_name]:
                 per_group_abundances_list = list()
                 """ @type per_group_abundances_list: list[str | unicode] """
                 per_group_alignments_list = list()
@@ -1435,8 +1454,7 @@ class Tuxedo(Analysis):
                 # Count samples that remain after removing excluded PairedReads objects.
                 sample_count = 0
 
-                for sample in group_samples:
-                    """ @type sample: bsf.ngs.Sample """
+                for sample in comparison.sample_list:
                     paired_reads_dict = sample.get_all_paired_reads(
                         replicate_grouping=self.replicate_grouping,
                         exclude=True)
@@ -1463,10 +1481,10 @@ class Tuxedo(Analysis):
                         executable_run_cuffmerge.dependencies.append(
                             '_'.join((self.stage_name_run_cufflinks, paired_reads_name)))
 
-                        # Create a Cuffquant Runnable per comparison (comparison_key) and replicate (paired_reads_name)
-                        # on the basis of the Cuffmerge GTF file.
+                        # Create a Cuffquant Runnable per comparison (comparison_name) and
+                        # replicate (paired_reads_name) on the basis of the Cuffmerge GTF file.
 
-                        prefix_cuffquant = '_'.join((stage_run_cuffquant.name, comparison_key, paired_reads_name))
+                        prefix_cuffquant = '_'.join((stage_run_cuffquant.name, comparison_name, paired_reads_name))
 
                         file_path_cuffquant = FilePathCuffquant(prefix=prefix_cuffquant)
                         # TODO: Remove after rearranging this method into the run method.
@@ -1545,7 +1563,7 @@ class Tuxedo(Analysis):
                         cuffdiff_cuffnorm_dependencies.append(executable_run_cuffquant.name)
 
                 if sample_count:
-                    cuffdiff_cuffnorm_labels.append(group_name)
+                    cuffdiff_cuffnorm_labels.append(comparison.name)
                     cuffdiff_cuffnorm_abundances.append(per_group_abundances_list)
                     cuffdiff_cuffnorm_alignments.append(per_group_alignments_list)
 
@@ -1631,7 +1649,7 @@ class Tuxedo(Analysis):
 
             # Create a Cuffnorm Runnable per comparison.
 
-            prefix_run_cuffnorm = '_'.join((stage_run_cuffnorm.name, comparison_key))
+            prefix_run_cuffnorm = '_'.join((stage_run_cuffnorm.name, comparison_name))
 
             file_path_run_cuffnorm = FilePathCuffnorm(prefix=prefix_run_cuffnorm)
 
@@ -1685,7 +1703,7 @@ class Tuxedo(Analysis):
 
             # Create a Cuffdiff Runnable per comparison.
 
-            prefix_run_cuffdiff = '_'.join((stage_run_cuffdiff.name, comparison_key))
+            prefix_run_cuffdiff = '_'.join((stage_run_cuffdiff.name, comparison_name))
 
             file_path_run_cuffdiff = FilePathCuffdiff(prefix=prefix_run_cuffdiff)
 
@@ -1767,7 +1785,7 @@ class Tuxedo(Analysis):
 
             executable_process_cuffdiff = stage_process_cuffdiff.add_executable(
                 executable=Executable(
-                    name='_'.join((stage_process_cuffdiff.name, comparison_key)),
+                    name='_'.join((stage_process_cuffdiff.name, comparison_name)),
                     program='bsf_rnaseq_process_cuffdiff.R'))
             executable_process_cuffdiff.dependencies.append(executable_run_cuffdiff.name)
 
@@ -1775,7 +1793,7 @@ class Tuxedo(Analysis):
             self.set_command_configuration(command=executable_process_cuffdiff)
             executable_process_cuffdiff.add_option_long(
                 key='comparison-name',
-                value=comparison_key)
+                value=comparison_name)
             executable_process_cuffdiff.add_option_long(
                 key='gtf-assembly',
                 value=file_path_cuffmerge.merged_gtf)
@@ -2088,17 +2106,17 @@ class Tuxedo(Analysis):
             str_list += '</thead>\n'
             str_list += '<tbody>\n'
 
-            comparison_keys = self.comparisons.keys()
-            comparison_keys.sort(cmp=lambda x, y: cmp(x, y))
+            comparison_name_list = self._comparison_dict.keys()
+            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            for comparison_key in comparison_keys:
-                path_prefix = 'rnaseq_process_cuffdiff_' + comparison_key
+            for comparison_name in comparison_name_list:
+                path_prefix = 'rnaseq_process_cuffdiff_' + comparison_name
 
                 # Link to comparison-specific symbolic links in the directory after cummeRbund processing.
 
                 str_list += '<tr>\n'
                 # Comparison
-                str_list += '<td class="left">' + comparison_key + '</td>\n'
+                str_list += '<td class="left">' + comparison_name + '</td>\n'
                 # Samples
                 str_list += '<td class="center">'
                 str_list += relative_anchor(
@@ -2247,12 +2265,12 @@ class Tuxedo(Analysis):
             str_list += '</thead>\n'
             str_list += '<tbody>\n'
 
-            for comparison_key in comparison_keys:
-                path_prefix = 'rnaseq_process_cuffdiff_' + comparison_key
+            for comparison_name in comparison_name_list:
+                path_prefix = 'rnaseq_process_cuffdiff_' + comparison_name
 
                 str_list += '<tr>\n'
                 # Comparison
-                str_list += '<td class="left">' + comparison_key + '</td>\n'
+                str_list += '<td class="left">' + comparison_name + '</td>\n'
                 # Genes
                 str_list += '<td class="center">'
                 str_list += relative_anchor(
@@ -2261,7 +2279,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_significance_matrix.png',
-                        text='Significance Matrix Plot - Genes - ' + comparison_key))
+                        text='Significance Matrix Plot - Genes - ' + comparison_name))
                 str_list += '</td>\n'
                 # Isoforms
                 str_list += '<td class="center">'
@@ -2271,7 +2289,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_significance_matrix.png',
-                        text='Significance Matrix Plot - Isoforms - ' + comparison_key))
+                        text='Significance Matrix Plot - Isoforms - ' + comparison_name))
                 str_list += '</td>\n'
                 str_list += '</tr>\n'
 
@@ -2313,12 +2331,12 @@ class Tuxedo(Analysis):
             str_list += '</thead>\n'
             str_list += '<tbody>\n'
 
-            for comparison_key in comparison_keys:
-                path_prefix = 'rnaseq_process_cuffdiff_' + comparison_key
+            for comparison_name in comparison_name_list:
+                path_prefix = 'rnaseq_process_cuffdiff_' + comparison_name
 
                 str_list += '<tr>\n'
                 # Comparison
-                str_list += '<td class="left">' + comparison_key + '</td>\n'
+                str_list += '<td class="left">' + comparison_name + '</td>\n'
 
                 # Dispersion Plots for Genes and Isoforms
 
@@ -2329,7 +2347,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_dispersion.png',
-                        text='Dispersion Plot - Genes - ' + comparison_key))
+                        text='Dispersion Plot - Genes - ' + comparison_name))
                 str_list += '</td>\n'
 
                 str_list += '<td class="center">'
@@ -2339,7 +2357,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_dispersion.png',
-                        text='Dispersion Plot - Isoforms - ' + comparison_key))
+                        text='Dispersion Plot - Isoforms - ' + comparison_name))
                 str_list += '</td>\n'
 
                 # Squared Coefficient of Variation (SCV) Plots for Genes and Isoforms
@@ -2353,7 +2371,7 @@ class Tuxedo(Analysis):
                         text=relative_image(
                             prefix=path_prefix,
                             suffix='genes_scv.png',
-                            text='Squared Coefficient of Variation (SCV) - Genes - ' + comparison_key))
+                            text='Squared Coefficient of Variation (SCV) - Genes - ' + comparison_name))
                 str_list += '</td>\n'
 
                 str_list += '<td class="center">'
@@ -2365,7 +2383,7 @@ class Tuxedo(Analysis):
                         text=relative_image(
                             prefix=path_prefix,
                             suffix='isoforms_scv.png',
-                            text='Squared Coefficient of Variation (SCV) - Isoforms - ' + comparison_key))
+                            text='Squared Coefficient of Variation (SCV) - Isoforms - ' + comparison_name))
                 str_list += '</td>\n'
 
                 # Density Plots for Genes without and with Replicates
@@ -2377,7 +2395,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_density_wo_replicates.png',
-                        text='Density Plot without Replicates - Genes - ' + comparison_key))
+                        text='Density Plot without Replicates - Genes - ' + comparison_name))
                 str_list += '</td>\n'
 
                 str_list += '<td class="center">'
@@ -2387,7 +2405,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_density_w_replicates.png',
-                        text='Density Plot with Replicates - Genes - ' + comparison_key))
+                        text='Density Plot with Replicates - Genes - ' + comparison_name))
                 str_list += '</td>\n'
 
                 # Density Plots for Isoforms without and with Replicates
@@ -2399,7 +2417,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_density_wo_replicates.png',
-                        text='Density Plot without Replicates - Isoforms - ' + comparison_key))
+                        text='Density Plot without Replicates - Isoforms - ' + comparison_name))
                 str_list += '</td>\n'
 
                 str_list += '<td class="center">'
@@ -2409,7 +2427,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_density_w_replicates.png',
-                        text='Density Plot with Replicates - Isoforms - ' + comparison_key))
+                        text='Density Plot with Replicates - Isoforms - ' + comparison_name))
                 str_list += '</td>\n'
 
                 # Box Plots for Genes without and with Replicates
@@ -2421,7 +2439,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_box_wo_replicates.png',
-                        text='Box Plot without Replicates - Genes - ' + comparison_key))
+                        text='Box Plot without Replicates - Genes - ' + comparison_name))
                 str_list += '</td>\n'
 
                 str_list += '<td class="center">'
@@ -2431,7 +2449,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_box_w_replicates.png',
-                        text='Box Plot with Replicates - Genes - ' + comparison_key))
+                        text='Box Plot with Replicates - Genes - ' + comparison_name))
                 str_list += '</td>\n'
 
                 # Box Plots for Isoforms with and without Replicates
@@ -2443,7 +2461,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_box_wo_replicates.png',
-                        text='Box Plot without Replicates - Isoforms - ' + comparison_key))
+                        text='Box Plot without Replicates - Isoforms - ' + comparison_name))
                 str_list += '</td>\n'
 
                 str_list += '<td class="center">'
@@ -2453,7 +2471,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_box_w_replicates.png',
-                        text='Box Plot with Replicates - Isoforms - ' + comparison_key))
+                        text='Box Plot with Replicates - Isoforms - ' + comparison_name))
                 str_list += '</td>\n'
 
                 # Scatter Matrix Plot for Genes and Isoforms
@@ -2465,7 +2483,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_scatter_matrix.png',
-                        text='Scatter Matrix Plot - Genes - ' + comparison_key))
+                        text='Scatter Matrix Plot - Genes - ' + comparison_name))
                 str_list += '</td>\n'
 
                 str_list += '<td class="center">'
@@ -2475,7 +2493,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_scatter_matrix.png',
-                        text='Scatter Matrix Plot - Isoforms - ' + comparison_key))
+                        text='Scatter Matrix Plot - Isoforms - ' + comparison_name))
                 str_list += '</td>\n'
 
                 # Dendrogram Plot for Genes
@@ -2487,7 +2505,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_dendrogram.png',
-                        text='Dendrogram Plot - Genes - ' + comparison_key))
+                        text='Dendrogram Plot - Genes - ' + comparison_name))
                 str_list += '</td>\n'
 
                 # Volcano Matrix Plot for Genes
@@ -2499,7 +2517,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_volcano_matrix.png',
-                        text='Volcano Matrix Plot - Genes - ' + comparison_key))
+                        text='Volcano Matrix Plot - Genes - ' + comparison_name))
                 str_list += '</td>\n'
 
                 # Multidimensional Scaling Plot for Genes
@@ -2513,7 +2531,7 @@ class Tuxedo(Analysis):
                         text=relative_image(
                             prefix=path_prefix,
                             suffix='genes_mds.png',
-                            text='Multidimensional Scaling Plot - Genes - ' + comparison_key))
+                            text='Multidimensional Scaling Plot - Genes - ' + comparison_name))
                 str_list += '</td>\n'
 
                 # Principal Component Analysis Plot for Genes
@@ -2525,7 +2543,7 @@ class Tuxedo(Analysis):
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_pca.png',
-                        text='Principal Component Analysis Plot - Genes - ' + comparison_key))
+                        text='Principal Component Analysis Plot - Genes - ' + comparison_name))
                 str_list += '</td>\n'
 
                 str_list += '</tr>\n'
@@ -2826,19 +2844,19 @@ class Tuxedo(Analysis):
 
             # Comparison-specific tracks
 
-            comparison_keys = self.comparisons.keys()
-            comparison_keys.sort(cmp=lambda x, y: cmp(x, y))
+            comparison_name_list = self._comparison_dict.keys()
+            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            for comparison_key in comparison_keys:
+            for comparison_name in comparison_name_list:
                 #
                 # Add a trackDB entry for each Cuffmerge merged.bb file.
                 #
                 # Common settings
-                str_list += 'track ' + comparison_key + '_assembly\n'
+                str_list += 'track ' + comparison_name + '_assembly\n'
                 str_list += 'type bigGenePred\n'
-                str_list += 'shortLabel ' + comparison_key + '_assembly\n'
-                str_list += 'longLabel ' + comparison_key + ' Cufflinks transcript assembly\n'
-                str_list += 'bigDataUrl rnaseq_cuffmerge_' + comparison_key + '/merged.bb\n'
+                str_list += 'shortLabel ' + comparison_name + '_assembly\n'
+                str_list += 'longLabel ' + comparison_name + ' Cufflinks transcript assembly\n'
+                str_list += 'bigDataUrl rnaseq_cuffmerge_' + comparison_name + '/merged.bb\n'
                 # str_list += 'html ...\n'
                 str_list += 'visibility pack\n'
 
@@ -2891,6 +2909,23 @@ class DESeq(Analysis):
     @type prefix: str
     @cvar stage_name_deseq: C{bsf.Stage.name} for the run DESeq stage
     @type stage_name_deseq: str
+    @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
+    @type replicate_grouping: bool
+    @ivar comparison_path: Comparison file path
+    @type comparison_path: str | unicode
+    @ivar contrast_path: Contrast file path
+    @type contrast_path: str | unicode
+    @ivar genome_fasta_path: Reference genome sequence FASTA file path
+    @type genome_fasta_path: str | unicode
+    @ivar transcriptome_gtf_path: Reference transcriptome GTF file path
+    @type transcriptome_gtf_path: str | unicode
+    @ivar transcriptome_index_path: Tophat transcriptome index path
+    @type transcriptome_index_path: str | unicode
+    @ivar design_formula: Design formula
+    @type design_formula: str | unicode
+    @ivar library_type: Library type
+        Cuffquant and Cuffdiff I{fr-unstranded} (default), I{fr-firststrand} or I{fr-secondstrand}
+    @type library_type: str
     """
 
     name = 'RNA-seq Analysis'
@@ -2912,11 +2947,10 @@ class DESeq(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             replicate_grouping=False,
-            cmp_file=None,
-            ctr_file=None,
+            comparison_path=None,
+            contrast_path=None,
             genome_fasta_path=None,
             transcriptome_gtf_path=None,
             transcriptome_index_path=None,
@@ -2948,17 +2982,14 @@ class DESeq(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{str} (comparison name) key objects and
-            Python C{tuple} value objects of C{bsf.ngs.Sample.name} and Python C{list} of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, (str, list[bsf.ngs.Sample])]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
         @type replicate_grouping: bool
-        @param cmp_file: Comparison file
-        @type cmp_file: str | unicode
-        @param ctr_file: Contrast file
-        @type ctr_file: str | unicode
+        @param comparison_path: Comparison file path
+        @type comparison_path: str | unicode
+        @param contrast_path: Contrast file path
+        @type contrast_path: str | unicode
         @param genome_fasta_path: Reference genome sequence FASTA file path
         @type genome_fasta_path: str | unicode
         @param transcriptome_gtf_path: Reference transcriptome GTF file path
@@ -2986,7 +3017,6 @@ class DESeq(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         # Sub-class specific ...
@@ -2997,15 +3027,15 @@ class DESeq(Analysis):
             assert isinstance(replicate_grouping, bool)
             self.replicate_grouping = replicate_grouping
 
-        if cmp_file is None:
-            self.cmp_file = str()
+        if comparison_path is None:
+            self.comparison_path = str()
         else:
-            self.cmp_file = cmp_file
+            self.comparison_path = comparison_path
 
-        if ctr_file is None:
-            self.ctr_file = str()
+        if contrast_path is None:
+            self.contrast_path = str()
         else:
-            self.ctr_file = ctr_file
+            self.contrast_path = contrast_path
 
         if genome_fasta_path is None:
             self.genome_fasta_path = str()
@@ -3057,11 +3087,11 @@ class DESeq(Analysis):
 
         option = 'cmp_file'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.cmp_file = configuration.config_parser.get(section=section, option=option)
+            self.comparison_path = configuration.config_parser.get(section=section, option=option)
 
         option = 'ctr_file'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.ctr_file = configuration.config_parser.get(section=section, option=option)
+            self.contrast_path = configuration.config_parser.get(section=section, option=option)
 
         option = 'genome_fasta'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -3104,13 +3134,11 @@ class DESeq(Analysis):
 
         # Read the designs (comparison) file.
 
-        self.cmp_file = os.path.expanduser(path=self.cmp_file)
-        self.cmp_file = os.path.expandvars(path=self.cmp_file)
-        if not os.path.isabs(self.cmp_file) and not os.path.exists(path=self.cmp_file):
-            self.cmp_file = os.path.join(self.project_directory, self.cmp_file)
+        self.comparison_path = os.path.expanduser(path=self.comparison_path)
+        self.comparison_path = os.path.expandvars(path=self.comparison_path)
 
         design_sheet = AnnotationSheet.from_file_path(
-            file_path=self.cmp_file,
+            file_path=self.comparison_path,
             file_type='excel',
             name='DESeq Design Table')
         # Convert the CSV configuration table into a TSV analysis table.
@@ -3118,13 +3146,11 @@ class DESeq(Analysis):
 
         # Read the contrasts file.
 
-        self.ctr_file = os.path.expanduser(path=self.ctr_file)
-        self.ctr_file = os.path.expandvars(path=self.ctr_file)
-        if not os.path.isabs(self.cmp_file) and not os.path.exists(path=self.cmp_file):
-            self.cmp_file = os.path.join(self.project_directory, self.cmp_file)
+        self.contrast_path = os.path.expanduser(path=self.contrast_path)
+        self.contrast_path = os.path.expandvars(path=self.contrast_path)
 
         contrast_sheet = AnnotationSheet.from_file_path(
-            file_path=self.ctr_file,
+            file_path=self.contrast_path,
             file_type='excel',
             name='DESeq Contrast Table')
         # Convert the CSV configuration table into a TSV analysis table.

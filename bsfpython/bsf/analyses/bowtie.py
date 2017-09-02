@@ -28,7 +28,6 @@ A package of classes and methods supporting Bowtie alignment analyses.
 
 from bsf import Analysis, Runnable
 from bsf.process import RunnableStep
-from bsf.standards import Configuration
 
 
 class Bowtie1(Analysis):
@@ -47,8 +46,8 @@ class Bowtie1(Analysis):
     @type bwa_genome_db: str | unicode
     """
 
-    name = 'Variant Calling Analysis'
-    prefix = 'variant_calling'
+    name = 'Bowtie1 Analysis'
+    prefix = 'bowtie1'
 
     stage_name_bowtie1 = 'bowtie1'
 
@@ -65,7 +64,6 @@ class Bowtie1(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             replicate_grouping=False,
             bwa_genome_db=None):
@@ -95,8 +93,6 @@ class Bowtie1(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{str} key and Python C{list} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param replicate_grouping: Group individual C{bsf.ngs.PairedReads} objects for processing or
@@ -120,7 +116,6 @@ class Bowtie1(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         # Sub-class specific ...
@@ -151,9 +146,6 @@ class Bowtie1(Analysis):
         @rtype:
         """
 
-        assert isinstance(configuration, Configuration)
-        assert isinstance(section, str)
-
         super(Bowtie1, self).set_configuration(configuration=configuration, section=section)
 
         config_parser = configuration.config_parser
@@ -167,6 +159,8 @@ class Bowtie1(Analysis):
         option = 'bwa_genome_db'
         if config_parser.has_option(section=section, option=option):
             self.bwa_genome_db = config_parser.get(section=section, option=option)
+
+        return
 
     def run(self):
         """Run a C{bsf.analyses.bowtie.Bowtie1} analysis.
@@ -221,19 +215,21 @@ class Bowtie1(Analysis):
                 """ @type runnable_step: RunnableStep """
                 runnable_step.arguments.append(self.bwa_genome_db)
 
-                reads1 = list()
-                reads2 = list()
+                reads_list_1 = list()
+                reads_list_2 = list()
 
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if paired_reads.reads_1:
-                        reads1.append(paired_reads.reads_1.file_path)
+                        reads_list_1.append(paired_reads.reads_1.file_path)
                     if paired_reads.reads_2:
-                        reads2.append(paired_reads.reads_2.file_path)
+                        reads_list_2.append(paired_reads.reads_2.file_path)
 
-                if len(reads1) and not len(reads2):
+                if len(reads_list_1) and not len(reads_list_2):
                     # For Bowtie1 unpaired reads are an argument, paired come with options -1 <m1> and -2 <m2>.
-                    runnable_step.arguments.append(','.join(reads1))
-                elif len(reads1) and len(reads2):
-                    runnable_step.add_option_short(key='1', value=','.join(reads1))
-                if len(reads2):
-                    runnable_step.add_option_short(key='2', value=','.join(reads2))
+                    runnable_step.arguments.append(','.join(reads_list_1))
+                elif len(reads_list_1) and len(reads_list_2):
+                    runnable_step.add_option_short(key='1', value=','.join(reads_list_1))
+                if len(reads_list_2):
+                    runnable_step.add_option_short(key='2', value=','.join(reads_list_2))
+
+        return

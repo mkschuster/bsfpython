@@ -116,7 +116,6 @@ class PicardIlluminaRunFolder(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             run_directory=None,
             intensity_directory=None,
@@ -150,8 +149,6 @@ class PicardIlluminaRunFolder(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
@@ -185,7 +182,6 @@ class PicardIlluminaRunFolder(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         if run_directory is None:
@@ -499,7 +495,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             run_directory=None,
             intensity_directory=None,
@@ -543,8 +538,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
@@ -598,7 +591,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list,
             run_directory=run_directory,
             intensity_directory=intensity_directory,
@@ -790,6 +782,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # Read the LibraryAnnotationSheet and populate a flow cell dict indexed on the lane number ...
 
         library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=self.library_path)
+        """ @type library_annotation_sheet: LibraryAnnotationSheet """
 
         validation_messages = library_annotation_sheet.validate(lanes=self.lanes)
 
@@ -824,12 +817,12 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         cell_dependency_list = list()
 
-        keys = flow_cell_dict.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
+        lane_str_list = flow_cell_dict.keys()
+        lane_str_list.sort(cmp=lambda x, y: cmp(x, y))
 
-        for key in keys:
-            # The key represents the lane number as a Python str.
-            prefix_lane = '_'.join((self.project_name, key))
+        for lane_str in lane_str_list:
+            # The lane_str represents the lane number as a Python str.
+            prefix_lane = '_'.join((self.project_name, lane_str))
 
             file_path_lane = FilePathExtractIlluminaLane(prefix=prefix_lane)
 
@@ -845,7 +838,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             bc_length_list = list()
 
             # Sort each lane by sample name.
-            flow_cell_dict_list = flow_cell_dict[key]
+            flow_cell_dict_list = flow_cell_dict[lane_str]
             flow_cell_dict_list.sort(cmp=lambda x, y: cmp(x['sample_name'], y['sample_name']))
 
             for row_dict in flow_cell_dict_list:
@@ -884,7 +877,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     'BARCODE_2': row_dict['barcode_sequence_2'],
                     'OUTPUT': os.path.join(
                         file_path_lane.samples_directory,
-                        '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])),
+                        '{}_{}#{}.bam'.format(self.project_name, lane_str, row_dict['sample_name'])),
                     'SAMPLE_ALIAS': row_dict['sample_name'],
                     'LIBRARY_NAME': row_dict['library_name'],
                 })
@@ -901,11 +894,11 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     'PairedReads Index 2': row_dict['barcode_sequence_2'],
                     # TODO: It would be good to add a RunnableStep to populate the ReadGroup.
                     'PairedReads ReadGroup': '',
-                    'Reads1 Name': '_'.join((self.project_name, key, row_dict['sample_name'])),
+                    'Reads1 Name': '_'.join((self.project_name, lane_str, row_dict['sample_name'])),
                     'Reads1 File': os.path.join(
                         os.path.basename(self.experiment_directory),
                         file_path_lane.samples_directory,
-                        '{}_{}#{}.bam'.format(self.project_name, key, row_dict['sample_name'])),
+                        '{}_{}#{}.bam'.format(self.project_name, lane_str, row_dict['sample_name'])),
                     'Reads2 Name': '',
                     'Reads2 File': '',
                 })
@@ -924,7 +917,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     'BARCODE_2': '',
                     'OUTPUT': os.path.join(
                         file_path_lane.samples_directory,
-                        '{}_{}#0.bam'.format(self.project_name, key)),
+                        '{}_{}#0.bam'.format(self.project_name, lane_str)),
                     'SAMPLE_ALIAS': 'Unmatched',
                     'LIBRARY_NAME': ibs_sheet.row_dicts[0]['LIBRARY_NAME'],
                 })
@@ -970,7 +963,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             runnable_lane = self.add_runnable(
                 runnable=Runnable(
-                    name=self.get_prefix_lane(project_name=self.project_name, lane=key),
+                    name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory,
                     file_path_object=file_path_lane))
@@ -1007,7 +1000,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 """ @type runnable_step: RunnableStepPicard """
                 runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
                 runnable_step.add_picard_option(key='OUTPUT_DIR', value=file_path_lane.output_directory)
-                runnable_step.add_picard_option(key='LANE', value=key)
+                runnable_step.add_picard_option(key='LANE', value=lane_str)
                 runnable_step.add_picard_option(key='READ_STRUCTURE', value=read_structure)
                 runnable_step.add_picard_option(key='BARCODE_FILE', value=file_path_lane.barcode_tsv)
                 runnable_step.add_picard_option(key='METRICS_FILE', value=file_path_lane.metrics_tsv)
@@ -1056,7 +1049,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
             if index_read_index > 0:
                 runnable_step.add_picard_option(key='BARCODES_DIR', value=file_path_lane.output_directory)
-            runnable_step.add_picard_option(key='LANE', value=key)
+            runnable_step.add_picard_option(key='LANE', value=lane_str)
             # OUTPUT is deprecated.
             runnable_step.add_picard_option(
                 key='RUN_BARCODE',
@@ -1064,7 +1057,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             # SAMPLE_ALIAS is deprecated.
             runnable_step.add_picard_option(
                 key='READ_GROUP_ID',
-                value='{}_{}'.format(self._irf.run_parameters.get_flow_cell_barcode, key))
+                value='_'.join((self._irf.run_parameters.get_flow_cell_barcode, lane_str)))
             # LIBRARY_NAME is deprecated.
             runnable_step.add_picard_option(key='SEQUENCING_CENTER', value=self.sequencing_centre)
             # NOTE: The ISO date format still does not work for Picard tools 2.6.1. Sigh.
@@ -1305,7 +1298,6 @@ class DownsampleSam(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             classpath_picard=None):
         """Initialise a C{bsf.analyses.picard.DownsampleSam} object.
@@ -1334,8 +1326,6 @@ class DownsampleSam(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -1356,7 +1346,6 @@ class DownsampleSam(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         if classpath_picard is None:
@@ -1391,12 +1380,6 @@ class DownsampleSam(Analysis):
 
         return
 
-    def _read_comparisons(self):
-
-        self.sample_list.extend(self.collection.get_all_samples())
-
-        return
-
     def run(self):
         """Run the C{bsf.analyses.picard.DownsampleSam} C{bsf.Analysis}.
 
@@ -1404,6 +1387,22 @@ class DownsampleSam(Analysis):
         @return:
         @rtype:
         """
+
+        def run_read_comparisons():
+            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
+
+            This implementation just adds all C{bsf.ngs.Sample} objects from the
+            C{bsf.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
+            C{bsf.Analysis.sample_list} instance variable.
+            @return:
+            @rtype:
+            """
+
+            self.sample_list.extend(self.collection.get_all_samples())
+
+            return
+
+        # Start of the run() method body.
 
         super(DownsampleSam, self).run()
 
@@ -1414,7 +1413,7 @@ class DownsampleSam(Analysis):
         if not self.classpath_picard:
             self.classpath_picard = default.classpath_picard
 
-        self._read_comparisons()
+        run_read_comparisons()
 
         # Picard DownsampleSam
 
@@ -1443,7 +1442,7 @@ class DownsampleSam(Analysis):
                     reads = paired_reads.reads_1
                     if not (reads.file_path.endswith('.bam') or reads.file_path.endswith('.sam')):
                         raise Exception(
-                            "Picard DownsampleSam can only work on BAM or SAM files. {}".format(reads.file_path))
+                            "Picard DownsampleSam can only work on BAM or SAM files. " + reads.file_path)
 
                     prefix_read_group = '_'.join((stage_picard_dss.name, paired_reads_name))
 
@@ -1565,7 +1564,6 @@ class SamToFastq(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             classpath_picard=None,
             include_non_pf_reads=False):
@@ -1595,8 +1593,6 @@ class SamToFastq(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -1619,7 +1615,6 @@ class SamToFastq(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         if classpath_picard is None:
@@ -1664,12 +1659,6 @@ class SamToFastq(Analysis):
 
         return
 
-    def _read_comparisons(self):
-
-        self.sample_list.extend(self.collection.get_all_samples())
-
-        return
-
     def run(self):
         """Run the C{bsf.analyses.picard.SamToFastq} C{bsf.Analysis}.
 
@@ -1677,6 +1666,22 @@ class SamToFastq(Analysis):
         @return:
         @rtype:
         """
+
+        def run_read_comparisons():
+            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
+
+            This implementation just adds all C{bsf.ngs.Sample} objects from the
+            C{bsf.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
+            C{bsf.Analysis.sample_list} instance variable.
+            @return:
+            @rtype:
+            """
+
+            self.sample_list.extend(self.collection.get_all_samples())
+
+            return
+
+        # Start of the run() method body.
 
         super(SamToFastq, self).run()
 
@@ -1687,7 +1692,7 @@ class SamToFastq(Analysis):
         if not self.classpath_picard:
             self.classpath_picard = default.classpath_picard
 
-        self._read_comparisons()
+        run_read_comparisons()
 
         prune_sas_dependencies = list()
 
@@ -1731,7 +1736,6 @@ class SamToFastq(Analysis):
 
                         for read_group_dict in alignment_file.header['RG']:
                             """ @type read_group_dict: dict[str, str] """
-                            assert isinstance(read_group_dict, dict)
                             # The makeFileNameSafe() method of htsjdk.samtools.util.IOUtil uses the following pattern:
                             # [\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]
                             platform_unit = re.sub(
@@ -1739,7 +1743,7 @@ class SamToFastq(Analysis):
                                 repl='_',
                                 string=read_group_dict['PU'])
                             read_group_list = ['@RG']
-                            read_group_list.extend(map(lambda x: '{}:{}'.format(x, read_group_dict[x]),
+                            read_group_list.extend(map(lambda x: ':'.join((x, read_group_dict[x])),
                                                        read_group_dict.keys()))
                             if read_group_dict == alignment_file.header['RG'][0]:
                                 # Use the '==' rather than the 'is' operator, since dictionaries do not seem to be

@@ -29,10 +29,9 @@ A package of classes and methods supporting the Trimmomatic tool.
 
 import os
 
-from bsf import Analysis, Default, FilePath, Runnable
+from bsf import Analysis, FilePath, Runnable
 from bsf.ngs import Reads, PairedReads
 from bsf.process import Command, RunnableStep, RunnableStepJava, RunnableStepMakeDirectory
-from bsf.standards import Configuration
 
 
 class FilePathTrimmomatic(FilePath):
@@ -126,7 +125,6 @@ class Trimmomatic(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             adapter_path=None,
             trimming_step_pe_list=None,
@@ -158,8 +156,6 @@ class Trimmomatic(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param adapter_path: Adapter file path
@@ -186,7 +182,6 @@ class Trimmomatic(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         if adapter_path is None:
@@ -223,8 +218,6 @@ class Trimmomatic(Analysis):
         @return:
         @rtype:
         """
-        assert isinstance(configuration, Configuration)
-
         super(Trimmomatic, self).set_configuration(configuration=configuration, section=section)
 
         # Sub-class specific ...
@@ -269,8 +262,8 @@ class Trimmomatic(Analysis):
         @rtype:
         """
 
-        def _adjust_illumina_clip_path(trimming_step_list):
-            """Adjust the adapter FASTA file path of ILLUMINACLIP trimming steps.
+        def run_adjust_illumina_clip_path(trimming_step_list):
+            """Private function to adjust the adapter FASTA file path of ILLUMINACLIP trimming steps.
 
             If the file path is not absolute, prepend the value of the adapter_path
             instance variable.
@@ -287,15 +280,21 @@ class Trimmomatic(Analysis):
                     trimming_step_list[i] = ':'.join(component_list)
             return
 
-        def _read_comparisons():
-            """Read a comparison annotation sheet to select those C{Sample} objects that should be analysed.
+        def run_read_comparisons():
+            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
 
-            By default, the C{Collection} object can automatically register all C{Sample} objects.
+            This implementation just adds all C{bsf.ngs.Sample} objects from the
+            C{bsf.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
+            C{bsf.Analysis.sample_list} instance variable.
             @return:
             @rtype:
             """
+
             self.sample_list.extend(self.collection.get_all_samples())
+
             return
+
+        # Start of the run() method body.
 
         super(Trimmomatic, self).run()
 
@@ -306,15 +305,15 @@ class Trimmomatic(Analysis):
                 os.path.dirname(self.classpath_trimmomatic),
                 'adapters')
 
-        _adjust_illumina_clip_path(trimming_step_list=self.trimming_step_pe_list)
-        _adjust_illumina_clip_path(trimming_step_list=self.trimming_step_se_list)
+        run_adjust_illumina_clip_path(trimming_step_list=self.trimming_step_pe_list)
+        run_adjust_illumina_clip_path(trimming_step_list=self.trimming_step_se_list)
 
         # Get the Trimmomatic tool Java Archive (JAR) class path directory.
 
         # if not self.classpath_trimmomatic:
         #     self.classpath_trimmomatic = default.classpath_trimmomatic
 
-        _read_comparisons()
+        run_read_comparisons()
 
         # Trimmomatic
 
@@ -331,7 +330,7 @@ class Trimmomatic(Analysis):
                 for trimming_step in sample.annotation_dict['Trimmomatic Steps']:
                     sample_step_list.extend(
                         filter(lambda x: x != '', map(lambda x: x.strip(), trimming_step.split(','))))
-                _adjust_illumina_clip_path(trimming_step_list=sample_step_list)
+                run_adjust_illumina_clip_path(trimming_step_list=sample_step_list)
 
             # The Trimmomatic analysis does not obey excluded PairedReads objects,
             # more high-level analyses generally do.
@@ -350,7 +349,7 @@ class Trimmomatic(Analysis):
                         for trimming_step in paired_reads.annotation_dict['Trimmomatic Steps']:
                             paired_reads_step_list.extend(
                                 filter(lambda x: x != '', map(lambda x: x.strip(), trimming_step.split(','))))
-                        _adjust_illumina_clip_path(trimming_step_list=paired_reads_step_list)
+                        run_adjust_illumina_clip_path(trimming_step_list=paired_reads_step_list)
 
                     # Apply some sanity checks.
 

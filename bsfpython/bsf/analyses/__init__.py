@@ -280,8 +280,8 @@ class ChIPSeq(Analysis):
     @type prefix: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
-    @ivar cmp_file: Comparison file
-    @type cmp_file: str | unicode
+    @ivar comparison_path: Comparison file path
+    @type comparison_path: str | unicode
     @ivar genome_fasta_path: Reference genome sequence FASTA file path
     @type genome_fasta_path: str | unicode
     @ivar genome_sizes_path: Reference genome (chromosome) sizes file path
@@ -304,10 +304,9 @@ class ChIPSeq(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             replicate_grouping=True,
-            cmp_file=None,
+            comparison_path=None,
             genome_fasta_path=None,
             genome_sizes_path=None):
         """Initialise a C{bsf.analyses.ChIPSeq}.
@@ -336,14 +335,12 @@ class ChIPSeq(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{list} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
         @type replicate_grouping: bool
-        @param cmp_file: Comparison file
-        @type cmp_file: str | unicode
+        @param comparison_path: Comparison file path
+        @type comparison_path: str | unicode
         @param genome_fasta_path: Reference genome sequence FASTA file path
         @type genome_fasta_path: str | unicode
         @param genome_sizes_path: Reference genome (chromosome) sizes file path
@@ -364,7 +361,6 @@ class ChIPSeq(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         # Sub-class specific ...
@@ -375,10 +371,10 @@ class ChIPSeq(Analysis):
             assert isinstance(replicate_grouping, bool)
             self.replicate_grouping = replicate_grouping
 
-        if cmp_file is None:
-            self.cmp_file = str()
+        if comparison_path is None:
+            self.comparison_path = str()
         else:
-            self.cmp_file = cmp_file
+            self.comparison_path = comparison_path
 
         if genome_fasta_path is None:
             self.genome_fasta_path = str()
@@ -389,6 +385,9 @@ class ChIPSeq(Analysis):
             self.genome_sizes_path = str()
         else:
             self.genome_sizes_path = genome_sizes_path
+
+        self._comparison_dict = dict()
+        """ @type _comparison_dict: dict[str, ChIPSeqComparison]"""
 
         self._factor_dict = dict()
         """ @type _factor_dict: dict[str, list[ChIPSeqComparison]] """
@@ -418,7 +417,7 @@ class ChIPSeq(Analysis):
 
         option = 'cmp_file'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.cmp_file = configuration.config_parser.get(section=section, option=option)
+            self.comparison_path = configuration.config_parser.get(section=section, option=option)
 
         option = 'genome_fasta'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -436,171 +435,169 @@ class ChIPSeq(Analysis):
         '1': True, 'yes': True, 'true': True, 'on': True,
         '0': False, 'no': False, 'false': False, 'off': False}
 
-    def _read_comparisons(self, cmp_file):
-        """Read a C{bsf.annotation.AnnotationSheet} CSV file from disk.
-
-            - Column headers for CASAVA folders:
-                - Treatment/Control ProcessedRunFolder:
-                    - CASAVA processed run folder name or
-                    - C{bsf.Analysis.input_directory} by default
-                - Treatment/Control Project:
-                    - CASAVA Project name or
-                    - C{bsf.Analysis.project_name} by default
-                - Treatment/Control Sample:
-                    - CASAVA Sample name, no default
-            - Column headers for independent samples:
-                - Treatment/Control Group:
-                - Treatment/Control Sample:
-                - Treatment/Control Reads:
-                - Treatment/Control File:
-        @param cmp_file: Comparison file path
-        @type cmp_file: str | unicode
-        @return:
-        @rtype:
-        """
-
-        if self.debug > 1:
-            print '{!r} method _read_comparisons:'.format(self)
-
-        annotation_sheet = AnnotationSheet.from_file_path(file_path=cmp_file)
-
-        # Unfortunately, two passes through the comparison sheet are required.
-        # In the first one merge all Sample objects that share the name.
-        # Merging Sample objects is currently the only way to pool PairedReads objects,
-        # which is required for ChIP-Seq experiments.
-
-        sample_dict = dict()
-        """ @type sample_dict: dict[str, bsf.ngs.Sample] """
-
-        # First pass, merge Sample objects, if they have the same name.
-        for row_dict in annotation_sheet.row_dicts:
-            for prefix in ('Control', 'Treatment'):
-                name, samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix=prefix)
-                for o_sample in samples:
-                    if o_sample.name not in sample_dict:
-                        sample_dict[o_sample.name] = o_sample
-                    else:
-                        n_sample = Sample.from_samples(sample1=sample_dict[o_sample.name], sample2=o_sample)
-                        sample_dict[n_sample.name] = n_sample
-
-        # Second pass, add all Sample objects mentioned in a comparison.
-        level_1_dict = dict()
-        """ @type level_1_dict: dict[str, dict[str, int]] """
-
-        for row_dict in annotation_sheet.row_dicts:
-
-            c_name, c_samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix='Control')
-            t_name, t_samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix='Treatment')
-
-            # ChIP-Seq experiments use the order treatment versus control in comparisons.
-            comparison_key = '{}__{}'.format(t_name, c_name)
-
-            # For a successful comparison, both Python list objects of Sample objects have to be defined.
-
-            if not (len(t_samples) and len(c_samples)):
-                if self.debug > 1:
-                    print 'Redundant comparison line with Treatment {!r} samples {} and Control {!r} samples {}'. \
-                        format(t_name, len(t_samples), c_name, len(c_samples))
-                continue
-
-            # Add all control Sample or SampleGroup objects to the Sample list.
-
-            for c_sample in c_samples:
-                if self.debug > 1:
-                    print '  Control Sample name: {!r} file_path: {!r}'.format(c_sample.name, c_sample.file_path)
-                    print c_sample.trace(1)
-                    # Find the Sample in the unified sample dictionary.
-                if c_sample.name in sample_dict:
-                    self.add_sample(sample=sample_dict[c_sample.name])
-
-            # Add all treatment Sample or SampleGroup objects to the Sample list.
-
-            for t_sample in t_samples:
-                if self.debug > 1:
-                    print '  Treatment Sample name: {!r} file_path: {!r}'.format(t_sample.name, t_sample.file_path)
-                    print t_sample.trace(1)
-                if t_sample.name in sample_dict:
-                    self.add_sample(sample=sample_dict[t_sample.name])
-
-            if 'Tissue' in row_dict:
-                tissue = row_dict['Tissue']
-            else:
-                tissue = str()
-
-            if 'Factor' in row_dict:
-                factor = row_dict['Factor']
-            else:
-                factor = defaults.web.chipseq_default_factor
-
-            if 'Condition' in row_dict:
-                condition = row_dict['Condition']
-            else:
-                condition = str()
-
-            if 'Treatment' in row_dict:
-                treatment = row_dict['Treatment']
-            else:
-                treatment = str()
-
-            if 'DiffBind' in row_dict:
-                if row_dict['DiffBind'].lower() not in ChIPSeq._boolean_states:
-                    raise ValueError('Value in field {!r} is not a boolean: {!r}'.format(
-                        'DiffBind',
-                        row_dict['DiffBind']))
-                diff_bind = ChIPSeq._boolean_states[row_dict['DiffBind'].lower()]
-            else:
-                diff_bind = True
-
-            # Automatically create replicate numbers for the sample annotation sheet required by the
-            # DiffBind Bioconductor package.
-            # Use a first-level dict with replicate key data and second-level dict value data.
-            # The second-level dict stores Treatment Sample key data and int value data.
-
-            if 'Replicate' in row_dict:
-                value = row_dict['Replicate']
-
-                if value not in level_1_dict:
-                    level_1_dict[value] = dict()
-
-                level_2_dict = level_1_dict[value]
-                level_2_dict[comparison_key] = 0
-
-            self.comparisons[comparison_key] = ChIPSeqComparison(
-                c_name=c_name,
-                t_name=t_name,
-                c_samples=c_samples,
-                t_samples=t_samples,
-                factor=factor,
-                tissue=tissue,
-                condition=condition,
-                treatment=treatment,
-                replicate=0,
-                diff_bind=diff_bind)
-
-        # Sort the comparison keys alphabetically and assign replicate numbers into ChIPSeqComparison objects.
-
-        for key_1 in level_1_dict.keys():
-            level_2_dict = level_1_dict[key_1]
-
-            key_2_list = level_2_dict.keys()
-            key_2_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            i = 1
-            for key_2 in key_2_list:
-                if not self.comparisons[key_2].diff_bind:
-                    continue
-                level_2_dict[key_2] = i
-                self.comparisons[key_2].replicate = i
-                i += 1
-
-        return
-
     def run(self):
         """Run a C{bsf.analyses.ChIPSeq} C{bsf.Analysis}.
 
         @return:
         @rtype:
         """
+
+        def run_read_comparisons():
+            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file from disk.
+
+                - Column headers for CASAVA folders:
+                    - Treatment/Control ProcessedRunFolder:
+                        - CASAVA processed run folder name or
+                        - C{bsf.Analysis.input_directory} by default
+                    - Treatment/Control Project:
+                        - CASAVA Project name or
+                        - C{bsf.Analysis.project_name} by default
+                    - Treatment/Control Sample:
+                        - CASAVA Sample name, no default
+                - Column headers for independent samples:
+                    - Treatment/Control Group:
+                    - Treatment/Control Sample:
+                    - Treatment/Control Reads:
+                    - Treatment/Control File:
+            @return:
+            @rtype:
+            """
+            annotation_sheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
+
+            # Unfortunately, two passes through the comparison sheet are required.
+            # In the first one merge all Sample objects that share the name.
+            # Merging Sample objects is currently the only way to pool PairedReads objects,
+            # which is required for ChIP-Seq experiments.
+
+            sample_dict = dict()
+            """ @type sample_dict: dict[str, bsf.ngs.Sample] """
+
+            # First pass, merge Sample objects, if they have the same name.
+            for row_dict in annotation_sheet.row_dicts:
+                for prefix in ('Control', 'Treatment'):
+                    name, sample_list = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix=prefix)
+                    for o_sample in sample_list:
+                        if o_sample.name not in sample_dict:
+                            sample_dict[o_sample.name] = o_sample
+                        else:
+                            n_sample = Sample.from_samples(sample1=sample_dict[o_sample.name], sample2=o_sample)
+                            sample_dict[n_sample.name] = n_sample
+
+            # Second pass, add all Sample objects mentioned in a comparison.
+            level_1_dict = dict()
+            """ @type level_1_dict: dict[str, dict[str, int]] """
+
+            for row_dict in annotation_sheet.row_dicts:
+
+                c_name, c_sample_list = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix='Control')
+                t_name, t_sample_list = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix='Treatment')
+
+                # ChIP-Seq experiments use the order treatment versus control in comparisons.
+                comparison_key = '{}__{}'.format(t_name, c_name)
+
+                # For a successful comparison, both Python list objects of Sample objects have to be defined.
+
+                if not (len(t_sample_list) and len(c_sample_list)):
+                    if self.debug > 1:
+                        print 'Redundant comparison line with Treatment {!r} samples {} and Control {!r} samples {}'. \
+                            format(t_name, len(t_sample_list), c_name, len(c_sample_list))
+                    continue
+
+                # Add all control Sample or SampleGroup objects to the Sample list.
+
+                for c_sample in c_sample_list:
+                    if self.debug > 1:
+                        print '  Control Sample name: {!r} file_path: {!r}'.format(c_sample.name, c_sample.file_path)
+                    if self.debug > 2:
+                        print c_sample.trace(1)
+                        # Find the Sample in the unified sample dictionary.
+                    if c_sample.name in sample_dict:
+                        self.add_sample(sample=sample_dict[c_sample.name])
+
+                # Add all treatment Sample or SampleGroup objects to the Sample list.
+
+                for t_sample in t_sample_list:
+                    if self.debug > 1:
+                        print '  Treatment Sample name: {!r} file_path: {!r}'.format(t_sample.name, t_sample.file_path)
+                    if self.debug > 2:
+                        print t_sample.trace(1)
+                    if t_sample.name in sample_dict:
+                        self.add_sample(sample=sample_dict[t_sample.name])
+
+                if 'Tissue' in row_dict:
+                    tissue = row_dict['Tissue']
+                else:
+                    tissue = str()
+
+                if 'Factor' in row_dict:
+                    factor = row_dict['Factor']
+                else:
+                    factor = defaults.web.chipseq_default_factor
+
+                if 'Condition' in row_dict:
+                    condition = row_dict['Condition']
+                else:
+                    condition = str()
+
+                if 'Treatment' in row_dict:
+                    treatment = row_dict['Treatment']
+                else:
+                    treatment = str()
+
+                if 'DiffBind' in row_dict:
+                    if row_dict['DiffBind'].lower() not in ChIPSeq._boolean_states:
+                        raise ValueError('Value in field {!r} is not a boolean: {!r}'.format(
+                            'DiffBind',
+                            row_dict['DiffBind']))
+                    diff_bind = ChIPSeq._boolean_states[row_dict['DiffBind'].lower()]
+                else:
+                    diff_bind = True
+
+                # Automatically create replicate numbers for the sample annotation sheet required by the
+                # DiffBind Bioconductor package.
+                # Use a first-level dict with replicate key data and second-level dict value data.
+                # The second-level dict stores Treatment Sample key data and int value data.
+
+                if 'Replicate' in row_dict:
+                    value = row_dict['Replicate']
+
+                    if value not in level_1_dict:
+                        level_1_dict[value] = dict()
+
+                    level_2_dict = level_1_dict[value]
+                    level_2_dict[comparison_key] = 0
+
+                self._comparison_dict[comparison_key] = ChIPSeqComparison(
+                    c_name=c_name,
+                    t_name=t_name,
+                    c_samples=c_sample_list,
+                    t_samples=t_sample_list,
+                    factor=factor,
+                    tissue=tissue,
+                    condition=condition,
+                    treatment=treatment,
+                    replicate=0,
+                    diff_bind=diff_bind)
+
+            # Sort the comparison keys alphabetically and assign replicate numbers into ChIPSeqComparison objects.
+
+            for key_1 in level_1_dict.keys():
+                level_2_dict = level_1_dict[key_1]
+
+                key_2_list = level_2_dict.keys()
+                key_2_list.sort(cmp=lambda x, y: cmp(x, y))
+
+                i = 1
+                for key_2 in key_2_list:
+                    if not self._comparison_dict[key_2].diff_bind:
+                        continue
+                    level_2_dict[key_2] = i
+                    self._comparison_dict[key_2].replicate = i
+                    i += 1
+
+            return
+
+        # Start of the run() method body.
 
         super(ChIPSeq, self).run()
 
@@ -614,19 +611,10 @@ class ChIPSeq(Analysis):
         # Check if an absolute path has been provided, if not,
         # automatically prepend standard directory paths.
 
-        self.cmp_file = os.path.expanduser(path=self.cmp_file)
-        self.cmp_file = os.path.expandvars(path=self.cmp_file)
+        self.comparison_path = os.path.expanduser(path=self.comparison_path)
+        self.comparison_path = os.path.expandvars(path=self.comparison_path)
 
-        if not os.path.isabs(self.cmp_file) and not os.path.exists(path=self.cmp_file):
-            self.cmp_file = os.path.join(self.project_directory, self.cmp_file)
-
-        self._read_comparisons(cmp_file=self.cmp_file)
-
-        # Experimentally, sort the Python list of Sample objects by the Sample name.
-        # This cannot be done in the super-class, because Samples are only put into the Analysis.samples list
-        # by the _read_comparisons method.
-
-        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        run_read_comparisons()
 
         # Define the reference genome FASTA file path.
         # If it does not exist, construct it from defaults.
@@ -674,6 +662,8 @@ class ChIPSeq(Analysis):
         # aligned, sorted, indexed BAM files.
 
         stage_sam2bam = self.get_stage(name='sam2bam')
+
+        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -778,12 +768,11 @@ class ChIPSeq(Analysis):
         stage_macs14 = self.get_stage(name='macs14')
         stage_process_macs14 = self.get_stage(name='process_macs14')
 
-        keys = self.comparisons.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
+        comparison_name_list = self._comparison_dict.keys()
+        comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-        for key in keys:
-            chipseq_comparison = self.comparisons[key]
-            """ @type: chipseq_comparison: ChIPSeqComparison """
+        for comparison_name in comparison_name_list:
+            chipseq_comparison = self._comparison_dict[comparison_name]
             factor = chipseq_comparison.factor.upper()
 
             for t_sample in chipseq_comparison.t_samples:
@@ -914,12 +903,11 @@ class ChIPSeq(Analysis):
         stage_macs2_bdg_cmp = self.get_stage(name='macs2_bdgcmp')
         stage_process_macs2 = self.get_stage(name='process_macs2')
 
-        keys = self.comparisons.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
+        comparison_name_list = self._comparison_dict.keys()
+        comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-        for key in keys:
-            chipseq_comparison = self.comparisons[key]
-            assert isinstance(chipseq_comparison, ChIPSeqComparison)
+        for comparison_name in comparison_name_list:
+            chipseq_comparison = self._comparison_dict[comparison_name]
             factor = chipseq_comparison.factor.upper()
             for t_sample in chipseq_comparison.t_samples:
                 t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
@@ -935,24 +923,24 @@ class ChIPSeq(Analysis):
                         c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
                         for c_paired_reads_name in c_paired_reads_name_list:
-                            macs2_callpeak = stage_macs2_call_peak.add_executable(
+                            macs2_call_peak = stage_macs2_call_peak.add_executable(
                                 executable=Macs2Callpeak(
                                     name='chipseq_macs2_callpeak_{}__{}'.format(
                                         t_paired_reads_name,
                                         c_paired_reads_name),
                                     analysis=self))
 
-                            macs2_callpeak.dependencies.append('chipseq_sam2bam_' + t_paired_reads_name)
-                            macs2_callpeak.dependencies.append('chipseq_sam2bam_' + c_paired_reads_name)
+                            macs2_call_peak.dependencies.append('chipseq_sam2bam_' + t_paired_reads_name)
+                            macs2_call_peak.dependencies.append('chipseq_sam2bam_' + c_paired_reads_name)
 
-                            macs2_bdgcmp = stage_macs2_bdg_cmp.add_executable(
+                            macs2_bdg_cmp = stage_macs2_bdg_cmp.add_executable(
                                 executable=Macs2Bdgcmp(
                                     name='chipseq_macs2_bdgcmp_{}__{}'.format(
                                         t_paired_reads_name,
                                         c_paired_reads_name),
                                     analysis=self))
 
-                            macs2_bdgcmp.dependencies.append(macs2_callpeak.name)
+                            macs2_bdg_cmp.dependencies.append(macs2_call_peak.name)
 
                             process_macs2 = stage_process_macs2.add_executable(
                                 executable=Executable(
@@ -960,13 +948,13 @@ class ChIPSeq(Analysis):
                                         t_paired_reads_name,
                                         c_paired_reads_name),
                                     program='bsf_chipseq_process_macs2.sh'))
-                            process_macs2.dependencies.append(macs2_bdgcmp.name)
+                            process_macs2.dependencies.append(macs2_bdg_cmp.name)
 
                             self.set_command_configuration(command=process_macs2)
 
                             # Set MACS2 callpeak sub-command options.
 
-                            mc2 = macs2_callpeak.sub_command
+                            mc2 = macs2_call_peak.sub_command
 
                             mc2.add_option_long(
                                 key='treatment',
@@ -1002,7 +990,7 @@ class ChIPSeq(Analysis):
                             mc2.add_option_long(key='name', value=os.path.join(prefix, prefix))
 
                             # The 'gsize' option has to be specified via the configuration.ini file.
-                            # macs2_callpeak.add_option_long(key='gsize', value=self.genome_sizes_path
+                            # macs2_call_peak.add_option_long(key='gsize', value=self.genome_sizes_path
 
                             mc2.add_switch_long(key='bdg')
                             mc2.add_switch_long(key='SPMR')
@@ -1043,13 +1031,13 @@ class ChIPSeq(Analysis):
                                         factor, defaults.web.chipseq_default_factor),
                                     UserWarning)
 
-                            # Set macs2_callpeak sub-command arguments.
+                            # Set macs2_call_peak sub-command arguments.
 
                             # None to set.
 
-                            # Set macs2_bdgcmp sub-command options.
+                            # Set macs2_bdg_cmp sub-command options.
 
-                            mb2 = macs2_bdgcmp.sub_command
+                            mb2 = macs2_bdg_cmp.sub_command
 
                             mb2.add_option_long(
                                 key='tfile',
@@ -1060,7 +1048,7 @@ class ChIPSeq(Analysis):
                                 value=os.path.join(prefix, '{}_control_lambda.bdg'.format(prefix)))
 
                             # Sequencing depth for treatment and control. Aim for setting the --SPMR parameter for
-                            # macs2_callpeak to get the track normalised.
+                            # macs2_call_peak to get the track normalised.
                             # --tdepth:
                             # --cdepth:
                             # --pseudocount
@@ -1074,7 +1062,7 @@ class ChIPSeq(Analysis):
 
                             # mb2.add_option_long(key='--method', value='FE')
 
-                            # Set macs2_bdgcmp arguments.
+                            # Set macs2_bdg_cmp arguments.
 
                             # None to set.
 
@@ -1088,8 +1076,8 @@ class ChIPSeq(Analysis):
                             process_macs2.arguments.append(self.genome_sizes_path)
 
                             if os.path.exists(os.path.join(prefix, '{}_peaks.bb'.format(prefix))):
-                                macs2_callpeak.submit = False
-                                macs2_bdgcmp.submit = False
+                                macs2_call_peak.submit = False
+                                macs2_bdg_cmp.submit = False
                                 process_macs2.submit = False
 
         return
@@ -1103,25 +1091,24 @@ class ChIPSeq(Analysis):
 
         stage_diffbind = self.get_stage(name='diffbind')
 
-        # Reorganise the comparisons by factor.
+        # Reorganise the ChIPSeqComparison objects by factor.
 
-        keys = self.comparisons.keys()
-        # keys.sort(cmp=lambda x, y: cmp(x, y))
+        comparison_name_list = self._comparison_dict.keys()
+        # comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-        for key in keys:
-            chipseq_comparison = self.comparisons[key]
-            assert isinstance(chipseq_comparison, ChIPSeqComparison)
+        for comparison_name in comparison_name_list:
+            chipseq_comparison = self._comparison_dict[comparison_name]
             if not chipseq_comparison.diff_bind:
                 continue
             if chipseq_comparison.factor not in self._factor_dict:
                 self._factor_dict[chipseq_comparison.factor] = list()
             self._factor_dict[chipseq_comparison.factor].append(chipseq_comparison)
 
-        keys = self._factor_dict.keys()
-        keys.sort(cmp=lambda x, y: cmp(x, y))
+        comparison_name_list = self._factor_dict.keys()
+        comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-        for key in keys:
-            factor_list = self._factor_dict[key]
+        for comparison_name in comparison_name_list:
+            factor_list = self._factor_dict[comparison_name]
             factor_list.sort(cmp=lambda x, y: cmp(x, y))
 
             # No comparison for less than two items.
@@ -1131,7 +1118,7 @@ class ChIPSeq(Analysis):
 
             # Create a directory per factor.
 
-            prefix = 'chipseq_diffbind_{}'.format(key)
+            prefix = 'chipseq_diffbind_{}'.format(comparison_name)
 
             factor_directory = os.path.join(self.genome_directory, prefix)
 
@@ -1147,12 +1134,11 @@ class ChIPSeq(Analysis):
 
             # Create a new ChIPSeq DiffBind Sheet per factor.
 
-            file_path = os.path.join(factor_directory, 'chipseq_diffbind_{}_samples.csv'.format(key))
+            file_path = os.path.join(factor_directory, 'chipseq_diffbind_{}_samples.csv'.format(comparison_name))
 
             dbs = ChIPSeqDiffBindSheet(file_path=file_path)
 
             for chipseq_comparison in factor_list:
-                assert isinstance(chipseq_comparison, ChIPSeqComparison)
                 if not chipseq_comparison.diff_bind:
                     continue
 
@@ -1216,20 +1202,20 @@ class ChIPSeq(Analysis):
 
             diffbind = stage_diffbind.add_executable(
                 executable=Executable(
-                    name='chipseq_diffbind_{}'.format(key),
+                    name='chipseq_diffbind_{}'.format(comparison_name),
                     program='bsf_chipseq_diffbind.R'))
             diffbind.dependencies.extend(job_dependencies)
 
             # Add diffbind options.
             self.set_command_configuration(command=diffbind)
-            diffbind.add_option_long(key='factor', value=key)
+            diffbind.add_option_long(key='factor', value=comparison_name)
             # diffbind.add_option_long(key='work_directory', value=factor_directory)
             diffbind.add_option_long(key='genome-directory', value=self.genome_directory)
             diffbind.add_option_long(key='sample-annotation', value=file_path)
 
             if os.path.exists(os.path.join(
                     factor_directory,
-                    'chipseq_diffbind_{}_correlation_read_counts.png'.format(key))):
+                    'chipseq_diffbind_{}_correlation_read_counts.png'.format(comparison_name))):
                 diffbind.submit = False
 
         return
@@ -1290,12 +1276,11 @@ class ChIPSeq(Analysis):
             str_list += '</thead>\n'
             str_list += '<tbody>\n'
 
-            comparison_name_list = self.comparisons.keys()
+            comparison_name_list = self._comparison_dict.keys()
             comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
             for comparison_name in comparison_name_list:
-                chipseq_comparison = self.comparisons[comparison_name]
-                """ @type chipseq_comparison: ChIPSeqComparison"""
+                chipseq_comparison = self._comparison_dict[comparison_name]
                 for t_sample in chipseq_comparison.t_samples:
                     t_paired_reads_dict = t_sample.get_all_paired_reads(
                         replicate_grouping=self.replicate_grouping)
@@ -1355,12 +1340,11 @@ class ChIPSeq(Analysis):
             str_list = list()
             """ @type str_list: list[str | unicode] """
 
-            comparison_name_list = self.comparisons.keys()
+            comparison_name_list = self._comparison_dict.keys()
             comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
             for comparison_name in comparison_name_list:
-                chipseq_comparison = self.comparisons[comparison_name]
-                """ @type chipseq_comparison: ChIPSeqComparison"""
+                chipseq_comparison = self._comparison_dict[comparison_name]
                 for t_sample in chipseq_comparison.t_samples:
                     t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
@@ -1549,12 +1533,11 @@ class ChIPSeq(Analysis):
             str_list += '</thead>\n'
             str_list += '<tbody>\n'
 
-            comparison_name_list = self.comparisons.keys()
+            comparison_name_list = self._comparison_dict.keys()
             comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
             for comparison_name in comparison_name_list:
-                chipseq_comparison = self.comparisons[comparison_name]
-                """ @type chipseq_comparison: ChIPSeqComparison"""
+                chipseq_comparison = self._comparison_dict[comparison_name]
                 for t_sample in chipseq_comparison.t_samples:
                     t_paired_reads_dict = t_sample.get_all_paired_reads(
                         replicate_grouping=self.replicate_grouping)
@@ -1791,12 +1774,11 @@ class ChIPSeq(Analysis):
 
             composite_groups = dict()
             """ @type composite_groups: dict[str, bool] """
-            comparison_name_list = self.comparisons.keys()
+            comparison_name_list = self._comparison_dict.keys()
             comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
             for comparison_name in comparison_name_list:
-                chipseq_comparison = self.comparisons[comparison_name]
-                """ @type chipseq_comparison: ChIPSeqComparison"""
+                chipseq_comparison = self._comparison_dict[comparison_name]
                 factor = chipseq_comparison.factor.upper()
                 for t_sample in chipseq_comparison.t_samples:
                     t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
@@ -2098,8 +2080,8 @@ class RunFastQC(Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @ivar cmp_file: Comparison file
-    @type cmp_file: str | unicode
+    @ivar comparison_path: Comparison file path
+    @type comparison_path: str | unicode
     """
 
     name = 'FastQC Analysis'
@@ -2118,9 +2100,8 @@ class RunFastQC(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
-            cmp_file=None):
+            comparison_path=None):
         """Initialise a C{bsf.analyses.RunFastQC}.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -2147,12 +2128,10 @@ class RunFastQC(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
-        @param cmp_file: Comparison file
-        @type cmp_file: str | unicode
+        @param comparison_path: Comparison file path
+        @type comparison_path: str | unicode
         @return:
         @rtype:
         """
@@ -2169,13 +2148,12 @@ class RunFastQC(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
-        if cmp_file is None:
-            self.cmp_file = str()
+        if comparison_path is None:
+            self.comparison_path = str()
         else:
-            self.cmp_file = cmp_file
+            self.comparison_path = comparison_path
 
         return
 
@@ -2198,40 +2176,11 @@ class RunFastQC(Analysis):
 
         # option = 'cmp_file'
         # if configuration.config_parser.has_option(section=section, option=option):
-        # self.cmp_file = configuration.config_parser.get(section=section, option=option)
+        # self.comparison_path = configuration.config_parser.get(section=section, option=option)
         # Use the sample annotation sheet instead of a separate comparison file.
         option = 'sas_file'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.cmp_file = configuration.config_parser.get(section=section, option=option)
-
-        return
-
-    def _read_comparisons(self, cmp_file):
-        """Read a C{bsf.ngs.AnnotationSheet} CSV file from disk.
-
-            - Column headers for CASAVA folders:
-                - Treatment/Control ProcessedRunFolder:
-                    - CASAVA processed run folder name or
-                    - C{bsf.Analysis.input_directory} by default
-                - Treatment/Control Project:
-                    - CASAVA Project name or
-                    - C{bsf.Analysis.project_name} by default
-                - Treatment/Control Sample:
-                    - CASAVA Sample name, no default
-            - Column headers for independent samples:
-                - Treatment/Control Sample:
-                - Treatment/Control Reads:
-                - Treatment/Control File:
-        @param cmp_file: Comparisons file path
-        @type cmp_file: str | unicode
-        @return:
-        @rtype:
-        """
-
-        annotation_sheet = AnnotationSheet.from_file_path(file_path=cmp_file)
-
-        for row_dict in annotation_sheet.row_dicts:
-            self.add_sample(sample=self.collection.get_sample_from_row_dict(row_dict=row_dict))
+            self.comparison_path = configuration.config_parser.get(section=section, option=option)
 
         return
 
@@ -2242,32 +2191,41 @@ class RunFastQC(Analysis):
         @rtype:
         """
 
+        def run_read_comparisons():
+            """Read a C{bsf.ngs.AnnotationSheet} CSV file from disk.
+
+                - Column headers for CASAVA folders:
+                    - Treatment/Control ProcessedRunFolder:
+                        - CASAVA processed run folder name or
+                        - C{bsf.Analysis.input_directory} by default
+                    - Treatment/Control Project:
+                        - CASAVA Project name or
+                        - C{bsf.Analysis.project_name} by default
+                    - Treatment/Control Sample:
+                        - CASAVA Sample name, no default
+                - Column headers for independent samples:
+                    - Treatment/Control Sample:
+                    - Treatment/Control Reads:
+                    - Treatment/Control File:
+            @return:
+            @rtype:
+            """
+
+            annotation_sheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
+
+            for row_dict in annotation_sheet.row_dicts:
+                self.add_sample(sample=self.collection.get_sample_from_row_dict(row_dict=row_dict))
+
+            return
+
+        # Start of the run() method body.
+
         super(RunFastQC, self).run()
 
-        self.cmp_file = os.path.expanduser(path=self.cmp_file)
-        self.cmp_file = os.path.expandvars(path=self.cmp_file)
+        self.comparison_path = os.path.expanduser(path=self.comparison_path)
+        self.comparison_path = os.path.expandvars(path=self.comparison_path)
 
-        if not os.path.isabs(self.cmp_file):
-            self.cmp_file = os.path.join(self.project_directory, self.cmp_file)
-
-        self._read_comparisons(cmp_file=self.cmp_file)
-
-        # Experimentally, sort the Python list of BSF Sample objects by the BSF Sample name.
-        # This cannot be done in the super-class, because BSF Samples are only put into the Analysis.samples list
-        # by the _read_comparisons method.
-
-        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
-
-        self._create_fastqc_jobs()
-
-        return
-
-    def _create_fastqc_jobs(self):
-        """Create FASTQC processes.
-
-        @return:
-        @rtype:
-        """
+        run_read_comparisons()
 
         # Read configuration options.
 
@@ -2284,11 +2242,8 @@ class RunFastQC(Analysis):
         # objects underneath.
 
         if config_parser.has_option(section=config_section, option='projects'):
-
             # A configuration option 'projects' has been set ...
-
             prf = ProcessedRunFolder.from_file_path(file_path=self.input_directory, file_type='Automatic')
-
             projects = config_parser.get(section=config_section, option='projects')
             components = projects.split(',')
             for component in components:
@@ -2301,37 +2256,29 @@ class RunFastQC(Analysis):
                         "Could not find projects component {!r} in RunFolder {!r}.\n"
                         "Check projects configuration value {!r}.".format(component, prf.name, projects),
                         UserWarning)
-
         elif config_parser.has_option(section=config_section, option='samples'):
-
             # A configuration option 'samples' has been set ...
-
             sample = config_parser.get(section=config_section, option='samples')
-
             if sample == 'auto':
-
                 # Automatically discover sample information from a CASAVA
                 # Processed Run Folder and a CASAVA Project name.
-
                 prf = ProcessedRunFolder.from_file_path(file_path=self.input_directory, file_type='Automatic')
                 project = prf.project_dict[self.project_name]
                 for sample in project.get_all_samples():
                     self.add_sample(sample=sample)
-
         else:
-
             # Since the BSF Collection object has complete BSF ProcessedRunFolder objects registered,
             # the sample annotation sheet needs re-reading.
-
             # TODO: This is now done in set_configuration.
             # annotation_sheet = AnnotationSheet(file_path=sas_file)
             #
             # for row_dict in annotation_sheet.row_dicts:
             # self.add_sample(sample=self.collection.get_sample_from_row_dict(row_dict=row_dict))
-
             pass
 
         stage_fastqc = self.get_stage(name='fastqc')
+
+        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -2383,10 +2330,6 @@ class RunFastQC(Analysis):
         @return:
         @rtype:
         """
-
-        # config_parser = self.configuration.config_parser
-        # config_section = self.configuration.section_from_instance(self)
-
         # Get further information.
 
         # Always check each BSF PairedReads object separately.
@@ -2475,7 +2418,6 @@ class RunBamToFastq(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None):
         """Initialise a RunBamToFastq.
 
@@ -2503,8 +2445,6 @@ class RunBamToFastq(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: BSF Collection
         @type collection: Collection
-        @param comparisons: Python C{dict} of Python C{list} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @return:
@@ -2523,7 +2463,6 @@ class RunBamToFastq(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         # Nothing else to do for this sub-class ...

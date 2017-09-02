@@ -38,7 +38,7 @@ from bsf.annotation import AnnotationSheet
 from bsf.executables import BWA
 from bsf.process import Command, Executable, RunnableStep, RunnableStepJava, RunnableStepPicard, RunnableStepLink, \
     RunnableStepMove
-from bsf.standards import Configuration, Default
+from bsf.standards import Default
 
 import pysam
 
@@ -765,7 +765,6 @@ class VariantCallingGATK(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             replicate_grouping=False,
             bwa_genome_db=None,
@@ -835,9 +834,6 @@ class VariantCallingGATK(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{str} key and Python C{list} value objects of
-            C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param replicate_grouping: Group individual C{bsf.ngs.PairedReads} objects
@@ -945,7 +941,6 @@ class VariantCallingGATK(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         # Sub-class specific ...
@@ -1155,6 +1150,9 @@ class VariantCallingGATK(Analysis):
         else:
             self.classpath_vcf_filter = classpath_vcf_filter
 
+        self._comparison_dict = dict()
+        """ @type _comparison_dict: dict[str, bsf.analyses.variant_calling.VariantCallingGATKComparison] """
+
         self._cache_path_dict = None
         """ @type _cache_path_dict: dict[str, str | unicode] """
 
@@ -1209,9 +1207,6 @@ class VariantCallingGATK(Analysis):
             @return:
             @rtype:
             """
-
-            assert isinstance(vqsr_resources_dict, dict)
-            assert isinstance(variation_type, str)
 
             if variation_type not in ('indel', 'snp'):
                 raise Exception("Variation type has to be 'indel' or 'snp', not {!r}.".format(variation_type))
@@ -1308,9 +1303,6 @@ class VariantCallingGATK(Analysis):
             return
 
         # Start of set_configuration() method body.
-
-        assert isinstance(configuration, Configuration)
-        assert isinstance(section, str)
 
         super(VariantCallingGATK, self).set_configuration(configuration=configuration, section=section)
 
@@ -1593,74 +1585,80 @@ class VariantCallingGATK(Analysis):
 
         return
 
-    def _read_comparisons(self, comparison_path):
-        """Read a C{bsf.annotation.AnnotationSheet} CSV file from disk.
-
-            - Column headers for CASAVA folders:
-                - Normal/Tumor ProcessedRunFolder:
-                    - CASAVA processed run folder name or
-                    - C{bsf.Analysis.input_directory} by default
-                - Normal/Tumor Project:
-                    - CASAVA Project name or
-                    - C{bsf.Analysis.project_name} by default
-                - Normal/Tumor Sample:
-                    - CASAVA Sample name, no default
-            - Column headers for independent samples:
-                - Normal/Tumor Sample:
-                - Normal/Tumor Reads:
-                - Normal/Tumor File:
-            - PON Path:
-                - File path to a Panel-Of-Normal (PON) VCF file
-        @param comparison_path: Comparison file path
-        @type comparison_path: str | unicode
-        @return:
-        @rtype:
-        """
-
-        assert isinstance(comparison_path, (str, unicode))
-
-        # For variant calling, all samples need adding to the Analysis regardless.
-        for sample in self.collection.get_all_samples():
-            self.add_sample(sample=sample)
-
-        if not comparison_path:
-            return
-
-        annotation_sheet = AnnotationSheet.from_file_path(file_path=comparison_path, name='Somatic Comparisons')
-
-        for row_dict in annotation_sheet.row_dicts:
-            comparison = VariantCallingGATKComparison()
-
-            if self.debug > 0:
-                print "Comparison sheet row_dict {!r}".format(row_dict)
-
-            for prefix in ('Normal', 'Tumor'):
-                group_name, group_samples = self.collection.get_samples_from_row_dict(row_dict=row_dict, prefix=prefix)
-                if group_name and len(group_samples):
-                    if len(group_samples) != 1:
-                        raise Exception("Got more than one Sample for comparison {!r}".format(row_dict))
-
-                    if prefix == 'Normal':
-                        comparison.normal_sample = group_samples[0]
-                    if prefix == 'Tumor':
-                        comparison.tumor_sample = group_samples[0]
-
-            prefix = 'PON Path'
-            if prefix in row_dict and row_dict[prefix]:
-                comparison.panel_of_normal_path = row_dict[prefix]
-
-            # At least a tumor Sample has to be defined for the "comparison" to make sense.
-            if comparison.tumor_sample is not None:
-                self.comparisons[comparison.get_name] = comparison
-
-        return
-
     def run(self):
         """Run a C{bsf.analyses.variant_calling.VariantCallingGATK} analysis.
 
         @return:
         @rtype:
         """
+
+        def run_read_comparisons():
+            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file from disk.
+
+                - Column headers for CASAVA folders:
+                    - Normal/Tumor ProcessedRunFolder:
+                        - CASAVA processed run folder name or
+                        - C{bsf.Analysis.input_directory} by default
+                    - Normal/Tumor Project:
+                        - CASAVA Project name or
+                        - C{bsf.Analysis.project_name} by default
+                    - Normal/Tumor Sample:
+                        - CASAVA Sample name, no default
+                - Column headers for independent samples:
+                    - Normal/Tumor Sample:
+                    - Normal/Tumor Reads:
+                    - Normal/Tumor File:
+                - PON Path:
+                    - File path to a Panel-Of-Normal (PON) VCF file
+            @return:
+            @rtype:
+            """
+            # For variant calling, all samples need adding to the Analysis regardless.
+            for _sample in self.collection.get_all_samples():
+                self.add_sample(sample=_sample)
+
+            if self.comparison_path:
+                # A comparison file path has been provided.
+                # Expand an eventual user part i.e. on UNIX ~ or ~user and
+                # expand any environment variables i.e. on UNIX ${NAME} or $NAME
+                self.comparison_path = os.path.expanduser(path=self.comparison_path)
+                self.comparison_path = os.path.expandvars(path=self.comparison_path)
+
+                annotation_sheet = AnnotationSheet.from_file_path(
+                    file_path=self.comparison_path,
+                    name='Somatic Comparisons')
+
+                for row_dict in annotation_sheet.row_dicts:
+                    if self.debug > 0:
+                        print "Comparison sheet row_dict {!r}".format(row_dict)
+
+                    comparison = VariantCallingGATKComparison()
+
+                    for prefix in ('Normal', 'Tumor'):
+                        group_name, group_samples = self.collection.get_samples_from_row_dict(
+                            row_dict=row_dict,
+                            prefix=prefix)
+                        if group_name and len(group_samples):
+                            if len(group_samples) != 1:
+                                raise Exception(
+                                    "Got more than one Sample for class {!r} in comparison {!r}".format(
+                                        prefix,
+                                        row_dict))
+
+                            if prefix == 'Normal':
+                                comparison.normal_sample = group_samples[0]
+                            if prefix == 'Tumor':
+                                comparison.tumor_sample = group_samples[0]
+
+                    prefix = 'PON Path'
+                    if prefix in row_dict and row_dict[prefix]:
+                        comparison.panel_of_normal_path = row_dict[prefix]
+
+                    # At least a tumor Sample has to be defined for the "comparison" to make sense.
+                    if comparison.tumor_sample is not None:
+                        self._comparison_dict[comparison.get_name] = comparison
+
+            return
 
         variants_to_table_fields = {
             'fixed': ('CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER'),
@@ -2304,8 +2302,7 @@ class VariantCallingGATK(Analysis):
             else:
                 final_index_exists = True
 
-            comparison = self.comparisons[comparison_key]
-            """ @type comparison: VariantCallingGATKComparison """
+            comparison = self._comparison_dict[comparison_key]
 
             # Scatter
             runnable_scatter = None
@@ -2986,7 +2983,7 @@ class VariantCallingGATK(Analysis):
                 default_path=Default.absolute_intervals())
 
         # Read comparisons for somatic mutation calling.
-        self._read_comparisons(comparison_path=self.comparison_path)
+        run_read_comparisons()
 
         # Create genomic tiles for scatter gather approaches.
         if self.number_of_tiles_cohort:
@@ -2994,12 +2991,6 @@ class VariantCallingGATK(Analysis):
 
         if self.number_of_tiles_somatic:
             self._tile_region_somatic_list = run_create_genome_tiles(tiles=self.number_of_tiles_somatic, width=0)
-
-        # Experimentally, sort the Python list of Sample objects by the Sample name.
-        # This cannot be done in the super-class, because Samples are only put into the Analysis.samples list
-        # by the _read_comparisons method.
-
-        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
         stage_align_lane = self.get_stage(name=self.stage_name_align_lane)
         stage_process_lane = self.get_stage(name=self.stage_name_process_lane)
@@ -3028,6 +3019,10 @@ class VariantCallingGATK(Analysis):
 
         runnable_diagnose_sample_list = list()
         """ @type runnable_diagnose_sample_list: list[Runnable] """
+
+        # Sort the Python list of Sample objects by the Sample.name.
+
+        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -4679,13 +4674,13 @@ class VariantCallingGATK(Analysis):
         # GATK VariantAnnotator (somatic_gatk_variant_annotator)
         # GATK VariantsToTable  (somatic_gatk_variants_to_table)
 
-        comparison_list = self.comparisons.keys()
-        comparison_list.sort(cmp=lambda x, y: cmp(x, y))
+        comparison_name_list = self._comparison_dict.keys()
+        comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
         if self.debug > 0:
-            print 'Somatic variant calling: ' + repr(comparison_list)
+            print 'Somatic variant calling comparison: ' + repr(comparison_name_list)
 
-        for comparison_name in comparison_list:
+        for comparison_name in comparison_name_list:
             prefix_somatic = '_'.join((stage_somatic.name, comparison_name))
 
             # Somatic variant calling-specific file paths
@@ -5109,7 +5104,7 @@ class VariantCallingGATK(Analysis):
 
             # Process per (somatic) comparison
 
-            for comparison_name in self.comparisons.keys():
+            for comparison_name in self._comparison_dict.keys():
                 runnable_somatic = self.runnable_dict[
                     '_'.join((self.stage_name_somatic, comparison_name))]
                 file_path_somatic = runnable_somatic.file_path_object
@@ -5496,10 +5491,10 @@ class VariantCallingGATK(Analysis):
 
             # Somatic variant calling.
 
-            comparison_list = self.comparisons.keys()
-            comparison_list.sort(cmp=lambda x, y: cmp(x, y))
+            comparison_name_list = self._comparison_dict.keys()
+            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            if len(comparison_list):
+            if len(comparison_name_list):
                 str_list += '<h2 id="somatic_variants">Somatic Variants</h2>\n'
                 str_list += '\n'
                 str_list += '<table id="somatic_variants_table">\n'
@@ -5512,7 +5507,7 @@ class VariantCallingGATK(Analysis):
                 str_list += '</thead>\n'
                 str_list += '<tbody>\n'
 
-                for comparison_name in comparison_list:
+                for comparison_name in comparison_name_list:
                     # runnable_somatic = self.runnable_dict[
                     #     '_'.join((self.stage_name_somatic, comparison_name))]
                     # file_path_somatic = runnable_somatic.file_path_object

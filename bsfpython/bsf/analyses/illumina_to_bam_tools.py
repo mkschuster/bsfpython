@@ -37,7 +37,7 @@ from bsf.ngs import SampleAnnotationSheet
 from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.process import Command, RunnableStepChangeMode, RunnableStepJava, RunnableStepPicard, \
     RunnableStepLink, RunnableStepMakeDirectory, RunnableStepMove
-from bsf.standards import Configuration, Default
+from bsf.standards import Default
 
 
 class BamIndexDecoderSheet(AnnotationSheet):
@@ -503,7 +503,6 @@ class IlluminaToBam(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             run_directory=None,
             intensity_directory=None,
@@ -545,8 +544,6 @@ class IlluminaToBam(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param run_directory: File path to an I{Illumina Run Folder}
@@ -596,7 +593,6 @@ class IlluminaToBam(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         # Sub-class specific ...
@@ -682,9 +678,6 @@ class IlluminaToBam(Analysis):
         @return:
         @rtype:
         """
-
-        assert isinstance(configuration, Configuration)
-        assert isinstance(section, str)
 
         super(IlluminaToBam, self).set_configuration(configuration=configuration, section=section)
 
@@ -1259,7 +1252,6 @@ class BamIndexDecoder(Analysis):
             debug=0,
             stage_list=None,
             collection=None,
-            comparisons=None,
             sample_list=None,
             hash_algorithm=None,
             library_path=None,
@@ -1298,8 +1290,6 @@ class BamIndexDecoder(Analysis):
         @type stage_list: list[bsf.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
-        @param comparisons: Python C{dict} of Python C{tuple} objects of C{bsf.ngs.Sample} objects
-        @type comparisons: dict[str, list[bsf.ngs.Sample]]
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param hash_algorithm: Use a BSF-specific hashing algorithm for demultiplexing
@@ -1340,7 +1330,6 @@ class BamIndexDecoder(Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            comparisons=comparisons,
             sample_list=sample_list)
 
         # Sub-class specific ...
