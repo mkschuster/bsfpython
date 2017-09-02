@@ -35,6 +35,8 @@ from subprocess import PIPE, Popen
 import sys
 from threading import Lock, Thread
 
+import pysam
+
 from bsf.process import Command, Executable
 
 # Set the environment consistently.
@@ -52,7 +54,8 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--debug', required=False, type=int,
                     help='debug level')
 
-parser.add_argument('input_file', help='file path to a BAM file.')
+parser.add_argument('--input_file', help='file path to a BAM file')
+parser.add_argument('--output_file', help='file path to a TSV file')
 
 name_space = parser.parse_args()
 
@@ -62,11 +65,42 @@ name_space = parser.parse_args()
 
 file_type = os.path.splitext(name_space.input_file)[-1]     # supported formats: .fastq/.sam/.bam
 
-log_after_x_processed_reads = 1000000
+log_after_x_processed_reads = 100000
 
 # Global variable
 
 barcode_dict = dict()
+
+alignment_file = pysam.AlignmentFile(name_space.input_file, 'rb', check_sq=False)
+alignment_iterator = alignment_file.fetch(until_eof=True)
+""" @type alignment_iterator: pysam.IteratorRowAll """
+alignment_counter = 0
+for aligned_segment in alignment_iterator:
+    """ @type aligned_segment: pysam.AlignedSegment """
+    barcode = aligned_segment.get_tag(tag='BC')
+    if barcode not in barcode_dict:
+        barcode_dict[barcode] = 1
+    else:
+        barcode_dict[barcode] += 1
+
+    alignment_counter += 1
+    if not alignment_counter % log_after_x_processed_reads:
+        print "Processed {} reads".format(alignment_counter)
+
+alignment_file.close()
+
+alignment_file = open(name_space.output_file, 'w')
+alignment_file.write('Barcode\tCount\n')
+
+barcode_list = barcode_dict.keys()
+barcode_list.sort()
+
+for barcode in barcode_list:
+    alignment_file.write(barcode + '\t' + str(barcode_dict[barcode]) + '\n')
+
+alignment_file.close()
+
+exit()
 
 
 def parse_sam_format(sam_file_handle):
