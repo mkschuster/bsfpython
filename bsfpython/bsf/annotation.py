@@ -51,8 +51,8 @@ class AnnotationSheet(object):
     @ivar field_names: Python C{list} of Python C{str} (field name) objects
     @type field_names: list[str]
     @ivar test_methods: Python C{dict} of Python C{str} (field name) key data and
-        Python C{list} of Python C{function} value data
-    #type test_methods: dict[str, list[function]]
+        Python C{list} of Python C{classmethod} value data
+    @type test_methods: dict[str, list[classmethod]]
     @ivar row_dicts: Python C{list} of Python C{dict} objects
     @type row_dicts: list[dict[str, str | unicode]]
     """
@@ -90,9 +90,10 @@ class AnnotationSheet(object):
     """ @type _field_names: list[str] """
 
     # Python dict of Python str (field name) key data and
-    # Python list of Python function value data
+    # Python list of Python classmethod value data
     _test_methods = dict()
-    """ #type _test_methods: dict[str, list[function]] """
+    """ @type _test_methods: dict[str, list[classmethod]] """
+    # dict[str, list[classmethod[int, dict[str, str | unicode], str]]]
 
     @classmethod
     def check_column_value(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
@@ -674,8 +675,8 @@ class AnnotationSheet(object):
         @param field_names: Python C{list} of Python C{str} (field name) objects
         @type field_names: list[str]
         @param test_methods: Python C{dict} of Python C{str} (field name) key data and
-            Python C{list} of Python C{function} value data
-        #type test_methods: dict[str, list[function]]
+            Python C{list} of Python C{classmethod} value data
+        @type test_methods: dict[str, list[classmethod]]
         @param row_dicts: Python C{list} of Python C{dict} objects
         @type row_dicts: list[dict[str, str | unicode]]
         @return:
