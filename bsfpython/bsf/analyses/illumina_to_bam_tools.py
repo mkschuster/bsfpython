@@ -1514,8 +1514,7 @@ class BamIndexDecoder(Analysis):
         # The library annotation sheet is deliberately not passed in via sas_file,
         # as the Analysis.run() method reads that option into a BSF Collection object.
 
-        self.library_path = os.path.expanduser(path=self.library_path)
-        self.library_path = os.path.expandvars(path=self.library_path)
+        self.library_path = Default.get_absolute_path(file_path=self.library_path)
 
         if not self.library_path:
             self.library_path = '_'.join((self.project_name, 'libraries.csv'))

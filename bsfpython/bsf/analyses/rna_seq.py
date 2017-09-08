@@ -785,10 +785,7 @@ class Tuxedo(Analysis):
                     _comparison_name = 'global'
                 else:
                     # A comparison file path was provided.
-                    # Expand an eventual user part i.e. on UNIX ~ or ~user and
-                    # expand any environment variables i.e. on UNIX ${NAME} or $NAME
-                    self.comparison_path = os.path.expanduser(path=self.comparison_path)
-                    self.comparison_path = os.path.expandvars(path=self.comparison_path)
+                    self.comparison_path = Default.get_absolute_path(file_path=self.comparison_path)
                     # Read and process the comparison file, which includes adding only those Sample objects,
                     # which are referenced in a comparison.
                     annotation_sheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
@@ -3134,8 +3131,7 @@ class DESeq(Analysis):
 
         # Read the designs (comparison) file.
 
-        self.comparison_path = os.path.expanduser(path=self.comparison_path)
-        self.comparison_path = os.path.expandvars(path=self.comparison_path)
+        self.comparison_path = Default.get_absolute_path(file_path=self.comparison_path)
 
         design_sheet = AnnotationSheet.from_file_path(
             file_path=self.comparison_path,
@@ -3146,8 +3142,7 @@ class DESeq(Analysis):
 
         # Read the contrasts file.
 
-        self.contrast_path = os.path.expanduser(path=self.contrast_path)
-        self.contrast_path = os.path.expandvars(path=self.contrast_path)
+        self.contrast_path = Default.get_absolute_path(file_path=self.contrast_path)
 
         contrast_sheet = AnnotationSheet.from_file_path(
             file_path=self.contrast_path,

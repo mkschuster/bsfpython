@@ -1619,10 +1619,7 @@ class VariantCallingGATK(Analysis):
 
             if self.comparison_path:
                 # A comparison file path has been provided.
-                # Expand an eventual user part i.e. on UNIX ~ or ~user and
-                # expand any environment variables i.e. on UNIX ${NAME} or $NAME
-                self.comparison_path = os.path.expanduser(path=self.comparison_path)
-                self.comparison_path = os.path.expandvars(path=self.comparison_path)
+                self.comparison_path = Default.get_absolute_path(file_path=self.comparison_path)
 
                 annotation_sheet = AnnotationSheet.from_file_path(
                     file_path=self.comparison_path,

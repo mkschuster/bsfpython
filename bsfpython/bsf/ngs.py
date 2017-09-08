@@ -34,6 +34,7 @@ import warnings
 import weakref
 
 from bsf.annotation import AnnotationSheet
+from bsf.standards import Default
 
 
 class NextGenerationBase(object):
@@ -1593,11 +1594,14 @@ class Collection(NextGenerationBase):
         @rtype: bsf.ngs.Collection
         """
 
+        sas = SampleAnnotationSheet.from_file_path(file_path=sas_path)
+        """ @type sas: bsf.ngs.SampleAnnotationSheet """
+
         return cls.from_sas(
             file_path=file_path,
             file_type=file_type,
             name=name,
-            sas=SampleAnnotationSheet.from_file_path(file_path=sas_path),
+            sas=sas,
             sas_prefix=sas_prefix)
 
     @classmethod
@@ -1616,7 +1620,8 @@ class Collection(NextGenerationBase):
             - Project Name: C{bsf.ngs.Project} name
             - Sample Name: C{bsf.ngs.Sample} name
             - Reads1 File: C{bsf.ngs.Reads.file_name} instance variable.
-                Subjected to C{os.path.expanduser} and C{os.path.expandvars}.
+                Subjected to C{os.path.expanduser} (i.e. on UNIX ~ or ~user) and
+                C{os.path.expandvars} (i.e. on UNIX ${NAME} or $NAME).
                 If still relative, the C{bsf.ngs.Collection.file_path} is prepended.
             - Reads1 Name: C{bsf.ngs.Reads.name} instance variable
             - Reads2 File: Same as Reads1 File
@@ -1858,14 +1863,10 @@ class Collection(NextGenerationBase):
         if file_name in self.processed_run_folder_dict:
             return self.processed_run_folder_dict[file_name]
         else:
-            file_path = os.path.expanduser(file_path)
-            file_path = os.path.expandvars(file_path)
-
-            if not os.path.isabs(file_path):
-                file_path = os.path.join(self.file_path, file_path)
-
             return self.add_processed_run_folder(
-                prf=ProcessedRunFolder.from_file_path(file_path=file_path, file_type=file_type))
+                prf=ProcessedRunFolder.from_file_path(
+                    file_path=Default.get_absolute_path(file_path=file_path, default_path=self.file_path),
+                    file_type=file_type))
 
     def get_all_processed_run_folders(self):
         """Get an ordered Python C{list} of C{bsf.ngs.ProcessedRunFolder} objects.
@@ -2148,11 +2149,7 @@ class Collection(NextGenerationBase):
         is_new_file_path = False
         if key in row_dict and row_dict[key]:
             new_reads.file_path = row_dict[key]
-            new_reads.file_path = os.path.expanduser(new_reads.file_path)
-            new_reads.file_path = os.path.expandvars(new_reads.file_path)
-            if not os.path.isabs(new_reads.file_path):
-                new_reads.file_path = os.path.join(self.file_path, new_reads.file_path)
-            new_reads.file_path = os.path.normpath(new_reads.file_path)
+            new_reads.file_path = Default.get_absolute_path(file_path=new_reads.file_path, default_path=self.file_path)
             # Check for a non-matching, i.e. new "file_path" instance variable.
             if new_reads.file_path != reads.file_path:
                 is_new_file_path = True

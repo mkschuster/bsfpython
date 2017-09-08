@@ -115,13 +115,8 @@ class Analysis(object):
         @rtype: bsf.Analysis
         """
 
-        file_path_list = list()
-        """ @type file_path_list: list[str | unicode] """
-        file_path_list.append(Default.global_file_path)
-        if not os.path.samefile(Default.global_file_path, config_path):
-            file_path_list.append(config_path)
         return cls.from_configuration(
-            configuration=Configuration.from_file_path_list(file_path_list=file_path_list))
+            configuration=Configuration.from_file_path_list(file_path_list=[Default.global_file_path, config_path]))
 
     @classmethod
     def from_configuration(cls, configuration):
@@ -687,11 +682,11 @@ class Analysis(object):
 
         if self.sas_file:
             # Populate a Collection from a SampleAnnotationSheet.
-            self.sas_file = os.path.expanduser(path=self.sas_file)
-            self.sas_file = os.path.expandvars(path=self.sas_file)
+            self.sas_file = Default.get_absolute_path(file_path=self.sas_file)
 
-            if not os.path.isabs(self.sas_file) and not os.path.exists(self.sas_file):
-                self.sas_file = os.path.join(self.project_directory, self.sas_file)
+            # NOTE: Do no longer search for configuration files and sample annotation sheets in the project directory.
+            # if not os.path.isabs(self.sas_file) and not os.path.exists(self.sas_file):
+            #     self.sas_file = os.path.join(self.project_directory, self.sas_file)
 
             self.collection = Collection.from_sas_path(
                 file_path=self.input_directory,

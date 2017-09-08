@@ -626,11 +626,7 @@ class ChIPSeq(Analysis):
         if not self.genome_version:
             raise Exception('A ChIPSeq analysis requires a genome_version configuration option.')
 
-        # Expand an eventual user part i.e. on UNIX ~ or ~user and
-        # expand any environment variables i.e. on UNIX ${NAME} or $NAME
-
-        self.comparison_path = os.path.expanduser(path=self.comparison_path)
-        self.comparison_path = os.path.expandvars(path=self.comparison_path)
+        self.comparison_path = Default.get_absolute_path(file_path=self.comparison_path)
 
         run_read_comparisons()
 
@@ -643,8 +639,7 @@ class ChIPSeq(Analysis):
                 genome_index='bowtie2')
 
         if self.genome_sizes_path:
-            self.genome_sizes_path = os.path.expanduser(self.genome_sizes_path)
-            self.genome_sizes_path = os.path.expandvars(self.genome_sizes_path)
+            self.genome_sizes_path = Default.get_absolute_path(file_path=self.genome_sizes_path)
 
         if not self.classpath_picard:
             self.classpath_picard = default.classpath_picard

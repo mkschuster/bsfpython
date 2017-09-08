@@ -66,6 +66,7 @@ class Configuration(object):
         """Create a C{bsf.standards.Configuration} object based on a Python C{list} of Python C{str} file paths.
 
         Both, user and variable expansion gets applied to each file path.
+        Identical files are read only once.
 
         @param file_path_list: Python C{list} of Python C{str} or C{unicode} configuration file path objects
         @type file_path_list: list[str | unicode]
@@ -73,17 +74,19 @@ class Configuration(object):
         @rtype: bsf.standards.Configuration
         @raise Exception: Configuration file path does not exist
         """
-        assert isinstance(file_path_list, list)
-
         # Expand each file_path for user and variable names.
-        expanded_list = list()
-        """ @type expanded_list: list[str | unicode] """
+        temporary_list = map(lambda x: Default.get_absolute_path(file_path=x), file_path_list)
+        """ @type temporary_list: list[str | unicode] """
 
-        for file_path in file_path_list:
-            file_path = os.path.expanduser(path=file_path)
-            file_path = os.path.expandvars(path=file_path)
-            file_path = os.path.normpath(path=file_path)
-            expanded_list.append(file_path)
+        file_path_list = list()
+        for temporary_path in temporary_list:
+            file_exists = False
+            for file_path in file_path_list:
+                if os.path.samefile(temporary_path, file_path):
+                    file_exists = True
+                    break
+            if not file_exists:
+                file_path_list.append(temporary_path)
 
         # Since ConfigParser options are used as command line options,
         # they have to be case sensitive.
@@ -92,7 +95,7 @@ class Configuration(object):
         config_parser = SafeConfigParser()
         config_parser.optionxform = str
 
-        configuration = cls(file_path_list=expanded_list, config_parser=config_parser)
+        configuration = cls(file_path_list=file_path_list, config_parser=config_parser)
 
         configuration._config_path_list = configuration.config_parser.read(filenames=configuration.file_path_list)
 
@@ -162,12 +165,7 @@ class Configuration(object):
         @rtype: str
         """
 
-        directory = self.config_parser.get(config_section, config_option)
-        directory = os.path.expanduser(path=directory)
-        directory = os.path.expandvars(path=directory)
-        directory = os.path.normpath(path=directory)
-
-        return directory
+        return Default.get_absolute_path(file_path=self.config_parser.get(config_section, config_option))
 
 
 class Default(object):
@@ -247,9 +245,6 @@ class Default(object):
     global_default = None
 
     global_file_path = '~/.bsfpython.ini'
-    global_file_path = os.path.expanduser(path=global_file_path)
-    global_file_path = os.path.expandvars(path=global_file_path)
-    global_file_path = os.path.normpath(path=global_file_path)
 
     @staticmethod
     def get_absolute_path(file_path, default_path=None):
@@ -302,8 +297,7 @@ class Default(object):
         @return: C{bsf.standards.Default}
         @rtype: bsf.standards.Default
         """
-
-        return cls.from_config_path(config_path=Default.global_file_path)
+        return cls.from_config_path(config_path=Default.get_absolute_path(file_path=Default.global_file_path))
 
     @classmethod
     def from_config_path(cls, config_path):
