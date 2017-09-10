@@ -38,7 +38,8 @@ import warnings
 from subprocess import Popen, PIPE
 from threading import Lock, Thread
 
-from bsf.argument import Argument, SwitchLong, SwitchShort, OptionLong, OptionShort, OptionPair
+from bsf.argument import Argument, SwitchLong, SwitchShort, OptionLong, OptionShort, \
+    OptionPair, OptionPairShort, OptionPairLong
 from bsf.standards import Configuration
 
 
@@ -189,7 +190,6 @@ class Command(object):
         @return:
         @rtype:
         """
-
         return self.add_argument(argument=SwitchLong(key=key), override=override)
 
     def add_switch_short(self, key, override=False):
@@ -202,7 +202,6 @@ class Command(object):
         @return:
         @rtype:
         """
-
         return self.add_argument(argument=SwitchShort(key=key), override=override)
 
     def add_option_long(self, key, value, override=False):
@@ -217,7 +216,6 @@ class Command(object):
         @return:
         @rtype:
         """
-
         return self.add_argument(argument=OptionLong(key=key, value=value), override=override)
 
     def add_option_short(self, key, value, override=False):
@@ -232,7 +230,6 @@ class Command(object):
         @return:
         @rtype:
         """
-
         return self.add_argument(argument=OptionShort(key=key, value=value), override=override)
 
     def add_option_pair(self, key, value, override=False):
@@ -247,8 +244,35 @@ class Command(object):
         @return:
         @rtype:
         """
-
         return self.add_argument(argument=OptionPair(key=key, value=value), override=override)
+
+    def add_option_pair_short(self, key, value, override=False):
+        """Initialise and add a C{bsf.argument.OptionPairShort}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.add_argument(argument=OptionPairShort(key=key, value=value), override=override)
+
+    def add_option_pair_long(self, key, value, override=False):
+        """Initialise and add a C{bsf.argument.OptionPairLong}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.add_argument(argument=OptionPairLong(key=key, value=value), override=override)
 
     def set_argument(self, argument, override):
         """Set a C{bsf.argument.Argument} or one of its sub-classes.
@@ -340,6 +364,34 @@ class Command(object):
         """
         return self.set_argument(argument=OptionPair(key=key, value=value), override=override)
 
+    def set_option_pair_short(self, key, value, override=False):
+        """Initialise and set a C{bsf.argument.OptionPairShort}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.set_argument(argument=OptionPairShort(key=key, value=value), override=override)
+
+    def set_option_pair_long(self, key, value, override=False):
+        """Initialise and set a C{bsf.argument.OptionPairLong}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.set_argument(argument=OptionPairLong(key=key, value=value), override=override)
+
     def set_configuration(self, configuration, section):
         """Set instance variables of a C{bsf.process.Command} via a C{bsf.standards.Configuration} section.
 
@@ -393,30 +445,8 @@ class Command(object):
         argument_key_list.sort(cmp=lambda x, y: cmp(x, y))
 
         for argument_key in argument_key_list:
-            options_list = self.options[argument_key]
-            for argument in options_list:
-                if isinstance(argument, SwitchLong):
-                    command_line.append('--{}'.format(argument.key))
-                elif isinstance(argument, SwitchShort):
-                    command_line.append('-{}'.format(argument.key))
-                elif isinstance(argument, OptionLong):
-                    command_line.append('--{}'.format(argument.key))
-                    if argument.value:
-                        # command_line.append(argument.value)
-                        # Allow more than one value i.e. --key value1 value2
-                        command_line.extend(argument.value.split())
-                elif isinstance(argument, OptionShort):
-                    command_line.append('-{}'.format(argument.key))
-                    if argument.value:
-                        # command_line.append(argument.value)
-                        # Allow more than one value i.e. --key value1 value2
-                        command_line.extend(argument.value.split())
-                elif isinstance(argument, OptionPair):
-                    command_line.append('{}={}'.format(argument.key, argument.value))
-                else:
-                    warnings.warn(
-                        'Unexpected object {!r} in Command.options dict.'.format(argument),
-                        UserWarning)
+            for argument in self.options[argument_key]:
+                command_line.extend(argument.get_list())
 
         # Add all arguments.
 
@@ -448,22 +478,8 @@ class Command(object):
         argument_key_list.sort(cmp=lambda x, y: cmp(x, y))
 
         for argument_key in argument_key_list:
-            options_list = self.options[argument_key]
-            for argument in options_list:
-                if isinstance(argument, SwitchLong):
-                    command_line += ' --{}'.format(argument.key)
-                elif isinstance(argument, SwitchShort):
-                    command_line += ' -{}'.format(argument.key)
-                elif isinstance(argument, OptionLong):
-                    command_line += ' --{} {}'.format(argument.key, argument.value)
-                elif isinstance(argument, OptionShort):
-                    command_line += ' -{} {}'.format(argument.key, argument.value)
-                elif isinstance(argument, OptionPair):
-                    command_line += ' {}={}'.format(argument.key, argument.value)
-                else:
-                    warnings.warn(
-                        'Unexpected object {!r} in Command.options dict.'.format(argument),
-                        UserWarning)
+            for argument in self.options[argument_key]:
+                command_line += ' ' + argument.get_str()
 
         # Add all arguments.
 
@@ -749,37 +765,6 @@ class Executable(Command):
         output += super(Executable, self).trace(level=level + 1)
 
         return output
-
-    def command_list(self):
-        """Assemble the command line from program, options and arguments.
-
-        @return: Python C{list} of program, options and arguments
-        @rtype: list[str | unicode]
-        """
-
-        command = list()
-        """ @type command: list[str | unicode] """
-
-        command.extend(super(Executable, self).command_list())
-
-        # The stdout_path and stderr_path gets appended in specific modules.
-
-        return command
-
-    def command_str(self):
-        """Assemble the command line from program, options, switches and arguments.
-
-        @return: A Python C{str} of program, options, switches and arguments
-        @rtype: str
-        """
-
-        command = str()
-
-        command += super(Executable, self).command_str()
-
-        # The stdout_path and stderr_path gets appended in specific modules.
-
-        return command
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
         """Run a C{bsf.process.Executable} via the Python C{subprocess.Popen} class.
