@@ -92,6 +92,7 @@ def scan_directory(directory_path, debug=0):
 
     return
 
+
 argument_parser = ArgumentParser(
     description='Fix symbolic links between the BSF samples and BSF sequences directory.')
 
