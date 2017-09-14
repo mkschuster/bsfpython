@@ -31,8 +31,10 @@ import errno
 import os
 import re
 import subprocess
+import sys
 
 from bsf.database import DatabaseAdaptor
+from bsf.process import Executable
 
 
 output_directory_name = 'bsfpython_sge_output'
@@ -448,10 +450,7 @@ def submit(stage, debug=0):
         output += "\n"
 
     for executable in stage.executable_list:
-        command = list()
-        """ @type command: list[str | unicode] """
-
-        command.append('qsub')
+        executable_drms = Executable(name=executable.name, program='qsub', sub_command=executable)
 
         # Add Stage-specific options.
 
@@ -461,19 +460,15 @@ def submit(stage, debug=0):
         # should be defined by the Bash startup files.
         # In this case the shell (-S) needs specifying explicitly.
 
-        # TODO: Clearing the environment seems linked to Python (numpy?) libimf.so failures.
-        # TODO: Test this again for the new Python installation at some stage ...
-        # command.append('-clear')
-        # command.append('-S')
-        # command.append('/bin/bash')
+        executable_drms.add_switch_short(key='-clear')
+        executable_drms.add_option_short(key='-S', value='/bin/bash')
 
         # Binary or script
 
-        command.append('-b')
         if stage.is_script:
-            command.append('no')
+            executable_drms.add_option_short(key='b', value='no')
         else:
-            command.append('yes')
+            executable_drms.add_option_short(key='b', value='yes')
 
         # Job resource string ...
 
@@ -481,9 +476,8 @@ def submit(stage, debug=0):
 
         # If a hard memory limit has been set, use it as the minimum free required.
 
-        if stage.memory_limit_hard:
-            if not stage.memory_free_virtual:
-                stage.memory_free_virtual = stage.memory_limit_hard
+        if stage.memory_limit_hard and not stage.memory_free_virtual:
+            stage.memory_free_virtual = stage.memory_limit_hard
 
         resource_list = list()
         """ @type resource_list: list[str | unicode] """
@@ -513,27 +507,24 @@ def submit(stage, debug=0):
             resource_list.append('hostname={}'.format(node_name))
 
         if len(resource_list):
-            command.append('-l')
-            command.append(','.join(resource_list))
+            executable_drms.add_option_short(key='l', value=','.join(resource_list))
 
         # Parallel environment
 
         if stage.parallel_environment:
-            command.append('-pe')
-            command.append(stage.parallel_environment)
-            command.append(str(stage.threads))
+            # Parallel environment format: -pe pe_name pe_min-pe_max
+            # Here, pe_max is not specified, but defaults to 9999999. See qsub (1).
+            executable_drms.add_option_short(key='pe', value=stage.parallel_environment + ' ' + str(stage.threads))
 
         # Queue name
 
         if stage.queue:
-            command.append('-q')
-            command.append(stage.queue)
+            executable_drms.add_option_short(key='q', value=stage.queue)
 
         # Working directory, standard output and standard error streams.
 
         if stage.working_directory:
-            command.append('-wd')
-            command.append(stage.working_directory)
+            executable_drms.add_option_short(key='wd', value=stage.working_directory)
 
             # Write standard output and standard error streams into an
             # output directory under the working directory.
@@ -551,50 +542,38 @@ def submit(stage, debug=0):
                     if exception.errno != errno.EEXIST:
                         raise
 
-            command.append('-e')
-            command.append(output_directory_name)
-
-            command.append('-o')
-            command.append(output_directory_name)
+            executable_drms.add_option_short(key='e', value=output_directory_name)
+            executable_drms.add_option_short(key='o', value=output_directory_name)
 
         # Add Executable-specific options.
 
         if executable.hold:
-            command.append('-h')
+            executable_drms.add_switch_short(key='h')
             # The SGE qsub command can use -h to place a user hold.
             # The second form -h {u|s|o|n|U|O|S}... is only for the SGE qalter command.
 
         # Job name
 
         if executable.name:
-            command.append('-N')
-            command.append(executable.name)
+            executable_drms.add_option_short(key='N', value=executable.name)
 
         # Job hold conditions
 
         if len(executable.dependencies):
-            command.append('-hold_jid')
-            command.append(','.join(executable.dependencies))
-
-        command.extend(executable.command_list())
-
-        if executable.stdout_path:
-            command.append("1>{}".format(executable.stdout_path))
-        if executable.stderr_path:
-            command.append("2>{}".format(executable.stderr_path))
+            executable_drms.add_option_short(key='hold_jid', value=','.join(executable.dependencies))
 
         # Finally, submit this command if requested and not in debug mode.
 
         if executable.submit and debug == 0:
 
             child_process = subprocess.Popen(
-                args=command,
+                args=executable_drms.command_list(),
                 bufsize=4096,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=False,
-                close_fds=True)
+                close_fds='posix' in sys.builtin_module_names)
 
             # Although subprocess.communicate() may block when memory buffers
             # have been filled up, not much STDOUT and STDERR is expected from
@@ -609,7 +588,11 @@ def submit(stage, debug=0):
                     "SGE qsub returned exit code {!r}\n"
                     "STDOUT: {}\n"
                     "STDERR: {}\n"
-                    "Command list representation: {!r}".format(child_return_code, child_stdout, child_stderr, command))
+                    "Command list representation: {!r}".format(
+                        child_return_code,
+                        child_stdout,
+                        child_stderr,
+                        executable_drms.command_list()))
 
             # Parse the multi-line STDOUT string to get the SGE process identifier and name.
             # The response to the SGE qsub command looks like:
@@ -623,11 +606,11 @@ def submit(stage, debug=0):
                     executable.process_identifier = match.group(1)
                     executable.process_name = match.group(2)
                 else:
-                    print('Could not parse SGE qsub response line {}'.format(line))
+                    print 'Could not parse SGE qsub response line {}'.format(line)
 
         # Copy the SGE command line to the Bash script.
 
-        output += ' '.join(command) + "\n"
+        output += executable_drms.command_str() + "\n"
         output += "\n"
 
     script_path = os.path.join(stage.working_directory, 'bsfpython_sge_{}.bash'.format(stage.name))

@@ -596,10 +596,7 @@ def submit(stage, debug=0):
         output += "\n"
 
     for executable in stage.executable_list:
-        command = list()
-        """ @type command: list[str | unicode] """
-
-        command.append('sbatch')
+        executable_drms = Executable(name=executable.name, program='sbatch', sub_command=executable)
 
         # Add Stage-specific options.
 
@@ -610,60 +607,46 @@ def submit(stage, debug=0):
         # SLURM-specific sanity checks ...
 
         if stage.memory_limit_hard:
-            command.append('--mem')
-            command.append(_recalculate_memory(stage.memory_limit_hard))
+            executable_drms.add_option_pair_long(key='mem', value=_recalculate_memory(stage.memory_limit_hard))
         elif stage.memory_limit_soft:
-            command.append('--mem')
-            command.append(_recalculate_memory(stage.memory_limit_soft))
+            executable_drms.add_option_pair_long(key='mem', value=_recalculate_memory(stage.memory_limit_soft))
 
         if len(stage.node_list_exclude):
-            command.append('--exclude')
-            command.append(','.join(stage.node_list_exclude))
+            executable_drms.add_option_pair_long(key='exclude', value=','.join(stage.node_list_exclude))
 
         if len(stage.node_list_include):
-            command.append('--nodelist')
-            command.append(','.join(stage.node_list_include))
+            executable_drms.add_option_pair_long(key='nodelist', value=','.join(stage.node_list_include))
 
         if stage.time_limit:
-            command.append('--time')
-            command.append(stage.time_limit)
+            executable_drms.add_option_pair_long(key='time', value=stage.time_limit)
 
         # Propagate none of the environment variables.
 
-        command.append('--export')
-        command.append('NONE')
+        executable_drms.add_option_pair_long(key='export', value='NONE')
 
         # Get the user environment resembling a login shell.
 
-        command.append('--get-user-env=L')
-        # command.append('L')
+        executable_drms.add_option_pair_long(key='get-user-env', value='L')
 
         # Parallel environment
 
         if stage.parallel_environment:
-            command.append('--distribution')
-            command.append(stage.parallel_environment)
-            command.append('--ntasks')
-            command.append('1')
-            command.append('--cpus-per-task')
-            command.append(str(stage.threads))
+            executable_drms.add_option_pair_long(key='distribution', value=stage.parallel_environment)
+            executable_drms.add_option_pair_long(key='ntasks', value='1')
+            executable_drms.add_option_pair_long(key='cpus-per-task', value=str(stage.threads))
 
-        command.append('--requeue')
-
-        # The --share option may no longer be needed.
-        # command.append('--share')
+        executable_drms.add_switch_long(key='requeue')
+        executable_drms.add_switch_long(key='share')
 
         # Queue name
 
         if stage.queue:
-            command.append('--partition')
-            command.append(stage.queue)
+            executable_drms.add_option_pair_long(key='partition', value=stage.queue)
 
         # Working directory, standard output and standard error streams.
 
         if stage.working_directory:
-            command.append('--workdir')
-            command.append(stage.working_directory)
+            executable_drms.add_option_pair_long(key='workdir', value=stage.working_directory)
 
             # Write standard output and standard error streams into an
             # output directory under the working directory.
@@ -681,17 +664,18 @@ def submit(stage, debug=0):
                     if exception.errno != errno.EEXIST:
                         raise
 
-            command.append('--error')
-            command.append(os.path.join(output_directory_name, '_'.join((executable.name, '%j.err'))))
+            executable_drms.add_option_pair_long(
+                key='error',
+                value=os.path.join(output_directory_name, '_'.join((executable.name, '%j.err'))))
 
-            command.append('--output')
-            command.append(os.path.join(output_directory_name, '_'.join((executable.name, '%j.out'))))
+            executable_drms.add_option_pair_long(
+                key='output',
+                value=os.path.join(output_directory_name, '_'.join((executable.name, '%j.out'))))
 
         # Job name
 
         if executable.name:
-            command.append('--job-name')
-            command.append(executable.name)
+            executable_drms.add_option_pair_long(key='job-name', value=executable.name)
 
         # Job hold conditions
         # A particular feature of SLURM is its inability to set process dependencies on process names.
@@ -716,15 +700,9 @@ def submit(stage, debug=0):
         if len(process_identifier_list):
             # Only set the dependency option if there are some on the process identifier list.
             # The identifier list may be empty if no dependencies exist or no Executable has been submitted before.
-            command.append('--dependency')
-            command.append(','.join(map(lambda x: 'afterok:' + x, process_identifier_list)))
-
-        command.extend(executable.command_list())
-
-        if executable.stdout_path:
-            command.append("1>{}".format(executable.stdout_path))
-        if executable.stderr_path:
-            command.append("2>{}".format(executable.stderr_path))
+            executable_drms.add_option_pair_long(
+                key='dependency',
+                value=','.join(map(lambda x: 'afterok:' + x, process_identifier_list)))
 
         # If a process in state 'PENDING' or 'RUNNING' exists already, the Executable does not need submitting.
 
@@ -736,13 +714,13 @@ def submit(stage, debug=0):
 
         if executable.submit and debug == 0:
             child_process = subprocess.Popen(
-                args=command,
+                args=executable_drms.command_list(),
                 bufsize=4096,
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=False,
-                close_fds=True)
+                close_fds='posix' in sys.builtin_module_names)
 
             # Although subprocess.communicate() may block when memory buffers
             # have been filled up, not much STDOUT and STDERR is expected from
@@ -757,7 +735,11 @@ def submit(stage, debug=0):
                     "SLURM sbatch returned exit code {!r}\n"
                     "STDOUT: {}\n"
                     "STDERR: {}\n"
-                    "Command list representation: {!r}".format(child_return_code, child_stdout, child_stderr, command))
+                    "Command list representation: {!r}".format(
+                        child_return_code,
+                        child_stdout,
+                        child_stderr,
+                        executable_drms.command_list()))
 
             # Parse the multi-line STDOUT string to get the SLURM process identifier and name.
             # The response to the SLURM sbatch command looks like:
@@ -769,11 +751,11 @@ def submit(stage, debug=0):
                 if match:
                     executable.process_identifier = match.group(1)
                 else:
-                    print('Could not parse the process identifier from the SLURM sbatch response line {}'.format(line))
+                    print 'Could not parse the process identifier from the SLURM sbatch response line {}'.format(line)
 
         # Copy the SLURM command line to the Bash script.
 
-        output += ' '.join(command) + "\n"
+        output += executable_drms.command_str() + "\n"
         output += "\n"
 
         # Regardless of an actual Executable submission, UPDATE it in or INSERT it into the SQLite database.
@@ -941,10 +923,10 @@ def check_state(stage, debug=0):
         return
 
     # TODO: The Executable class, so far, does not allow setting specific STDOUT and STDERR handlers ...
-    executable = Executable(name='sacct', program='sacct')
-    executable.add_option_long(key='jobs', value=','.join(map(lambda x: x.job_id, process_slurm_list)))
-    executable.add_switch_long(key='long')
-    executable.add_switch_long(key='parsable')
+    executable_drms = Executable(name='sacct', program='sacct')
+    executable_drms.add_option_long(key='jobs', value=','.join(map(lambda x: x.job_id, process_slurm_list)))
+    executable_drms.add_switch_long(key='long')
+    executable_drms.add_switch_long(key='parsable')
 
     # Executable.run() parameters.
     max_thread_joins = 10
@@ -955,10 +937,10 @@ def check_state(stage, debug=0):
     # TODO: ... therefore, the following block is a complete duplication of code in method Executable.run().
     # TODO: Requires re-engineering of the Executable class.
 
-    while attempt_counter < executable.maximum_attempts:
+    while attempt_counter < executable_drms.maximum_attempts:
 
         child_process = subprocess.Popen(
-            args=executable.command_list(),
+            args=executable_drms.command_list(),
             bufsize=4096,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
@@ -977,7 +959,7 @@ def check_state(stage, debug=0):
                 'stdout_handle': child_process.stdout,
                 'thread_lock': thread_lock,
                 'process_slurm_adaptor': process_slurm_adaptor,
-                'stdout_path': executable.stdout_path,
+                'stdout_path': executable_drms.stdout_path,
                 'debug': debug,
             })
         thread_out.daemon = True  # Thread dies with the program.
@@ -988,7 +970,7 @@ def check_state(stage, debug=0):
             kwargs={
                 'stderr_handle': child_process.stderr,
                 'thread_lock': thread_lock,
-                'stderr_path': executable.stderr_path,
+                'stderr_path': executable_drms.stderr_path,
                 'debug': debug,
             })
         thread_err.daemon = True  # Thread dies with the program.
@@ -1025,16 +1007,16 @@ def check_state(stage, debug=0):
         if child_return_code > 0:
             if debug > 0:
                 print '[{}] Child process {!r} failed with exit code {}'. \
-                    format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
+                    format(datetime.datetime.now().isoformat(), executable_drms.name, +child_return_code)
             attempt_counter += 1
         elif child_return_code < 0:
             if debug > 0:
                 print '[{}] Child process {!r} received signal {}.'. \
-                    format(datetime.datetime.now().isoformat(), executable.name, -child_return_code)
+                    format(datetime.datetime.now().isoformat(), executable_drms.name, -child_return_code)
         else:
             if debug > 0:
                 print '[{}] Child process {!r} completed successfully {}.'. \
-                    format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
+                    format(datetime.datetime.now().isoformat(), executable_drms.name, +child_return_code)
             break
 
     return
