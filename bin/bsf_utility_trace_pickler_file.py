@@ -30,22 +30,32 @@
 from argparse import ArgumentParser
 
 from bsf import Runnable
-from bsf.process import RunnableStep
 
 
 argument_parser = ArgumentParser(
     description='Trace a pickled Runnable.')
 
 argument_parser.add_argument(
+    '--format',
+    choices=['list', 'str'],
+    default='str',
+    help='Output format Python str or Python list [str]',
+    required=False)
+
+argument_parser.add_argument(
     'pickler_path',
     help='file path to a pickled Runnable object')
 
-arguments = argument_parser.parse_args()
+name_space = argument_parser.parse_args()
 
-runnable = Runnable.from_pickler_path(file_path=arguments.pickler_path)
+runnable = Runnable.from_pickler_path(file_path=name_space.pickler_path)
 
 print runnable.trace(level=1)
 
 for runnable_step in runnable.runnable_step_list:
-    assert isinstance(runnable_step, RunnableStep)
-    print 'RunnableStep command: {}'.format(runnable_step.command_str())
+    if name_space.format == 'list':
+        print 'RunnableStep command list:', runnable_step.command_list()
+        print
+    elif name_space.format == 'str':
+        print 'RunnableStep command str:', runnable_step.command_str()
+        print
