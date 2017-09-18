@@ -150,6 +150,7 @@ class SwitchLong(Switch):
     def get_str(self):
         """Get the string representation as Python C{str} or C{unicode}
 
+        Overrides method Switch.get_str() to prepend two dashes ('--key').
         @return: String representation
         @rtype: str | unicode
         """
@@ -165,6 +166,7 @@ class SwitchShort(Switch):
     def get_str(self):
         """Get the string representation as Python C{str} or C{unicode}
 
+        Overrides method Switch.get_str() to prepend one dash ('-key').
         @return: String representation
         @rtype: str | unicode
         """
@@ -223,6 +225,7 @@ class Option(Switch):
     def get_str(self):
         """Get the string representation as Python C{str} or C{unicode}
 
+        Overrides method Switch.get_str() to join key and value with space ('key value1 value2 ...').
         @return: String representation
         @rtype: str | unicode
         """
@@ -231,12 +234,12 @@ class Option(Switch):
     def get_list(self):
         """Get the list representation as Python C{list}.
 
-        This method supports more than one value i.e. --key value1 value2 for programs like the STAR aligner.
-        It splits the command string on white space and returns the resulting Python C{list}.
+        Overrides method Switch.get_list() to split the Python str representation on
+        white space only once (['key', 'value1 value2 ...']).
         @return: List representation
         @rtype: list[str | unicode]
         """
-        return self.get_str().split()
+        return self.get_str().split(None, 1)
 
 
 class OptionLong(Option):
@@ -248,6 +251,7 @@ class OptionLong(Option):
     def get_str(self):
         """Get the string representation as Python C{str} or C{unicode}
 
+        Overrides method Option.get_str() to prepend two dashes ('--key value1 value2 ...').
         @return: String representation
         @rtype: str | unicode
         """
@@ -263,6 +267,7 @@ class OptionShort(Option):
     def get_str(self):
         """Get the string representation as Python C{str} or C{unicode}
 
+        Overrides method Option.get_str() to prepend one dash ('-key value1 value2 ...').
         @return: String representation
         @rtype: str | unicode
         """
@@ -283,6 +288,15 @@ class OptionPair(Option):
         """
         return '='.join((self.key, self.value))
 
+    def get_list(self):
+        """Get the list representation as Python C{list}.
+
+        Overrides method Option.get_list() to avoid splitting by white space (['key=value1 value2 ...']).
+        @return: List representation
+        @rtype: list[str | unicode]
+        """
+        return [self.get_str()]
+
 
 class OptionPairLong(OptionPair):
     """The C{bsf.argument.OptionPairLong} class represents an argument obeying a I{--KEY=VALUE} schema.
@@ -293,6 +307,7 @@ class OptionPairLong(OptionPair):
     def get_str(self):
         """Get the string representation as Python C{str} or C{unicode}.
 
+        Overrides method OptionPair.get_str() to prepend two dashes ('--key=value1 value2 ...').
         @return: String representation
         @rtype: str | unicode
         """
@@ -308,7 +323,76 @@ class OptionPairShort(OptionPair):
     def get_str(self):
         """Get the string representation as Python C{str} or C{unicode}.
 
+        Overrides method OptionPair.get_str() to prepend one dash ('-key=value1 value2 ...').
         @return: String representation
         @rtype: str | unicode
         """
         return '-' + super(OptionPairShort, self).get_str()
+
+
+class OptionMulti(Option):
+    """The C{bsf.argument.Option} class represents arguments obeying a I{--key value1 value2}
+    or I{-k value1 value2} schema.
+
+    Attributes:
+    """
+
+    def get_list(self):
+        """Get the list representation as Python C{list}.
+
+        Override method Option.get_list() to split on white space (['key', 'value1', 'value2', '...']).
+        This method supports programs like the STAR aligner.
+        @return: List representation
+        @rtype: list[str | unicode]
+        """
+        return self.get_str().split()
+
+
+class OptionMultiLong(OptionMulti, OptionLong):
+    """The C{bsf.argument.OptionMultiLong} class represents arguments obeying a I{--key value1 value2} or schema.
+
+    The order of inheritance (OptionMulti, OptionLong) ascertains that OptionMulti.get_list()
+    gets called before OptionLong.get_list().
+    Attributes:
+    """
+    pass
+
+
+class OptionMultiShort(OptionMulti, OptionShort):
+    """The C{bsf.argument.OptionMultiLong} class represents arguments obeying a I{-k value1 value2} schema.
+
+    The order of inheritance (OptionMulti, OptionShort) ascertains that OptionMulti.get_list()
+    gets called before OptionShort.get_list().
+    Attributes:
+    """
+    pass
+
+
+class OptionMultiPair(OptionMulti, OptionPair):
+    """The C{bsf.argument.OptionMultiLong} class represents arguments obeying a I{key=value1 value2} schema.
+
+    The order of inheritance (OptionMulti, OptionPair) ascertains that OptionMulti.get_list()
+    gets called before OptionPair.get_list().
+    Attributes:
+    """
+    pass
+
+
+class OptionMultiPairLong(OptionMulti, OptionPairLong):
+    """The C{bsf.argument.OptionMultiPairLong} class represents arguments obeying a I{--key=value1 value2} schema.
+
+    The order of inheritance (OptionMulti, OptionPairLong) ascertains that OptionMulti.get_list()
+    gets called before OptionPairLong.get_list().
+    Attributes:
+    """
+    pass
+
+
+class OptionMultiPairShort(OptionMulti, OptionPairShort):
+    """The C{bsf.argument.OptionMultiPairShort} class represents arguments obeying a I{-key=value1 value2} schema.
+
+    The order of inheritance (OptionMulti, OptionPairShort) ascertains that OptionMulti.get_list()
+    gets called before OptionPairShort.get_list().
+    Attributes:
+    """
+    pass

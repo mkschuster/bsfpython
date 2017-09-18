@@ -1273,7 +1273,7 @@ class VariantCallingGATK(Analysis):
                             file_path = config_parser.get(section=resource_section, option=resource_option)
                         else:
                             raise Exception(
-                                "Missing configuration option {!r} in configuration section {!r}.".format(
+                                'Missing configuration option {!r} in configuration section {!r}.'.format(
                                     resource_option,
                                     resource_section))
                         resource_option = 'annotations'
@@ -1288,7 +1288,7 @@ class VariantCallingGATK(Analysis):
                                         option=resource_option).split(',')))
                         else:
                             raise Exception(
-                                "Missing configuration option {!r} in configuration section {!r}.".format(
+                                'Missing configuration option {!r} in configuration section {!r}.'.format(
                                     resource_option,
                                     resource_section))
                         # Create a dict key and a tuple of a Python str and Python list.
@@ -1627,7 +1627,7 @@ class VariantCallingGATK(Analysis):
 
                 for row_dict in annotation_sheet.row_dicts:
                     if self.debug > 0:
-                        print "Comparison sheet row_dict {!r}".format(row_dict)
+                        print 'Comparison sheet row_dict:', row_dict
 
                     comparison = VariantCallingGATKComparison()
 
@@ -1638,7 +1638,7 @@ class VariantCallingGATK(Analysis):
                         if group_name and len(group_samples):
                             if len(group_samples) != 1:
                                 raise Exception(
-                                    "Got more than one Sample for class {!r} in comparison {!r}".format(
+                                    'Got more than one Sample for class {!r} in comparison {!r}'.format(
                                         prefix,
                                         row_dict))
 
@@ -1651,7 +1651,7 @@ class VariantCallingGATK(Analysis):
                     if prefix in row_dict and row_dict[prefix]:
                         comparison.panel_of_normal_path = row_dict[prefix]
 
-                    # At least a tumor Sample has to be defined for the "comparison" to make sense.
+                    # At least a tumor Sample has to be defined for the comparison to make sense.
                     if comparison.tumor_sample is not None:
                         self._comparison_dict[comparison.get_name] = comparison
 
@@ -1780,7 +1780,7 @@ class VariantCallingGATK(Analysis):
 
             dict_path = os.path.splitext(self.bwa_genome_db)[0] + '.dict'
             if not os.path.exists(dict_path):
-                raise Exception("Picard sequence dictionary {!r} does not exist.".format(dict_path))
+                raise Exception('Picard sequence dictionary {!r} does not exist.'.format(dict_path))
 
             alignment_file = pysam.AlignmentFile(dict_path, 'r')
             # Summarise sequence lengths to get the total length.
@@ -2860,7 +2860,7 @@ class VariantCallingGATK(Analysis):
             file_path=self.bwa_genome_db,
             default_path=self.get_gatk_bundle_path)
         if not os.path.exists(path=self.bwa_genome_db):
-            raise Exception("The bwa_genome_db file {!r} does not exist.".format(self.bwa_genome_db))
+            raise Exception('The bwa_genome_db file {!r} does not exist.'.format(self.bwa_genome_db))
 
         # GATK does a lot of read requests from the reference FASTA file.
         # Place it and the accompanying *.fasta.fai and *.dict files in the cache directory.
@@ -3023,7 +3023,7 @@ class VariantCallingGATK(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
+                print self, 'Sample name:', sample.name
                 print sample.trace(1)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
@@ -3858,7 +3858,9 @@ class VariantCallingGATK(Analysis):
             # GATK QualifyMissingIntervals          (diagnose_sample_gatk_qualify_missing_intervals)
             # GATK CallableLoci                     (diagnose_sample_gatk_callable_loci)
             # bsfR bsf_variant_calling_coverage.R   (diagnose_sample_coverage)
-            # Picard CalculateHsMetrics             (diagnose_sample_picard_calculate_hybrid_selection_metrics)
+            # UCSC bedSort                          (diagnose_sample_bed_sort)
+            # UCSC bedToBigBed                      (diagnose_sample_bed_sort)
+            # Picard CollectHsMetrics               (diagnose_sample_picard_collect_hybrid_selection_metrics)
 
             prefix_diagnose_sample = '_'.join((stage_diagnose_sample.name, sample.name))
 
@@ -4067,22 +4069,21 @@ class VariantCallingGATK(Analysis):
                         file_path_diagnose_sample.sorted_bed,
                     ]))
             """ @type runnable_step: RunnableStep """
-            # FIXME: It would be good to allow options with and without an equal sign.
-            runnable_step.add_switch_short(key='type=bed4')
+            runnable_step.add_option_pair_short(key='type', value='bed4')
             runnable_step.arguments.append(file_path_diagnose_sample.sorted_bed)
             runnable_step.arguments.append(reference_diagnose_sample + '.fai')
             runnable_step.arguments.append(file_path_diagnose_sample.callable_bb)
 
             if target_interval_path:
-                # Run the Picard CalculateHsMetrics analysis per sample, only if targets have been defined.
+                # Run the Picard CollectHsMetrics analysis per sample, only if targets have been defined.
 
                 runnable_step = runnable_diagnose_sample.add_runnable_step(
                     runnable_step=RunnableStepPicard(
-                        name='diagnose_sample_picard_calculate_hybrid_selection_metrics',
+                        name='diagnose_sample_picard_collect_hybrid_selection_metrics',
                         java_temporary_path=runnable_diagnose_sample.get_relative_temporary_directory_path,
                         java_heap_maximum='Xmx6G',
                         picard_classpath=self.classpath_picard,
-                        picard_command='CalculateHsMetrics'))
+                        picard_command='CollectHsMetrics'))
                 """ @type runnable_step: RunnableStepPicard """
                 if probe_interval_path:
                     runnable_step.add_picard_option(key='BAIT_INTERVALS', value=probe_interval_path)
@@ -4154,7 +4155,7 @@ class VariantCallingGATK(Analysis):
                 cohort_runnable_dict=runnable_merge_cohort_dict,
                 cohort_name=self.cohort_name)
         else:
-            raise Exception("Unexpected number of Runnable objects on the merge_cohort list.")
+            raise Exception('Unexpected number of Runnable objects on the merge_cohort list.')
 
         # Run an additional GATK CombineGVCFs analysis to merge into a super-cohort, if defined.
 
@@ -4675,7 +4676,7 @@ class VariantCallingGATK(Analysis):
         comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
         if self.debug > 0:
-            print 'Somatic variant calling comparison: ' + repr(comparison_name_list)
+            print 'Somatic variant calling comparison:', comparison_name_list
 
         for comparison_name in comparison_name_list:
             prefix_somatic = '_'.join((stage_somatic.name, comparison_name))
@@ -4954,7 +4955,7 @@ class VariantCallingGATK(Analysis):
 
             for sample in self.sample_list:
                 if self.debug > 0:
-                    print repr(self) + ' Sample name: ' + sample.name
+                    print self, 'Sample name:', sample.name
                     print sample.trace(1)
 
                 paired_reads_dict = sample.get_all_paired_reads(
@@ -5223,7 +5224,7 @@ class VariantCallingGATK(Analysis):
 
             for sample in self.sample_list:
                 if self.debug > 0:
-                    print repr(self) + ' Sample name: ' + sample.name
+                    print self, 'Sample name:', sample.name
                     print sample.trace(1)
 
                 paired_reads_dict = sample.get_all_paired_reads(

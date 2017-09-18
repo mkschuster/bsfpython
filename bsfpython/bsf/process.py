@@ -38,8 +38,7 @@ import warnings
 from subprocess import Popen, PIPE
 from threading import Lock, Thread
 
-from bsf.argument import Argument, SwitchLong, SwitchShort, OptionLong, OptionShort, \
-    OptionPair, OptionPairShort, OptionPairLong
+import bsf.argument
 from bsf.standards import Configuration
 
 
@@ -162,7 +161,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        assert isinstance(argument, Argument)
+        assert isinstance(argument, bsf.argument.Argument)
         assert isinstance(override, bool)
 
         if not override and argument.key in self.options:
@@ -190,7 +189,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.add_argument(argument=SwitchLong(key=key), override=override)
+        return self.add_argument(argument=bsf.argument.SwitchLong(key=key), override=override)
 
     def add_switch_short(self, key, override=False):
         """Initialise and add a C{bsf.argument.SwitchShort}.
@@ -202,7 +201,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.add_argument(argument=SwitchShort(key=key), override=override)
+        return self.add_argument(argument=bsf.argument.SwitchShort(key=key), override=override)
 
     def add_option_long(self, key, value, override=False):
         """Initialise and add a C{bsf.argument.OptionLong}.
@@ -216,7 +215,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.add_argument(argument=OptionLong(key=key, value=value), override=override)
+        return self.add_argument(argument=bsf.argument.OptionLong(key=key, value=value), override=override)
 
     def add_option_short(self, key, value, override=False):
         """Initialise and add a C{bsf.argument.OptionShort}.
@@ -230,7 +229,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.add_argument(argument=OptionShort(key=key, value=value), override=override)
+        return self.add_argument(argument=bsf.argument.OptionShort(key=key, value=value), override=override)
 
     def add_option_pair(self, key, value, override=False):
         """Initialise and add a C{bsf.argument.OptionPair}.
@@ -244,7 +243,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.add_argument(argument=OptionPair(key=key, value=value), override=override)
+        return self.add_argument(argument=bsf.argument.OptionPair(key=key, value=value), override=override)
 
     def add_option_pair_short(self, key, value, override=False):
         """Initialise and add a C{bsf.argument.OptionPairShort}.
@@ -258,7 +257,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.add_argument(argument=OptionPairShort(key=key, value=value), override=override)
+        return self.add_argument(argument=bsf.argument.OptionPairShort(key=key, value=value), override=override)
 
     def add_option_pair_long(self, key, value, override=False):
         """Initialise and add a C{bsf.argument.OptionPairLong}.
@@ -272,7 +271,91 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.add_argument(argument=OptionPairLong(key=key, value=value), override=override)
+        return self.add_argument(argument=bsf.argument.OptionPairLong(key=key, value=value), override=override)
+
+    def add_option_multi(self, key, value, override=False):
+        """Initialise and add a C{bsf.argument.OptionMulti}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.add_argument(argument=bsf.argument.OptionMulti(key=key, value=value), override=override)
+
+    def add_option_multi_long(self, key, value, override=False):
+        """Initialise and add a C{bsf.argument.OptionMultiLong}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.add_argument(argument=bsf.argument.OptionMultiLong(key=key, value=value), override=override)
+
+    def add_option_multi_short(self, key, value, override=False):
+        """Initialise and add a C{bsf.argument.OptionMultiShort}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.add_argument(argument=bsf.argument.OptionMultiShort(key=key, value=value), override=override)
+
+    def add_option_multi_pair(self, key, value, override=False):
+        """Initialise and add a C{bsf.argument.OptionMultiPair}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.add_argument(argument=bsf.argument.OptionMultiPair(key=key, value=value), override=override)
+
+    def add_option_multi_pair_long(self, key, value, override=False):
+        """Initialise and add a C{bsf.argument.OptionMultiPairLong}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.add_argument(argument=bsf.argument.OptionMultiPairLong(key=key, value=value), override=override)
+
+    def add_option_multi_pair_short(self, key, value, override=False):
+        """Initialise and add a C{bsf.argument.OptionMultiPairShort}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.add_argument(argument=bsf.argument.OptionMultiPairShort(key=key, value=value), override=override)
 
     def set_argument(self, argument, override):
         """Set a C{bsf.argument.Argument} or one of its sub-classes.
@@ -284,7 +367,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        assert isinstance(argument, Argument)
+        assert isinstance(argument, bsf.argument.Argument)
         assert isinstance(override, bool)
 
         if not override and argument.key in self.options:
@@ -308,7 +391,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.set_argument(argument=SwitchLong(key=key), override=override)
+        return self.set_argument(argument=bsf.argument.SwitchLong(key=key), override=override)
 
     def set_switch_short(self, key, override=False):
         """Initialise and set a C{bsf.argument.SwitchShort}.
@@ -320,7 +403,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.set_argument(argument=SwitchShort(key=key), override=override)
+        return self.set_argument(argument=bsf.argument.SwitchShort(key=key), override=override)
 
     def set_option_long(self, key, value, override=False):
         """Initialise and set a C{bsf.argument.OptionLong}.
@@ -334,7 +417,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.set_argument(argument=OptionLong(key=key, value=value), override=override)
+        return self.set_argument(argument=bsf.argument.OptionLong(key=key, value=value), override=override)
 
     def set_option_short(self, key, value, override=False):
         """Initialise and set a C{bsf.argument.OptionShort}.
@@ -348,7 +431,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.set_argument(argument=OptionShort(key=key, value=value), override=override)
+        return self.set_argument(argument=bsf.argument.OptionShort(key=key, value=value), override=override)
 
     def set_option_pair(self, key, value, override=False):
         """Initialise and set a C{bsf.argument.OptionPair}.
@@ -362,7 +445,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.set_argument(argument=OptionPair(key=key, value=value), override=override)
+        return self.set_argument(argument=bsf.argument.OptionPair(key=key, value=value), override=override)
 
     def set_option_pair_short(self, key, value, override=False):
         """Initialise and set a C{bsf.argument.OptionPairShort}.
@@ -376,7 +459,7 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.set_argument(argument=OptionPairShort(key=key, value=value), override=override)
+        return self.set_argument(argument=bsf.argument.OptionPairShort(key=key, value=value), override=override)
 
     def set_option_pair_long(self, key, value, override=False):
         """Initialise and set a C{bsf.argument.OptionPairLong}.
@@ -390,7 +473,91 @@ class Command(object):
         @return:
         @rtype:
         """
-        return self.set_argument(argument=OptionPairLong(key=key, value=value), override=override)
+        return self.set_argument(argument=bsf.argument.OptionPairLong(key=key, value=value), override=override)
+
+    def set_option_multi(self, key, value, override=False):
+        """Initialise and set a C{bsf.argument.OptionMulti}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.set_argument(argument=bsf.argument.OptionMulti(key=key, value=value), override=override)
+
+    def set_option_multi_long(self, key, value, override=False):
+        """Initialise and set a C{bsf.argument.OptionMultiLong}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.set_argument(argument=bsf.argument.OptionMultiLong(key=key, value=value), override=override)
+
+    def set_option_multi_short(self, key, value, override=False):
+        """Initialise and set a C{bsf.argument.OptionMultiShort}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.set_argument(argument=bsf.argument.OptionMultiShort(key=key, value=value), override=override)
+
+    def set_option_multi_pair(self, key, value, override=False):
+        """Initialise and set a C{bsf.argument.OptionMultiPair}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.set_argument(argument=bsf.argument.OptionMultiPair(key=key, value=value), override=override)
+
+    def set_option_multi_pair_long(self, key, value, override=False):
+        """Initialise and set a C{bsf.argument.OptionMultiPairLong}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.set_argument(argument=bsf.argument.OptionMultiPairLong(key=key, value=value), override=override)
+
+    def set_option_multi_pair_short(self, key, value, override=False):
+        """Initialise and set a C{bsf.argument.OptionMultiPairShort}.
+
+        @param key: Key
+        @type key: str
+        @param value: Value
+        @type value: str | unicode
+        @param override: Override existing C{bsf.argument.Argument} without warning
+        @type override: bool
+        @return:
+        @rtype:
+        """
+        return self.set_argument(argument=bsf.argument.OptionMultiPairShort(key=key, value=value), override=override)
 
     def set_configuration(self, configuration, section):
         """Set instance variables of a C{bsf.process.Command} via a C{bsf.standards.Configuration} section.
@@ -417,7 +584,7 @@ class Command(object):
 
         for option in configuration.config_parser.options(section=section):
             self.add_argument(
-                argument=Argument.from_key_value(
+                argument=bsf.argument.Argument.from_key_value(
                     key=option,
                     value=configuration.config_parser.get(
                         section=section,

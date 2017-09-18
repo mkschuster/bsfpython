@@ -318,11 +318,11 @@ class TuxedoSamplePairSheet(AnnotationSheet):
     Attributes:
     """
 
-    _file_type = "excel-tab"
+    _file_type = 'excel-tab'
 
     _field_names = [
-        "V1",
-        "V2",
+        'V1',
+        'V2',
     ]
 
     _test_methods = dict()
@@ -810,7 +810,7 @@ class Tuxedo(Analysis):
                             elif i == 0:
                                 prefix = 'Treatment'
                             else:
-                                prefix = 'Point {}'.format(i)
+                                prefix = 'Point ' + str(i)
                             # Get Sample objects for 'Point N' keys for as long as they are defined.
                             # The Collection.get_sample_from_row_dict method can return one or more Sample objects,
                             # depending on 'Group' or 'Sample' column entries.
@@ -830,8 +830,8 @@ class Tuxedo(Analysis):
                                 for _sample in _group_sample_list:
                                     self.add_sample(sample=_sample)
                                     if self.debug > 1:
-                                        print '  {} Sample name: {!r} file_path: {!r}'.format(
-                                            prefix, _sample.name, _sample.file_path)
+                                        print '  ', prefix, 'Sample name:', _sample.name, \
+                                            'file_path:', _sample.file_path
                                     if self.debug > 2:
                                         print sample.trace(1)
                             elif i < 1:
@@ -844,8 +844,7 @@ class Tuxedo(Analysis):
                         # For a successful comparison, more than one Sample (pool) has to be defined.
                         if len(_comparison_list) < 2:
                             if self.debug > 1:
-                                print 'Comparison line with less than two Sample or Group keys. {!r}'. \
-                                    format(row_dict)
+                                print 'Comparison line with less than two Sample or Group keys.', row_dict
                             continue
 
                         if 'Comparison Name' in row_dict and row_dict['Comparison Name']:
@@ -905,11 +904,10 @@ class Tuxedo(Analysis):
         if not self.genome_fasta_path:
             self.genome_fasta_path = self.genome_index_path + '.fa'
 
-        # FIXME: For the moment use the FAI file instead of the UCSC chromosome sizes file.
         genome_sizes_path = self.genome_fasta_path + '.fai'
 
         if not os.path.exists(self.genome_fasta_path):
-            raise Exception("Genome FASTA file path {!r} does not exists.".format(self.genome_fasta_path))
+            raise Exception('Genome FASTA file path {!r} does not exists.'.format(self.genome_fasta_path))
 
         # Define a reference transcriptome index directory or a GTF file path.
 
@@ -921,7 +919,7 @@ class Tuxedo(Analysis):
                 default_path=Default.absolute_transcriptome_resource(transcriptome_version=''))
 
             if not os.path.isdir(self.transcriptome_index_path):
-                raise Exception("Reference transcriptome index directory {!r} does not exist.".
+                raise Exception('Reference transcriptome index directory {!r} does not exist.'.
                                 format(self.transcriptome_index_path))
 
             transcriptome_index = os.path.basename(self.transcriptome_index_path)
@@ -942,7 +940,7 @@ class Tuxedo(Analysis):
                 '.'.join((transcriptome_index, 'gtf')))
 
             if not os.path.exists(self.transcriptome_gtf_path):
-                raise Exception("Reference transcriptome GTF file {!r} does not exist.".
+                raise Exception('Reference transcriptome GTF file {!r} does not exist.'.
                                 format(self.transcriptome_gtf_path))
         elif self.transcriptome_gtf_path:
             # Check if transcriptome_gtf_path is absolute and if not,
@@ -952,7 +950,7 @@ class Tuxedo(Analysis):
                 default_path=Default.absolute_transcriptome_resource(transcriptome_version=self.transcriptome_version))
 
             if not os.path.exists(self.transcriptome_gtf_path):
-                raise Exception("Reference transcriptome GTF file {!r} does not exist.".
+                raise Exception('Reference transcriptome GTF file {!r} does not exist.'.
                                 format(self.transcriptome_gtf_path))
         else:
             # Neither was provided, automatically discover on the basis of the transcriptome version.
@@ -967,11 +965,11 @@ class Tuxedo(Analysis):
                 default.indices['tophat'],
                 self.transcriptome_version) + '.gtf'
             if not os.path.exists(self.transcriptome_gtf_path):
-                raise Exception("Reference transcriptome GTF file path {!r} does not exist.".
+                raise Exception('Reference transcriptome GTF file path {!r} does not exist.'.
                                 format(self.transcriptome_gtf_path))
 
         if not self.transcriptome_gtf_path:
-            raise Exception("Reference transcriptome GTF file not defined.")
+            raise Exception('Reference transcriptome GTF file not defined.')
 
         # Read configuration options.
 
@@ -998,7 +996,7 @@ class Tuxedo(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
+                print self, 'Sample name:', sample.name
                 print sample.trace(1)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
@@ -1078,7 +1076,7 @@ class Tuxedo(Analysis):
                     tophat.add_option_long(
                         key='library-type',
                         value=self.library_type)
-                # The TopHat coverage search finds additional "GT-AG" introns, but is only recommended for
+                # The TopHat coverage search finds additional 'GT-AG' introns, but is only recommended for
                 # short reads (< 45 bp) and small read numbers (<= 10 M).
                 # TODO: This option should possibly become configurable per sample.
                 tophat.add_switch_long(key='no-coverage-search')
@@ -1097,7 +1095,7 @@ class Tuxedo(Analysis):
 
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
-                        print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
+                        print self, 'PairedReads name:', self, paired_reads.get_name()
 
                     if paired_reads.reads_1:
                         reads_1_file_path_list.append(paired_reads.reads_1.file_path)
@@ -1119,7 +1117,7 @@ class Tuxedo(Analysis):
 
                 pickler_path = os.path.join(
                     self.genome_directory,
-                    '{}_{}.pkl'.format(stage_run_tophat.name, paired_reads_name))
+                    stage_run_tophat.name + '_' + paired_reads_name + '.pkl')
                 pickler_file = open(pickler_path, 'wb')
                 pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
                 pickler.dump(obj=pickler_dict_run_tophat)
@@ -1137,7 +1135,7 @@ class Tuxedo(Analysis):
                 executable_run_tophat.add_option_long(key='pickler_path', value=pickler_path)
                 executable_run_tophat.add_option_long(key='debug', value=str(self.debug))
 
-                # Only submit this Executable if the "align_summary.txt" file does not exist.
+                # Only submit this Executable if the 'align_summary.txt' file does not exist.
                 file_path_temporary = os.path.join(self.genome_directory, file_path_tophat.align_summary)
                 if os.path.exists(file_path_temporary) and os.path.getsize(file_path_temporary) > 0:
                     executable_run_tophat.submit = False
@@ -1160,7 +1158,7 @@ class Tuxedo(Analysis):
                 executable_process_tophat.arguments.append(file_path_tophat.output_directory)
                 executable_process_tophat.arguments.append(genome_sizes_path)
 
-                # Only submit this Executable if the "accepted_hits.bam.bai" file does not exist.
+                # Only submit this Executable if the 'accepted_hits.bam.bai' file does not exist.
                 file_path_temporary = os.path.join(
                     self.genome_directory,
                     file_path_tophat.accepted_hits_bai_link_source)
@@ -1319,16 +1317,10 @@ class Tuxedo(Analysis):
                             file_path_cufflinks.temporary_sorted_tsv,
                         ]))
                 """ @type runnable_step: RunnableStep """
-                # FIXME: It would be good to allow options with and without an equal sign.
-                # i.e. --type=bed12+8 versus --type bed12+8, which does not work.
-                # How could this work with configuration.ini files?
-                # FIXME: This needs to be configurable.
-                # Either another instance variable is required or via a generic configuration option
-                # for the RunnableStep.
                 # TODO: The location of the autoSQL file needs to be configurable.
-                runnable_step.add_switch_short(key='as=/scratch/lab_bsf/resources/UCSC/bigGenePred.as')
+                runnable_step.add_option_pair_short(key='as', value='/scratch/lab_bsf/resources/UCSC/bigGenePred.as')
                 runnable_step.add_switch_short(key='tab')
-                runnable_step.add_switch_short(key='type=bed12+8')
+                runnable_step.add_option_pair_short(key='type', value='bed12+8')
                 runnable_step.arguments.append(file_path_cufflinks.temporary_sorted_tsv)
                 runnable_step.arguments.append(genome_sizes_path)
                 runnable_step.arguments.append(file_path_cufflinks.transcripts_bb)
@@ -1373,7 +1365,8 @@ class Tuxedo(Analysis):
         # expected to exist by another process.
         # Circumvent such a situation by introducing dependencies on previous Cuffmerge processes. Sigh.
         # TODO: Report this to the Cufflinks author.
-        previous_cuffmerge_name = str()
+        previous_cuffmerge_name = None
+        """ @type previous_cuffmerge_name: str """
 
         comparison_name_list = self._comparison_dict.keys()
         comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
@@ -1395,7 +1388,7 @@ class Tuxedo(Analysis):
                 stage=stage_run_cuffmerge,
                 runnable=runnable_run_cuffmerge)
             # Set a dependency on the previous Cuffmerge process to avoid file contention.
-            if previous_cuffmerge_name:
+            if previous_cuffmerge_name is not None:
                 executable_run_cuffmerge.dependencies.append(previous_cuffmerge_name)
             previous_cuffmerge_name = executable_run_cuffmerge.name
 
@@ -1616,16 +1609,10 @@ class Tuxedo(Analysis):
                         file_path_cuffmerge.temporary_sorted_tsv,
                     ]))
             """ @type runnable_step: RunnableStep """
-            # FIXME: It would be good to allow options with and without an equal sign.
-            # i.e. --type=bed12+8 versus --type bed12+8, which does not work.
-            # How could this work with configuration.ini files?
-            # FIXME: This needs to be configurable.
-            # Either another instance variable is required or via a generic configuration option
-            # for the RunnableStep.
             # TODO: The location of the autoSQL file needs to be configurable.
-            runnable_step.add_switch_short(key='as=/scratch/lab_bsf/resources/UCSC/bigGenePred.as')
+            runnable_step.add_option_pair_short(key='as', value='/scratch/lab_bsf/resources/UCSC/bigGenePred.as')
             runnable_step.add_switch_short(key='tab')
-            runnable_step.add_switch_short(key='type=bed12+8')
+            runnable_step.add_option_pair_short(key='type', value='bed12+8')
             runnable_step.arguments.append(file_path_cuffmerge.temporary_sorted_tsv)
             runnable_step.arguments.append(genome_sizes_path)
             runnable_step.arguments.append(file_path_cuffmerge.merged_bb)
@@ -1991,7 +1978,7 @@ class Tuxedo(Analysis):
 
             for sample in self.sample_list:
                 if self.debug > 0:
-                    print repr(self) + ' Sample name: ' + sample.name
+                    print self, 'Sample name:', sample.name
                     print sample.trace(1)
 
                 paired_reads_dict = sample.get_all_paired_reads(
@@ -2043,7 +2030,7 @@ class Tuxedo(Analysis):
                         text='Isoforms (Symbols)')
 
                     # TODO: The aligned BAM and BAI files and the unaligned BAM file are currently non standard.
-                    # The files have a "rnaseq_tophat_" prefix, but are in the "rnaseq_cufflinks_" directory.
+                    # The files have a 'rnaseq_tophat_' prefix, but are in the 'rnaseq_cufflinks_' directory.
                     # This will be resolved when the process_tophat step gets re-engineered.
                     # Aligned BAM file
                     str_list += '</td>\n'
@@ -3175,7 +3162,7 @@ class DESeq(Analysis):
 
             for sample in self.sample_list:
                 if self.debug > 0:
-                    print repr(self) + ' Sample name: ' + sample.name
+                    print self, 'Sample name:', sample.name
                     print sample.trace(1)
 
                 paired_reads_dict = sample.get_all_paired_reads(
@@ -3189,12 +3176,12 @@ class DESeq(Analysis):
                 paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
                 row_dict = {
-                    "sample": sample.name,
-                    "bam_path": StarAligner.get_prefix_star_aligner_merge(sample_name=sample.name) + '.bam',
-                    "bai_path": StarAligner.get_prefix_star_aligner_merge(sample_name=sample.name) + '.bai',
+                    'sample': sample.name,
+                    'bam_path': StarAligner.get_prefix_star_aligner_merge(sample_name=sample.name) + '.bam',
+                    'bai_path': StarAligner.get_prefix_star_aligner_merge(sample_name=sample.name) + '.bai',
                 }
                 """ @type row_dict: dict[str, str | unicode] """
-                # Set additional columns from the Sample Annotation Sheet prefixed with "Sample DESeq *".
+                # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample DESeq *'.
                 for annotation_key in filter(lambda x: x.startswith('DESeq '), sample.annotation_dict.keys()):
                     row_dict[annotation_key[6:]] = sample.annotation_dict[annotation_key][0]
 

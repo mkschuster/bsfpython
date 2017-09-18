@@ -416,7 +416,7 @@ class StarAligner(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
+                print self, 'Sample name:', sample.name
                 print sample.trace(1)
 
             runnable_index_list = list()
@@ -433,7 +433,7 @@ class StarAligner(Analysis):
             for paired_reads_name in paired_reads_name_list:
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
-                        print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
+                        print self, 'PairedReads name:', paired_reads.get_name()
 
                     ######################
                     # 1. Alignment Stage #
@@ -468,12 +468,15 @@ class StarAligner(Analysis):
                     runnable_step.add_option_long(key='runThreadN', value=str(stage_align.threads))
                     runnable_step.add_option_long(key='genomeDir', value=self.index_directory)
                     runnable_step.add_option_long(key='outFileNamePrefix', value=prefix_align + '_')
+                    # NOTE: The STAR aligner command line interface is seriously broken,
+                    # as the readFilesIn option requires two values.
+                    # Hence, use class bsf.argument.OptionMultiLong via wrapper Command.add_option_multi_long().
                     if paired_reads.reads_2 is None:
                         runnable_step.add_option_long(
                             key='readFilesIn',
                             value=paired_reads.reads_1.file_path)
                     else:
-                        runnable_step.add_option_long(
+                        runnable_step.add_option_multi_long(
                             key='readFilesIn',
                             value=' '.join((paired_reads.reads_1.file_path, paired_reads.reads_2.file_path)))
 
@@ -778,10 +781,6 @@ class StarAligner(Analysis):
             str_list += '<tbody>\n'
 
             for sample in self.sample_list:
-                if self.debug > 0:
-                    print repr(self) + ' Sample name: ' + sample.name
-                    print sample.trace(1)
-
                 paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping,
                                                                 exclude=True)
 

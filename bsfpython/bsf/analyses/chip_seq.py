@@ -523,7 +523,7 @@ class ChIPSeq(Analysis):
 
                 for c_sample in c_sample_list:
                     if self.debug > 1:
-                        print '  Control Sample name: {!r} file_path: {!r}'.format(c_sample.name, c_sample.file_path)
+                        print '  Control Sample name:', c_sample.name, 'file_path:', c_sample.file_path
                     if self.debug > 2:
                         print c_sample.trace(1)
                         # Find the Sample in the unified sample dictionary.
@@ -534,7 +534,7 @@ class ChIPSeq(Analysis):
 
                 for t_sample in t_sample_list:
                     if self.debug > 1:
-                        print '  Treatment Sample name: {!r} file_path: {!r}'.format(t_sample.name, t_sample.file_path)
+                        print '  Treatment Sample name:', t_sample.name, 'file_path:', t_sample.file_path
                     if self.debug > 2:
                         print t_sample.trace(1)
                     if t_sample.name in sample_dict:
@@ -671,7 +671,7 @@ class ChIPSeq(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
+                print self, 'Sample name:', sample.name
                 print sample.trace(1)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
@@ -809,7 +809,7 @@ class ChIPSeq(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
+                print self, 'Sample name:', sample.name
                 print sample.trace(1)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
@@ -977,14 +977,14 @@ class ChIPSeq(Analysis):
                                 key='treatment',
                                 value=os.path.join(
                                     self.genome_directory,
-                                    'chipseq_bowtie2_{}'.format(t_paired_reads_name),
-                                    '{}.bam'.format(t_paired_reads_name)))
+                                    'chipseq_bowtie2_' + t_paired_reads_name,
+                                    t_paired_reads_name + '.bam'))
                             macs14.add_option_long(
                                 key='control',
                                 value=os.path.join(
                                     self.genome_directory,
-                                    'chipseq_bowtie2_{}'.format(c_paired_reads_name),
-                                    '{}.bam'.format(c_paired_reads_name)))
+                                    'chipseq_bowtie2_' + c_paired_reads_name,
+                                    c_paired_reads_name + '.bam'))
 
                             # TODO: Experimentally prepend a chipseq_macs14 directory
                             # MACS14 can hopefully also cope with directories specified in the --name option, but
@@ -1131,15 +1131,15 @@ class ChIPSeq(Analysis):
                                 key='treatment',
                                 value=os.path.join(
                                     self.genome_directory,
-                                    'chipseq_bowtie2_{}'.format(t_paired_reads_name),
-                                    '{}.bam'.format(t_paired_reads_name)))
+                                    'chipseq_bowtie2_' + t_paired_reads_name,
+                                    t_paired_reads_name + '.bam'))
 
                             mc2.add_option_long(
                                 key='control',
                                 value=os.path.join(
                                     self.genome_directory,
-                                    'chipseq_bowtie2_{}'.format(c_paired_reads_name),
-                                    '{}.bam'.format(c_paired_reads_name)))
+                                    'chipseq_bowtie2_' + c_paired_reads_name,
+                                    c_paired_reads_name + '.bam'))
 
                             # TODO: Experimentally prepend a chipseq_macs2 directory.
                             # MACS2 can cope with directories specified in the --name option, but
@@ -1212,11 +1212,11 @@ class ChIPSeq(Analysis):
 
                             mb2.add_option_long(
                                 key='tfile',
-                                value=os.path.join(prefix, '{}_treat_pileup.bdg'.format(prefix)))
+                                value=os.path.join(prefix, prefix + '_treat_pileup.bdg'))
 
                             mb2.add_option_long(
                                 key='cfile',
-                                value=os.path.join(prefix, '{}_control_lambda.bdg'.format(prefix)))
+                                value=os.path.join(prefix, prefix + '_control_lambda.bdg'))
 
                             # Sequencing depth for treatment and control. Aim for setting the --SPMR parameter for
                             # macs2_call_peak to get the track normalised.
@@ -1226,12 +1226,12 @@ class ChIPSeq(Analysis):
 
                             mb2.add_option_long(
                                 key='ofile',
-                                value=os.path.join(prefix, '{}_bdgcmp.bdg'.format(prefix)))
+                                value=os.path.join(prefix, prefix + '_bdgcmp.bdg'))
 
                             # --method defaults to ppois i.e. Poisson Pvalue (-log10(pvalue), which yields data
                             # on a logarithmic scale.
 
-                            # mb2.add_option_long(key='--method', value='FE')
+                            # mb2.add_option_long(key='method', value='FE')
 
                             # Set macs2_bdg_cmp arguments.
 
@@ -1246,7 +1246,7 @@ class ChIPSeq(Analysis):
                             process_macs2.arguments.append('{}__{}'.format(t_paired_reads_name, c_paired_reads_name))
                             process_macs2.arguments.append(self.genome_sizes_path)
 
-                            if os.path.exists(os.path.join(prefix, '{}_peaks.bb'.format(prefix))):
+                            if os.path.exists(os.path.join(prefix, prefix + '_peaks.bb')):
                                 macs2_call_peak.submit = False
                                 macs2_bdg_cmp.submit = False
                                 process_macs2.submit = False
@@ -1289,7 +1289,7 @@ class ChIPSeq(Analysis):
 
             # Create a directory per factor.
 
-            prefix = 'chipseq_diffbind_{}'.format(comparison_name)
+            prefix = 'chipseq_diffbind_' + comparison_name
 
             factor_directory = os.path.join(self.genome_directory, prefix)
 
@@ -1339,12 +1339,12 @@ class ChIPSeq(Analysis):
                                 row_dict['Replicate'] = chipseq_comparison.replicate
                                 row_dict['bamReads'] = os.path.join(
                                     self.genome_directory,
-                                    'chipseq_bowtie2_{}'.format(t_paired_reads_name),
-                                    '{}.bam'.format(t_paired_reads_name))
+                                    'chipseq_bowtie2_' + t_paired_reads_name,
+                                    t_paired_reads_name + '.bam')
                                 row_dict['bamControl'] = os.path.join(
                                     self.genome_directory,
-                                    'chipseq_bowtie2_{}'.format(c_paired_reads_name),
-                                    '{}.bam'.format(c_paired_reads_name))
+                                    'chipseq_bowtie2_' + c_paired_reads_name,
+                                    c_paired_reads_name + '.bam')
                                 row_dict['ControlID'] = c_paired_reads_name
                                 row_dict['Peaks'] = os.path.join(
                                     self.genome_directory,
@@ -1373,7 +1373,7 @@ class ChIPSeq(Analysis):
 
             diffbind = stage_diffbind.add_executable(
                 executable=Executable(
-                    name='chipseq_diffbind_{}'.format(comparison_name),
+                    name='chipseq_diffbind_' + comparison_name,
                     program='bsf_chipseq_diffbind.R'))
             diffbind.dependencies.extend(job_dependencies)
 

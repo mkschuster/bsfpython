@@ -460,8 +460,8 @@ def submit(stage, debug=0):
         # should be defined by the Bash startup files.
         # In this case the shell (-S) needs specifying explicitly.
 
-        executable_drms.add_switch_short(key='-clear')
-        executable_drms.add_option_short(key='-S', value='/bin/bash')
+        executable_drms.add_switch_short(key='clear')
+        executable_drms.add_option_short(key='S', value='/bin/bash')
 
         # Binary or script
 
@@ -514,7 +514,9 @@ def submit(stage, debug=0):
         if stage.parallel_environment:
             # Parallel environment format: -pe pe_name pe_min-pe_max
             # Here, pe_max is not specified, but defaults to 9999999. See qsub (1).
-            executable_drms.add_option_short(key='pe', value=stage.parallel_environment + ' ' + str(stage.threads))
+            executable_drms.add_option_multi_short(
+                key='pe',
+                value=' '.join((stage.parallel_environment, str(stage.threads))))
 
         # Queue name
 
