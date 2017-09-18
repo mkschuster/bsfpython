@@ -566,7 +566,7 @@ class RunInformation(object):
         """
 
         cycle_number = 0
-        """ cycle_number: int """
+        """ @type cycle_number: int """
         read_start_list = list()
         """ @type read_start_list: list[int] """
 
@@ -618,9 +618,9 @@ class RunInformation(object):
 
         for read in self.reads:
             if read.index:
-                read_structure_list.append('{}I'.format(read.cycles))
+                read_structure_list.append(str(read.cycles) + 'I')
             else:
-                read_structure_list.append('{}B'.format(read.cycles))
+                read_structure_list.append(str(read.cycles) + 'B')
 
         return read_structure_list
 
@@ -727,7 +727,7 @@ class RunParameters(object):
             # MiSeq or NextSeq
             return self.element_tree.find(path='ExperimentName').text
         else:
-            # HiSeq run or else
+            # HiSeq or else
             return self.element_tree.find(path='Setup/ExperimentName').text
 
     @property
@@ -742,12 +742,13 @@ class RunParameters(object):
         """
 
         if self.get_run_parameters_version in ('MiSeq_1_1', ):
-            # MiSeq 1_1 run
+            # MiSeq 1_1
             return self.element_tree.find(path='Barcode').text
         elif self.get_run_parameters_version in ('NextSeq_2_1_0', ):
+            # NextSeq
             return self.element_tree.find(path='FlowCellSerial').text
         else:
-            # HiSeq run or else
+            # HiSeq or else
             return self.element_tree.find(path='Setup/Barcode').text
 
     @property
@@ -762,7 +763,7 @@ class RunParameters(object):
         """
 
         if self.get_run_parameters_version in ('MiSeq_1_1', ):
-            # MiSeq 1_1 run
+            # MiSeq 1_1
             # The MiSeq has no concept of a <Flowcell> chemistry type, only a <ReagentKitVersion>.
             return self.element_tree.find(path='ReagentKitVersion').text
         elif self.get_run_parameters_version in ('NextSeq_2_1_0', ):
@@ -770,7 +771,7 @@ class RunParameters(object):
             # The NextSeq uses <Chemistry>
             return self.element_tree.find(path='Chemistry').text
         else:
-            # HiSeq run or else
+            # HiSeq or else
             return self.element_tree.find(path='Setup/Flowcell').text
 
     @property
@@ -785,12 +786,16 @@ class RunParameters(object):
         """
 
         if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1 run
+            # MiSeq 1_1
             # The MiSeq has no concept of a <Index> version, only a <ReagentKitVersion>.
             return str()
         else:
-            # HiSeq run or else
-            return self.element_tree.find(path='Setup/Index').text
+            # HiSeq or else
+            element = self.element_tree.find(path='Setup/Index')
+            if element is None:
+                return str()
+            else:
+                return element.text
 
     @property
     def get_pe_type(self):
@@ -804,12 +809,16 @@ class RunParameters(object):
         """
 
         if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1 run
+            # MiSeq 1_1
             # The MiSeq has no concept of a <Pe> version, only a <ReagentKitVersion>.
             return str()
         else:
-            # HiSeq run or else
-            return self.element_tree.find(path='Setup/Pe').text
+            # HiSeq or else
+            element = self.element_tree.find(path='Setup/Pe')
+            if element is None:
+                return str()
+            else:
+                return element.text
 
     @property
     def get_sbs_type(self):
@@ -823,12 +832,16 @@ class RunParameters(object):
         """
 
         if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1 run
+            # MiSeq 1_1
             # The MiSeq has no concept of a <Sbs> chemistry version, only a <ReagentKitVersion>.
             return str()
         else:
-            # HiSeq run or else
-            return self.element_tree.find(path='Setup/Sbs').text
+            # HiSeq or else
+            element = self.element_tree.find(path='Setup/Sbs')
+            if element is None:
+                return str()
+            else:
+                return element.text
 
     @property
     def get_position(self):
@@ -843,14 +856,14 @@ class RunParameters(object):
         """
 
         if self.get_run_parameters_version in ('MiSeq_1_1', ):
-            # MiSeq 1_1 run
+            # MiSeq 1_1
             # The MiSeq has no concept of a <FCPosition>.
             return str()
-        elif self._run_parameters_version in ('NextSeq_2_1_0', ):
-            # The NextSeq has no concept of <FCPosition>, but always uses "A".
-            return "A"
+        elif self.get_run_parameters_version in ('NextSeq_2_1_0', ):
+            # The NextSeq has no concept of <FCPosition>, but always uses 'A'.
+            return 'A'
         else:
-            # HiSeq run or else
+            # HiSeq or else
             element = self.element_tree.find(path='Setup/FCPosition')
             if element is not None:
                 return element.text
@@ -869,10 +882,10 @@ class RunParameters(object):
         """
 
         if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1 run
+            # MiSeq 1_1
             return self.element_tree.find(path='RunID').text
         else:
-            # HiSeq run or else
+            # HiSeq or else
             return self.element_tree.find(path='Setup/RunID').text
 
     @property
@@ -889,10 +902,10 @@ class RunParameters(object):
         """
 
         if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1 run
+            # MiSeq 1_1
             return str()
         else:
-            # HiSeq run or else
+            # HiSeq or else
             element = self.element_tree.find(path='Setup/Read1')
             if element is not None:
                 return element.text
@@ -914,10 +927,10 @@ class RunParameters(object):
         """
 
         if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1 run
+            # MiSeq 1_1
             return str()
         else:
-            # HiSeq run or else
+            # HiSeq or else
             element = self.element_tree.find(path='Setup/Read2')
             if element is not None:
                 return element.text
@@ -940,10 +953,10 @@ class RunParameters(object):
         """
 
         if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1 run
+            # MiSeq 1_1
             return str()
         else:
-            # HiSeq run or else
+            # HiSeq or else
             element = self.element_tree.find(path='Setup/IndexRead1')
             if element is not None:
                 return element.text
@@ -970,10 +983,10 @@ class RunParameters(object):
         """
 
         if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1 run
+            # MiSeq 1_1
             return str()
         else:
-            # HiSeq run or else
+            # HiSeq or else
             element = self.element_tree.find(path='Setup/IndexRead2')
             if element is not None:
                 return element.text
@@ -992,10 +1005,10 @@ class RunParameters(object):
         """
 
         if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1 run
+            # MiSeq 1_1
             return self.element_tree.find(path='RTAVersion').text
         else:
-            # HiSeq run or else
+            # HiSeq or else
             return self.element_tree.find(path='Setup/RTAVersion').text
 
     @property
@@ -1218,9 +1231,9 @@ class RunFolder(object):
         elif os.path.exists(os.path.join(file_path, 'RunParameters.xml')):
             run_parameters_path = os.path.join(file_path, 'RunParameters.xml')
         else:
-            raise Exception("Found neither a runParameters.xml not a RunParameters.xml file.")
+            raise Exception('Found neither a runParameters.xml not a RunParameters.xml file.')
 
-        # Illumina Run Folders obey a "YYMMDD_SN000_Run_PositionFCID" schema.
+        # Illumina Run Folders obey a 'YYMMDD_SN000_Run_PositionFCID' schema.
 
         components = file_name.split('_')
 
@@ -1369,16 +1382,15 @@ class RunFolder(object):
             if lane not in self._missing_base_call_tiles:
                 self._missing_base_call_tiles[lane] = dict()
             lane_dict = self._missing_base_call_tiles[lane]
-            if self.base_call_analysis.has_lane(lane='{:1d}'.format(lane)):
+            if self.base_call_analysis.has_lane(lane=str(lane)):
                 # Lanes are not defined of the config.xml file could not be read.
                 for surface in range(1, fcl.surface_count + 1):
                     for swath in range(1, fcl.swath_count + 1):
                         for tile in range(1, fcl.tile_count + 1):
                             tile = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
-                            if not self.base_call_analysis.has_lane_tile(lane='{:1d}'.format(lane), tile=tile):
+                            if not self.base_call_analysis.has_lane_tile(lane=str(lane), tile=tile):
                                 lane_dict[tile] = True
-                                print "Missing BaseCallAnalysis lane '{:1d}' tile '{}'.". \
-                                    format(lane, tile)
+                                print 'Missing BaseCallAnalysis lane:', lane, 'tile:', tile
 
         return
 
@@ -1396,16 +1408,15 @@ class RunFolder(object):
             if lane not in self._missing_image_analysis_tiles:
                 self._missing_image_analysis_tiles[lane] = dict()
             lane_dict = self._missing_image_analysis_tiles[lane]
-            if self.image_analysis.has_lane(lane='{:1d}'.format(lane)):
+            if self.image_analysis.has_lane(lane=str(lane)):
                 # Lanes are not defined of the config.xml file could not be read.
                 for surface in range(1, fcl.surface_count + 1):
                     for swath in range(1, fcl.swath_count + 1):
                         for tile in range(1, fcl.tile_count + 1):
                             tile = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
-                            if not self.image_analysis.has_lane_tile(lane='{:1d}'.format(lane), tile=tile):
+                            if not self.image_analysis.has_lane_tile(lane=str(lane), tile=tile):
                                 lane_dict[tile] = True
-                                print "Missing ImageAnalysis lane '{:1d}' tile '{}'.". \
-                                    format(lane, tile)
+                                print 'Missing ImageAnalysis lane:', lane, 'tile:', tile
 
         return
 
@@ -1464,14 +1475,16 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-        if debug:
-            print "Processing directory '{}'".format(directory_path)
+        if debug > 0:
+            # print 'Processing directory', directory_path
+            pass
 
         for file_name in file_name_list:
+            file_path = os.path.join(directory_path, file_name)
             if file_name in directory_dict:
                 del directory_dict[file_name]
             else:
-                print "Missing file '{}' in directory path '{}'".format(file_name, directory_path)
+                print 'Missing file', file_path
 
         return
 
@@ -1497,47 +1510,49 @@ class RunFolder(object):
             return
 
         _directory_name = 'Matrix'
+        _directory_path = os.path.join(directory_path, _directory_name)
         if _directory_name in directory_dict:
             del directory_dict[_directory_name]
         else:
-            print "Missing directory IRF/Data/Intensities/BaseCalls/{}".format(_directory_name)
+            print 'Missing directory', _directory_path
             return
-        _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
         """ @type _directory_dict: dict[str | unicode, int] """
 
-        if debug:
-            print "Processing 'IRF/Data/Intensities/BaseCalls/{}/'".format(_directory_name)
+        if debug > 0:
+            print 'Processing directory', _directory_path
 
         if rta in ('2.5.2', ):
             # For RTA 2.5.2 (HiSeq 3000/4000) process IRF/Data/Intensities/BaseCalls/Matrix/L00[1-8] directories.
             for lane in range(1, fcl.lane_count + 1):
                 lane_name = 'L{:03d}'.format(lane)
+                lane_path = os.path.join(_directory_path, lane_name)
                 if lane_name in _directory_dict:
                     del _directory_dict[lane_name]
                 else:
-                    print "Missing directory IRF/Data/Intensities/BaseCalls/{}/{}/".format(_directory_name, lane_name)
+                    print 'Missing directory', lane_path
                     continue
-                lane_path = os.path.join(_directory_path, lane_name)
                 lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
                 """ @type lane_dict: dict[str | unicode, int] """
 
-                if debug:
-                    print "Processing 'IRF/Data/Intensities/BaseCalls/{}/{}/'".format(_directory_name, lane_name)
+                if debug > 1:
+                    print 'Processing directory', lane_path
 
                 # Process IRF/Data/Intensities/BaseCalls/Matrix/L00[1-8]/C[0-9]+.1/ directories.
 
                 for cycle in range(1, self.run_information.get_cycle_number + 1):
                     cycle_name = 'C{:d}.1'.format(cycle)
+                    cycle_path = os.path.join(lane_path, cycle_name)
                     if cycle_name in lane_dict:
                         del lane_dict[cycle_name]
                     else:
-                        print "Missing directory IRF/Data/Intensities/BaseCalls/{}/{}/{}/". \
-                            format(_directory_name, lane_name, cycle_name)
+                        print 'Missing directory', cycle_path
                         continue
-                    cycle_path = os.path.join(lane_path, cycle_name)
                     cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
                     """ @type cycle_dict: dict[str | unicode, int] """
+
+                    if debug > 2:
+                        print 'Processing directory', cycle_path
 
                     for surface in range(1, fcl.surface_count + 1):
                         for swath in range(1, fcl.swath_count + 1):
@@ -1549,22 +1564,19 @@ class RunFolder(object):
                                 if _entry_name in cycle_dict:
                                     del cycle_dict[_entry_name]
                                 else:
-                                    print "Missing tile matrix file IRF/Data/Intensities/BaseCalls/{}/{}/{}/{}". \
-                                        format(_directory_name, lane_name, cycle_name, _entry_name)
+                                    print 'Missing tile matrix file', os.path.join(cycle_path, _entry_name)
 
                     if len(cycle_dict):
-                        print "IRF/Data/Intensities/BaseCalls/{}/{}/{}/ with number of entries: {:d}". \
-                            format(_directory_name, lane_name, cycle_name, len(cycle_dict))
+                        print cycle_path, 'with number of entries:', str(len(cycle_dict))
                         entry_name_list = cycle_dict.keys()
                         entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                        print '  Remaining entries: {!r}'.format(entry_name_list)
+                        print '  Remaining entries:', entry_name_list
 
                 if len(lane_dict):
-                    print "IRF/Data/Intensities/BaseCalls/{}/{}/ with number of entries: {:d}". \
-                        format(_directory_name, lane_name, len(lane_dict))
+                    print lane_path, 'with number of entries:', str(len(lane_dict))
                     entry_name_list = lane_dict.keys()
                     entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                    print '  Remaining entries: {!r}'.format(entry_name_list)
+                    print '  Remaining entries:', entry_name_list
         else:
             # All other platforms have a flat list of matrix.txt files.
             for read in range(1, self.run_information.get_read_number + 1):
@@ -1575,8 +1587,7 @@ class RunFolder(object):
                 if _entry_name in _directory_dict:
                     del _directory_dict[_entry_name]
                 else:
-                    print "Missing read matrix file IRF/Data/Intensities/BaseCalls/{}/{}". \
-                        format(_directory_name, _entry_name)
+                    print 'Missing read matrix file', os.path.join(_directory_path, _entry_name)
 
                 for lane in range(1, fcl.lane_count + 1):
                     # Process lane matrix files.
@@ -1586,8 +1597,7 @@ class RunFolder(object):
                     if _entry_name in _directory_dict:
                         del _directory_dict[_entry_name]
                     else:
-                        print "Missing lane matrix file IRF/Data/Intensities/BaseCalls/{}/{}". \
-                            format(_directory_name, _entry_name)
+                        print 'Missing lane matrix file', os.path.join(_directory_path, _entry_name)
 
                     for surface in range(1, fcl.surface_count + 1):
                         for swath in range(1, fcl.swath_count + 1):
@@ -1605,15 +1615,13 @@ class RunFolder(object):
                                 if _entry_name in _directory_dict:
                                     del _directory_dict[_entry_name]
                                 else:
-                                    print "Missing tile matrix file IRF/Data/Intensities/BaseCalls/{}/{}". \
-                                        format(_directory_name, _entry_name)
+                                    print 'Missing tile matrix file', os.path.join(_directory_path, _entry_name)
 
         if len(_directory_dict):
-            print "IRF/Data/Intensities/BaseCalls/{}/ with number of entries: {:d}". \
-                format(_directory_name, len(_directory_dict))
+            print _directory_path, 'with number of entries:', str(len(_directory_dict))
             entry_name_list = _directory_dict.keys()
             entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print '  Remaining entries: {!r}'.format(entry_name_list)
+            print '  Remaining entries:', entry_name_list
 
         return
 
@@ -1639,17 +1647,17 @@ class RunFolder(object):
             return
 
         _directory_name = 'Phasing'
+        _directory_path = os.path.join(directory_path, _directory_name)
         if _directory_name in directory_dict:
             del directory_dict[_directory_name]
         else:
-            print "Missing directory IRF/Data/intensities/BaseCalls/{}/".format(_directory_name)
+            print 'Missing directory', os.path.join(directory_path, _directory_name)
             return
-        _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
         """ @type _directory_dict: dict[str | unicode, int] """
 
-        if debug:
-            print "Processing 'IRF/Data/intensities/BaseCalls/{}/'".format(_directory_name)
+        if debug > 0:
+            print 'Processing directory', _directory_path
 
         for ri_read in self.run_information.reads:
             # Process read phasing files.
@@ -1659,7 +1667,7 @@ class RunFolder(object):
             if _entry_name in _directory_dict:
                 del _directory_dict[_entry_name]
             else:
-                print "Missing file IRF/Data/intensities/BaseCalls/{}/{}".format(_directory_name, _entry_name)
+                print 'Missing file', os.path.join(_directory_path, _entry_name)
 
             for lane in range(1, fcl.lane_count + 1):
                 # Process lane phasing files.
@@ -1669,7 +1677,7 @@ class RunFolder(object):
                 if _entry_name in _directory_dict:
                     del _directory_dict[_entry_name]
                 else:
-                    print "Missing file IRF/Data/intensities/BaseCalls/{}/{}".format(_directory_name, _entry_name)
+                    print 'Missing file', os.path.join(_directory_path, _entry_name)
                     continue
 
                 for surface in range(1, fcl.surface_count + 1):
@@ -1689,8 +1697,7 @@ class RunFolder(object):
                                 if _entry_name in _directory_dict:
                                     del _directory_dict[_entry_name]
                                 else:
-                                    print "Missing file IRF/Data/intensities/BaseCalls/{}/{}". \
-                                        format(_directory_name, _entry_name)
+                                    print 'Missing file', os.path.join(_directory_path, _entry_name)
 
                             # Process tile phasing files.
                             # s_1_1_1101_phasing.txt
@@ -1700,8 +1707,7 @@ class RunFolder(object):
                             if _entry_name in _directory_dict:
                                 del _directory_dict[_entry_name]
                             else:
-                                print "Missing file IRF/Data/intensities/BaseCalls/{}/{}". \
-                                    format(_directory_name, _entry_name)
+                                print 'Missing file', os.path.join(_directory_path, _entry_name)
 
                             if rta not in ('1.12.4', '1.12.4.2', '1.13.48', '1.17.21.3'):
                                 # Process the tile empirical phasing files.
@@ -1710,8 +1716,7 @@ class RunFolder(object):
                                 if _entry_name in _directory_dict:
                                     del _directory_dict[_entry_name]
                                 else:
-                                    print "Missing file IRF/Data/intensities/BaseCalls/{}/{}". \
-                                        format(_directory_name, _entry_name)
+                                    print 'Missing file', os.path.join(_directory_path, _entry_name)
 
         if rta not in ('2.5.2', ):
             # RTA 2.5.2 (HiSeq 3000/4000) does not have
@@ -1722,14 +1727,13 @@ class RunFolder(object):
                     if _entry_name in _directory_dict:
                         del _directory_dict[_entry_name]
                     else:
-                        print "Missing file IRF/DataIntensities/BaseCalls/{}/{}".format(_directory_name, _entry_name)
+                        print 'Missing file', os.path.join(_directory_path, _entry_name)
 
         if len(_directory_dict):
-            print "IRF/Data/intensities/BaseCalls/{}/ with number of entries: {:d}". \
-                format(_directory_name, len(_directory_dict))
+            print _directory_path, 'with number of entries:', str(len(_directory_dict))
             entry_name_list = _directory_dict.keys()
             entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print '  Remaining entries: {!r}'.format(entry_name_list)
+            print '  Remaining entries:', entry_name_list
 
         return
 
@@ -1750,17 +1754,17 @@ class RunFolder(object):
         rta = self.run_parameters.get_real_time_analysis_version
 
         _directory_name = 'BaseCalls'
+        _directory_path = os.path.join(directory_path, _directory_name)
         if _directory_name in directory_dict:
             del directory_dict[_directory_name]
         else:
-            print "Missing directory IRF/Data/Intensities/{}/".format(_directory_name)
+            print 'Missing directory', os.path.join(directory_path, _directory_name)
             return
-        _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
         """ @type _directory_dict: dict[str | unicode, int] """
 
-        if debug:
-            print "Processing 'IRF/Data/Intensities/{}/'".format(_directory_name)
+        if debug > 0:
+            print 'Processing directory', _directory_path
 
         # Process the IRF/Data/Intensities/BaseCalls/config.xml file.
 
@@ -1770,7 +1774,7 @@ class RunFolder(object):
             if _entry_name in _directory_dict:
                 del _directory_dict[_entry_name]
             else:
-                print "Missing file IRF/Data/Intensities/{}/{}".format(_directory_name, _entry_name)
+                print 'Missing file', os.path.join(_directory_path, _entry_name)
 
             # Check for completeness of tiles in the base call configuration XML file (config.xml).
             self._check_tiles_base_call()
@@ -1779,17 +1783,17 @@ class RunFolder(object):
 
         for lane in range(1, fcl.lane_count + 1):
             lane_name = 'L{:03d}'.format(lane)
+            lane_path = os.path.join(_directory_path, lane_name)
             if lane_name in _directory_dict:
                 del _directory_dict[lane_name]
             else:
-                print "Missing directory IRF/Data/Intensities/{}/{}/".format(_directory_name, lane_name)
+                print 'Missing directory', lane_path
                 continue
-            lane_path = os.path.join(_directory_path, lane_name)
             lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
             """ @type lane_dict: dict[str | unicode, int] """
 
-            if debug:
-                print "Processing 'IRF/Data/Intensities/{}/{}/'".format(_directory_name, lane_name)
+            if debug > 1:
+                print 'Processing directory', lane_path
 
             # Process IRF/Data/Intensities/BaseCalls/L00[1-8]/C[0-9]+.1 directories.
 
@@ -1800,41 +1804,39 @@ class RunFolder(object):
                     if _entry_name in lane_dict:
                         del lane_dict[_entry_name]
                     else:
-                        print "Missing cycle bcl.bgzf file IRF/Data/Intensities/{}/{}/{}". \
-                            format(_directory_name, lane_name, _entry_name)
+                        print 'Missing cycle bcl.bgzf file', os.path.join(lane_path, _entry_name)
                     _entry_name = '{:04d}.bcl.bgzf.bci'.format(cycle)
                     if _entry_name in lane_dict:
                         del lane_dict[_entry_name]
                     else:
-                        print "Missing cycle bcl.bgzf.bci file IRF/Data/Intensities/{}/{}/{}". \
-                            format(_directory_name, lane_name, _entry_name)
+                        print 'Missing cycle bcl.bgzf.bci file', os.path.join(lane_path, _entry_name)
 
                 _entry_name = 's_{:d}.bci'.format(lane)
                 if _entry_name in lane_dict:
                     del lane_dict[_entry_name]
                 else:
-                    print "Missing lane bci file IRF/Data/Intensities/{}/{}/{}". \
-                        format(_directory_name, lane_name, _entry_name)
+                    print 'Missing lane bci file', os.path.join(lane_path, _entry_name)
 
                 _entry_name = 's_{:d}.filter'.format(lane)
                 if _entry_name in lane_dict:
                     del lane_dict[_entry_name]
                 else:
-                    print "Missing lane filter file IRF/Data/Intensities/{}/{}/{}". \
-                        format(_directory_name, lane_name, _entry_name)
+                    print 'Missing lane filter file', os.path.join(lane_path, _entry_name)
             else:
                 # For HiSeq and MiSeq
                 for cycle in range(1, self.run_information.get_cycle_number + 1):
                     cycle_name = 'C{:d}.1'.format(cycle)
+                    cycle_path = os.path.join(lane_path, cycle_name)
                     if cycle_name in lane_dict:
                         del lane_dict[cycle_name]
                     else:
-                        print "Missing directory IRF/Data/Intensities/{}/{}/{}/". \
-                            format(_directory_name, lane_name, cycle_name)
+                        print 'Missing directory', cycle_path
                         continue
-                    cycle_path = os.path.join(lane_path, cycle_name)
                     cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
                     """ @type cycle_dict: dict[str | unicode, int] """
+
+                    if debug > 2:
+                        print 'Processing directory', cycle_path
 
                     for surface in range(1, fcl.surface_count + 1):
                         for swath in range(1, fcl.swath_count + 1):
@@ -1858,8 +1860,7 @@ class RunFolder(object):
                                     if _entry_name in cycle_dict:
                                         del cycle_dict[_entry_name]
                                     else:
-                                        print "Missing tile bcl file IRF/Data/Intensities/{}/{}/{}/{}". \
-                                            format(_directory_name, lane_name, cycle_name, _entry_name)
+                                        print 'Missing tile bcl file', os.path.join(cycle_path, _entry_name)
 
                                 # Process tile stats files.
                                 # s_1_1101.stats
@@ -1870,15 +1871,13 @@ class RunFolder(object):
                                     if _entry_name in cycle_dict:
                                         del cycle_dict[_entry_name]
                                     else:
-                                        print "Missing tile stats file IRF/Data/Intensities/{}/{}/{}/{}". \
-                                            format(_directory_name, lane_name, cycle_name, _entry_name)
+                                        print 'Missing tile stats file', os.path.join(cycle_path, _entry_name)
 
                     if len(cycle_dict):
-                        print "IRF/Data/Intensities/{}/{}/{}/ with number of entries: {:d}". \
-                            format(_directory_name, lane_name, cycle_name, len(cycle_dict))
+                        print cycle_path, 'with number of entries:', str(len(cycle_dict))
                         entry_name_list = cycle_dict.keys()
                         entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                        print '  Remaining entries: {!r}'.format(entry_name_list)
+                        print '  Remaining entries:', entry_name_list
 
             # Process control and filter files.
 
@@ -1901,8 +1900,7 @@ class RunFolder(object):
                                 if _entry_name in lane_dict:
                                     del lane_dict[_entry_name]
                                 else:
-                                    print "Missing tile control file IRF/Data/Intensities/{}/{}/{}". \
-                                        format(_directory_name, lane_name, _entry_name)
+                                    print 'Missing tile control file', os.path.join(lane_path, _entry_name)
 
                             # Process tile filter files.
                             # s_1_1101.filter
@@ -1911,15 +1909,13 @@ class RunFolder(object):
                             if _entry_name in lane_dict:
                                 del lane_dict[_entry_name]
                             else:
-                                print "Missing tile filter file IRF/Data/Intensities/{}/{}/{}". \
-                                    format(_directory_name, lane_name, _entry_name)
+                                print 'Missing tile filter file', os.path.join(lane_path, _entry_name)
 
             if len(lane_dict):
-                print "IRF/Data/Intensities/{}/{} with number of entries: {:d}". \
-                    format(_directory_name, lane_name, len(lane_dict))
+                print lane_path, 'with number of entries:', str(len(lane_dict))
                 entry_name_list = lane_dict.keys()
                 entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                print '  Remaining entries: {!r}'.format(entry_name_list)
+                print '  Remaining entries:', entry_name_list
 
         # Process the IRF/Data/Intensities/BaseCalls/Matrix/ directory.
 
@@ -1943,14 +1939,13 @@ class RunFolder(object):
             if _entry_name in _directory_dict:
                 del _directory_dict[_entry_name]
             else:
-                print "Missing file IRF/Data/Intensities/{}/{}".format(_directory_name, _entry_name)
+                print 'Missing file', os.path.join(_directory_path, _entry_name)
 
         if len(_directory_dict):
-            print "IRF/Data/Intensities/{}/ with number of entries: {:d}". \
-                format(_directory_name, len(_directory_dict))
+            print _directory_path, 'with number of entries:', str(len(_directory_dict))
             entry_name_list = _directory_dict.keys()
             entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print '  Remaining entries: {!r}'.format(entry_name_list)
+            print '  Remaining entries:', entry_name_list
 
         return
 
@@ -1973,17 +1968,17 @@ class RunFolder(object):
             return
 
         _directory_name = 'Offsets'
+        _directory_path = os.path.join(directory_path, _directory_name)
         if _directory_name in directory_dict:
             del directory_dict[_directory_name]
         else:
-            print "Missing directory IRF/Data/Intensities/{}'".format(_directory_name)
+            print 'Missing directory', _directory_path
             return
-        _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
         """ @type _directory_dict: dict[str | unicode, int] """
 
-        if debug:
-            print "Processing 'IRF/Data/Intensities/{}/'".format(_directory_name)
+        if debug > 0:
+            print 'Processing directory', _directory_path
 
         # Check the IRF/Data/Intensities/Offsets/offsets.txt file.
 
@@ -1991,7 +1986,7 @@ class RunFolder(object):
         if _entry_name in _directory_dict:
             del _directory_dict[_entry_name]
         else:
-            print "Missing file IRF/Data/Intensities/{}/{}'".format(_directory_name, _entry_name)
+            print 'Missing file', os.path.join(_directory_path, _entry_name)
 
         # Check the IRF/Data/Intensities/Offsets/SubTileOffsets.txt file.
 
@@ -1999,14 +1994,13 @@ class RunFolder(object):
         if _entry_name in _directory_dict:
             del _directory_dict[_entry_name]
         else:
-            print "Missing file IRF/Data/Intensities/{}/{}".format(_directory_name, _entry_name)
+            print 'Missing file', os.path.join(_directory_path, _entry_name)
 
         if len(_directory_dict):
-            print "IRF/Data/Intensities/{}/ with number of entries: {:d}". \
-                format(_directory_name, len(_directory_dict))
+            print _directory_path, 'with number of entries:', str(len(_directory_dict))
             entry_name_list = _directory_dict.keys()
             entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print '  Remaining entries: {!r}'.format(entry_name_list)
+            print '  Remaining entries:', entry_name_list
 
         return
 
@@ -2027,17 +2021,17 @@ class RunFolder(object):
         rta = self.run_parameters.get_real_time_analysis_version
 
         _directory_name = 'Intensities'
+        _directory_path = os.path.join(directory_path, _directory_name)
         if _directory_name in directory_dict:
             del directory_dict[_directory_name]
         else:
-            print "Missing directory IRF/Data/{}/".format(_directory_name)
+            print 'Missing directory', _directory_path
             return
-        _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
         """ @type _directory_dict: dict[str | unicode, int] """
 
-        if debug:
-            print "Processing 'IRF/Data/{}/'".format(_directory_name)
+        if debug > 0:
+            print 'Processing directory', _directory_path
 
         # Build a list of cycle numbers that have no error map such as the last cycle of a read and index cycles.
         no_error_cycles = list()
@@ -2051,8 +2045,8 @@ class RunFolder(object):
                 no_error_cycles.append(cycles + ri_read.cycles - 1)
             cycles += ri_read.cycles
 
-        if debug:
-            print "Cycles without errorMap files: {!r}".format(no_error_cycles)
+        if debug > 0:
+            print 'Cycles without errorMap files:', no_error_cycles
 
         # Check the IRF/Data/Intensities/BaseCalls/ directory.
 
@@ -2071,7 +2065,7 @@ class RunFolder(object):
             if _entry_name in _directory_dict:
                 del _directory_dict[_entry_name]
             else:
-                print "Missing file IRF/Data/{}/{}".format(_directory_name, _entry_name)
+                print 'Missing file', os.path.join(_directory_path, _entry_name)
         else:
             # The HiSeq 2000 platform has:
             # config.xml
@@ -2087,7 +2081,7 @@ class RunFolder(object):
                 if _entry_name in _directory_dict:
                     del _directory_dict[_entry_name]
                 else:
-                    print "Missing configuration file IRF/Data/{}/{}".format(_directory_name, _entry_name)
+                    print 'Missing configuration file', os.path.join(_directory_path, _entry_name)
 
             # Check for completeness of tiles in the image analysis configuration XML file (config.xml).
 
@@ -2097,24 +2091,24 @@ class RunFolder(object):
 
             for lane in range(1, fcl.lane_count + 1):
                 lane_name = 'L{:03d}'.format(lane)
+                lane_path = os.path.join(_directory_path, lane_name)
                 if lane_name in _directory_dict:
                     del _directory_dict[lane_name]
                 else:
-                    print "Missing directory IRF/Data/{}/{}/".format(_directory_name, lane_name)
+                    print 'Missing directory', lane_path
                     continue
-                lane_path = os.path.join(_directory_path, lane_name)
                 lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
                 """ @type lane_dict: dict[str | unicode, int] """
 
-                if debug:
-                    print "Processing 'IRF/Data/{}/{}/'".format(_directory_name, lane_name)
+                if debug > 1:
+                    print 'Processing directory', lane_path
 
                 if rta in ('2.4.11', ):
                     _entry_name = 's_{:d}.locs'.format(lane)
                     if _entry_name in lane_dict:
                         del lane_dict[_entry_name]
                     else:
-                        print "Missing file IRF/Data/{}/{}/{}".format(_directory_name, lane_name, _entry_name)
+                        print 'Missing file', os.path.join(lane_path, _entry_name)
                 else:
                     for surface in range(1, fcl.surface_count + 1):
                         for swath in range(1, fcl.swath_count + 1):
@@ -2132,8 +2126,7 @@ class RunFolder(object):
                                     if _entry_name in lane_dict:
                                         del lane_dict[_entry_name]
                                     else:
-                                        print "Missing file IRF/Data/{}/{}/{}". \
-                                            format(_directory_name, lane_name, _entry_name)
+                                        print 'Missing file', os.path.join(lane_path, _entry_name)
                                 else:
                                     # s_1_1101.clocs
                                     # s_1_2316.clocs
@@ -2141,8 +2134,7 @@ class RunFolder(object):
                                     if _entry_name in lane_dict:
                                         del lane_dict[_entry_name]
                                     else:
-                                        print "Missing file IRF/Data/{}/{}/{}". \
-                                            format(_directory_name, lane_name, _entry_name)
+                                        print 'Missing file', os.path.join(lane_path, _entry_name)
 
                 # Process IRF/Data/Intensities/L00[1-8]/C[0-9]+.1 directories.
 
@@ -2153,15 +2145,17 @@ class RunFolder(object):
                     # full width at half maximum (*.FWHMMap) files.
                     for cycle in range(1, self.run_information.get_cycle_number + 1):
                         cycle_name = 'C{:d}.1'.format(cycle)
+                        cycle_path = os.path.join(lane_path, cycle_name)
                         if cycle_name in lane_dict:
                             del lane_dict[cycle_name]
                         else:
-                            print "Missing directory IRF/Data/{}/{}/{}/". \
-                                format(_directory_name, lane_name, cycle_name)
+                            print 'Missing directory', cycle_path
                             continue
-                        cycle_path = os.path.join(lane_path, cycle_name)
                         cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
                         """ @type cycle_dict: dict[str | unicode, int] """
+
+                        if debug > 2:
+                            print 'Processing directory', cycle_path
 
                         for surface in range(1, fcl.surface_count + 1):
                             for swath in range(1, fcl.swath_count + 1):
@@ -2177,8 +2171,7 @@ class RunFolder(object):
                                     if _entry_name in cycle_dict:
                                         del cycle_dict[_entry_name]
                                     else:
-                                        print "Missing cif file IRF/Data/{}/{}/{}/{}". \
-                                            format(_directory_name, lane_name, cycle_name, _entry_name)
+                                        print 'Missing cif file', os.path.join(cycle_path, _entry_name)
 
                                     if rta in ('1.12.4', '1.12.4.2', '1.13.48'):
                                         # Older RTA versions store error map (*.errorMap) and
@@ -2192,8 +2185,7 @@ class RunFolder(object):
                                             if _entry_name in cycle_dict:
                                                 del cycle_dict[_entry_name]
                                             else:
-                                                print "Missing error map file IRF/Data/{}/{}/{}/{}". \
-                                                    format(_directory_name, lane_name, cycle_name, _entry_name)
+                                                print 'Missing error map file', os.path.join(cycle_path, _entry_name)
 
                                         # Process *.FWHMMap files.
                                         # s_1_1101_T.FWHMMap
@@ -2203,22 +2195,19 @@ class RunFolder(object):
                                         if _entry_name in cycle_dict:
                                             del cycle_dict[_entry_name]
                                         else:
-                                            print "Missing FWHM map file IRF/Data/{}/{}/{}/{}". \
-                                                format(_directory_name, lane_name, cycle_name, _entry_name)
+                                            print 'Missing FWHM map file', os.path.join(cycle_path, _entry_name)
 
                         if len(cycle_dict):
-                            print "IRF/Data/{}/{}/{}/ with number of entries: {:d}". \
-                                format(_directory_name, lane_name, cycle_name, len(cycle_dict))
+                            print cycle_path, 'with number of entries:', str(len(cycle_dict))
                             entry_name_list = cycle_dict.keys()
                             entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                            print '  Remaining entries: {!r}'.format(entry_name_list)
+                            print '  Remaining entries:', entry_name_list
 
                 if len(lane_dict):
-                    print "IRF/Data/{}/{}/ with number of entries: {:d}". \
-                        format(_directory_name, lane_name, len(lane_dict))
+                    print lane_path, 'with number of entries:', str(len(lane_dict))
                     entry_name_list = lane_dict.keys()
                     entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                    print '  Remaining entries: {!r}'.format(entry_name_list)
+                    print '  Remaining entries:', entry_name_list
 
             # Check the IRF/Data/Intensities/Offsets/ directory.
 
@@ -2235,8 +2224,7 @@ class RunFolder(object):
                 if _entry_name in _directory_dict:
                     del _directory_dict[_entry_name]
                 else:
-                    print "Missing Real Time Analysis configuration file IRF/Data/{}/{}". \
-                        format(_directory_name, _entry_name)
+                    print 'Missing Real Time Analysis configuration file', os.path.join(_directory_path, _entry_name)
 
             if rta in ('1.12.4', '1.12.4.2', '1.13.48'):
                 # Older RTA version have position (*_pos.txt) files in addition to cluster location (*.clocs) files.
@@ -2250,14 +2238,13 @@ class RunFolder(object):
                                 if _entry_name in _directory_dict:
                                     del _directory_dict[_entry_name]
                                 else:
-                                    print "Missing pos file IRF/Data/{}/L{:03d}/{}". \
-                                        format(_directory_name, lane, _entry_name)
+                                    print 'Missing pos file', os.path.join(_directory_path, _entry_name)
 
         if len(_directory_dict):
-            print "IRF/Data/{}/ with number of entries: {:d}".format(_directory_name, len(_directory_dict))
+            print _directory_path, 'with number of entries:', str(len(_directory_dict))
             entry_name_list = _directory_dict.keys()
             entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print '  Remaining entries: {!r}'.format(entry_name_list)
+            print '  Remaining entries:', entry_name_list
 
         return
 
@@ -2282,17 +2269,17 @@ class RunFolder(object):
             return
 
         _directory_name = 'TileStatus'
+        _directory_path = os.path.join(directory_path, _directory_name)
         if _directory_name in directory_dict:
             del directory_dict[_directory_name]
         else:
-            print "Missing directory IRF/Data/{}/".format(_directory_name)
+            print 'Missing directory', _directory_path
             return
-        _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
         """ @type _directory_dict: dict[str | unicode, int] """
 
-        if debug:
-            print "Processing 'IRF/Data/{}/'".format(_directory_name)
+        if debug > 0:
+            print 'Processing directory', _directory_path
 
         for lane in range(1, fcl.lane_count + 1):
             for surface in range(1, fcl.surface_count + 1):
@@ -2303,21 +2290,19 @@ class RunFolder(object):
                         if _entry_name in _directory_dict:
                             del _directory_dict[_entry_name]
                         else:
-                            print "Missing file IRF/Data/{}/{}". \
-                                format(_directory_name, _entry_name)
+                            print 'Missing file', os.path.join(_directory_path, _entry_name)
 
                         _entry_name = tile_prefix + '.tpl'
                         if _entry_name in _directory_dict:
                             del _directory_dict[_entry_name]
                         else:
-                            print "Missing file IRF/Data/{}/{}". \
-                                format(_directory_name, _entry_name)
+                            print 'Missing file', os.path.join(_directory_path, _entry_name)
 
         if len(directory_dict):
-            print "IRF/Data/{}/ with number of entries: {:d}".format(_directory_name, len(_directory_dict))
+            print _directory_path, 'with number of entries:', str(len(_directory_dict))
             entry_name_list = _directory_dict.keys()
             entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print '  Remaining entries: {!r}'.format(entry_name_list)
+            print '  Remaining entries:', entry_name_list
 
         return
 
@@ -2337,17 +2322,17 @@ class RunFolder(object):
         rta = self.run_parameters.get_real_time_analysis_version
 
         _directory_name = 'Data'
+        _directory_path = os.path.join(directory_path, _directory_name)
         if _directory_name in directory_dict:
             del directory_dict[_directory_name]
         else:
-            print "Missing directory IRF/{}/".format(_directory_name)
+            print 'Missing directory', _directory_path
             return
-        _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
         """ @type _directory_dict: dict[str | unicode, int] """
 
-        if debug:
-            print "Processing 'IRF/{}/'".format(_directory_name)
+        if debug > 0:
+            print 'Processing directory', _directory_path
 
         # Check the IRF/Data/Intensities/ directory.
 
@@ -2363,14 +2348,14 @@ class RunFolder(object):
             if _entry_name in _directory_dict:
                 del _directory_dict[_entry_name]
             else:
-                print "Missing file IRF/{}/{}".format(_directory_name, _entry_name)
+                print 'Missing file', os.path.join(_directory_path, _entry_name)
 
             # Check the IRF/Data/RTALogs directory.
             _entry_name = 'RTALogs'
             if _entry_name in _directory_dict:
                 del _directory_dict[_entry_name]
             else:
-                print "Missing directory IRF/{}/{}/".format(_directory_name, _entry_name)
+                print 'Missing directory', os.path.join(_directory_path, _entry_name)
 
         if rta in ('1.12.4', '1.12.4.2', '1.13.48'):
             # Check the IRF/Data/reports/ directory.
@@ -2379,7 +2364,7 @@ class RunFolder(object):
             if _entry_name in _directory_dict:
                 del _directory_dict[_entry_name]
             else:
-                print "Missing directory IRF/{}/{}/".format(_directory_name, _entry_name)
+                print 'Missing directory', os.path.join(_directory_path, _entry_name)
 
             # Check the IRF/Data/Status_Files/ directory.
             # TODO: Check the directory for completeness?
@@ -2387,14 +2372,14 @@ class RunFolder(object):
             if _entry_name in _directory_dict:
                 del _directory_dict[_entry_name]
             else:
-                print "Missing directory IRF/{}/{}/".format(_directory_name, _entry_name)
+                print 'Missing directory', os.path.join(_directory_path, _entry_name)
 
             # Check the IRF/Data/Status.htm file.
             _entry_name = 'Status.htm'
             if _entry_name in _directory_dict:
                 del _directory_dict[_entry_name]
             else:
-                print "Missing file IRF/{}/{}".format(_directory_name, _entry_name)
+                print 'Missing file', os.path.join(_directory_path, _entry_name)
 
         # Process the IRF/Data/TileStatus/ directory.
 
@@ -2404,10 +2389,10 @@ class RunFolder(object):
             debug=debug)
 
         if len(_directory_dict):
-            print "IRF/{}/ with number of entries: {:d}".format(_directory_name, len(_directory_dict))
+            print _directory_path, 'with number of entries:', str(len(_directory_dict))
             entry_name_list = _directory_dict.keys()
             entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print '  Remaining entries: {!r}'.format(entry_name_list)
+            print '  Remaining entries:', entry_name_list
 
         return
 
@@ -2427,14 +2412,17 @@ class RunFolder(object):
         rta = self.run_parameters.get_real_time_analysis_version
 
         _directory_name = 'InterOp'
+        _directory_path = os.path.join(directory_path, _directory_name)
         if _directory_name in directory_dict:
             del directory_dict[_directory_name]
         else:
-            print "Missing directory IRF/{}/".format(_directory_name)
+            print 'Missing directory', _directory_path
             return
-        _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
         """ @type _directory_dict: dict[str | unicode, int] """
+
+        if debug > 0:
+            print 'Processing directory', _directory_path
 
         _file_name_list = [
             'CorrectedIntMetricsOut.bin',
@@ -2475,10 +2463,10 @@ class RunFolder(object):
             debug=debug)
 
         if len(_directory_dict):
-            print "IRF/{}/ with number of entries: {:d}".format(_directory_name, len(_directory_dict))
+            print _directory_path, 'with number of entries:', str(len(_directory_dict))
             entry_name_list = _directory_dict.keys()
             entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print '  Remaining entries: {!r}'.format(entry_name_list)
+            print '  Remaining entries:', entry_name_list
 
         return
 
@@ -2501,14 +2489,17 @@ class RunFolder(object):
             return
 
         _directory_name = 'PeriodicSaveRates'
+        _directory_path = os.path.join(directory_path, _directory_name)
         if _directory_name in directory_dict:
             del directory_dict[_directory_name]
         else:
-            print "Missing directory IRF/{}/".format(_directory_name)
+            print 'Missing directory', _directory_path
             return
-        _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
         """ @type _directory_dict: dict[str | unicode, int] """
+
+        if debug > 0:
+            print 'Processing directory', _directory_path
 
         _file_name_list = [
             'Save All Thumbnails.xml'
@@ -2521,10 +2512,10 @@ class RunFolder(object):
             debug=debug)
 
         if len(_directory_dict):
-            print "IRF/{}/ with number of entries: {:d}".format(_directory_name, len(_directory_dict))
+            print _directory_path, 'with number of entries:', str(len(_directory_dict))
             entry_name_list = _directory_dict.keys()
             entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print '  Remaining entries: {!r}'.format(entry_name_list)
+            print '  Remaining entries:', entry_name_list
 
         return
 
@@ -2545,14 +2536,17 @@ class RunFolder(object):
         flow_cell_barcode = self.run_parameters.get_flow_cell_barcode.upper()
 
         _directory_name = 'Recipe'
+        _directory_path = os.path.join(directory_path, _directory_name)
         if _directory_name in directory_dict:
             del directory_dict[_directory_name]
         else:
-            print "Missing directory IRF/{}/".format(_directory_name)
+            print 'Missing directory', _directory_path
             return
-        _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
         """ @type _directory_dict: dict[str | unicode, int] """
+
+        if debug > 0:
+            print 'Processing directory', _directory_path
 
         _file_name_list = list()
         """ @type _file_name_list: list[str | unicode] """
@@ -2576,10 +2570,10 @@ class RunFolder(object):
             debug=debug)
 
         if len(_directory_dict):
-            print "IRF/{}/ with number of entries: {:d}".format(_directory_name, len(_directory_dict))
+            print _directory_path, 'with number of entries:', str(len(_directory_dict))
             entry_name_list = _directory_dict.keys()
             entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print '  Remaining entries: {!r}'.format(entry_name_list)
+            print '  Remaining entries:', entry_name_list
 
         return
 
@@ -2615,17 +2609,17 @@ class RunFolder(object):
         # Process the IRF/Thumbnail_Images/ directory.
 
         _directory_name = 'Thumbnail_Images'
+        _directory_path = os.path.join(directory_path, _directory_name)
         if _directory_name in directory_dict:
             del directory_dict[_directory_name]
         else:
-            print "Missing directory IRF/{}/".format(_directory_name)
+            print 'Missing directory', _directory_path
             return
-        _directory_path = os.path.join(directory_path, _directory_name)
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
         """ @type _directory_dict: dict[str | unicode, int] """
 
-        if debug:
-            print "Processing 'IRF/{}/'".format(_directory_name)
+        if debug > 0:
+            print 'Processing directory', _directory_path
 
         # Process the IRF/Thumbnail_Images/L00[1-8]/ directories.
 
@@ -2634,27 +2628,30 @@ class RunFolder(object):
             if lane_name in _directory_dict:
                 del _directory_dict[lane_name]
             else:
-                print "Missing IRF/{}/{}/ directory".format(_directory_name, lane_name)
+                print 'Missing directory', os.path.join(_directory_path, lane_name)
                 continue
             lane_path = os.path.join(_directory_path, lane_name)
             lane_dict = dict(map(lambda x: (x, 1), os.listdir(lane_path)))
             """ @type lane_dict: dict[str | unicode, int] """
 
-            if debug:
-                print "Processing 'IRF/{}/{}/'".format(_directory_name, lane_name)
+            if debug > 1:
+                print 'Processing directory', lane_path
 
             # Process the IRF/Thumbnail_Images/L00[1-8]/C[0-9]+.1/ directories.
 
             for cycle in range(1, self.run_information.get_cycle_number + 1):
                 cycle_name = 'C{:d}.1'.format(cycle)
+                cycle_path = os.path.join(lane_path, cycle_name)
                 if cycle_name in lane_dict:
                     del lane_dict[cycle_name]
                 else:
-                    print "Missing IRF/{}/{}/{}/ directory".format(_directory_name, lane_name, cycle_name)
+                    print 'Missing directory', cycle_path
                     continue
-                cycle_path = os.path.join(lane_path, cycle_name)
                 cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
                 """ @type cycle_dict: dict[str | unicode, int] """
+
+                if debug > 2:
+                    print 'Processing directory', cycle_path
 
                 for surface in range(1, fcl.surface_count + 1):
                     for swath in range(1, fcl.swath_count + 1):
@@ -2673,8 +2670,7 @@ class RunFolder(object):
                                 if _entry_name in cycle_dict:
                                     del cycle_dict[_entry_name]
                                 else:
-                                    print "Missing swath image file IRF/{}/{}/{}/{}". \
-                                        format(_directory_name, lane_name, cycle_name, _entry_name)
+                                    print 'Missing swath image file', os.path.join(cycle_path, _entry_name)
 
                                 _entry_name += '.zprof'
                                 if rta in ('2.5.2', '2.7.3', '2.7.6', '2.7.7') and base in ('c', 'g', 't'):
@@ -2684,8 +2680,7 @@ class RunFolder(object):
                                     if _entry_name in cycle_dict:
                                         del cycle_dict[_entry_name]
                                     else:
-                                        print "Missing swath zprof file IRF/{}/{}/{}/{}". \
-                                            format(_directory_name, lane_name, cycle_name, _entry_name)
+                                        print 'Missing swath zprof file', os.path.join(cycle_path, _entry_name)
 
                             # Process tile image files.
                             if rta in ('1.18.54', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
@@ -2701,28 +2696,25 @@ class RunFolder(object):
                                 if tile_file in cycle_dict:
                                     del cycle_dict[tile_file]
                                 else:
-                                    print "Missing tile file IRF/{}/{}/{}/{}". \
-                                        format(_directory_name, lane_name, cycle_name, tile_file)
+                                    print 'Missing tile file', os.path.join(cycle_path, tile_file)
 
                 if len(cycle_dict):
-                    print "IRF/{}/{}/{}/ with number of entries: {:d}". \
-                        format(_directory_name, lane_name, cycle_name, len(cycle_dict))
+                    print cycle_path, 'with number of entries:', str(len(cycle_dict))
                     entry_name_list = cycle_dict.keys()
                     entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                    print '  Remaining entries: {!r}'.format(entry_name_list)
+                    print '  Remaining entries:', entry_name_list
 
             if len(lane_dict):
-                print "IRF/{}/{}/ with number of entries: {:d}".format(_directory_name, lane_name, len(lane_dict))
+                print lane_path, 'with number of entries:', str(len(lane_dict))
                 entry_name_list = lane_dict.keys()
                 entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                print '  Remaining entries: {!r}'.format(entry_name_list)
+                print '  Remaining entries:', entry_name_list
 
         if len(_directory_dict):
-            print "IRF/{}/ with number of entries: {:d}". \
-                format(_directory_name, len(_directory_dict))
+            print _directory_path, 'with number of entries:', str(len(_directory_dict))
             entry_name_list = _directory_dict.keys()
             entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print '  Remaining entries: {!r}'.format(entry_name_list)
+            print '  Remaining entries:', entry_name_list
 
         return
 
@@ -2754,10 +2746,13 @@ class RunFolder(object):
         ):
             raise Exception("Unsupported RTA version: '{}'".format(rta))
 
-        _directory_name = os.path.basename(self.file_path)
+        # _directory_name = os.path.basename(self.file_path)
         _directory_path = self.file_path
         _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
         """ @type _directory_dict: dict[str | unicode, int] """
+
+        if debug > 0:
+            print 'Processing directory', _directory_path
 
         # Check the IRF/Data/ directory.
 
@@ -2843,9 +2838,9 @@ class RunFolder(object):
             debug=debug)
 
         if len(_directory_dict):
-            print "{}/ with number of entries: {:d}".format(_directory_name, len(_directory_dict))
+            print _directory_path, 'with number of entries:', str(len(_directory_dict))
             entry_name_list = _directory_dict.keys()
             entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print '  Remaining entries: {!r}'.format(entry_name_list)
+            print '  Remaining entries:', entry_name_list
 
         return
