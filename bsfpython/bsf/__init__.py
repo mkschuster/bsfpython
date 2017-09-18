@@ -39,7 +39,6 @@ import urllib
 import uuid
 import warnings
 from pickle import Pickler, Unpickler, HIGHEST_PROTOCOL
-import stat
 
 from bsf import defaults
 from bsf.argument import *
@@ -1070,80 +1069,75 @@ class Analysis(object):
                 "The public HTML directory path {!r} does not exist.\n"
                 "Please check the optional sub-directory name {!r}.".format(html_path, sub_directory))
 
-        # The link_name consists of the absolute public_html directory,
+        # The target_path consists of the absolute public_html directory,
         # the analysis-specific sub-directory, the project name and a 128 bit hexadecimal UUID string.
 
-        link_name = os.path.join(html_path, '_'.join((self.project_name, uuid.uuid4().hex)))
+        target_path = os.path.join(html_path, '_'.join((self.project_name, uuid.uuid4().hex)))
 
-        # While checking for already existing symbolic links,
-        # the path_name holds the complete path for each link in the sub-directory.
+        # The final_path holds the final symbolic link target path.
+        # It can be the target_path assembled above or point to an already existing one.
 
-        path_name = str()
-
-        # The link_final holds the final symbolic link. It can be the link_name assembled above or
-        # point to an already existing one.
-
-        link_final = link_name
-
-        link_exists = False
+        final_path = target_path
 
         for file_name in os.listdir(html_path):
-            path_name = os.path.join(html_path, file_name)
-            mode = os.lstat(path_name).st_mode
-            if stat.S_ISLNK(mode):
-                target_name = os.readlink(path_name)
-                if not os.path.isabs(target_name):
-                    target_name = os.path.join(html_path, target_name)
-                if not os.path.exists(path=target_name):
+            file_path = os.path.join(html_path, file_name)
+            if os.path.islink(file_path):
+                source_path = os.readlink(file_path)
+                if not os.path.isabs(source_path):
+                    source_path = os.path.join(html_path, source_path)
+                source_path = os.path.normpath(source_path)
+                if not os.path.exists(path=source_path):
                     # Both paths for os.path.samefile have to exist.
                     # Check for dangling symbolic links.
                     warnings.warn(
-                        'Dangling symbolic link {!r} to {!r}'.format(path_name, target_name),
+                        'Dangling symbolic link {!r} to {!r}'.format(source_path, file_path),
                         UserWarning)
                     continue
-                if os.path.samefile(target_name, self.project_directory):
-                    link_exists = True
-                    link_final = path_name  # Reset link_final to the already existing path_name.
-                    # break
+                if os.path.samefile(source_path, self.project_directory):
+                    # Reset the final_path to the already existing file_path.
+                    final_path = file_path
                     # Do not break out here to discover all dangling symbolic links.
 
-        if link_exists:
+        if final_path != target_path:
+            # A symbolic link already exists.
             # Ask the user to re-create the symbolic link.
             answer = raw_input(
-                "Public HTML link {!r} to {!r} does exist.\n"
-                "Re-create? [y/N] ".format(path_name, self.project_directory))
+                "Public HTML link {!r} to {!r} exists.\n"
+                "Re-create? [y/N] ".format(self.project_directory, final_path))
 
-            if not answer or answer == 'N' or answer == 'n':
+            if not answer or answer.upper() == 'N':
                 print 'Public HTML link {!r} to {!r} not reset.'. \
-                    format(path_name, self.project_directory)
+                    format(self.project_directory, final_path)
             else:
                 try:
-                    os.remove(path_name)
+                    os.remove(final_path)
                 except OSError as exception:
                     if exception.errno != errno.ENOENT:
                         raise
                 try:
-                    os.symlink(os.path.relpath(self.project_directory, html_path), link_name)
+                    os.symlink(os.path.relpath(self.project_directory, html_path), target_path)
                 except OSError as exception:
                     if exception.errno != errno.EEXIST:
                         raise
+                final_path = target_path
         else:
+            # A symbolic link does not exist.
             # Ask the user to create a symbolic link.
             answer = raw_input(
                 'Public HTML link {!r} to {!r} does not exist.\n'
-                'Create? [Y/n] '.format(link_name, self.project_directory))
+                'Create? [Y/n] '.format(self.project_directory, final_path))
 
-            if not answer or answer == 'Y' or answer == 'y':
+            if not answer or answer.upper() == 'Y':
                 try:
-                    os.symlink(os.path.relpath(self.project_directory, html_path), link_name)
+                    os.symlink(os.path.relpath(self.project_directory, html_path), final_path)
                 except OSError as exception:
                     if exception.errno != errno.EEXIST:
                         raise
             else:
                 print 'Public HTML link {!r} to {!r} not set.'. \
-                    format(link_name, self.project_directory)
+                    format(self.project_directory, final_path)
 
-        return link_final
+        return final_path
 
     def ucsc_track_url(
             self,
