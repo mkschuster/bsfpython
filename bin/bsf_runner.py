@@ -29,13 +29,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-from argparse import ArgumentParser
+import argparse
 import importlib
 
-from bsf import Runnable
+import bsf
 
-
-argument_parser = ArgumentParser(
+argument_parser = argparse.ArgumentParser(
     description='Generic BSF runner script.')
 
 argument_parser.add_argument(
@@ -46,7 +45,7 @@ argument_parser.add_argument(
 
 arguments = argument_parser.parse_args()
 
-runnable = Runnable.from_pickler_path(file_path=arguments.pickler_path)
+runnable = bsf.Runnable.from_pickler_path(file_path=arguments.pickler_path)
 
 python_module = importlib.import_module(name=runnable.code_module)
 

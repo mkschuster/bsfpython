@@ -30,8 +30,10 @@ A package of classes and methods supporting variant calling analyses.
 import errno
 import math
 import os
-from pickle import Pickler, HIGHEST_PROTOCOL
+import pickle
 import warnings
+
+import pysam
 
 from bsf import Analysis, FilePath, Runnable
 from bsf.annotation import AnnotationSheet
@@ -39,8 +41,6 @@ from bsf.executables import BWA
 from bsf.process import Command, Executable, RunnableStep, RunnableStepJava, RunnableStepPicard, RunnableStepLink, \
     RunnableStepMove
 from bsf.standards import Default
-
-import pysam
 
 
 class RunnableStepGATK(RunnableStepJava):
@@ -3124,7 +3124,7 @@ class VariantCallingGATK(Analysis):
                     self.genome_directory,
                     stage_align_lane.name + '_' + paired_reads_name + '.pkl')
                 pickler_file = open(pickler_path, 'wb')
-                pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
+                pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
                 pickler.dump(obj=pickler_dict_align_lane)
                 pickler_file.close()
 

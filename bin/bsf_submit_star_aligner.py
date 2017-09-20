@@ -29,7 +29,6 @@ import argparse
 
 from bsf.analyses.star_aligner import StarAligner
 
-
 argument_parser = argparse.ArgumentParser(
     description='StarAligner Analysis driver script.')
 

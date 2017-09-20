@@ -26,18 +26,16 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-from argparse import ArgumentParser
+import argparse
 import datetime
 import os
 import time
 
-# from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
 from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder, IlluminaToBam
 from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.standards import Default
 
-
-argument_parser = ArgumentParser(
+argument_parser = argparse.ArgumentParser(
     description='IlluminaToBamTools Illumina2bam and BamIndexDecoder Analysis driver script.')
 
 argument_parser.add_argument(
@@ -205,7 +203,6 @@ print 'Project directory:      ', analysis_itb.project_directory
 print 'Illumina run directory: ', analysis_itb.run_directory
 print 'Experiment directory:   ', analysis_itb.experiment_directory
 
-
 if analysis_itb.debug >= 2:
     print '{!r} final trace:'.format(analysis_itb)
     print analysis_itb.trace(level=1)
@@ -258,7 +255,6 @@ if not analysis_bid.library_path:
         analysis_bid.library_path = library_path
 
 if analysis_bid.library_path:
-
     # Do the work if, at this stage, a library file has been set.
 
     analysis_bid.run()
@@ -271,7 +267,6 @@ if analysis_bid.library_path:
     print 'Project directory:    ', analysis_bid.project_directory
     print 'Sequences directory:  ', analysis_bid.sequences_directory
     print 'Experiment directory: ', analysis_bid.experiment_directory
-
 
 if analysis_bid.debug >= 2:
     print '{!r} final trace:'.format(analysis_bid)

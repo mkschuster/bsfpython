@@ -34,7 +34,6 @@ import re
 from bsf.ngs import ProcessedRunFolder
 from bsf.standards import Default
 
-
 parser = argparse.ArgumentParser(description='List projects and samples.')
 
 # Only a --full flag, with out a value.

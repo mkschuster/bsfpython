@@ -25,13 +25,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-from argparse import ArgumentParser
+import argparse
 
 from bsf.analyses.illumina_run_folder import IlluminaRunFolderArchive
 from bsf.standards import Default
 
-
-argument_parser = ArgumentParser(
+argument_parser = argparse.ArgumentParser(
     description='IlluminaRunFolderArchive Analysis driver script.')
 
 argument_parser.add_argument(

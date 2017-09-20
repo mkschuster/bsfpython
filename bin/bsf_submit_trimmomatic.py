@@ -30,7 +30,6 @@ import argparse
 from bsf.analyses.trimmomatic import Trimmomatic
 from bsf.standards import Default
 
-
 argument_parser = argparse.ArgumentParser(
     description='Trimmomatic Analysis driver script.')
 

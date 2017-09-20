@@ -119,7 +119,6 @@ if not os.path.isabs(project_directory):
 
         project_directory = os.path.join(Default.absolute_public_html(), 'projects', project_name)
 
-
 report_dict = dict()
 
 scan_directory(report_dict_local=report_dict, directory_root=project_directory, directory_path='.')

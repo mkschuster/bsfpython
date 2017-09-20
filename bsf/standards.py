@@ -27,7 +27,7 @@ A package of classes and methods modelling configuration and default information
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from ConfigParser import SafeConfigParser
+import ConfigParser
 import os
 
 
@@ -92,7 +92,7 @@ class Configuration(object):
         # they have to be case sensitive.
         # Hence, override optionxform() with str().
 
-        config_parser = SafeConfigParser()
+        config_parser = ConfigParser.SafeConfigParser()
         config_parser.optionxform = str
 
         configuration = cls(file_path_list=file_path_list, config_parser=config_parser)
@@ -125,9 +125,9 @@ class Configuration(object):
             self.file_path_list = file_path_list
 
         if config_parser is None:
-            self.config_parser = SafeConfigParser()
+            self.config_parser = ConfigParser.SafeConfigParser()
         else:
-            assert isinstance(config_parser, SafeConfigParser)
+            assert isinstance(config_parser, ConfigParser.SafeConfigParser)
             self.config_parser = config_parser
 
         self._config_path_list = None

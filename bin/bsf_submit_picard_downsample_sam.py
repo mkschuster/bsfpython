@@ -30,7 +30,6 @@ import argparse
 from bsf.analyses.picard import DownsampleSam
 from bsf.standards import Default
 
-
 argument_parser = argparse.ArgumentParser(
     description='Picard DownsampleSam Analysis driver script.')
 

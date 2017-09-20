@@ -29,7 +29,6 @@ import argparse
 
 from bsf.analyses.variant_calling import VariantCallingGATK
 
-
 argument_parser = argparse.ArgumentParser(
     description='VariantCallingGATK Analysis driver script.')
 

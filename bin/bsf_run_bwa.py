@@ -28,12 +28,11 @@
 import argparse
 import errno
 import os
-from pickle import Unpickler
+import pickle
 import shutil
 
 from bsf.process import Command, Executable
 from bsf.standards import Default
-
 
 # Set the environment consistently.
 
@@ -59,7 +58,7 @@ args = parser.parse_args()
 
 pickler_file = open(args.pickler_path, 'rb')
 
-unpickler = Unpickler(file=pickler_file)
+unpickler = pickle.Unpickler(file=pickler_file)
 
 pickler_dict = unpickler.load()
 
@@ -146,9 +145,7 @@ if run_bwa.sub_command.program == 'mem' and run_bwa.sub_command.arguments[1][-4:
     child_return_code = samtools.run()
 
     if child_return_code:
-        raise Exception(
-            'Could not complete the {!r} step on the BAM file for the replicate.'.
-            format(samtools.name))
+        raise Exception('Could not complete the {!r} step on the BAM file for the replicate.'.format(samtools.name))
 
     sam_temporary_handle = open(path_temporary_sam, 'r')
     for line in sam_temporary_handle:
@@ -259,9 +256,7 @@ if len(sam_header_pg) or len(sam_header_rg):
     child_return_code = samtools.run()
 
     if child_return_code:
-        raise Exception(
-            'Could not complete the {!r} step on the SAM file after CleanSam.'.
-            format(samtools.name))
+        raise Exception('Could not complete the {!r} step on the SAM file after CleanSam.'.format(samtools.name))
 
     sam_temporary_handle = open(path_temporary_sam, 'r')
     sam_header_handle = open(path_header_sam, 'w')

@@ -34,7 +34,6 @@
 import argparse
 import os
 
-
 # Set the environment consistently.
 
 os.environ['LANG'] = 'C'

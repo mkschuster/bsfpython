@@ -93,6 +93,7 @@ class AnnotationSheet(object):
     # Python list of Python classmethod value data
     _test_methods = dict()
     """ @type _test_methods: dict[str, list[classmethod]] """
+
     # dict[str, list[classmethod[int, dict[str, str | unicode], str]]]
 
     @classmethod

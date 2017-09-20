@@ -25,14 +25,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-from argparse import ArgumentParser
+import argparse
 import os
 
 from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder
 from bsf.standards import Default
 
-
-argument_parser = ArgumentParser(
+argument_parser = argparse.ArgumentParser(
     description='IlluminaToBamTools BamIndexDecoder Analysis driver script.')
 
 argument_parser.add_argument(

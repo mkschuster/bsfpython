@@ -25,13 +25,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-from argparse import ArgumentParser
+import argparse
 import os
 
 from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
 
-
-argument_parser = ArgumentParser(
+argument_parser = argparse.ArgumentParser(
     description='Count samples per lane based on BamIndexDecoder library annotation files.')
 
 argument_parser.add_argument(

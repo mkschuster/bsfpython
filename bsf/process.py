@@ -32,11 +32,11 @@ import errno
 import os
 import shutil
 import stat
+import subprocess
 import sys
+import threading
 import time
 import warnings
-from subprocess import Popen, PIPE
-from threading import Lock, Thread
 
 import bsf.argument
 from bsf.standards import Configuration
@@ -953,21 +953,21 @@ class Executable(Command):
 
         while attempt_counter < self.maximum_attempts:
 
-            child_process = Popen(
+            child_process = subprocess.Popen(
                 args=self.command_list(),
                 bufsize=0,
-                stdin=PIPE,
-                stdout=PIPE,
-                stderr=PIPE,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
                 shell=False,
                 close_fds=on_posix)
 
             # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
             # should make sure that buffers are not filling up.
 
-            thread_lock = Lock()
+            thread_lock = threading.Lock()
 
-            thread_out = Thread(
+            thread_out = threading.Thread(
                 target=Executable.process_stdout,
                 kwargs={
                     'stdout_handle': child_process.stdout,
@@ -978,7 +978,7 @@ class Executable(Command):
             thread_out.daemon = True  # Thread dies with the program.
             thread_out.start()
 
-            thread_err = Thread(
+            thread_err = threading.Thread(
                 target=Executable.process_stderr,
                 kwargs={
                     'stderr_handle': child_process.stderr,

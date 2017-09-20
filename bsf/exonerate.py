@@ -29,7 +29,6 @@ A package of classes and methods supporting Guy Slater's Exonerate alignment too
 
 import re
 
-
 vulgar_pattern = re.compile(pattern='^vulgar: (.*)')
 
 
@@ -74,9 +73,9 @@ class VULGAR(object):
 
         self = cls()
 
-        self.q_name, self.q_start, self.q_end, self.q_strand,\
-            self.t_name, self.t_start, self.t_end, self.t_strand,\
-            self.score, triplet_str = vulgar_str.split(' ', 9)
+        self.q_name, self.q_start, self.q_end, self.q_strand, \
+        self.t_name, self.t_start, self.t_end, self.t_strand, \
+        self.score, triplet_str = vulgar_str.split(' ', 9)
 
         triplet_list = triplet_str.split(' ')
         # Further split into triplets by means of a list comprehension.

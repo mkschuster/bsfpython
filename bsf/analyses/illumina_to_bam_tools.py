@@ -33,8 +33,8 @@ import warnings
 from bsf import Analysis, FilePath, Runnable
 from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
 from bsf.annotation import AnnotationSheet
-from bsf.ngs import SampleAnnotationSheet
 from bsf.illumina import RunFolder, RunFolderNotComplete
+from bsf.ngs import SampleAnnotationSheet
 from bsf.process import Command, RunnableStepChangeMode, RunnableStepJava, RunnableStepPicard, \
     RunnableStepLink, RunnableStepMakeDirectory, RunnableStepMove
 from bsf.standards import Default
@@ -384,7 +384,6 @@ class RunnableStepIlluminaToBam(RunnableStepJava):
 
 
 class FilePathIlluminaToBamLane(FilePath):
-
     def __init__(self, project_name, lane, experiment_directory):
         """Initialise a C{FilePathIlluminaToBamLane} object.
         
@@ -931,7 +930,7 @@ class IlluminaToBam(Analysis):
                     lane=lane_str))
             # For NextSeq instruments the number of open file handles can become really large.
             # Set dependencies to run Illumina2bam lane for lane.
-            if irf.run_parameters.get_instrument_type in ('NextSeq', ) and lane_dependency_str:
+            if irf.run_parameters.get_instrument_type in ('NextSeq',) and lane_dependency_str:
                 executable_lane.dependencies.append(lane_dependency_str)
 
             lane_dependency_str = runnable_lane.name
@@ -1123,9 +1122,7 @@ class IlluminaToBam(Analysis):
 
 
 class FilePathBamIndexDecoderCell(FilePath):
-
     def __init__(self, project_name):
-
         prefix = BamIndexDecoder.get_prefix_bam_index_decoder_cell(project_name=project_name)
 
         super(FilePathBamIndexDecoderCell, self).__init__(prefix=prefix)
@@ -1139,7 +1136,6 @@ class FilePathBamIndexDecoderCell(FilePath):
 
 
 class FilePathBamIndexDecoderLane(FilePath):
-
     def __init__(self, project_name, lane, sequences_directory):
         """Initialise a C{FilePathBamIndexDecoderLane} object.
         

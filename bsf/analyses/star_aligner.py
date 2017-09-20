@@ -41,9 +41,7 @@ from bsf.standards import Default
 
 
 class FilePathStarAlign(FilePath):
-
     def __init__(self, prefix):
-
         super(FilePathStarAlign, self).__init__(prefix=prefix)
 
         self.aligned_sam = prefix + '_Aligned.out.sam'
@@ -53,9 +51,7 @@ class FilePathStarAlign(FilePath):
 
 
 class FilePathStarIndex(FilePath):
-
     def __init__(self, prefix):
-
         super(FilePathStarIndex, self).__init__(prefix=prefix)
 
         self.aligned_bam = prefix + '_Aligned.bam'
@@ -67,9 +63,7 @@ class FilePathStarIndex(FilePath):
 
 
 class FilePathStarMerge(FilePath):
-
     def __init__(self, prefix):
-
         super(FilePathStarMerge, self).__init__(prefix=prefix)
 
         self.merged_bam = prefix + '.bam'
@@ -83,9 +77,7 @@ class FilePathStarMerge(FilePath):
 
 
 class FilePathStarSummary(FilePath):
-
     def __init__(self, prefix):
-
         super(FilePathStarSummary, self).__init__(prefix=prefix)
 
         self.read_group_to_sample_tsv = prefix + '_read_group_to_sample.tsv'

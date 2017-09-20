@@ -35,13 +35,12 @@ import os
 import re
 import subprocess
 import sys
-from threading import Lock, Thread
+import threading
 import warnings
 
 from bsf.database import DatabaseConnection, \
     JobSubmission, JobSubmissionAdaptor, DatabaseAdaptor
 from bsf.process import Executable
-
 
 output_directory_name = 'bsfpython_slurm_output'
 database_file_name = 'bsfpython_slurm_jobs.db'
@@ -951,9 +950,9 @@ def check_state(stage, debug=0):
         # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
         # should make sure that buffers are not filling up.
 
-        thread_lock = Lock()
+        thread_lock = threading.Lock()
 
-        thread_out = Thread(
+        thread_out = threading.Thread(
             target=check_state_stdout,
             kwargs={
                 'stdout_handle': child_process.stdout,
@@ -965,7 +964,7 @@ def check_state(stage, debug=0):
         thread_out.daemon = True  # Thread dies with the program.
         thread_out.start()
 
-        thread_err = Thread(
+        thread_err = threading.Thread(
             target=Executable.process_stderr,
             kwargs={
                 'stderr_handle': child_process.stderr,

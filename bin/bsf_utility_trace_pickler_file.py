@@ -27,12 +27,11 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-from argparse import ArgumentParser
+import argparse
 
 from bsf import Runnable
 
-
-argument_parser = ArgumentParser(
+argument_parser = argparse.ArgumentParser(
     description='Trace a pickled Runnable.')
 
 argument_parser.add_argument(

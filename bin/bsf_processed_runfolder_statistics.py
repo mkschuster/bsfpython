@@ -32,7 +32,6 @@ import stat
 
 from bsf.standards import Default
 
-
 parser = argparse.ArgumentParser(description='Collect statistics from a processed run folder after de-multiplexing.')
 
 parser.add_argument('input',

@@ -462,7 +462,7 @@ class IlluminaRunFolderArchive(Analysis):
         # 6. Compress all files in the IRF/Logs/ and IRF/Logs/IALogs/ directories.
         #    The NextSeq compresses into a single Logs.zip file.
 
-        if irf.run_parameters.get_instrument_type not in ('NextSeq', ):
+        if irf.run_parameters.get_instrument_type not in ('NextSeq',):
             compress_logs = runnable_pre_process_folder.add_runnable_step(
                 runnable_step=RunnableStep(
                     name='compress_logs',
@@ -681,9 +681,7 @@ class IlluminaRunFolderArchive(Analysis):
 
 
 class FilePathIlluminaRunFolderRestore(FilePath):
-
     def __init__(self, prefix):
-
         super(FilePathIlluminaRunFolderRestore, self).__init__(prefix=prefix)
 
         self.folder = '_'.join((prefix, 'Folder.tar'))

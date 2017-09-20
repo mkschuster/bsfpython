@@ -52,6 +52,7 @@ class ReadGroupContainer(object):
     @ivar fastq_2_path: FASTQ R2 file path
     @type fastq_2_path: str | unicode
     """
+
     def __init__(
             self,
             rg_string=None,

@@ -35,13 +35,11 @@ import getpass
 import importlib
 import inspect
 import os
+import pickle
 import urllib
 import uuid
 import warnings
-from pickle import Pickler, Unpickler, HIGHEST_PROTOCOL
 
-from bsf import defaults
-from bsf.argument import *
 from bsf.ngs import Collection, Sample
 from bsf.process import Command, Executable, RunnableStep
 from bsf.standards import Configuration, Default
@@ -1996,7 +1994,7 @@ class Runnable(object):
         """
 
         pickler_file = open(self.pickler_path, 'wb')
-        pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
+        pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
         pickler.dump(obj=self)
         pickler_file.close()
 
@@ -2013,7 +2011,7 @@ class Runnable(object):
         """
 
         pickler_file = open(file_path, 'rb')
-        unpickler = Unpickler(file=pickler_file)
+        unpickler = pickle.Unpickler(file=pickler_file)
         runnable = unpickler.load()
         """ @type runnable: bsf.Runnable """
         pickler_file.close()

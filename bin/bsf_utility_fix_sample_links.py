@@ -27,7 +27,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-from argparse import ArgumentParser
+import argparse
 import errno
 import os
 import stat
@@ -93,7 +93,7 @@ def scan_directory(directory_path, debug=0):
     return
 
 
-argument_parser = ArgumentParser(
+argument_parser = argparse.ArgumentParser(
     description='Fix symbolic links between the BSF samples and BSF sequences directory.')
 
 argument_parser.add_argument(

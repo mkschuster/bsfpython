@@ -28,7 +28,7 @@
 import argparse
 import errno
 import os
-from pickle import Unpickler
+import pickle
 import re
 import shutil
 
@@ -159,7 +159,7 @@ args = parser.parse_args()
 
 pickler_file = open(args.pickler_path, 'rb')
 
-unpickler = Unpickler(file=pickler_file)
+unpickler = pickle.Unpickler(file=pickler_file)
 
 pickler_dict = unpickler.load()
 

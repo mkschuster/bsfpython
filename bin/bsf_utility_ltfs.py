@@ -25,10 +25,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-from argparse import ArgumentParser
+import argparse
 import os
 import xml.etree.ElementTree
-
 
 cartridge_dict = {
     'LTO5': int(1391601152 * 1024)
@@ -369,7 +368,7 @@ class LinearTapeFileSystemCopy(object):
         ltfs_element_tree.write(file_or_filename=file_path)
 
 
-argument_parser = ArgumentParser(
+argument_parser = argparse.ArgumentParser(
     description='Linear Tape File System Copy tool driver script.')
 
 argument_parser.add_argument(
@@ -484,10 +483,10 @@ for main_file_path in input_file:
     linear_tape_file_system_copy.add_source_file_path(source_path=main_file_path)
 
 if ltfs_free_bytes <= total_size:
-    print 'Total size {:,d} exceeds LTFS free space {:,d} out of {:,d}'.\
+    print 'Total size {:,d} exceeds LTFS free space {:,d} out of {:,d}'. \
         format(total_size, ltfs_free_bytes, ltfs_total_bytes)
 else:
-    print "LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Remaining {:,d}".\
+    print "LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Remaining {:,d}". \
         format(ltfs_total_bytes, ltfs_free_bytes, total_size, ltfs_free_bytes - total_size)
 
 linear_tape_file_system_copy.write_batch_file(file_path=name_space.cartridge + '.xml')

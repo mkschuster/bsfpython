@@ -27,13 +27,13 @@
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 import argparse
-from collections import OrderedDict
+import collections
 import datetime
 import os
 import platform
-from subprocess import PIPE, Popen
+import subprocess
 import sys
-from threading import Lock, Thread
+import threading
 
 import pysam
 
@@ -59,11 +59,10 @@ parser.add_argument('--output_file', help='file path to a TSV file')
 
 name_space = parser.parse_args()
 
-
 # TODO: dual indices not supported
 # TODO: GNU Zip FASTQ files could be read directly: http://docs.python.org/2/library/gzip.html
 
-file_type = os.path.splitext(name_space.input_file)[-1]     # supported formats: .fastq/.sam/.bam
+file_type = os.path.splitext(name_space.input_file)[-1]  # supported formats: .fastq/.sam/.bam
 
 log_after_x_processed_reads = 100000
 
@@ -206,7 +205,6 @@ def parse_bam_file(input_filename):
 # parses a FASTQ file, processes barcode in header line of each FASTQ entry
 # TODO: breaks if barcode has /1 or /2 at the end (I think FASTQ files created by Picard from PE BAM files have these)
 def parse_fastq_file(input_filename):
-
     print "Processing FASTQ file (expecting barcode in the header)"
 
     input_file = open(input_filename)
@@ -245,26 +243,26 @@ elif file_type == ".bam":
 
     on_posix = 'posix' in sys.builtin_module_names
 
-    child_process = Popen(args=executable.command_list(),
-                          bufsize=-1,
-                          stdin=PIPE,
-                          stdout=PIPE,
-                          stderr=PIPE,
-                          shell=False,
-                          close_fds=on_posix)
+    child_process = subprocess.Popen(args=executable.command_list(),
+                                     bufsize=-1,
+                                     stdin=subprocess.PIPE,
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE,
+                                     shell=False,
+                                     close_fds=on_posix)
 
     # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
     # should make sure that buffers are not filling up.
 
-    thread_lock = Lock()
+    thread_lock = threading.Lock()
 
-    thread_out = Thread(
+    thread_out = threading.Thread(
         target=parse_sam_format,
         kwargs={'sam_file_handle': child_process.stdout})
     thread_out.daemon = True  # Thread dies with the program.
     thread_out.start()
 
-    thread_err = Thread(
+    thread_err = threading.Thread(
         target=Executable.process_stderr,
         kwargs={
             'stderr_handle': child_process.stderr,
@@ -316,11 +314,10 @@ elif file_type == ".bam":
 else:
     raise Exception("Unsupported file format.")
 
-
 # write report
 # outfile = open("unmatched_barcode_report.csv", "w")
 # print dict sorted by highest number of occurence
-for barcode in OrderedDict(sorted(barcode_dict.items(), reverse=True, key=lambda t: t[1])):
+for barcode in collections.OrderedDict(sorted(barcode_dict.items(), reverse=True, key=lambda t: t[1])):
     message = barcode + ";" + str(barcode_dict[barcode])
 
     # outfile.write(message + "\n")

@@ -29,7 +29,6 @@ import argparse
 
 from bsf.analyses import ChIPSeq
 
-
 parser = argparse.ArgumentParser(description='ChIP-Seq analysis driver script.')
 
 parser.add_argument('--debug', required=False, type=int,

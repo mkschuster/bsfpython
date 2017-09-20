@@ -25,16 +25,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-from argparse import ArgumentParser
+import argparse
 import os
 import re
 import xml
 
-from bsf.illumina import RunFolder
 from bsf.annotation import AnnotationSheet
+from bsf.illumina import RunFolder
 
-
-argument_parser = ArgumentParser(
+argument_parser = argparse.ArgumentParser(
     description='List software version of Illumina Run Folders.')
 
 argument_parser.add_argument(
@@ -87,7 +86,7 @@ for file_name in file_name_list:
         continue
     file_path = os.path.join(name_space.directory, file_name)
     if not (os.path.exists(os.path.join(file_path, 'runParameters.xml')) or
-            os.path.exists(os.path.join(file_path, 'RunParameters.xml'))):
+                os.path.exists(os.path.join(file_path, 'RunParameters.xml'))):
         print 'Directory {!r} not an Illumina Run Folder'.format(file_name)
         continue
     # Temporarily catch IOError and xml.etree.ElementTree.ParseError exceptions
@@ -102,9 +101,6 @@ for file_name in file_name_list:
         if name_space.debug:
             print "\t".join((file_name, '?', '?', '?'))
         continue
-    except:
-        print 'Exception in run folder {!r}'.format(file_name)
-        raise
 
     root_node = irf.run_parameters.element_tree.getroot()
     annotation_sheet.row_dicts.append({

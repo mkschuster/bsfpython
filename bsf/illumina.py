@@ -29,10 +29,11 @@ specific for Illumina HiSeq and MiSeq systems.
 
 
 import datetime
-import dateutil.tz
 import os
 import warnings
-from xml.etree.ElementTree import ElementTree, Element
+import xml.etree.ElementTree
+
+import dateutil.tz
 
 from bsf.annotation import AnnotationSheet
 
@@ -289,7 +290,7 @@ class RunInformation(object):
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
-        run_info_tree = ElementTree(file=file_path)
+        run_info_tree = xml.etree.ElementTree.ElementTree(file=file_path)
         run_element = run_info_tree.find(path='Run')
         """ @type run_element: Element | None """
         if run_element is None:
@@ -340,7 +341,7 @@ class RunInformation(object):
 
         for read_element in run_element.find(path='Reads'):
             """ @type read_element: Element | None """
-            assert isinstance(read_element, Element)
+            assert isinstance(read_element, xml.etree.ElementTree.Element)
 
             # <ApplicationName>HiSeq Control Software</ApplicationName>
             # <ApplicationVersion>2.0.12.0</ApplicationVersion>
@@ -647,7 +648,7 @@ class RunParameters(object):
         """
 
         file_path = os.path.normpath(file_path)
-        return cls(file_path=file_path, element_tree=ElementTree(file=file_path))
+        return cls(file_path=file_path, element_tree=xml.etree.ElementTree.ElementTree(file=file_path))
 
     def __init__(self, file_path=None, element_tree=None):
         """Initialise a C{bsf.illumina.RunParameters} object.
@@ -670,7 +671,7 @@ class RunParameters(object):
         if element_tree:
             self.element_tree = element_tree
         else:
-            self.element_tree = ElementTree()
+            self.element_tree = xml.etree.ElementTree.ElementTree()
 
         self._run_parameters_version = None
         """ @type _run_parameters_version: str | None """
@@ -705,9 +706,9 @@ class RunParameters(object):
         @rtype: str
         """
 
-        if self.get_run_parameters_version in ('MiSeq_1_1', ):
+        if self.get_run_parameters_version in ('MiSeq_1_1',):
             return 'MiSeq'
-        elif self.get_run_parameters_version in ('NextSeq_2_1_0', ):
+        elif self.get_run_parameters_version in ('NextSeq_2_1_0',):
             return 'NextSeq'
         else:
             return 'HiSeq'
@@ -741,10 +742,10 @@ class RunParameters(object):
         @rtype: str
         """
 
-        if self.get_run_parameters_version in ('MiSeq_1_1', ):
+        if self.get_run_parameters_version in ('MiSeq_1_1',):
             # MiSeq 1_1
             return self.element_tree.find(path='Barcode').text
-        elif self.get_run_parameters_version in ('NextSeq_2_1_0', ):
+        elif self.get_run_parameters_version in ('NextSeq_2_1_0',):
             # NextSeq
             return self.element_tree.find(path='FlowCellSerial').text
         else:
@@ -762,11 +763,11 @@ class RunParameters(object):
         @rtype: str
         """
 
-        if self.get_run_parameters_version in ('MiSeq_1_1', ):
+        if self.get_run_parameters_version in ('MiSeq_1_1',):
             # MiSeq 1_1
             # The MiSeq has no concept of a <Flowcell> chemistry type, only a <ReagentKitVersion>.
             return self.element_tree.find(path='ReagentKitVersion').text
-        elif self.get_run_parameters_version in ('NextSeq_2_1_0', ):
+        elif self.get_run_parameters_version in ('NextSeq_2_1_0',):
             # NextSeq_2_1_0
             # The NextSeq uses <Chemistry>
             return self.element_tree.find(path='Chemistry').text
@@ -855,11 +856,11 @@ class RunParameters(object):
         @rtype: str
         """
 
-        if self.get_run_parameters_version in ('MiSeq_1_1', ):
+        if self.get_run_parameters_version in ('MiSeq_1_1',):
             # MiSeq 1_1
             # The MiSeq has no concept of a <FCPosition>.
             return str()
-        elif self.get_run_parameters_version in ('NextSeq_2_1_0', ):
+        elif self.get_run_parameters_version in ('NextSeq_2_1_0',):
             # The NextSeq has no concept of <FCPosition>, but always uses 'A'.
             return 'A'
         else:
@@ -1059,7 +1060,7 @@ class XMLConfiguration(object):
         file_path = os.path.normpath(file_path)
         if not os.path.isfile(file_path):
             file_path = None
-        return cls(file_path=file_path, element_tree=ElementTree(file=file_path))
+        return cls(file_path=file_path, element_tree=xml.etree.ElementTree.ElementTree(file=file_path))
 
     def __init__(self, file_path=None, element_tree=None):
         """Initialise a C{bsf.illumina.XMLConfiguration} object.
@@ -1082,7 +1083,7 @@ class XMLConfiguration(object):
         if element_tree:
             self.element_tree = element_tree
         else:
-            self.element_tree = ElementTree()
+            self.element_tree = xml.etree.ElementTree.ElementTree()
 
         return
 
@@ -1121,7 +1122,7 @@ class AnalysisConfiguration(XMLConfiguration):
 
         for lane_element in self.element_tree.find(path='Run/TileSelection'):
             """ @type lane_element: Element """
-            assert isinstance(lane_element, Element)
+            assert isinstance(lane_element, xml.etree.ElementTree.Element)
             lane_index = lane_element.get(key='Index')
             """ @type lane_index: str """
             if lane_index not in self._lane_tile_dict:
@@ -1129,7 +1130,7 @@ class AnalysisConfiguration(XMLConfiguration):
             lane_dict = self._lane_tile_dict[lane_index]
             for tile_element in lane_element.findall(path='Tile'):
                 """ @type title_element: Element """
-                assert isinstance(tile_element, Element)
+                assert isinstance(tile_element, xml.etree.ElementTree.Element)
                 lane_dict[tile_element.text] = True
 
         return
@@ -1522,7 +1523,7 @@ class RunFolder(object):
         if debug > 0:
             print 'Processing directory', _directory_path
 
-        if rta in ('2.5.2', ):
+        if rta in ('2.5.2',):
             # For RTA 2.5.2 (HiSeq 3000/4000) process IRF/Data/Intensities/BaseCalls/Matrix/L00[1-8] directories.
             for lane in range(1, fcl.lane_count + 1):
                 lane_name = 'L{:03d}'.format(lane)
@@ -1718,7 +1719,7 @@ class RunFolder(object):
                                 else:
                                     print 'Missing file', os.path.join(_directory_path, _entry_name)
 
-        if rta not in ('2.5.2', ):
+        if rta not in ('2.5.2',):
             # RTA 2.5.2 (HiSeq 3000/4000) does not have
             # IRF/DataIntensities/BaseCalls/Phasing/s_{lane}_{cycle}_phasing.xml files.
             for lane in range(1, fcl.lane_count + 1):
@@ -1797,7 +1798,7 @@ class RunFolder(object):
 
             # Process IRF/Data/Intensities/BaseCalls/L00[1-8]/C[0-9]+.1 directories.
 
-            if rta in ('2.4.11', ):
+            if rta in ('2.4.11',):
                 # For NextSeq
                 for cycle in range(1, self.run_information.get_cycle_number + 1):
                     _entry_name = '{:04d}.bcl.bgzf'.format(cycle)
@@ -1881,7 +1882,7 @@ class RunFolder(object):
 
             # Process control and filter files.
 
-            if rta not in ('2.4.11', ):
+            if rta not in ('2.4.11',):
                 # Not for NextSeq
                 for surface in range(1, fcl.surface_count + 1):
                     for swath in range(1, fcl.swath_count + 1):
@@ -1933,7 +1934,7 @@ class RunFolder(object):
 
         # Check the IRF/Data/Intensities/BaseCalls/SampleSheet.csv file.
 
-        if rta in ('1.18.54', ):
+        if rta in ('1.18.54',):
             # Only the MiSeq platform has this file.
             _entry_name = 'SampleSheet.csv'
             if _entry_name in _directory_dict:
@@ -1964,7 +1965,7 @@ class RunFolder(object):
 
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta in ('2.4.11', ):
+        if rta in ('2.4.11',):
             return
 
         _directory_name = 'Offsets'
@@ -2075,7 +2076,7 @@ class RunFolder(object):
 
             # Process the IRF/Data/Intensities/config.xml file.
 
-            if rta not in ('2.4.11', ):
+            if rta not in ('2.4.11',):
                 # Not for NextSeq
                 _entry_name = 'config.xml'
                 if _entry_name in _directory_dict:
@@ -2103,7 +2104,7 @@ class RunFolder(object):
                 if debug > 1:
                     print 'Processing directory', lane_path
 
-                if rta in ('2.4.11', ):
+                if rta in ('2.4.11',):
                     _entry_name = 's_{:d}.locs'.format(lane)
                     if _entry_name in lane_dict:
                         del lane_dict[_entry_name]
@@ -2118,7 +2119,7 @@ class RunFolder(object):
                                 tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
                                 if self._is_missing_image_analysis_tile(lane=lane, tile=tile_name):
                                     continue
-                                if rta in ('1.18.54', ):
+                                if rta in ('1.18.54',):
                                     # The MiSeq platform uses locs files. Sigh.
                                     # s_1_1101.locs
                                     # s_1_2119.locs
@@ -2218,7 +2219,7 @@ class RunFolder(object):
 
             # Check the IRF/Data/Intensities/RTAConfiguration.xml file.
 
-            if rta not in ('2.4.11', ):
+            if rta not in ('2.4.11',):
                 # Not for NextSeq
                 _entry_name = 'RTAConfiguration.xml'
                 if _entry_name in _directory_dict:
@@ -2264,7 +2265,7 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta not in ('1.18.54', ):
+        if rta not in ('1.18.54',):
             # Check the IRF/Data/TileStatus/ directory that only exist on the MiSeq platform.
             return
 
@@ -2432,7 +2433,7 @@ class RunFolder(object):
             'TileMetricsOut.bin',
         ]
 
-        if rta in ('1.18.54', ):
+        if rta in ('1.18.54',):
             # Only on the MiSeq platform.
             _file_name_list.append('IndexMetricsOut.bin')
 
@@ -2485,7 +2486,7 @@ class RunFolder(object):
 
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta in ('2.4.11', ):
+        if rta in ('2.4.11',):
             return
 
         _directory_name = 'PeriodicSaveRates'
@@ -2551,7 +2552,7 @@ class RunFolder(object):
         _file_name_list = list()
         """ @type _file_name_list: list[str | unicode] """
 
-        if rta in ('1.18.54', ):
+        if rta in ('1.18.54',):
             # The MiSeq platform uses the reagent kit barcode.
             _file_name_list.append(
                 self.run_parameters.element_tree.find(path='ReagentKitRFIDTag/SerialNumber').text + '.xml')
@@ -2593,7 +2594,7 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta in ('2.4.11', ):
+        if rta in ('2.4.11',):
             # Not on the NextSeq platform
             return
 
@@ -2657,7 +2658,7 @@ class RunFolder(object):
                     for swath in range(1, fcl.swath_count + 1):
                         for base in ('a', 'c', 'g', 't'):
                             # Process swath image and zprof files.
-                            if rta in ('1.18.54', ):
+                            if rta in ('1.18.54',):
                                 # The MiSeq platform does not have swath image and zprof files.
                                 pass
                             else:
@@ -2770,7 +2771,7 @@ class RunFolder(object):
 
         # Check the IRF/PeriodicSaveRates/ directory.
 
-        if rta not in ('1.18.54', ):
+        if rta not in ('1.18.54',):
             # The MiSeq platform does not have this directory.
             self._check_periodic_save_rates(
                 directory_dict=_directory_dict,
@@ -2799,14 +2800,14 @@ class RunFolder(object):
             'RunInfo.xml',
         ]
 
-        if rta in ('2.4.11', ):
+        if rta in ('2.4.11',):
             # On the NextSeq platform
             _file_name_list.append('RunParameters.xml')
         else:
             # On all but the NextSeq platform
             _file_name_list.append('runParameters.xml')
 
-        if rta in ('1.18.54', ):
+        if rta in ('1.18.54',):
             # The MiSeq platform has a sample annotation sheet.
             _file_name_list.append('SampleSheet.csv')
 
@@ -2820,7 +2821,7 @@ class RunFolder(object):
             _file_name_list.append('RTALogs')  # directory
             for read in range(1, len(self.run_information.reads) + 1):
                 _file_name_list.append('RTARead{:d}Complete.txt'.format(read))
-            if rta not in ('2.4.11', ):
+            if rta not in ('2.4.11',):
                 # Not on the NextSeq platform
                 _file_name_list.append('SequencingComplete.txt')
         else:

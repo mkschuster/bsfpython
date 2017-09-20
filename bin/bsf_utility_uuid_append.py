@@ -30,11 +30,10 @@ Generate UUIDs for uses such as keeping public sequencing project URLs
 just a bit more private.
 """
 
-from argparse import ArgumentParser
+import argparse
 import uuid
 
-
-argument_parser = ArgumentParser(
+argument_parser = argparse.ArgumentParser(
     description='Append a UUID to a string.')
 
 argument_parser.add_argument(

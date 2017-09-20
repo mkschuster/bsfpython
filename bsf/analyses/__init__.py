@@ -34,8 +34,8 @@ import warnings
 
 from bsf import Analysis, defaults, FilePath
 from bsf.annotation import AnnotationSheet
-from bsf.ngs import Collection, ProcessedRunFolder, Sample
 from bsf.executables import Bowtie2, Macs14, Macs2Bdgcmp, Macs2Callpeak, FastQC
+from bsf.ngs import Collection, ProcessedRunFolder, Sample
 from bsf.process import Executable
 from bsf.standards import Default
 

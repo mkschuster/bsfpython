@@ -32,16 +32,16 @@ import re
 import warnings
 import weakref
 
+import pysam
+
 from bsf import Analysis, FilePath, Runnable
 from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
 from bsf.annotation import AnnotationSheet
-from bsf.ngs import Reads, PairedReads, SampleAnnotationSheet
 from bsf.illumina import RunFolder, RunFolderNotComplete
-from bsf.process import RunnableStep, RunnableStepChangeMode, RunnableStepPicard, RunnableStepMakeDirectory,\
+from bsf.ngs import Reads, PairedReads, SampleAnnotationSheet
+from bsf.process import RunnableStep, RunnableStepChangeMode, RunnableStepPicard, RunnableStepMakeDirectory, \
     RunnableStepMove
 from bsf.standards import Default
-
-import pysam
 
 
 class PicardIlluminaRunFolder(Analysis):
@@ -415,9 +415,7 @@ class IlluminaBasecallsToSamSheet(AnnotationSheet):
 
 
 class FilePathExtractIlluminaCell(FilePath):
-
     def __init__(self, prefix):
-
         super(FilePathExtractIlluminaCell, self).__init__(prefix=prefix)
 
         self.sample_annotation_sheet_csv = prefix + '_samples.csv'
@@ -426,9 +424,7 @@ class FilePathExtractIlluminaCell(FilePath):
 
 
 class FilePathExtractIlluminaLane(FilePath):
-
     def __init__(self, prefix):
-
         super(FilePathExtractIlluminaLane, self).__init__(prefix=prefix)
 
         self.output_directory = prefix + '_output'
@@ -1181,9 +1177,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
 
 class FilePathCollectHiSeqXPfFailMetricsLane(FilePath):
-
     def __init__(self, prefix):
-
         super(FilePathCollectHiSeqXPfFailMetricsLane, self).__init__(prefix=prefix)
 
         self.summary_tsv = prefix + '.pffail_summary_metrics'
@@ -1273,9 +1267,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
 
 
 class FilePathDownsampleSam(FilePath):
-
     def __init__(self, prefix):
-
         super(FilePathDownsampleSam, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
@@ -1538,9 +1530,7 @@ class DownsampleSam(Analysis):
 
 
 class FilePathSamToFastq(FilePath):
-
     def __init__(self, prefix):
-
         super(FilePathSamToFastq, self).__init__(prefix=prefix)
 
         self.output_directory = prefix

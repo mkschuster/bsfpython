@@ -29,7 +29,7 @@ A package of classes and methods supporting RNA-Seq analyses.
 
 import errno
 import os
-from pickle import Pickler, HIGHEST_PROTOCOL
+import pickle
 import re
 
 from bsf import Analysis, FilePath, Runnable
@@ -1119,7 +1119,7 @@ class Tuxedo(Analysis):
                     self.genome_directory,
                     stage_run_tophat.name + '_' + paired_reads_name + '.pkl')
                 pickler_file = open(pickler_path, 'wb')
-                pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
+                pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
                 pickler.dump(obj=pickler_dict_run_tophat)
                 pickler_file.close()
 

@@ -29,7 +29,6 @@ import argparse
 
 from bsf.analyses.rna_seq import DESeq
 
-
 argument_parser = argparse.ArgumentParser(
     description='RNA-Seq DESeq Analysis driver script.')
 

@@ -29,13 +29,13 @@ A package of classes and methods supporting ChIP-Seq analyses.
 
 import errno
 import os
-from pickle import Pickler, HIGHEST_PROTOCOL
+import pickle
 import warnings
 
 from bsf import Analysis, defaults, FilePath, Runnable
 from bsf.annotation import AnnotationSheet
-from bsf.ngs import Sample
 from bsf.executables import BWA, Macs14
+from bsf.ngs import Sample
 from bsf.process import Command, Executable, RunnableStep, RunnableStepPicard
 from bsf.standards import Default
 
@@ -755,7 +755,7 @@ class ChIPSeq(Analysis):
                     self.genome_directory,
                     '{}_{}.pkl'.format(stage_alignment.name, paired_reads_name))
                 pickler_file = open(pickler_path, 'wb')
-                pickler = Pickler(file=pickler_file, protocol=HIGHEST_PROTOCOL)
+                pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
                 pickler.dump(obj=pickler_dict_align_lane)
                 pickler_file.close()
 

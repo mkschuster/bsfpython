@@ -29,7 +29,6 @@ import argparse
 
 from bsf.analyses.rna_seq import Tuxedo
 
-
 argument_parser = argparse.ArgumentParser(
     description='RNA-Seq Tuxedo Analysis driver script.')
 

@@ -36,7 +36,6 @@ import sys
 from bsf.database import DatabaseAdaptor
 from bsf.process import Executable
 
-
 output_directory_name = 'bsfpython_sge_output'
 
 

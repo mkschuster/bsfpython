@@ -30,7 +30,6 @@
 
 import argparse
 
-
 argument_parser = argparse.ArgumentParser(
     description='BSF utility to convert from VCF to 23andMe format.')
 

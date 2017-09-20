@@ -30,7 +30,6 @@ import argparse
 from bsf.analyses.picard import SamToFastq
 from bsf.standards import Default
 
-
 argument_parser = argparse.ArgumentParser(
     description='Picard SamToFastq Analysis driver script.')
 

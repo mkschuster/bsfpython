@@ -29,12 +29,11 @@
 import argparse
 import datetime
 import os
-from subprocess import PIPE, Popen
 import sys
-from threading import Lock, Thread
+import subprocess
+import threading
 
 from bsf.process import Command, Executable
-
 
 on_posix = 'posix' in sys.builtin_module_names
 max_thread_joins = 10
@@ -42,13 +41,12 @@ thread_join_timeout = 10
 
 
 def process_stdout(input_file_handle, thread_lock, output_file_path, debug=0):
-
     thread_lock.acquire(True)
     output_file = open(output_file_path, 'wb')
-    output_process = Popen(
+    output_process = subprocess.Popen(
         args=['bgzip'],
         bufsize=-1,
-        stdin=PIPE,
+        stdin=subprocess.PIPE,
         stdout=output_file,
         stderr=None,
         shell=False,
@@ -175,21 +173,21 @@ stdin_command.add_switch_long(key='decompress')
 stdin_command.add_switch_long(key='stdout')
 stdin_command.arguments.append(name_space.input_path)
 
-input_process = Popen(
+input_process = subprocess.Popen(
     args=stdin_command.command_list(),
     bufsize=-1,
     stdin=None,
-    stdout=PIPE,
-    stderr=PIPE,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE,
     shell=False,
     close_fds=on_posix)
 
 # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
 # should make sure that buffers are not filling up.
 
-input_thread_lock = Lock()
+input_thread_lock = threading.Lock()
 
-input_thread_out = Thread(
+input_thread_out = threading.Thread(
     target=process_stdout,
     kwargs={
         'input_file_handle': input_process.stdout,
@@ -200,7 +198,7 @@ input_thread_out = Thread(
 input_thread_out.daemon = True  # Thread dies with the program.
 input_thread_out.start()
 
-input_thread_err = Thread(
+input_thread_err = threading.Thread(
     target=Executable.process_stderr,
     kwargs={
         'stderr_handle': input_process.stderr,

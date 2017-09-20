@@ -29,7 +29,6 @@ import argparse
 
 from bsf.analyses import RunFastQC
 
-
 parser = argparse.ArgumentParser(description='FastQC driver script.')
 
 parser.add_argument('--debug', required=False, type=int,

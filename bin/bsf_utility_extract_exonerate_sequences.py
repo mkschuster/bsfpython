@@ -27,12 +27,11 @@
 
 import re
 
-import bsf.exonerate
-
+import numpy
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
-import numpy
 
+import bsf.exonerate
 
 vulgar_pattern = re.compile(pattern='^vulgar: (.*)')
 identifier_pattern = re.compile(pattern='^\w+\|(\w+)\|([^ ]+)')

@@ -29,7 +29,6 @@ import argparse
 
 from bsf.analyses import RunBamToFastq
 
-
 parser = argparse.ArgumentParser(description='BAM To FASTQ analysis driver script.')
 
 parser.add_argument('--debug', required=False, type=int,
