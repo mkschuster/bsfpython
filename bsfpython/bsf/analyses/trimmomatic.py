@@ -321,7 +321,7 @@ class Trimmomatic(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
+                print self, 'Sample name:', sample.name
                 print sample.trace(level=1)
 
             sample_step_list = list()
@@ -342,7 +342,7 @@ class Trimmomatic(Analysis):
             for paired_reads_name in paired_reads_name_list:
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
-                        print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
+                        print self, 'PairedReads name:', paired_reads.get_name()
 
                     paired_reads_step_list = list()
                     if 'Trimmomatic Steps' in paired_reads.annotation_dict:
@@ -361,7 +361,7 @@ class Trimmomatic(Analysis):
                     prefix_trimmomatic = '_'.join((stage_trimmomatic.name, paired_reads_name))
 
                     if self.debug > 0:
-                        print 'Trimmomatic Prefix: {}'.format(prefix_trimmomatic)
+                        print 'Trimmomatic Prefix:', prefix_trimmomatic
 
                     file_path_trimmomatic = FilePathTrimmomatic(prefix=prefix_trimmomatic)
 
@@ -529,7 +529,7 @@ class Trimmomatic(Analysis):
         report_list = list()
         """ @type report_list: list[str | unicode] """
 
-        report_list += '<h1 id="{}_analysis">{} {}</h1>\n'.format(self.prefix, self.project_name, self.name)
+        report_list += '<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n'
         report_list += '\n'
 
         report_list += '<h2 id="aliquot_and_sample_level">Aliquot and Sample Level</h2>\n'
@@ -547,10 +547,6 @@ class Trimmomatic(Analysis):
         report_list += '<tbody>\n'
 
         for sample in self.sample_list:
-            if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
-                print sample.trace(1)
-
             # The Trimmomatic analysis does not obey excluded PairedReads objects,
             # more high-level analyses generally do.
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=False)
@@ -567,7 +563,7 @@ class Trimmomatic(Analysis):
             paired_reads_name_list.sort()
 
             report_list += '<tr>\n'
-            report_list += '<td class="left">{}</td>\n'.format(sample.name)
+            report_list += '<td class="left">' + sample.name + '</td>\n'
             report_list += '<td class="left"></td>\n'  # Aliquot
             report_list += '<td class="center"></td>\n'  # Coverage PNG
             report_list += '<td class="center"></td>\n'  # Frequency PNG
@@ -588,22 +584,24 @@ class Trimmomatic(Analysis):
                 # Sample
                 report_list += '<td class="left"></td>\n'
                 # Aliquot
-                report_list += '<td class="left">{}</td>\n'.format(paired_reads_name)
+                report_list += '<td class="left">' + paired_reads_name + '</td>\n'
                 # Coverage
-                report_list += '<td class="center">' \
-                               '<a href="{}">' \
-                               '<img alt="Coverage {}" src="{}" height="100" width="100" />' \
-                               '</a>' \
-                               '</td>\n'.format(file_path_trimmomatic.coverage_png,
-                                                runnable_trimmomatic.name,
-                                                file_path_trimmomatic.coverage_png)
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_trimmomatic.coverage_png + '">'
+                report_list += '<img alt="Coverage ' + runnable_trimmomatic.name + '"'
+                report_list += ' src="' + file_path_trimmomatic.coverage_png + '"'
+                report_list += ' height="100" width="100" />'
+                report_list += '</a>'
+                report_list += '</td>\n'
                 # Frequency
-                report_list += '<td class="center"><a href="{}">PNG</a></td>\n'.format(
-                    file_path_trimmomatic.frequency_png)
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_trimmomatic.frequency_png + '">PNG</a>'
+                report_list += '</td>\n'
                 # The frequency plots provide little information that does not necessarily justify
                 # adding another set of images onto the HTML report.
-                report_list += '<td class="center"><a href="{}">TSV</a></td>\n'.format(
-                    file_path_trimmomatic.summary_tsv)
+                report_list += '<td class="center">'
+                report_list += '<a href="' + file_path_trimmomatic.summary_tsv + '">TSV</a>'
+                report_list += '</td>\n'
                 report_list += '</tr>\n'
 
         report_list += '</tbody>\n'

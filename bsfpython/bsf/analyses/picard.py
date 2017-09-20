@@ -73,8 +73,8 @@ class PicardIlluminaRunFolder(Analysis):
     @type force: bool
     """
 
-    name = "Picard PicardIlluminaRunFolder Analysis"
-    prefix = "picard_illumina_run_folder"
+    name = 'Picard PicardIlluminaRunFolder Analysis'
+    prefix = 'picard_illumina_run_folder'
 
     stage_name_lane = '_'.join((prefix, 'lane'))
     stage_name_cell = '_'.join((prefix, 'cell'))
@@ -294,14 +294,14 @@ class PicardIlluminaRunFolder(Analysis):
         # Check that the Illumina Run Folder exists.
 
         if not os.path.isdir(self.run_directory):
-            raise Exception(
-                'The Illumina run directory {!r} does not exist.'.format(self.run_directory))
+            raise Exception('The Illumina run directory {!r} does not exist.'.
+                            format(self.run_directory))
 
         # Check that the Illumina Run Folder is complete.
 
         if not (os.path.exists(path=os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
-            raise RunFolderNotComplete(
-                'The Illumina run directory {!r} is not complete.'.format(self.run_directory))
+            raise RunFolderNotComplete('The Illumina run directory {!r} is not complete.'.
+                                       format(self.run_directory))
 
         # Define an 'Intensities' directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
@@ -319,8 +319,8 @@ class PicardIlluminaRunFolder(Analysis):
         # Check that the Intensities directory exists.
 
         if not os.path.isdir(self.intensity_directory):
-            raise Exception(
-                'The Intensity directory {!r} does not exist.'.format(self.intensity_directory))
+            raise Exception('The Intensity directory {!r} does not exist.'.
+                            format(self.intensity_directory))
 
         # Define a 'BaseCalls' directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
@@ -338,8 +338,8 @@ class PicardIlluminaRunFolder(Analysis):
         # Check that the BaseCalls directory exists.
 
         if not os.path.isdir(self.basecalls_directory):
-            raise Exception(
-                'The BaseCalls directory {!r} does not exist.'.format(self.basecalls_directory))
+            raise Exception('The BaseCalls directory {!r} does not exist.'.
+                            format(self.basecalls_directory))
 
         self._irf = RunFolder.from_file_path(file_path=self.run_directory)
 
@@ -476,8 +476,8 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
     @type vendor_quality_filter: dict[str, bool]
     """
 
-    name = "Picard Extract Illumina Run Folder Analysis"
-    prefix = "extract_illumina_run_folder"
+    name = 'Picard Extract Illumina Run Folder Analysis'
+    prefix = 'extract_illumina_run_folder'
 
     stage_name_lane = '_'.join((prefix, 'lane'))
     stage_name_cell = '_'.join((prefix, 'cell'))
@@ -734,6 +734,18 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         @rtype:
         """
 
+        def run_sample_file_name(sample_name):
+            """Private function to format sample-specific BAM file names (i.e. project_lane#sample.bam).
+
+            @param sample_name:
+            @type sample_name: str | unicode
+            @return:
+            @rtype: str | unicode
+            """
+            return self.project_name + '_' + lane_str + '#' + sample_name + '.bam'
+
+        # Start of the run() method body.
+
         super(ExtractIlluminaRunFolder, self).run()
 
         default = Default.get_global_default()
@@ -745,8 +757,8 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
 
         if not os.path.isdir(self.samples_directory):
-            raise Exception(
-                'The ExtractIlluminaRunFolder samples_directory {!r} does not exist.'.format(self.samples_directory))
+            raise Exception('The ExtractIlluminaRunFolder samples_directory {!r} does not exist.'.
+                            format(self.samples_directory))
 
         self.experiment_directory = os.path.join(self.samples_directory, self.project_name)
 
@@ -758,8 +770,8 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
         if self._irf.run_parameters.get_flow_cell_type not in self.vendor_quality_filter:
-            raise Exception('Flow cell chemistry type {!r} not defined.'.format(
-                self._irf.run_parameters.get_flow_cell_type))
+            raise Exception('Flow cell chemistry type {!r} not defined.'.
+                            format(self._irf.run_parameters.get_flow_cell_type))
 
         # Get the library annotation sheet.
         # The library annotation sheet is deliberately not passed in via sas_file,
@@ -773,7 +785,8 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         self.library_path = os.path.normpath(path=self.library_path)
 
         if not os.path.exists(path=self.library_path):
-            raise Exception('Library annotation file {!r} does not exist.'.format(self.library_path))
+            raise Exception('Library annotation file {!r} does not exist.'.
+                            format(self.library_path))
 
         stage_lane = self.get_stage(name=self.stage_name_lane)
         stage_cell = self.get_stage(name=self.stage_name_cell)
@@ -835,6 +848,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             # Initialise a list of barcode sequence lengths.
             bc_length_list = list()
+            """ @type bc_length_list: list[int] """
 
             # Sort each lane by sample name.
             flow_cell_dict_list = flow_cell_dict[lane_str]
@@ -876,7 +890,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     'BARCODE_2': row_dict['barcode_sequence_2'],
                     'OUTPUT': os.path.join(
                         file_path_lane.samples_directory,
-                        '{}_{}#{}.bam'.format(self.project_name, lane_str, row_dict['sample_name'])),
+                        run_sample_file_name(sample_name=row_dict['sample_name'])),
                     'SAMPLE_ALIAS': row_dict['sample_name'],
                     'LIBRARY_NAME': row_dict['library_name'],
                 })
@@ -897,7 +911,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     'Reads1 File': os.path.join(
                         os.path.basename(self.experiment_directory),
                         file_path_lane.samples_directory,
-                        '{}_{}#{}.bam'.format(self.project_name, lane_str, row_dict['sample_name'])),
+                        run_sample_file_name(sample_name=row_dict['sample_name'])),
                     'Reads2 Name': '',
                     'Reads2 File': '',
                 })
@@ -916,7 +930,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                     'BARCODE_2': '',
                     'OUTPUT': os.path.join(
                         file_path_lane.samples_directory,
-                        '{}_{}#0.bam'.format(self.project_name, lane_str)),
+                        run_sample_file_name(sample_name='0')),
                     'SAMPLE_ALIAS': 'Unmatched',
                     'LIBRARY_NAME': ibs_sheet.row_dicts[0]['LIBRARY_NAME'],
                 })
@@ -931,13 +945,13 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             for run_information_read in run_information_read_list:
                 if run_information_read.index:
                     # For an index read ...
-                    read_structure += '{}B'.format(bc_length_list[index_read_index])
+                    read_structure += str(bc_length_list[index_read_index]) + 'B'
                     if run_information_read.cycles < bc_length_list[index_read_index]:
-                        read_structure += '{}S'.format(run_information_read.cycles - bc_length_list[index_read_index])
+                        read_structure += str(run_information_read.cycles - bc_length_list[index_read_index]) + 'S'
                     index_read_index += 1  # Increment to the next barcode read
                 else:
                     # For a template read ...
-                    read_structure += '{}T'.format(run_information_read.cycles)
+                    read_structure += str(run_information_read.cycles) + 'T'
 
             # Further adjust the IlluminaBaseCallsToSamSheet and remove any BARCODE_N columns not represented
             # in the read structure.
@@ -1062,10 +1076,12 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             # NOTE: The ISO date format still does not work for Picard tools 2.6.1. Sigh.
             # runnable_step.add_picard_option(key='RUN_START_DATE', value=self._irf.run_information.get_iso_date)
             # NOTE: The only date format that seems to work is mm/dd/yyyy. Why?
-            runnable_step.add_picard_option(key='RUN_START_DATE', value='{}/{}/20{}'.format(
-                self._irf.run_information.date[2:4],
-                self._irf.run_information.date[4:6],
-                self._irf.run_information.date[0:2]))
+            runnable_step.add_picard_option(
+                key='RUN_START_DATE',
+                value='/'.join((
+                    self._irf.run_information.date[2:4],
+                    self._irf.run_information.date[4:6],
+                    '20' + self._irf.run_information.date[0:2])))
             # PLATFORM The name of the sequencing technology that produced the read. Default value: illumina.
             # NOTE: IlluminaToBam defaults to 'ILLUMINA'.
             # runnable_step.add_picard_option(key='PLATFORM', value='ILLUMINA')
@@ -1188,8 +1204,8 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
     @type stage_name_lane: str
     """
 
-    name = "Picard CollectHiSeqXPfFailMetrics Analysis"
-    prefix = "picard_hiseq_x_pf_fail"
+    name = 'Picard CollectHiSeqXPfFailMetrics Analysis'
+    prefix = 'picard_hiseq_x_pf_fail'
 
     stage_name_lane = '_'.join((prefix, 'lane'))
 
@@ -1420,7 +1436,7 @@ class DownsampleSam(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
+                print self, 'Sample name:', sample.name
                 print sample.trace(level=1)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
@@ -1431,7 +1447,7 @@ class DownsampleSam(Analysis):
             for paired_reads_name in paired_reads_name_list:
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
-                        print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
+                        print self, 'PairedReads name:', paired_reads.get_name()
 
                     # Apply some sanity checks.
 
@@ -1441,7 +1457,7 @@ class DownsampleSam(Analysis):
                     reads = paired_reads.reads_1
                     if not (reads.file_path.endswith('.bam') or reads.file_path.endswith('.sam')):
                         raise Exception(
-                            "Picard DownsampleSam can only work on BAM or SAM files. " + reads.file_path)
+                            'Picard DownsampleSam can only work on BAM or SAM files. ' + reads.file_path)
 
                     prefix_read_group = '_'.join((stage_picard_dss.name, paired_reads_name))
 
@@ -1701,7 +1717,7 @@ class SamToFastq(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
+                print self, 'Sample name:', sample.name
                 print sample.trace(level=1)
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
@@ -1712,7 +1728,7 @@ class SamToFastq(Analysis):
             for paired_reads_name in paired_reads_name_list:
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
-                        print '{!r} PairedReads name: {}'.format(self, paired_reads.get_name())
+                        print self, 'PairedReads name:', paired_reads.get_name()
 
                     # Apply some sanity checks.
 
@@ -1738,7 +1754,7 @@ class SamToFastq(Analysis):
                             # The makeFileNameSafe() method of htsjdk.samtools.util.IOUtil uses the following pattern:
                             # [\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]
                             platform_unit = re.sub(
-                                pattern="[\\s!\"#$%&'()*/:;<=>?@\\[\\]\\\\^`{|}~]",
+                                pattern='[\\s!"#$%&\'()*/:;<=>?@\\[\\]\\\\^`{|}~]',
                                 repl='_',
                                 string=read_group_dict['PU'])
                             read_group_list = ['@RG']

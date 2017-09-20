@@ -381,7 +381,7 @@ class StarAligner(Analysis):
             if self.stranded not in ('yes', 'no', 'reverse'):
                 raise Exception(
                     'The STAR Aligner configuration option "stranded" can only be '
-                    '"yes", "no" or "reverse", not {}.'.format(self.stranded))
+                    '"yes", "no" or "reverse", not "' + self.stranded + '".')
         else:
             self.stranded = 'yes'
 
@@ -495,9 +495,9 @@ class StarAligner(Analysis):
                                 key_list = read_group_dict.keys()
                                 # Remove the 'ID' from the key_list, as it has to go first.
                                 key_list.remove('ID')
-                                read_group_str = "ID:{}".format(read_group_dict['ID'])
+                                read_group_str = ':'.join(('ID', read_group_dict['ID']))
                                 for key in key_list:
-                                    read_group_str += ' "{}:{}"'.format(key, read_group_dict[key])
+                                    read_group_str += ' "' + ':'.join((key, read_group_dict[key])) + '"'
                                 runnable_step.add_option_long(key='outSAMattrRGline', value=read_group_str)
 
                             # Add @PG lines.
@@ -507,7 +507,7 @@ class StarAligner(Analysis):
                             #     key_list = program_dict.keys()
                             #     program_str = ''
                             #     for key in key_list:
-                            #         program_str += ' "{}:{}"'.format(key, program_dict[key])
+                            #         program_str += ' "' + ':'.join((key, program_dict[key])) + '"'
                             #     runnable_step.add_option_long(key='outSAMheaderPG', value=program_str)
 
                     annotation_sheet.row_dicts.append({'sample': sample.name, 'read_group': paired_reads.get_name()})
