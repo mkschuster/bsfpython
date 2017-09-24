@@ -5792,7 +5792,8 @@ class VariantCallingGATK(Analysis):
                 str_list += '</tr>\n'
 
             # Hybrid Selection - Percent Unique Reads
-            if os.path.exists(os.path.join(
+            # The plot is meaningless if Picard MarkDuplicates has not run.
+            if not self.skip_mark_duplicates and os.path.exists(os.path.join(
                     self.genome_directory,
                     file_path_summary.hybrid_unique_percentage_sample_png)):
                 str_list += '<tr>\n'
