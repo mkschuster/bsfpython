@@ -36,6 +36,7 @@ import xml.etree.ElementTree
 import dateutil.tz
 
 from bsf.annotation import AnnotationSheet
+from bsf.standards import Default
 
 
 class Adaptors(object):
@@ -1211,6 +1212,38 @@ class RunFolder(object):
     @type run_information: bsf.illumina.RunInformation
     """
 
+    @staticmethod
+    def absolute_file_path(name):
+        """Return the absolute file path for an Illumina Run Folder (IRF) name.
+
+        This method first checks for existence in C{Default.absolute_illumina_run()}, before
+        checking in C{Default.absolute_illumina_sav()}.
+        @param name: Illumina Run Folder (IRF) name
+        @type name: str | unicode
+        @return: Absolute file path
+        @rtype: str | unicode | None
+        """
+        # Check the Illumina Run Folder directory.
+        file_path = Default.get_absolute_path(
+            file_path=name,
+            default_path=Default.absolute_illumina_run())
+        if os.path.exists(file_path):
+            return file_path
+
+        # Check the Illumina Sequence Analysis Viewer directory.
+        file_path = Default.get_absolute_path(
+            file_path=name,
+            default_path=Default.absolute_illumina_sav())
+        if os.path.exists(file_path):
+            return file_path
+
+        # Append the '_sav' suffix customary for SAV folders.
+        file_path += '_sav'
+        if os.path.exists(file_path):
+            return file_path
+
+        return
+
     @classmethod
     def from_file_path(cls, file_path):
         """Construct a C{bsf.illumina.RunFolder} object from a file path.
@@ -1232,7 +1265,7 @@ class RunFolder(object):
         elif os.path.exists(os.path.join(file_path, 'RunParameters.xml')):
             run_parameters_path = os.path.join(file_path, 'RunParameters.xml')
         else:
-            raise Exception('Found neither a runParameters.xml not a RunParameters.xml file.')
+            raise Exception('Found neither a runParameters.xml nor a RunParameters.xml file.')
 
         # Illumina Run Folders obey a 'YYMMDD_SN000_Run_PositionFCID' schema.
 

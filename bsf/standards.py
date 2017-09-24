@@ -190,8 +190,10 @@ class Default(object):
     @type directory_cache: str | unicode
     @ivar directory_home: Home directory for all data
     @type directory_home: str | unicode
-    @ivar directory_runs_illumina: Sub-directory for Illumina runs
-    @type directory_runs_illumina: str | unicode
+    @ivar directory_illumina_run: Sub-directory for Illumina Run Folders
+    @type directory_illumina_run: str | unicode
+    @ivar directory_illumina_sav: Sub-directory for Illumina Sequence Analysis Viewer (SAV) Folders
+    @type directory_illumina_sav: str | unicode
     @ivar directory_sequences: Sub-directory for sequences
     @type directory_sequences: str | unicode
     @ivar directory_samples: Sub-directory for processed samples
@@ -336,7 +338,8 @@ class Default(object):
             classpath_vcf_filter=None,
             directory_cache=None,
             directory_home=None,
-            directory_runs_illumina=None,
+            directory_illumina_run=None,
+            directory_illumina_sav=None,
             directory_sequences=None,
             directory_samples=None,
             directory_projects=None,
@@ -377,8 +380,10 @@ class Default(object):
         @type directory_cache: str | unicode
         @param directory_home: Home directory for all data
         @type directory_home: str | unicode
-        @param directory_runs_illumina: Sub-directory for Illumina runs
-        @type directory_runs_illumina: str | unicode
+        @param directory_illumina_run: Sub-directory for Illumina Run Folders
+        @type directory_illumina_run: str | unicode
+        @param directory_illumina_sav: Sub-directory for Illumina Sequence Analysis Viewer (SAV) Folders
+        @type directory_illumina_sav: str | unicode
         @param directory_sequences: Sub-directory for sequences
         @type directory_sequences: str | unicode
         @param directory_samples: Sub-directory for processed samples
@@ -472,10 +477,15 @@ class Default(object):
         else:
             self.directory_home = directory_home
 
-        if directory_runs_illumina is None:
-            self.directory_runs_illumina = str()
+        if directory_illumina_run is None:
+            self.directory_illumina_run = str()
         else:
-            self.directory_runs_illumina = directory_runs_illumina
+            self.directory_illumina_run = directory_illumina_run
+
+        if directory_illumina_sav is None:
+            self.directory_illumina_sav = str()
+        else:
+            self.directory_illumina_sav = directory_illumina_sav
 
         if directory_sequences is None:
             self.directory_sequences = str()
@@ -638,7 +648,8 @@ class Default(object):
 
         self.directory_cache = cp.get(section=section, option='cache')
         self.directory_home = cp.get(section=section, option='home')
-        self.directory_runs_illumina = cp.get(section=section, option='runs_illumina')
+        self.directory_illumina_run = cp.get(section=section, option='illumina_run')
+        self.directory_illumina_sav = cp.get(section=section, option='illumina_sav')
         self.directory_sequences = cp.get(section=section, option='sequences')
         self.directory_samples = cp.get(section=section, option='samples')
         self.directory_projects = cp.get(section=section, option='projects')
@@ -711,19 +722,34 @@ class Default(object):
         return default.directory_home
 
     @staticmethod
-    def absolute_runs_illumina():
-        """Get the absolute directory path for Illumina runs.
+    def absolute_illumina_run():
+        """Get the absolute directory path for Illumina Run Folders.
 
-        @return: Absolute path to the Illumina runs directory
+        @return: Absolute path to the Illumina Run Folder directory
         @rtype: str | unicode
         """
 
         default = Default.get_global_default()
 
-        if os.path.isabs(default.directory_runs_illumina):
-            return default.directory_runs_illumina
+        if os.path.isabs(default.directory_illumina_run):
+            return default.directory_illumina_run
         else:
-            return os.path.join(default.directory_home, default.directory_runs_illumina)
+            return os.path.join(default.directory_home, default.directory_illumina_run)
+
+    @staticmethod
+    def absolute_illumina_sav():
+        """Get the absolute directory path for Illumina Sequence Analysis Viewer (SAV) Folders.
+
+        @return: Absolute path to the Illumina Sequence Analysis Viewer (SAV) Folders directory
+        @rtype: str | unicode
+        """
+
+        default = Default.get_global_default()
+
+        if os.path.isabs(default.directory_illumina_sav):
+            return default.directory_illumina_sav
+        else:
+            return os.path.join(default.directory_home, default.directory_illumina_sav)
 
     @staticmethod
     def absolute_sequences():

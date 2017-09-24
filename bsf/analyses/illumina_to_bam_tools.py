@@ -786,7 +786,7 @@ class IlluminaToBam(Analysis):
 
         self.run_directory = Default.get_absolute_path(
             file_path=self.run_directory,
-            default_path=Default.absolute_runs_illumina())
+            default_path=Default.absolute_illumina_run())
 
         # Check that the Illumina Run Folder exists.
 

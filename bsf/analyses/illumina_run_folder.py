@@ -322,7 +322,7 @@ class IlluminaRunFolderArchive(Analysis):
 
         self.run_directory = Default.get_absolute_path(
             file_path=self.run_directory,
-            default_path=Default.absolute_runs_illumina())
+            default_path=Default.absolute_illumina_run())
 
         # Check that the Illumina Run Folder exists.
 
@@ -972,7 +972,7 @@ class IlluminaRunFolderRestore(Analysis):
             raise Exception('The Illumina run archive {!r} does not exist.'.format(self.archive_directory))
 
         if not self.illumina_directory:
-            self.illumina_directory = Default.absolute_runs_illumina()
+            self.illumina_directory = Default.absolute_illumina_run()
 
         if not os.path.isdir(self.illumina_directory):
             raise Exception('The directory of Illumina Run Folder directories {!r} does not exist.'.
