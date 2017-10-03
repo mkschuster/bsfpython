@@ -307,11 +307,15 @@ class FilePathDiagnoseSample(FilePath):
         self.callable_txt = prefix + '_callable_loci.txt'
         self.callable_bb = prefix + '_callable_loci.bb'
         self.sorted_bed = prefix + '_callable_sorted.bed'
-        # Defined in bsf_variant_calling_coverage.R.
+        # Defined in bsf_variant_calling_coverage.R
         self.non_callable_loci_tsv = prefix + '_non_callable_loci.tsv'
         self.non_callable_regions_tsv = prefix + '_non_callable_regions.tsv'
         self.non_callable_summary_tsv = prefix + '_non_callable_summary.tsv'
         self.hybrid_selection_metrics = prefix + '_hybrid_selection_metrics.tsv'
+        # Defined in bsf_variant_calling_insert_size.R
+        self.insert_size_pdf = prefix + '_insert_size.pdf'
+        self.insert_size_png = prefix + '_insert_size.png'
+        self.insert_size_tsv = prefix + '_insert_size.tsv'
 
         return
 
@@ -3854,13 +3858,14 @@ class VariantCallingGATK(Analysis):
             # Step 4: Diagnose the sample. #
             ################################
             #
-            # GATK DiagnoseTarget                   (diagnose_sample_gatk_diagnose_target)
-            # GATK QualifyMissingIntervals          (diagnose_sample_gatk_qualify_missing_intervals)
-            # GATK CallableLoci                     (diagnose_sample_gatk_callable_loci)
-            # bsfR bsf_variant_calling_coverage.R   (diagnose_sample_coverage)
-            # UCSC bedSort                          (diagnose_sample_bed_sort)
-            # UCSC bedToBigBed                      (diagnose_sample_bed_sort)
-            # Picard CollectHsMetrics               (diagnose_sample_picard_collect_hybrid_selection_metrics)
+            # GATK DiagnoseTarget                    (diagnose_sample_gatk_diagnose_target)
+            # GATK QualifyMissingIntervals           (diagnose_sample_gatk_qualify_missing_intervals)
+            # GATK CallableLoci                      (diagnose_sample_gatk_callable_loci)
+            # bsfR bsf_variant_calling_insert_size.R (diagnose_sample_insert_size)
+            # bsfR bsf_variant_calling_coverage.R    (diagnose_sample_coverage)
+            # UCSC bedSort                           (diagnose_sample_bed_sort)
+            # UCSC bedToBigBed                       (diagnose_sample_bed_sort)
+            # Picard CollectHsMetrics                (diagnose_sample_picard_collect_hybrid_selection_metrics)
 
             prefix_diagnose_sample = '_'.join((stage_diagnose_sample.name, sample.name))
 
@@ -4030,6 +4035,15 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='summary', value=file_path_diagnose_sample.callable_txt)
             # Optional Outputs
             runnable_step.add_gatk_option(key='out', value=file_path_diagnose_sample.callable_bed)
+
+            # Run the bsfR bsf_variant_calling_insert_size.R script.
+
+            runnable_step = runnable_diagnose_sample.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='diagnose_sample_insert_size',
+                    program='bsf_variant_calling_insert_size.R'))
+            """ @type runnable_step: RunnableStep """
+            runnable_step.add_option_long(key='file-path', value=file_path_process_sample.realigned_bam)
 
             # Run the bsfR bsf_variant_calling_coverage.R script.
 
@@ -5218,6 +5232,7 @@ class VariantCallingGATK(Analysis):
             str_list += '<th>Hybrid Selection Metrics</th>\n'
             str_list += '<th>Non-Callable Loci</th>\n'
             str_list += '<th>Non-Callable Summary</th>\n'
+            str_list += '<th>Insert Size</th>\n'
             str_list += '</tr>\n'
             str_list += '</thead>\n'
             str_list += '<tbody>\n'
@@ -5347,6 +5362,21 @@ class VariantCallingGATK(Analysis):
                     str_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
                     str_list += '</a>'
                 str_list += '</td>\n'
+                # Insert size
+                str_list += '<td class="center">'
+                if os.path.isfile(
+                        os.path.join(
+                            self.genome_directory,
+                            file_path_diagnosis.insert_size_tsv)):
+                    str_list += '<a href="' + file_path_diagnosis.insert_size_pdf + '">'
+                    str_list += '<img alt="Insert Size per Sample ' + sample.name + '"'
+                    str_list += ' src="' + file_path_diagnosis.insert_size_png + '"'
+                    str_list += ' height="80" width="80" />'
+                    str_list += '</a>'
+                    str_list += '<a href="' + file_path_diagnosis.insert_size_tsv + '">'
+                    str_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
+                    str_list += '</a>'
+                str_list += '</td>\n'
                 str_list += '</tr>\n'
 
                 for paired_reads_name in paired_reads_name_list:
@@ -5385,6 +5415,8 @@ class VariantCallingGATK(Analysis):
                     # Non-Callable Loci
                     str_list += '<td class="center"></td>\n'
                     # Non-Callable Summary
+                    str_list += '<td class="center"></td>\n'
+                    # Insert Size
                     str_list += '<td class="center"></td>\n'
                     str_list += '</tr>\n'
 
