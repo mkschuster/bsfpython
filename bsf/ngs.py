@@ -1642,6 +1642,328 @@ class Collection(NextGenerationBase):
         @return: C{bsf.ngs.Collection}
         @rtype: bsf.ngs.Collection
         """
+
+        def _process_file_type():
+            """Private function to get file type information.
+
+            A 'I{[Prefix] FileType}' key is optional, its value defaults to I{Automatic}.
+            @return: File type
+            @rtype: str
+            """
+            _key = (sas_prefix + ' File Type').lstrip()
+
+            # If present, delete the key from the key list.
+            if _key in key_list:
+                key_list.remove(_key)
+
+            if _key in row_dict and row_dict[_key]:
+                _file_type = row_dict[_key]
+            else:
+                _file_type = 'Automatic'
+
+            return _file_type
+
+        def _process_processed_run_folder():
+            """Private function to get or create a C{bsf.ngs.ProcessedRunFolder}.
+
+            A 'I{[Prefix] ProcessedRunFolder Name}' key is optional, its value defaults to I{Default}.
+            @return: C{bsf.ngs.ProcessedRunFolder}
+            @rtype: bsf.ngs.ProcessedRunFolder
+            """
+            prf_new = None
+
+            _key = (sas_prefix + ' ProcessedRunFolder Name').lstrip()
+
+            if _key in row_dict:
+                # The key exists ...
+                key_list.remove(_key)
+                if row_dict[_key]:
+                    # ... and has a meaningful value ...
+                    _value = row_dict[_key]
+                    if _value in collection.processed_run_folder_dict:
+                        # ..., which exists in the dict of ProcessedRunFolder objects.
+                        prf_new = collection.processed_run_folder_dict[_value]
+                    else:
+                        # ..., which does not exist in the dict of ProcessedRunFolder objects.
+                        # Try to automatically discover a ProcessedRunFolder.
+                        prf_new = collection.get_processed_run_folder(file_path=_value, file_type=file_type)
+                else:
+                    # ... and has no meaningful value ...
+                    if prf is not None:
+                        # ..., but an old PRF exists.
+                        prf_new = prf
+
+            if prf_new is None:
+                if ProcessedRunFolder.default_name in collection.processed_run_folder_dict:
+                    prf_new = collection.processed_run_folder_dict[ProcessedRunFolder.default_name]
+                else:
+                    prf_new = collection.add_processed_run_folder(
+                        prf=ProcessedRunFolder(name=ProcessedRunFolder.default_name, file_type=file_type))
+
+            prf_new.process_annotation(row_dict=row_dict, key_list=key_list, prefix=sas_prefix)
+
+            return prf_new
+
+        def _process_project():
+            """Private function to get or create a C{bsf.ngs.Project}.
+
+            A 'I{[Prefix] Project Name}' key is optional, its value defaults to I{Default}.
+            @return: C{bsf.ngs.Project}
+            @rtype: bsf.ngs.Project
+            """
+            project_new = None
+
+            _key = (sas_prefix + ' Project Name').lstrip()
+
+            if _key in row_dict:
+                # The key exists ...
+                key_list.remove(_key)  # Remove the 'Name' key.
+                if row_dict[_key]:
+                    # ... and has a meaningful value ...
+                    _value = row_dict[_key]
+                    if _value in prf.project_dict:
+                        # ..., which exists in the dict of Project objects.
+                        project_new = prf.project_dict[_value]
+                    else:
+                        # ..., which does not exist in the dict of Project objects.
+                        # Create a new Project.
+                        project_new = prf.add_project(project=Project(name=_value, file_type=file_type))
+                else:
+                    # ... and has no meaningful value ...
+                    if project is not None:
+                        # ..., but a current Project exists.
+                        project_new = project
+
+            if project_new is None:
+                if Project.default_name in prf.project_dict:
+                    project_new = prf.project_dict[Project.default_name]
+                else:
+                    project_new = prf.add_project(project=Project(name=Project.default_name, file_type=file_type))
+
+            project_new.process_annotation(row_dict=row_dict, key_list=key_list, prefix=sas_prefix)
+
+            return project_new
+
+        def _process_sample():
+            """Private function to get or create a C{bsf.ngs.Sample}.
+
+            A 'I{[Prefix] Sample Name}' key is optional, its value defaults to I{Default}.
+            @return: C{bsf.ngs.Sample}
+            @rtype: bsf.ngs.Sample
+            """
+            sample_new = None
+
+            _key = (sas_prefix + ' Sample Name').lstrip()
+
+            if _key in row_dict:
+                key_list.remove(_key)  # Remove the 'Name' key.
+                # The key exists ...
+                if row_dict[_key]:
+                    # ... and has a meaningful value ...
+                    _value = row_dict[_key]
+                    if _value in project.sample_dict:
+                        # ..., which exists in the dict of Sample objects.
+                        sample_new = project.sample_dict[_value]
+                    else:
+                        # ..., which does not exist in the dict of Sample objects.
+                        # Create a new Sample.
+                        sample_new = project.add_sample(sample=Sample(name=_value, file_type=file_type))
+                else:
+                    # ... and has no meaningful value ...
+                    if sample is not None:
+                        # ..., but a current Sample exists.
+                        sample_new = sample
+
+            if sample_new is None:
+                if Sample.default_name in project.sample_dict:
+                    sample_new = project.sample_dict[Sample.default_name]
+                else:
+                    sample_new = project.add_sample(sample=Sample(name=Sample.default_name, file_type=file_type))
+
+            sample_new.process_annotation(row_dict=row_dict, key_list=key_list, prefix=sas_prefix)
+
+            return sample_new
+
+        def _process_reads(reads, suffix):
+            """Get or create a C{bsf.ngs.Reads} object.
+
+            A 'I{[Prefix] Reads{suffix} Name}' key and 'I{[Prefix] Reads{suffix} File}' key are optional,
+            in which case the default is a C{None} object.
+            @param reads: Current C{bsf.ngs.Reads} that may get replaced upon encountering a new
+                'I{[Prefix] ReadsN Name}' key
+            @type reads: bsf.ngs.Reads
+            @param suffix: The read suffix (i.e. I{1} or I{2})
+            @type suffix: str
+            @return: C{bsf.ngs.Reads}
+            @rtype: bsf.ngs.Reads
+            """
+
+            if reads is None:
+                reads = Reads()
+
+            new_reads = Reads(file_type=file_type)
+
+            # Pre-process the Reads.file_path instance variable.
+
+            _key = (sas_prefix + ' Reads' + suffix + ' File').lstrip()
+            if _key in key_list:
+                key_list.remove(_key)
+
+            is_new_file_path = False
+            if _key in row_dict and row_dict[_key]:
+                new_reads.file_path = row_dict[_key]
+                new_reads.file_path = Default.get_absolute_path(file_path=new_reads.file_path,
+                                                                default_path=collection.file_path)
+                # Check for a non-matching, i.e. new "file_path" instance variable.
+                if new_reads.file_path != reads.file_path:
+                    is_new_file_path = True
+
+            # Pre-process the Reads.name instance variable.
+
+            _key = (sas_prefix + ' Reads' + suffix + ' Name').lstrip()
+            if _key in key_list:
+                key_list.remove(_key)
+
+            is_new_name = False
+            if _key in row_dict and row_dict[_key]:
+                new_reads.name = row_dict[_key]
+                # Check for a non-matching i.e. new "name" instance variable.
+                if new_reads.name != reads.name:
+                    is_new_name = True
+
+            if is_new_file_path and is_new_name:
+                # All is well. Just return the new Reads object.
+                pass
+            elif is_new_file_path:
+                # A new file_path, but check the name.
+                if new_reads.name:
+                    if reads.name and new_reads.name == reads.name:
+                        # The old Reads object has the same Reads.name instance variable.
+                        raise Exception("Encountered new Reads.file_path {} -> {}, but the same Reads.name {}.".format(
+                            reads.file_path, new_reads.file_path, new_reads.name))
+                    else:
+                        # Set the Reads.name instance variable.
+                        reads.name = new_reads.name
+                        new_reads = reads
+            elif is_new_name:
+                # A new name, but check the file_path.
+                if new_reads.file_path:
+                    if reads.file_path and new_reads.file_path == reads.file_path:
+                        # The old Reads object has the same Reads.file_path instance variable.
+                        raise Exception("Encountered new Reads.name {} -> {}, but same reads.file_path {}.".format(
+                            reads.name, new_reads.name, new_reads.file_path))
+                    else:
+                        # Set the Reads.file_path instance variable.
+                        reads.file_path = new_reads.file_path
+                        new_reads = reads
+            else:
+                # Nothing new, just return the old Reads object.
+                new_reads = reads
+
+            return new_reads
+
+        def _process_paired_reads(paired_reads_old):
+            """Get or create a C{bsf.ngs.PairedReads} object.
+
+            The 'I{[Prefix] PairedReads Exclude}' key is optional,
+            in which case the default is Python C{bool} I{False}.
+            The 'I{[Prefix] PairedReads Index 1}', 'I{[Prefix] PairedReads Index 2}' and
+            'I{[Prefix] PairedReads ReadGroup}' keys are optional,
+            in which case the default is an empty Python C{str} object.
+            @param paired_reads_old: Current C{bsf.ngs.PairedReads} that may get replaced
+            @type paired_reads_old: bsf.ngs.PairedReads
+            @return: C{PairedReads}
+            @rtype: bsf.ngs.PairedReads
+            """
+
+            def _is_new_reads(reads_new, reads_old):
+                """Test whether a C{bsf.ngs.Reads} object is new.
+
+                To test for object equality is not good enough here. A new C{bsf.ngs.Reads} object is encountered
+                upon mismatches in the C{bsf.ngs.Reads.file_path} or C{bsf.ngs.Reads.name} instance variables.
+                @param reads_new: C{bsf.ngs.Reads}
+                @type reads_new: bsf.ngs.Reads
+                @param reads_old: C{bsf.ngs.Reads}
+                @type reads_old: bsf.ngs.Reads
+                @return: True if C{Reads} is new
+                @rtype: bool
+                """
+                if reads_new is None and reads_old is None:
+                    # Both Reads objects are not defined, so, nothing new.
+                    is_new_reads = False
+                elif not (reads_new or reads_old):
+                    is_new_reads = False
+                elif reads_new is None:
+                    # At least reads_old must be defined.
+                    is_new_reads = True
+                elif reads_old is None:
+                    # At least reads_new must be defined.
+                    is_new_reads = True
+                elif reads_new.name != reads_old.name or reads_new.file_path != reads_old.file_path:
+                    is_new_reads = True
+                else:
+                    is_new_reads = False
+
+                return is_new_reads
+
+            # PairedReads objects have no name instance variable. Thus, a new PairedReads object has to begin,
+            # when a new Reads() object is encountered.
+
+            if paired_reads_old is None:
+                paired_reads_old = PairedReads()
+
+            paired_reads_new = PairedReads(
+                file_type=file_type,
+                reads_1=_process_reads(reads=paired_reads_old.reads_1, suffix='1'),
+                reads_2=_process_reads(reads=paired_reads_old.reads_2, suffix='2'))
+
+            is_new_reads_1 = _is_new_reads(reads_new=paired_reads_new.reads_1, reads_old=paired_reads_old.reads_1)
+            is_new_reads_2 = _is_new_reads(reads_new=paired_reads_new.reads_2, reads_old=paired_reads_old.reads_2)
+
+            if is_new_reads_1 or is_new_reads_2:
+                # Replace eventual unchanged Reads instances with empty Reads instances.
+                if not is_new_reads_1:
+                    paired_reads_new.reads_1 = Reads()
+                if not is_new_reads_2:
+                    paired_reads_new.reads_2 = Reads()
+                sample.add_paired_reads(paired_reads=paired_reads_new)
+            else:
+                paired_reads_new = paired_reads_old
+
+            _key = (sas_prefix + ' PairedReads Exclude').lstrip()
+            if _key in key_list:
+                key_list.remove(_key)
+
+            if _key in row_dict and row_dict[_key]:
+                if row_dict[_key].lower() not in Collection._boolean_states:
+                    raise ValueError('Value in field {!r} is not a boolean: {!r}'.format(_key, row_dict[_key]))
+                paired_reads_new.exclude = Collection._boolean_states[row_dict[_key].lower()]
+
+            _key = (sas_prefix + ' PairedReads Index 1').lstrip()
+            if _key in key_list:
+                key_list.remove(_key)
+
+            if _key in row_dict and row_dict[_key]:
+                paired_reads_new.index_1 = row_dict[_key]
+
+            _key = (sas_prefix + ' PairedReads Index 2').lstrip()
+            if _key in key_list:
+                key_list.remove(_key)
+
+            if _key in row_dict and row_dict[_key]:
+                paired_reads_new.index_2 = row_dict[_key]
+
+            _key = (sas_prefix + ' PairedReads ReadGroup').lstrip()
+            if _key in key_list:
+                key_list.remove(_key)
+
+            if _key in row_dict and row_dict[_key]:
+                paired_reads_new.read_group = row_dict[_key]
+
+            paired_reads_new.process_annotation(row_dict=row_dict, key_list=key_list, prefix=sas_prefix)
+
+            return paired_reads_new
+
         assert isinstance(sas, SampleAnnotationSheet)
 
         collection = cls(file_path=file_path, file_type=file_type, name=name)
@@ -1656,38 +1978,11 @@ class Collection(NextGenerationBase):
 
         for row_dict in sas.row_dicts:
             key_list = row_dict.keys()
-            file_type = collection._process_file_type(row_dict=row_dict, key_list=key_list, prefix=sas_prefix)
-
-            prf = collection._process_processed_run_folder(
-                prf=prf,
-                row_dict=row_dict,
-                key_list=key_list,
-                prefix=sas_prefix,
-                file_type=file_type)
-
-            project = collection._process_project(
-                project=project,
-                row_dict=row_dict,
-                key_list=key_list,
-                prefix=sas_prefix,
-                file_type=file_type,
-                prf=prf)
-
-            sample = collection._process_sample(
-                sample=sample,
-                row_dict=row_dict,
-                key_list=key_list,
-                prefix=sas_prefix,
-                file_type=file_type,
-                project=project)
-
-            paired_reads = collection._process_paired_reads(
-                paired_reads=paired_reads,
-                row_dict=row_dict,
-                key_list=key_list,
-                prefix=sas_prefix,
-                file_type=file_type,
-                sample=sample)
+            file_type = _process_file_type()
+            prf = _process_processed_run_folder()
+            project = _process_project()
+            sample = _process_sample()
+            paired_reads = _process_paired_reads(paired_reads_old=paired_reads)
 
             # Optionally group the Sample objects.
 
@@ -1709,12 +2004,9 @@ class Collection(NextGenerationBase):
 
         # Quench empty default objects that are a consequence of empty lines in the sample annotation sheet.
 
-        for prf_name in collection.processed_run_folder_dict.keys():
-            prf = collection.processed_run_folder_dict[prf_name]
-            for project_name in prf.project_dict.keys():
-                project = prf.project_dict[project_name]
-                for sample_name in project.sample_dict.keys():
-                    sample = project.sample_dict[sample_name]
+        for prf in collection.processed_run_folder_dict.values():
+            for project in prf.project_dict.values():
+                for sample in project.sample_dict.values():
                     if sample.name == Sample.default_name and not len(sample.paired_reads_list):
                         project.del_sample(name=sample.name)
                 if project.name == Project.default_name and not len(project.sample_dict):
@@ -1916,416 +2208,11 @@ class Collection(NextGenerationBase):
 
         return sample_list
 
-    @staticmethod
-    def _process_file_type(row_dict, key_list, prefix):
-        """Get file type information.
-
-        A 'I{[Prefix] FileType}' key is optional, its value defaults to I{Automatic}.
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
-        @param key_list: A Python C{list} of Python C{str} (key) objects in the row
-        @type key_list: list[str]
-        @param prefix: Optional configuration prefix
-            (e.g. '[Control] FileType', '[Treatment] FileType', '[Point N]  FileType', ...)
-        @type prefix: str
-        @return: File type
-        @rtype: str
-        """
-
-        key = '{} File Type'.format(prefix).lstrip()
-
-        # If present, delete the key from the key list.
-        if key in key_list:
-            key_list.remove(key)
-
-        if key in row_dict and row_dict[key]:
-            file_type = row_dict[key]
-        else:
-            file_type = 'Automatic'
-
-        return file_type
-
-    def _process_processed_run_folder(self, prf, row_dict, key_list, prefix, file_type):
-        """Get or create a C{bsf.ngs.ProcessedRunFolder}.
-
-        A 'I{[Prefix] ProcessedRunFolder Name}' key is optional, its value defaults to I{Default}.
-        @param prf: Current C{bsf.ngs.ProcessedRunFolder} that may get replaced upon encountering a new
-            'I{[Prefix] ProcessedRunFolder Name}' key
-        @type prf: bsf.ngs.ProcessedRunFolder
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
-        @param key_list: A Python C{list} of Python C{str} (key) objects in the row
-        @type key_list: list[str]
-        @param prefix: Optional configuration prefix
-            (e.g. '[Control] ProcessedRunFolder', '[Treatment] ProcessedRunFolder',
-            '[Point N] ProcessedRunFolder', ...)
-        @type prefix: str
-        @param file_type: File type
-        @type file_type: str
-        @return: C{bsf.ngs.ProcessedRunFolder}
-        @rtype: bsf.ngs.ProcessedRunFolder
-        """
-
-        new_prf = None
-
-        key = '{} ProcessedRunFolder Name'.format(prefix).lstrip()
-
-        if key in row_dict:
-            # The key exists ...
-            key_list.remove(key)
-            if row_dict[key]:
-                # ... and has a meaningful value ...
-                value = row_dict[key]
-                if value in self.processed_run_folder_dict:
-                    # ..., which exists in the dict of ProcessedRunFolder objects.
-                    new_prf = self.processed_run_folder_dict[value]
-                else:
-                    # ..., which does not exist in the dict of ProcessedRunFolder objects.
-                    # Try to automatically discover a ProcessedRunFolder.
-                    new_prf = self.get_processed_run_folder(file_path=value, file_type=file_type)
-            else:
-                # ... and has no meaningful value ...
-                if prf is not None:
-                    # ..., but an old PRF exists.
-                    new_prf = prf
-
-        if new_prf is None:
-            if ProcessedRunFolder.default_name in self.processed_run_folder_dict:
-                new_prf = self.processed_run_folder_dict[ProcessedRunFolder.default_name]
-            else:
-                new_prf = self.add_processed_run_folder(
-                    prf=ProcessedRunFolder(name=ProcessedRunFolder.default_name, file_type=file_type))
-
-        new_prf.process_annotation(row_dict=row_dict, key_list=key_list, prefix=prefix)
-
-        return new_prf
-
-    @staticmethod
-    def _process_project(project, row_dict, key_list, prefix, file_type, prf):
-        """Get or create a C{bsf.ngs.Project}.
-
-        A 'I{[Prefix] Project Name}' key is optional, its value defaults to I{Default}.
-        @param project: Current C{bsf.ngs.Project} that may get replaced upon encountering a new
-            'I{[Prefix] Project Name}' key
-        @type project: bsf.ngs.Project
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
-        @param key_list: A Python C{list} of Python C{str} (key) objects in the row
-        @type key_list: list[str]
-        @param prefix: Optional configuration prefix
-            (e.g. '[Control] Project', '[Treatment] Project', '[Point N] Project', ...)
-        @type prefix: str
-        @param file_type: File type
-        @type file_type: str
-        @param prf: C{bsf.ngs.ProcessedRunFolder}
-        @type prf: bsf.ngs.ProcessedRunFolder
-        @return: C{bsf.ngs.Project}
-        @rtype: bsf.ngs.Project
-        """
-
-        new_project = None
-
-        key = '{} Project Name'.format(prefix).lstrip()
-
-        if key in row_dict:
-            # The key exists ...
-            key_list.remove(key)  # Remove the 'Name' key.
-            if row_dict[key]:
-                # ... and has a meaningful value ...
-                value = row_dict[key]
-                if value in prf.project_dict:
-                    # ..., which exists in the dict of Project objects.
-                    new_project = prf.project_dict[value]
-                else:
-                    # ..., which does not exist in the dict of Project objects.
-                    # Create a new Project.
-                    new_project = prf.add_project(project=Project(name=value, file_type=file_type))
-            else:
-                # ... and has no meaningful value ...
-                if project is not None:
-                    # ..., but a current Project exists.
-                    new_project = project
-
-        if new_project is None:
-            if Project.default_name in prf.project_dict:
-                new_project = prf.project_dict[Project.default_name]
-            else:
-                new_project = prf.add_project(project=Project(name=Project.default_name, file_type=file_type))
-
-        new_project.process_annotation(row_dict=row_dict, key_list=key_list, prefix=prefix)
-
-        return new_project
-
-    @staticmethod
-    def _process_sample(sample, row_dict, key_list, prefix, file_type, project):
-        """Get or create a C{bsf.ngs.Sample}.
-
-        A 'I{[Prefix] Sample Name}' key is optional, its value defaults to I{Default}.
-        @param sample: Current C{bsf.ngs.Sample} that may get replaced upon encountering a new
-            'I{[Prefix] Sample Name}' key
-        @type sample: bsf.ngs.Sample
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
-        @param key_list: A Python C{list} of Python C{str} (key) objects in the row
-        @type key_list: list[str]
-        @param prefix: Optional configuration prefix
-            (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
-        @type prefix: str
-        @param file_type: File type
-        @type file_type: str
-        @param project: C{bsf.ngs.Project}
-        @type project: bsf.ngs.Project
-        @return: C{bsf.ngs.Sample}
-        @rtype: bsf.ngs.Sample
-        """
-
-        new_sample = None
-
-        key = '{} Sample Name'.format(prefix).lstrip()
-
-        if key in row_dict:
-            key_list.remove(key)  # Remove the 'Name' key.
-            # The key exists ...
-            if row_dict[key]:
-                # ... and has a meaningful value ...
-                value = row_dict[key]
-                if value in project.sample_dict:
-                    # ..., which exists in the dict of Sample objects.
-                    new_sample = project.sample_dict[value]
-                else:
-                    # ..., which does not exist in the dict of Sample objects.
-                    # Create a new Sample.
-                    new_sample = project.add_sample(sample=Sample(name=value, file_type=file_type))
-            else:
-                # ... and has no meaningful value ...
-                if sample is not None:
-                    # ..., but a current Sample exists.
-                    new_sample = sample
-
-        if new_sample is None:
-            if Sample.default_name in project.sample_dict:
-                new_sample = project.sample_dict[Sample.default_name]
-            else:
-                new_sample = project.add_sample(sample=Sample(name=Sample.default_name, file_type=file_type))
-
-        new_sample.process_annotation(row_dict=row_dict, key_list=key_list, prefix=prefix)
-
-        return new_sample
-
-    def _process_reads(self, reads, row_dict, key_list, prefix, file_type, suffix):
-        """Get or create a C{bsf.ngs.Reads} object.
-
-        A 'I{[Prefix] Reads{suffix} Name}' key and 'I{[Prefix] Reads{suffix} File}' key are optional,
-        in which case the default is a C{None} object.
-        @param reads: Current C{bsf.ngs.Reads} that may get replaced upon encountering a new
-            'I{[Prefix] ReadsN Name}' key
-        @type reads: bsf.ngs.Reads
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
-        @param key_list: A Python C{list} of Python C{str} (key) objects in the row
-        @type key_list: list[str]
-        @param prefix: Optional configuration prefix
-            (e.g. '[Control] ReadsN', '[Treatment] ReadsN', '[Point N] ReadsN', ...)
-        @type prefix: str
-        @param file_type: File type
-        @type file_type: str
-        @param suffix: The read suffix (i.e. I{1} or I{2})
-        @type suffix: str
-        @return: C{bsf.ngs.Reads}
-        @rtype: bsf.ngs.Reads
-        """
-
-        if reads is None:
-            reads = Reads()
-
-        new_reads = Reads(file_type=file_type)
-
-        # Pre-process the Reads.file_path instance variable.
-
-        key = '{} Reads{} File'.format(prefix, suffix).lstrip()
-        if key in key_list:
-            key_list.remove(key)
-
-        is_new_file_path = False
-        if key in row_dict and row_dict[key]:
-            new_reads.file_path = row_dict[key]
-            new_reads.file_path = Default.get_absolute_path(file_path=new_reads.file_path, default_path=self.file_path)
-            # Check for a non-matching, i.e. new "file_path" instance variable.
-            if new_reads.file_path != reads.file_path:
-                is_new_file_path = True
-
-        # Pre-process the Reads.name instance variable.
-
-        key = '{} Reads{} Name'.format(prefix, suffix).lstrip()
-        if key in key_list:
-            key_list.remove(key)
-
-        is_new_name = False
-        if key in row_dict and row_dict[key]:
-            new_reads.name = row_dict[key]
-            # Check for a non-matching i.e. new "name" instance variable.
-            if new_reads.name != reads.name:
-                is_new_name = True
-
-        if is_new_file_path and is_new_name:
-            # All is well. Just return the new Reads object.
-            pass
-        elif is_new_file_path:
-            # A new file_path, but check the name.
-            if new_reads.name:
-                if reads.name and new_reads.name == reads.name:
-                    # The old Reads object has the same Reads.name instance variable.
-                    raise Exception("Encountered new Reads.file_path {} -> {}, but the same Reads.name {}.".format(
-                        reads.file_path, new_reads.file_path, new_reads.name))
-                else:
-                    # Set the Reads.name instance variable.
-                    reads.name = new_reads.name
-                    new_reads = reads
-        elif is_new_name:
-            # A new name, but check the file_path.
-            if new_reads.file_path:
-                if reads.file_path and new_reads.file_path == reads.file_path:
-                    # The old Reads object has the same Reads.file_path instance variable.
-                    raise Exception("Encountered new Reads.name {} -> {}, but same reads.file_path {}.".format(
-                        reads.name, new_reads.name, new_reads.file_path))
-                else:
-                    # Set the Reads.file_path instance variable.
-                    reads.file_path = new_reads.file_path
-                    new_reads = reads
-        else:
-            # Nothing new, just return the old Reads object.
-            new_reads = reads
-
-        return new_reads
-
     # Taken from ConfigParser.RawConfigParser.getboolean()
 
     _boolean_states = {
         '1': True, 'yes': True, 'true': True, 'on': True,
         '0': False, 'no': False, 'false': False, 'off': False}
-
-    def _process_paired_reads(self, paired_reads, row_dict, key_list, prefix, file_type, sample):
-        """Get or create a C{bsf.ngs.PairedReads} object.
-
-        The 'I{[Prefix] PairedReads Exclude}' key is optional, in which case the default is Python C{bool} I{False}.
-        The 'I{[Prefix] PairedReads Index 1}', 'I{[Prefix] PairedReads Index 2}' and 'I{[Prefix] PairedReads ReadGroup}'
-        keys are optional, in which case the default is an empty Python C{str} object.
-        @param paired_reads: C{PairedReads}
-        @type paired_reads: PairedReads
-        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
-        @type row_dict: dict[str, str | unicode]
-        @param key_list: A Python C{list} of Python C{str} (key) objects in the row
-        @type key_list: list[str]
-        @param prefix: Optional configuration prefix
-            (e.g. '[Control] PairedReads ReadGroup',
-            '[Treatment] PairedReads ReadGroup',
-            '[Point N] PairedReads ReadGroup', ...)
-        @type prefix: str
-        @param file_type: File type
-        @type file_type: str
-        @return: C{PairedReads}
-        @rtype: PairedReads
-        """
-
-        def _is_new_reads(reads_new, reads_old):
-            """Test whether a C{bsf.ngs.Reads} object is new.
-
-            To test for object equality is not good enough here. A new C{bsf.ngs.Reads} object is encountered
-            upon mismatches in the C{bsf.ngs.Reads.file_path} or C{bsf.ngs.Reads.name} instance variables.
-            @param reads_new: C{bsf.ngs.Reads}
-            @type reads_new: Reads
-            @param reads_old: C{bsf.ngs.Reads}
-            @type reads_old: Reads
-            @return: True if C{Reads} is new
-            @rtype: bool
-            """
-            if reads_new is None and reads_old is None:
-                # Both Reads objects are not defined, so, nothing new.
-                is_new_reads = False
-            elif not (reads_new or reads_old):
-                is_new_reads = False
-            elif reads_new is None:
-                # At least reads_2 must be defined.
-                is_new_reads = True
-            elif reads_old is None:
-                # At least reads_1 must be defined.
-                is_new_reads = True
-            elif reads_new.name != reads_old.name or reads_new.file_path != reads_old.file_path:
-                is_new_reads = True
-            else:
-                is_new_reads = False
-
-            return is_new_reads
-
-        # PairedReads objects have no name instance variable. Thus, a new PairedReads object has to begin,
-        # when a new Reads() object is encountered.
-
-        if paired_reads is None:
-            paired_reads = PairedReads()
-
-        new_paired_reads = PairedReads(
-            file_type=file_type,
-            reads_1=self._process_reads(
-                reads=paired_reads.reads_1,
-                row_dict=row_dict,
-                key_list=key_list,
-                prefix=prefix,
-                file_type=file_type,
-                suffix='1'),
-            reads_2=self._process_reads(
-                reads=paired_reads.reads_2,
-                row_dict=row_dict,
-                key_list=key_list,
-                prefix=prefix,
-                file_type=file_type,
-                suffix='2'))
-
-        is_new_reads_1 = _is_new_reads(reads_new=new_paired_reads.reads_1, reads_old=paired_reads.reads_1)
-        is_new_reads_2 = _is_new_reads(reads_new=new_paired_reads.reads_2, reads_old=paired_reads.reads_2)
-
-        if is_new_reads_1 or is_new_reads_2:
-            # Replace eventual unchanged Reads instances with empty Reads instances.
-            if not is_new_reads_1:
-                new_paired_reads.reads_1 = Reads()
-            if not is_new_reads_2:
-                new_paired_reads.reads_2 = Reads()
-            sample.add_paired_reads(paired_reads=new_paired_reads)
-        else:
-            new_paired_reads = paired_reads
-
-        key = '{} PairedReads Exclude'.format(prefix).lstrip()
-        if key in key_list:
-            key_list.remove(key)
-
-        if key in row_dict and row_dict[key]:
-            if row_dict[key].lower() not in Collection._boolean_states:
-                raise ValueError('Value in field {!r} is not a boolean: {!r}'.format(key, row_dict[key]))
-            new_paired_reads.exclude = Collection._boolean_states[row_dict[key].lower()]
-
-        key = '{} PairedReads Index 1'.format(prefix).lstrip()
-        if key in key_list:
-            key_list.remove(key)
-
-        if key in row_dict and row_dict[key]:
-            new_paired_reads.index_1 = row_dict[key]
-
-        key = '{} PairedReads Index 2'.format(prefix).lstrip()
-        if key in key_list:
-            key_list.remove(key)
-
-        if key in row_dict and row_dict[key]:
-            new_paired_reads.index_2 = row_dict[key]
-
-        key = '{} PairedReads ReadGroup'.format(prefix).lstrip()
-        if key in key_list:
-            key_list.remove(key)
-
-        if key in row_dict and row_dict[key]:
-            new_paired_reads.read_group = row_dict[key]
-
-        new_paired_reads.process_annotation(row_dict=row_dict, key_list=key_list, prefix=prefix)
-
-        return new_paired_reads
 
     def get_sample_from_row_dict(self, row_dict, prefix=None):
         """Get a Sample from a C{bsf.ngs.SampleAnnotationSheet} row Python C{dict}.
