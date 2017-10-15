@@ -3236,6 +3236,9 @@ class VariantCallingGATK(Analysis):
                         key='READ_NAME_REGEX',
                         value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
                     runnable_step.add_picard_option(
+                        key='OPTICAL_DUPLICATE_PIXEL_DISTANCE',
+                        value='5000')
+                    runnable_step.add_picard_option(
                         key='TMP_DIR',
                         value=runnable_process_lane.get_relative_temporary_directory_path)
                     # VERBOSITY defaults to 'INFO'.
@@ -3658,6 +3661,9 @@ class VariantCallingGATK(Analysis):
                     runnable_step.add_picard_option(
                         key='READ_NAME_REGEX',
                         value='[a-zA-Z0-9_-]+:[0-9]:([0-9]+):([0-9]+):([0-9]+).*')
+                    runnable_step.add_picard_option(
+                        key='OPTICAL_DUPLICATE_PIXEL_DISTANCE',
+                        value='5000')
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
                         value=runnable_process_sample.get_relative_temporary_directory_path)
