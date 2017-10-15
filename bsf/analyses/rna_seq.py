@@ -31,11 +31,13 @@ import errno
 import os
 import pickle
 import re
+import warnings
 
 from bsf import Analysis, FilePath, Runnable
 from bsf.analyses.star_aligner import StarAligner
 from bsf.annotation import AnnotationSheet
 from bsf.executables import TopHat
+from bsf.ngs import SampleGroup
 from bsf.process import Executable, RunnableStep, RunnableStepLink
 from bsf.standards import Default
 
@@ -326,36 +328,6 @@ class TuxedoSamplePairSheet(AnnotationSheet):
     ]
 
     _test_methods = dict()
-
-
-class TuxedoComparison(object):
-    """The C{bsf.analyses.rna_seq.TuxedoComparison} class models RNA-seq comparisons.
-
-    Attributes:
-    @ivar name: Name
-    @type name: str
-    @ivar sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-    @type sample_list: list[bsf.ngs.Sample]
-    """
-
-    def __init__(self, name, sample_list=None):
-        """Initialise a C{bsf.analyses.rna_seq.TuxedoComparison} object.
-
-        @param name: Name
-        @type name: str
-        @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
-        @return:
-        @rtype:
-        """
-        self.name = name  # Can be None
-
-        if sample_list is None:
-            self.sample_list = list()
-        else:
-            self.sample_list = sample_list
-
-        return
 
 
 class Tuxedo(Analysis):
@@ -656,7 +628,7 @@ class Tuxedo(Analysis):
             self.no_length_correction = no_length_correction
 
         self._comparison_dict = dict()
-        """ @type _comparison_dict: dict[str, list[bsf.analyses.rna_seq.TuxedoComparison]] """
+        """ @type _comparison_dict: dict[str, list[bsf.ngs.SampleGroup]] """
 
         return
 
@@ -757,32 +729,44 @@ class Tuxedo(Analysis):
             """
             if self.comparison_path:
                 # A comparison file path was provided.
-                _comparison_list = list()
-                """ @type _comparison_list: list[bsf.analyses.rna_seq.TuxedoComparison] """
-                _comparison_name = None
-                """ @type _comparison_name: str """
                 if self.comparison_path == '*groups*':
                     # The special file name *groups* creates TuxedoComparison objects on the basis of an
                     # all-against-all group comparison.
                     # Without a comparison file path, simply add all Sample objects from the Collection.
                     self.sample_list.extend(self.collection.get_all_samples())
                     # Create a global comparison by adding all sample groups.
+                    _sample_group_list = list()
+                    """ @type _sample_group_list: list[bsf.ngs.SampleGroup] """
                     for _group_name in self.collection.sample_group_dict.keys():
-                        _comparison_list.append(TuxedoComparison(
+                        _sample_group_list.append(SampleGroup(
                             name=_group_name,
                             sample_list=self.collection.sample_group_dict[_group_name]))
-                    # Set the comparison name to 'global'.
-                    _comparison_name = 'global'
+                    # For a successful *groups* comparison, more than one Group has to be defined.
+                    if len(_sample_group_list) < 2:
+                        warnings.warn('Special comparison *groups* with less than two Group keys.')
+                    else:
+                        # Sort the list of comparison groups by group name.
+                        _sample_group_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+                        # Set the comparison name to 'global'.
+                        self._comparison_dict['global'] = _sample_group_list
                 elif self.comparison_path == '*samples*':
                     # The special file name *samples* creates TuxedoComparison objects on the basis of an
                     # all-against-all sample comparison.
                     # Without a comparison file path, simply add all Sample objects from the Collection.
                     self.sample_list.extend(self.collection.get_all_samples())
                     # Create a global comparison by adding all samples under their sample name as group name.
+                    _sample_group_list = list()
+                    """ @type _sample_group_list: list[bsf.ngs.SampleGroup] """
                     for _sample in self.sample_list:
-                        _comparison_list.append(TuxedoComparison(name=_sample.name, sample_list=[_sample]))
-                    # Set the comparison name to 'global'.
-                    _comparison_name = 'global'
+                        _sample_group_list.append(SampleGroup(name=_sample.name, sample_list=[_sample]))
+                    # For a successful *samples* comparison, more than one Sample has to be defined.
+                    if len(_sample_group_list) < 2:
+                        warnings.warn('Special comparison *samples* with less than two Sample keys.')
+                    else:
+                        # Sort the list of comparison groups by group name.
+                        _sample_group_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+                        # Set the comparison name to 'global'.
+                        self._comparison_dict['global'] = _sample_group_list
                 else:
                     # A comparison file path was provided.
                     self.comparison_path = Default.get_absolute_path(file_path=self.comparison_path)
@@ -792,6 +776,10 @@ class Tuxedo(Analysis):
                     regular_expression = re.compile(pattern='\W')
 
                     for row_dict in annotation_sheet.row_dicts:
+                        _sample_group_list = list()
+                        """ @type _sample_group_list: list[bsf.ngs.SampleGroup] """
+                        _comparison_name_list = list()
+                        """ @type _comparison_name_list: list[str] """
                         # In addition to defining samples, allow also the definition of groups in comparison files.
                         # If the row dictionary has a 'Group' key, then the Sample in the same row gets added to
                         # the group. So,
@@ -802,7 +790,6 @@ class Tuxedo(Analysis):
                         # Get Sample objects for classical 'Control' and 'Treatment' keys,
                         # before looking up a series of 'Point N' keys.
                         i = -2
-                        _comparison_name = str()
                         while True:
                             i += 1
                             if i == -1:
@@ -821,8 +808,8 @@ class Tuxedo(Analysis):
                                 prefix=prefix)
 
                             if _group_name and len(_group_sample_list):
-                                _comparison_name += _group_name + '__'
-                                _comparison_list.append(TuxedoComparison(
+                                _comparison_name_list.append(_group_name)
+                                _sample_group_list.append(SampleGroup(
                                     name=_group_name,
                                     sample_list=_group_sample_list))
                                 # Also expand each Python list of bsf.ngs.Sample objects to get all those
@@ -841,12 +828,6 @@ class Tuxedo(Analysis):
                                 # Only break if there is no further 'Point N' prefix.
                                 break
 
-                        # For a successful comparison, more than one Sample (pool) has to be defined.
-                        if len(_comparison_list) < 2:
-                            if self.debug > 1:
-                                print 'Comparison line with less than two Sample or Group keys.', row_dict
-                            continue
-
                         if 'Comparison Name' in row_dict and row_dict['Comparison Name']:
                             # For ridiculously large comparisons involving loads of groups or samples a
                             # comparison name can be explicitly specified.
@@ -854,16 +835,32 @@ class Tuxedo(Analysis):
                             _comparison_name = re.sub(pattern=regular_expression, repl='_',
                                                       string=row_dict['Comparison Name'])
                         else:
-                            # Truncate the last '__' separator off the key string.
-                            _comparison_name = _comparison_name.rstrip('_')
+                            _comparison_name = '__'.join(_comparison_name_list)
 
-                # Sort the list of comparison groups by group name.
-                _comparison_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
-                self._comparison_dict[_comparison_name] = _comparison_list
+                        # For a successful comparison, more than one Group or Sample has to be defined.
+                        if len(_sample_group_list) < 2:
+                            warnings.warn('Comparison ' + _comparison_name + ' with less than two keys.')
+                        else:
+                            # Sort the list of comparison groups by group name.
+                            _sample_group_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+                            # Set the comparison name to 'global'.
+                            self._comparison_dict[_comparison_name] = _sample_group_list
             else:
                 # Without a comparison file path, simply add all Sample objects from the Collection.
                 # This means that only the initial pipeline stages, but not the comparison stage gets run.
                 self.sample_list.extend(self.collection.get_all_samples())
+            # FIXME: It can still happen that for a particular comparison group all ReadGroup and thus Sample
+            # objects are excluded, in which case a comparison ist not possible.
+
+            if self.debug > 0:
+                for _comparison_name, _sample_group_list in self._comparison_dict.iteritems():
+                    print "Comparison name:", _comparison_name
+                    print "SampleGroup list:"
+                    for _sample_group in _sample_group_list:
+                        print "  SampleGroup name:", _sample_group.name
+                        print "  SampleGroup Sample list:"
+                        for _sample in _sample_group.sample_list:
+                            print "    Sample name:", _sample.name
 
             return
 
@@ -1095,7 +1092,7 @@ class Tuxedo(Analysis):
 
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
-                        print self, 'PairedReads name:', self, paired_reads.get_name()
+                        print self, 'PairedReads name:', paired_reads.get_name()
 
                     if paired_reads.reads_1:
                         reads_1_file_path_list.append(paired_reads.reads_1.file_path)
@@ -1371,7 +1368,13 @@ class Tuxedo(Analysis):
         comparison_name_list = self._comparison_dict.keys()
         comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
+        if self.debug > 0:
+            print "Tuxedo Comparison dict key list", comparison_name_list
+
         for comparison_name in comparison_name_list:
+            if self.debug > 0:
+                print '  Comparison name:', comparison_name
+
             # TODO: Should the comparison prefix also include the project name or number?
             prefix_cuffmerge = self.get_prefix_rnaseq_run_cuffmerge(comparison_name=comparison_name)
 
@@ -1436,7 +1439,10 @@ class Tuxedo(Analysis):
             cuffdiff_cuffnorm_labels = list()
             """ @type cuffdiff_cuffnorm_labels: list[str] """
 
-            for comparison in self._comparison_dict[comparison_name]:
+            for sample_group in self._comparison_dict[comparison_name]:
+                if self.debug > 0:
+                    print '    SampleGroup name:', sample_group.name
+
                 per_group_abundances_list = list()
                 """ @type per_group_abundances_list: list[str | unicode] """
                 per_group_alignments_list = list()
@@ -1444,7 +1450,10 @@ class Tuxedo(Analysis):
                 # Count samples that remain after removing excluded PairedReads objects.
                 sample_count = 0
 
-                for sample in comparison.sample_list:
+                for sample in sample_group.sample_list:
+                    if self.debug > 0:
+                        print '      Sample name:', sample.name
+
                     paired_reads_dict = sample.get_all_paired_reads(
                         replicate_grouping=self.replicate_grouping,
                         exclude=True)
@@ -1458,6 +1467,8 @@ class Tuxedo(Analysis):
                     paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
                     for paired_reads_name in paired_reads_name_list:
+                        if self.debug > 0:
+                            print '        PairedReads name:', paired_reads_name
                         # Add the Cufflinks assembled transcripts to the Cuffmerge manifest.
 
                         transcripts_path = os.path.join(
@@ -1553,7 +1564,7 @@ class Tuxedo(Analysis):
                         cuffdiff_cuffnorm_dependencies.append(executable_run_cuffquant.name)
 
                 if sample_count:
-                    cuffdiff_cuffnorm_labels.append(comparison.name)
+                    cuffdiff_cuffnorm_labels.append(sample_group.name)
                     cuffdiff_cuffnorm_abundances.append(per_group_abundances_list)
                     cuffdiff_cuffnorm_alignments.append(per_group_alignments_list)
 

@@ -2471,7 +2471,7 @@ class Collection(NextGenerationBase):
 
 
 class SampleGroup(object):
-    """The C{bsf.ngs.SampleGroup} class represents a group of C{bsf.ngs.Sample} objects.
+    """The C{bsf.ngs.SampleGroup} class represents a named Python list of C{bsf.ngs.Sample} objects.
 
     The grouping is usually defined in a sample annotation sheet.
     Attributes:
@@ -2480,8 +2480,6 @@ class SampleGroup(object):
     @ivar sample_list: Python C{list} of C{bsf.ngs.Sample} objects
     @type sample_list: list[bsf.ngs.Sample]
     """
-
-    # TODO: The SampleGroup class is currently not in use.
     # Sample and PairedReads objects from different ProcessRunFolder objects
     # (i.e. flow cells) could bear the same name, leading to problems with SGE job names.
     # This would need further re-thinking.
@@ -2499,7 +2497,6 @@ class SampleGroup(object):
         @return:
         @rtype:
         """
-
         super(SampleGroup, self).__init__()
 
         if name is None:
