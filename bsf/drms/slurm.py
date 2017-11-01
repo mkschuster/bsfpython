@@ -55,6 +55,8 @@ class ProcessSLURM(object):
     @type process_slurm_id: int
     @ivar job_id: The number of the job or job step. It is in the form: job.jobstep
     @type job_id: str
+    @ivar job_id_raw: The number of the job or job step. It is in the form: I{job.jobstep}
+    @type job_id_raw: str
     @ivar job_name: The name of the job or job step
     @type job_name: str
     @ivar partition: Identifies the partition on which the job ran
@@ -105,8 +107,12 @@ class ProcessSLURM(object):
     @type exit_code: str
     @ivar average_cpu_frequency: Average weighted CPU frequency of all tasks in job, in kHz
     @type average_cpu_frequency: str
-    @ivar requested_cpu_frequency: Requested CPU frequency for the step, in kHz
-    @type requested_cpu_frequency: str
+    @ivar requested_cpu_frequency_min: Requested minimum CPU frequency for the step, in kHz
+    @type requested_cpu_frequency_min: str
+    @ivar requested_cpu_frequency_max: Requested maximum CPU frequency for the step, in kHz
+    @type requested_cpu_frequency_max: str
+    @ivar requested_cpu_frequency_gov: Requested CPU governor
+    @type requested_cpu_frequency_gov: str
     @ivar requested_memory: Minimum required memory for the job, in MB
     @type requested_memory: str
     @ivar consumed_energy: Total energy consumed by all tasks in job, in joules
@@ -127,12 +133,21 @@ class ProcessSLURM(object):
     @type max_disk_write_task: str
     @ivar average_disk_write: Average number of bytes written by all tasks in job
     @type average_disk_write: str
+    @ivar allocated_gres: Allocated generic consumable resources
+    @type allocated_gres: str
+    @ivar requested_gres: Requested generic consumable resources
+    @type requested_gres: str
+    @ivar allocated_tres: Allocated trackable resources
+    @type allocated_tres: str
+    @ivar requested_tres: Requested trackable resources
+    @type requested_tres: str
     """
 
     def __init__(
             self,
             process_slurm_id=None,
             job_id=None,
+            job_id_raw=None,
             job_name=None,
             partition=None,
             max_vm_size=None,
@@ -157,7 +172,9 @@ class ProcessSLURM(object):
             state=None,
             exit_code=None,
             average_cpu_frequency=None,
-            requested_cpu_frequency=None,
+            requested_cpu_frequency_min=None,
+            requested_cpu_frequency_max=None,
+            requested_cpu_frequency_gov=None,
             requested_memory=None,
             consumed_energy=None,
             max_disk_read=None,
@@ -167,13 +184,19 @@ class ProcessSLURM(object):
             max_disk_write=None,
             max_disk_write_node=None,
             max_disk_write_task=None,
-            average_disk_write=None):
+            average_disk_write=None,
+            allocated_gres=None,
+            requested_gres=None,
+            allocated_tres=None,
+            requested_tres=None):
         """Initialise a C{bsf.drms.slurm.ProcessSLURM}.
 
         @param process_slurm_id:
         @type process_slurm_id: int
         @param job_id: The number of the job or job step. It is in the form: I{job.jobstep}
         @type job_id: str
+        @param job_id_raw: The number of the job or job step. It is in the form: I{job.jobstep}
+        @type job_id_raw: str
         @param job_name: The name of the job or job step
         @type job_name: str
         @param partition: Identifies the partition on which the job ran
@@ -224,8 +247,12 @@ class ProcessSLURM(object):
         @type exit_code: str
         @param average_cpu_frequency: Average weighted CPU frequency of all tasks in job, in kHz
         @type average_cpu_frequency: str
-        @param requested_cpu_frequency: Requested CPU frequency for the step, in kHz
-        @type requested_cpu_frequency: str
+        @param requested_cpu_frequency_min: Requested minimum CPU frequency for the step, in kHz
+        @type requested_cpu_frequency_min: str
+        @param requested_cpu_frequency_max: Requested maximum CPU frequency for the step, in kHz
+        @type requested_cpu_frequency_max: str
+        @param requested_cpu_frequency_gov: Requested CPU governor
+        @type requested_cpu_frequency_gov: str
         @param requested_memory: Minimum required memory for the job, in MB
         @type requested_memory: str
         @param consumed_energy: Total energy consumed by all tasks in job, in joules
@@ -246,12 +273,21 @@ class ProcessSLURM(object):
         @type max_disk_write_task: str
         @param average_disk_write: Average number of bytes written by all tasks in job
         @type average_disk_write: str
+        @param allocated_gres: Allocated generic consumable resources
+        @type allocated_gres: str
+        @param requested_gres: Requested generic consumable resources
+        @type requested_gres: str
+        @param allocated_tres: Allocated trackable resources
+        @type allocated_tres: str
+        @param requested_tres: Requested trackable resources
+        @type requested_tres: str
         @return:
         @rtype:
         """
         super(ProcessSLURM, self).__init__()
         self.process_slurm_id = process_slurm_id
         self.job_id = job_id
+        self.job_id_raw = job_id_raw
         self.job_name = job_name
         self.partition = partition
         self.max_vm_size = max_vm_size
@@ -276,7 +312,9 @@ class ProcessSLURM(object):
         self.state = state
         self.exit_code = exit_code
         self.average_cpu_frequency = average_cpu_frequency
-        self.requested_cpu_frequency = requested_cpu_frequency
+        self.requested_cpu_frequency_min = requested_cpu_frequency_min
+        self.requested_cpu_frequency_max = requested_cpu_frequency_max
+        self.requested_cpu_frequency_gov = requested_cpu_frequency_gov
         self.requested_memory = requested_memory
         self.consumed_energy = consumed_energy
         self.max_disk_read = max_disk_read
@@ -287,6 +325,10 @@ class ProcessSLURM(object):
         self.max_disk_write_node = max_disk_write_node
         self.max_disk_write_task = max_disk_write_task
         self.average_disk_write = average_disk_write
+        self.allocated_gres = allocated_gres
+        self.requested_gres = requested_gres
+        self.allocated_tres = allocated_tres
+        self.requested_tres = requested_tres
 
         return
 
@@ -319,6 +361,9 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # JobID
                 # The number of the job or job step. It is in the form: job.jobstep.
                 ['job_id', 'TEXT UNIQUE'],
+                # JobIDRaw
+                #
+                ['job_id_raw', 'TEXT'],
                 # JobName
                 # The name of the job or job step.
                 ['job_name', 'TEXT'],
@@ -377,7 +422,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # Total number of tasks in a job or step.
                 ['number_tasks', 'TEXT'],
                 # AllocCPUS
-                # Count of allocated CPUs.
+                # Count of allocated CPUs. Equivalent to NCPUS.
                 ['allocated_cpus', 'TEXT'],
                 # Elapsed
                 # The jobs elapsed time.
@@ -395,9 +440,15 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # AveCPUFreq
                 # Average weighted CPU frequency of all tasks in job, in kHz.
                 ['average_cpu_frequency', 'TEXT'],
-                # ReqCPUFreq
-                # Requested CPU frequency for the step, in kHz.
-                ['requested_cpu_frequency', 'TEXT'],
+                # ReqCPUFreqMin
+                # Requested minimum CPU frequency for the step, in kHz.
+                ['requested_cpu_frequency_min', 'TEXT'],
+                # ReqCPUFreqMax
+                # Requested maximum CPU frequency for the step, in kHz.
+                ['requested_cpu_frequency_max', 'TEXT'],
+                # ReqCPUFreqGov
+                # Requested CPU frequency governor.
+                ['requested_cpu_frequency_gov', 'TEXT'],
                 # ReqMem
                 # Minimum required memory for the job, in MB.
                 ['requested_memory', 'TEXT'],
@@ -428,7 +479,128 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
                 # AveDiskWrite
                 # Average number of bytes written by all tasks in job.
                 ['average_disk_write', 'TEXT'],
+                # AllocGRES
+                # Names and counts of generic resources allocated.
+                ['allocated_gres', 'TEXT'],
+                # ReqGRES
+                ['requested_gres', 'TEXT'],
+                # AllocTRES
+                ['allocated_tres', 'TEXT'],
+                # ReqTRES
+                ['requested_tres', 'TEXT'],
             ])
+
+        # NOTE: Experimentally patch the table definition for this DatabaseAdaptor.
+        self.patch_table_definition()
+
+        return
+
+    def patch_table_definition(self):
+        """Patch the SQL table definition.
+
+        Re-synchronise the SQLite table with the current BSF Python table definition.
+
+        @return:
+        @rtype:
+        """
+        column_dict_old, column_dict_new = self.compare_table_definitions()
+
+        # print "Column dict old:", column_dict_old
+        # print "Column dict new:", column_dict_new
+
+        if len(column_dict_new) or len(column_dict_old):
+            print "Attempting to patch SQLite table", self.table_name
+
+            table_name_old = '_'.join((self.table_name, 'old'))
+
+            # Rename the old table to move it sideways.
+            statement = self.statement_alter_table_rename(table_name_new=table_name_old)
+            # print "Statement:", statement
+            self.get_cursor().execute(statement)
+
+            # Create a new table
+            statement = self.statement_create_table()
+            # print "Statement:", statement
+            self.get_cursor().execute(statement)
+
+            # Call INSERT INTO ...
+            statement_list = list()
+            statement_list.append('INSERT')
+            statement_list.append('INTO')
+            statement_list.append(self.table_name)
+            statement_list.append('SELECT')
+
+            select_list = list()
+            select_list.append('process_slurm_id')
+            select_list.append('job_id')
+            select_list.append("''")  # job_id_raw
+            select_list.append('job_name')
+            select_list.append('partition')
+
+            select_list.append('max_vm_size')
+            select_list.append('max_vm_size_node')
+            select_list.append('max_vm_size_task')
+            select_list.append('average_vm_size')
+
+            select_list.append('max_rss')
+            select_list.append('max_rss_node')
+            select_list.append('max_rss_task')
+            select_list.append('average_rss')
+
+            select_list.append('max_pages')
+            select_list.append('max_pages_node')
+            select_list.append('max_pages_task')
+            select_list.append('average_pages')
+
+            select_list.append('min_cpu')
+            select_list.append('min_cpu_node')
+            select_list.append('min_cpu_task')
+            select_list.append('average_cpu')
+
+            select_list.append('number_tasks')
+            select_list.append('allocated_cpus')
+            select_list.append('elapsed')
+            select_list.append('state')
+            select_list.append('exit_code')
+
+            select_list.append('average_cpu_frequency')
+            select_list.append('requested_cpu_frequency')  # requested_cpu_frequency_min
+            select_list.append("''")  # requested_cpu_frequency_max
+            select_list.append("''")  # requested_cpu_frequency_gov
+            select_list.append('requested_memory')
+            select_list.append('consumed_energy')
+
+            select_list.append('max_disk_read')
+            select_list.append('max_disk_read_node')
+            select_list.append('max_disk_read_task')
+            select_list.append('average_disk_read')
+
+            select_list.append('max_disk_write')
+            select_list.append('max_disk_write_node')
+            select_list.append('max_disk_write_task')
+            select_list.append('average_disk_write')
+
+            select_list.append("''")  # allocated_gres
+            select_list.append("''")  # requested_gres
+            select_list.append("''")  # allocated_tres
+            select_list.append("''")  # requested_tres
+
+            statement_list.append(', '.join(select_list))
+            statement_list.append('FROM')
+            statement_list.append(table_name_old)
+
+            statement = ' '.join(statement_list)
+            # print "Statement:", statement
+            self.get_cursor().execute(statement)
+            # By default, the sqlite3 Python module opens transactions implicitly before a
+            # Data Modification Language (DML) statement (i.e. INSERT, UPDATE, DELETE or REPLACE)
+            # and commits transactions implicitly before a non-DML, non-query statement (i.e. SELECT)
+            self.database_connection.commit()
+
+            # Drop the old table
+            statement = self.statement_drop_table(table_name=table_name_old)
+            # print "Statement:", statement
+            self.get_cursor().execute(statement)
 
         return
 
@@ -823,6 +995,7 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
     for row_dict in dict_reader:
         new_process_slurm = ProcessSLURM(
             job_id=row_dict['JobID'],
+            job_id_raw=row_dict['JobIDRaw'],
             job_name=row_dict['JobName'],
             partition=row_dict['Partition'],
             max_vm_size=row_dict['MaxVMSize'],
@@ -847,7 +1020,8 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
             state=row_dict['State'],
             exit_code=row_dict['ExitCode'],
             average_cpu_frequency=row_dict['AveCPUFreq'],
-            requested_cpu_frequency=row_dict['ReqCPUFreq'],
+            requested_cpu_frequency_min=row_dict['ReqCPUFreqMin'],
+            requested_cpu_frequency_max=row_dict['ReqCPUFreqMax'],
             requested_memory=row_dict['ReqMem'],
             consumed_energy=row_dict['ConsumedEnergy'],
             max_disk_read=row_dict['MaxDiskRead'],
@@ -857,7 +1031,11 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
             max_disk_write=row_dict['MaxDiskWrite'],
             max_disk_write_node=row_dict['MaxDiskWriteNode'],
             max_disk_write_task=row_dict['MaxDiskWriteTask'],
-            average_disk_write=row_dict['AveDiskWrite'])
+            average_disk_write=row_dict['AveDiskWrite'],
+            allocated_gres=row_dict['AllocGRES'],
+            requested_gres=row_dict['ReqGRES'],
+            allocated_tres=row_dict['AllocTRES'],
+            requested_tres=row_dict['ReqTRES'])
 
         # Check if the ProcessSLURM already exists.
         old_process_slurm = process_slurm_adaptor.select_by_job_id(job_id=new_process_slurm.job_id)
