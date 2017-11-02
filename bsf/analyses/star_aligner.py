@@ -206,7 +206,7 @@ class StarAligner(Analysis):
             stranded=None,
             transcriptome_gtf=None,
             classpath_picard=None):
-        """Initialise a C{bsf.analyses.rna_seq.Tuxedo} object.
+        """Initialise a C{bsf.analyses.rna_seq.StarAligner} object.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -290,7 +290,7 @@ class StarAligner(Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.rna_seq.Tuxedo} object via a section of a
+        """Set instance variables of a C{bsf.analyses.rna_seq.StarAligner} object via a section of a
         C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
@@ -331,7 +331,7 @@ class StarAligner(Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.rna_seq.Tuxedo} analysis.
+        """Run this C{bsf.analyses.rna_seq.StarAligner} analysis.
 
         Although the STAR aligner can directly count reads according to its splice junction database,
         more than one read group may need aligning so that the count tables had to be combined.
@@ -471,6 +471,8 @@ class StarAligner(Analysis):
                         runnable_step.add_option_multi_long(
                             key='readFilesIn',
                             value=' '.join((paired_reads.reads_1.file_path, paired_reads.reads_2.file_path)))
+                    if paired_reads.reads_1.file_path.endswith('fastq.gz'):
+                        runnable_step.add_option_long(key='readFilesCommand', value='zcat')
 
                     # If the original BAM file was annotated in the PairedReads object, the read group can be set.
 
