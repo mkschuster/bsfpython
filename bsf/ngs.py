@@ -1062,12 +1062,12 @@ class Sample(NextGenerationBase):
     def get_all_paired_reads(self, replicate_grouping, exclude=False, full=False):
         """Get all C{bsf.ngs.PairedReads} of a C{bsf.ngs.Sample} grouped or un-grouped.
 
-        A C{bsf.ngs.Sample} can hold several C{bsf.ngs.PairedReads} (i.e. biological or technical
-        replicates) that have been sequenced on different lanes of the same flow cell.
+        A C{bsf.ngs.Sample} can hold several C{bsf.ngs.PairedReads} (i.e. SAM Read Group (@RG) entries)
+        that have been sequenced on different lanes of the same or even another flow cell.
         The C{bsf.ngs.PairedReads} will therefore differ in I{name}, I{barcode} or I{lane} information.
-        Depending on the I{replicate_grouping} parameter they can be returned as a group or separately.
-        C{bsf.ngs.PairedReads} that share the I{name}, I{barcode} and I{lane}, but differ in I{chunk} number
-        are always grouped together.
+        Depending on the I{replicate_grouping} parameter, C{bsf.ngs.PairedReads} can be returned as a group
+        or separately. However, C{bsf.ngs.PairedReads} that share the I{name}, I{barcode} and I{lane},
+        but only differ in their I{chunk} number are always grouped together.
         @param replicate_grouping: Group all C{bsf.ngs.PairedReads} of a C{bsf.ngs.Sample} or
             list them individually
         @type replicate_grouping: bool
@@ -1106,6 +1106,18 @@ class Sample(NextGenerationBase):
             paired_reads_dict[key].append(paired_reads)
 
         return paired_reads_dict
+
+    def is_excluded(self):
+        """Is this C{bsf.ngs.Sample} object excluded, because all its C{bsf.ngs.PairedReads} objects are?
+
+        @return: C{bsf.ngs.Sample} object is excluded as all C{bsf.ngs.PairedReads} objects are excluded
+        @rtype: bool
+        """
+        for paired_read in self.paired_reads_list:
+            if not paired_read.exclude:
+                return False
+        else:
+            return True
 
 
 class Project(NextGenerationBase):
@@ -1277,9 +1289,11 @@ class Project(NextGenerationBase):
         else:
             return
 
-    def get_all_samples(self):
+    def get_all_samples(self, exclude=False):
         """Get an ordered Python C{list} of C{bsf.ngs.Sample} objects.
 
+        @param exclude: Exclude C{bsf.ngs.Sample} objects on the basis of C{bsf.ngs.PairedReads.exclude}
+        @type exclude: bool
         @return: Python C{list} of C{bsf.ngs.Sample} objects
         @rtype: list[bsf.ngs.Sample]
         """
@@ -1291,7 +1305,9 @@ class Project(NextGenerationBase):
         sample_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
         for sample_name in sample_name_list:
-            sample_list.append(self.sample_dict[sample_name])
+            sample = self.sample_dict[sample_name]
+            if not (exclude and sample.is_excluded()):
+                sample_list.append(sample)
 
         return sample_list
 
@@ -2193,9 +2209,11 @@ class Collection(NextGenerationBase):
 
         return project_list
 
-    def get_all_samples(self):
+    def get_all_samples(self, exclude=False):
         """Get an ordered Python C{list} of C{bsf.ngs.Sample} objects.
 
+        @param exclude: Exclude C{bsf.ngs.Sample} objects on the basis of C{bsf.ngs.PairedReads.exclude}
+        @type exclude: bool
         @return: Python C{list} of C{bsf.ngs.Sample} objects
         @rtype: list[bsf.ngs.Sample]
         """
@@ -2204,7 +2222,7 @@ class Collection(NextGenerationBase):
         """ @type sample_list: list[bsf.ngs.Sample] """
 
         for project in self.get_all_projects():
-            sample_list.extend(project.get_all_samples())
+            sample_list.extend(project.get_all_samples(exclude=exclude))
 
         return sample_list
 
@@ -2524,6 +2542,18 @@ class SampleGroup(object):
             self.sample_list.append(sample)
 
         return
+
+    def is_excluded(self):
+        """Is this C{bsf.ngs.SampleGroup} object excluded, because all its C{ngs.bsf.Sample} objects are?
+
+        @return: C{bsf.ngs.SampleGroup} is excluded as all C{bsf.ngs.Sample} objects are excluded
+        @rtype: bool
+        """
+        for sample in self.sample_list:
+            if not sample.is_excluded():
+                return False
+        else:
+            return True
 
     def get_all_paired_reads(self, replicate_grouping):
         """Get all C{bsf.ngs.PairedReads} objects of a C{bsf.ngs.SampleGroup}.
