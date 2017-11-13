@@ -31,7 +31,6 @@ import errno
 import os
 import pickle
 import re
-import warnings
 
 from bsf import Analysis, FilePath, Runnable
 from bsf.analyses.star_aligner import StarAligner
@@ -285,6 +284,7 @@ class FilePathCuffnorm(FilePath):
         super(FilePathCuffnorm, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
+        self.abundances_tsv = prefix + '_abundances.tsv'
 
         return
 
@@ -308,6 +308,8 @@ class FilePathCuffdiff(FilePath):
         super(FilePathCuffdiff, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
+        self.abundances_tsv = prefix + '_abundances.tsv'
+        self.alignments_tsv = prefix + '_alignments.tsv'
 
         return
 
@@ -733,40 +735,41 @@ class Tuxedo(Analysis):
                     # The special file name *groups* creates TuxedoComparison objects on the basis of an
                     # all-against-all group comparison.
                     # Without a comparison file path, simply add all Sample objects from the Collection.
-                    self.sample_list.extend(self.collection.get_all_samples())
+                    self.sample_list.extend(self.collection.get_all_samples(exclude=True))
+
                     # Create a global comparison by adding all sample groups.
                     _sample_group_list = list()
                     """ @type _sample_group_list: list[bsf.ngs.SampleGroup] """
-                    for _group_name in self.collection.sample_group_dict.keys():
-                        _sample_group_list.append(SampleGroup(
-                            name=_group_name,
-                            sample_list=self.collection.sample_group_dict[_group_name]))
-                    # For a successful *groups* comparison, more than one Group has to be defined.
-                    if len(_sample_group_list) < 2:
-                        warnings.warn('Special comparison *groups* with less than two Group keys.')
-                    else:
-                        # Sort the list of comparison groups by group name.
-                        _sample_group_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
-                        # Set the comparison name to 'global'.
-                        self._comparison_dict['global'] = _sample_group_list
+
+                    for _group_name, _sample_list in self.collection.sample_group_dict.iteritems():
+                        _sample_group = SampleGroup(name=_group_name, sample_list=_sample_list)
+                        # SampleGroup objects are only useful, if at least one Sample object is not excluded.
+                        if not _sample_group.is_excluded():
+                            _sample_group_list.append(_sample_group)
+
+                    # Sort the list of comparison groups by group name.
+                    _sample_group_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+                    # Set the comparison name to 'global'.
+                    self._comparison_dict['global'] = _sample_group_list
                 elif self.comparison_path == '*samples*':
                     # The special file name *samples* creates TuxedoComparison objects on the basis of an
                     # all-against-all sample comparison.
                     # Without a comparison file path, simply add all Sample objects from the Collection.
-                    self.sample_list.extend(self.collection.get_all_samples())
+                    self.sample_list.extend(self.collection.get_all_samples(exclude=True))
+
                     # Create a global comparison by adding all samples under their sample name as group name.
                     _sample_group_list = list()
                     """ @type _sample_group_list: list[bsf.ngs.SampleGroup] """
+
                     for _sample in self.sample_list:
-                        _sample_group_list.append(SampleGroup(name=_sample.name, sample_list=[_sample]))
-                    # For a successful *samples* comparison, more than one Sample has to be defined.
-                    if len(_sample_group_list) < 2:
-                        warnings.warn('Special comparison *samples* with less than two Sample keys.')
-                    else:
-                        # Sort the list of comparison groups by group name.
-                        _sample_group_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
-                        # Set the comparison name to 'global'.
-                        self._comparison_dict['global'] = _sample_group_list
+                        # Sample objects are only useful, if at least one PairedReads object is not excluded.
+                        if not sample.is_excluded():
+                            _sample_group_list.append(SampleGroup(name=_sample.name, sample_list=[_sample]))
+
+                    # Sort the list of comparison groups by group name.
+                    _sample_group_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+                    # Set the comparison name to 'global'.
+                    self._comparison_dict['global'] = _sample_group_list
                 else:
                     # A comparison file path was provided.
                     self.comparison_path = Default.get_absolute_path(file_path=self.comparison_path)
@@ -803,24 +806,31 @@ class Tuxedo(Analysis):
                             # depending on 'Group' or 'Sample' column entries.
                             # In RNA-Seq experiments, entire pools of Sample objects (replicates) are compared
                             # with each other.
-                            _group_name, _group_sample_list = self.collection.get_samples_from_row_dict(
+                            _group_name, _sample_list_old = self.collection.get_samples_from_row_dict(
                                 row_dict=row_dict,
                                 prefix=prefix)
+                            _sample_list_new = list()
+                            """ @type _sample_list_new: list[bsf.ngs.Sample] """
+                            if _group_name and len(_sample_list_old):
+                                # Sample objects are unly useful, if at least one PairedReads object is not excluded.
+                                for _sample in _sample_list_old:
+                                    if not _sample.is_excluded():
+                                        _sample_list_new.append(_sample)
 
-                            if _group_name and len(_group_sample_list):
-                                _comparison_name_list.append(_group_name)
-                                _sample_group_list.append(SampleGroup(
-                                    name=_group_name,
-                                    sample_list=_group_sample_list))
-                                # Also expand each Python list of bsf.ngs.Sample objects to get all those
-                                # bsf.ngs.Sample objects that this bsf.Analysis needs considering.
-                                for _sample in _group_sample_list:
-                                    self.add_sample(sample=_sample)
-                                    if self.debug > 1:
-                                        print '  ', prefix, 'Sample name:', _sample.name, \
-                                            'file_path:', _sample.file_path
-                                    if self.debug > 2:
-                                        print sample.trace(1)
+                                if len(_sample_list_new):
+                                    _comparison_name_list.append(_group_name)
+                                    _sample_group_list.append(SampleGroup(
+                                        name=_group_name,
+                                        sample_list=_sample_list_new))
+                                    # Also expand each Python list of bsf.ngs.Sample objects to get all those
+                                    # bsf.ngs.Sample objects that this bsf.Analysis needs considering.
+                                    for _sample in _sample_list_new:
+                                        self.add_sample(sample=_sample)
+                                        if self.debug > 1:
+                                            print '  ', prefix, 'Sample name:', _sample.name, \
+                                                'file_path:', _sample.file_path
+                                        if self.debug > 2:
+                                            print sample.trace(1)
                             elif i < 1:
                                 # A Control and Treatment prefix is not required.
                                 continue
@@ -837,20 +847,18 @@ class Tuxedo(Analysis):
                         else:
                             _comparison_name = '__'.join(_comparison_name_list)
 
-                        # For a successful comparison, more than one Group or Sample has to be defined.
-                        if len(_sample_group_list) < 2:
-                            warnings.warn('Comparison ' + _comparison_name + ' with less than two keys.')
-                        else:
-                            # Sort the list of comparison groups by group name.
-                            _sample_group_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
-                            # Set the comparison name to 'global'.
-                            self._comparison_dict[_comparison_name] = _sample_group_list
+                        # Sort the list of comparison groups by group name.
+                        _sample_group_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+                        # Set the comparison name.
+                        self._comparison_dict[_comparison_name] = _sample_group_list
             else:
-                # Without a comparison file path, simply add all Sample objects from the Collection.
-                # This means that only the initial pipeline stages, but not the comparison stage gets run.
-                self.sample_list.extend(self.collection.get_all_samples())
-            # FIXME: It can still happen that for a particular comparison group all ReadGroup and thus Sample
-            # objects are excluded, in which case a comparison ist not possible.
+                # Without a comparison file path, simply add a comparison 'global' with a SampleGroup 'global'
+                # with all Sample objects from the Collection.
+                # This means that most pipeline stages with the exception of Cuffdiff can run.
+                self.sample_list.extend(self.collection.get_all_samples(exclude=True))
+                self._comparison_dict['global'] = [SampleGroup(
+                    name='global',
+                    sample_list=self.collection.get_all_samples(exclude=True))]
 
             if self.debug > 0:
                 for _comparison_name, _sample_group_list in self._comparison_dict.iteritems():
@@ -861,6 +869,22 @@ class Tuxedo(Analysis):
                         print "  SampleGroup Sample list:"
                         for _sample in _sample_group.sample_list:
                             print "    Sample name:", _sample.name
+
+            return
+
+        def run_write_annotation(annotation_path, annotation_dict):
+            """Private function to write a sample annotation file for Cuffdiff or Cuffnorm to disk.
+
+            @param annotation_path: Annotation file path
+            @type annotation_path: str | unicode
+            @param annotation_dict: Annotation dict
+            @type annotation_dict: dict[str, list[str | unicode]]
+            """
+            _annotation_file = open(annotation_path, 'w')
+            for _group_name, per_group_list in annotation_dict.iteritems():
+                for _file_path in per_group_list:
+                    _annotation_file.write(_file_path + '\t' + _group_name + '\n')
+            _annotation_file.close()
 
             return
 
@@ -1420,24 +1444,21 @@ class Tuxedo(Analysis):
 
             # Set rnaseq_cuffmerge arguments.
 
-            # Create an assembly manifest file to merge all replicates of each Sample object.
-            # This file requires an absolute path, because the working directory is not set at the stage of
-            # job submission.
-
-            assembly_path = os.path.join(self.genome_directory, file_path_cuffmerge.assembly_txt)
-            assembly_file = open(assembly_path, 'w')
+            # Add the assembly manifest file as Cuffmerge argument.
+            # The file will be written below.
+            runnable_step_cuffmerge.arguments.append(file_path_cuffmerge.assembly_txt)
 
             # Process rnaseq_cuffmerge and rnaseq_cuffdiff arguments in parallel.
 
             # Create a Python list of Python list objects of Cuffquant abundances per comparison group.
-            cuffdiff_cuffnorm_abundances = list()
-            """ @type cuffdiff_cuffnorm_abundances: list[list[str | unicode]] """
-            cuffdiff_cuffnorm_alignments = list()
-            """ @type cuffdiff_cuffnorm_alignments: list[list[str | unicode]] """
+            cuffdiff_cuffnorm_abundances_dict = dict()
+            """ @type cuffdiff_cuffnorm_abundances_dict: dict[str, list[str | unicode]] """
+            cuffdiff_cuffnorm_alignments_dict = dict()
+            """ @type cuffdiff_cuffnorm_alignments_dict: dict[str, list[str | unicode]] """
             cuffdiff_cuffnorm_dependencies = list()
             """ @type cuffdiff_cuffnorm_dependencies: list[str] """
-            cuffdiff_cuffnorm_labels = list()
-            """ @type cuffdiff_cuffnorm_labels: list[str] """
+            cuffmerge_transcript_gtf_list = list()
+            """ @type cuffmerge_transcript_gtf_list: list[str | unicode] """
 
             for sample_group in self._comparison_dict[comparison_name]:
                 if self.debug > 0:
@@ -1447,8 +1468,6 @@ class Tuxedo(Analysis):
                 """ @type per_group_abundances_list: list[str | unicode] """
                 per_group_alignments_list = list()
                 """ @type per_group_alignments_list: list[str | unicode] """
-                # Count samples that remain after removing excluded PairedReads objects.
-                sample_count = 0
 
                 for sample in sample_group.sample_list:
                     if self.debug > 0:
@@ -1459,23 +1478,14 @@ class Tuxedo(Analysis):
                         exclude=True)
 
                     paired_reads_name_list = paired_reads_dict.keys()
-                    if len(paired_reads_name_list):
-                        sample_count += 1
-                    else:
-                        # Skip Sample objects, which PairedReads objects have all been excluded.
-                        continue
                     paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
                     for paired_reads_name in paired_reads_name_list:
                         if self.debug > 0:
                             print '        PairedReads name:', paired_reads_name
-                        # Add the Cufflinks assembled transcripts to the Cuffmerge manifest.
-
-                        transcripts_path = os.path.join(
-                            self.genome_directory,
-                            '_'.join(('rnaseq_cufflinks', paired_reads_name)),
-                            'transcripts.gtf')
-                        assembly_file.write(transcripts_path + '\n')
+                        # Add the Cufflinks assembled transcripts GTF to the Cuffmerge manifest.
+                        cuffmerge_transcript_gtf_list.append(
+                            os.path.join('_'.join(('rnaseq_cufflinks', paired_reads_name)), 'transcripts.gtf') + '\n')
 
                         # Wait for each Cufflinks replicate to finish, before Cuffmerge can run.
 
@@ -1563,15 +1573,15 @@ class Tuxedo(Analysis):
 
                         cuffdiff_cuffnorm_dependencies.append(executable_run_cuffquant.name)
 
-                if sample_count:
-                    cuffdiff_cuffnorm_labels.append(sample_group.name)
-                    cuffdiff_cuffnorm_abundances.append(per_group_abundances_list)
-                    cuffdiff_cuffnorm_alignments.append(per_group_alignments_list)
+                cuffdiff_cuffnorm_abundances_dict[sample_group.name] = per_group_abundances_list
+                cuffdiff_cuffnorm_alignments_dict[sample_group.name] = per_group_alignments_list
 
+            # Write a Cuffmerge assembly manifest file to merge all transcriptome GTF files of each Sample object.
+            # This requires an absolute path, because the working directory is not set at the stage of
+            # job submission.
+            assembly_file = open(os.path.join(self.genome_directory, file_path_cuffmerge.assembly_txt), 'w')
+            assembly_file.writelines(cuffmerge_transcript_gtf_list)
             assembly_file.close()
-
-            # Add the assembly manifest file as Cuffmerge argument.
-            runnable_step_cuffmerge.arguments.append(assembly_path)
 
             # Convert the resulting merged GTF file into a UCSC genePred file.
 
@@ -1675,9 +1685,6 @@ class Tuxedo(Analysis):
                 key='output-dir',
                 value=file_path_run_cuffnorm.output_directory)
             runnable_step_cuffnorm.add_option_long(
-                key='labels',
-                value=','.join(cuffdiff_cuffnorm_labels))
-            runnable_step_cuffnorm.add_option_long(
                 key='num-threads',
                 value=str(stage_run_cuffnorm.threads))
             if self.library_type:
@@ -1688,120 +1695,133 @@ class Tuxedo(Analysis):
                 key='quiet')
             runnable_step_cuffnorm.add_switch_long(
                 key='no-update-check')
+            runnable_step_cuffnorm.add_switch_long(
+                key='use-sample-sheet')
 
             # Add the Cuffmerge GTF file as first Cuffnorm argument.
             runnable_step_cuffnorm.arguments.append(file_path_cuffmerge.merged_gtf)
 
-            # Add the Cuffquant abundances files per point as Cuffnorm arguments.
-            for per_group_abundances_list in cuffdiff_cuffnorm_abundances:
-                runnable_step_cuffnorm.arguments.append(','.join(per_group_abundances_list))
+            # Add an abundances annotation file as second Cuffnorm argument.
+            # Writing a Cuffnorm abundances TSV file requires an absolute path,
+            # because the working directory is not set at the current stage of job submission.
+            run_write_annotation(
+                annotation_path=os.path.join(self.genome_directory, file_path_run_cuffnorm.abundances_tsv),
+                annotation_dict=cuffdiff_cuffnorm_abundances_dict)
+            runnable_step_cuffnorm.arguments.append(file_path_run_cuffnorm.abundances_tsv)
 
-            # Create a Cuffdiff Runnable per comparison.
+            if len(self._comparison_dict[comparison_name]) >= 2:
+                # Create a Cuffdiff Runnable per comparison if there are at least two SampleGroup objects.
 
-            prefix_run_cuffdiff = '_'.join((stage_run_cuffdiff.name, comparison_name))
+                prefix_run_cuffdiff = '_'.join((stage_run_cuffdiff.name, comparison_name))
 
-            file_path_run_cuffdiff = FilePathCuffdiff(prefix=prefix_run_cuffdiff)
+                file_path_run_cuffdiff = FilePathCuffdiff(prefix=prefix_run_cuffdiff)
 
-            runnable_run_cuffdiff = self.add_runnable(
-                runnable=Runnable(
-                    name=prefix_run_cuffdiff,
-                    code_module='bsf.runnables.generic',
-                    working_directory=self.genome_directory,
-                    file_path_object=file_path_run_cuffdiff,
-                    debug=self.debug))
-            executable_run_cuffdiff = self.set_stage_runnable(
-                stage=stage_run_cuffdiff,
-                runnable=runnable_run_cuffdiff)
+                runnable_run_cuffdiff = self.add_runnable(
+                    runnable=Runnable(
+                        name=prefix_run_cuffdiff,
+                        code_module='bsf.runnables.generic',
+                        working_directory=self.genome_directory,
+                        file_path_object=file_path_run_cuffdiff,
+                        debug=self.debug))
+                executable_run_cuffdiff = self.set_stage_runnable(
+                    stage=stage_run_cuffdiff,
+                    runnable=runnable_run_cuffdiff)
 
-            if run_cuffquant_before_cuffdiff:
-                # Add all executable_run_cuffquant dependencies to the executable_run_cuffdiff process.
-                executable_run_cuffdiff.dependencies.extend(cuffdiff_cuffnorm_dependencies)
-            else:
-                # Add the executable_run_cuffmerge dependency to the executable_run_cuffdiff process.
-                executable_run_cuffdiff.dependencies.append(executable_run_cuffmerge.name)
+                if run_cuffquant_before_cuffdiff:
+                    # Add all executable_run_cuffquant dependencies to the executable_run_cuffdiff process.
+                    executable_run_cuffdiff.dependencies.extend(cuffdiff_cuffnorm_dependencies)
+                else:
+                    # Add the executable_run_cuffmerge dependency to the executable_run_cuffdiff process.
+                    executable_run_cuffdiff.dependencies.append(executable_run_cuffmerge.name)
 
-            # Create a new Cuffdiff RunnableStep.
+                # Create a new Cuffdiff RunnableStep.
 
-            runnable_step_cuffdiff = runnable_run_cuffdiff.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='cuffdiff',
-                    program='cuffdiff'))
-            """ @type runnable_step: RunnableStep """
+                runnable_step_cuffdiff = runnable_run_cuffdiff.add_runnable_step(
+                    runnable_step=RunnableStep(
+                        name='cuffdiff',
+                        program='cuffdiff'))
+                """ @type runnable_step: RunnableStep """
 
-            # Set Cuffdiff options.
+                # Set Cuffdiff options.
 
-            runnable_step_cuffdiff.add_option_long(
-                key='output-dir',
-                value=file_path_run_cuffdiff.output_directory)
-            runnable_step_cuffdiff.add_option_long(
-                key='labels',
-                value=','.join(cuffdiff_cuffnorm_labels))
-            runnable_step_cuffdiff.add_option_long(
-                key='num-threads',
-                value=str(stage_run_cuffdiff.threads))
-            if self.mask_gtf_path:
                 runnable_step_cuffdiff.add_option_long(
-                    key='mask-file',
-                    value=self.mask_gtf_path)
-            runnable_step_cuffdiff.add_option_long(
-                key='frag-bias-correct',
-                value=self.genome_fasta_path)
-            if self.multi_read_correction:
-                runnable_step_cuffdiff.add_switch_long(
-                    key='multi-read-correct')
-            if self.library_type:
+                    key='output-dir',
+                    value=file_path_run_cuffdiff.output_directory)
                 runnable_step_cuffdiff.add_option_long(
-                    key='library-type',
-                    value=self.library_type)
-            if self.no_length_correction:
+                    key='num-threads',
+                    value=str(stage_run_cuffdiff.threads))
+                if self.mask_gtf_path:
+                    runnable_step_cuffdiff.add_option_long(
+                        key='mask-file',
+                        value=self.mask_gtf_path)
+                runnable_step_cuffdiff.add_option_long(
+                    key='frag-bias-correct',
+                    value=self.genome_fasta_path)
+                if self.multi_read_correction:
+                    runnable_step_cuffdiff.add_switch_long(
+                        key='multi-read-correct')
+                if self.library_type:
+                    runnable_step_cuffdiff.add_option_long(
+                        key='library-type',
+                        value=self.library_type)
+                if self.no_length_correction:
+                    runnable_step_cuffdiff.add_switch_long(
+                        key='no-length-correction')
                 runnable_step_cuffdiff.add_switch_long(
-                    key='no-length-correction')
-            runnable_step_cuffdiff.add_switch_long(
-                key='quiet')
-            runnable_step_cuffdiff.add_switch_long(
-                key='no-update-check')
+                    key='quiet')
+                runnable_step_cuffdiff.add_switch_long(
+                    key='no-update-check')
+                runnable_step_cuffdiff.add_switch_long(
+                    key='use-sample-sheet')
 
-            # Add the Cuffmerge GTF file as first Cuffdiff argument.
-            runnable_step_cuffdiff.arguments.append(file_path_cuffmerge.merged_gtf)
+                # Add the Cuffmerge GTF file as first Cuffdiff argument.
+                runnable_step_cuffdiff.arguments.append(file_path_cuffmerge.merged_gtf)
 
-            # Cuffdiff seems to have a problem with Cuffquant abundances files in that the isoforms.count_tracking
-            # files show ridiculously low numbers such as 1e-319 for some splice variants. Usually, other splice
-            # variants in the same cluster seem fine.
-            if run_cuffquant_before_cuffdiff:
-                # Add the Cuffquant abundances files per comparison group as Cuffdiff arguments.
-                for per_group_abundances_list in cuffdiff_cuffnorm_abundances:
-                    runnable_step_cuffdiff.arguments.append(','.join(per_group_abundances_list))
-            else:
-                # Add the TopHat BAM files per comparison group as Cuffdiff arguments.
-                for per_group_alignments_list in cuffdiff_cuffnorm_alignments:
-                    runnable_step_cuffdiff.arguments.append(','.join(per_group_alignments_list))
+                # Add an abundances or alignment annotation file as second Cuffdiff argument.
+                # Cuffdiff seems to have a problem with Cuffquant abundances files in that the isoforms.count_tracking
+                # files show ridiculously low numbers such as 1e-319 for some splice variants. Usually, other splice
+                # variants in the same cluster seem fine.
+                if run_cuffquant_before_cuffdiff:
+                    # Writing a Cuffdiff abundances TSV file requires an absolute path,
+                    # because the working directory is not set at the current stage of job submission.
+                    run_write_annotation(
+                        annotation_path=os.path.join(self.genome_directory, file_path_run_cuffdiff.abundances_tsv),
+                        annotation_dict=cuffdiff_cuffnorm_abundances_dict)
+                    runnable_step_cuffdiff.arguments.append(file_path_run_cuffdiff.abundances_tsv)
+                else:
+                    # Writing a Cuffdiff alignments TSV file requires an absolute path,
+                    # because the working directory is not set at the current stage of job submission.
+                    run_write_annotation(
+                        annotation_path=os.path.join(self.genome_directory, file_path_run_cuffdiff.alignments_tsv),
+                        annotation_dict=cuffdiff_cuffnorm_alignments_dict)
+                    runnable_step_cuffdiff.arguments.append(file_path_run_cuffdiff.alignments_tsv)
 
-            # Create a new rnaseq_process_cuffdiff Executable.
+                # Create a new rnaseq_process_cuffdiff Executable.
 
-            executable_process_cuffdiff = stage_process_cuffdiff.add_executable(
-                executable=Executable(
-                    name='_'.join((stage_process_cuffdiff.name, comparison_name)),
-                    program='bsf_rnaseq_process_cuffdiff.R'))
-            executable_process_cuffdiff.dependencies.append(executable_run_cuffdiff.name)
+                executable_process_cuffdiff = stage_process_cuffdiff.add_executable(
+                    executable=Executable(
+                        name='_'.join((stage_process_cuffdiff.name, comparison_name)),
+                        program='bsf_rnaseq_process_cuffdiff.R'))
+                executable_process_cuffdiff.dependencies.append(executable_run_cuffdiff.name)
 
-            # Set rnaseq_process_cuffdiff options.
-            self.set_command_configuration(command=executable_process_cuffdiff)
-            executable_process_cuffdiff.add_option_long(
-                key='comparison-name',
-                value=comparison_name)
-            executable_process_cuffdiff.add_option_long(
-                key='gtf-assembly',
-                value=file_path_cuffmerge.merged_gtf)
-            executable_process_cuffdiff.add_option_long(
-                key='gtf-reference',
-                value=self.transcriptome_gtf_path)
-            executable_process_cuffdiff.add_option_long(
-                key='genome-version',
-                value=self.genome_version)
+                # Set rnaseq_process_cuffdiff options.
+                self.set_command_configuration(command=executable_process_cuffdiff)
+                executable_process_cuffdiff.add_option_long(
+                    key='comparison-name',
+                    value=comparison_name)
+                executable_process_cuffdiff.add_option_long(
+                    key='gtf-assembly',
+                    value=file_path_cuffmerge.merged_gtf)
+                executable_process_cuffdiff.add_option_long(
+                    key='gtf-reference',
+                    value=self.transcriptome_gtf_path)
+                executable_process_cuffdiff.add_option_long(
+                    key='genome-version',
+                    value=self.genome_version)
 
-            # Set rnaseq_process_cuffdiff arguments.
+                # Set rnaseq_process_cuffdiff arguments.
 
-            # None so far.
+                # None so far.
 
         return
 
