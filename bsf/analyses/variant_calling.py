@@ -1924,10 +1924,12 @@ class VariantCallingGATK(Analysis):
                 _runnable_step.add_gatk_option(key='reference_sequence', value=reference_scatter)
                 for _interval in self.exclude_intervals_list:
                     _runnable_step.add_gatk_option(key='excludeIntervals', value=_interval, override=True)
-                # for _interval in self.include_intervals_list:
-                #     _runnable_step.add_gatk_option(key='intervals', value=_interval, override=True)
-                # if self.interval_padding:
-                #     _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                if False:
+                    # Use the intervals defined by the genome tiles.
+                    for _interval in self.include_intervals_list:
+                        _runnable_step.add_gatk_option(key='intervals', value=_interval, override=True)
+                    if self.interval_padding:
+                        _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 for region_tuple in self._tile_region_cohort_list[tile_index]:
                     # The list of tiles is initialised to an empty tile to trigger at least one process.
                     # Do not assign an interval in such cases.
@@ -2144,10 +2146,12 @@ class VariantCallingGATK(Analysis):
                 _runnable_step.add_gatk_option(key='reference_sequence', value=reference_scatter)
                 for _interval in self.exclude_intervals_list:
                     _runnable_step.add_gatk_option(key='excludeIntervals', value=_interval, override=True)
-                # for _interval in self.include_intervals_list:
-                #     _runnable_step.add_gatk_option(key='intervals', value=_interval, override=True)
-                # if self.interval_padding:
-                #     _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                if False:
+                    # Use the intervals defined by the genome tiles.
+                    for _interval in self.include_intervals_list:
+                        _runnable_step.add_gatk_option(key='intervals', value=_interval, override=True)
+                    if self.interval_padding:
+                        _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 for region_tuple in self._tile_region_cohort_list[tile_index]:
                     # The list of tiles is initialised to an empty tile to trigger at least one process.
                     # Do not assign an interval in such cases.
@@ -2359,10 +2363,12 @@ class VariantCallingGATK(Analysis):
                 _runnable_step.add_gatk_option(key='reference_sequence', value=reference_scatter)
                 for _interval in self.exclude_intervals_list:
                     _runnable_step.add_gatk_option(key='excludeIntervals', value=_interval, override=True)
-                # for interval in self.include_intervals_list:
-                #     _runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                # if self.interval_padding:
-                #     _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                if False:
+                    # Use the intervals defined by the genome tiles.
+                    for _interval in self.include_intervals_list:
+                        _runnable_step.add_gatk_option(key='intervals', value=_interval, override=True)
+                    if self.interval_padding:
+                        _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 for region_tuple in self._tile_region_somatic_list[tile_index]:
                     # The list of tiles is initialised to an empty tile to trigger at least one process.
                     # Do not assign an interval in such cases.
@@ -3276,13 +3282,14 @@ class VariantCallingGATK(Analysis):
                     runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_lane)
                     if self.downsample_to_fraction:
                         runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                    # Run sequence processing steps always on the full genome.
-                    # for interval in self.exclude_intervals_list:
-                    #     runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                    # for interval in self.include_intervals_list:
-                    #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                    # if self.interval_padding:
-                    #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                    if False:
+                        # Run sequence processing steps always on the full genome.
+                        for interval in self.exclude_intervals_list:
+                            runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                        for interval in self.include_intervals_list:
+                            runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                        if self.interval_padding:
+                            runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                     for file_path in self.known_sites_realignment:
                         runnable_step.add_gatk_option(key='known', value=file_path, override=True)
                     runnable_step.add_gatk_option(
@@ -3311,13 +3318,14 @@ class VariantCallingGATK(Analysis):
                     runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_lane)
                     if self.downsample_to_fraction:
                         runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                    # Run sequence processing steps always on the full genome.
-                    # for interval in self.exclude_intervals_list:
-                    #     runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                    # for interval in self.include_intervals_list:
-                    #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                    # if self.interval_padding:
-                    #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                    if False:
+                        # Run sequence processing steps always on the full genome.
+                        for interval in self.exclude_intervals_list:
+                            runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                        for interval in self.include_intervals_list:
+                            runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                        if self.interval_padding:
+                            runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                     runnable_step.add_gatk_switch(key='keep_program_records')
                     runnable_step.add_gatk_switch(key='generate_md5')
                     runnable_step.add_gatk_option(key='bam_compression', value='9')
@@ -3347,13 +3355,14 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_lane)
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                # Run sequence processing steps always on the full genome.
-                # for interval in self.exclude_intervals_list:
-                #     runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                # for interval in self.include_intervals_list:
-                #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                # if self.interval_padding:
-                #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                if False:
+                    # Run sequence processing steps always on the full genome.
+                    for interval in self.exclude_intervals_list:
+                        runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                    for interval in self.include_intervals_list:
+                        runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                    if self.interval_padding:
+                        runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 for file_path in self.known_sites_recalibration:
                     runnable_step.add_gatk_option(key='knownSites', value=file_path, override=True)
                 runnable_step.add_gatk_option(key='input_file', value=file_path_process_read_group.realigned_bam)
@@ -3372,13 +3381,14 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_lane)
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                # Run sequence processing steps always on the full genome.
-                # for interval in self.exclude_intervals_list:
-                #     runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                # for interval in self.include_intervals_list:
-                #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                # if self.interval_padding:
-                #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                if False:
+                    # Run sequence processing steps always on the full genome.
+                    for interval in self.exclude_intervals_list:
+                        runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                    for interval in self.include_intervals_list:
+                        runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                    if self.interval_padding:
+                        runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 for file_path in self.known_sites_recalibration:
                     runnable_step.add_gatk_option(key='knownSites', value=file_path, override=True)
                 runnable_step.add_gatk_option(key='BQSR', value=file_path_process_read_group.recalibration_table_pre)
@@ -3398,13 +3408,14 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_lane)
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                # Run sequence processing steps always on the full genome.
-                # for interval in self.exclude_intervals_list:
-                #     runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                # for interval in self.include_intervals_list:
-                #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                # if self.interval_padding:
-                #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                if False:
+                    # Run sequence processing steps always on the full genome.
+                    for interval in self.exclude_intervals_list:
+                        runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                    for interval in self.include_intervals_list:
+                        runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                    if self.interval_padding:
+                        runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 runnable_step.add_gatk_option(
                     key='afterReportFile',
                     value=file_path_process_read_group.recalibration_table_post)
@@ -3434,13 +3445,14 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_lane)
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                # Run sequence processing steps always on the full genome.
-                # for interval in self.exclude_intervals_list:
-                #     runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                # for interval in self.include_intervals_list:
-                #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                # if self.interval_padding:
-                #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                if False:
+                    # Run sequence processing steps always on the full genome.
+                    for interval in self.exclude_intervals_list:
+                        runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                    for interval in self.include_intervals_list:
+                        runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                    if self.interval_padding:
+                        runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 runnable_step.add_gatk_switch(key='keep_program_records')
                 runnable_step.add_gatk_switch(key='generate_md5')
                 runnable_step.add_gatk_option(key='bam_compression', value='9')
@@ -3715,13 +3727,14 @@ class VariantCallingGATK(Analysis):
                     runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_sample)
                     if self.downsample_to_fraction:
                         runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                    # Run sequence processing steps always on the full genome.
-                    # for interval in self.exclude_intervals_list:
-                    #     runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                    # for interval in self.include_intervals_list:
-                    #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                    # if self.interval_padding:
-                    #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                    if False:
+                        # Run sequence processing steps always on the full genome.
+                        for interval in self.exclude_intervals_list:
+                            runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                        for interval in self.include_intervals_list:
+                            runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                        if self.interval_padding:
+                            runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                     for file_path in self.known_sites_realignment:
                         runnable_step.add_gatk_option(key='known', value=file_path, override=True)
                     runnable_step.add_gatk_option(
@@ -3748,13 +3761,14 @@ class VariantCallingGATK(Analysis):
                     runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_sample)
                     if self.downsample_to_fraction:
                         runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                    # Run sequence processing steps always on the full genome.
-                    # for interval in self.exclude_intervals_list:
-                    #     runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                    # for interval in self.include_intervals_list:
-                    #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                    # if self.interval_padding:
-                    #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                    if False:
+                        # Run sequence processing steps always on the full genome.
+                        for interval in self.exclude_intervals_list:
+                            runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                        for interval in self.include_intervals_list:
+                            runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                        if self.interval_padding:
+                            runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                     runnable_step.add_gatk_switch(key='keep_program_records')
                     runnable_step.add_gatk_switch(key='generate_md5')
                     runnable_step.add_gatk_option(key='bam_compression', value='9')
@@ -3824,26 +3838,24 @@ class VariantCallingGATK(Analysis):
             runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_sample)
             if self.downsample_to_fraction:
                 runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-            # Run sequence processing steps always on the full genome.
-            # for interval in self.exclude_intervals_list:
-            #     runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-            # for interval in self.include_intervals_list:
-            #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-            # if self.interval_padding:
-            #     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # The number of threads should be configurable, but multi-threading seems to cause the occasional problem.
-            # runnable_step.add_gatk_option(key='num_cpu_threads_per_data_thread', value='1')
-            # runnable_step.add_gatk_option(key='pair_hmm_implementation', value='VECTOR_LOGLESS_CACHING')
+            if False:
+                # Run sequence processing steps always on the full genome.
+                for interval in self.exclude_intervals_list:
+                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                for interval in self.include_intervals_list:
+                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                if self.interval_padding:
+                    runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
             runnable_step.add_gatk_option(key='genotyping_mode', value='DISCOVERY')
-            # runnable_step.add_gatk_option(key='standard_min_confidence_threshold_for_emitting', value='10')
-            # runnable_step.add_gatk_option(key='standard_min_confidence_threshold_for_calling', value='30')
             runnable_step.add_gatk_option(key='emitRefConfidence', value='GVCF')
             if self.known_sites_discovery:
                 runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
             runnable_step.add_gatk_option(key='input_file', value=file_path_process_sample.realigned_bam)
             runnable_step.add_gatk_option(key='out', value=file_path_process_sample.raw_variants_gvcf_vcf)
-            # Parameter to pass to the VCF/BCF IndexCreator
+            # The following two options are no longer needed for "g.vcf" output files.
+            # Type of IndexCreator to use for VCF/BCF indices.
             # runnable_step.add_gatk_option(key='variant_index_type', value='LINEAR')
+            # Parameter to pass to the VCF/BCF IndexCreator.
             # runnable_step.add_gatk_option(key='variant_index_parameter', value='128000')
 
             # Finally, record the process_sample Runnable for the merge_cohort stage under the Sample's
@@ -3955,13 +3967,15 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='reference_sequence', value=reference_diagnose_sample)
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                # for interval in self.include_intervals_list:
-                #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                # if self.interval_padding:
-                #     sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
-                # The Diagnose Targets analysis is run on the target intervals, only.
+                if False:
+                    # The Diagnose Targets analysis is run on the target intervals, only.
+                    # This will not include excluded intervals, such as decoy sequences.
+                    for interval in self.exclude_intervals_list:
+                        runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                    for interval in self.include_intervals_list:
+                        runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                    if self.interval_padding:
+                        runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 if target_interval_path:
                     runnable_step.add_gatk_option(key='intervals', value=target_interval_path)
                 runnable_step.add_gatk_option(key='input_file', value=file_path_process_sample.realigned_bam)
@@ -3990,14 +4004,16 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='reference_sequence', value=reference_diagnose_sample)
                 if self.downsample_to_fraction:
                     runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
-                for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-                # for interval in self.include_intervals_list:
-                #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-                # if self.interval_padding:
-                #     sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
-                # The Qualify Missing Intervals analysis is run on the missing intervals
-                # of the Diagnose Targets analysis, regardless.
+                if False:
+                    # The Qualify Missing Intervals analysis is run only on the missing intervals
+                    # of the Diagnose Targets analysis above, regardless.
+                    # This will not include excluded intervals, such as decoy sequences.
+                    for interval in self.exclude_intervals_list:
+                        runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+                    for interval in self.include_intervals_list:
+                        runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                    if self.interval_padding:
+                        runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 runnable_step.add_gatk_option(key='intervals', value=file_path_diagnose_sample.missing_intervals)
                 runnable_step.add_gatk_option(key='input_file', value=file_path_process_sample.realigned_bam)
                 # QualifyMissingIntervals
@@ -4029,11 +4045,12 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='downsample_to_fraction', value=self.downsample_to_fraction)
             for interval in self.exclude_intervals_list:
                 runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-            # for interval in self.include_intervals_list:
-            #     runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
-            # if self.interval_padding:
-            #     sub_command.add_option_long(key='interval_padding', value=str(self.interval_padding))
-            # The Callable Loci analysis is run on the target intervals, only.
+            if False:
+                # The Callable Loci analysis is run on the target intervals, only.
+                for interval in self.include_intervals_list:
+                    runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
+                if self.interval_padding:
+                    runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
             if target_interval_path:
                 runnable_step.add_gatk_option(key='intervals', value=target_interval_path)
             runnable_step.add_gatk_option(key='input_file', value=file_path_process_sample.realigned_bam)
@@ -4264,7 +4281,6 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             runnable_step.add_gatk_option(key='mode', value='SNP')
             for resource in self.vqsr_resources_snp_dict.keys():
                 resource_option = 'resource:{},known={},training={},truth={},prior={}'.format(
@@ -4304,7 +4320,6 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             runnable_step.add_gatk_option(key='mode', value='SNP')
             runnable_step.add_gatk_option(key='input', value=file_path_genotype_cohort.genotyped_raw_vcf)
             runnable_step.add_gatk_option(key='recal_file', value=file_path_process_cohort.recalibration_snp)
@@ -4340,7 +4355,6 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             runnable_step.add_gatk_option(key='mode', value='INDEL')
             for resource in self.vqsr_resources_indel_dict.keys():
                 resource_option = 'resource:{},known={},training={},truth={},prior={}'.format(
@@ -4380,7 +4394,6 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             runnable_step.add_gatk_option(key='mode', value='INDEL')
             runnable_step.add_gatk_option(key='input', value=file_path_process_cohort.recalibrated_snp_raw_indel_vcf)
             runnable_step.add_gatk_option(key='recal_file', value=file_path_process_cohort.recalibration_indel)
@@ -4411,7 +4424,6 @@ class VariantCallingGATK(Analysis):
                 runnable_step.add_gatk_option(key='intervals', value=interval, override=True)
             if self.interval_padding:
                 runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
-            # runnable_step.add_gatk_option(key='num_threads', value=str(stage_process_cohort.threads))
             runnable_step.add_gatk_option(
                 key='variant',
                 value=file_path_process_cohort.recalibrated_snp_recalibrated_indel_vcf)
