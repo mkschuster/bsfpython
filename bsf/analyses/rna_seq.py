@@ -37,7 +37,7 @@ from bsf.analyses.star_aligner import StarAligner
 from bsf.annotation import AnnotationSheet
 from bsf.executables import TopHat
 from bsf.ngs import SampleGroup
-from bsf.process import Executable, RunnableStep, RunnableStepLink
+from bsf.process import Executable, RunnableStep, RunnableStepCopy, RunnableStepLink, RunnableStepMakeDirectory
 from bsf.standards import Default
 
 
@@ -881,6 +881,7 @@ class Tuxedo(Analysis):
             @type annotation_dict: dict[str, list[str | unicode]]
             """
             _annotation_file = open(annotation_path, 'w')
+            _annotation_file.write('sample_id\tgroup_label\n')
             for _group_name, per_group_list in annotation_dict.iteritems():
                 for _file_path in per_group_list:
                     _annotation_file.write(_file_path + '\t' + _group_name + '\n')
@@ -1419,34 +1420,49 @@ class Tuxedo(Analysis):
                 executable_run_cuffmerge.dependencies.append(previous_cuffmerge_name)
             previous_cuffmerge_name = executable_run_cuffmerge.name
 
-            # Create a new Cuffmerge RunnableStep.
+            if self.novel_transcripts:
+                # Create a new Cuffmerge RunnableStep.
 
-            runnable_step_cuffmerge = runnable_run_cuffmerge.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='cuffmerge',
-                    program='cuffmerge'))
-            """ @type runnable_step_cuffmerge: RunnableStep """
+                runnable_step_cuffmerge = runnable_run_cuffmerge.add_runnable_step(
+                    runnable_step=RunnableStep(
+                        name='cuffmerge',
+                        program='cuffmerge'))
+                """ @type runnable_step_cuffmerge: RunnableStep """
 
-            # Set rnaseq_cuffmerge options.
+                # Set rnaseq_cuffmerge options.
 
-            runnable_step_cuffmerge.add_option_long(
-                key='output-dir',
-                value=file_path_cuffmerge.output_directory)
-            runnable_step_cuffmerge.add_option_long(
-                key='num-threads',
-                value=str(stage_run_cuffmerge.threads))
-            runnable_step_cuffmerge.add_option_long(
-                key='ref-gtf',
-                value=self.transcriptome_gtf_path)
-            runnable_step_cuffmerge.add_option_long(
-                key='ref-sequence',
-                value=self.genome_fasta_path)
+                runnable_step_cuffmerge.add_option_long(
+                    key='output-dir',
+                    value=file_path_cuffmerge.output_directory)
+                runnable_step_cuffmerge.add_option_long(
+                    key='num-threads',
+                    value=str(stage_run_cuffmerge.threads))
+                runnable_step_cuffmerge.add_option_long(
+                    key='ref-gtf',
+                    value=self.transcriptome_gtf_path)
+                runnable_step_cuffmerge.add_option_long(
+                    key='ref-sequence',
+                    value=self.genome_fasta_path)
 
-            # Set rnaseq_cuffmerge arguments.
+                # Set rnaseq_cuffmerge arguments.
 
-            # Add the assembly manifest file as Cuffmerge argument.
-            # The file will be written below.
-            runnable_step_cuffmerge.arguments.append(file_path_cuffmerge.assembly_txt)
+                # Add the assembly manifest file as Cuffmerge argument.
+                # The file will be written below.
+                runnable_step_cuffmerge.arguments.append(file_path_cuffmerge.assembly_txt)
+            else:
+                # If novel transcripts are not assembled, create RunnableStep objects to create the output directory
+                # and copy the reference transcriptome GTF file.
+
+                runnable_run_cuffmerge.add_runnable_step(
+                    runnable_step=RunnableStepMakeDirectory(
+                        name='make_directory',
+                        directory_path=file_path_cuffmerge.output_directory))
+
+                runnable_run_cuffmerge.add_runnable_step(
+                    runnable_step=RunnableStepCopy(
+                        name='copy',
+                        source_path=self.transcriptome_gtf_path,
+                        target_path=file_path_cuffmerge.merged_gtf))
 
             # Process rnaseq_cuffmerge and rnaseq_cuffdiff arguments in parallel.
 
@@ -1576,12 +1592,13 @@ class Tuxedo(Analysis):
                 cuffdiff_cuffnorm_abundances_dict[sample_group.name] = per_group_abundances_list
                 cuffdiff_cuffnorm_alignments_dict[sample_group.name] = per_group_alignments_list
 
-            # Write a Cuffmerge assembly manifest file to merge all transcriptome GTF files of each Sample object.
-            # This requires an absolute path, because the working directory is not set at the stage of
-            # job submission.
-            assembly_file = open(os.path.join(self.genome_directory, file_path_cuffmerge.assembly_txt), 'w')
-            assembly_file.writelines(cuffmerge_transcript_gtf_list)
-            assembly_file.close()
+            if self.novel_transcripts:
+                # Write a Cuffmerge assembly manifest file to merge all transcriptome GTF files of each Sample object.
+                # This requires an absolute path, because the working directory is not set at the stage of
+                # job submission.
+                assembly_file = open(os.path.join(self.genome_directory, file_path_cuffmerge.assembly_txt), 'w')
+                assembly_file.writelines(cuffmerge_transcript_gtf_list)
+                assembly_file.close()
 
             # Convert the resulting merged GTF file into a UCSC genePred file.
 
