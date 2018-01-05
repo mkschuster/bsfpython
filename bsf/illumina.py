@@ -293,7 +293,7 @@ class RunInformation(object):
 
         run_info_tree = xml.etree.ElementTree.ElementTree(file=file_path)
         run_element = run_info_tree.find(path='Run')
-        """ @type run_element: Element | None """
+        """ @type run_element: xml.etree.ElementTree.Element | None """
         if run_element is None:
             raise Exception('Cannot find the <Run> element in the ElementTree of XML file {!r}.'.format(file_path))
 
@@ -306,7 +306,7 @@ class RunInformation(object):
         run_identifier_components = RunInformation.parse_run_identifier(run_identifier=run_identifier)
 
         xml_flow_cell = run_element.find(path='Flowcell')
-        """ @type xml_flow_cell: Element | None """
+        """ @type xml_flow_cell: xml.etree.ElementTree.Element | None """
         if xml_flow_cell is not None:
             flow_cell = xml_flow_cell.text  # e.g. C26JBACXX
             """ @type flow_cell: str """
@@ -314,7 +314,7 @@ class RunInformation(object):
             flow_cell = run_identifier_components[4]
 
         xml_instrument = run_element.find(path='Instrument')
-        """ @type xml_instrument: Element | None """
+        """ @type xml_instrument: xml.etree.ElementTree.Element | None """
         if xml_instrument is not None:
             instrument = xml_instrument.text  # e.g. SN815
             """ @type instrument: str """
@@ -322,7 +322,7 @@ class RunInformation(object):
             instrument = run_identifier_components[1]
 
         xml_date = run_element.find(path='Date')
-        """ @type xml_date: Element | None """
+        """ @type xml_date: xml.etree.ElementTree.Element | None """
         if xml_date is not None:
             date = xml_date.text  # e.g. 130724
             """ @type date: str """
@@ -330,7 +330,7 @@ class RunInformation(object):
             date = run_identifier_components[0]
 
         xml_second_read = run_element.find(path='SecondRead')
-        """ @type xml_second_read: Element | None """
+        """ @type xml_second_read: xml.etree.ElementTree.Element | None """
         if xml_second_read is not None:
             second_read = int(xml_second_read.get(key='FirstCycle'))
         else:
@@ -341,7 +341,7 @@ class RunInformation(object):
         number = int(1)
 
         for read_element in run_element.find(path='Reads'):
-            """ @type read_element: Element | None """
+            """ @type read_element: xml.etree.ElementTree.Element | None """
             assert isinstance(read_element, xml.etree.ElementTree.Element)
 
             # <ApplicationName>HiSeq Control Software</ApplicationName>
@@ -406,7 +406,7 @@ class RunInformation(object):
         # Get the flow cell layout if it exits.
 
         xml_flow_cell_layout = run_info_tree.find(path='Run/FlowcellLayout')
-        """ @type xml_flow_cell_layout: Element | None """
+        """ @type xml_flow_cell_layout: xml.etree.ElementTree.Element | None """
         if xml_flow_cell_layout is not None:
             flow_cell_layout = RunInformationFlowcellLayout(
                 lane_count=int(xml_flow_cell_layout.get(key='LaneCount')),
@@ -566,8 +566,7 @@ class RunInformation(object):
         @return: Python C{list} of Python C{int} (starting cycle) for each read
         @rtype: list[int]
         """
-
-        cycle_number = 0
+        cycle_number = 1
         """ @type cycle_number: int """
         read_start_list = list()
         """ @type read_start_list: list[int] """
@@ -577,6 +576,24 @@ class RunInformation(object):
             cycle_number += read.cycles
 
         return read_start_list
+
+    @property
+    def get_read_end_list(self):
+        """Get a Python C{list} of cycle numbers at the end of each read.
+
+        @return: Python C{list} of Python C{int} (ending cycle) for each read
+        @rtype: list[int]
+        """
+        cycle_number = 1
+        """ @type cycle_number: int """
+        read_end_list = list()
+        """ @type read_end_list: list[int] """
+
+        for read in self.reads:
+            cycle_number += read.cycles
+            read_end_list.append(cycle_number - 1)
+
+        return read_end_list
 
     @property
     def get_picard_read_structure(self):
@@ -674,366 +691,195 @@ class RunParameters(object):
         else:
             self.element_tree = xml.etree.ElementTree.ElementTree()
 
-        self._run_parameters_version = None
-        """ @type _run_parameters_version: str | None """
-
         return
+
+    def xml_paths_to_text(self, xml_paths):
+        """Get the text representation of the first element of a tuple of XML paths.
+
+        @param xml_paths: Python C{tuple} of Python C{str} XML path elements
+        @type xml_paths: tuple[str | unicode]
+        @return: Text representation
+        @rtype: str | unicode
+        """
+        for xml_path in xml_paths:
+            element = self.element_tree.find(path=xml_path)
+            """ @type element: xml.etree.ElementTree.Element """
+            if element is not None:
+                return element.text
+        else:
+            return
 
     @property
     def get_run_parameters_version(self):
         """Get the run parameters version of a C{bsf.illumina.RunParameters} object.
 
-        Returns an empty string for I{HiSeq Control Software} or the text representation of the
-        I{<RunParameters>/<RunParametersVersion>} element for I{MiSeq Control Software}.
+        Returns the text representation of:
+            - I{<RunParameters>/<RunParametersVersion>}: I{MiSeq} and I{NextSeq}
         @return: Run parameters version or an empty string
         @rtype: str
         """
-
-        if self._run_parameters_version is None:
-            element = self.element_tree.find(path='RunParametersVersion')
-            if element is None:
-                self._run_parameters_version = str()
-            else:
-                self._run_parameters_version = element.text
-
-        return self._run_parameters_version
+        return self.xml_paths_to_text(xml_paths=('RunParametersVersion',))
 
     @property
     def get_instrument_type(self):
         """Get the instrument type based on a C{bsf.illumina.RunParameters} object.
 
-        Returns I{MiSeq}, I{NextSeq} or I{HiSeq}
+        Returns I{HiSeq}, I{MiSeq}, I{NextSeq} or I{NovaSeq} depending on C{get_application_name}
         @return: Instrument type
         @rtype: str
         """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1',):
-            return 'MiSeq'
-        elif self.get_run_parameters_version in ('NextSeq_2_1_0',):
-            return 'NextSeq'
-        else:
-            return 'HiSeq'
+        # Simply remove ' Control Software' from the get_application_name property.
+        return self.get_application_name[:-17]
 
     @property
     def get_experiment_name(self):
         """Get the experiment name of a C{bsf.illumina.RunParameters} object.
 
-        Returns the text representation of the I{<RunParameters>/<Setup>/<ExperimentName>} element for
-        I{HiSeq Control Software} or the I{<RunParameters>/<ExperimentName>} element for
-        I{MiSeq Control Software}.
+            - I{HiSeq}:   I{<RunParameters>/<Setup>/<ExperimentName>}
+            - I{MiSeq}:   I{<RunParameters>/<ExperimentName>}
+            - I{NextSeq}: I{<RunParameters>/<ExperimentName>}
+            - I{NovaSeq}: I{<RunParameters>/<ExperimentName>}
         @return: Experiment name
         @rtype: str
         """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq or NextSeq
-            return self.element_tree.find(path='ExperimentName').text
-        else:
-            # HiSeq or else
-            return self.element_tree.find(path='Setup/ExperimentName').text
+        return self.xml_paths_to_text(xml_paths=('Setup/ExperimentName', 'ExperimentName'))
 
     @property
     def get_flow_cell_barcode(self):
         """Get the flow cell barcode of a C{bsf.illumina.RunParameters} object.
 
-        Returns the text representation of the I{<RunParameters>/<Setup>/<Barcode>} element for
-        I{HiSeq Control Software} or the I{<RunParameters>/<Barcode>} element for
-        I{MiSeq Control Software}.
+            - I{HiSeq}:   I{<RunParameters>/<Setup>/<Barcode>}
+            - I{MiSeq}:   I{<RunParameters>/<Barcode>}
+            - I{NextSeq}: I{<RunParameters>/<FlowCellSerial>}
+            - I{NovaSeq}: I{<RunParameters>/<RfidsInfo>/<FlowCellSerialBarcode>}
         @return: Flow cell barcode
         @rtype: str
         """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1',):
-            # MiSeq 1_1
-            return self.element_tree.find(path='Barcode').text
-        elif self.get_run_parameters_version in ('NextSeq_2_1_0',):
-            # NextSeq
-            return self.element_tree.find(path='FlowCellSerial').text
-        else:
-            # HiSeq or else
-            return self.element_tree.find(path='Setup/Barcode').text
+        return self.xml_paths_to_text(xml_paths=(
+            'Setup/Barcode', 'Barcode', 'FlowCellSerial', 'RfidsInfo/FlowCellSerialBarcode'))
 
     @property
     def get_flow_cell_type(self):
         """Get the flow cell chemistry type of a C{bsf.illumina.RunParameters} object.
 
-        Returns the text representation of the I{<RunParameters>/<Setup>/<Flowcell>} element for
-        I{HiSeq Control Software} or the I{<RunParameters>/<ReagentKitVersion>} element for
-        I{MiSeq Control Software}.
+            - I{HiSeq}:   I{<RunParameters>/<Setup>/<Flowcell>}
+            - I{MiSeq}:   I{<RunParameters>/<ReagentKitVersion>}
+            - I{NextSeq}: I{<RunParameters>/<Chemistry>}
+            - I{NovaSeq}: I{<RunParameters>/<RfidsInfo>/<FlowCellMode>}
         @return: Flow cell chemistry type
         @rtype: str
         """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1',):
-            # MiSeq 1_1
-            # The MiSeq has no concept of a <Flowcell> chemistry type, only a <ReagentKitVersion>.
-            return self.element_tree.find(path='ReagentKitVersion').text
-        elif self.get_run_parameters_version in ('NextSeq_2_1_0',):
-            # NextSeq_2_1_0
-            # The NextSeq uses <Chemistry>
-            return self.element_tree.find(path='Chemistry').text
-        else:
-            # HiSeq or else
-            return self.element_tree.find(path='Setup/Flowcell').text
+        return self.xml_paths_to_text(xml_paths=(
+            'Setup/Flowcell', 'ReagentKitVersion', 'Chemistry', 'RfidsInfo/FlowCellMode'))
 
     @property
     def get_index_type(self):
         """Get the index chemistry type of a C{bsf.illumina.RunParameters} object.
 
-        Returns the text representation of the I{<RunParameters>/<Setup>/<Index>} element for
-        I{HiSeq Control Software} or an empty string for
-        I{MiSeq Control Software}.
+            - I{HiSeq}:   I{<RunParameters>/<Setup>/<Index>}
+            - I{MiSeq}:   I{<RunParameters>/<Setup>/<Index>}
+            - I{NextSeq}: I{None}
+            - I{NovaSeq}: I{None}
         @return: Index chemistry type
         @rtype: str
         """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1
-            # The MiSeq has no concept of a <Index> version, only a <ReagentKitVersion>.
-            return str()
-        else:
-            # HiSeq or else
-            element = self.element_tree.find(path='Setup/Index')
-            if element is None:
-                return str()
-            else:
-                return element.text
+        return self.xml_paths_to_text(xml_paths=('Setup/Index',))
 
     @property
     def get_pe_type(self):
         """Get the paired-end chemistry type of a C{bsf.illumina.RunParameters} object.
 
-        Returns the text representation of the I{<RunParameters>/<Setup>/<Pe>} element for
-        I{HiSeq Control Software} or an empty string for
-        I{MiSeq Control Software}.
+            - I{HiSeq}: I{<RunParameters>/<Setup>/<Pe>}
+            - I{MiSeq}: I{<RunParameters>/<Setup>/<Pe>}
+            - I{NextSeq}: I{None}
+            - I{NovaSeq}: I{None}
         @return: Paired-end chemistry type
         @rtype: str
         """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1
-            # The MiSeq has no concept of a <Pe> version, only a <ReagentKitVersion>.
-            return str()
-        else:
-            # HiSeq or else
-            element = self.element_tree.find(path='Setup/Pe')
-            if element is None:
-                return str()
-            else:
-                return element.text
+        return self.xml_paths_to_text(xml_paths=('Setup/Pe',))
 
     @property
     def get_sbs_type(self):
         """Get the sequencing-by-synthesis chemistry type of a C{bsf.illumina.RunParameters} object.
 
-        Returns the text representation of the I{<RunParameters>/<Setup>/<Sbs>} element for
-        I{HiSeq Control Software} or an empty string for
-        I{MiSeq Control Software}.
+            - I{HiSeq}:   I{<RunParameters>/<Setup>/<Sbs>}
+            - I{MiSeq}:   I{<RunParameters>/<Setup>/<Sbs>}
+            - I{NextSeq}: I{None}
+            - I{NovaSeq}: I{None}
         @return: Sequencing-by-synthesis chemistry type
         @rtype: str
         """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1
-            # The MiSeq has no concept of a <Sbs> chemistry version, only a <ReagentKitVersion>.
-            return str()
-        else:
-            # HiSeq or else
-            element = self.element_tree.find(path='Setup/Sbs')
-            if element is None:
-                return str()
-            else:
-                return element.text
+        return self.xml_paths_to_text(xml_paths=('Setup/Sbs',))
 
     @property
     def get_position(self):
         """Get the flow cell position of a C{bsf.illumina.RunParameters} object.
 
-        Returns the text representation of the I{<RunParameters>/<Setup>/<FCPosition>} element for
-        I{HiSeq Control Software} or an empty string for
-        I{MiSeq Control Software}.
-        Since the element does not exist in older I{HiSeq Control Software} versions an empty string may be returned.
+            - I{HiSeq}:   I{<RunParameters>/<Setup>/<FCPosition>}
+            - I{MiSeq}:   I{None}
+            - I{NextSeq}: I{'A'}
+            - I{NovaSeq}: I{<RunParameters>/<Side>}
+
+        The I{NextSeq} has no concept of I{<FCPosition>}, but always uses 'A'
         @return: Flow cell position e.g. A or B
         @rtype: str
         """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1',):
-            # MiSeq 1_1
-            # The MiSeq has no concept of a <FCPosition>.
-            return str()
-        elif self.get_run_parameters_version in ('NextSeq_2_1_0',):
-            # The NextSeq has no concept of <FCPosition>, but always uses 'A'.
+        if self.get_instrument_type in ('NextSeq',):
             return 'A'
         else:
-            # HiSeq or else
-            element = self.element_tree.find(path='Setup/FCPosition')
-            if element is not None:
-                return element.text
-            else:
-                return str()
+            return self.xml_paths_to_text(xml_paths=('Setup/FCPosition', 'Side'))
 
     @property
     def get_run_identifier(self):
         """Get the run identifier of a C{bsf.illumina.RunParameters} object.
 
-        Returns the text representation of the I{<RunParameters>/<Setup>/<RunID>} element for
-        I{HiSeq Control Software} or the I{<RunParameters>/<RunID>} element for
-        I{MiSeq Control Software}.
+            - I{HiSeq}:   I{<RunParameters>/<Setup>/<RunID>}
+            - I{MiSeq}:   I{<RunParameters>/<RunID>}
+            - I{NextSeq}: I{<RunParameters>/<RunID>}
+            - I{NovaSeq}: I{<RunParameters>/<RunID>}
         @return: Run identifier
         @rtype: str
         """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1
-            return self.element_tree.find(path='RunID').text
-        else:
-            # HiSeq or else
-            return self.element_tree.find(path='Setup/RunID').text
-
-    @property
-    def get_read1(self):
-        """Get the read 1 cycle number of a C{bsf.illumina.RunParameters} object.
-
-        Returns the text representation of the I{<RunParameters>/<Setup>/<Read1>} element for
-        I{HiSeq Control Software} or an empty string for
-        I{MiSeq Control Software}.
-        @return: Number of cycles in read 1
-        @rtype: str
-        @deprecated: The more scalable option is getting read information via the
-            C{bsf.illumina.RunInformation.reads} instance variable.
-        """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1
-            return str()
-        else:
-            # HiSeq or else
-            element = self.element_tree.find(path='Setup/Read1')
-            if element is not None:
-                return element.text
-            else:
-                return str()
-
-    @property
-    def get_read2(self):
-        """Get the read 2 cycle number of a C{bsf.illumina.RunParameters} object.
-
-        Returns the text representation of the I{<RunParameters>/<Setup>/<Read2>} element for
-        I{HiSeq Control Software} or an empty string for
-        I{MiSeq Control Software}.
-        Not every run has a read 2 defined so that an empty string may be returned.
-        @return: Number of cycles in read 2
-        @rtype: str
-        @deprecated: The more scalable option is getting read information via the
-            C{bsf.illumina.RunInformation.reads} instance variable.
-        """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1
-            return str()
-        else:
-            # HiSeq or else
-            element = self.element_tree.find(path='Setup/Read2')
-            if element is not None:
-                return element.text
-            else:
-                return str()
-
-    @property
-    def get_index_read1(self):
-        """Get the index read 1 cycle number of a C{bsf.illumina.RunParameters} object.
-
-        Returns the text representation of the I{<RunParameters>/<Setup>/<IndexRead1>} element for
-        I{HiSeq Control Software} or an empty string for
-        I{MiSeq Control Software}.
-        Older implementations of the I{HiSeq Control Software} have only a
-        I{<RunParameters>/<Setup>/<IndexRead>} element.
-        @return: Number of cycles in index read 1
-        @rtype: str
-        @deprecated: The more scalable option is getting read information via the
-            C{bsf.illumina.RunInformation.reads} instance variable.
-        """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1
-            return str()
-        else:
-            # HiSeq or else
-            element = self.element_tree.find(path='Setup/IndexRead1')
-            if element is not None:
-                return element.text
-
-            element = self.element_tree.find(path='Setup/IndexRead')
-            if element is not None:
-                return element.text
-            else:
-                return str()
-
-    @property
-    def get_index_read2(self):
-        """Get the index read 2 cycle number of a C{bsf.illumina.RunParameters} object.
-
-        Returns the text representation of the I{<RunParameters>/<Setup>/<IndexRead2>} element for
-        I{HiSeq Control Software} or an empty string for
-        I{MiSeq Control Software}.
-        Older implementations of the I{HiSeq Control Software} have only a
-        I{<RunParameters>/<Setup>/<IndexRead>} element.
-        @return: Number of cycles in index read 2
-        @rtype: str
-        @deprecated: The more scalable option is getting read information via the
-            C{bsf.illumina.RunInformation.reads} instance variable.
-        """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1
-            return str()
-        else:
-            # HiSeq or else
-            element = self.element_tree.find(path='Setup/IndexRead2')
-            if element is not None:
-                return element.text
-            else:
-                return str()
+        return self.xml_paths_to_text(xml_paths=('Setup/RunID', 'RunID'))
 
     @property
     def get_real_time_analysis_version(self):
         """Get the Real-Time Analysis (RTA) Version of a C{bsf.illumina.RunParameters} object.
 
-        Returns the text representation of the I{<RunParameters>/<Setup>/<RTAVersion>} element for
-        I{HiSeq Control Software} or the I{<RunParameters>/<RTAVersion>} element for
-        I{MiSeq Control Software}.
+            - I{HiSeq}:   I{<RunParameters>/<Setup>/<RTAVersion>}
+            - I{MiSeq}:   I{<RunParameters>/<RTAVersion>}
+            - I{NextSeq}: I{<RunParameters>/<RTAVersion>}
+            - I{NovaSeq}: I{<RunParameters>/<RtaVersion>}
         @return: RTA version
         @rtype: str
         """
-
-        if self.get_run_parameters_version in ('MiSeq_1_1', 'NextSeq_2_1_0'):
-            # MiSeq 1_1
-            return self.element_tree.find(path='RTAVersion').text
-        else:
-            # HiSeq or else
-            return self.element_tree.find(path='Setup/RTAVersion').text
+        return self.xml_paths_to_text(xml_paths=('Setup/RTAVersion', 'RTAVersion', 'RtaVersion'))
 
     @property
     def get_application_name(self):
-        """Get the application (i.e. I{HiSeq} or I{MiSeq Control Software}) name.
+        """Get the application (i.e. I{HiSeq}, I{MiSeq}, I{NextSeq} or I{NovaSeq Control Software}) name.
 
-        Returns the text representation of the I{<RunParameters>/<Setup>/<ApplicationName>} element.
+            - I{HiSeq}:   I{<RunParameters>/<Setup>/<ApplicationName>}
+            - I{MiSeq}:   I{<RunParameters>/<Setup>/<ApplicationName>}
+            - I{NextSeq}: I{<RunParameters>/<Setup>/<ApplicationName>}
+            - I{NovaSeq}: I{<RunParameters>/<Application>}
         @return: Application name
         @rtype: str
         """
-
-        return self.element_tree.find(path='Setup/ApplicationName').text
+        return self.xml_paths_to_text(xml_paths=('Setup/ApplicationName', 'Application'))
 
     @property
     def get_application_version(self):
-        """Get the application (i.e. I{HiSeq} or I{MiSeq Control Software}) version.
+        """Get the application (i.e. I{HiSeq}, I{MiSeq}, I{NextSeq} or I{NovaSeq Control Software}) version.
 
-        Returns the text representation of the I{<RunParameters>/<Setup>/<ApplicationVersion>} element.
+            - I{HiSeq}:   I{<RunParameters>/<Setup>/<ApplicationVersion>}
+            - I{MiSeq}:   I{<RunParameters>/<Setup>/<ApplicationVersion>}
+            - I{NextSeq}: I{<RunParameters>/<Setup>/<ApplicationVersion>}
+            - I{NovaSeq}: I{<RunParameters>/<ApplicationVersion>}
         @return: Application version
         @rtype: str
         """
-
-        return self.element_tree.find(path='Setup/ApplicationVersion').text
+        return self.xml_paths_to_text(xml_paths=('Setup/ApplicationVersion', 'ApplicationVersion'))
 
 
 class XMLConfiguration(object):
@@ -1122,7 +968,7 @@ class AnalysisConfiguration(XMLConfiguration):
             return
 
         for lane_element in self.element_tree.find(path='Run/TileSelection'):
-            """ @type lane_element: Element """
+            """ @type lane_element: xml.etree.ElementTree.Element """
             assert isinstance(lane_element, xml.etree.ElementTree.Element)
             lane_index = lane_element.get(key='Index')
             """ @type lane_index: str """
@@ -1130,7 +976,7 @@ class AnalysisConfiguration(XMLConfiguration):
                 self._lane_tile_dict[lane_index] = dict()
             lane_dict = self._lane_tile_dict[lane_index]
             for tile_element in lane_element.findall(path='Tile'):
-                """ @type title_element: Element """
+                """ @type title_element: xml.etree.ElementTree.Element """
                 assert isinstance(tile_element, xml.etree.ElementTree.Element)
                 lane_dict[tile_element.text] = True
 
@@ -1522,6 +1368,84 @@ class RunFolder(object):
 
         return
 
+    def _check_config(self, directory_dict, directory_path, debug=0):
+        """Check the I{IRF/Config/} directory.
+
+        @param directory_dict: Python C{dict} of Illumina Run Folder I{IRF/} entries
+        @type directory_dict: dict[str | unicode, int]
+        @param directory_path: Illumina Run Folder I{IRF/} path
+        @type directory_path: str | unicode
+        @param debug: Integer debugging level
+        @type debug: int
+        @return:
+        @rtype:
+        """
+        rta = self.run_parameters.get_real_time_analysis_version
+        # flow_cell_barcode = self.run_parameters.get_flow_cell_barcode.upper()
+
+        _directory_name = 'Config'
+        _directory_path = os.path.join(directory_path, _directory_name)
+        if _directory_name in directory_dict:
+            del directory_dict[_directory_name]
+        else:
+            print 'Missing directory', _directory_path
+            return
+        _directory_dict = dict(map(lambda x: (x, 1), os.listdir(_directory_path)))
+        """ @type _directory_dict: dict[str | unicode, int] """
+
+        if debug > 0:
+            print 'Processing directory', _directory_path
+
+        _file_name_list = list()
+        """ @type _file_name_list: list[str | unicode] """
+
+        if rta in ('1.18.54',):
+            # MiSeq
+            _file_name_list.append('Effective.cfg')
+            _file_name_list.append('MiSeqOverride.cfg')
+            _file_name_list.append('RTAStart.bat')
+
+        if rta in ('1.12.4',):
+            # HiSeq
+            _file_name_list.append('HiSeqControlSoftware.Options.cfg')
+            _file_name_list.append('RTAStart.bat')
+            _file_name_list.append('Variability_HiSeq.xml')
+
+        if rta in ('2.7.7',):
+            # HiSeq
+            _file_name_list.append('HiSeqControlSoftware.Options.cfg')
+            _file_name_list.append('RTAStart.log')
+            _file_name_list.append('Variability_HiSeq_E.bin')
+
+        if rta in ('2.4.11',):
+            # NextSeq
+            _file_name_list.append('Effective.cfg')
+            _file_name_list.append('FirmwareVersions.txt')
+            _file_name_list.append('NextSeqCalibration.cfg')
+            _file_name_list.append('NextSeqOverride.cfg')
+
+        if rta in ('v3.3.3',):
+            # NovaSeq
+            _file_name_list.append('Effective.cfg')
+            _file_name_list.append('LaserPowerVariability.xml')
+            _file_name_list.append('NovaSeqCalibration.cfg')
+            _file_name_list.append('NovaSeqOverride.cfg')
+            _file_name_list.append('Options.cfg')
+
+        self._check_files(
+            directory_dict=_directory_dict,
+            directory_path=_directory_path,
+            file_name_list=_file_name_list,
+            debug=debug)
+
+        if len(_directory_dict):
+            print _directory_path, 'with number of entries:', str(len(_directory_dict))
+            entry_name_list = _directory_dict.keys()
+            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
+            print '  Remaining entries:', entry_name_list
+
+        return
+
     def _check_data_intensities_base_calls_matrix(self, directory_dict, directory_path, debug=0):
         """Check the I{IRF/Data/Intensities/BaseCalls/Matrix/} directory.
 
@@ -1538,7 +1462,7 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta in ('2.4.11', '2.7.3', '2.7.6', '2.7.7'):
+        if rta in ('2.4.11', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
             # RTA 2.4.11 (NextSeq) doe not have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             # RTA 2.7.3 (HiSeq 3000/4000) does no longer have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             return
@@ -1675,8 +1599,8 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta in ('2.4.11', '2.7.3', '2.7.6', '2.7.7'):
-            # RTA 2.4.11 (NextSeq) doe not have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
+        if rta in ('2.4.11', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
+            # RTA 2.4.11 (NextSeq) does not have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             # RTA 2.7.3 (HiSeq 3000/4000) does no longer have a IRF/Data/Intensities/BaseCalls/Phasing/ directory.
             return
 
@@ -1757,7 +1681,7 @@ class RunFolder(object):
             # IRF/DataIntensities/BaseCalls/Phasing/s_{lane}_{cycle}_phasing.xml files.
             for lane in range(1, fcl.lane_count + 1):
                 for read_start in self.run_information.get_read_start_list:
-                    _entry_name = 's_{:1d}_{:02d}_phasing.xml'.format(lane, read_start + 2)
+                    _entry_name = 's_{:1d}_{:02d}_phasing.xml'.format(lane, read_start + 1)
                     if _entry_name in _directory_dict:
                         del _directory_dict[_entry_name]
                     else:
@@ -1802,7 +1726,7 @@ class RunFolder(object):
 
         # Process the IRF/Data/Intensities/BaseCalls/config.xml file.
 
-        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
+        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
             # HiSeq 3000/4000 and NextSeq does not have the IRF/Data/Intensities/BaseCalls/config.xml file.
             _entry_name = 'config.xml'
             if _entry_name in _directory_dict:
@@ -1873,39 +1797,48 @@ class RunFolder(object):
                         print 'Processing directory', cycle_path
 
                     for surface in range(1, fcl.surface_count + 1):
-                        for swath in range(1, fcl.swath_count + 1):
-                            for tile in range(1, fcl.tile_count + 1):
-                                # Not all tiles have to exists especially after catastrophic events during the
-                                # cluster generation step.
-                                tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
-                                if self._is_missing_base_call_tile(lane=lane, tile=tile_name):
-                                    continue
-                                # Process tile base call (BCL) files.
-                                # s_1_1101.bcl
-                                # s_1_2316.bcl
-                                _entry_name = 's_{:1d}_{:1d}{:1d}{:02d}.bcl'.format(lane, surface, swath, tile)
-                                if _entry_name in cycle_dict:
-                                    del cycle_dict[_entry_name]
-                                else:
-                                    # Base call (BCL) files can also be GNU Zip compressed.
-                                    # s_1_1101.bcl.gz
-                                    # s_1_2316.bcl.gz
-                                    _entry_name += '.gz'
+                        # NovaSeq has only L001_<surface>.cbcl files.
+                        if rta in ('v3.3.3',):
+                            _entry_name = '{}_{:d}.cbcl'.format(lane_name, surface)
+                            if _entry_name in cycle_dict:
+                                del cycle_dict[_entry_name]
+                            else:
+                                print 'Missing cbcl file', os.path.join(cycle_path, _entry_name)
+                        else:
+                            for swath in range(1, fcl.swath_count + 1):
+                                for tile in range(1, fcl.tile_count + 1):
+                                    # Not all tiles have to exists especially after catastrophic events during the
+                                    # cluster generation step.
+                                    tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
+                                    if self._is_missing_base_call_tile(lane=lane, tile=tile_name):
+                                        continue
+                                    # Process tile base call (BCL) files.
+                                    # s_1_1101.bcl
+                                    # s_1_2316.bcl
+                                    _entry_name = 's_{:1d}_{:1d}{:1d}{:02d}.bcl'.format(lane, surface, swath, tile)
                                     if _entry_name in cycle_dict:
                                         del cycle_dict[_entry_name]
                                     else:
-                                        print 'Missing tile bcl file', os.path.join(cycle_path, _entry_name)
+                                        # Base call (BCL) files can also be GNU Zip compressed.
+                                        # s_1_1101.bcl.gz
+                                        # s_1_2316.bcl.gz
+                                        _entry_name += '.gz'
+                                        if _entry_name in cycle_dict:
+                                            del cycle_dict[_entry_name]
+                                        else:
+                                            print 'Missing tile bcl file', os.path.join(cycle_path, _entry_name)
 
-                                # Process tile stats files.
-                                # s_1_1101.stats
-                                # s_1_2316.stats
-                                if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7'):
-                                    # HiSeq 3000/4000 does not have stats files.
-                                    _entry_name = 's_{:1d}_{:1d}{:1d}{:02d}.stats'.format(lane, surface, swath, tile)
-                                    if _entry_name in cycle_dict:
-                                        del cycle_dict[_entry_name]
-                                    else:
-                                        print 'Missing tile stats file', os.path.join(cycle_path, _entry_name)
+                                    # Process tile stats files.
+                                    # s_1_1101.stats
+                                    # s_1_2316.stats
+                                    if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7'):
+                                        # HiSeq 3000/4000 does not have stats files.
+                                        _entry_name = 's_{:1d}_{:1d}{:1d}{:02d}.stats'.format(
+                                            lane, surface, swath, tile)
+                                        if _entry_name in cycle_dict:
+                                            del cycle_dict[_entry_name]
+                                        else:
+                                            print 'Missing tile stats file', os.path.join(cycle_path, _entry_name)
 
                     if len(cycle_dict):
                         print cycle_path, 'with number of entries:', str(len(cycle_dict))
@@ -1928,8 +1861,8 @@ class RunFolder(object):
                             # Process tile control files.
                             # s_1_1101.control
                             # s_1_2316.control
-                            if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7'):
-                                # HiSeq 3000/4000 does not have control files.
+                            if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
+                                # HiSeq 3000/4000 and NovaSeq does not have control files.
                                 _entry_name = 's_{:1d}_{:1d}{:1d}{:02d}.control'.format(lane, surface, swath, tile)
                                 if _entry_name in lane_dict:
                                     del lane_dict[_entry_name]
@@ -2089,7 +2022,7 @@ class RunFolder(object):
             directory_path=_directory_path,
             debug=debug)
 
-        if rta in ('2.5.2', '2.7.3', '2.7.6', '2.7.7'):
+        if rta in ('2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
             # The HiSeq 3000/4000 platform has:
             # s.locs
 
@@ -2375,7 +2308,7 @@ class RunFolder(object):
             directory_path=_directory_path,
             debug=debug)
 
-        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
+        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
             # Exclude the HiSeq 3000/4000 and NextSeq platforms.
             # Check the IRF/Data/ImageSize.dat file.
             _entry_name = 'ImageSize.dat'
@@ -2483,11 +2416,98 @@ class RunFolder(object):
             _file_name_list.append('FWHMGridMetricsOut.bin')
             _file_name_list.append('StaticRunMetricsOut.bin')
 
+        if rta in ('v3.3.3',):
+            # NovaSeq platform
+            _file_name_list.append('AlignmentMetricsOut.bin')
+            _file_name_list.append('BasecallingMetricsOut.bin')
+            _file_name_list.append('EmpiricalPhasingMetricsOut.bin')
+            _file_name_list.append('EventMetricsOut.bin')
+            _file_name_list.append('ExtendedTileMetricsOut.bin')
+            _file_name_list.append('FWHMGridMetricsOut.bin')
+            _file_name_list.append('OpticalModelMetricsOut.bin')
+            _file_name_list.append('PFGridMetricsOut.bin')
+            _file_name_list.append('QMetrics2030Out.bin')
+            _file_name_list.append('QMetricsByLaneOut.bin')
+            _file_name_list.append('RegistrationMetricsOut.bin')
+
+            read_start_list = self.run_information.get_read_start_list
+            read_end_list = self.run_information.get_read_end_list
+
+            # Qualities are calculated for payload i.e. non-index reads from cycle 25 onwards.
+            cycle_number = 1
+            """ @type cycle_number: int """
+            quality_cycle_list = list()
+            """ @type quality_cycle_list: list[int] """
+            quality_start_list = list()
+            """ @type quality_start_list: list[int] """
+            for read in self.run_information.reads:
+                if not read.index:
+                    quality_cycle_list.extend(range(cycle_number + 24, cycle_number + read.cycles))
+                    quality_start_list.append(cycle_number + 24)
+                cycle_number += read.cycles
+
+            for cycle in range(1, self.run_information.get_cycle_number + 1):
+                cycle_name = 'C{:d}.1'.format(cycle)
+                cycle_path = os.path.join(_directory_path, cycle_name)
+                if cycle_name in _directory_dict:
+                    del _directory_dict[cycle_name]
+                else:
+                    print 'Missing directory', cycle_path
+                    continue
+                cycle_dict = dict(map(lambda x: (x, 1), os.listdir(cycle_path)))
+                """ @type cycle_dict: dict[str | unicode, int] """
+                _cycle_file_name_list = [
+                    'BasecallingMetricsOut.bin',
+                    'EventMetricsOut.bin',
+                    'ExtractionMetricsOut.bin',
+                    'ImageMetricsOut.bin',
+                    'RegistrationMetricsOut.bin',
+                ]
+
+                if cycle in read_start_list:
+                    _cycle_file_name_list.append('FWHMGridMetricsOut.bin')
+
+                if cycle in read_end_list:
+                    _cycle_file_name_list.append('FWHMGridMetricsOut.bin')
+                else:
+                    _cycle_file_name_list.append('EmpiricalPhasingMetricsOut.bin')
+
+                if cycle in quality_cycle_list:
+                    _cycle_file_name_list.append('AlignmentMetricsOut.bin')
+                    _cycle_file_name_list.append('ErrorMetricsOut.bin')
+
+                if cycle in quality_start_list:
+                    _cycle_file_name_list.append('TileMetricsOut.bin')
+
+                if 1 == cycle:
+                    _cycle_file_name_list.append('OpticalModelMetricsOut.bin')
+
+                if 10 == cycle:
+                    _cycle_file_name_list.append('ExtendedTileMetricsOut.bin')
+
+                if 25 == cycle:
+                    _cycle_file_name_list.append('PFGridMetricsOut.bin')
+
+                if 25 <= cycle:
+                    _cycle_file_name_list.append('CorrectedIntMetricsOut.bin')
+                    _cycle_file_name_list.append('QMetricsOut.bin')
+
+                self._check_files(
+                    directory_dict=cycle_dict,
+                    directory_path=cycle_path,
+                    file_name_list=_cycle_file_name_list)
+
+                if len(cycle_dict):
+                    print cycle_path, 'with number of entries:', str(len(cycle_dict))
+                    entry_name_list = cycle_dict.keys()
+                    entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
+                    print '  Remaining entries:', entry_name_list
+
         if rta not in ('1.18.54', '2.4.11', '2.5.2'):
             _file_name_list.append('ImageMetricsOut.bin')
 
-        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
-            # Other than HiSeq 3000/4000 and NextSeq platforms
+        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
+            # Other than HiSeq 3000/4000, NextSeq and NovaSeq platforms
             _file_name_list.append('ControlMetricsOut.bin')
 
         self._check_files(
@@ -2590,11 +2610,15 @@ class RunFolder(object):
             _file_name_list.append(
                 self.run_parameters.element_tree.find(path='ReagentKitRFIDTag/SerialNumber').text + '.xml')
             _file_name_list.append('RunState.xml')
+        elif rta in ('2.4.11',):
+            # The NextSeq platform uses the reagent kit barcode.
+            _file_name_list.append(
+                self.run_parameters.element_tree.find(path='ReagentKitSerial').text + '.xml')
         else:
             _file_name_list.append(flow_cell_barcode + '.xml')
 
-            if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7'):
-                # The HiSeq 3000/4000 platform does not have a 'FCID_RunState.xml' file.
+            if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
+                # The HiSeq 3000/4000 and NovaSeq platforms do not have a 'FCID_RunState.xml' file.
                 _file_name_list.append(flow_cell_barcode + '_RunState.xml')
 
         self._check_files(
@@ -2689,48 +2713,65 @@ class RunFolder(object):
 
                 for surface in range(1, fcl.surface_count + 1):
                     for swath in range(1, fcl.swath_count + 1):
-                        for base in ('a', 'c', 'g', 't'):
-                            # Process swath image and zprof files.
-                            if rta in ('1.18.54',):
-                                # The MiSeq platform does not have swath image and zprof files.
-                                pass
-                            else:
-                                # c6nk1anxx_c001_l1_t001_bot_s1_a.jpg
-                                # c6nk1anxx_c001_l1_t001_bot_s1_a.jpg.zprof
-                                # c6nk1anxx_c001_l1_t001_top_s3_t.jpg
-                                # c6nk1anxx_c001_l1_t001_top_s3_t.jpg.zprof
-                                _entry_name = '{}_c{:03d}_l{:d}_t{:03d}_{}_s{}_{}.jpg'. \
-                                    format(flow_cell_barcode, cycle, lane, 1, surface_dict[surface], swath, base)
-                                if _entry_name in cycle_dict:
-                                    del cycle_dict[_entry_name]
-                                else:
-                                    print 'Missing swath image file', os.path.join(cycle_path, _entry_name)
-
-                                _entry_name += '.zprof'
-                                if rta in ('2.5.2', '2.7.3', '2.7.6', '2.7.7') and base in ('c', 'g', 't'):
-                                    # The HiSeq 3000/4000 platform does not have swath files for bases c, g and t.
+                        if rta in ('v3.3.3',):
+                            # NovaSeq has green and red bases.
+                            for base in ('green', 'red'):
+                                for tile in range(1, fcl.tile_count + 1):
+                                    # NovaSeq only stores thumbnails for tiles that end in 3. Strange.
+                                    # s_2_1103_green.png
+                                    # s_2_1103_red.png
+                                    if (tile - 3) % 10:
+                                        continue
+                                    tile_file = 's_{:1d}_{:1d}{:1d}{:02d}_{}.png'.format(
+                                        lane, surface, swath, tile, base)
+                                    if tile_file in cycle_dict:
+                                        del cycle_dict[tile_file]
+                                    else:
+                                        print 'Missing tile file', os.path.join(cycle_path, tile_file)
+                        else:
+                            for base in ('a', 'c', 'g', 't'):
+                                # Process swath image and zprof files.
+                                if rta in ('1.18.54',):
+                                    # The MiSeq platform does not have swath image and zprof files.
                                     pass
                                 else:
+                                    # c6nk1anxx_c001_l1_t001_bot_s1_a.jpg
+                                    # c6nk1anxx_c001_l1_t001_bot_s1_a.jpg.zprof
+                                    # c6nk1anxx_c001_l1_t001_top_s3_t.jpg
+                                    # c6nk1anxx_c001_l1_t001_top_s3_t.jpg.zprof
+                                    _entry_name = '{}_c{:03d}_l{:d}_t{:03d}_{}_s{}_{}.jpg'.format(
+                                        flow_cell_barcode, cycle, lane, 1, surface_dict[surface], swath, base)
                                     if _entry_name in cycle_dict:
                                         del cycle_dict[_entry_name]
                                     else:
-                                        print 'Missing swath zprof file', os.path.join(cycle_path, _entry_name)
+                                        print 'Missing swath image file', os.path.join(cycle_path, _entry_name)
 
-                            # Process tile image files.
-                            if rta in ('1.18.54', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
-                                # The HiSeq 3000/4000 and MiSeq platforms use lower case bases.
-                                pass
-                            else:
-                                # The HiSeq 2000 platform uses upper case bases.
-                                base = base.upper()
-                            for tile in range(1, fcl.tile_count + 1):
-                                # s_1_1101_A.jpg
-                                # s_1_2316_T.jpg
-                                tile_file = 's_{:1d}_{:1d}{:1d}{:02d}_{}.jpg'.format(lane, surface, swath, tile, base)
-                                if tile_file in cycle_dict:
-                                    del cycle_dict[tile_file]
+                                    _entry_name += '.zprof'
+                                    if rta in ('2.5.2', '2.7.3', '2.7.6', '2.7.7') and base in ('c', 'g', 't'):
+                                        # The HiSeq 3000/4000 platform does not have swath files for bases c, g and t.
+                                        pass
+                                    else:
+                                        if _entry_name in cycle_dict:
+                                            del cycle_dict[_entry_name]
+                                        else:
+                                            print 'Missing swath zprof file', os.path.join(cycle_path, _entry_name)
+
+                                # Process tile image files.
+                                if rta in ('1.18.54', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
+                                    # The HiSeq 3000/4000 and MiSeq platforms use lower case bases.
+                                    pass
                                 else:
-                                    print 'Missing tile file', os.path.join(cycle_path, tile_file)
+                                    # The HiSeq 2000 platform uses upper case bases.
+                                    base = base.upper()
+                                for tile in range(1, fcl.tile_count + 1):
+                                    # s_1_1101_A.jpg
+                                    # s_1_2316_T.jpg
+                                    tile_file = 's_{:1d}_{:1d}{:1d}{:02d}_{}.jpg'.format(
+                                        lane, surface, swath, tile, base)
+                                    if tile_file in cycle_dict:
+                                        del cycle_dict[tile_file]
+                                    else:
+                                        print 'Missing tile file', os.path.join(cycle_path, tile_file)
 
                 if len(cycle_dict):
                     print cycle_path, 'with number of entries:', str(len(cycle_dict))
@@ -2777,6 +2818,7 @@ class RunFolder(object):
                 '2.7.3',  # HiSeq Control Software 3.3.52 (HiSeq 3000/4000)
                 '2.7.6',  # HiSeq Control Software 3.3.76 (HiSeq 3000/4000)
                 '2.7.7',  # HiSeq Control Software HD 3.4.0.38 (HiSeq 3000/4000)
+                'v3.3.3',  # NovaSeq Control Software 1.2.0 (NovaSeq 6000)
         ):
             raise Exception("Unsupported RTA version: '{}'".format(rta))
 
@@ -2787,6 +2829,13 @@ class RunFolder(object):
 
         if debug > 0:
             print 'Processing directory', _directory_path
+
+        # Check the IRF/Config directory.
+
+        self._check_config(
+            directory_dict=_directory_dict,
+            directory_path=_directory_path,
+            debug=debug)
 
         # Check the IRF/Data/ directory.
 
@@ -2804,8 +2853,8 @@ class RunFolder(object):
 
         # Check the IRF/PeriodicSaveRates/ directory.
 
-        if rta not in ('1.18.54',):
-            # The MiSeq platform does not have this directory.
+        if rta not in ('1.18.54', 'v3.3.3'):
+            # Not for MiSeq and NovaSeq platforms.
             self._check_periodic_save_rates(
                 directory_dict=_directory_dict,
                 directory_path=_directory_path,
@@ -2833,8 +2882,8 @@ class RunFolder(object):
             'RunInfo.xml',
         ]
 
-        if rta in ('2.4.11',):
-            # On the NextSeq platform
+        if rta in ('2.4.11', 'v3.3.3'):
+            # On the NextSeq and NovaSeq platforms
             _file_name_list.append('RunParameters.xml')
         else:
             # On all but the NextSeq platform
@@ -2844,8 +2893,8 @@ class RunFolder(object):
             # The MiSeq platform has a sample annotation sheet.
             _file_name_list.append('SampleSheet.csv')
 
-        if rta not in ('1.18.54', '2.4.11'):
-            # Not for MiSeq and NextSeq platforms.
+        if rta not in ('1.18.54', '2.4.11', 'v3.3.3'):
+            # Not for MiSeq, NextSeq and NovaSeq platforms.
             _file_name_list.append('First_Base_Report.htm')
 
         if rta in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
@@ -2857,6 +2906,10 @@ class RunFolder(object):
             if rta not in ('2.4.11',):
                 # Not on the NextSeq platform
                 _file_name_list.append('SequencingComplete.txt')
+        elif rta in ('v3.3.3',):
+            _file_name_list.append('CopyComplete.txt')
+            _file_name_list.append('RTA3.cfg')
+            _file_name_list.append('SequenceComplete.txt')
         else:
             # Other than HiSeq 3000/4000 platforms.
             _file_name_list.append('Basecalling_Netcopy_complete.txt')
@@ -2864,6 +2917,9 @@ class RunFolder(object):
             for read in range(1, len(self.run_information.reads) + 1):
                 _file_name_list.append('Basecalling_Netcopy_complete_Read{:d}.txt'.format(read))
                 _file_name_list.append('ImageAnalysis_Netcopy_complete_Read{:d}.txt'.format(read))
+
+        if rta in ('2.4.11',):
+            _file_name_list.append('RunCompletionStatus.xml')
 
         self._check_files(
             directory_dict=_directory_dict,
