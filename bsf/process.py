@@ -961,6 +961,8 @@ class Executable(Command):
                 stderr=subprocess.PIPE,
                 shell=False,
                 close_fds=on_posix)
+            # TODO: It would be wonderful to catch Exceptions here.
+            # OSError: [Errno 2] No such file or directory
 
             # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
             # should make sure that buffers are not filling up.
@@ -1361,6 +1363,120 @@ class RunnableStepChangeMode(RunnableStep):
             if int_mode_file is not None:
                 for file_name in file_name_list:
                     os.chmod(os.path.join(file_path, file_name), int_mode_file)
+
+        return 0
+
+
+class RunnableStepCopy(RunnableStep):
+    """The C{bsf.process.RunnableStepCopy} represents a step copying files.
+
+    Attributes:
+    @ivar source_path: Source path
+    @type source_path: str | unicode
+    @ivar target_path: Target path
+    @type target_path: str | unicode
+    """
+
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdout_path=None,
+            stderr_path=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            obsolete_file_path_list=None,
+            source_path=None,
+            target_path=None):
+        """Initialise a C{bsf.process.RunnableStepCopy}.
+
+        @param name: Name
+        @type name: str
+        @param program: Program
+        @type program: str
+        @param options:  Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
+            Python C{list} value objects of C{bsf.argument.Argument} objects
+        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]]
+        @param arguments: Python C{list} of program arguments
+        @type arguments: list[str | unicode]
+        @param sub_command: Subordinate C{bsf.process.Command}
+        @type sub_command: bsf.process.Command
+        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
+        @type stdout_path: str | unicode
+        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
+        @type stderr_path: str | unicode
+        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
+            properties in the context of C{bsf.Stage} dependencies
+        @type dependencies: list[bsf.process.Executable.name]
+        @param hold: Hold on job scheduling
+        @type hold: str
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @type submit: bool
+        @param process_identifier: Process identifier
+        @type process_identifier: str
+        @param process_name: Process name
+        @type process_name: str
+        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
+            after successfully completing this C{bsf.process.RunnableStep}
+        @type obsolete_file_path_list: list[str | unicode]
+        @param source_path: Source path
+        @type source_path: str | unicode
+        @param target_path: Target path
+        @type target_path: str | unicode
+        @return:
+        @rtype:
+        """
+
+        super(RunnableStepCopy, self).__init__(
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            obsolete_file_path_list=obsolete_file_path_list)
+
+        if source_path is None:
+            self.source_path = str()
+        else:
+            self.source_path = source_path
+
+        if target_path is None:
+            self.target_path = str()
+        else:
+            self.target_path = target_path
+
+        return
+
+    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+        """Run a C{bsf.process.RunnableStepLink}.
+
+        @param max_thread_joins: Maximum number of attempts to join the output threads
+        @type max_thread_joins: int
+        @param thread_join_timeout: Timeout for each attempt to join the output threads
+        @type thread_join_timeout: int
+        @param debug: Debug level
+        @type debug: int
+        @return: Return value of the child in the Python subprocess,
+            negative values indicate that the child received a signal
+        @rtype: int
+        """
+
+        if self.source_path and self.target_path and not os.path.exists(self.target_path):
+            # Copy data and all stat info ("cp -p src dst").
+            shutil.copy2(src=self.source_path, dst=self.target_path)
 
         return 0
 
@@ -1927,7 +2043,6 @@ class RunnableStepMove(RunnableStep):
         """
 
         if self.source_path and self.target_path:
-            # os.rename(self.source_path, self.target_path)
             shutil.move(src=self.source_path, dst=self.target_path)
 
         return 0
