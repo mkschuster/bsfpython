@@ -70,7 +70,7 @@ class NextGenerationBase(object):
         @type file_type: str
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
-        @type annotation_dict: dict[str, list[str]]
+        @type annotation_dict: dict[str, list[str]] | None
         @return:
         @rtype:
         """
@@ -126,8 +126,8 @@ class NextGenerationBase(object):
         """
         assert isinstance(other, NextGenerationBase)
 
-        if self is not other:
-            return True
+        if self is other:
+            return False
 
         return self.name != other.name \
             or self.file_path != other.file_path \
@@ -266,7 +266,7 @@ class Reads(NextGenerationBase):
         @type file_type: str
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
-        @type annotation_dict: dict[str, list[str]]
+        @type annotation_dict: dict[str, list[str]] | None
         @param barcode: Barcode used for sample multiplexing
         @type barcode: str
         @param lane: Lane number
@@ -276,7 +276,7 @@ class Reads(NextGenerationBase):
         @param chunk: Chunk number (e.g. I{001}, I{002}, ...)
         @type chunk:str
         @param weak_reference_paired_reads: C{weakref.ReferenceType} pointing at a C{bsf.ngs.PairedReads} object
-        @type weak_reference_paired_reads: weakref.ReferenceType
+        @type weak_reference_paired_reads: weakref.ReferenceType | None
         @return:
         @rtype:
         """
@@ -322,8 +322,10 @@ class Reads(NextGenerationBase):
         """
         assert isinstance(other, Reads)
 
-        return self is other \
-            or super(Reads, self).__eq__(other=other) \
+        if self is other:
+            return True
+
+        return super(Reads, self).__eq__(other=other) \
             and self.barcode == other.barcode \
             and self.lane == other.lane \
             and self.read == other.read \
@@ -339,8 +341,10 @@ class Reads(NextGenerationBase):
         """
         assert isinstance(other, Reads)
 
-        return self is not other \
-            or super(Reads, self).__ne__(other=other) \
+        if self is other:
+            return False
+
+        return super(Reads, self).__ne__(other=other) \
             or self.barcode != other.barcode \
             or self.lane != other.lane \
             or self.read != other.read \
@@ -532,7 +536,7 @@ class PairedReads(NextGenerationBase):
         @param read_group: SAM read group (@RG) information
         @type read_group: str
         @param weak_reference_sample: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Sample}
-        @type weak_reference_sample: weakref.ReferenceType
+        @type weak_reference_sample: weakref.ReferenceType | None
         @return:
         @rtype:
         @raise Exception: For C{bsf.ngs.Reads.file_type} I{CASAVA}, I{R1} or I{R2} must be set in the
@@ -616,8 +620,10 @@ class PairedReads(NextGenerationBase):
         """
         assert isinstance(other, PairedReads)
 
-        return self is other \
-            or super(PairedReads, self).__eq__(other=other) \
+        if self is other:
+            return True
+
+        return super(PairedReads, self).__eq__(other=other) \
             and self.reads_1 == other.reads_1 \
             and self.reads_2 == other.reads_2 \
             and self.exclude == other.exclude \
@@ -635,8 +641,10 @@ class PairedReads(NextGenerationBase):
         """
         assert isinstance(other, PairedReads)
 
-        return self is not other \
-            or super(PairedReads, self).__ne__(other=other) \
+        if self is other:
+            return False
+
+        return super(PairedReads, self).__ne__(other=other) \
             or self.reads_1 != other.reads_1 \
             or self.reads_2 != other.reads_2 \
             or self.exclude != other.exclude \
@@ -812,7 +820,7 @@ class Sample(NextGenerationBase):
     @ivar paired_reads_list: Python C{list} of C{bsf.ngs.PairedReads} objects
     @type paired_reads_list: list[bsf.ngs.PairedReads]
     @ivar weak_reference_project: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Project} object
-    @type weak_reference_project: weakref.ReferenceType
+    @type weak_reference_project: weakref.ReferenceType | None
     """
 
     default_name = 'Default'
@@ -919,7 +927,7 @@ class Sample(NextGenerationBase):
         @param paired_reads_list: Python C{list} of C{bsf.ngs.PairedReads} objects
         @type paired_reads_list: list[bsf.ngs.PairedReads]
         @param weak_reference_project: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Project} object
-        @type weak_reference_project: weakref.ReferenceType
+        @type weak_reference_project: weakref.ReferenceType | None
         @return:
         @rtype:
         """
@@ -1131,7 +1139,7 @@ class Project(NextGenerationBase):
     @ivar sample_dict: Python C{dict} of C{bsf.ngs.Sample.name} key objects and C{bsf.ngs.Sample} value objects
     @type sample_dict: dict[bsf.ngs.Sample.name, bsf.ngs.Sample]
     @ivar weak_reference_prf: C{weakref.ReferenceType} pointing at a C{bsf.ngs.ProcessedRunFolder} object
-    @type weak_reference_prf: weakref.ReferenceType
+    @type weak_reference_prf: weakref.ReferenceType | None
     """
 
     default_name = 'Default'
@@ -1203,7 +1211,7 @@ class Project(NextGenerationBase):
         @param sample_dict: Python C{dict} of C{bsf.ngs.Sample.name} key objects and C{bsf.ngs.Sample} value objects
         @type sample_dict: dict[bsf.ngs.Sample.name, bsf.ngs.Sample]
         @param weak_reference_prf: C{weakref.ReferenceType} pointing at a C{bsf.ngs.ProcessedRunFolder} object
-        @type weak_reference_prf: weakref.ReferenceType
+        @type weak_reference_prf: weakref.ReferenceType | None
         @raise Exception: If C{bsf.ngs.Sample.name} values are not unique for I{file_type} I{CASAVA}
         @return:
         @rtype:
@@ -1283,7 +1291,7 @@ class Project(NextGenerationBase):
         if name in self.sample_dict:
             sample = self.sample_dict[name]
             del self.sample_dict[name]
-            if sample.weak_reference_project() is self:
+            if (sample.weak_reference_project is not None) and (sample.weak_reference_project() is self):
                 sample.weak_reference_project = None
             return sample
         else:
@@ -1327,7 +1335,7 @@ class ProcessedRunFolder(NextGenerationBase):
     @ivar project_dict: Python C{dict} of C{bsf.ngs.Project.name} key objects and C{bsf.ngs.Project} value objects
     @type project_dict: dict[bsf.ngs.Project.name, bsf.ngs.Project]
     @ivar weak_reference_collection: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Collection} object
-    @type weak_reference_collection: weakref.ReferenceType
+    @type weak_reference_collection: weakref.ReferenceType | None
     """
 
     default_name = 'Default'
@@ -1452,7 +1460,7 @@ class ProcessedRunFolder(NextGenerationBase):
         @param project_dict: Python C{dict} of C{bsf.ngs.Project.name} key objects and C{bsf.ngs.Project} value objects
         @type project_dict: dict[bsf.ngs.Project.name, bsf.ngs.Project]
         @param weak_reference_collection: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Collection} object
-        @type weak_reference_collection: weakref.ReferenceType
+        @type weak_reference_collection: weakref.ReferenceType | None
         @return:
         @rtype:
         @raise Exception: If C{bsf.ngs.Project.name} values are not unique for file_type I{CASAVA}
@@ -1550,7 +1558,7 @@ class ProcessedRunFolder(NextGenerationBase):
         if name in self.project_dict:
             project = self.project_dict[name]
             del self.project_dict[name]
-            if project.weak_reference_prf() is self:
+            if (project.weak_reference_prf is not None) and (project.weak_reference_prf() is self):
                 project.weak_reference_prf = None
             return project
         else:
@@ -2146,7 +2154,7 @@ class Collection(NextGenerationBase):
         if name in self.processed_run_folder_dict:
             prf = self.processed_run_folder_dict[name]
             del self.processed_run_folder_dict[name]
-            if prf.weak_reference_collection() is self:
+            if (prf.weak_reference_collection is not None) and (prf.weak_reference_collection() is self):
                 prf.weak_reference_collection = None
             return prf
         else:
