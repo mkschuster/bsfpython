@@ -1387,8 +1387,8 @@ class Tuxedo(Analysis):
         # expected to exist by another process.
         # Circumvent such a situation by introducing dependencies on previous Cuffmerge processes. Sigh.
         # TODO: Report this to the Cufflinks author.
-        previous_cuffmerge_name = None
-        """ @type previous_cuffmerge_name: str """
+        executable_cuffmerge_dict = dict()
+        """ @type executable_cuffmerge_dict: dict[str, bsf.process.Executable] """
 
         comparison_name_list = self._comparison_dict.keys()
         comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
@@ -1415,10 +1415,8 @@ class Tuxedo(Analysis):
             executable_run_cuffmerge = self.set_stage_runnable(
                 stage=stage_run_cuffmerge,
                 runnable=runnable_run_cuffmerge)
-            # Set a dependency on the previous Cuffmerge process to avoid file contention.
-            if previous_cuffmerge_name is not None:
-                executable_run_cuffmerge.dependencies.append(previous_cuffmerge_name)
-            previous_cuffmerge_name = executable_run_cuffmerge.name
+            # Set a dependency on all other Cuffmerge process to avoid file contention.
+            executable_cuffmerge_dict[prefix_cuffmerge] = executable_run_cuffmerge
 
             if self.novel_transcripts:
                 # Create a new Cuffmerge RunnableStep.
@@ -1839,6 +1837,12 @@ class Tuxedo(Analysis):
                 # Set rnaseq_process_cuffdiff arguments.
 
                 # None so far.
+
+        # Finally, set dependencies on all other Cuffmerge Executable objects to avoid file contention.
+        for prefix_cuffmerge in executable_cuffmerge_dict.keys():
+            for executable_cuffmerge in executable_cuffmerge_dict.values():
+                if prefix_cuffmerge != executable_cuffmerge.name:
+                    executable_cuffmerge.dependencies.append(prefix_cuffmerge)
 
         return
 
