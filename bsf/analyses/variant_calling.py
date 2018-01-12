@@ -3824,14 +3824,15 @@ class VariantCallingGATK(Analysis):
             # Step 4: Diagnose the sample. #
             ################################
             #
-            # GATK DiagnoseTarget                    (diagnose_sample_gatk_diagnose_target)
-            # GATK QualifyMissingIntervals           (diagnose_sample_gatk_qualify_missing_intervals)
             # GATK CallableLoci                      (diagnose_sample_gatk_callable_loci)
-            # bsfR bsf_variant_calling_insert_size.R (diagnose_sample_insert_size)
-            # bsfR bsf_variant_calling_coverage.R    (diagnose_sample_coverage)
             # UCSC bedSort                           (diagnose_sample_bed_sort)
             # UCSC bedToBigBed                       (diagnose_sample_bed_sort)
-            # Picard CollectHsMetrics                (diagnose_sample_picard_collect_hybrid_selection_metrics)
+            # bsfR bsf_variant_calling_coverage.R    (diagnose_sample_coverage)
+            # bsfR bsf_variant_calling_insert_size.R (diagnose_sample_insert_size)
+            # For target intervals only:
+            #   GATK DiagnoseTarget                  (diagnose_sample_gatk_diagnose_target)
+            #   GATK QualifyMissingIntervals         (diagnose_sample_gatk_qualify_missing_intervals)
+            #   Picard CollectHsMetrics              (diagnose_sample_picard_collect_hybrid_selection_metrics)
 
             prefix_diagnose_sample = '_'.join((stage_diagnose_sample.name, sample.name))
 
@@ -3858,6 +3859,89 @@ class VariantCallingGATK(Analysis):
 
             reference_diagnose_sample = runnable_diagnose_sample.get_absolute_cache_file_path(
                 file_path=self.bwa_genome_db)
+
+            # Run the GATK CallableLoci analysis per sample.
+
+            runnable_step = runnable_diagnose_sample.add_runnable_step(
+                runnable_step=RunnableStepGATK(
+                    name='diagnose_sample_gatk_callable_loci',
+                    java_temporary_path=runnable_diagnose_sample.get_relative_temporary_directory_path,
+                    java_heap_maximum='Xmx6G',
+                    gatk_classpath=self.classpath_gatk))
+            """ @type runnable_step: RunnableStepGATK """
+            self.set_runnable_step_configuration(runnable_step=runnable_step)
+            # CommandLineGATK
+            # Required Parameters
+            runnable_step.add_gatk_option(key='analysis_type', value='CallableLoci')
+            # Optional Inputs
+            runnable_step.add_gatk_option(key='reference_sequence', value=reference_diagnose_sample)
+            if target_intervals.targets_path:
+                # If target intervals are available, the Callable Loci analysis is run only on them.
+                runnable_step.add_gatk_option(key='intervals', value=target_intervals.targets_path)
+            else:
+                # If target intervals are not available, decoy sequences etc. can be excluded
+                # from the genome-wide Callable Loci analysis.
+                for interval in self.exclude_intervals_list:
+                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
+            runnable_step.add_gatk_option(key='input_file', value=file_path_process_sample.realigned_bam)
+            # Required Outputs
+            runnable_step.add_gatk_option(key='summary', value=file_path_diagnose_sample.callable_txt)
+            # Optional Outputs
+            runnable_step.add_gatk_option(key='out', value=file_path_diagnose_sample.callable_bed)
+
+            # Run the UCSC bedSort tool.
+
+            runnable_step = runnable_diagnose_sample.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='diagnose_sample_bed_sort',
+                    program='bedSort'))
+            """ @type runnable_step: RunnableStep """
+            runnable_step.arguments.append(file_path_diagnose_sample.callable_bed)
+            runnable_step.arguments.append(file_path_diagnose_sample.sorted_bed)
+
+            # Run the UCSC bedToBigBed tool.
+
+            runnable_step = runnable_diagnose_sample.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='diagnose_sample_bed_to_big_bed',
+                    program='bedToBigBed',
+                    obsolete_file_path_list=[
+                        file_path_diagnose_sample.sorted_bed,
+                    ]))
+            """ @type runnable_step: RunnableStep """
+            runnable_step.add_option_pair_short(key='type', value='bed4')
+            runnable_step.arguments.append(file_path_diagnose_sample.sorted_bed)
+            runnable_step.arguments.append(reference_diagnose_sample + '.fai')
+            runnable_step.arguments.append(file_path_diagnose_sample.callable_bb)
+
+            # Run the bsfR bsf_variant_calling_coverage.R script.
+
+            runnable_step = runnable_diagnose_sample.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='diagnose_sample_coverage',
+                    program='bsf_variant_calling_coverage.R'))
+            """ @type runnable_step: RunnableStep """
+            self.set_runnable_step_configuration(runnable_step=runnable_step)
+            runnable_step.add_option_long(key='exons', value=self.genome_annotation_gtf)
+            runnable_step.add_option_long(key='callable-loci', value=file_path_diagnose_sample.callable_bed)
+            if target_intervals.targets_path is None:
+                # If a target interval path has not been defined, run without it.
+                pass
+            elif target_intervals.targets_path.endswith('.bed'):
+                runnable_step.add_option_long(key='targets', value=target_intervals.targets_path)
+            elif target_intervals.targets_path.endswith('.interval_list'):
+                runnable_step.add_option_long(key='targets', value=target_intervals.targets_path[:-13] + 'bed')
+            elif target_intervals.targets_path:
+                runnable_step.add_option_long(key='targets', value=target_intervals.targets_path)
+
+            # Run the bsfR bsf_variant_calling_insert_size.R script.
+
+            runnable_step = runnable_diagnose_sample.add_runnable_step(
+                runnable_step=RunnableStep(
+                    name='diagnose_sample_insert_size',
+                    program='bsf_variant_calling_insert_size.R'))
+            """ @type runnable_step: RunnableStep """
+            runnable_step.add_option_long(key='file-path', value=file_path_process_sample.realigned_bam)
 
             if target_intervals.targets_path:
                 # Run the GATK DiagnoseTarget analysis per sample, only if targets have been defined.
@@ -3916,90 +4000,6 @@ class VariantCallingGATK(Analysis):
                 if target_intervals.probes_path:
                     runnable_step.add_gatk_option(key='baitsfile', value=target_intervals.probes_path)
 
-            # Run the GATK CallableLoci analysis per sample.
-
-            runnable_step = runnable_diagnose_sample.add_runnable_step(
-                runnable_step=RunnableStepGATK(
-                    name='diagnose_sample_gatk_callable_loci',
-                    java_temporary_path=runnable_diagnose_sample.get_relative_temporary_directory_path,
-                    java_heap_maximum='Xmx6G',
-                    gatk_classpath=self.classpath_gatk))
-            """ @type runnable_step: RunnableStepGATK """
-            self.set_runnable_step_configuration(runnable_step=runnable_step)
-            # CommandLineGATK
-            # Required Parameters
-            runnable_step.add_gatk_option(key='analysis_type', value='CallableLoci')
-            # Optional Inputs
-            runnable_step.add_gatk_option(key='reference_sequence', value=reference_diagnose_sample)
-            if target_intervals.targets_path:
-                # If target intervals are available, the Callable Loci analysis is run only on them.
-                runnable_step.add_gatk_option(key='intervals', value=target_intervals.targets_path)
-            else:
-                # If target intervals are not available, decoy sequences etc. can be excluded
-                # from the genome-wide Callable Loci analysis.
-                for interval in self.exclude_intervals_list:
-                    runnable_step.add_gatk_option(key='excludeIntervals', value=interval, override=True)
-            runnable_step.add_gatk_option(key='input_file', value=file_path_process_sample.realigned_bam)
-            # Required Outputs
-            runnable_step.add_gatk_option(key='summary', value=file_path_diagnose_sample.callable_txt)
-            # Optional Outputs
-            runnable_step.add_gatk_option(key='out', value=file_path_diagnose_sample.callable_bed)
-
-            # Run the bsfR bsf_variant_calling_insert_size.R script.
-
-            runnable_step = runnable_diagnose_sample.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='diagnose_sample_insert_size',
-                    program='bsf_variant_calling_insert_size.R'))
-            """ @type runnable_step: RunnableStep """
-            runnable_step.add_option_long(key='file-path', value=file_path_process_sample.realigned_bam)
-
-            # Run the bsfR bsf_variant_calling_coverage.R script.
-
-            runnable_step = runnable_diagnose_sample.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='diagnose_sample_coverage',
-                    program='bsf_variant_calling_coverage.R'))
-            """ @type runnable_step: RunnableStep """
-            self.set_runnable_step_configuration(runnable_step=runnable_step)
-            runnable_step.add_option_long(key='exons', value=self.genome_annotation_gtf)
-            runnable_step.add_option_long(key='callable-loci', value=file_path_diagnose_sample.callable_bed)
-            if target_intervals.targets_path is None:
-                # If a target interval path has not been defined, run without it.
-                pass
-            elif target_intervals.targets_path.endswith('.bed'):
-                runnable_step.add_option_long(key='targets', value=target_intervals.targets_path)
-            elif target_intervals.targets_path.endswith('.interval_list'):
-                runnable_step.add_option_long(key='targets', value=target_intervals.targets_path[:-13] + 'bed')
-            elif target_intervals.targets_path:
-                runnable_step.add_option_long(key='targets', value=target_intervals.targets_path)
-
-            # Run the UCSC bedSort tool.
-
-            runnable_step = runnable_diagnose_sample.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='diagnose_sample_bed_sort',
-                    program='bedSort'))
-            """ @type runnable_step: RunnableStep """
-            runnable_step.arguments.append(file_path_diagnose_sample.callable_bed)
-            runnable_step.arguments.append(file_path_diagnose_sample.sorted_bed)
-
-            # Run the UCSC bedToBigBed tool.
-
-            runnable_step = runnable_diagnose_sample.add_runnable_step(
-                runnable_step=RunnableStep(
-                    name='diagnose_sample_bed_to_big_bed',
-                    program='bedToBigBed',
-                    obsolete_file_path_list=[
-                        file_path_diagnose_sample.sorted_bed,
-                    ]))
-            """ @type runnable_step: RunnableStep """
-            runnable_step.add_option_pair_short(key='type', value='bed4')
-            runnable_step.arguments.append(file_path_diagnose_sample.sorted_bed)
-            runnable_step.arguments.append(reference_diagnose_sample + '.fai')
-            runnable_step.arguments.append(file_path_diagnose_sample.callable_bb)
-
-            if target_intervals.targets_path:
                 # Run the Picard CollectHsMetrics analysis per sample, only if targets have been defined.
 
                 runnable_step = runnable_diagnose_sample.add_runnable_step(
