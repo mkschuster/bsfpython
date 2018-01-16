@@ -4995,7 +4995,7 @@ class VariantCallingGATK(Analysis):
                 """ @type file_path_split_somatic_snpeff: FilePathSplitSomatic """
 
                 for attribute, extension in (
-                        ('comparison_tsv', '_vep.tsv'),):
+                        ('comparison_tsv', '_snpeff.tsv'),):
                     report_create_symbolic_link(
                         source_path=os.path.relpath(
                             os.path.join(self.genome_directory, getattr(file_path_split_somatic_snpeff, attribute)),
