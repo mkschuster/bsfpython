@@ -1183,7 +1183,7 @@ class Tuxedo(Analysis):
                 # Only submit this Executable if the 'accepted_hits.bam.bai' file does not exist.
                 file_path_temporary = os.path.join(
                     self.genome_directory,
-                    file_path_tophat.accepted_hits_bai_link_source)
+                    file_path_tophat.accepted_hits_bai)
                 if os.path.exists(file_path_temporary) and os.path.getsize(file_path_temporary):
                     executable_process_tophat.submit = False
 
