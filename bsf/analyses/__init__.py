@@ -1066,7 +1066,7 @@ class ChIPSeq(Analysis):
 
                             # Set process_macs2 arguments.
 
-                            process_macs2.arguments.append('{}__{}'.format(t_paired_reads_name, c_paired_reads_name))
+                            process_macs2.arguments.append(prefix)
                             process_macs2.arguments.append(self.genome_sizes_path)
 
                             if os.path.exists(os.path.join(prefix, prefix + '_peaks.bb')):
@@ -1179,8 +1179,6 @@ class ChIPSeq(Analysis):
                                 # row_dict['LowerBetter'] = str()
                                 # row_dict['Counts'] = str()
 
-                                # TODO: Remove once the code works.
-                                # ## sas.csv_writer_next(row_dict=row_dict)
                                 dbs.row_dicts.append(row_dict)
 
                                 job_dependency = 'chipseq_process_macs2_{}__{}'.format(
@@ -1188,8 +1186,6 @@ class ChIPSeq(Analysis):
                                     c_paired_reads_name)
                                 job_dependencies.append(job_dependency)
 
-            # TODO: Remove once the code works.
-            # ## sas.csv_writer_close()
             dbs.to_file_path()
 
             # Create the DiffBind job.
@@ -1203,8 +1199,6 @@ class ChIPSeq(Analysis):
             # Add diffbind options.
             self.set_command_configuration(command=diffbind)
             diffbind.add_option_long(key='factor', value=comparison_name)
-            # diffbind.add_option_long(key='work_directory', value=factor_directory)
-            diffbind.add_option_long(key='genome-directory', value=self.genome_directory)
             diffbind.add_option_long(key='sample-annotation', value=file_path)
 
             if os.path.exists(os.path.join(

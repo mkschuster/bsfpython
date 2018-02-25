@@ -33,23 +33,28 @@ else
 fi
 
 if test "$#" -lt '2'; then
-    echo "Error: bsf_chipseq_process_macs2.sh Too few arguments." 1>&2 \
-    || exit 1
-    echo "Usage: bsf_chipseq_process_macs2.sh <prefix> <chromosome_sizes>" 1>&2 \
-    || exit 1
+    echo "Error: $(basename ${0}) Too few arguments." 1>&2 || exit 1
+    echo "Usage: $(basename ${0}) <prefix> <chromosome_sizes>" 1>&2 || exit 1
     exit 1
 fi
 
-declare prefix="chipseq_macs2_${1}"
+declare prefix="${1}"
 declare chromosome_sizes="${2}"
 
 # Create a temporary directory for sorting as the default one may not be big enough.
 
-declare temporary_directory="${prefix}/temporary"
-mkdir -p "${temporary_directory}" || exit 1;
-declare -x TMPDIR="${temporary_directory}";
+if [ -d "${prefix}_temporary" ]; then
+    # Rely on the temporary directory created by the bsf.process.Runnable.
+    declare -x TMPDIR="${prefix}_temporary";
+else
+    # Create a new one.
+    declare temporary_directory="${prefix}/temporary";
+    mkdir -p "${temporary_directory}" || exit 1;
+    declare -x TMPDIR="${temporary_directory}";
+fi
 
 # Convert the following MACS2 bedGraph files into the BigWig format.
+#
 # prefix_control_lambda.bdg
 # prefix_treat_pileup.bdg
 # prefix_treat_pvalue.bdg  Obsolete since MACS 2.0.10
@@ -60,137 +65,45 @@ declare -x TMPDIR="${temporary_directory}";
 
 # https://gist.github.com/taoliu/2469050
 
-# NAME_control_lambda.bdg
+declare -a suffixes=('control_lambda' 'treat_pileup' 'bdgcmp' 'treat_pvalue');
 
-if [ -f "./${prefix}/${prefix}_control_lambda.bdg" ]; then
+for suffix in "${suffixes[@]}"; do
+    if [ -f "${prefix}/${prefix}_${suffix}.bdg" ] && [ ! -s "${prefix}/${prefix}_${suffix}.bw" ]; then
+        echo "$(date) bedGraphToBigWig: ${prefix}_${suffix}.bdg" || exit 1;
+        # echo "$(date) bedGraphToBigWig: ${prefix}_${suffix}.bdg" 1>&2 || exit 1;
 
-    echo "$(date) bedGraphToBigWig: ${prefix}_control_lambda.bdg" || exit 1
-    echo "$(date) bedGraphToBigWig: ${prefix}_control_lambda.bdg" 1>&2 || exit 1
+        grep --extended-regexp --invert-match '^track|^browser' \
+            "${prefix}/${prefix}_${suffix}.bdg" \
+            | sort -k 1,1 -k 2,2n \
+            | slopBed -i - -g "${chromosome_sizes}" -b 0 \
+            | bedClip 'stdin' "${chromosome_sizes}" "${prefix}/${prefix}_${suffix}_clipped.bdg" \
+            || exit 1;
 
-    grep --extended-regexp --invert-match '^track|^browser' \
-        "./${prefix}/${prefix}_control_lambda.bdg" \
-        | sort -k1,1 -k2,2n \
-        | slopBed -i - -g "${chromosome_sizes}" -b 0 \
-        | bedClip 'stdin' "${chromosome_sizes}" "./${prefix}/${prefix}_clipped.bdg" \
-        || exit 1
+        bedGraphToBigWig \
+            "${prefix}/${prefix}_${suffix}_clipped.bdg" \
+            "${chromosome_sizes}" \
+            "${prefix}/${prefix}_${suffix}.bw" \
+            || exit 1;
 
-    bedGraphToBigWig \
-        "./${prefix}/${prefix}_clipped.bdg" \
-        "${chromosome_sizes}" \
-        "./${prefix}/${prefix}_control_lambda.bw" \
-        || exit 1
-
-    rm "./${prefix}/${prefix}_clipped.bdg" || exit 1
-#   mv "${prefix}/${prefix}_control_lambda.bdg" "${prefix}/${prefix}_control_lambda.bdg.bak" || exit 1
-    rm "${prefix}/${prefix}_control_lambda.bdg" || exit 1
-
-fi
-
-if [ -f "./${prefix}/${prefix}_treat_pileup.bdg" ]; then
-
-    echo "$(date) bedGraphToBigWig: ${prefix}_treat_pileup.bdg" || exit 1
-    echo "$(date) bedGraphToBigWig: ${prefix}_treat_pileup.bdg" 1>&2 || exit 1
-
-    grep --extended-regexp --invert-match '^track|^browser' \
-        "./${prefix}/${prefix}_treat_pileup.bdg" \
-        | sort -k1,1 -k2,2n \
-        | slopBed -i - -g "${chromosome_sizes}" -b 0 \
-        | bedClip 'stdin' "${chromosome_sizes}" "./${prefix}/${prefix}_clipped.bdg" \
-        || exit 1
-
-    bedGraphToBigWig \
-        "./${prefix}/${prefix}_clipped.bdg" \
-        "${chromosome_sizes}" \
-        "./${prefix}/${prefix}_treat_pileup.bw" \
-        || exit 1
-
-    rm "./${prefix}/${prefix}_clipped.bdg" || exit 1
-    mv "./${prefix}/${prefix}_treat_pileup.bdg" "./${prefix}/${prefix}_treat_pileup.bdg.bak" || exit 1
-#   rm "./${prefix}/${prefix}_treat_pileup.bdg" || exit 1
-
-fi
-
-# NAME_bdgcmp.bdg
-
-if [ -f "./${prefix}/${prefix}_bdgcmp.bdg" ]; then
-
-    echo "$(date) bedGraphToBigWig: ${prefix}_bdgcmp.bdg" || exit 1
-    echo "$(date) bedGraphToBigWig: ${prefix}_bdgcmp.bdg" 1>&2 || exit 1
-
-    grep --extended-regexp --invert-match '^track|^browser' \
-        "./${prefix}/${prefix}_bdgcmp.bdg" \
-        | sort -k1,1 -k2,2n \
-        | slopBed -i - -g "${chromosome_sizes}" -b 0 \
-        | bedClip 'stdin' "${chromosome_sizes}" "./${prefix}/${prefix}_clipped.bdg" \
-        || exit 1
-
-    bedGraphToBigWig \
-        "./${prefix}/${prefix}_clipped.bdg" \
-        "${chromosome_sizes}" \
-        "./${prefix}/${prefix}_bdgcmp.bw" \
-        || exit 1
-
-    rm "./${prefix}/${prefix}_clipped.bdg" || exit 1
-    mv "./${prefix}/${prefix}_bdgcmp.bdg" "./${prefix}/${prefix}_bdgcmp.bdg.bak" || exit 1
-#   rm "./${prefix}/${prefix}_bdgcmp.bdg" || exit 1
-
-fi
-
-# NAME_treat_pvalue.bdg
-# This file is obsolete since version 2.0.10.
-
-if [ -f "./${prefix}/${prefix}_treat_pvalue.bdg" ]; then
-
-    echo "$(date) bedGraphToBigWig: ${prefix}_treat_pvalue.bdg" || exit 1
-    echo "$(date) bedGraphToBigWig: ${prefix}_treat_pvalue.bdg" 1>&2 || exit 1
-
-    grep --extended-regexp --invert-match '^track|^browser' \
-        "./${prefix}/${prefix}_treat_pvalue.bdg" \
-        | sort -k1,1 -k2,2n \
-        | slopBed -i - -g "${chromosome_sizes}" -b 0 \
-        | bedClip 'stdin' "${chromosome_sizes}" "./${prefix}/${prefix}_clipped.bdg" \
-        || exit 1
-
-    bedGraphToBigWig \
-        "./${prefix}/${prefix}_clipped.bdg" \
-        "${chromosome_sizes}" \
-        "./${prefix}/${prefix}_treat_pvalue.bw" \
-        || exit 1
-
-    rm "./${prefix}/${prefix}_clipped.bdg" || exit 1
-    rm "./${prefix}/${prefix}_treat_pvalue.bdg" || exit 1
-
-fi
-
-# NAME_treat_qvalue.bdg
-# This file is obsolete since version 2.0.10.
-
-if [ -f "./${prefix}/${prefix}_treat_qvalue.bdg" ]; then
-
-    echo "$(date) bedGraphToBigWig: ${prefix}_treat_qvalue.bdg" || exit 1
-    echo "$(date) bedGraphToBigWig: ${prefix}_treat_qvalue.bdg" 1>&2 || exit 1
-
-    grep --extended-regexp --invert-match '^track|^browser' \
-        "./${prefix}/${prefix}_treat_qvalue.bdg" \
-        | sort -k1,1 -k2,2n \
-        | slopBed -i - -g "${chromosome_sizes}" -b 0 \
-        | bedClip 'stdin' "${chromosome_sizes}" "./${prefix}/${prefix}_clipped.bdg" \
-        || exit 1
-
-    bedGraphToBigWig \
-        "./${prefix}/${prefix}_clipped.bdg" \
-        "${chromosome_sizes}" \
-        "./${prefix}/${prefix}_treat_qvalue.bw" \
-        || exit 1
-
-    rm "./${prefix}/${prefix}_clipped.bdg" || exit 1
-    rm "./${prefix}/${prefix}_treat_qvalue.bdg" || exit 1
-
-fi
+        rm "${prefix}/${prefix}_${suffix}_clipped.bdg" || exit 1;
+        rm "${prefix}/${prefix}_${suffix}.bdg" || exit 1;
+    fi
+done
 
 # Convert the following BED files into the BigBED format.
-# prefix_peaks.bed
+#
+# prefix_peaks.bed         Obsolete since MACS 2.1.0
 # prefix_summits.bed
+# prefix_peaks.narrowPeak  Linked to prefix_narrow_peaks.bed symbolically.
+
+if [ -f "${prefix}/${prefix}_peaks.narrowPeak" ] && [ ! -h "${prefix}/${prefix}_narrow_peaks.bed" ]; then
+    cd "${prefix}" || exit 1;
+    ln -s \
+        "${prefix}_peaks.narrowPeak" \
+        "${prefix}_narrow_peaks.bed" \
+        || exit 1;
+    cd '-' || exit 1;
+fi
 
 # The UCSC bedToBigBed utility requires that track lines are stripped out. Sigh!
 # The UCSC Genome Browser recommends the following sort command.
@@ -203,87 +116,36 @@ fi
 # Use a Perl one-liner to correct this.
 # The bedToBigBed does neither understand a 'stdin' option,
 # nor is it capable of reading from standard input.
-# Convert via a temporary *.txt file.
+# Convert via a temporary *_clipped.bed file.
 
+declare -a suffixes=('peaks' 'summits' 'narrow_peaks');
 
-# NAME_peaks.bed
-# This file seems obsolete in version 2.1.0.
+for suffix in "${suffixes[@]}"; do
+    if [ -f "${prefix}/${prefix}_${suffix}.bed" ] && [ ! -s "${prefix}/${prefix}_${suffix}.bb" ]; then
+        echo "$(date) bedToBigBed: ${prefix}_${suffix}.bed" || exit 1;
+        # echo "$(date) bedToBigBed: ${prefix}_${suffix}.bed" 1>&2 || exit 1;
 
-if [ -f "./${prefix}/${prefix}_peaks.bed" ]; then
+        grep --extended-regexp --invert-match '^track|^browser' \
+            "${prefix}/${prefix}_${suffix}.bed" \
+            | sort -k 1,1 -k 2,2n \
+            | perl -a -n -e '$F[4] = 0; print join(qq{\t}, @F), qq{\n};' \
+            | bedClip 'stdin' "${chromosome_sizes}" "${prefix}/${prefix}_${suffix}_clipped.bed" \
+            || exit 1;
 
-    echo "$(date) bedToBigBed: ${prefix}_peaks.bed" || exit 1
-    echo "$(date) bedToBigBed: ${prefix}_peaks.bed" 1>&2 || exit 1
+        declare cl='';
+        cl+='bedToBigBed';
+        if [ "${suffix}" == 'narrow_peaks' ]; then
+            cl+=' -type=bed6+4';
+        fi
+        cl+=" ${prefix}/${prefix}_${suffix}_clipped.bed";
+        cl+=" ${chromosome_sizes}";
+        cl+=" ${prefix}/${prefix}_${suffix}.bb";
+        eval ${cl} || exit 1;
 
-    grep --extended-regexp --invert-match '^track|^browser' \
-        "./${prefix}/${prefix}_peaks.bed" \
-        | sort -k1,1 -k2,2n \
-        | perl -e 'while (<>) { chomp; my @fields = split q{ }; $fields[4] = 0; print join(qq{\t}, @fields), qq{\n}; }' \
-        | bedClip 'stdin' "${chromosome_sizes}" "./${prefix}/${prefix}_peaks.txt" \
-        || exit 1
+        rm "${prefix}/${prefix}_${suffix}_clipped.bed" || exit 1;
+    fi
+done
 
-    bedToBigBed \
-        "./${prefix}/${prefix}_peaks.txt" \
-        "${chromosome_sizes}" \
-        "./${prefix}/${prefix}_peaks.bb" \
-        || exit 1
-
-    rm "./${prefix}/${prefix}_peaks.txt" || exit 1
-#   rm "./${prefix}/${prefix}_peaks.bed" || exit 1
-
+if [ -d "${temporary_directory}" ]; then
+    rm -R "${temporary_directory}" || exit 1;
 fi
-
-
-# NAME_peaks.narrowPeak
-
-if [ -f "./${prefix}/${prefix}_peaks.narrowPeak" ]; then
-
-    echo "$(date) bedToBigBed: ${prefix}_peaks.narrowPeak" || exit 1
-    echo "$(date) bedToBigBed: ${prefix}_peaks.narrowPeak" 1>&2 || exit 1
-
-    grep --extended-regexp --invert-match '^track|^browser' \
-        "./${prefix}/${prefix}_peaks.narrowPeak" \
-        | sort -k1,1 -k2,2n \
-        | perl -e 'while (<>) { chomp; my @fields = split q{ }; $fields[4] = 0; print join(qq{\t}, @fields), qq{\n}; }' \
-        | bedClip 'stdin' "${chromosome_sizes}" "./${prefix}/${prefix}_peaks.txt" \
-        || exit 1
-
-    bedToBigBed -type=bed6+4 \
-        "./${prefix}/${prefix}_peaks.txt" \
-        "${chromosome_sizes}" \
-        "./${prefix}/${prefix}_peaks.bb" \
-        || exit 1
-
-    rm "./${prefix}/${prefix}_peaks.txt" || exit 1
-#   rm "./${prefix}/${prefix}_peaks.bed" || exit 1
-
-fi
-
-
-# NAME_summits.bed
-
-if [ -f "./${prefix}/${prefix}_summits.bed" ]; then
-
-    echo "$(date) bedToBigBed: ${prefix}_summits.bed" || exit 1
-    echo "$(date) bedToBigBed: ${prefix}_summits.bed" 1>&2 || exit 1
-
-    grep --extended-regexp --invert-match '^track|^browser' \
-        "./${prefix}/${prefix}_summits.bed" \
-        | sort -k1,1 -k2,2n \
-        | perl -e 'while (<>) { chomp; my @fields = split q{ }; $fields[4] = 0; print join(qq{\t}, @fields), qq{\n}; }' \
-        | bedClip 'stdin' "${chromosome_sizes}" "./${prefix}/${prefix}_summits.txt" \
-        || exit 1
-
-    bedToBigBed \
-        "./${prefix}/${prefix}_summits.txt" \
-        "${chromosome_sizes}" \
-        "./${prefix}/${prefix}_summits.bb" \
-        || exit 1
-
-    rm "./${prefix}/${prefix}_summits.txt" || exit 1
-#   rm "./${prefix}/${prefix}_summits.bed" || exit 1
-
-fi
-
-rm -R "${temporary_directory}" || exit 1;
-
-exit 0
