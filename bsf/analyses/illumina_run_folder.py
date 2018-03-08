@@ -473,7 +473,7 @@ class IlluminaRunFolderArchive(Analysis):
             compress_logs.arguments.append(os.path.join(self.run_directory, 'Logs'))
 
         # 7. Compress all files in the IRF/Data/RTALogs/ directory if it exists.
-        #    It does not on the HiSeq 3000/4000 platform.
+        #    It does not on the HiSeq 3000/4000 and NovaSeq platforms.
 
         if os.path.isdir(os.path.join(self.run_directory, 'Data', 'RTALogs')):
             compress_rta_logs = runnable_pre_process_folder.add_runnable_step(runnable_step=RunnableStep(
@@ -501,13 +501,15 @@ class IlluminaRunFolderArchive(Analysis):
         # Cluster intensity file (*.cif) directories, if present, need excluding from archiving at a later stage.
 
         exclude_intensities_patterns = list()
+        """ @type exclude_intensities_patterns: list[str | unicode] """
         archive_folder_dependencies = list()
+        """ @type archive_folder_dependencies: list[str] """
+
         archive_folder_dependencies.append(runnable_pre_process_folder.name)
 
         for lane_int in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
-            # MiSeq and NextSeq instruments do not need lane processing.
-
-            if irf.run_parameters.get_instrument_type in ('MiSeq', 'NextSeq'):
+            # MiSeq, NextSeq and NovaSeq instruments do not need lane processing.
+            if irf.run_parameters.get_instrument_type in ('MiSeq', 'NextSeq', 'NovaSeq'):
                 continue
 
             # Process the IRF/Data/Intensities/BaseCalls/ directory.

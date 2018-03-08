@@ -836,11 +836,11 @@ class RunParameters(object):
             - I{HiSeq}:   I{<RunParameters>/<Setup>/<RunID>}
             - I{MiSeq}:   I{<RunParameters>/<RunID>}
             - I{NextSeq}: I{<RunParameters>/<RunID>}
-            - I{NovaSeq}: I{<RunParameters>/<RunID>}
+            - I{NovaSeq}: I{<RunParameters>/<RunId>}
         @return: Run identifier
         @rtype: str
         """
-        return self.xml_paths_to_text(xml_paths=('Setup/RunID', 'RunID'))
+        return self.xml_paths_to_text(xml_paths=('Setup/RunID', 'RunID', 'RunId'))
 
     @property
     def get_real_time_analysis_version(self):

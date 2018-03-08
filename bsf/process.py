@@ -722,16 +722,18 @@ class Executable(Command):
 
         for line in file_handle:
             thread_lock.acquire(True)
-            if output_file:
-                output_file.write(line)
-            else:
+            if output_file is None:
                 print '[{}] {}: {}'.format(datetime.datetime.now().isoformat(), file_type, line.rstrip())
+            else:
+                output_file.write(line)
             thread_lock.release()
 
         thread_lock.acquire(True)
         if debug > 0:
             print '[{}] Received EOF on {} pipe.'.format(datetime.datetime.now().isoformat(), file_type)
-        if output_file:
+        if output_file is None:
+            pass
+        else:
             output_file.close()
             if debug > 0:
                 print '[{}] Closed {} file {!r}.'. \
@@ -903,9 +905,9 @@ class Executable(Command):
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
-        output += '{}  stdout:             {!r}\n'. \
+        output += '{}  stdout_path:        {!r}\n'. \
             format(indent, self.stdout_path)
-        output += '{}  stderr:             {!r}\n'. \
+        output += '{}  stderr_path:        {!r}\n'. \
             format(indent, self.stderr_path)
         output += '{}  hold:               {!r}\n'. \
             format(indent, self.hold)

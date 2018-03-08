@@ -272,11 +272,11 @@ class Trimmomatic(Analysis):
             @return:
             @rtype:
             """
-            for i in range(1, len(trimming_step_list)):
+            for i in range(0, len(trimming_step_list)):
                 if trimming_step_list[i].startswith('ILLUMINACLIP'):
                     component_list = trimming_step_list[i].split(':')
-                    if not os.path.isabs(component_list[2]):
-                        component_list[2] = os.path.join(self.adapter_path, component_list[2])
+                    if not os.path.isabs(component_list[1]):
+                        component_list[1] = os.path.join(self.adapter_path, component_list[1])
                     trimming_step_list[i] = ':'.join(component_list)
             return
 
@@ -392,7 +392,8 @@ class Trimmomatic(Analysis):
                             java_jar_path=self.classpath_trimmomatic))
                     """ @type runnable_step_trimmomatic: bsf.process.RunnableStepJava """
 
-                    if paired_reads.reads_2 is None:
+                    if paired_reads.reads_2 is None or not paired_reads.reads_2.name:
+                        # FIXME: For the moment, PairedReads.reads2 is always defined.
                         runnable_step_trimmomatic.sub_command.sub_command = Command(program='SE')
                     else:
                         runnable_step_trimmomatic.sub_command.sub_command = Command(program='PE')
@@ -401,7 +402,8 @@ class Trimmomatic(Analysis):
                     sub_command = runnable_step_trimmomatic.sub_command.sub_command
                     sub_command.add_option_short(key='trimlog', value=file_path_trimmomatic.trim_log_tsv)
 
-                    if paired_reads.reads_2 is None:
+                    if paired_reads.reads_2 is None or not paired_reads.reads_2.name:
+                        # FIXME: For the moment, PairedReads.reads2 is always defined.
                         file_path_trimmomatic.reads_1u = os.path.join(
                             file_path_trimmomatic.output_directory,
                             paired_reads.reads_1.name + 'U.fastq.gz')
@@ -482,7 +484,8 @@ class Trimmomatic(Analysis):
                     elif len(sample_step_list):
                         sub_command.arguments.extend(sample_step_list)
                     else:
-                        if paired_reads.reads_2 is None:
+                        if paired_reads.reads_2 is None or not paired_reads.reads_2.name:
+                            # FIXME: For the moment, PairedReads.reads2 is always defined.
                             sub_command.arguments.extend(self.trimming_step_se_list)
                         else:
                             sub_command.arguments.extend(self.trimming_step_pe_list)

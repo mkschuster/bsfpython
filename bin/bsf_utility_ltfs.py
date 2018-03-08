@@ -30,8 +30,35 @@ import os
 import xml.etree.ElementTree
 
 cartridge_dict = {
-    'LTO5': int(1391601152 * 1024)
+    'LTO5': int(1391601152 * 1024),
 }
+
+si_prefix_dict = {
+    0: 'B',
+    1: 'kiB',
+    2: 'MiB',
+    3: 'GiB',
+    4: 'TiB',
+    5: 'PiB',
+    6: 'EiB',
+}
+
+
+def convert_into_readable(integer_bytes):
+    """Convert an integer number of bytes into a readable number with SI prefixes.
+
+    @param integer_bytes: Integer number of bytes
+    @type integer_bytes: int
+    @return: Python C{tuple} of Python C{float} readable bytes and Python C{str} (SI) unit.
+    @rtype: (float, str)
+    """
+    si_index = 0
+    readable_bytes = float(integer_bytes)
+    while readable_bytes > 1024.0:
+        readable_bytes /= 1024.0
+        si_index += 1
+
+    return readable_bytes, si_prefix_dict[si_index]
 
 
 class LinearTapeFileSystemDirectory(object):
@@ -479,14 +506,19 @@ for main_file_path in input_file:
     main_file_path = os.path.normpath(main_file_path)
     ltfs_stat_result = os.stat(main_file_path)
     total_size += ltfs_stat_result.st_size
-    # print 'File {!r}, size: {:,d}'.format(main_file_path, ltfs_stat_result.st_size)
     linear_tape_file_system_copy.add_source_file_path(source_path=main_file_path)
 
 if ltfs_free_bytes <= total_size:
-    print 'Total size {:,d} exceeds LTFS free space {:,d} out of {:,d}'. \
-        format(total_size, ltfs_free_bytes, ltfs_total_bytes)
+    difference_bytes = total_size - ltfs_free_bytes
+    difference_readable, difference_unit = convert_into_readable(integer_bytes=difference_bytes)
+    print 'LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Exceeding {:,d} ({:0.1f} {})'. \
+        format(ltfs_total_bytes, ltfs_free_bytes, total_size,
+               difference_bytes, difference_readable, difference_unit)
 else:
-    print "LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Remaining {:,d}". \
-        format(ltfs_total_bytes, ltfs_free_bytes, total_size, ltfs_free_bytes - total_size)
+    difference_bytes = ltfs_free_bytes - total_size
+    difference_readable, difference_unit = convert_into_readable(integer_bytes=difference_bytes)
+    print "LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Remaining {:,d} ({:0.1f} {})". \
+        format(ltfs_total_bytes, ltfs_free_bytes, total_size,
+               difference_bytes, difference_readable, difference_unit)
 
 linear_tape_file_system_copy.write_batch_file(file_path=name_space.cartridge + '.xml')

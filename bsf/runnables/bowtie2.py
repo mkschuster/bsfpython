@@ -34,7 +34,7 @@ import shutil
 
 import bsf
 from bsf import Analysis
-from bsf.analyses.chip_seq import FilePathChIPSeq
+from bsf.analyses.chip_seq import FilePathAlignment
 from bsf.argument import OptionShort
 from bsf.executables import Bowtie2
 from bsf.process import Command, Executable
@@ -227,11 +227,11 @@ def run_bowtie2(runnable):
 
     file_path_read_group = runnable.file_path_object
     """ @type file_path_read_group: bsf.analyses.chip_seq.FilePathChIPSeq """
-    assert isinstance(file_path_read_group, FilePathChIPSeq)
+    assert isinstance(file_path_read_group, FilePathAlignment)
 
-    if not os.path.isdir(file_path_read_group.replicate_directory):
+    if not os.path.isdir(file_path_read_group.output_directory):
         try:
-            os.makedirs(file_path_read_group.replicate_directory)
+            os.makedirs(file_path_read_group.output_directory)
         except OSError as exception:  # Python > 2.5
             if exception.errno != errno.EEXIST:
                 raise
@@ -246,10 +246,24 @@ def run_bowtie2(runnable):
     # The following bowtie2 definition is only a placeholder.
     bowtie2 = bsf.executables.Bowtie2(name='bowtie2', analysis=Analysis())
 
+    # aligned_sam = bowtie2.stdout_path
+
     # TODO: For the moment, convert only files set in the bowtie2 -U option.
     # Pop the original list of -U options off the Bowtie2 Executable object.
-    option_list = list(bowtie2.options['U'])
-    # aligned_sam = bowtie2.stdout_path
+    if 'U' in bowtie2.options:
+        option_list_u = list(bowtie2.options['U'])
+    else:
+        option_list_u = list()
+
+    if '1' in bowtie2.options:
+        option_list_1 = list(bowtie2.options['1'])
+    else:
+        option_list_1 = list()
+
+    if '2' in bowtie2.options:
+        option_list_2 = list(bowtie2.options['2'])
+    else:
+        option_list_2 = list()
 
     rgc_list = list()
     """ @type rgc_list: list[ReadGroupContainer] """
@@ -258,11 +272,11 @@ def run_bowtie2(runnable):
 
     # Expand all BAM files into ReadGroupContainers representing FASTQ files and
 
-    for option in option_list:
-        """ @type option: OptionShort """
+    for option in option_list_u:
+        """ @type option: bsf.argument.OptionShort """
         assert isinstance(option, OptionShort)
         for file_path in option.value.split(','):
-            if file_path[-4:] == '.bam':
+            if file_path.endswith('.bam'):
                 rgc_list.extend(run_picard_sam_to_fastq(runnable=runnable, bam_file_path=file_path))
             else:
                 fastq_list.append(file_path)
@@ -318,7 +332,32 @@ def run_bowtie2(runnable):
 
         sam_file_path = os.path.join(
             runnable.get_relative_temporary_directory_path,
-            'all_fastq_files.sam')
+            'unpaired_fastq_files.sam')
+        bowtie2.stdout_path = sam_file_path
+        sam_file_path_list.append(sam_file_path)
+
+        print bowtie2.trace(1)
+
+        child_return_code = bowtie2.run()
+        if child_return_code:
+            raise Exception('Could not complete the {!r} step.'.format(bowtie2.name))
+
+            # Do not delete the non-temporary FASTQ files.
+
+    if len(option_list_1):
+
+        bowtie2.options.pop('U', None)
+        bowtie2.options.pop('1', None)
+        bowtie2.options.pop('2', None)
+
+        bowtie2.add_option_short(key='1', value=','.join(option_list_1))
+
+        if len(option_list_2):
+            bowtie2.add_option_short(key='2', value=','.join(option_list_2))
+
+        sam_file_path = os.path.join(
+            runnable.get_relative_temporary_directory_path,
+            'paired_fastq_files.sam')
         bowtie2.stdout_path = sam_file_path
         sam_file_path_list.append(sam_file_path)
 
@@ -374,11 +413,11 @@ def run(runnable):
                 raise
 
     file_path_read_group = runnable.file_path_object
-    """ @type file_path_read_group: FilePathChIPSeq """
+    """ @type file_path_read_group: FilePathAlignment """
 
-    if not os.path.isdir(file_path_read_group.replicate_directory):
+    if not os.path.isdir(file_path_read_group.output_directory):
         try:
-            os.makedirs(file_path_read_group.replicate_directory)
+            os.makedirs(file_path_read_group.output_directory)
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
