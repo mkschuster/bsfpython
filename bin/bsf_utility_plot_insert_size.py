@@ -60,12 +60,12 @@ for i in args.input:
         if read.is_paired and read.is_read1 and read.is_proper_pair and abs(read.template_length) < 1000:
             count += 1
             insert_sizes.append(abs(read.template_length))
-    #insert_sizes.sort()
     data_to_plot.append(insert_sizes)
     bam.close()
 
 sns.set(style="whitegrid")
 
+# Set up dataframe
 my_data = {}
 for i in range(len(sample_names)):
     my_data[sample_names[i]] = data_to_plot[i]
