@@ -4,7 +4,7 @@ A package of classes and methods supporting ChIP-Seq analyses.
 """
 
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2018 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -210,8 +210,8 @@ class FilePathPeakCalling(FilePath):
         # self.peaks_bed = os.path.join(prefix, '_'.join((prefix, 'peaks.bed')))
         # self.peaks_bb = os.path.join(prefix, '_'.join((prefix, 'peaks.bb')))
         self.peaks_narrow = os.path.join(prefix, '_'.join((prefix, 'peaks.narrowPeak')))
-        self.peaks_narrow_bed = os.path.join(prefix, '_'.join((prefix, 'peaks_narrow.bed')))
-        self.peaks_narrow_bb = os.path.join(prefix, '_'.join((prefix, 'peaks_narrow.bb')))
+        self.narrow_peaks_bed = os.path.join(prefix, '_'.join((prefix, 'narrow_peaks.bed')))
+        self.narrow_peaks_bb = os.path.join(prefix, '_'.join((prefix, 'narrow_peaks.bb')))
         self.summits_bed = os.path.join(prefix, '_'.join((prefix, 'summits.bed')))
         self.summits_bb = os.path.join(prefix, '_'.join((prefix, 'summits.bb')))
         self.peaks_xls = os.path.join(prefix, '_'.join((prefix, 'peaks.xls')))
@@ -1192,7 +1192,7 @@ class ChIPSeq(Analysis):
                                 process_macs2.arguments.append(prefix_peak_calling)
                                 process_macs2.arguments.append(self.genome_sizes_path)
 
-                                if os.path.exists(file_path_peak_calling.peaks_narrow_bb):
+                                if os.path.exists(file_path_peak_calling.narrow_peaks_bb):
                                     executable_peak_calling.submit = False
 
             return
@@ -1815,6 +1815,7 @@ class ChIPSeq(Analysis):
             str_list += '<table id="peak_calling_table">\n'
             str_list += '<thead>\n'
             str_list += '<tr>\n'
+            str_list += '<th>Comparison</th>\n'
             str_list += '<th>Peaks</th>\n'
             str_list += '<th>R Model</th>\n'
             str_list += '</tr>\n'
@@ -1849,9 +1850,15 @@ class ChIPSeq(Analysis):
                                 """ @type file_path_peak_calling: FilePathPeakCalling """
 
                                 str_list += '<tr>\n'
+                                # Comparison
+                                str_list += '<td>'
+                                str_list += '<strong>' + t_paired_reads_name + '</strong>'
+                                str_list += ' versus '
+                                str_list += '<strong>' + c_paired_reads_name + '</strong>'
+                                str_list += '</td>\n'
                                 # Peaks
                                 str_list += '<td><a href="' + file_path_peak_calling.peaks_xls + '">'
-                                str_list += 'Peaks ' + t_paired_reads_name + ' versus ' + c_paired_reads_name
+                                str_list += '<abbr title="Tab-Separated Value">XLS</abbr>'
                                 str_list += '</a></td>\n'
                                 # R Model
                                 str_list += '<td><a href="' + file_path_peak_calling.model_r + '">'
@@ -1880,7 +1887,7 @@ class ChIPSeq(Analysis):
             str_list += '<th>Scatter Plot</th>\n'
             str_list += '<th>PCA Plot</th>\n'
             str_list += '<th>Box Plot</th>\n'
-            str_list += '<th>DiffBind Report</th>\n'
+            str_list += '<th>Differntially Bound Sites</th>\n'
             str_list += '</tr>\n'
             str_list += '</thead>\n'
             str_list += '<tbody>\n'
@@ -1934,7 +1941,7 @@ class ChIPSeq(Analysis):
                 str_list += '<td></td>\n'  # Scatter Plot
                 str_list += '<td></td>\n'  # PCA Plot
                 str_list += '<td></td>\n'  # Box Plot
-                str_list += '<td></td>\n'  # DiffBin Report
+                str_list += '<td></td>\n'  # DiffBind Report
 
                 str_list += '</tr>\n'
 
@@ -1996,19 +2003,21 @@ class ChIPSeq(Analysis):
 
                     # Box Plot
                     str_list += '<td>'
-                    str_list += '<a href="' + file_path_diff_bind_contrast.box_plot_png + '">'
-                    str_list += '<img'
-                    str_list += ' alt="DiffBind Box plot for factor ' + factor_name + '"'
-                    str_list += ' src="' + file_path_diff_bind_contrast.box_plot_png + '"'
-                    str_list += ' height="80" width="80">'
-                    str_list += '</a>'
+                    if os.path.exists(os.path.join(self.genome_directory, file_path_diff_bind_contrast.box_plot_png)):
+                        str_list += '<a href="' + file_path_diff_bind_contrast.box_plot_png + '">'
+                        str_list += '<img'
+                        str_list += ' alt="DiffBind Box plot for factor ' + factor_name + '"'
+                        str_list += ' src="' + file_path_diff_bind_contrast.box_plot_png + '"'
+                        str_list += ' height="80" width="80">'
+                        str_list += '</a>'
                     str_list += '</td>\n'
 
                     # DiffBind report
                     str_list += '<td>'
-                    str_list += '<a href="' + file_path_diff_bind_contrast.dba_report_csv + '">'
-                    str_list += 'DBA ' + factor_name + ' report ' + row_dict['Group1'] + ' vs ' + row_dict['Group2']
-                    str_list += '</a>'
+                    if os.path.exists(os.path.join(self.genome_directory, file_path_diff_bind_contrast.dba_report_csv)):
+                        str_list += '<a href="' + file_path_diff_bind_contrast.dba_report_csv + '">'
+                        str_list += '<abbr title="Comma-Separated Value">CSV</abbr>'
+                        str_list += '</a>'
                     str_list += '</td>\n'
 
                     str_list += '</tr>\n'
@@ -2287,7 +2296,7 @@ class ChIPSeq(Analysis):
                                 str_list += 'type bigBed\n'
                                 str_list += 'shortLabel ' + prefix_short + '_peaks\n'
                                 str_list += 'longLabel ChIP peaks ' + prefix_long + '\n'
-                                str_list += 'bigDataUrl ' + file_path_peak_calling.peaks_narrow_bb + '\n'
+                                str_list += 'bigDataUrl ' + file_path_peak_calling.narrow_peaks_bb + '\n'
                                 # str_list += 'html ...\n'
                                 str_list += 'visibility pack\n'
 
