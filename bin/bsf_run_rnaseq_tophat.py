@@ -199,6 +199,10 @@ if not os.path.isdir(path_temporary):
 run_tophat = pickler_dict['tophat_executable']
 assert isinstance(run_tophat, Executable)
 
+if args.debug > 1:
+    print 'Executable before conversion'
+    print run_tophat.trace(level=1)
+
 # Check the list of file paths in the second and third arguments for FASTQ versus BAM files.
 
 new_file_paths_1 = list()
@@ -207,31 +211,56 @@ old_file_paths_1 = run_tophat.arguments[1].split(',')
 old_file_paths_2 = run_tophat.arguments[2].split(',')
 temporary_files = list()
 
+# Tophat does not like empty compressed FASTQ files.
+# Since empty GNU Zip files seem to have 20 bytes,
+# only append a file if its size is equal to or greater than 1024 bytes.
+
+minimum_size = 1024
+
 for i in range(0, len(old_file_paths_1)):
-    if old_file_paths_1[i][-4:] == '.bam':
+    if old_file_paths_1[i].endswith('.bam'):
         # This file needs converting.
         for file_path_1, file_path_2 in run_picard_sam_to_fastq(input_path=old_file_paths_1[i],
                                                                 temporary_path=path_temporary):
             if file_path_2 and os.path.exists(path=file_path_2):
-                new_file_paths_1.append(file_path_1)
-                new_file_paths_2.append(file_path_2)
+                if (os.path.getsize(file_path_2) >= minimum_size) and (os.path.getsize(file_path_1) >= minimum_size):
+                    new_file_paths_1.append(file_path_1)
+                    new_file_paths_2.append(file_path_2)
                 temporary_files.append(file_path_1)
                 temporary_files.append(file_path_2)
             else:
-                new_file_paths_1.append(file_path_1)
+                if os.path.getsize(file_path_1) > minimum_size:
+                    new_file_paths_1.append(file_path_1)
                 temporary_files.append(file_path_1)
     else:
-        new_file_paths_1.append(old_file_paths_1[i])
-        if old_file_paths_2[i] and os.path.exists(path=old_file_paths_2[i]):
-            new_file_paths_2.append(old_file_paths_2[i])
+        file_path_1 = old_file_paths_1[i]
+        try:
+            # The second list may be shorter (i.e. empty) in case read 2 files are not defined.
+            file_path_2 = old_file_paths_2[i]
+        except IndexError:
+            file_path_2 = None
+
+        if file_path_2 and os.path.exists(path=file_path_2):
+            if (os.path.getsize(file_path_2) >= minimum_size) and (os.path.getsize(file_path_1) >= minimum_size):
+                # Only append the pair if both files are larger or equal to 1024 bytes.
+                # Empty GNU Zip files teem to have 20 bytes.
+                new_file_paths_1.append(file_path_1)
+                new_file_paths_2.append(file_path_2)
+        else:
+            if os.path.getsize(file_path_1) > minimum_size:
+                new_file_paths_1.append(file_path_1)
 
 run_tophat.arguments[1] = ','.join(new_file_paths_1)
 
 if len(new_file_paths_2):
     run_tophat.arguments[2] = ','.join(new_file_paths_2)
 else:
-    # If the list of arguments is now empty truncate it to just two.
+    # If the list of arguments is now empty truncate it to just two (0: genome index, 1: R1 FASTQ files).
     run_tophat.arguments = run_tophat.arguments[:2]
+
+if args.debug > 1:
+    print 'Executable after conversion'
+    print run_tophat.trace(level=1)
 
 child_return_code = run_tophat.run()
 
