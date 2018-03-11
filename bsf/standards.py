@@ -37,11 +37,33 @@ class Configuration(object):
     A C{bsf.standards.Configuration} has an associated Python C{ConfigParser.SafeConfigParser} to parse the file(s).
 
     Attributes:
+    @cvar global_configuration: Global C{bsf.standards.Configuration}
+    @type global_configuration: bsf.standards.Configuration
+    @cvar global_file_path: Global configuration file
+    @type global_file_path: str | unicode
     @ivar file_path_list: C{bsf.standards.Configuration} file path
     @type file_path_list: list[str | unicode]
     @ivar config_parser: Python C{ConfigParser.SafeConfigParser}
     @type config_parser: ConfigParser.SafeConfigParser
     """
+
+    global_configuration = None
+
+    global_file_path = '~/.bsfpython.ini'
+
+    @staticmethod
+    def get_global_configuration():
+        """Get the global C{bsf.standards.Configuration} and initialise it, if not already done so.
+
+        @return: C{bsf.standards.Configuration}
+        @rtype: bsf.standards.Configuration
+        """
+
+        if Configuration.global_configuration is None:
+            Configuration.global_configuration = Configuration.from_file_path_list(
+                file_path_list=[Configuration.global_file_path])
+
+        return Configuration.global_configuration
 
     @staticmethod
     def section_from_instance(instance):
@@ -152,20 +174,20 @@ class Configuration(object):
 
         return output
 
-    def get_expanded_directory(self, config_section, config_option):
+    def get_expanded_directory(self, section, option):
         """Get configuration information for a directory and expand it.
 
         The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
         any environment variables i.e. on UNIX ${NAME} or $NAME.
-        @param config_section: Configuration file section string
-        @type config_section: str
-        @param config_option: Configuration file option string
-        @type config_option: str
+        @param section: Configuration file section string
+        @type section: str | unicode
+        @param option: Configuration file option string
+        @type option: str | unicode
         @return: Expanded directory
-        @rtype: str
+        @rtype: None | str | unicode
         """
 
-        return Default.get_absolute_path(file_path=self.config_parser.get(config_section, config_option))
+        return Default.get_absolute_path(file_path=self.config_parser.get(section=section, option=option))
 
 
 class Default(object):
@@ -212,12 +234,6 @@ class Default(object):
     @type directory_intervals: str | unicode
     @ivar directory_snpeff_data: snpEff database directory
     @type directory_snpeff_data: str | unicode
-    @ivar directory_vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
-    @type directory_vep_cache: str | unicode
-    @ivar directory_vep_plugins: Ensembl Variant Effect Predictor (VEP) plug-ins directory
-    @type directory_vep_plugins: str | unicode
-    @ivar directory_vep_src: Ensembl Variant Effect Predictor (VEP) source directory
-    @type directory_vep_src: str | unicode
     @ivar indices: Python C{dict} of program name key and index directory name value data
     @type indices: dict[str, str]
     @ivar operator_contact: Contact e-mail address
@@ -246,10 +262,11 @@ class Default(object):
 
     global_default = None
 
+    # FIXME: This should be phased out in favour of the Configuration.global_file_path class variable.
     global_file_path = '~/.bsfpython.ini'
 
     @staticmethod
-    def get_absolute_path(file_path, default_path=None):
+    def get_absolute_path(file_path=None, default_path=None):
         """Return an absolute file path.
 
         Expand an eventual user part (i.e. on UNIX ~ or ~user) and
@@ -264,8 +281,12 @@ class Default(object):
         @param default_path: Default absolute path
         @type default_path: str | unicode
         @return: Absolute path
-        @rtype: str | unicode
+        @rtype: None | str | unicode
         """
+        # FIXME: This method should be moved into the Configuration class.
+
+        if file_path is None:
+            return
 
         absolute_path = os.path.expanduser(path=file_path)
         absolute_path = os.path.expandvars(path=absolute_path)
@@ -286,32 +307,10 @@ class Default(object):
         """
 
         if Default.global_default is None:
-            Default.global_default = Default.from_global_file_path()
+            Default.global_default = Default.from_configuration(
+                configuration=Configuration.get_global_configuration())
 
         return Default.global_default
-
-    @classmethod
-    def from_global_file_path(cls):
-        """Create a new C{bsf.standards.Default} object from the global default configuration file.
-
-        The default configuration is based on the file $HOME/.bsfpython.ini in the user's home directory.
-
-        @return: C{bsf.standards.Default}
-        @rtype: bsf.standards.Default
-        """
-        return cls.from_config_path(config_path=Default.get_absolute_path(file_path=Default.global_file_path))
-
-    @classmethod
-    def from_config_path(cls, config_path):
-        """Create a new C{bsf.standards.Default} object from a UNIX-style configuration file.
-
-        @param config_path: UNIX-style configuration file path
-        @type config_path: str | unicode
-        @return: C{bsf.standards.Default}
-        @rtype: bsf.standards.Default
-        """
-
-        return cls.from_configuration(configuration=Configuration.from_file_path_list(file_path_list=[config_path]))
 
     @classmethod
     def from_configuration(cls, configuration):
@@ -349,9 +348,6 @@ class Default(object):
             directory_gatk_bundle=None,
             directory_intervals=None,
             directory_snpeff_data=None,
-            directory_vep_cache=None,
-            directory_vep_plugins=None,
-            directory_vep_src=None,
             indices=None,
             operator_contact=None,
             operator_e_mail=None,
@@ -364,7 +360,7 @@ class Default(object):
             url_host_name=None,
             url_relative_dna=None,
             url_relative_projects=None):
-        """Initialise a C{bsf.standards.Default}.
+        """Initialise a C{bsf.standards.Default} object.
 
         @param classpath_gatk: Genome Analysis Toolkit Java Archive (JAR) class path directory
         @type classpath_gatk: str | unicode
@@ -402,12 +398,6 @@ class Default(object):
         @type directory_intervals: str | unicode
         @param directory_snpeff_data: snpEff database directory
         @type directory_snpeff_data: str | unicode
-        @param directory_vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
-        @type directory_vep_cache: str | unicode
-        @param directory_vep_plugins: Ensembl Variant Effect Predictor (VEP) plug-ins directory
-        @type directory_vep_plugins: str | unicode
-        @param directory_vep_src: Ensembl Variant Effect Predictor (VEP) source directory
-        @type directory_vep_src: str | unicode
         @param indices: Python C{dict} of program name key and index directory name value data
         @type indices: dict[str, str]
         @param operator_contact: Contact e-mail address
@@ -532,21 +522,6 @@ class Default(object):
         else:
             self.directory_snpeff_data = directory_snpeff_data
 
-        if directory_vep_cache is None:
-            self.directory_vep_cache = str()
-        else:
-            self.directory_vep_cache = directory_vep_cache
-
-        if directory_vep_plugins is None:
-            self.directory_vep_plugins = str()
-        else:
-            self.directory_vep_plugins = directory_vep_plugins
-
-        if directory_vep_src is None:
-            self.directory_vep_src = str()
-        else:
-            self.directory_vep_src = directory_vep_src
-
         # Set index information.
 
         if indices is None:
@@ -659,9 +634,6 @@ class Default(object):
         self.directory_gatk_bundle = cp.get(section=section, option='gatk_bundle')
         self.directory_intervals = cp.get(section=section, option='intervals')
         self.directory_snpeff_data = cp.get(section=section, option='snpeff_data')
-        self.directory_vep_cache = cp.get(section=section, option='vep_cache')
-        self.directory_vep_plugins = cp.get(section=section, option='vep_plugins')
-        self.directory_vep_src = cp.get(section=section, option='vep_src')
 
         section = 'indices'
 
@@ -1017,3 +989,171 @@ class Default(object):
             return default.genome_aliases_ucsc_dict[genome_version]
         else:
             return genome_version
+
+
+class EnsemblVEP(object):
+    """The C{bsf.standards.EnsemblVEP} class models Ensembl Variant Effect Predictor (VEP) defaults.
+
+    Attributes:
+    @cvar section: C{SafeConfigParser} section for the Ensembl Variant Effect Predictor (VEP)
+    @type section: str | unicode
+    """
+
+    section = 'ensembl_vep'
+
+    @staticmethod
+    def get_section(genome_version=None):
+        """Get the Configuration section from a genome assembly version.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Configuration section
+        @rtype: str
+        """
+        if genome_version:
+            return '_'.join((EnsemblVEP.section, genome_version))
+        else:
+            return EnsemblVEP.section
+
+    @staticmethod
+    def get(option=None, genome_version=None):
+        if option is None:
+            return
+
+        section = EnsemblVEP.get_section(genome_version=genome_version)
+        if Configuration.get_global_configuration().config_parser.has_option(section=section, option=option):
+            return Configuration.get_global_configuration().config_parser.get(section=section, option=option)
+        else:
+            return
+
+    @staticmethod
+    def get_expanded_directory(option=None, genome_version=None):
+        """Get configuration information for a directory and expand it.
+
+        The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
+        any environment variables i.e. on UNIX ${NAME} or $NAME.
+        @param option: Configuration option
+        @type option: None | str | unicode
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Expanded directory
+        @rtype: None | str | unicode
+        """
+        if option is None:
+            return
+
+        section = EnsemblVEP.get_section(genome_version=genome_version)
+        if Configuration.get_global_configuration().config_parser.has_option(section=section, option=option):
+            return Configuration.get_global_configuration().get_expanded_directory(section=section, option=option)
+        else:
+            return
+
+    @staticmethod
+    def get_directory_cache(genome_version=None):
+        """Get the cache directory path.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Cache directory path
+        @rtype: None | str | unicode
+        """
+        return EnsemblVEP.get_expanded_directory(option='directory_cache', genome_version=genome_version)
+
+    @staticmethod
+    def get_directory_fasta(genome_version=None):
+        """Get the FASTA directory path.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: FASTA directory path
+        @rtype: None | str | unicode
+        """
+        return EnsemblVEP.get_expanded_directory(option='directory_fasta', genome_version=genome_version)
+
+    @staticmethod
+    def get_directory_plugin(genome_version=None):
+        """Get the plug-ins directory path.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Plug-ins directory path
+        @rtype: None | str | unicode
+        """
+        return EnsemblVEP.get_expanded_directory(option='directory_plugin', genome_version=genome_version)
+
+    @staticmethod
+    def get_directory_source(genome_version=None):
+        """Get the source directory path.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Source directory path
+        @rtype: None | str | unicode
+        """
+        return EnsemblVEP.get_expanded_directory(option='directory_source', genome_version=genome_version)
+
+    @staticmethod
+    def get_name_assembly(genome_version=None):
+        """Get the genome assembly name.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Genome assembly name
+        @rtype: None | str | unicode
+        """
+        return EnsemblVEP.get(option='name_assembly', genome_version=genome_version)
+
+    @staticmethod
+    def get_name_species(genome_version=None):
+        """Get the scientific species name.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Scientific species name
+        @rtype: None | str | unicode
+        """
+        return EnsemblVEP.get(option='name_species', genome_version=genome_version)
+
+    @staticmethod
+    def get_sql_user(genome_version=None):
+        """Get the SQL database user name.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: SQL database user name
+        @rtype: None | str | unicode
+        """
+        return EnsemblVEP.get(option='sql_user', genome_version=genome_version)
+
+    @staticmethod
+    def get_sql_pass(genome_version=None):
+        """Get the SQL database password.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: SQL database password
+        @rtype: None | str | unicode
+        """
+        return EnsemblVEP.get(option='sql_pass', genome_version=genome_version)
+
+    @staticmethod
+    def get_sql_host(genome_version=None):
+        """Get the SQL database host name.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: SQL database host name
+        @rtype: None | str | unicode
+        """
+        return EnsemblVEP.get(option='sql_host', genome_version=genome_version)
+
+    @staticmethod
+    def get_sql_port(genome_version=None):
+        """Get the SQL database TCP/IP port number.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: SQL database TCP/IP port number
+        @rtype: None | str | unicode
+        """
+        return EnsemblVEP.get(option='sql_port', genome_version=genome_version)

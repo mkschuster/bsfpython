@@ -40,7 +40,7 @@ from bsf.annotation import AnnotationSheet
 from bsf.executables import BWA
 from bsf.process import Command, Executable, RunnableStep, RunnableStepJava, RunnableStepPicard, RunnableStepLink, \
     RunnableStepMove
-from bsf.standards import Default
+from bsf.standards import Default, EnsemblVEP
 
 
 class RunnableStepGATK(RunnableStepJava):
@@ -755,9 +755,9 @@ class VariantCallingGATK(Analysis):
     @ivar truth_sensitivity_filter_level_snp: Truth sensitivity filter level for SNPs
     @type truth_sensitivity_filter_level_snp: str
     @ivar vqsr_skip_indel: Skip the Variant Quality Score Recalibration on INDELs
-    @type vqsr_skip_indel: bool, None
+    @type vqsr_skip_indel: None | bool
     @ivar vqsr_skip_snp: Skip the Variant Quality Score Recalibration on SNPs
-    @type vqsr_skip_snp: bool, None
+    @type vqsr_skip_snp: None | bool
     @ivar vqsr_resources_indel_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
     @type vqsr_resources_indel_dict: dict[str, dict[str, str | unicode]]
     @ivar vqsr_resources_snp_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
@@ -767,13 +767,13 @@ class VariantCallingGATK(Analysis):
     @ivar vqsr_annotations_snp_list: Python C{list} of Python C{str} (variant annotation) objects
     @type vqsr_annotations_snp_list: list[str]
     @ivar vqsr_bad_lod_cutoff_indel: LOD score cutoff for negative training set for INDELs
-    @type vqsr_bad_lod_cutoff_indel: float
+    @type vqsr_bad_lod_cutoff_indel: None | float
     @ivar vqsr_bad_lod_cutoff_snp: LOD score cutoff for negative training set for SNPs
-    @type vqsr_bad_lod_cutoff_snp: float
+    @type vqsr_bad_lod_cutoff_snp: None | float
     @ivar vqsr_max_gaussians_pos_indel: Maximum number of Gaussians in the positive training for INDELs
-    @type vqsr_max_gaussians_pos_indel: int
+    @type vqsr_max_gaussians_pos_indel: None | int
     @ivar vqsr_max_gaussians_pos_snp: Maximum number of Gaussians in the positive training for SNPs
-    @type vqsr_max_gaussians_pos_snp: int
+    @type vqsr_max_gaussians_pos_snp: None | int
     @ivar exclude_intervals_list: Python C{list} of Python C{str} (intervals) to exclude from the analysis
     @type exclude_intervals_list: list[str]
     @ivar include_intervals_list: Python C{list} of Python C{str} (intervals) to include in the analysis
@@ -794,20 +794,34 @@ class VariantCallingGATK(Analysis):
     @type snpeff_genome_version: str
     @ivar genome_annotation_gtf: Genome annotation Gene Transfer Format (GTF) file path
     @type genome_annotation_gtf: str | unicode
-    @ivar directory_vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
-    @type directory_vep_cache: str | unicode
-    @ivar directory_vep_plugins: Ensembl Variant Effect Predictor (VEP) plugins directory
-    @type directory_vep_plugins: str | unicode
-    @ivar directory_vep_src: Ensembl Variant Effect Predictor (VEP) source directory
-    @type directory_vep_src: str | unicode
+    @ivar vep_assembly: Ensembl Variant Effect Predictor (VEP) assembly
+    @type vep_assembly: None | str | unicode
+    @ivar vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
+    @type vep_cache: None | str | unicode
+    @ivar vep_fasta: Ensembl Variant Effect Predictor (VEP) FASTA directory
+    @type vep_fasta: None | str | unicode
+    @ivar vep_plugin: Ensembl Variant Effect Predictor (VEP) plug-in directory
+    @type vep_plugin: None | str | unicode
+    @ivar vep_species: Ensembl Variant Effect Predictor (VEP) species
+    @type vep_species: None | str | unicode
+    @ivar vep_source: Ensembl Variant Effect Predictor (VEP) source directory
+    @type vep_source: None | str | unicode
+    @ivar vep_sql_user: Ensembl Variant Effect Predictor (VEP) SQL database user name
+    @type vep_sql_user: None | str | unicode
+    @ivar vep_sql_pass: Ensembl Variant Effect Predictor (VEP) SQL database password
+    @type vep_sql_pass: None | str | unicode
+    @ivar vep_sql_host: Ensembl Variant Effect Predictor (VEP) SQL host
+    @type vep_sql_host: None | str | unicode
+    @ivar vep_sql_port: Ensembl Variant Effect Predictor (VEP) SQL TCP/IP port
+    @type vep_sql_port: None | str | unicode
     @ivar classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
-    @type classpath_gatk: str | unicode
+    @type classpath_gatk: None | str | unicode
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | unicode
+    @type classpath_picard: None | str | unicode
     @ivar classpath_snpeff: snpEff tool Java Archive (JAR) class path directory
-    @type classpath_snpeff: str | unicode
+    @type classpath_snpeff: None | str | unicode
     @ivar classpath_vcf_filter: VCF.Filter tool Java Archive (JAR) class path directory
-    @type classpath_vcf_filter: str | unicode
+    @type classpath_vcf_filter: None | str | unicode
     """
 
     name = 'Variant Calling Analysis'
@@ -878,9 +892,16 @@ class VariantCallingGATK(Analysis):
             gatk_bundle_version=None,
             snpeff_genome_version=None,
             genome_annotation_gtf=None,
-            directory_vep_cache=None,
-            directory_vep_plugins=None,
-            directory_vep_src=None,
+            vep_assembly=None,
+            vep_cache=None,
+            vep_fasta=None,
+            vep_plugin=None,
+            vep_species=None,
+            vep_source=None,
+            vep_sql_user=None,
+            vep_sql_pass=None,
+            vep_sql_host=None,
+            vep_sql_port=None,
             classpath_gatk=None,
             classpath_picard=None,
             classpath_snpeff=None,
@@ -947,9 +968,9 @@ class VariantCallingGATK(Analysis):
         @param truth_sensitivity_filter_level_snp: Truth sensitivity filter level for SNPs
         @type truth_sensitivity_filter_level_snp: str
         @param vqsr_skip_indel: Skip the Variant Quality Score Recalibration on INDELs
-        @type vqsr_skip_indel: bool, None
+        @type vqsr_skip_indel: None | bool
         @param vqsr_skip_snp: Skip the Variant Quality Score Recalibration on SNPs
-        @type vqsr_skip_snp: bool, None
+        @type vqsr_skip_snp: None | bool
         @param vqsr_resources_indel_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
         @type vqsr_resources_indel_dict: dict[str, dict[str, str | unicode]]
         @param vqsr_resources_snp_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
@@ -959,13 +980,13 @@ class VariantCallingGATK(Analysis):
         @param vqsr_annotations_snp_list: Python C{list} of Python C{str} (variant annotation) objects
         @type vqsr_annotations_snp_list: list[str]
         @param vqsr_bad_lod_cutoff_indel: LOD score cutoff for negative training set for INDELs
-        @type vqsr_bad_lod_cutoff_indel: float
+        @type vqsr_bad_lod_cutoff_indel: None | float
         @param vqsr_bad_lod_cutoff_snp: LOD score cutoff for negative training set for SNPs
-        @type vqsr_bad_lod_cutoff_snp: float
+        @type vqsr_bad_lod_cutoff_snp: None | float
         @param vqsr_max_gaussians_pos_indel: Maximum number of Gaussians in the positive training for INDELs
-        @type vqsr_max_gaussians_pos_indel: int
+        @type vqsr_max_gaussians_pos_indel: None | int
         @param vqsr_max_gaussians_pos_snp: Maximum number of Gaussians in the positive training for SNPs
-        @type vqsr_max_gaussians_pos_snp: int
+        @type vqsr_max_gaussians_pos_snp: None | int
         @param exclude_intervals_list: Python C{list} of Python C{str} (intervals) to exclude from the analysis
         @type exclude_intervals_list: list[str]
         @param include_intervals_list: Python C{list} of Python C{str} (intervals) to include in the analysis
@@ -986,20 +1007,34 @@ class VariantCallingGATK(Analysis):
         @type snpeff_genome_version: str
         @param genome_annotation_gtf: Genome annotation Gene Transfer Format (GTF) file path
         @type genome_annotation_gtf: str | unicode
-        @param directory_vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
-        @type directory_vep_cache: str | unicode
-        @param directory_vep_plugins: Ensembl Variant Effect Predictor (VEP) plugins directory
-        @type directory_vep_plugins: str | unicode
-        @param directory_vep_src: Ensembl Variant Effect Predictor (VEP) source directory
-        @type directory_vep_src: str | unicode
+        @param vep_assembly: Ensembl Variant Effect Predictor (VEP) assembly
+        @type vep_assembly: None | str | unicode
+        @param vep_fasta: Ensembl Variant Effect Predictor (VEP) FASTA directory
+        @type vep_fasta: None | str | unicode
+        @param vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
+        @type vep_cache: None | str | unicode
+        @param vep_plugin: Ensembl Variant Effect Predictor (VEP) plug-in directory
+        @type vep_plugin: None | str | unicode
+        @param vep_species: Ensembl Variant Effect Predictor (VEP) species
+        @type vep_species: None | str | unicode
+        @param vep_source: Ensembl Variant Effect Predictor (VEP) source directory
+        @type vep_source: None | str | unicode
+        @param vep_sql_user: Ensembl Variant Effect Predictor (VEP) SQL database user name
+        @type vep_sql_user: None | str | unicode
+        @param vep_sql_pass: Ensembl Variant Effect Predictor (VEP) SQL database password
+        @type vep_sql_pass: None | str | unicode
+        @param vep_sql_host: Ensembl Variant Effect Predictor (VEP) SQL host
+        @type vep_sql_host: None | str | unicode
+        @param vep_sql_port: Ensembl Variant Effect Predictor (VEP) SQL TCP/IP port
+        @type vep_sql_port: None | str | unicode
         @param classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
-        @type classpath_gatk: str | unicode
+        @type classpath_gatk: None | str | unicode
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode
+        @type classpath_picard: None | str | unicode
         @param classpath_snpeff: snpEff tool Java Archive (JAR) class path directory
-        @type classpath_snpeff: str | unicode
+        @type classpath_snpeff: None | str | unicode
         @param classpath_vcf_filter: VCF.Filter tool Java Archive (JAR) class path directory
-        @type classpath_vcf_filter: str | unicode
+        @type classpath_vcf_filter: None | str | unicode
         @return:
         @rtype:
         """
@@ -1120,10 +1155,10 @@ class VariantCallingGATK(Analysis):
         else:
             self.vqsr_annotations_snp_list = vqsr_annotations_snp_list
 
-        self.vqsr_bad_lod_cutoff_indel = vqsr_bad_lod_cutoff_indel  # Can be None.
-        self.vqsr_bad_lod_cutoff_snp = vqsr_bad_lod_cutoff_snp  # Can be None.
-        self.vqsr_max_gaussians_pos_indel = vqsr_max_gaussians_pos_indel  # Can be None.
-        self.vqsr_max_gaussians_pos_snp = vqsr_max_gaussians_pos_snp  # Can be None.
+        self.vqsr_bad_lod_cutoff_indel = vqsr_bad_lod_cutoff_indel
+        self.vqsr_bad_lod_cutoff_snp = vqsr_bad_lod_cutoff_snp
+        self.vqsr_max_gaussians_pos_indel = vqsr_max_gaussians_pos_indel
+        self.vqsr_max_gaussians_pos_snp = vqsr_max_gaussians_pos_snp
 
         if exclude_intervals_list is None:
             self.exclude_intervals_list = list()
@@ -1175,40 +1210,21 @@ class VariantCallingGATK(Analysis):
         else:
             self.genome_annotation_gtf = genome_annotation_gtf
 
-        if directory_vep_cache is None:
-            self.directory_vep_cache = str()
-        else:
-            self.directory_vep_cache = directory_vep_cache
+        self.vep_assembly = vep_assembly
+        self.vep_cache = vep_cache
+        self.vep_fasta = vep_fasta
+        self.vep_plugin = vep_plugin
+        self.vep_source = vep_source
+        self.vep_species = vep_species
+        self.vep_sql_user = vep_sql_user
+        self.vep_sql_pass = vep_sql_pass
+        self.vep_sql_host = vep_sql_host
+        self.vep_sql_port = vep_sql_port
 
-        if directory_vep_plugins is None:
-            self.directory_vep_plugins = str()
-        else:
-            self.directory_vep_plugins = directory_vep_plugins
-
-        if directory_vep_src is None:
-            self.directory_vep_src = str()
-        else:
-            self.directory_vep_src = directory_vep_src
-
-        if classpath_gatk is None:
-            self.classpath_gatk = str()
-        else:
-            self.classpath_gatk = classpath_gatk
-
-        if classpath_picard is None:
-            self.classpath_picard = str()
-        else:
-            self.classpath_picard = classpath_picard
-
-        if classpath_snpeff is None:
-            self.classpath_snpeff = str()
-        else:
-            self.classpath_snpeff = classpath_snpeff
-
-        if classpath_vcf_filter is None:
-            self.classpath_vcf_filter = str()
-        else:
-            self.classpath_vcf_filter = classpath_vcf_filter
+        self.classpath_gatk = classpath_gatk
+        self.classpath_picard = classpath_picard
+        self.classpath_snpeff = classpath_snpeff
+        self.classpath_vcf_filter = classpath_vcf_filter
 
         self._comparison_dict = dict()
         """ @type _comparison_dict: dict[str, bsf.analyses.variant_calling.VariantCallingGATKComparison] """
@@ -1601,17 +1617,51 @@ class VariantCallingGATK(Analysis):
         if config_parser.has_option(section=section, option=option):
             self.genome_annotation_gtf = config_parser.get(section=section, option=option)
 
-        option = 'directory_vep_cache'
-        if config_parser.has_option(section=section, option=option):
-            self.directory_vep_cache = config_parser.get(section=section, option=option)
+        # VEP names
 
-        option = 'directory_vep_plugins'
+        option = 'vep_assembly'
         if config_parser.has_option(section=section, option=option):
-            self.directory_vep_plugins = config_parser.get(section=section, option=option)
+            self.vep_assembly = config_parser.get(section=section, option=option)
 
-        option = 'directory_vep_src'
+        option = 'vep_species'
         if config_parser.has_option(section=section, option=option):
-            self.directory_vep_src = config_parser.get(section=section, option=option)
+            self.vep_species = config_parser.get(section=section, option=option)
+
+        # VEP directories
+
+        option = 'vep_cache'
+        if config_parser.has_option(section=section, option=option):
+            self.vep_cache = config_parser.get(section=section, option=option)
+
+        option = 'vep_fasta'
+        if config_parser.has_option(section=section, option=option):
+            self.vep_fasta = config_parser.get(section=section, option=option)
+
+        option = 'vep_plugin'
+        if config_parser.has_option(section=section, option=option):
+            self.vep_plugin = config_parser.get(section=section, option=option)
+
+        option = 'vep_source'
+        if config_parser.has_option(section=section, option=option):
+            self.vep_source = config_parser.get(section=section, option=option)
+
+        # VEP SQL database
+
+        option = 'vep_sql_user'
+        if config_parser.has_option(section=section, option=option):
+            self.vep_sql_user = config_parser.get(section=section, option=option)
+
+        option = 'vep_sql_pass'
+        if config_parser.has_option(section=section, option=option):
+            self.vep_sql_pass = config_parser.get(section=section, option=option)
+
+        option = 'vep_sql_host'
+        if config_parser.has_option(section=section, option=option):
+            self.vep_sql_host = config_parser.get(section=section, option=option)
+
+        option = 'vep_sql_port'
+        if config_parser.has_option(section=section, option=option):
+            self.vep_sql_port = config_parser.get(section=section, option=option)
 
         # Get the Genome Analysis Tool Kit (GATK) Java Archive (JAR) class path directory.
 
@@ -2721,13 +2771,13 @@ class VariantCallingGATK(Analysis):
                     sub_command=Command()))
             """ @type _runnable_step: RunnableStep """
             # self.set_runnable_step_configuration(runnable_step=_runnable_step)
-            _runnable_step.arguments.append(os.path.join(self.directory_vep_src, 'vep'))
+            _runnable_step.arguments.append(os.path.join(self.vep_source, 'vep'))
             _sub_command = _runnable_step.sub_command
             # Basic options
             _sub_command.add_switch_long(key='everything')
             # Input options
-            _sub_command.add_option_long(key='species', value='homo_sapiens')  # TODO: Has to be configurable
-            _sub_command.add_option_long(key='assembly', value='GRCh37')  # TODO: Has to be configurable
+            _sub_command.add_option_long(key='species', value=self.vep_species)
+            _sub_command.add_option_long(key='assembly', value=self.vep_assembly)
             _sub_command.add_option_long(key='input_file', value=vcf_file_path)
             _sub_command.add_option_long(key='format', value='vcf')  # Input file format
             _sub_command.add_option_long(key='output_file', value=file_path_annotate.vep_complete_raw_vcf)
@@ -2735,8 +2785,14 @@ class VariantCallingGATK(Analysis):
             _sub_command.add_option_long(key='stats_file', value=file_path_annotate.vep_statistics)
             # Cache options
             _sub_command.add_switch_long(key='cache')
-            _sub_command.add_option_long(key='dir_cache', value=self.directory_vep_cache)
-            _sub_command.add_option_long(key='dir_plugins', value=self.directory_vep_plugins)
+            if False:
+                # FIXME: For Ensembl VEP 91.
+                _sub_command.add_switch_long(key='offline')
+            _sub_command.add_option_long(key='dir_cache', value=self.vep_cache)
+            _sub_command.add_option_long(key='dir_plugins', value=self.vep_plugin)
+            if False:
+                # FIXME: For Ensembl VEP 91.
+                _sub_command.add_option_long(key='fasta_dir', value=self.vep_fasta)
             # Other annotation sources
             _sub_command.add_option_long(  # TODO: Has to be configurable
                 key='plugin',
@@ -2756,7 +2812,14 @@ class VariantCallingGATK(Analysis):
             _sub_command.add_switch_long(key='allow_non_variant')
             _sub_command.add_switch_long(key='flag_pick_allele_gene')
             # Database options
-            _sub_command.add_option_long(key='port', value='3337')
+            if self.vep_sql_user:
+                _sub_command.add_option_long(key='user', value=self.vep_sql_user)
+            if self.vep_sql_pass:
+                _sub_command.add_option_long(key='password', value=self.vep_sql_pass)
+            if self.vep_sql_host:
+                _sub_command.add_option_long(key='host', value=self.vep_sql_host)
+            if self.vep_sql_port:
+                _sub_command.add_option_long(key='port', value=self.vep_sql_port)
             # Undocumented options
             _sub_command.add_switch_long(key='no_progress')
             _sub_command.add_option_long(
@@ -2787,7 +2850,7 @@ class VariantCallingGATK(Analysis):
                     sub_command=Command()))
             """ @type _runnable_step: RunnableStep """
             # self.set_runnable_step_configuration(runnable_step=_runnable_step)
-            _runnable_step.arguments.append(os.path.join(self.directory_vep_src, 'filter_vep'))
+            _runnable_step.arguments.append(os.path.join(self.vep_source, 'filter_vep'))
             _sub_command = _runnable_step.sub_command
             _sub_command.add_option_long(key='input_file', value=file_path_annotate.vep_complete_raw_vcf_bgz)
             _sub_command.add_option_long(key='format', value='vcf')
@@ -2875,26 +2938,68 @@ class VariantCallingGATK(Analysis):
         if not self.snpeff_genome_version:
             raise Exception("A 'VariantCallingGATK' analysis requires a 'snpeff_genome_version' configuration option.")
 
-        if not self.directory_vep_cache:
-            self.directory_vep_cache = default.directory_vep_cache
+        if not self.vep_assembly:
+            self.vep_assembly = EnsemblVEP.get_name_assembly(genome_version=self.genome_version)
+            if not self.vep_assembly:
+                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_assembly' configuration option.")
 
-        if not self.directory_vep_plugins:
-            self.directory_vep_plugins = default.directory_vep_plugins
+        if not self.vep_cache:
+            self.vep_cache = EnsemblVEP.get_directory_cache(genome_version=self.genome_version)
+            if not self.vep_cache:
+                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_cache' configuration option.")
 
-        if not self.directory_vep_src:
-            self.directory_vep_src = default.directory_vep_src
+        if not self.vep_fasta:
+            self.vep_fasta = EnsemblVEP.get_directory_fasta(genome_version=self.genome_version)
+            if not self.vep_fasta:
+                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_fasta' configuration option.")
+
+        if not self.vep_plugin:
+            self.vep_plugin = EnsemblVEP.get_directory_plugin(genome_version=self.genome_version)
+            if not self.vep_plugin:
+                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_plugin' configuration option.")
+
+        if not self.vep_source:
+            self.vep_source = EnsemblVEP.get_directory_source(genome_version=self.genome_version)
+            if not self.vep_source:
+                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_source' configuration option.")
+
+        if not self.vep_species:
+            self.vep_species = EnsemblVEP.get_name_species(genome_version=self.genome_version)
+            if not self.vep_species:
+                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_species' configuration option.")
+
+        if not self.vep_sql_user:
+            self.vep_sql_user = EnsemblVEP.get_sql_user(genome_version=self.genome_version)
+
+        if not self.vep_sql_pass:
+            self.vep_sql_pass = EnsemblVEP.get_sql_pass(genome_version=self.genome_version)
+
+        if not self.vep_sql_host:
+            self.vep_sql_host = EnsemblVEP.get_sql_host(genome_version=self.genome_version)
+
+        if not self.vep_sql_port:
+            self.vep_sql_port = EnsemblVEP.get_sql_port(genome_version=self.genome_version)
 
         if not self.classpath_gatk:
             self.classpath_gatk = default.classpath_gatk
+            if not self.classpath_gatk:
+                raise Exception("A 'VariantCallingGATK' analysis requires a 'classpath_gatk' configuration option.")
 
         if not self.classpath_picard:
             self.classpath_picard = default.classpath_picard
+            if not self.classpath_picard:
+                raise Exception("A 'VariantCallingGATK' analysis requires a 'classpath_picard' configuration option.")
 
         if not self.classpath_snpeff:
             self.classpath_snpeff = default.classpath_snpeff
+            if not self.classpath_snpeff:
+                raise Exception("A 'VariantCallingGATK' analysis requires a 'classpath_snpeff' configuration option.")
 
         if not self.classpath_vcf_filter:
             self.classpath_vcf_filter = default.classpath_vcf_filter
+            if not self.classpath_vcf_filter:
+                raise Exception("A 'VariantCallingGATK' analysis requires a "
+                                "'classpath_vcf_filter' configuration option.")
 
         # Check for absolute paths and adjust if required before checking for existence.
 
