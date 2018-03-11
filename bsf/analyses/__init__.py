@@ -606,7 +606,7 @@ class ChIPSeq(Analysis):
         if not self.genome_version:
             raise Exception('A ChIPSeq analysis requires a genome_version configuration option.')
 
-        self.comparison_path = Default.get_absolute_path(file_path=self.comparison_path)
+        self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
 
         run_read_comparisons()
 
@@ -619,7 +619,7 @@ class ChIPSeq(Analysis):
                 genome_index='bowtie2')
 
         if self.genome_sizes_path:
-            self.genome_sizes_path = Default.get_absolute_path(file_path=self.genome_sizes_path)
+            self.genome_sizes_path = self.configuration.get_absolute_path(file_path=self.genome_sizes_path)
 
         # self._create_bwa_jobs()
         self._create_bowtie2_jobs()
@@ -2210,7 +2210,7 @@ class RunFastQC(Analysis):
 
         super(RunFastQC, self).run()
 
-        self.comparison_path = Default.get_absolute_path(file_path=self.comparison_path)
+        self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
 
         run_read_comparisons()
 

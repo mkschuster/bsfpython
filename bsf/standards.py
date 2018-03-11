@@ -66,6 +66,37 @@ class Configuration(object):
         return Configuration.global_configuration
 
     @staticmethod
+    def get_absolute_path(file_path=None, default_path=None):
+        """Return an absolute file path.
+
+        Expand an eventual user part (i.e. on UNIX ~ or ~user) and
+        expand any environment variables (i.e. on UNIX ${NAME} or $NAME).
+        Check if an absolute path has been provided, if not,
+        automatically prepend default directory paths,
+        which again has user part and environment variables expanded.
+        Finally, normalise the file path.
+
+        @param file_path: File path
+        @type file_path: str | unicode
+        @param default_path: Default absolute path
+        @type default_path: str | unicode
+        @return: Absolute path
+        @rtype: None | str | unicode
+        """
+        if file_path is None:
+            return
+
+        absolute_path = os.path.expanduser(path=file_path)
+        absolute_path = os.path.expandvars(path=absolute_path)
+
+        if default_path and not os.path.isabs(absolute_path):
+            default_path = os.path.expanduser(path=default_path)
+            default_path = os.path.expandvars(path=default_path)
+            absolute_path = os.path.join(default_path, absolute_path)
+
+        return os.path.normpath(absolute_path)
+
+    @staticmethod
     def section_from_instance(instance):
         """Get a configuration section Python C{str} composed of the Python module and Python class name.
 
@@ -97,7 +128,7 @@ class Configuration(object):
         @raise Exception: Configuration file path does not exist
         """
         # Expand each file_path for user and variable names.
-        temporary_list = map(lambda x: Default.get_absolute_path(file_path=x), file_path_list)
+        temporary_list = map(lambda x: cls.get_absolute_path(file_path=x), file_path_list)
         """ @type temporary_list: list[str | unicode] """
 
         file_path_list = list()
@@ -186,8 +217,7 @@ class Configuration(object):
         @return: Expanded directory
         @rtype: None | str | unicode
         """
-
-        return Default.get_absolute_path(file_path=self.config_parser.get(section=section, option=option))
+        return self.get_absolute_path(file_path=self.config_parser.get(section=section, option=option))
 
 
 class Default(object):
@@ -196,8 +226,6 @@ class Default(object):
     Attributes:
     @cvar global_default: Global C{bsf.standards.Default}
     @type global_default: bsf.standards.Default
-    @cvar global_file_path: Global configuration file
-    @type global_file_path: str | unicode
     @ivar classpath_gatk: Genome Analysis Toolkit Java Archive (JAR) class path directory
     @type classpath_gatk: str | unicode
     @ivar classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
@@ -261,42 +289,6 @@ class Default(object):
     """
 
     global_default = None
-
-    # FIXME: This should be phased out in favour of the Configuration.global_file_path class variable.
-    global_file_path = '~/.bsfpython.ini'
-
-    @staticmethod
-    def get_absolute_path(file_path=None, default_path=None):
-        """Return an absolute file path.
-
-        Expand an eventual user part (i.e. on UNIX ~ or ~user) and
-        expand any environment variables (i.e. on UNIX ${NAME} or $NAME).
-        Check if an absolute path has been provided, if not,
-        automatically prepend default directory paths,
-        which again has user part and environment variables expanded.
-        Finally, normalise the file path.
-
-        @param file_path: File path
-        @type file_path: str | unicode
-        @param default_path: Default absolute path
-        @type default_path: str | unicode
-        @return: Absolute path
-        @rtype: None | str | unicode
-        """
-        # FIXME: This method should be moved into the Configuration class.
-
-        if file_path is None:
-            return
-
-        absolute_path = os.path.expanduser(path=file_path)
-        absolute_path = os.path.expandvars(path=absolute_path)
-
-        if default_path and not os.path.isabs(absolute_path):
-            default_path = os.path.expanduser(path=default_path)
-            default_path = os.path.expandvars(path=default_path)
-            absolute_path = os.path.join(default_path, absolute_path)
-
-        return os.path.normpath(absolute_path)
 
     @staticmethod
     def get_global_default():

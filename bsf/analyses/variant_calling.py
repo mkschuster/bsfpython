@@ -40,7 +40,7 @@ from bsf.annotation import AnnotationSheet
 from bsf.executables import BWA
 from bsf.process import Command, Executable, RunnableStep, RunnableStepJava, RunnableStepPicard, RunnableStepLink, \
     RunnableStepMove
-from bsf.standards import Default, EnsemblVEP
+from bsf.standards import Configuration, Default, EnsemblVEP
 
 
 class RunnableStepGATK(RunnableStepJava):
@@ -646,7 +646,7 @@ class VariantCallingGATKTargetIntervals(object):
                                 format(sample.name, target_interval_list))
             target_intervals.targets_path = target_interval_list[0]
             if target_intervals.targets_path and not os.path.isabs(target_intervals.targets_path):
-                target_intervals.targets_path = Default.get_absolute_path(
+                target_intervals.targets_path = Configuration.get_absolute_path(
                     file_path=target_intervals.targets_path,
                     default_path=Default.absolute_intervals())
 
@@ -658,7 +658,7 @@ class VariantCallingGATKTargetIntervals(object):
                                 format(sample.name, probe_interval_list))
             target_intervals.probes_path = probe_interval_list[0]
             if target_intervals.probes_path and not os.path.isabs(target_intervals.probes_path):
-                target_intervals.probes_path = Default.get_absolute_path(
+                target_intervals.probes_path = Configuration.get_absolute_path(
                     file_path=target_intervals.probes_path,
                     default_path=Default.absolute_intervals())
 
@@ -1723,7 +1723,7 @@ class VariantCallingGATK(Analysis):
 
             if self.comparison_path:
                 # A comparison file path has been provided.
-                self.comparison_path = Default.get_absolute_path(file_path=self.comparison_path)
+                self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
 
                 annotation_sheet = AnnotationSheet.from_file_path(
                     file_path=self.comparison_path,
@@ -3003,7 +3003,7 @@ class VariantCallingGATK(Analysis):
 
         # Check for absolute paths and adjust if required before checking for existence.
 
-        self.bwa_genome_db = Default.get_absolute_path(
+        self.bwa_genome_db = self.configuration.get_absolute_path(
             file_path=self.bwa_genome_db,
             default_path=self.get_gatk_bundle_path)
         if not os.path.exists(path=self.bwa_genome_db):
@@ -3020,7 +3020,9 @@ class VariantCallingGATK(Analysis):
         temporary_list = list()
         """ @type temporary_list: list[str | unicode] """
         for file_path in self.accessory_cohort_gvcfs:
-            file_path = Default.get_absolute_path(file_path=file_path, default_path=Default.absolute_projects())
+            file_path = self.configuration.get_absolute_path(
+                file_path=file_path,
+                default_path=Default.absolute_projects())
             if os.path.exists(file_path):
                 temporary_list.append(file_path)
             else:
@@ -3030,7 +3032,9 @@ class VariantCallingGATK(Analysis):
 
         for key in self.annotation_resources_dict.keys():
             file_path, annotation_list = self.annotation_resources_dict[key]
-            file_path = Default.get_absolute_path(file_path=file_path, default_path=self.get_gatk_bundle_path)
+            file_path = self.configuration.get_absolute_path(
+                file_path=file_path,
+                default_path=self.get_gatk_bundle_path)
             if os.path.exists(file_path):
                 self.annotation_resources_dict[key] = file_path, annotation_list
             else:
@@ -3038,7 +3042,7 @@ class VariantCallingGATK(Analysis):
                                 format(file_path, key))
 
         if self.known_sites_discovery:
-            self.known_sites_discovery = Default.get_absolute_path(
+            self.known_sites_discovery = self.configuration.get_absolute_path(
                 file_path=self.known_sites_discovery,
                 default_path=self.get_gatk_bundle_path)
             if not os.path.exists(self.known_sites_discovery):
@@ -3048,7 +3052,9 @@ class VariantCallingGATK(Analysis):
         temporary_list = list()
         """ @type temporary_list: list[str | unicode] """
         for file_path in self.known_sites_realignment:
-            file_path = Default.get_absolute_path(file_path=file_path, default_path=self.get_gatk_bundle_path)
+            file_path = self.configuration.get_absolute_path(
+                file_path=file_path,
+                default_path=self.get_gatk_bundle_path)
             if os.path.exists(file_path):
                 temporary_list.append(file_path)
             else:
@@ -3059,7 +3065,9 @@ class VariantCallingGATK(Analysis):
         temporary_list = list()
         """ @type temporary_list: list[str | unicode] """
         for file_path in self.known_sites_recalibration:
-            file_path = Default.get_absolute_path(file_path=file_path, default_path=self.get_gatk_bundle_path)
+            file_path = self.configuration.get_absolute_path(
+                file_path=file_path,
+                default_path=self.get_gatk_bundle_path)
             if os.path.exists(file_path):
                 temporary_list.append(file_path)
             else:
@@ -3069,7 +3077,7 @@ class VariantCallingGATK(Analysis):
 
         for key in self.vqsr_resources_indel_dict:
             resource_dict = self.vqsr_resources_indel_dict[key]
-            resource_dict['file_path'] = Default.get_absolute_path(
+            resource_dict['file_path'] = self.configuration.get_absolute_path(
                 file_path=resource_dict['file_path'],
                 default_path=self.get_gatk_bundle_path)
             if not os.path.exists(resource_dict['file_path']):
@@ -3078,7 +3086,7 @@ class VariantCallingGATK(Analysis):
 
         for key in self.vqsr_resources_snp_dict:
             resource_dict = self.vqsr_resources_snp_dict[key]
-            resource_dict['file_path'] = Default.get_absolute_path(
+            resource_dict['file_path'] = self.configuration.get_absolute_path(
                 file_path=resource_dict['file_path'],
                 default_path=self.get_gatk_bundle_path)
             if not os.path.exists(resource_dict['file_path']):
@@ -3122,7 +3130,7 @@ class VariantCallingGATK(Analysis):
         # Genome Annotation GTF file path, defaults to the interval files directory.
 
         if self.genome_annotation_gtf and not os.path.isabs(self.genome_annotation_gtf):
-            self.genome_annotation_gtf = Default.get_absolute_path(
+            self.genome_annotation_gtf = self.configuration.get_absolute_path(
                 file_path=self.genome_annotation_gtf,
                 default_path=Default.absolute_intervals())
 

@@ -287,7 +287,7 @@ class PicardIlluminaRunFolder(Analysis):
         if not self.run_directory:
             raise Exception('An Illumina run directory or file path has not been defined.')
 
-        self.run_directory = Default.get_absolute_path(
+        self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
             default_path=Default.absolute_illumina_run())
 
@@ -310,7 +310,7 @@ class PicardIlluminaRunFolder(Analysis):
         # automatically prepend the Illumina Run Folder path.
 
         if self.intensity_directory:
-            self.intensity_directory = Default.get_absolute_path(
+            self.intensity_directory = self.configuration.get_absolute_path(
                 file_path=self.intensity_directory,
                 default_path=self.run_directory)
         else:
@@ -329,7 +329,7 @@ class PicardIlluminaRunFolder(Analysis):
         # automatically prepend the Intensities directory path.
 
         if self.basecalls_directory:
-            self.basecalls_directory = Default.get_absolute_path(
+            self.basecalls_directory = self.configuration.get_absolute_path(
                 file_path=self.basecalls_directory,
                 default_path=self.intensity_directory)
         else:
@@ -746,7 +746,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         default = Default.get_global_default()
 
-        self.samples_directory = Default.get_absolute_path(
+        self.samples_directory = self.configuration.get_absolute_path(
             file_path=self.samples_directory,
             default_path=Default.absolute_samples())
 
@@ -773,7 +773,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # The library annotation sheet is deliberately not passed in via sas_file,
         # as the Analysis.run() method reads that option into a BSF Collection object.
 
-        self.library_path = Default.get_absolute_path(file_path=self.library_path)
+        self.library_path = self.configuration.get_absolute_path(file_path=self.library_path)
 
         if not self.library_path:
             self.library_path = '_'.join((self.project_name, 'libraries.csv'))

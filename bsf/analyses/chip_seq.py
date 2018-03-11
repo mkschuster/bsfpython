@@ -1335,7 +1335,7 @@ class ChIPSeq(Analysis):
         if not self.genome_version:
             raise Exception('A ChIPSeq analysis requires a genome_version configuration option.')
 
-        self.comparison_path = Default.get_absolute_path(file_path=self.comparison_path)
+        self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
 
         # Define the reference genome FASTA file path.
         # If it does not exist, construct it from defaults.
@@ -1347,7 +1347,7 @@ class ChIPSeq(Analysis):
 
         # TODO: for the genome sizes path, the *.fa.fai file could be used.
         if self.genome_sizes_path:
-            self.genome_sizes_path = Default.get_absolute_path(file_path=self.genome_sizes_path)
+            self.genome_sizes_path = self.configuration.get_absolute_path(file_path=self.genome_sizes_path)
 
         if not self.classpath_picard:
             self.classpath_picard = default.classpath_picard

@@ -34,7 +34,7 @@ import warnings
 import weakref
 
 from bsf.annotation import AnnotationSheet
-from bsf.standards import Default
+from bsf.standards import Configuration
 
 
 class NextGenerationBase(object):
@@ -1836,8 +1836,9 @@ class Collection(NextGenerationBase):
             is_new_file_path = False
             if _key in row_dict and row_dict[_key]:
                 new_reads.file_path = row_dict[_key]
-                new_reads.file_path = Default.get_absolute_path(file_path=new_reads.file_path,
-                                                                default_path=collection.file_path)
+                new_reads.file_path = Configuration.get_absolute_path(
+                    file_path=new_reads.file_path,
+                    default_path=collection.file_path)
                 # Check for a non-matching, i.e. new "file_path" instance variable.
                 if new_reads.file_path != reads.file_path:
                     is_new_file_path = True
@@ -2198,7 +2199,7 @@ class Collection(NextGenerationBase):
         else:
             return self.add_processed_run_folder(
                 prf=ProcessedRunFolder.from_file_path(
-                    file_path=Default.get_absolute_path(file_path=file_path, default_path=self.file_path),
+                    file_path=Configuration.get_absolute_path(file_path=file_path, default_path=self.file_path),
                     file_type=file_type))
 
     def get_all_processed_run_folders(self):

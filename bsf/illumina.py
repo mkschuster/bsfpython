@@ -36,7 +36,7 @@ import xml.etree.ElementTree
 import dateutil.tz
 
 from bsf.annotation import AnnotationSheet
-from bsf.standards import Default
+from bsf.standards import Configuration, Default
 
 
 class Adaptors(object):
@@ -1015,7 +1015,6 @@ class ImageAnalysis(AnalysisConfiguration):
 
     Attributes:
     """
-
     pass
 
 
@@ -1025,7 +1024,6 @@ class BaseCallAnalysis(AnalysisConfiguration):
 
     Attributes:
     """
-
     pass
 
 
@@ -1070,14 +1068,14 @@ class RunFolder(object):
         @rtype: str | unicode | None
         """
         # Check the Illumina Run Folder directory.
-        file_path = Default.get_absolute_path(
+        file_path = Configuration.get_absolute_path(
             file_path=name,
             default_path=Default.absolute_illumina_run())
         if os.path.exists(file_path):
             return file_path
 
         # Check the Illumina Sequence Analysis Viewer directory.
-        file_path = Default.get_absolute_path(
+        file_path = Configuration.get_absolute_path(
             file_path=name,
             default_path=Default.absolute_illumina_sav())
         if os.path.exists(file_path):
@@ -1117,7 +1115,7 @@ class RunFolder(object):
 
         components = file_name.split('_')
 
-        irf = cls(
+        return cls(
             file_path=file_path,
             file_type='Illumina',
             name='_'.join(components),
@@ -1131,8 +1129,6 @@ class RunFolder(object):
                 file_path, 'Data', 'Intensities', 'config.xml')),
             base_call_analysis=BaseCallAnalysis.from_file_path(file_path=os.path.join(
                 file_path, 'Data', 'Intensities', 'BaseCalls', 'config.xml')))
-
-        return irf
 
     def __init__(
             self,

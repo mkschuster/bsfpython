@@ -773,7 +773,7 @@ class Tuxedo(Analysis):
                     self._comparison_dict['global'] = _sample_group_list
                 else:
                     # A comparison file path was provided.
-                    self.comparison_path = Default.get_absolute_path(file_path=self.comparison_path)
+                    self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
                     # Read and process the comparison file, which includes adding only those Sample objects,
                     # which are referenced in a comparison.
                     annotation_sheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
@@ -945,7 +945,7 @@ class Tuxedo(Analysis):
         if self.transcriptome_index_path:
             # Check if the transcriptome_index_path is absolute and if not,
             # prepend the default transcriptomes directory.
-            self.transcriptome_index_path = Default.get_absolute_path(
+            self.transcriptome_index_path = self.configuration.get_absolute_path(
                 file_path=self.transcriptome_index_path,
                 default_path=Default.absolute_transcriptome_resource(transcriptome_version=''))
 
@@ -976,7 +976,7 @@ class Tuxedo(Analysis):
         elif self.transcriptome_gtf_path:
             # Check if transcriptome_gtf_path is absolute and if not,
             # prepend the default transcriptomes directory.
-            self.transcriptome_gtf_path = Default.get_absolute_path(
+            self.transcriptome_gtf_path = self.configuration.get_absolute_path(
                 file_path=self.transcriptome_gtf_path,
                 default_path=Default.absolute_transcriptome_resource(transcriptome_version=self.transcriptome_version))
 
@@ -3193,7 +3193,7 @@ class DESeq(Analysis):
 
         # Read the designs (comparison) file.
 
-        self.comparison_path = Default.get_absolute_path(file_path=self.comparison_path)
+        self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
 
         design_sheet = AnnotationSheet.from_file_path(
             file_path=self.comparison_path,
@@ -3204,7 +3204,7 @@ class DESeq(Analysis):
 
         # Read the contrasts file.
 
-        self.contrast_path = Default.get_absolute_path(file_path=self.contrast_path)
+        self.contrast_path = self.configuration.get_absolute_path(file_path=self.contrast_path)
 
         contrast_sheet = AnnotationSheet.from_file_path(
             file_path=self.contrast_path,

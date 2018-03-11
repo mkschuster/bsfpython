@@ -784,7 +784,7 @@ class IlluminaToBam(Analysis):
         if not self.run_directory:
             raise Exception('An Illumina run directory or file path has not been defined.')
 
-        self.run_directory = Default.get_absolute_path(
+        self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
             default_path=Default.absolute_illumina_run())
 
@@ -807,7 +807,7 @@ class IlluminaToBam(Analysis):
         # automatically prepend the Illumina Run Folder path.
 
         if self.intensity_directory:
-            intensity_directory = Default.get_absolute_path(
+            intensity_directory = self.configuration.get_absolute_path(
                 file_path=self.intensity_directory,
                 default_path=self.run_directory)
         else:
@@ -826,7 +826,7 @@ class IlluminaToBam(Analysis):
         # automatically prepend the Intensities directory path.
 
         if self.basecalls_directory:
-            basecalls_directory = Default.get_absolute_path(
+            basecalls_directory = self.configuration.get_absolute_path(
                 file_path=self.basecalls_directory,
                 default_path=intensity_directory)
         else:
@@ -865,7 +865,7 @@ class IlluminaToBam(Analysis):
         # An absolute path cannot be prepended.
 
         if self.sequences_directory:
-            self.sequences_directory = Default.get_absolute_path(
+            self.sequences_directory = self.configuration.get_absolute_path(
                 file_path=self.sequences_directory)
         else:
             self.sequences_directory = Default.absolute_sequences()
@@ -1490,11 +1490,11 @@ class BamIndexDecoder(Analysis):
         if not self.sequences_directory:
             self.sequences_directory = self.project_name
 
-        self.sequences_directory = Default.get_absolute_path(
+        self.sequences_directory = self.configuration.get_absolute_path(
             file_path=self.sequences_directory,
             default_path=Default.absolute_sequences())
 
-        self.samples_directory = Default.get_absolute_path(
+        self.samples_directory = self.configuration.get_absolute_path(
             file_path=self.samples_directory,
             default_path=Default.absolute_samples())
 
@@ -1510,7 +1510,7 @@ class BamIndexDecoder(Analysis):
         # The library annotation sheet is deliberately not passed in via sas_file,
         # as the Analysis.run() method reads that option into a BSF Collection object.
 
-        self.library_path = Default.get_absolute_path(file_path=self.library_path)
+        self.library_path = self.configuration.get_absolute_path(file_path=self.library_path)
 
         if not self.library_path:
             self.library_path = '_'.join((self.project_name, 'libraries.csv'))

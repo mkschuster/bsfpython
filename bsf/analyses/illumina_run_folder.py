@@ -320,7 +320,7 @@ class IlluminaRunFolderArchive(Analysis):
         if not self.run_directory:
             raise Exception('An Illumina run directory or file path has not been defined.')
 
-        self.run_directory = Default.get_absolute_path(
+        self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
             default_path=Default.absolute_illumina_run())
 
@@ -345,7 +345,7 @@ class IlluminaRunFolderArchive(Analysis):
             # If a relative path to an archive directory has been explicitly defined,
             # prepend it with the parent directory of the Illumina Run Folder (run_folder)
             # to have the run and archive directories in the same directory.
-            self.archive_directory = Default.get_absolute_path(
+            self.archive_directory = self.configuration.get_absolute_path(
                 file_path=self.archive_directory,
                 default_path=os.path.dirname(self.run_directory))
 

@@ -103,7 +103,7 @@ class Analysis(object):
     def from_config_file_path(cls, config_path):
         """Create a new C{bsf.Analysis} from a UNIX-style configuration file path.
 
-        The configuration file on C{bsf.standards.Default.global_file_path} is read as default,
+        The configuration file in C{bsf.standards.Configuration.global_file_path} is read as default,
         before the project-specific one gets read, if it is not the same file.
 
         @param config_path: UNIX-style configuration file path
@@ -113,7 +113,8 @@ class Analysis(object):
         """
 
         return cls.from_configuration(
-            configuration=Configuration.from_file_path_list(file_path_list=[Default.global_file_path, config_path]))
+            configuration=Configuration.from_file_path_list(
+                file_path_list=[Configuration.global_file_path, config_path]))
 
     @classmethod
     def from_configuration(cls, configuration):
@@ -640,15 +641,15 @@ class Analysis(object):
         # Check if an absolute path has been provided, if not,
         # automatically prepend standard directory paths.
 
-        self.cache_directory = Default.get_absolute_path(
+        self.cache_directory = self.configuration.get_absolute_path(
             file_path=self.cache_directory,
             default_path=Default.absolute_cache())
 
-        self.input_directory = Default.get_absolute_path(
+        self.input_directory = self.configuration.get_absolute_path(
             file_path=self.input_directory,
             default_path=Default.absolute_samples())
 
-        self.output_directory = Default.get_absolute_path(
+        self.output_directory = self.configuration.get_absolute_path(
             file_path=self.output_directory,
             default_path=Default.absolute_projects())
 
@@ -679,7 +680,7 @@ class Analysis(object):
 
         if self.sas_file:
             # Populate a Collection from a SampleAnnotationSheet.
-            self.sas_file = Default.get_absolute_path(file_path=self.sas_file)
+            self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
 
             # NOTE: Do no longer search for configuration files and sample annotation sheets in the project directory.
             # if not os.path.isabs(self.sas_file) and not os.path.exists(self.sas_file):
@@ -2056,11 +2057,11 @@ class Runnable(object):
         """
 
         if self.cache_directory:
-            return Default.get_absolute_path(
+            return Configuration.get_absolute_path(
                 file_path=self.get_relative_cache_directory_path,
                 default_path=self.cache_directory)
         else:
-            return Default.get_absolute_path(
+            return Configuration.get_absolute_path(
                 file_path=self.get_relative_cache_directory_path,
                 default_path=self.working_directory)
 

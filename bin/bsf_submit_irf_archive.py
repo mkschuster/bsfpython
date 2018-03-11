@@ -28,7 +28,7 @@
 import argparse
 
 from bsf.analyses.illumina_run_folder import IlluminaRunFolderArchive
-from bsf.standards import Default
+from bsf.standards import Configuration
 
 argument_parser = argparse.ArgumentParser(
     description='IlluminaRunFolderArchive Analysis driver script.')
@@ -47,7 +47,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=Default.global_file_path,
+    default=Configuration.global_file_path,
     help='configuration (*.ini) file path',
     required=False,
     type=str)

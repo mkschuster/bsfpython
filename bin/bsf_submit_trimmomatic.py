@@ -28,7 +28,7 @@
 import argparse
 
 from bsf.analyses.trimmomatic import Trimmomatic
-from bsf.standards import Default
+from bsf.standards import Configuration
 
 argument_parser = argparse.ArgumentParser(
     description='Trimmomatic Analysis driver script.')
@@ -47,7 +47,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=Default.global_file_path,
+    default=Configuration.global_file_path,
     help='configuration (*.ini) file path',
     required=False,
     type=str)
@@ -71,7 +71,7 @@ name_space = argument_parser.parse_args()
 # This analysis requires either a non-default --configuration argument or a
 # --project-name and --sas-file argument.
 
-if name_space.configuration == Default.global_file_path:
+if name_space.configuration == Configuration.global_file_path:
     if name_space.project_name is None:
         raise Exception("argument --project-name is required if --configuration is not set")
     if name_space.sas_file is None:

@@ -28,7 +28,7 @@
 import argparse
 
 from bsf.analyses.picard import CollectHiSeqXPfFailMetrics
-from bsf.standards import Default
+from bsf.standards import Configuration
 
 argument_parser = argparse.ArgumentParser(
     description='Picard CollectHiSeqXPfFailMetrics Analysis driver script.')
@@ -47,7 +47,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=Default.global_file_path,
+    default=Configuration.global_file_path,
     help='configuration (*.ini) file path',
     required=False,
     type=str)
@@ -68,7 +68,7 @@ name_space = argument_parser.parse_args()
 # This analysis requires either a non-default --configuration argument or a
 # --irf argument.
 
-if name_space.configuration == Default.global_file_path:
+if name_space.configuration == Configuration.global_file_path:
     if name_space.irf is None:
         raise Exception("argument --irf is required if --configuration is not set")
 

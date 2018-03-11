@@ -32,7 +32,7 @@ import os
 import re
 
 from bsf.ngs import ProcessedRunFolder
-from bsf.standards import Default
+from bsf.standards import Configuration, Default
 
 parser = argparse.ArgumentParser(description='List projects and samples.')
 
@@ -64,7 +64,9 @@ csv_writer.writeheader()
 
 # Assemble the input directory.
 
-input_directory = Default.get_absolute_path(file_path=args.input_directory, default_path=Default.absolute_sequences())
+input_directory = Configuration.get_absolute_path(
+    file_path=args.input_directory,
+    default_path=Default.absolute_sequences())
 
 prf = ProcessedRunFolder.from_file_path(file_path=input_directory, file_type='Automatic')
 
