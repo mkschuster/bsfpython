@@ -193,13 +193,13 @@ class Reads(NextGenerationBase):
 
     Attributes:
     @ivar barcode: Barcode used for sample multiplexing
-    @type barcode: str
+    @type barcode: str | unicode
     @ivar lane: Lane number
-    @type lane: str
+    @type lane: str | unicode
     @ivar read: Read number (e.g. I{R1}, I{R2}, ...)
-    @type read: str
+    @type read: str | unicode
     @ivar chunk: Chunk number (e.g. I{001}, I{002}, ...)
-    @type chunk: str
+    @type chunk: str | unicode
     @ivar weak_reference_paired_reads: C{weakref.ReferenceType} pointing at a C{bsf.ngs.PairedReads} object
     @type weak_reference_paired_reads: weakref.ReferenceType
     """
@@ -268,13 +268,13 @@ class Reads(NextGenerationBase):
             Python C{list} of Python C{str} value data
         @type annotation_dict: dict[str, list[str]] | None
         @param barcode: Barcode used for sample multiplexing
-        @type barcode: str
+        @type barcode: str | unicode
         @param lane: Lane number
-        @type lane: str
+        @type lane: str | unicode
         @param read: Read number (e.g. I{R1}, I{R2}, ...)
-        @type read: str
+        @type read: str | unicode
         @param chunk: Chunk number (e.g. I{001}, I{002}, ...)
-        @type chunk:str
+        @type chunk:str | unicode
         @param weak_reference_paired_reads: C{weakref.ReferenceType} pointing at a C{bsf.ngs.PairedReads} object
         @type weak_reference_paired_reads: weakref.ReferenceType | None
         @return:
@@ -1327,11 +1327,11 @@ class ProcessedRunFolder(NextGenerationBase):
     @cvar default_name: Default key
     @type default_name: str
     @ivar prefix: Prefix
-    @type prefix: str
+    @type prefix: str | unicode
     @ivar flow_cell: Flow cell identifier
-    @type flow_cell: str
+    @type flow_cell: str | unicode
     @ivar version: Version number
-    @type version: str
+    @type version: str | unicode
     @ivar project_dict: Python C{dict} of C{bsf.ngs.Project.name} key objects and C{bsf.ngs.Project} value objects
     @type project_dict: dict[bsf.ngs.Project.name, bsf.ngs.Project]
     @ivar weak_reference_collection: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Collection} object
@@ -1452,11 +1452,11 @@ class ProcessedRunFolder(NextGenerationBase):
             Python C{list} of Python C{str} value data
         @type annotation_dict: dict[str, list[str]]
         @param prefix: Prefix
-        @type prefix: str
+        @type prefix: str | unicode
         @param flow_cell: Flow cell identifier
-        @type flow_cell: str
+        @type flow_cell: str | unicode
         @param version: Version
-        @type version: str
+        @type version: str | unicode
         @param project_dict: Python C{dict} of C{bsf.ngs.Project.name} key objects and C{bsf.ngs.Project} value objects
         @type project_dict: dict[bsf.ngs.Project.name, bsf.ngs.Project]
         @param weak_reference_collection: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Collection} object
@@ -2009,7 +2009,11 @@ class Collection(NextGenerationBase):
             paired_reads = _process_paired_reads(paired_reads_old=paired_reads)
 
             # Optionally group the Sample objects.
-
+            # FIXME: Change the 'Group' field to 'Sample Group' annotation.
+            # Since the 'Group' field is handled outside the Collection object,
+            # it cannot easily be propagated into other SampleAnnotationSheet objects,
+            # converted from Collection objects.
+            # TODO: Phase out the code below once sample annotation sheets are converted.
             key = '{} Group'.format(sas_prefix).lstrip()
 
             if key in key_list:
@@ -2037,6 +2041,19 @@ class Collection(NextGenerationBase):
                     prf.del_project(name=project.name)
             if prf.name == ProcessedRunFolder.default_name and not prf.project_dict:
                 collection.del_processed_run_folder(name=prf.name)
+
+        # Group Sample objects on the basis of 'Sample Group' annotation.
+
+        for prf in collection.processed_run_folder_dict.values():
+            for project in prf.project_dict.values():
+                for sample in project.sample_dict.values():
+                    if 'Group' in sample.annotation_dict:
+                        for sample_group_name in sample.annotation_dict['Group']:
+                            if sample_group_name not in collection.sample_group_dict:
+                                collection.sample_group_dict[sample_group_name] = list()
+                            sample_list = collection.sample_group_dict[sample_group_name]
+                            if sample not in sample_list:
+                                sample_list.append(sample)
 
         return collection
 
@@ -2506,6 +2523,7 @@ class SampleGroup(object):
     @ivar sample_list: Python C{list} of C{bsf.ngs.Sample} objects
     @type sample_list: list[bsf.ngs.Sample]
     """
+
     # Sample and PairedReads objects from different ProcessRunFolder objects
     # (i.e. flow cells) could bear the same name, leading to problems with SGE job names.
     # This would need further re-thinking.
