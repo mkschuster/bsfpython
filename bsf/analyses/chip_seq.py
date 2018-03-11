@@ -374,7 +374,7 @@ class ChIPSeq(Analysis):
     @ivar genome_sizes_path: Reference genome (chromosome) sizes file path
     @type genome_sizes_path: str | unicode
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | unicode
+    @type classpath_picard: None | str | unicode
     """
 
     name = 'ChIP-seq Analysis'
@@ -475,7 +475,7 @@ class ChIPSeq(Analysis):
         @param genome_sizes_path: Reference genome (chromosome) sizes file path
         @type genome_sizes_path: str | unicode
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode
+        @type classpath_picard: None | str | unicode
         @return:
         @rtype:
         """
@@ -516,10 +516,7 @@ class ChIPSeq(Analysis):
         else:
             self.genome_sizes_path = genome_sizes_path
 
-        if classpath_picard is None:
-            self.classpath_picard = str()
-        else:
-            self.classpath_picard = classpath_picard
+        self.classpath_picard = classpath_picard
 
         self._comparison_dict = dict()
         """ @type _comparison_dict: dict[str, ChIPSeqComparison]"""
@@ -581,6 +578,7 @@ class ChIPSeq(Analysis):
         @return:
         @rtype:
         """
+
         def run_read_comparisons():
             """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file from disk.
 
@@ -638,8 +636,8 @@ class ChIPSeq(Analysis):
 
                 if not (len(t_sample_list) and len(c_sample_list)):
                     if self.debug > 1:
-                        print 'Redundant comparison line with Treatment {!r} samples {} and Control {!r} samples {}'. \
-                            format(t_name, len(t_sample_list), c_name, len(c_sample_list))
+                        print 'Redundant comparison line with Treatment:', repr(t_name), 'samples:', len(t_sample_list),
+                        'and Control:', repr(c_name), 'samples:', len(c_sample_list)
                     continue
 
                 # Add all control Sample or SampleGroup objects to the Sample list.
@@ -685,9 +683,7 @@ class ChIPSeq(Analysis):
 
                 if 'DiffBind' in row_dict:
                     if row_dict['DiffBind'].lower() not in ChIPSeq._boolean_states:
-                        raise ValueError('Value in field {!r} is not a boolean: {!r}'.format(
-                            'DiffBind',
-                            row_dict['DiffBind']))
+                        raise ValueError("Value in field 'DiffBind' is not a boolean: " + repr(row_dict['DiffBind']))
                     diff_bind = ChIPSeq._boolean_states[row_dict['DiffBind'].lower()]
                 else:
                     diff_bind = True
@@ -1144,9 +1140,9 @@ class ChIPSeq(Analysis):
                                     pass
                                 else:
                                     warnings.warn(
-                                        'Unable to set MACS2 parameters for unknown factor {!r}.\n'
-                                        'Please use default factor {!r} or adjust Python code if necessary.'.format(
-                                            factor, defaults.web.chipseq_default_factor),
+                                        'Unable to set MACS2 parameters for unknown factor ' + repr(factor) + '.\n' +
+                                        'Please use default factor ' + repr(defaults.web.chipseq_default_factor) +
+                                        ' or adjust Python code if necessary.',
                                         UserWarning)
 
                                 # Add a RunnableStep to compare BedGraph files.
@@ -1222,7 +1218,7 @@ class ChIPSeq(Analysis):
 
             for factor_name in factor_name_list:
                 if self.debug > 0:
-                    print "chipseq factor_name:", factor_name
+                    print 'chipseq factor_name:', factor_name
 
                 factor_list = self._factor_dict[factor_name]
                 factor_list.sort(cmp=lambda x, y: cmp(x, y))
@@ -1248,7 +1244,7 @@ class ChIPSeq(Analysis):
                         file_path_diff_bind.sample_annotation_sheet))
 
                 if self.debug > 0:
-                    print "ChIPSeqDiffBindSheet file_path:", dbs.file_path
+                    print 'ChIPSeqDiffBindSheet file_path:', dbs.file_path
 
                 for chipseq_comparison in factor_list:
                     if not chipseq_comparison.diff_bind:
@@ -1355,6 +1351,8 @@ class ChIPSeq(Analysis):
 
         if not self.classpath_picard:
             self.classpath_picard = default.classpath_picard
+            if not self.classpath_picard:
+                raise Exception("A 'ChIPSeq' analysis requires a 'classpath_picard' configuration option.")
 
         stage_alignment = self.get_stage(name=self.stage_name_alignment)
         stage_peak_calling = self.get_stage(name=self.stage_name_peak_calling)
@@ -1408,7 +1406,7 @@ class ChIPSeq(Analysis):
                         for c_paired_reads_name in c_paired_reads_name_list:
                             macs14 = stage_macs14.add_executable(
                                 executable=Macs14(
-                                    name='chipseq_macs14_{}__{}'.format(t_paired_reads_name, c_paired_reads_name),
+                                    name='chipseq_macs14_' + t_paired_reads_name + '__' + c_paired_reads_name,
                                     analysis=self))
 
                             macs14.dependencies.append('chipseq_sam2bam_' + t_paired_reads_name)
@@ -1416,9 +1414,7 @@ class ChIPSeq(Analysis):
 
                             process_macs14 = stage_process_macs14.add_executable(
                                 executable=bsf.process.Executable(
-                                    name='chipseq_process_macs14_{}__{}'.format(
-                                        t_paired_reads_name,
-                                        c_paired_reads_name),
+                                    name='chipseq_process_macs14_' + t_paired_reads_name + '__' + c_paired_reads_name,
                                     program='bsf_chipseq_process_macs14.sh'))
                             process_macs14.dependencies.append(macs14.name)
                             self.set_command_configuration(command=process_macs14)
@@ -1443,7 +1439,7 @@ class ChIPSeq(Analysis):
                             # the resulting R script has them set too. Hence the R script has to be started
                             # from the genome_directory. However, the R script needs re-writing anyway, because
                             # it would be better to use the PNG rather than the PDF device for plotting.
-                            prefix = 'chipseq_macs14_{}__{}'.format(t_paired_reads_name, c_paired_reads_name)
+                            prefix = 'chipseq_macs14_' + t_paired_reads_name + '__' + c_paired_reads_name
 
                             replicate_directory = os.path.join(self.genome_directory, prefix)
 
@@ -1493,9 +1489,9 @@ class ChIPSeq(Analysis):
                                 pass
                             else:
                                 warnings.warn(
-                                    'Unable to set MACS14 parameters for unknown factor {!r}.\n'
-                                    'Please use default factor {!r} or adjust Python code if necessary.'.format(
-                                        factor, defaults.web.chipseq_default_factor),
+                                    'Unable to set MACS14 parameters for unknown factor ' + repr(factor) + '.\n' +
+                                    'Please use default factor ' + repr(defaults.web.chipseq_default_factor) +
+                                    ' or adjust Python code if necessary.',
                                     UserWarning)
 
                             # Set macs14 arguments.
@@ -1586,27 +1582,34 @@ class ChIPSeq(Analysis):
                             c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
                             for c_paired_reads_name in c_paired_reads_name_list:
-                                # prefix = 'chipseq_macs14_{}__{}'.format(t_paired_reads_name, c_paired_reads_name)
+                                # prefix = 'chipseq_macs14_'  + t_paired_reads_name + '__' + c_paired_reads_name
                                 str_list += '<tr>\n'
                                 # if treatment and absolute:
-                                # str_list += '<td><strong>{}</strong></td>\n'.format(t_paired_reads_name)
+                                # str_list += '<td><strong>' + t_paired_reads_name + '</strong></td>\n'
                                 # if not treatment and absolute:
-                                # str_list += '<td><strong>{}</strong></td>\n'.format(c_paired_reads_name)
+                                # str_list += '<td><strong>' + c_paired_reads_name + '</strong></td>\n'
 
                                 # Peaks
-                                str_list += '<td><a href="{}__{}_peaks.xls">Peaks {} versus {}</a></td>\n'. \
-                                    format(t_paired_reads_name, c_paired_reads_name,
-                                           t_paired_reads_name, c_paired_reads_name)
+                                str_list += '<td>'
+                                str_list += '<a href="' + t_paired_reads_name + '__' + c_paired_reads_name + \
+                                            '_peaks.xls">'
+                                str_list += 'Peaks ' + t_paired_reads_name + ' versus ' + c_paired_reads_name
+                                str_list += '</a>'
+                                str_list += '</td>\n'
                                 # Negative Peaks
                                 str_list += '<td>'
-                                str_list += '<a href="{}__{}_negative_peaks.xls">Negative peaks {} versus {}</a>'. \
-                                    format(t_paired_reads_name, c_paired_reads_name,
-                                           t_paired_reads_name, c_paired_reads_name)
+                                str_list += '<a href="' + t_paired_reads_name + '__' + c_paired_reads_name + \
+                                            '_negative_peaks.xls">'
+                                str_list += 'Negative peaks ' + t_paired_reads_name + ' versus ' + c_paired_reads_name
+                                str_list += '</a>'
                                 str_list += '</td>\n'
                                 # R Model
-                                str_list += '<td><a href="{}__{}_model.r">R model</a></td>\n'. \
-                                    format(t_paired_reads_name, c_paired_reads_name,
-                                           t_paired_reads_name, c_paired_reads_name)
+                                str_list += '<td>'
+                                str_list += '<a href="' + t_paired_reads_name + '__' + c_paired_reads_name + \
+                                            '_model.r">'
+                                str_list += 'R model'
+                                str_list += '</a>'
+                                str_list += '</td>\n'
 
                                 str_list += '</tr>\n'
                                 str_list += '\n'
@@ -1649,7 +1652,8 @@ class ChIPSeq(Analysis):
                             c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
                             for c_paired_reads_name in c_paired_reads_name_list:
-                                # prefix = 'chipseq_macs14_{}__{}'.format(t_paired_reads_name, c_paired_reads_name)
+                                # prefix = 'chipseq_macs14_' + t_paired_reads_name + '__' + c_paired_reads_name
+                                prefix = t_paired_reads_name + '__' + c_paired_reads_name
 
                                 # Add UCSC trackDB entries for each treatment/control and absolute/normalised pair.
 
@@ -1669,18 +1673,15 @@ class ChIPSeq(Analysis):
                                         # Add a UCSC trackDB entry for each bigWig file
                                         #
                                         # Common settings
-                                        str_list += 'track ChIP_{}__{}_{}_{}\n'. \
-                                            format(t_paired_reads_name, c_paired_reads_name, state, scaling)
+                                        str_list += 'track ChIP_' + '_'.join((prefix, state, scaling)) + '\n'
                                         str_list += 'type bigWig\n'
-                                        str_list += 'shortLabel ChIP_{}__{}_{}_{}\n'. \
-                                            format(t_paired_reads_name, c_paired_reads_name, state, scaling)
-                                        str_list += 'longLabel {} ChIP-Seq read counts for {} of {} versus {}\n'. \
-                                            format(scaling.capitalize(), state, t_paired_reads_name,
-                                                   c_paired_reads_name)
+                                        str_list += 'shortLabel ChIP_' + '_'.join((prefix, state, scaling)) + '\n'
+                                        str_list += 'longLabel ' + scaling.capitalize() + \
+                                                    ' ChIP-Seq read counts for ' + state + ' of ' + \
+                                                    t_paired_reads_name + ' versus ' + c_paired_reads_name + '\n'
                                         str_list += 'bigDataUrl '
-                                        str_list += '{}__{}_MACS_wiggle/{}/{}__{}_{}_afterfiting_all.bw\n'. \
-                                            format(t_paired_reads_name, c_paired_reads_name, state,
-                                                   t_paired_reads_name, c_paired_reads_name, state)
+                                        str_list += prefix + '_MACS_wiggle/' + state + '/' + prefix + '_' + \
+                                            state + '_afterfiting_all.bw\n'
                                         # str_list += 'html ...\n'
                                         if treatment and not absolute:
                                             str_list += 'visibility full\n'
@@ -1688,8 +1689,9 @@ class ChIPSeq(Analysis):
                                             str_list += 'visibility hide\n'
 
                                         # Common optional settings
-                                        str_list += 'color {}\n'. \
-                                            format(defaults.web.get_chipseq_colour(factor=chipseq_comparison.factor))
+                                        str_list += 'color ' + \
+                                                    defaults.web.get_chipseq_colour(
+                                                        factor=chipseq_comparison.factor) + '\n'
 
                                         # bigWig - Signal graphing track settings
                                         str_list += 'graphTypeDefault bar\n'
@@ -1709,21 +1711,19 @@ class ChIPSeq(Analysis):
                                 # Add a UCSC trackDB entry for each bigBed peaks file
                                 #
                                 # Common settings
-                                str_list += 'track Peaks_{}__{}\n'. \
-                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'track Peaks_' + prefix + '\n'
                                 str_list += 'type bigBed\n'
-                                str_list += 'shortLabel Peaks_{}__{}\n'. \
-                                    format(t_paired_reads_name, c_paired_reads_name)
-                                str_list += 'longLabel ChIP-Seq peaks for {} versus {}\n'. \
-                                    format(t_paired_reads_name, c_paired_reads_name)
-                                str_list += 'bigDataUrl {}__{}_peaks.bb\n'. \
-                                    format(t_paired_reads_name, c_paired_reads_name)
+                                str_list += 'shortLabel Peaks_' + prefix + '\n'
+                                str_list += 'longLabel ChIP-Seq peaks for ' + t_paired_reads_name + \
+                                            ' versus ' + c_paired_reads_name + '\n'
+                                str_list += 'bigDataUrl ' + prefix + '_peaks.bb\n'
                                 # str_list += 'html ...\n'
                                 str_list += 'visibility pack\n'
 
                                 # Common optional settings
-                                str_list += 'color {}\n'. \
-                                    format(defaults.web.get_chipseq_colour(factor=chipseq_comparison.factor))
+                                str_list += 'color ' + \
+                                            defaults.web.get_chipseq_colour(factor=chipseq_comparison.factor) + \
+                                            '\n'
 
                                 str_list += '\n'
 
@@ -1740,13 +1740,11 @@ class ChIPSeq(Analysis):
                     # Add a UCSC trackDB entry.
                     #
                     # Common settings
-                    str_list += 'track Alignment_{}\n'.format(paired_reads_name)
+                    str_list += 'track Alignment_' + paired_reads_name + '\n'
                     str_list += 'type bam\n'
-                    str_list += 'shortLabel Alignment_{}\n'.format(paired_reads_name)
-                    str_list += 'longLabel Bowtie2 alignment of {}\n'. \
-                        format(paired_reads_name)
-                    str_list += 'bigDataUrl {}.bam\n'. \
-                        format(paired_reads_name)
+                    str_list += 'shortLabel Alignment_' + paired_reads_name + '\n'
+                    str_list += 'longLabel Bowtie2 alignment of ' + paired_reads_name + '\n'
+                    str_list += 'bigDataUrl ' + paired_reads_name + '.bam\n'
                     # str_list += 'html ...\n'
                     str_list += 'visibility hide\n'
 
@@ -1772,7 +1770,8 @@ class ChIPSeq(Analysis):
         @return:
         @rtype:
         """
-        # contrast_field_names = ["", "Group1", "Members1", "Group2", "Members2", "DB.edgeR"]
+
+        # contrast_field_names = ['', 'Group1', 'Members1', 'Group2', 'Members2', 'DB.edgeR']
 
         def report_html():
             """Private function to create a HTML report.
