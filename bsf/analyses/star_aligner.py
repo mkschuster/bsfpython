@@ -37,7 +37,7 @@ import pysam
 from bsf import Analysis, FilePath, Runnable
 from bsf.annotation import AnnotationSheet
 from bsf.process import RunnableStep, RunnableStepLink, RunnableStepMove, RunnableStepPicard
-from bsf.standards import Default
+from bsf.standards import JavaClassPath
 
 
 class FilePathStarAlign(FilePath):
@@ -359,8 +359,6 @@ class StarAligner(Analysis):
 
         # Get global defaults.
 
-        default = Default.get_global_default()
-
         # The STAR Aligner requires a genome version.
 
         if not self.genome_version:
@@ -381,7 +379,10 @@ class StarAligner(Analysis):
             raise Exception('A STAR Aligner analysis requires a transcriptome_gtf configuration option.')
 
         if not self.classpath_picard:
-            self.classpath_picard = default.classpath_picard
+            self.classpath_picard = JavaClassPath.get_picard()
+            if not self.classpath_picard:
+                raise Exception("An 'StarAligner' analysis requires a "
+                                "'classpath_picard' configuration option.")
 
         run_read_comparisons()
 

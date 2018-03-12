@@ -226,16 +226,6 @@ class Default(object):
     Attributes:
     @cvar global_default: Global C{bsf.standards.Default}
     @type global_default: bsf.standards.Default
-    @ivar classpath_gatk: Genome Analysis Toolkit Java Archive (JAR) class path directory
-    @type classpath_gatk: str | unicode
-    @ivar classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
-    @type classpath_illumina2bam: str | unicode
-    @ivar classpath_picard: Picard Java Archive (JAR) class path directory
-    @type classpath_picard: str | unicode
-    @ivar classpath_snpeff: snpEff Java Archive (JAR) class path directory
-    @type classpath_snpeff: str | unicode
-    @ivar classpath_vcf_filter: VCF.Filter Java Archive (JAR) class path directory
-    @type classpath_vcf_filter: str | unicode
     @ivar directory_cache: Local cache directory on the compute node (e.g. /dev/shm)
     @type directory_cache: str | unicode
     @ivar directory_home: Home directory for all data
@@ -264,14 +254,6 @@ class Default(object):
     @type directory_snpeff_data: str | unicode
     @ivar indices: Python C{dict} of program name key and index directory name value data
     @type indices: dict[str, str]
-    @ivar operator_contact: Contact e-mail address
-    @type operator_contact: str
-    @ivar operator_e_mail: Operator e-mail
-    @type operator_e_mail: str
-    @ivar operator_institution: Institution name
-    @type operator_institution: str
-    @ivar operator_sequencing_centre: BAM sequencing centre code
-    @type operator_sequencing_centre: str
     @ivar genome_aliases_ucsc_dict: Alias of genome assembly names for the UCSC Genome Browser
     @type genome_aliases_ucsc_dict: dict[str, str]
     @ivar ucsc_protocol: UCSC Genome Browser URL protocol (i.e. http, https, ...)
@@ -322,11 +304,6 @@ class Default(object):
 
     def __init__(
             self,
-            classpath_gatk=None,
-            classpath_illumina2bam=None,
-            classpath_picard=None,
-            classpath_snpeff=None,
-            classpath_vcf_filter=None,
             directory_cache=None,
             directory_home=None,
             directory_illumina_run=None,
@@ -341,10 +318,6 @@ class Default(object):
             directory_intervals=None,
             directory_snpeff_data=None,
             indices=None,
-            operator_contact=None,
-            operator_e_mail=None,
-            operator_institution=None,
-            operator_sequencing_centre=None,
             genome_aliases_ucsc_dict=None,
             ucsc_protocol=None,
             ucsc_host_name=None,
@@ -354,16 +327,6 @@ class Default(object):
             url_relative_projects=None):
         """Initialise a C{bsf.standards.Default} object.
 
-        @param classpath_gatk: Genome Analysis Toolkit Java Archive (JAR) class path directory
-        @type classpath_gatk: str | unicode
-        @param classpath_illumina2bam: Illumina2bam Java Archive (JAR) class path directory
-        @type classpath_illumina2bam: str | unicode
-        @param classpath_picard: Picard Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode
-        @param classpath_snpeff: snpEff Java Archive (JAR) class path directory
-        @type classpath_snpeff: str | unicode
-        @param classpath_vcf_filter: VCF.Filter Java Archive (JAR) class path directory
-        @type classpath_vcf_filter: str | unicode
         @param directory_cache: Local cache directory on the compute node (e.g. /dev/shm)
         @type directory_cache: str | unicode
         @param directory_home: Home directory for all data
@@ -392,14 +355,6 @@ class Default(object):
         @type directory_snpeff_data: str | unicode
         @param indices: Python C{dict} of program name key and index directory name value data
         @type indices: dict[str, str]
-        @param operator_contact: Contact e-mail address
-        @type operator_contact: str
-        @param operator_e_mail: Operator e-mail
-        @type operator_e_mail: str
-        @param operator_institution: Institution name
-        @type operator_institution: str
-        @param operator_sequencing_centre: BAM sequencing centre code
-        @type operator_sequencing_centre: str
         @param genome_aliases_ucsc_dict: Alias of genome assembly names for the UCSC Genome Browser
         @type genome_aliases_ucsc_dict: dict[str, str]
         @param ucsc_protocol: UCSC Genome Browser URL protocol (i.e. http, https, ...)
@@ -419,33 +374,6 @@ class Default(object):
         """
 
         super(Default, self).__init__()
-
-        # Set Java class path information.
-
-        if classpath_gatk is None:
-            self.classpath_gatk = str()
-        else:
-            self.classpath_gatk = classpath_gatk
-
-        if classpath_illumina2bam is None:
-            self.classpath_illumina2bam = str()
-        else:
-            self.classpath_illumina2bam = classpath_illumina2bam
-
-        if classpath_picard is None:
-            self.classpath_picard = str()
-        else:
-            self.classpath_picard = classpath_picard
-
-        if classpath_snpeff is None:
-            self.classpath_snpeff = str()
-        else:
-            self.classpath_snpeff = classpath_snpeff
-
-        if classpath_vcf_filter is None:
-            self.classpath_vcf_filter = str()
-        else:
-            self.classpath_vcf_filter = classpath_vcf_filter
 
         # Set directory information.
 
@@ -521,28 +449,6 @@ class Default(object):
         else:
             self.indices = indices
 
-        # Set operator information.
-
-        if operator_contact is None:
-            self.operator_contact = str()
-        else:
-            self.operator_contact = operator_contact
-
-        if operator_e_mail is None:
-            self.operator_e_mail = str()
-        else:
-            self.operator_e_mail = operator_e_mail
-
-        if operator_institution is None:
-            self.operator_institution = str()
-        else:
-            self.operator_institution = operator_institution
-
-        if operator_sequencing_centre is None:
-            self.operator_sequencing_centre = str()
-        else:
-            self.operator_sequencing_centre = operator_sequencing_centre
-
         # Set Genome Aliases for the UCSC Genome Browser.
 
         if genome_aliases_ucsc_dict is None:
@@ -603,14 +509,6 @@ class Default(object):
         # Reading configuration cannot be done via a single Python dict,
         # because each option really needs defining.
 
-        section = 'classpath'
-
-        self.classpath_gatk = cp.get(section=section, option='gatk')
-        self.classpath_illumina2bam = cp.get(section=section, option='illumina2bam')
-        self.classpath_picard = cp.get(section=section, option='picard')
-        self.classpath_snpeff = cp.get(section=section, option='snpeff')
-        self.classpath_vcf_filter = cp.get(section=section, option='vcf_filter')
-
         section = 'directories'
 
         self.directory_cache = cp.get(section=section, option='cache')
@@ -631,13 +529,6 @@ class Default(object):
 
         for option in cp.options(section=section):
             self.indices[option] = cp.get(section=section, option=option)
-
-        section = 'operator'
-
-        self.operator_contact = cp.get(section=section, option='contact')
-        self.operator_e_mail = cp.get(section=section, option='e_mail')
-        self.operator_institution = cp.get(section=section, option='institution')
-        self.operator_sequencing_centre = cp.get(section=section, option='sequencing_centre')
 
         section = 'genome_aliases_ucsc'
 
@@ -983,18 +874,111 @@ class Default(object):
             return genome_version
 
 
+class InitialisationBase(object):
+    """The C{bsf.standards.InitialisationBase} class is the base class for global configuration defaults.
+
+    The defaults are read from the a particular section of the global configuration file.
+    Attributes:
+    @cvar section: C{SafeConfigParser} section
+    @type section: str | unicode
+    """
+    section = None
+
+    @classmethod
+    def get(cls, option=None):
+        """Get the value for a configuration option in the section defined by the sub-class section class variable.
+
+        This method is a re-implementation of the C{SafeConfigParser.get()} method that returns C{None}
+        upon non-existing sections or options.
+        @param option: Configuration option
+        @type option: None | str | unicode
+        @return: Configuration value
+        @rtype: None | str | unicode
+        """
+        if not cls.section:
+            return
+
+        if not option:
+            return
+
+        if Configuration.get_global_configuration().config_parser.has_option(
+                section=cls.section,
+                option=option):
+            return Configuration.get_global_configuration().config_parser.get(
+                section=cls.section,
+                option=option)
+        else:
+            return
+
+
+class JavaClassPath(InitialisationBase):
+    """The C{bsf.standards.JavaClassPath} class models Java class path defaults.
+
+    The defaults are read from the [classpath] section of the global configuration file.
+    Attributes:
+    @cvar section: C{SafeConfigParser} section for Java class path defaults
+    @type section: str | unicode
+    """
+    section = 'classpath'
+
+    @classmethod
+    def get_gatk(cls):
+        """Get the GATK Java class path.
+
+        @return: GATK Java class path
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='gatk')
+
+    @classmethod
+    def get_illumina2bam(cls):
+        """Get the Illumina2bam tools Java class path.
+
+        @return: Illumina2bam tools Java class path
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='illumina2bam')
+
+    @classmethod
+    def get_picard(cls):
+        """Get the Picard tools Java class path.
+
+        @return: Picard tools Java class path
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='picard')
+
+    @classmethod
+    def get_snpeff(cls):
+        """Get the snpEff Java class path.
+
+        @return: snpEff Java class path
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='snpeff')
+
+    @classmethod
+    def get_vcf_filter(cls):
+        """Get the VCF.Filter Java class path.
+
+        @return: VCF.Filter Java class path
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='vcf_filter')
+
+
 class EnsemblVEP(object):
     """The C{bsf.standards.EnsemblVEP} class models Ensembl Variant Effect Predictor (VEP) defaults.
 
+    The defaults are read form the [ensembl_vep_{genome_version}] section of the global configuration file.
     Attributes:
     @cvar section: C{SafeConfigParser} section for the Ensembl Variant Effect Predictor (VEP)
     @type section: str | unicode
     """
-
     section = 'ensembl_vep'
 
-    @staticmethod
-    def get_section(genome_version=None):
+    @classmethod
+    def get_section(cls, genome_version=None):
         """Get the Configuration section from a genome assembly version.
 
         @param genome_version: Genome assembly version
@@ -1003,23 +987,32 @@ class EnsemblVEP(object):
         @rtype: str
         """
         if genome_version:
-            return '_'.join((EnsemblVEP.section, genome_version))
+            return '_'.join((cls.section, genome_version))
         else:
-            return EnsemblVEP.section
+            return cls.section
 
-    @staticmethod
-    def get(option=None, genome_version=None):
-        if option is None:
+    @classmethod
+    def get(cls, option=None, genome_version=None):
+        """Get the value for a configuration option.
+
+        @param option: Configuration option
+        @type option: None | str | unicode
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str | unicode
+        @return: Configuration value
+        @rtype: None | str | unicode
+        """
+        if not option:
             return
 
-        section = EnsemblVEP.get_section(genome_version=genome_version)
+        section = cls.get_section(genome_version=genome_version)
         if Configuration.get_global_configuration().config_parser.has_option(section=section, option=option):
             return Configuration.get_global_configuration().config_parser.get(section=section, option=option)
         else:
             return
 
-    @staticmethod
-    def get_expanded_directory(option=None, genome_version=None):
+    @classmethod
+    def get_expanded_directory(cls, option=None, genome_version=None):
         """Get configuration information for a directory and expand it.
 
         The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
@@ -1031,17 +1024,17 @@ class EnsemblVEP(object):
         @return: Expanded directory
         @rtype: None | str | unicode
         """
-        if option is None:
+        if not option:
             return
 
-        section = EnsemblVEP.get_section(genome_version=genome_version)
+        section = cls.get_section(genome_version=genome_version)
         if Configuration.get_global_configuration().config_parser.has_option(section=section, option=option):
             return Configuration.get_global_configuration().get_expanded_directory(section=section, option=option)
         else:
             return
 
-    @staticmethod
-    def get_directory_cache(genome_version=None):
+    @classmethod
+    def get_directory_cache(cls, genome_version=None):
         """Get the cache directory path.
 
         @param genome_version: Genome assembly version
@@ -1049,10 +1042,10 @@ class EnsemblVEP(object):
         @return: Cache directory path
         @rtype: None | str | unicode
         """
-        return EnsemblVEP.get_expanded_directory(option='directory_cache', genome_version=genome_version)
+        return cls.get_expanded_directory(option='directory_cache', genome_version=genome_version)
 
-    @staticmethod
-    def get_directory_fasta(genome_version=None):
+    @classmethod
+    def get_directory_fasta(cls, genome_version=None):
         """Get the FASTA directory path.
 
         @param genome_version: Genome assembly version
@@ -1060,10 +1053,10 @@ class EnsemblVEP(object):
         @return: FASTA directory path
         @rtype: None | str | unicode
         """
-        return EnsemblVEP.get_expanded_directory(option='directory_fasta', genome_version=genome_version)
+        return cls.get_expanded_directory(option='directory_fasta', genome_version=genome_version)
 
-    @staticmethod
-    def get_directory_plugin(genome_version=None):
+    @classmethod
+    def get_directory_plugin(cls, genome_version=None):
         """Get the plug-ins directory path.
 
         @param genome_version: Genome assembly version
@@ -1071,10 +1064,10 @@ class EnsemblVEP(object):
         @return: Plug-ins directory path
         @rtype: None | str | unicode
         """
-        return EnsemblVEP.get_expanded_directory(option='directory_plugin', genome_version=genome_version)
+        return cls.get_expanded_directory(option='directory_plugin', genome_version=genome_version)
 
-    @staticmethod
-    def get_directory_source(genome_version=None):
+    @classmethod
+    def get_directory_source(cls, genome_version=None):
         """Get the source directory path.
 
         @param genome_version: Genome assembly version
@@ -1082,10 +1075,10 @@ class EnsemblVEP(object):
         @return: Source directory path
         @rtype: None | str | unicode
         """
-        return EnsemblVEP.get_expanded_directory(option='directory_source', genome_version=genome_version)
+        return cls.get_expanded_directory(option='directory_source', genome_version=genome_version)
 
-    @staticmethod
-    def get_name_assembly(genome_version=None):
+    @classmethod
+    def get_name_assembly(cls, genome_version=None):
         """Get the genome assembly name.
 
         @param genome_version: Genome assembly version
@@ -1093,10 +1086,10 @@ class EnsemblVEP(object):
         @return: Genome assembly name
         @rtype: None | str | unicode
         """
-        return EnsemblVEP.get(option='name_assembly', genome_version=genome_version)
+        return cls.get(option='name_assembly', genome_version=genome_version)
 
-    @staticmethod
-    def get_name_species(genome_version=None):
+    @classmethod
+    def get_name_species(cls, genome_version=None):
         """Get the scientific species name.
 
         @param genome_version: Genome assembly version
@@ -1104,10 +1097,10 @@ class EnsemblVEP(object):
         @return: Scientific species name
         @rtype: None | str | unicode
         """
-        return EnsemblVEP.get(option='name_species', genome_version=genome_version)
+        return cls.get(option='name_species', genome_version=genome_version)
 
-    @staticmethod
-    def get_sql_user(genome_version=None):
+    @classmethod
+    def get_sql_user(cls, genome_version=None):
         """Get the SQL database user name.
 
         @param genome_version: Genome assembly version
@@ -1115,10 +1108,10 @@ class EnsemblVEP(object):
         @return: SQL database user name
         @rtype: None | str | unicode
         """
-        return EnsemblVEP.get(option='sql_user', genome_version=genome_version)
+        return cls.get(option='sql_user', genome_version=genome_version)
 
-    @staticmethod
-    def get_sql_pass(genome_version=None):
+    @classmethod
+    def get_sql_pass(cls, genome_version=None):
         """Get the SQL database password.
 
         @param genome_version: Genome assembly version
@@ -1126,10 +1119,10 @@ class EnsemblVEP(object):
         @return: SQL database password
         @rtype: None | str | unicode
         """
-        return EnsemblVEP.get(option='sql_pass', genome_version=genome_version)
+        return cls.get(option='sql_pass', genome_version=genome_version)
 
-    @staticmethod
-    def get_sql_host(genome_version=None):
+    @classmethod
+    def get_sql_host(cls, genome_version=None):
         """Get the SQL database host name.
 
         @param genome_version: Genome assembly version
@@ -1137,10 +1130,10 @@ class EnsemblVEP(object):
         @return: SQL database host name
         @rtype: None | str | unicode
         """
-        return EnsemblVEP.get(option='sql_host', genome_version=genome_version)
+        return cls.get(option='sql_host', genome_version=genome_version)
 
-    @staticmethod
-    def get_sql_port(genome_version=None):
+    @classmethod
+    def get_sql_port(cls, genome_version=None):
         """Get the SQL database TCP/IP port number.
 
         @param genome_version: Genome assembly version
@@ -1148,4 +1141,51 @@ class EnsemblVEP(object):
         @return: SQL database TCP/IP port number
         @rtype: None | str | unicode
         """
-        return EnsemblVEP.get(option='sql_port', genome_version=genome_version)
+        return cls.get(option='sql_port', genome_version=genome_version)
+
+
+class Operator(InitialisationBase):
+    """The C{bsf.standards.Operator} class models operator defaults.
+
+    The defaults are read form the [operator] section of the global configuration file.
+    Attributes:
+    @cvar section: C{SafeConfigParser} section for the operator
+    @type section: str | unicode
+    """
+    section = 'operator'
+
+    @classmethod
+    def get_contact(cls):
+        """Get the operator contact information.
+
+        @return: Operator contact information
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='contact')
+
+    @classmethod
+    def get_e_mail(cls):
+        """Get the operator e-mail information.
+
+        @return: Operator e-mail information
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='e_mail')
+
+    @classmethod
+    def get_institution(cls):
+        """Get the operator institution information.
+
+        @return: Operator institution information
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='institution')
+
+    @classmethod
+    def get_sequencing_centre(cls):
+        """Get the operator sequencing centre information.
+
+        @return: Operator sequencing centre information
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='sequencing_centre')

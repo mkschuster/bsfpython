@@ -37,7 +37,7 @@ from bsf.annotation import AnnotationSheet
 from bsf.executables import Bowtie2, Macs14, Macs2Bdgcmp, Macs2Callpeak, FastQC
 from bsf.ngs import Collection, ProcessedRunFolder, Sample
 from bsf.process import Executable
-from bsf.standards import Default
+from bsf.standards import Default, JavaClassPath
 
 
 class ChIPSeqComparison(object):
@@ -2497,8 +2497,6 @@ class RunBamToFastq(Analysis):
         # config_parser = self.configuration.config_parser
         # config_section = self.configuration.section_from_instance(self)
 
-        default = Default.get_global_default()
-
         # Replicates have to be un-grouped, always!
         # replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
         replicate_grouping = False
@@ -2537,7 +2535,7 @@ class RunBamToFastq(Analysis):
                                     program='bsf_bam2fastq.sh'))
                             self.set_command_configuration(command=sam_to_fastq)
                             sam_to_fastq.arguments.append(paired_reads.reads_1.file_path)
-                            sam_to_fastq.arguments.append(os.path.join(default.classpath_picard, 'picard.jar'))
+                            sam_to_fastq.arguments.append(os.path.join(JavaClassPath.get_picard(), 'picard.jar'))
                             sam_to_fastq.arguments.append(os.path.join(self.genome_directory, match.group(1)))
 
                     if paired_reads.reads_2:
@@ -2553,7 +2551,7 @@ class RunBamToFastq(Analysis):
                                     program='bsf_bam2fastq.sh'))
                             self.set_command_configuration(command=sam_to_fastq)
                             sam_to_fastq.arguments.append(paired_reads.reads_2.file_path)
-                            sam_to_fastq.arguments.append(os.path.join(default.classpath_picard, 'picard.jar'))
+                            sam_to_fastq.arguments.append(os.path.join(JavaClassPath.get_picard(), 'picard.jar'))
                             sam_to_fastq.arguments.append(os.path.join(self.genome_directory, match.group(1)))
 
         return

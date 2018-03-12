@@ -40,7 +40,7 @@ from bsf.annotation import AnnotationSheet
 from bsf.executables import BWA
 from bsf.process import Command, Executable, RunnableStep, RunnableStepJava, RunnableStepPicard, RunnableStepLink, \
     RunnableStepMove
-from bsf.standards import Configuration, Default, EnsemblVEP
+from bsf.standards import Configuration, Default, EnsemblVEP, JavaClassPath
 
 
 class RunnableStepGATK(RunnableStepJava):
@@ -2919,8 +2919,6 @@ class VariantCallingGATK(Analysis):
 
         # Get global defaults.
 
-        default = Default.get_global_default()
-
         # VariantCallingGATK requires a genome version, which gets configured by the super-class.
 
         if not self.genome_version:
@@ -2981,22 +2979,22 @@ class VariantCallingGATK(Analysis):
             self.vep_sql_port = EnsemblVEP.get_sql_port(genome_version=self.genome_version)
 
         if not self.classpath_gatk:
-            self.classpath_gatk = default.classpath_gatk
+            self.classpath_gatk = JavaClassPath.get_gatk()
             if not self.classpath_gatk:
                 raise Exception("A 'VariantCallingGATK' analysis requires a 'classpath_gatk' configuration option.")
 
         if not self.classpath_picard:
-            self.classpath_picard = default.classpath_picard
+            self.classpath_picard = JavaClassPath.get_picard()
             if not self.classpath_picard:
                 raise Exception("A 'VariantCallingGATK' analysis requires a 'classpath_picard' configuration option.")
 
         if not self.classpath_snpeff:
-            self.classpath_snpeff = default.classpath_snpeff
+            self.classpath_snpeff = JavaClassPath.get_snpeff()
             if not self.classpath_snpeff:
                 raise Exception("A 'VariantCallingGATK' analysis requires a 'classpath_snpeff' configuration option.")
 
         if not self.classpath_vcf_filter:
-            self.classpath_vcf_filter = default.classpath_vcf_filter
+            self.classpath_vcf_filter = JavaClassPath.get_vcf_filter()
             if not self.classpath_vcf_filter:
                 raise Exception("A 'VariantCallingGATK' analysis requires a "
                                 "'classpath_vcf_filter' configuration option.")
@@ -3967,7 +3965,7 @@ class VariantCallingGATK(Analysis):
                 runnable=runnable_diagnose_sample)
             # Set dependencies on preceding Runnable.name or Executable.name objects.
             executable_diagnose_sample.dependencies.append(runnable_process_sample.name)
-            # Set dependencies for succeding Runnable or Executable objects.
+            # Set dependencies for succeeding Runnable or Executable objects.
             runnable_diagnose_sample_list.append(runnable_diagnose_sample)
 
             reference_diagnose_sample = runnable_diagnose_sample.get_absolute_cache_file_path(

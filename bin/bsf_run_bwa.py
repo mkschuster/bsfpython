@@ -32,7 +32,7 @@ import pickle
 import shutil
 
 from bsf.process import Command, Executable
-from bsf.standards import Default
+from bsf.standards import Default, JavaClassPath
 
 # Set the environment consistently.
 
@@ -82,7 +82,7 @@ key = 'classpath_picard'
 if key in pickler_dict and pickler_dict[key]:
     classpath_picard = pickler_dict[key]
 else:
-    classpath_picard = default.classpath_picard
+    classpath_picard = JavaClassPath.get_picard()
 
 # Create a temporary directory.
 

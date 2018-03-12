@@ -41,7 +41,7 @@ from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.ngs import Reads, PairedReads, SampleAnnotationSheet
 from bsf.process import RunnableStep, RunnableStepChangeMode, RunnableStepPicard, RunnableStepMakeDirectory, \
     RunnableStepMove
-from bsf.standards import Default
+from bsf.standards import Default, JavaClassPath, Operator
 
 
 class PicardIlluminaRunFolder(Analysis):
@@ -276,8 +276,6 @@ class PicardIlluminaRunFolder(Analysis):
         @rtype:
         """
 
-        default = Default.get_global_default()
-
         # Define an Illumina Run Folder directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
@@ -360,7 +358,10 @@ class PicardIlluminaRunFolder(Analysis):
         # Get the Picard tools Java Archive (JAR) class path directory.
 
         if not self.classpath_picard:
-            self.classpath_picard = default.classpath_picard
+            self.classpath_picard = JavaClassPath.get_picard()
+            if not self.classpath_picard:
+                raise Exception("A 'PicardIlluminaRunFolder' analysis requires a "
+                                "'classpath_picard' configuration option.")
 
         # Call the run method of the super class after the project_name has been defined.
 
@@ -744,8 +745,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         super(ExtractIlluminaRunFolder, self).run()
 
-        default = Default.get_global_default()
-
         self.samples_directory = self.configuration.get_absolute_path(
             file_path=self.samples_directory,
             default_path=Default.absolute_samples())
@@ -761,7 +760,10 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # Get sequencing centre information.
 
         if not self.sequencing_centre:
-            self.sequencing_centre = default.operator_sequencing_centre
+            self.sequencing_centre = Operator.get_sequencing_centre()
+            if not self.sequencing_centre:
+                raise Exception("An 'ExtractIlluminaRunFolder' analysis requires a "
+                                "'sequencing_centre' configuration option.")
 
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
@@ -1413,12 +1415,13 @@ class DownsampleSam(Analysis):
 
         super(DownsampleSam, self).run()
 
-        default = Default.get_global_default()
-
         # Get the Picard tools Java Archive (JAR) class path directory.
 
         if not self.classpath_picard:
-            self.classpath_picard = default.classpath_picard
+            self.classpath_picard = JavaClassPath.get_picard()
+            if not self.classpath_picard:
+                raise Exception("A 'DownsampleSam' analysis requires a "
+                                "'classpath_picard' configuration option.")
 
         run_read_comparisons()
 
@@ -1690,12 +1693,13 @@ class SamToFastq(Analysis):
 
         super(SamToFastq, self).run()
 
-        default = Default.get_global_default()
-
         # Get the Picard tools Java Archive (JAR) class path directory.
 
         if not self.classpath_picard:
-            self.classpath_picard = default.classpath_picard
+            self.classpath_picard = JavaClassPath.get_picard()
+            if not self.classpath_picard:
+                raise Exception("A 'SamToFastq' analysis requires a "
+                                "'classpath_picard' configuration option.")
 
         run_read_comparisons()
 

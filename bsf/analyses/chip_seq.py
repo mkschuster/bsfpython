@@ -37,7 +37,7 @@ from bsf import Analysis, defaults, FilePath, Runnable
 from bsf.annotation import AnnotationSheet
 from bsf.executables import BWA, Macs14
 from bsf.ngs import Sample
-from bsf.standards import Default
+from bsf.standards import Default, JavaClassPath
 
 
 class ChIPSeqComparison(object):
@@ -1326,8 +1326,6 @@ class ChIPSeq(Analysis):
 
         # Get global defaults.
 
-        default = Default.get_global_default()
-
         super(ChIPSeq, self).run()
 
         # ChIPSeq requires a genome version.
@@ -1350,7 +1348,7 @@ class ChIPSeq(Analysis):
             self.genome_sizes_path = self.configuration.get_absolute_path(file_path=self.genome_sizes_path)
 
         if not self.classpath_picard:
-            self.classpath_picard = default.classpath_picard
+            self.classpath_picard = JavaClassPath.get_picard()
             if not self.classpath_picard:
                 raise Exception("A 'ChIPSeq' analysis requires a 'classpath_picard' configuration option.")
 

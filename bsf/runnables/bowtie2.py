@@ -38,7 +38,7 @@ from bsf.analyses.chip_seq import FilePathAlignment
 from bsf.argument import OptionShort
 from bsf.executables import Bowtie2
 from bsf.process import Command, Executable
-from bsf.standards import Default
+from bsf.standards import JavaClassPath
 
 
 class ReadGroupContainer(object):
@@ -126,8 +126,6 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     @return:
     @rtype:
     """
-    default = Default.get_global_default()
-
     # Propagate SAM header lines @PG and @RG around FASTQ files into the final BAM file. Sigh!
 
     bam_file_name = os.path.basename(bam_file_path)
@@ -172,7 +170,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     java_process.add_option_pair(key='-Djava.io.tmpdir', value=runnable.get_relative_temporary_directory_path)
 
     picard_process = java_process.sub_command
-    picard_process.add_option_short(key='jar', value=os.path.join(default.classpath_picard, 'picard.jar'))
+    picard_process.add_option_short(key='jar', value=os.path.join(JavaClassPath.get_picard(), 'picard.jar'))
     picard_process.sub_command = Command(program='SamToFastq')
 
     sam_to_fastq = picard_process.sub_command
@@ -373,8 +371,6 @@ def run_bowtie2(runnable):
     if len(sam_file_path_list) > 1:
         # SAM files need merging.
 
-        default = Default.get_global_default()
-
         java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command())
         java_process.add_switch_short(key='d64')
         java_process.add_switch_short(key='server')
@@ -382,7 +378,7 @@ def run_bowtie2(runnable):
         java_process.add_option_pair(key='-Djava.io.tmpdir', value=runnable.get_relative_temporary_directory_path)
 
         picard_process = java_process.sub_command
-        picard_process.add_option_short(key='jar', value=os.path.join(default.classpath_picard, 'picard.jar'))
+        picard_process.add_option_short(key='jar', value=os.path.join(JavaClassPath.get_picard(), 'picard.jar'))
         picard_process.sub_command = Command(program='SamToFastq')
 
         sam_to_fastq = picard_process.sub_command

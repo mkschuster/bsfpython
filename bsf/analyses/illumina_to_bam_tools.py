@@ -37,7 +37,7 @@ from bsf.illumina import RunFolder, RunFolderNotComplete
 from bsf.ngs import SampleAnnotationSheet
 from bsf.process import Command, RunnableStepChangeMode, RunnableStepJava, RunnableStepPicard, \
     RunnableStepLink, RunnableStepMakeDirectory, RunnableStepMove
-from bsf.standards import Default
+from bsf.standards import Default, JavaClassPath, Operator
 
 
 class BamIndexDecoderSheet(AnnotationSheet):
@@ -773,8 +773,6 @@ class IlluminaToBam(Analysis):
         @rtype:
         """
 
-        default = Default.get_global_default()
-
         # Define an Illumina Run Folder directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
@@ -857,7 +855,10 @@ class IlluminaToBam(Analysis):
         # Get sequencing centre information.
 
         if not self.sequencing_centre:
-            self.sequencing_centre = default.operator_sequencing_centre
+            self.sequencing_centre = Operator.get_sequencing_centre()
+            if not self.sequencing_centre:
+                raise Exception("An 'IlluminaToBam' analysis requires a "
+                                "'sequencing_centre' configuration option.")
 
         # Define the sequences directory in which to create the experiment directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
@@ -881,12 +882,18 @@ class IlluminaToBam(Analysis):
         # Get the Illumina2Bam tools Java Archive (JAR) class path directory.
 
         if not self.classpath_illumina2bam:
-            self.classpath_illumina2bam = default.classpath_illumina2bam
+            self.classpath_illumina2bam = JavaClassPath.get_illumina2bam()
+            if not self.classpath_illumina2bam:
+                raise Exception("An 'IlluminaToBam' analysis requires a "
+                                "'classpath_illumina2bam' configuration option.")
 
         # Get the Picard tools Java Archive (JAR) class path directory
 
         if not self.classpath_picard:
-            self.classpath_picard = default.classpath_picard
+            self.classpath_picard = JavaClassPath.get_picard()
+            if not self.classpath_picard:
+                raise Exception("An 'IlluminaToBam' analysis requires a "
+                                "'classpath_picard' configuration option.")
 
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
@@ -1477,8 +1484,6 @@ class BamIndexDecoder(Analysis):
 
         super(BamIndexDecoder, self).run()
 
-        default = Default.get_global_default()
-
         # Load from the configuration file and override with the default if necessary.
 
         # Define the sequences and samples directory.
@@ -1538,12 +1543,18 @@ class BamIndexDecoder(Analysis):
         # Get the Illumina2Bam tools Java Archive (JAR) class path directory.
 
         if not self.classpath_illumina2bam:
-            self.classpath_illumina2bam = default.classpath_illumina2bam
+            self.classpath_illumina2bam = JavaClassPath.get_illumina2bam()
+            if not self.classpath_illumina2bam:
+                raise Exception("An 'BamIndexDecoder' analysis requires a "
+                                "'classpath_illumina2bam' configuration option.")
 
         # Get the Picard tools Java Archive (JAR) class path directory.
 
         if not self.classpath_picard:
-            self.classpath_picard = default.classpath_picard
+            self.classpath_picard = JavaClassPath.get_picard()
+            if not self.classpath_picard:
+                raise Exception("An 'BamIndexDecoder' analysis requires a "
+                                "'classpath_picard' configuration option.")
 
         stage_lane = self.get_stage(name=self.stage_name_lane)
         stage_cell = self.get_stage(name=self.stage_name_cell)
