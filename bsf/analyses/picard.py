@@ -1073,7 +1073,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             runnable_step.add_picard_option(key='SEQUENCING_CENTER', value=self.sequencing_centre)
             # NOTE: The ISO date format still does not work for Picard tools 2.6.1. Sigh.
             # runnable_step.add_picard_option(key='RUN_START_DATE', value=self._irf.run_information.get_iso_date)
-            # NOTE: The only date format that seems to work is mm/dd/yyyy. Why?
+            # NOTE: The only date format that seems to work is MM/DD/YYYY. Why?
             runnable_step.add_picard_option(
                 key='RUN_START_DATE',
                 value='/'.join((
@@ -1479,17 +1479,16 @@ class DownsampleSam(Analysis):
 
                     # Create a new RunnableStepMakeDirectory in preparation of the Picard program.
 
-                    if False:
-                        runnable_picard_dss.add_runnable_step(
-                            runnable_step=RunnableStepMakeDirectory(
-                                name='mkdir',
-                                directory_path=file_path_read_group.output_directory))
+                    # runnable_picard_dss.add_runnable_step(
+                    #     runnable_step=RunnableStepMakeDirectory(
+                    #         name='make_directory',
+                    #         directory_path=file_path_read_group.output_directory))
 
                     # Create a new RunnableStep for the Picard DownsampleSam program.
 
                     runnable_step = runnable_picard_dss.add_runnable_step(
                         runnable_step=RunnableStepPicard(
-                            name='picard_donwsample_sam',
+                            name='picard_downsample_sam',
                             java_temporary_path=runnable_picard_dss.get_relative_temporary_directory_path,
                             java_heap_maximum='Xmx2G',
                             picard_classpath=self.classpath_picard,
@@ -1532,11 +1531,56 @@ class DownsampleSam(Analysis):
         return
 
 
-class FilePathSamToFastq(FilePath):
+class FilePathSamToFastqReadGroup(FilePath):
+    """The C{bsf.analyses.picard.FilePathSamToFastqReadGroup} class models read group-specific Picard SamToFastq files.
+
+    Attributes:
+    @ivar output_directory: Output directory
+    @type output_directory: str | unicode
+    """
     def __init__(self, prefix):
-        super(FilePathSamToFastq, self).__init__(prefix=prefix)
+        """Initialise a C{bsf.analyses.picard.FilePathSamToFastqReadGroup} object.
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
+        super(FilePathSamToFastqReadGroup, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
+
+        return
+
+
+class FilePathSamToFastqProject(FilePath):
+    """The C{bsf.analyses.picard.FilePathSamToFastqProject} class models project-specific Picard SamToFastq files.
+
+    Attributes:
+    @ivar output_directory: Output directory
+    @type output_directory: str | unicode
+    @ivar sas_path_old: Old Sample Annotation Sheet file path
+    @type sas_path_old: str | unicode
+    @ivar sas_path_new: New Sample Annotation Sheet file path
+    @type sas_path_new: str | unicode
+    """
+    def __init__(self, prefix, prefix_analysis, project_name):
+        """Initialise a C{bsf.analyses.picard.FilePathSamToFastqProject} object.
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @param prefix_analysis: C{bsf.Analysis.prefix}
+        @type prefix_analysis: str
+        @param project_name: Project name
+        @type project_name: str
+        @return:
+        @rtype
+        """
+        super(FilePathSamToFastqProject, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
+        self.sas_path_old = '_'.join((project_name, prefix_analysis, 'original.csv'))
+        self.sas_path_new = '_'.join((project_name, prefix_analysis, 'samples.csv'))
 
         return
 
@@ -1550,14 +1594,21 @@ class SamToFastq(Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
+    @cvar stage_name_read_group: C{bsf.Stage.name} for read group-specific C{bsf.Runnable} objects
+    @type stage_name_read_group: str
+    @cvar stage_name_project: C{bsf.Stage.name} for project-specific C{bsf.Runnable} objects
+    @type stage_name_project: str
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | unicode
+    @type classpath_picard: None | str | unicode
     @ivar include_non_pf_reads: Include non-pass filer reads
     @type include_non_pf_reads: bool
     """
 
     name = 'Picard SamToFastq Analysis'
     prefix = 'picard_sam_to_fastq'
+
+    stage_name_read_group = '_'.join((prefix, 'read_group'))
+    stage_name_project = '_'.join((prefix, 'project'))
 
     def __init__(
             self,
@@ -1604,7 +1655,7 @@ class SamToFastq(Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode
+        @type classpath_picard: None | str | unicode
         @param include_non_pf_reads: Include non-pass filer reads
         @type include_non_pf_reads: bool
         @return:
@@ -1625,16 +1676,8 @@ class SamToFastq(Analysis):
             collection=collection,
             sample_list=sample_list)
 
-        if classpath_picard is None:
-            self.classpath_picard = str()
-        else:
-            self.classpath_picard = classpath_picard
-
-        if include_non_pf_reads is None:
-            self.include_non_pass_filter_reads = False
-        else:
-            assert isinstance(include_non_pf_reads, bool)
-            self.include_non_pass_filter_reads = include_non_pf_reads
+        self.classpath_picard = classpath_picard
+        self.include_non_pass_filter_reads = include_non_pf_reads
 
         return
 
@@ -1703,11 +1746,13 @@ class SamToFastq(Analysis):
 
         run_read_comparisons()
 
-        prune_sas_dependencies = list()
-
         # Picard SamToFastq
 
-        stage_picard_stf = self.get_stage(name='picard_sam_to_fastq')
+        stage_read_group = self.get_stage(name=self.stage_name_read_group)
+        stage_project = self.get_stage(name=self.stage_name_project)
+
+        project_dependency_list = list()
+        """ @type project_dependency_list: list[str] """
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -1732,9 +1777,9 @@ class SamToFastq(Analysis):
                     reads = paired_reads.reads_1
                     if reads.file_path.endswith('.bam'):
                         bam_file_path = reads.file_path
-                        prefix_picard_stf = '_'.join((stage_picard_stf.name, paired_reads_name))
+                        prefix_read_group = '_'.join((stage_read_group.name, paired_reads_name))
 
-                        file_path_picard_stf = FilePathSamToFastq(prefix=prefix_picard_stf)
+                        file_path_read_group = FilePathSamToFastqReadGroup(prefix=prefix_read_group)
 
                         # Get the SAM header of a BAM file to extract the read group (@RG), amongst other things.
 
@@ -1762,14 +1807,14 @@ class SamToFastq(Analysis):
                                 paired_reads.reads_1.name = platform_unit + '_1'
                                 paired_reads.reads_1.file_path = os.path.join(
                                     self.project_directory,
-                                    file_path_picard_stf.output_directory,
-                                    platform_unit + '_1.fastq')
+                                    file_path_read_group.output_directory,
+                                    platform_unit + '_1.fastq.gz')
                                 paired_reads.reads_2 = Reads(
                                     name=platform_unit + '_2',
                                     file_path=os.path.join(
                                         self.project_directory,
-                                        file_path_picard_stf.output_directory,
-                                        platform_unit + '_2.fastq'),
+                                        file_path_read_group.output_directory,
+                                        platform_unit + '_2.fastq.gz'),
                                     file_type=paired_reads.reads_1.file_type,
                                     lane=paired_reads.reads_1.lane,
                                     read=paired_reads.reads_1.read,
@@ -1783,8 +1828,8 @@ class SamToFastq(Analysis):
                                     name=platform_unit + '_1',
                                     file_path=os.path.join(
                                         self.project_directory,
-                                        file_path_picard_stf.output_directory,
-                                        platform_unit + '_1.fastq'),
+                                        file_path_read_group.output_directory,
+                                        platform_unit + '_1.fastq.gz'),
                                     file_type=paired_reads.reads_1.file_type,
                                     lane=paired_reads.reads_1.lane,
                                     read='R1',
@@ -1793,8 +1838,8 @@ class SamToFastq(Analysis):
                                     name=platform_unit + '_2',
                                     file_path=os.path.join(
                                         self.project_directory,
-                                        file_path_picard_stf.output_directory,
-                                        platform_unit + '_2.fastq'),
+                                        file_path_read_group.output_directory,
+                                        platform_unit + '_2.fastq.gz'),
                                     file_type=paired_reads.reads_1.file_type,
                                     lane=paired_reads.reads_1.lane,
                                     read='R2',
@@ -1812,43 +1857,45 @@ class SamToFastq(Analysis):
 
                         # Create a Runnable for running the Picard SamToFastq analysis.
 
-                        runnable_picard_stf = self.add_runnable(
+                        runnable_read_group = self.add_runnable(
                             runnable=Runnable(
-                                name=prefix_picard_stf,
+                                name=prefix_read_group,
                                 code_module='bsf.runnables.generic',
                                 working_directory=self.project_directory,
-                                file_path_object=file_path_picard_stf))
+                                file_path_object=file_path_read_group))
+                        self.set_stage_runnable(stage=stage_read_group, runnable=runnable_read_group)
 
-                        # Create an Executable for running the Picard SamToFastq Runnable.
+                        # Record the Executable.name for the project dependency.
 
-                        self.set_stage_runnable(stage=stage_picard_stf, runnable=runnable_picard_stf)
-
-                        # Record the Executable.name for the prune_sas dependency.
-
-                        prune_sas_dependencies.append(runnable_picard_stf.name)
+                        project_dependency_list.append(runnable_read_group.name)
 
                         # Create a new RunnableStepMakeDirectory in preparation of the Picard program.
 
-                        runnable_picard_stf.add_runnable_step(
+                        runnable_read_group.add_runnable_step(
                             runnable_step=RunnableStepMakeDirectory(
                                 name='mkdir',
-                                directory_path=file_path_picard_stf.output_directory))
+                                directory_path=file_path_read_group.output_directory))
 
                         # Create a new RunnableStep for the Picard SamToFastq program.
 
-                        runnable_step = runnable_picard_stf.add_runnable_step(
+                        runnable_step = runnable_read_group.add_runnable_step(
                             runnable_step=RunnableStepPicard(
                                 name='picard_sam_to_fastq',
-                                java_temporary_path=runnable_picard_stf.get_relative_temporary_directory_path,
+                                java_temporary_path=runnable_read_group.get_relative_temporary_directory_path,
                                 java_heap_maximum='Xmx2G',
                                 picard_classpath=self.classpath_picard,
                                 picard_command='SamToFastq'))
                         """ @type runnable_step: RunnableStepPicard """
                         runnable_step.add_picard_option(key='INPUT', value=bam_file_path)
+                        # FASTQ
+                        # SECOND_END_FASTQ
+                        # UNPAIRED_FASTQ
                         runnable_step.add_picard_option(key='OUTPUT_PER_RG', value='true')
+                        runnable_step.add_picard_option(key='COMPRESS_OUTPUTS_PER_RG', value='true')
+                        # RG_TAG
                         runnable_step.add_picard_option(
                             key='OUTPUT_DIR',
-                            value=file_path_picard_stf.output_directory)
+                            value=file_path_read_group.output_directory)
                         # RE_REVERSE
                         # INTERLEAVE
                         if self.include_non_pass_filter_reads:
@@ -1857,14 +1904,16 @@ class SamToFastq(Analysis):
                             runnable_step.add_picard_option(key='INCLUDE_NON_PF_READS', value='false')
                         # CLIPPING_ATTRIBUTE
                         # CLIPPING_ACTION
+                        # CLIPPING_MIN_LENGTH
                         # READ1_TRIM
                         # READ1_MAX_BASES_TO_WRITE
                         # READ2_TRIM
                         # READ2_MAX_BASES_TO_WRITE
+                        # QUALITY
                         # INCLUDE_NON_PRIMARY_ALIGNMENTS
                         runnable_step.add_picard_option(
                             key='TMP_DIR',
-                            value=runnable_picard_stf.get_relative_temporary_directory_path)
+                            value=runnable_read_group.get_relative_temporary_directory_path)
                         # VERBOSITY defaults to 'INFO'.
                         runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                         # QUIET defaults to 'false'.
@@ -1872,47 +1921,48 @@ class SamToFastq(Analysis):
                         # VALIDATION_STRINGENCY defaults to 'STRICT'.
                         runnable_step.add_picard_option(key='VALIDATION_STRINGENCY', value='STRICT')
                         # COMPRESSION_LEVEL defaults to '5'.
+                        runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
                         # MAX_RECORDS_IN_RAM defaults to '500000'.
                         # CREATE_INDEX defaults to 'false'.
                         # CREATE_MD5_FILE defaults to 'false'.
+                        runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
                         # OPTIONS_FILE
+
+        # Create a Runnable for pruning the sample annotation sheet.
+
+        prefix_project = '_'.join((stage_project.name, self.project_name))
+
+        file_path_project = FilePathSamToFastqProject(
+            prefix=prefix_project,
+            prefix_analysis=self.prefix,
+            project_name=self.project_name)
 
         # Convert the (modified) Collection object into a SampleAnnotationSheet object and write it to disk.
 
         annotation_sheet = self.collection.to_sas(
-            file_path=os.path.join(
-                self.project_directory,
-                '_'.join((self.project_name, 'picard_sam_to_fastq_original.csv'))),
-            name='_'.join((self.project_name, 'picard_sam_to_fastq')))
-
+            file_path=os.path.join(self.project_directory, file_path_project.sas_path_old),
+            name=prefix_project)
         annotation_sheet.to_file_path()
 
-        # Create a Runnable for pruning the sample annotation sheet.
-
-        prefix_prune_sas = '_'.join((stage_picard_stf.name, self.project_name))
-
-        file_path_prune_sas = FilePathSamToFastq(prefix=prefix_prune_sas)
-
-        runnable_prune_sas = self.add_runnable(
+        runnable_project = self.add_runnable(
             runnable=Runnable(
-                name=prefix_prune_sas,
+                name=prefix_project,
                 code_module='bsf.runnables.picard_sam_to_fastq_sample_sheet',
                 working_directory=self.project_directory,
-                file_path_object=file_path_prune_sas))
-
-        # Create an Executable for running the Runnable for pruning the sample annotation sheet.
-
-        executable_prune_sas = self.set_stage_runnable(
-            stage=stage_picard_stf,
-            runnable=runnable_prune_sas)
-        executable_prune_sas.dependencies.extend(prune_sas_dependencies)
+                file_path_object=file_path_project))
+        executable_project = self.set_stage_runnable(
+            stage=stage_project,
+            runnable=runnable_project)
+        executable_project.dependencies.extend(project_dependency_list)
 
         # Create a new RunnableStep.
 
-        prune_sas = runnable_prune_sas.add_runnable_step(
+        runnable_step_project = runnable_project.add_runnable_step(
             runnable_step=RunnableStep(
                 name='prune_sample_annotation_sheet'))
 
-        prune_sas.add_option_long(key='sas_path', value=annotation_sheet.file_path)
+        runnable_step_project.add_option_long(key='sas_path_old', value=file_path_project.sas_path_old)
+        runnable_step_project.add_option_long(key='sas_path_new', value=file_path_project.sas_path_new)
+        runnable_step_project.add_option_long(key='minimum_size', value='1024')
 
-        return annotation_sheet
+        return

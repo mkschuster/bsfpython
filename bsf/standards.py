@@ -958,6 +958,15 @@ class JavaClassPath(InitialisationBase):
         return cls.get(option='snpeff')
 
     @classmethod
+    def get_trimmomatic(cls):
+        """Get the Trimmomatic Java class path.
+
+        @return: Trimmomatic Java class path
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='trimmomatic')
+
+    @classmethod
     def get_vcf_filter(cls):
         """Get the VCF.Filter Java class path.
 

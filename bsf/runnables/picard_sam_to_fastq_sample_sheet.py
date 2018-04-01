@@ -29,7 +29,6 @@ A package of classes and methods to clean a sample sheet for the Picard SamToFas
 
 import os
 
-from bsf.argument import OptionLong
 from bsf.ngs import Collection
 
 
@@ -41,6 +40,16 @@ def run(runnable):
     @return:
     @rtype:
     """
+    def run_get_value(key):
+        """Get the value of the first C{bsf.argument.OptionLong} object registered under a key
+        in the first C{bsf.process.RunnableStep} object of this C{bsf.Runnable} object.
+
+        @param key:
+        @return:
+        """
+        argument = runnable_step.options[key][0]
+        """ @type argument: bsf.argument.OptionLong """
+        return argument.value
 
     # If the Runnable status file exists, there is nothing to do and
     # this Runnable should not have been submitted in the first place.
@@ -51,20 +60,16 @@ def run(runnable):
     # Do the work.
 
     runnable_step = runnable.runnable_step_list[0]
-    argument = runnable_step.options['sas_path'][0]
-    """ @type argument: bsf.argument.OptionLong """
-    assert isinstance(argument, OptionLong)
-    old_file_path = argument.value
-    if old_file_path.endswith('_original.csv'):
-        new_file_path = old_file_path[:-13] + '_samples.csv'
-    else:
-        new_file_path = old_file_path
+
+    file_path_old = run_get_value(key='sas_path_old')
+    file_path_new = run_get_value(key='sas_path_new')
+    minimum_size = int(run_get_value(key='minimum_size'))
 
     collection = Collection.from_sas_path(
         file_path='',
         file_type='',
         name='picard_sam_to_fastq',
-        sas_path=argument.value)
+        sas_path=file_path_old)
 
     for prf in collection.processed_run_folder_dict.itervalues():
         for project in prf.project_dict.itervalues():
@@ -75,7 +80,7 @@ def run(runnable):
                     paired_reads_keep = False
                     if paired_reads.reads_1 is not None:
                         if os.path.exists(paired_reads.reads_1.file_path):
-                            if os.path.getsize(paired_reads.reads_1.file_path):
+                            if os.path.getsize(paired_reads.reads_1.file_path) >= minimum_size:
                                 paired_reads_keep = True
                             else:
                                 os.remove(paired_reads.reads_1.file_path)
@@ -84,7 +89,7 @@ def run(runnable):
                             paired_reads.reads_1 = None
                     if paired_reads.reads_2 is not None:
                         if os.path.exists(paired_reads.reads_2.file_path):
-                            if os.path.getsize(paired_reads.reads_2.file_path):
+                            if os.path.getsize(paired_reads.reads_2.file_path) >= minimum_size:
                                 paired_reads_keep = True
                             else:
                                 os.remove(paired_reads.reads_2.file_path)
@@ -99,7 +104,7 @@ def run(runnable):
                 # The Sample object could have lost all its PairedReads objects.
                 # The PairedReads objects may no longer have the correct weakref to their Sample.
 
-    collection.to_sas_path(name='picard_sam_to_fastq', file_path=new_file_path)
+    collection.to_sas_path(name='picard_sam_to_fastq', file_path=file_path_new)
 
     runnable_step.remove_obsolete_file_paths()
 
