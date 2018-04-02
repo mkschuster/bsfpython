@@ -1379,6 +1379,7 @@ class Tuxedo(Analysis):
         # Create one process_cufflinks Executable to process all sub-directories.
 
         if len(runnable_run_cufflinks_list):
+            # TODO: Convert this into a Runnable and RunnableStep.
             executable_process_cufflinks = stage_process_cufflinks.add_executable(
                 executable=Executable(
                     name=stage_process_cufflinks.name,
@@ -1449,7 +1450,8 @@ class Tuxedo(Analysis):
             executable_run_cuffmerge = self.set_stage_runnable(
                 stage=stage_run_cuffmerge,
                 runnable=runnable_run_cuffmerge)
-            executable_run_cuffmerge.submit = cuffmerge_cuffnorm_submit
+            # Submit the Executable if the status file AND the sample group list above supports it.
+            executable_run_cuffmerge.submit &= cuffmerge_cuffnorm_submit
             # Set a dependency on all other Cuffmerge process to avoid file contention.
             executable_cuffmerge_dict[prefix_cuffmerge] = executable_run_cuffmerge
 
@@ -1706,7 +1708,8 @@ class Tuxedo(Analysis):
             executable_run_cuffnorm = self.set_stage_runnable(
                 stage=stage_run_cuffnorm,
                 runnable=runnable_run_cuffnorm)
-            executable_run_cuffnorm.submit = cuffmerge_cuffnorm_submit
+            # Submit the Executable if the status file AND the sample group list above supports it.
+            executable_run_cuffnorm.submit &= cuffmerge_cuffnorm_submit
             executable_run_cuffnorm.dependencies.extend(cuffdiff_cuffnorm_dependencies)
 
             # Create a new Cuffnorm RunnableStep.
