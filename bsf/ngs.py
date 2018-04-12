@@ -42,13 +42,13 @@ class NextGenerationBase(object):
 
     Attributes:
     @ivar name: Name
-    @type name: str
+    @type name: str | unicode
     @ivar file_path: File path
     @type file_path: str | unicode
     @ivar file_type: File type
         I{CASAVA}: FASTQ file after post-processing with CASAVA
         I{External}: other data files
-    @type file_type: str
+    @type file_type: str | None
     @ivar annotation_dict: Python C{dict} for annotation of Python C{str} key and
         Python C{list} of Python C{str} value data
     @type annotation_dict: dict[str, list[str]]
@@ -63,11 +63,11 @@ class NextGenerationBase(object):
         """Initialise a C{bsf.ngs.Reads} object.
 
         @param name: Name
-        @type name: str
+        @type name: str | unicode
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
-        @type file_type: str
+        @type file_type: str | None
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
         @type annotation_dict: dict[str, list[str]] | None
@@ -86,10 +86,7 @@ class NextGenerationBase(object):
         else:
             self.file_path = file_path
 
-        if file_type is None:
-            self.file_type = str()
-        else:
-            self.file_type = file_type
+        self.file_type = file_type
 
         if annotation_dict is None:
             self.annotation_dict = dict()
@@ -111,7 +108,8 @@ class NextGenerationBase(object):
         if self is other:
             return True
 
-        return self.name == other.name \
+        return \
+            self.name == other.name \
             and self.file_path == other.file_path \
             and self.file_type == other.file_type \
             and self.annotation_dict == other.annotation_dict
@@ -129,7 +127,8 @@ class NextGenerationBase(object):
         if self is other:
             return False
 
-        return self.name != other.name \
+        return \
+            self.name != other.name \
             or self.file_path != other.file_path \
             or self.file_type != other.file_type \
             or self.annotation_dict != other.annotation_dict
@@ -144,7 +143,6 @@ class NextGenerationBase(object):
         @return:
         @rtype:
         """
-
         if self.annotation_dict is None:
             self.annotation_dict = dict()
 
@@ -158,7 +156,7 @@ class NextGenerationBase(object):
 
         return
 
-    def process_annotation(self, row_dict, key_list, prefix):
+    def process_annotation(self, row_dict, key_list, prefix=None):
         """Process annotation from a Python C{dict} of row entries of a Python C{csv} object.
 
         @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
@@ -167,11 +165,16 @@ class NextGenerationBase(object):
         @type key_list: list[str]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] ReadsN', '[Treatment] ReadsN', '[Point N] ReadsN', ...)
-        @type prefix: str
+        @type prefix: str | None
         @return:
         @rtype:
         """
-        re_pattern = re.compile(pattern=' '.join((prefix, self.__class__.__name__)).lstrip())
+        pattern = self.__class__.__name__
+        if prefix:
+            pattern = prefix + ' ' + pattern
+
+        re_pattern = re.compile(pattern=pattern)
+
         for key in list(key_list):
             # Only match the pattern at the start of the string.
             re_match = re.match(pattern=re_pattern, string=key)
@@ -193,15 +196,15 @@ class Reads(NextGenerationBase):
 
     Attributes:
     @ivar barcode: Barcode used for sample multiplexing
-    @type barcode: str | unicode
+    @type barcode: str | unicode | None
     @ivar lane: Lane number
-    @type lane: str | unicode
+    @type lane: str | unicode | None
     @ivar read: Read number (e.g. I{R1}, I{R2}, ...)
-    @type read: str | unicode
+    @type read: str | unicode | None
     @ivar chunk: Chunk number (e.g. I{001}, I{002}, ...)
-    @type chunk: str | unicode
+    @type chunk: str | unicode | None
     @ivar weak_reference_paired_reads: C{weakref.ReferenceType} pointing at a C{bsf.ngs.PairedReads} object
-    @type weak_reference_paired_reads: weakref.ReferenceType
+    @type weak_reference_paired_reads: weakref.ReferenceType | None
     """
 
     @classmethod
@@ -219,31 +222,29 @@ class Reads(NextGenerationBase):
         @return: C{bsf.ngs.Reads} object
         @rtype: bsf.ngs.Reads
         """
-
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
         if file_type == 'CASAVA':
-            # CASAVA Reads obey a SampleName_Index_Lane_Read_Chunk schema.
+            # CASAVA Reads obey a SampleName_Index_Lane_Read_Chunk.fastq.gz schema.
 
-            component_list = file_name.split('.')  # Split file extensions
+            # Split file extensions first, base name components second.
+            component_list = file_name.split('.')[0].split('_')
+            # Since SampleName can contain underscores, list components need assigning from the end
+            # i.e. via negative indices.
 
-            component_list[0] = component_list[0].split('_')  # Split components
-
-            reads = cls(
-                name='_'.join(component_list[0][:-4]),  # Exclude the SampleName
+            return cls(
+                name='_'.join(component_list[:-4]),  # Exclude the last four components
                 file_path=file_path,
                 file_type=file_type,
                 annotation_dict=None,
-                barcode=component_list[0][-4],
-                lane=component_list[0][-3],
-                read=component_list[0][-2],
-                chunk=component_list[0][-1],
+                barcode=component_list[-4],
+                lane=component_list[-3],
+                read=component_list[-2],
+                chunk=component_list[-1],
                 weak_reference_paired_reads=None)
         else:
-            raise Exception('Unsupported file_type {!r}.'.format(file_type))
-
-        return reads
+            raise Exception('Unsupported file_type: ' + repr(file_type))
 
     def __init__(
             self,
@@ -259,7 +260,7 @@ class Reads(NextGenerationBase):
         """Initialise a C{bsf.ngs.Reads} object.
 
         @param name: Name
-        @type name: str
+        @type name: str | unicode
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
@@ -268,19 +269,18 @@ class Reads(NextGenerationBase):
             Python C{list} of Python C{str} value data
         @type annotation_dict: dict[str, list[str]] | None
         @param barcode: Barcode used for sample multiplexing
-        @type barcode: str | unicode
+        @type barcode: str | unicode | None
         @param lane: Lane number
-        @type lane: str | unicode
+        @type lane: str | unicode | None
         @param read: Read number (e.g. I{R1}, I{R2}, ...)
-        @type read: str | unicode
+        @type read: str | unicode | None
         @param chunk: Chunk number (e.g. I{001}, I{002}, ...)
-        @type chunk:str | unicode
+        @type chunk: str | unicode | None
         @param weak_reference_paired_reads: C{weakref.ReferenceType} pointing at a C{bsf.ngs.PairedReads} object
         @type weak_reference_paired_reads: weakref.ReferenceType | None
         @return:
         @rtype:
         """
-
         super(Reads, self).__init__(
             name=name,
             file_path=file_path,
@@ -288,27 +288,11 @@ class Reads(NextGenerationBase):
             annotation_dict=annotation_dict
         )
 
-        if barcode is None:
-            self.barcode = str()
-        else:
-            self.barcode = barcode
-
-        if lane is None:
-            self.lane = str()
-        else:
-            self.lane = lane
-
-        if read is None:
-            self.read = str()
-        else:
-            self.read = read
-
-        if chunk is None:
-            self.chunk = str()
-        else:
-            self.chunk = chunk
-
-        self.weak_reference_paired_reads = weak_reference_paired_reads  # Can be None.
+        self.barcode = barcode
+        self.lane = lane
+        self.read = read
+        self.chunk = chunk
+        self.weak_reference_paired_reads = weak_reference_paired_reads
 
         return
 
@@ -325,7 +309,8 @@ class Reads(NextGenerationBase):
         if self is other:
             return True
 
-        return super(Reads, self).__eq__(other=other) \
+        return \
+            super(Reads, self).__eq__(other=other) \
             and self.barcode == other.barcode \
             and self.lane == other.lane \
             and self.read == other.read \
@@ -344,7 +329,8 @@ class Reads(NextGenerationBase):
         if self is other:
             return False
 
-        return super(Reads, self).__ne__(other=other) \
+        return \
+            super(Reads, self).__ne__(other=other) \
             or self.barcode != other.barcode \
             or self.lane != other.lane \
             or self.read != other.read \
@@ -369,7 +355,6 @@ class Reads(NextGenerationBase):
         @return: Trace information
         @rtype: str
         """
-
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
@@ -491,7 +476,7 @@ class PairedReads(NextGenerationBase):
     @ivar read_group: SAM read group (@RG) information
     @type read_group: str
     @ivar weak_reference_sample: C{weakref.ReferenceType} to a C{bsf.ngs.Sample}
-    @type weak_reference_sample: weakref.ReferenceType
+    @type weak_reference_sample: weakref.ReferenceType | None
     """
 
     def __init__(
@@ -515,7 +500,7 @@ class PairedReads(NextGenerationBase):
         Upon initialisation of this C{bsf.ngs.PairedReads} object, weak references (C{weakref.ReferenceType})
         are set in the C{bsf.ngs.Reads} objects.
         @param name: Name
-        @type name: str
+        @type name: str | unicode
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
@@ -542,7 +527,6 @@ class PairedReads(NextGenerationBase):
         @raise Exception: For C{bsf.ngs.Reads.file_type} I{CASAVA}, I{R1} or I{R2} must be set in the
             C{bsf.ngs.Reads} object.
         """
-
         if (reads_1 and reads_2) and (not reads_1.match_paired(reads=reads_2)):
             raise Exception('The Reads objects do not match.')
 
@@ -565,7 +549,7 @@ class PairedReads(NextGenerationBase):
                     self.reads_2 = reads_1
                     reads_1.weak_reference_paired_reads = weakref.ReferenceType(self)
                 else:
-                    raise Exception('Unknown Reads read attribute {!r}.'.format(reads_1.read))
+                    raise Exception('Unknown Reads read attribute: ' + repr(reads_1.read))
             else:
                 # Other file types go here ...
                 self.reads_1 = reads_1
@@ -580,7 +564,7 @@ class PairedReads(NextGenerationBase):
                     self.reads_2 = reads_2
                     reads_2.weak_reference_paired_reads = weakref.ReferenceType(self)
                 else:
-                    raise Exception('Unknown Reads read attribute {!r}.'.format(reads_2.read))
+                    raise Exception('Unknown Reads read attribute: ' + repr(reads_2.read))
             else:
                 # Other file types go here ...
                 self.reads_2 = reads_2
@@ -606,7 +590,7 @@ class PairedReads(NextGenerationBase):
         else:
             self.read_group = read_group
 
-        self.weak_reference_sample = weak_reference_sample  # Can be None.
+        self.weak_reference_sample = weak_reference_sample
 
         return
 
@@ -623,7 +607,8 @@ class PairedReads(NextGenerationBase):
         if self is other:
             return True
 
-        return super(PairedReads, self).__eq__(other=other) \
+        return \
+            super(PairedReads, self).__eq__(other=other) \
             and self.reads_1 == other.reads_1 \
             and self.reads_2 == other.reads_2 \
             and self.exclude == other.exclude \
@@ -644,7 +629,8 @@ class PairedReads(NextGenerationBase):
         if self is other:
             return False
 
-        return super(PairedReads, self).__ne__(other=other) \
+        return \
+            super(PairedReads, self).__ne__(other=other) \
             or self.reads_1 != other.reads_1 \
             or self.reads_2 != other.reads_2 \
             or self.exclude != other.exclude \
@@ -660,7 +646,6 @@ class PairedReads(NextGenerationBase):
         @return: Trace information
         @rtype: str
         """
-
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
@@ -695,7 +680,6 @@ class PairedReads(NextGenerationBase):
         @return: C{True} upon success, C{False} otherwise
         @rtype: bool
         """
-
         # For CASAVA projects, reads are automatically added to either
         # reads_1 or reads_2 according to the file name.
         # Returns True upon success, False otherwise.
@@ -710,14 +694,14 @@ class PairedReads(NextGenerationBase):
                 if reads.read == 'R1':
                     raise Exception(
                         'PairedReads reads_1 has already been defined.\n'
-                        '  reads_1: {!r}\n'
-                        '  reads:   {!r}'.format(self.reads_1.file_path, reads.file_path))
+                        '  reads_1: ' + repr(self.reads_1.file_path) + '\n'
+                        '  reads:   ' + repr(reads.file_path))
                 elif reads.read == 'R2':
                     self.reads_2 = reads
                     reads.weak_reference_paired_reads = weakref.ReferenceType(self)
                     return True
                 else:
-                    raise Exception('Unknown Reads read attribute {!r}.'.format(reads.read))
+                    raise Exception('Unknown Reads read attribute: ' + repr(reads.read))
             else:
                 # Other file types go here ...
                 warnings.warn(
@@ -736,10 +720,10 @@ class PairedReads(NextGenerationBase):
                 elif reads.read == 'R2':
                     raise Exception(
                         'PairedReads reads_2 has already been defined.\n'
-                        '  reads_2: {!r}\n'
-                        '  reads:   {!r}'.format(self.reads_2.file_path, reads.file_path))
+                        '  reads_2: ' + repr(self.reads_2.file_path) + '\n'
+                        '  reads:   ' + repr(reads.file_path))
                 else:
-                    raise Exception('Unknown Reads read attribute {!r}.'.format(reads.read))
+                    raise Exception('Unknown Reads read attribute: ' + repr(reads.read))
             else:
                 # Other file types go here ...
                 warnings.warn(
@@ -756,7 +740,6 @@ class PairedReads(NextGenerationBase):
         @return: C{True} if both objects match, C{False} otherwise
         @rtype: bool
         """
-
         if self is paired_reads:
             return True
 
@@ -790,7 +773,6 @@ class PairedReads(NextGenerationBase):
         @return: Name
         @rtype: str
         """
-
         if self.reads_1 is not None:
             reads = self.reads_1
         elif self.reads_2 is not None:
@@ -838,7 +820,6 @@ class Sample(NextGenerationBase):
         @return: C{bsf.ngs.Sample}
         @rtype: bsf.ngs.Sample
         """
-
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
@@ -863,7 +844,7 @@ class Sample(NextGenerationBase):
                     continue
                 sample.add_reads(reads=Reads.from_file_path(file_path=file_path, file_type=file_type))
         else:
-            raise Exception('Unsupported file_type {!r}.'.format(file_type))
+            raise Exception('Unsupported file_type: ' + repr(file_type))
 
         return sample
 
@@ -883,7 +864,9 @@ class Sample(NextGenerationBase):
 
         if sample1.name != sample2.name:
             warnings.warn(
-                'Merged Sample objects {!r} and {!r} should have the same name.'.format(sample1.name, sample2.name),
+                'Merged Sample objects ' +
+                repr(sample1.name) + ' and ' + repr(sample2.name) +
+                ' should have the same name.',
                 UserWarning)
 
         # A file_path does not make sense for merged Sample objects.
@@ -916,7 +899,7 @@ class Sample(NextGenerationBase):
         """Initialise a C{bsf.ngs.Sample} object.
 
         @param name: Name
-        @type name: str
+        @type name: str | unicode
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type
@@ -925,13 +908,12 @@ class Sample(NextGenerationBase):
             Python C{list} of Python C{str} value data
         @type annotation_dict: dict[str, list[str]]
         @param paired_reads_list: Python C{list} of C{bsf.ngs.PairedReads} objects
-        @type paired_reads_list: list[bsf.ngs.PairedReads]
+        @type paired_reads_list: list[bsf.ngs.PairedReads] | None
         @param weak_reference_project: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Project} object
         @type weak_reference_project: weakref.ReferenceType | None
         @return:
         @rtype:
         """
-
         super(Sample, self).__init__(
             name=name,
             file_path=file_path,
@@ -947,7 +929,7 @@ class Sample(NextGenerationBase):
             for paired_reads_object in paired_reads_list:
                 paired_reads_object.weak_reference_sample = weakref.ReferenceType(self)
 
-        self.weak_reference_project = weak_reference_project  # Can be None.
+        self.weak_reference_project = weak_reference_project
 
         return
 
@@ -959,7 +941,6 @@ class Sample(NextGenerationBase):
         @return: Trace information
         @rtype: str
         """
-
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
@@ -984,7 +965,6 @@ class Sample(NextGenerationBase):
         @return: C{True} if both objects match, C{False} otherwise
         @rtype: bool
         """
-
         # When Sample objects get merged, the file_path does no longer make sense.
         # Hence cope with empty file paths here ...
 
@@ -1087,7 +1067,6 @@ class Sample(NextGenerationBase):
             Python C{list} of C{bsf.ngs.PairedReads} value data
         @rtype: dict[str, list[bsf.ngs.PairedReads]]
         """
-
         paired_reads_dict = dict()
         """ @type paired_reads_dict: dict[str, list[bsf.ngs.PairedReads]] """
 
@@ -1137,7 +1116,7 @@ class Project(NextGenerationBase):
     @cvar default_name: Default key
     @type default_name: str
     @ivar sample_dict: Python C{dict} of C{bsf.ngs.Sample.name} key objects and C{bsf.ngs.Sample} value objects
-    @type sample_dict: dict[bsf.ngs.Sample.name, bsf.ngs.Sample]
+    @type sample_dict: dict[str, bsf.ngs.Sample]
     @ivar weak_reference_prf: C{weakref.ReferenceType} pointing at a C{bsf.ngs.ProcessedRunFolder} object
     @type weak_reference_prf: weakref.ReferenceType | None
     """
@@ -1155,7 +1134,6 @@ class Project(NextGenerationBase):
         @return: C{bsf.ngs.Project}
         @rtype: bsf.ngs.Project
         """
-
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
@@ -1178,12 +1156,11 @@ class Project(NextGenerationBase):
                 re_match = re_pattern.search(string=file_name)
                 if stat.S_ISDIR(file_mode) and re_match is not None:
                     if re_match.group(1) in project.sample_dict:
-                        raise Exception(
-                            'Sample with name {!r} already exists.'.format(re_match.group(1)))
+                        raise Exception('Sample with name ' + repr(re_match.group(1)) + ' already exists.')
                     else:
                         project.add_sample(sample=Sample.from_file_path(file_path=file_path, file_type=file_type))
         else:
-            raise Exception('Unsupported file_type {!r}.'.format(file_type))
+            raise Exception('Unsupported file_type: ' + repr(file_type))
 
         return project
 
@@ -1200,7 +1177,7 @@ class Project(NextGenerationBase):
         For a I{file_type} I{CASAVA} the name is automatically populated,
         while C{bsf.ngs.Sample} objects are automatically discovered.
         @param name: Name
-        @type name: str
+        @type name: str | unicode
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
@@ -1209,14 +1186,13 @@ class Project(NextGenerationBase):
             Python C{list} of Python C{str} value data
         @type annotation_dict: dict[str, list[str]]
         @param sample_dict: Python C{dict} of C{bsf.ngs.Sample.name} key objects and C{bsf.ngs.Sample} value objects
-        @type sample_dict: dict[bsf.ngs.Sample.name, bsf.ngs.Sample]
+        @type sample_dict: dict[str, bsf.ngs.Sample]
         @param weak_reference_prf: C{weakref.ReferenceType} pointing at a C{bsf.ngs.ProcessedRunFolder} object
         @type weak_reference_prf: weakref.ReferenceType | None
         @raise Exception: If C{bsf.ngs.Sample.name} values are not unique for I{file_type} I{CASAVA}
         @return:
         @rtype:
         """
-
         super(Project, self).__init__(
             name=name,
             file_path=file_path,
@@ -1232,7 +1208,7 @@ class Project(NextGenerationBase):
             for sample in self.sample_dict.itervalues():
                 sample.weak_reference_project = weakref.ReferenceType(self)
 
-        self.weak_reference_prf = weak_reference_prf  # Can be None.
+        self.weak_reference_prf = weak_reference_prf
 
         return
 
@@ -1244,7 +1220,6 @@ class Project(NextGenerationBase):
         @return: Trace information
         @rtype: str
         """
-
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
@@ -1283,11 +1258,10 @@ class Project(NextGenerationBase):
         clear the weak reference, if it points back at the C{bsf.ngs.Project} object.
 
         @param name: C{bsf.ngs.Sample.name}
-        @type name: str
+        @type name: str | unicode
         @return: C{bsf.ngs.Sample}
         @rtype: bsf.ngs.Sample
         """
-
         if name in self.sample_dict:
             sample = self.sample_dict[name]
             del self.sample_dict[name]
@@ -1305,7 +1279,6 @@ class Project(NextGenerationBase):
         @return: Python C{list} of C{bsf.ngs.Sample} objects
         @rtype: list[bsf.ngs.Sample]
         """
-
         sample_list = list()
         """ @type sample_list: list[bsf.ngs.Sample] """
 
@@ -1327,13 +1300,13 @@ class ProcessedRunFolder(NextGenerationBase):
     @cvar default_name: Default key
     @type default_name: str
     @ivar prefix: Prefix
-    @type prefix: str | unicode
+    @type prefix: str | unicode | None
     @ivar flow_cell: Flow cell identifier
-    @type flow_cell: str | unicode
+    @type flow_cell: str | unicode | None
     @ivar version: Version number
-    @type version: str | unicode
+    @type version: str | unicode | None
     @ivar project_dict: Python C{dict} of C{bsf.ngs.Project.name} key objects and C{bsf.ngs.Project} value objects
-    @type project_dict: dict[bsf.ngs.Project.name, bsf.ngs.Project]
+    @type project_dict: dict[str, bsf.ngs.Project]
     @ivar weak_reference_collection: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Collection} object
     @type weak_reference_collection: weakref.ReferenceType | None
     """
@@ -1355,7 +1328,6 @@ class ProcessedRunFolder(NextGenerationBase):
         @return: File type (i.e. I{CASAVA} or I{External})
         @rtype: str
         """
-
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
@@ -1367,7 +1339,7 @@ class ProcessedRunFolder(NextGenerationBase):
             return 'External'
 
     @classmethod
-    def from_file_path(cls, file_path, file_type):
+    def from_file_path(cls, file_path, file_type=None):
         """Construct a C{bsf.ngs.ProcessedRunFolder} object from a file path.
 
         For the I{file_type} I{CASAVA}, the C{bsf.ngs.ProcessedRunFolder.name}, C{bsf.ngs.ProcessedRunFolder.prefix},
@@ -1377,11 +1349,10 @@ class ProcessedRunFolder(NextGenerationBase):
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type
-        @type file_type: str
+        @type file_type: str | None
         @return: C{bsf.ngs.ProcessedRunFolder}
         @rtype: bsf.ngs.ProcessedRunFolder
         """
-
         # Try to determine the file_type if not explicitly specified.
 
         if not file_type or file_type == 'Automatic':
@@ -1417,15 +1388,14 @@ class ProcessedRunFolder(NextGenerationBase):
                 re_match = re_pattern.search(string=file_name)
                 if stat.S_ISDIR(file_mode) and re_match is not None:
                     if re_match.group(1) in prf.project_dict:
-                        raise Exception(
-                            'Project with name {!r} already exists.'.format(re_match.group(1)))
+                        raise Exception('Project with name ' + repr(re_match.group(1)) + ' already exists.')
                     else:
                         prf.add_project(project=Project.from_file_path(file_path=file_path, file_type=file_type))
         elif file_type == 'External':
             # Create a new, minimal ProcessedRunFolder.
             prf = cls(file_path=file_path, file_type=file_type, name=file_name)
         else:
-            raise Exception('Unsupported file_type {!r}.'.format(file_type))
+            raise Exception('Unsupported file_type: ' + repr(file_type))
 
         return prf
 
@@ -1443,7 +1413,7 @@ class ProcessedRunFolder(NextGenerationBase):
         """Initialise a C{bsf.ngs.ProcessedRunFolder} object.
 
         @param name: Name
-        @type name: str
+        @type name: str | unicode
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type (e.g. I{CASAVA}, I{External} or I{Automatic})
@@ -1452,20 +1422,19 @@ class ProcessedRunFolder(NextGenerationBase):
             Python C{list} of Python C{str} value data
         @type annotation_dict: dict[str, list[str]]
         @param prefix: Prefix
-        @type prefix: str | unicode
+        @type prefix: str | unicode | None
         @param flow_cell: Flow cell identifier
-        @type flow_cell: str | unicode
+        @type flow_cell: str | unicode | None
         @param version: Version
-        @type version: str | unicode
+        @type version: str | unicode | None
         @param project_dict: Python C{dict} of C{bsf.ngs.Project.name} key objects and C{bsf.ngs.Project} value objects
-        @type project_dict: dict[bsf.ngs.Project.name, bsf.ngs.Project]
+        @type project_dict: dict[str, bsf.ngs.Project]
         @param weak_reference_collection: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Collection} object
         @type weak_reference_collection: weakref.ReferenceType | None
         @return:
         @rtype:
         @raise Exception: If C{bsf.ngs.Project.name} values are not unique for file_type I{CASAVA}
         """
-
         super(ProcessedRunFolder, self).__init__(
             name=name,
             file_path=file_path,
@@ -1473,20 +1442,9 @@ class ProcessedRunFolder(NextGenerationBase):
             annotation_dict=annotation_dict
         )
 
-        if prefix is None:
-            self.prefix = str()
-        else:
-            self.prefix = prefix
-
-        if flow_cell is None:
-            self.flow_cell = str()
-        else:
-            self.flow_cell = flow_cell
-
-        if version is None:
-            self.version = str()
-        else:
-            self.version = version
+        self.prefix = prefix
+        self.flow_cell = flow_cell
+        self.version = version
 
         if project_dict is None:
             self.project_dict = dict()
@@ -1496,7 +1454,7 @@ class ProcessedRunFolder(NextGenerationBase):
             for project in self.project_dict.itervalues():
                 project.weak_reference_prf = weakref.ReferenceType(self)
 
-        self.weak_reference_collection = weak_reference_collection  # Can be None.
+        self.weak_reference_collection = weak_reference_collection
 
         return
 
@@ -1508,7 +1466,6 @@ class ProcessedRunFolder(NextGenerationBase):
         @return: Trace information
         @rtype: str
         """
-
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
@@ -1550,11 +1507,10 @@ class ProcessedRunFolder(NextGenerationBase):
         clear the weak reference, if it points back at the C{bsf.ngs.ProcessedRunFolder} object.
 
         @param name: C{bsf.ngs.Project.name}
-        @type name: str
+        @type name: str | unicode
         @return: C{bsf.ngs.Project}
         @rtype: bsf.ngs.Project
         """
-
         if name in self.project_dict:
             project = self.project_dict[name]
             del self.project_dict[name]
@@ -1570,7 +1526,6 @@ class ProcessedRunFolder(NextGenerationBase):
         @return: A Python C{list} of C{bsf.ngs.Project} objects
         @rtype: list[bsf.ngs.Project]
         """
-
         project_list = list()
         """ @type project_list: list[bsf.ngs.Project] """
 
@@ -1592,7 +1547,7 @@ class Collection(NextGenerationBase):
     @type default_name: str
     @ivar processed_run_folder_dict: Python C{dict} of C{bsf.ngs.ProcessedRunFolder.name} key objects and
         C{bsf.ngs.ProcessedRunFolder} value objects
-    @type processed_run_folder_dict: dict[bsf.ngs.ProcessedRunFolder.name, bsf.ngs.ProcessedRunFolder]
+    @type processed_run_folder_dict: dict[str, bsf.ngs.ProcessedRunFolder]
     @ivar sample_group_dict: Python C{dict} of Python C{str} (group) and C{bsf.ngs.Sample} objects
     @type sample_group_dict: dict[str, list[bsf.ngs.Sample]]
     """
@@ -1608,16 +1563,15 @@ class Collection(NextGenerationBase):
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
         @type file_type: str
         @param name: Name
-        @type name: str
+        @type name: str | unicode
         @param sas_path: C{bsf.ngs.SampleAnnotationSheet} file path
         @type sas_path: str | unicode
         @param sas_prefix: Optional column header prefix
             (e.g. '[Control ]Sample', '[Treatment ]Sample', ...)
-        @type sas_prefix: str
+        @type sas_prefix: str | None
         @return: C{bsf.ngs.Collection}
         @rtype: bsf.ngs.Collection
         """
-
         sas = SampleAnnotationSheet.from_file_path(file_path=sas_path)
         """ @type sas: bsf.ngs.SampleAnnotationSheet """
 
@@ -1657,12 +1611,12 @@ class Collection(NextGenerationBase):
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
         @type file_type: str
         @param name: Name
-        @type name: str
+        @type name: str | unicode
         @param sas: C{bsf.ngs.SampleAnnotationSheet}
         @type sas: bsf.ngs.SampleAnnotationSheet
         @param sas_prefix: Optional column header prefix
             (e.g. '[Control ]Sample', '[Treatment ]Sample', '[Point N ]Sample', ...)
-        @type sas_prefix: str
+        @type sas_prefix: str | None
         @return: C{bsf.ngs.Collection}
         @rtype: bsf.ngs.Collection
         """
@@ -1674,7 +1628,9 @@ class Collection(NextGenerationBase):
             @return: File type
             @rtype: str
             """
-            _key = (sas_prefix + ' File Type').lstrip()
+            _key = 'File Type'
+            if sas_prefix:
+                _key = sas_prefix + ' ' + _key
 
             # If present, delete the key from the key list.
             if _key in key_list:
@@ -1696,7 +1652,9 @@ class Collection(NextGenerationBase):
             """
             prf_new = None
 
-            _key = (sas_prefix + ' ProcessedRunFolder Name').lstrip()
+            _key = 'ProcessedRunFolder Name'
+            if sas_prefix:
+                _key = sas_prefix + ' ' + _key
 
             if _key in row_dict:
                 # The key exists ...
@@ -1737,7 +1695,9 @@ class Collection(NextGenerationBase):
             """
             project_new = None
 
-            _key = (sas_prefix + ' Project Name').lstrip()
+            _key = 'Project Name'
+            if sas_prefix:
+                _key = sas_prefix + ' ' + _key
 
             if _key in row_dict:
                 # The key exists ...
@@ -1777,7 +1737,9 @@ class Collection(NextGenerationBase):
             """
             sample_new = None
 
-            _key = (sas_prefix + ' Sample Name').lstrip()
+            _key = 'Sample Name'
+            if sas_prefix:
+                _key = sas_prefix + ' ' + _key
 
             if _key in row_dict:
                 key_list.remove(_key)  # Remove the 'Name' key.
@@ -1829,7 +1791,10 @@ class Collection(NextGenerationBase):
 
             # Pre-process the Reads.file_path instance variable.
 
-            _key = (sas_prefix + ' Reads' + suffix + ' File').lstrip()
+            _key = 'Reads' + suffix + ' File'
+            if sas_prefix:
+                _key = sas_prefix + ' ' + _key
+
             if _key in key_list:
                 key_list.remove(_key)
 
@@ -1845,7 +1810,10 @@ class Collection(NextGenerationBase):
 
             # Pre-process the Reads.name instance variable.
 
-            _key = (sas_prefix + ' Reads' + suffix + ' Name').lstrip()
+            _key = 'Reads' + suffix + ' Name'
+            if sas_prefix:
+                _key = sas_prefix + ' ' + _key
+
             if _key in key_list:
                 key_list.remove(_key)
 
@@ -1955,30 +1923,42 @@ class Collection(NextGenerationBase):
             else:
                 paired_reads_new = paired_reads_old
 
-            _key = (sas_prefix + ' PairedReads Exclude').lstrip()
+            _key = 'PairedReads Exclude'
+            if sas_prefix:
+                _key = sas_prefix + ' ' + _key
+
             if _key in key_list:
                 key_list.remove(_key)
 
             if _key in row_dict and row_dict[_key]:
                 if row_dict[_key].lower() not in Collection._boolean_states:
-                    raise ValueError('Value in field {!r} is not a boolean: {!r}'.format(_key, row_dict[_key]))
+                    raise ValueError('Value in field ' + repr(_key) + ' is not a boolean: ' + repr(row_dict[_key]))
                 paired_reads_new.exclude = Collection._boolean_states[row_dict[_key].lower()]
 
-            _key = (sas_prefix + ' PairedReads Index 1').lstrip()
+            _key = 'PairedReads Index 1'
+            if sas_prefix:
+                _key = sas_prefix + ' ' + _key
+
             if _key in key_list:
                 key_list.remove(_key)
 
             if _key in row_dict and row_dict[_key]:
                 paired_reads_new.index_1 = row_dict[_key]
 
-            _key = (sas_prefix + ' PairedReads Index 2').lstrip()
+            _key = 'PairedReads Index 2'
+            if sas_prefix:
+                _key = sas_prefix + ' ' + _key
+
             if _key in key_list:
                 key_list.remove(_key)
 
             if _key in row_dict and row_dict[_key]:
                 paired_reads_new.index_2 = row_dict[_key]
 
-            _key = (sas_prefix + ' PairedReads ReadGroup').lstrip()
+            _key = 'PairedReads ReadGroup'
+            if sas_prefix:
+                _key = sas_prefix + ' ' + _key
+
             if _key in key_list:
                 key_list.remove(_key)
 
@@ -1993,9 +1973,6 @@ class Collection(NextGenerationBase):
 
         collection = cls(file_path=file_path, file_type=file_type, name=name)
 
-        if sas_prefix is None:
-            sas_prefix = str()
-
         prf = None
         project = None
         sample = None
@@ -2009,27 +1986,8 @@ class Collection(NextGenerationBase):
             sample = _process_sample()
             paired_reads = _process_paired_reads(paired_reads_old=paired_reads)
 
-            # Optionally group the Sample objects.
-            # FIXME: Change the 'Group' field to 'Sample Group' annotation.
-            # Since the 'Group' field is handled outside the Collection object,
-            # it cannot easily be propagated into other SampleAnnotationSheet objects,
-            # converted from Collection objects.
-            # TODO: Phase out the code below once sample annotation sheets are converted.
-            key = '{} Group'.format(sas_prefix).lstrip()
-
-            if key in key_list:
-                key_list.remove(key)
-
-            if key in row_dict and row_dict[key]:
-                value = row_dict[key]
-                if value not in collection.sample_group_dict:
-                    collection.sample_group_dict[value] = list()
-                sample_list = collection.sample_group_dict[value]
-                if sample not in sample_list:
-                    sample_list.append(sample)
-
             if len(key_list):
-                warnings.warn("Unexpected keys in sample annotation sheet: {!r}".format(key_list), UserWarning)
+                warnings.warn('Unexpected keys in sample annotation sheet: ' + repr(key_list), UserWarning)
 
         # Quench empty default objects that are a consequence of empty lines in the sample annotation sheet.
 
@@ -2069,7 +2027,7 @@ class Collection(NextGenerationBase):
         """Initialise a C{bsf.ngs.Collection} object.
 
         @param name: Name
-        @type name: str
+        @type name: str | unicode
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
@@ -2079,7 +2037,7 @@ class Collection(NextGenerationBase):
         @type annotation_dict: dict[str, list[str]]
         @param processed_run_folder_dict: Python C{dict} of C{bsf.ngs.ProcessedRunFolder.name} key objects and
             C{bsf.ngs.ProcessedRunFolder} value objects
-        @type processed_run_folder_dict: dict[bsf.ngs.ProcessedRunFolder.name, bsf.ngs.ProcessedRunFolder]
+        @type processed_run_folder_dict: dict[str, bsf.ngs.ProcessedRunFolder]
         @param sample_group_dict: Python C{dict} of Python C{str} (group name) key objects and
             second-level Python C{dict} value objects of C{bsf.ngs.Sample.name} key objects and
             C{bsf.ngs.Sample} value objects
@@ -2087,7 +2045,6 @@ class Collection(NextGenerationBase):
         @return:
         @rtype:
         """
-
         super(Collection, self).__init__(
             name=name,
             file_path=file_path,
@@ -2118,7 +2075,6 @@ class Collection(NextGenerationBase):
         @return: Trace information
         @rtype: str
         """
-
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
@@ -2164,11 +2120,10 @@ class Collection(NextGenerationBase):
         clear the weak reference, if it points back at the C{bsf.ngs.Collection} object.
 
         @param name: C{bsf.ngs.ProcessedRunFolder.name}
-        @type name: str
+        @type name: str | unicode
         @return: C{bsf.ngs.ProcessedRunFolder}
         @rtype: bsf.ngs.ProcessedRunFolder
         """
-
         if name in self.processed_run_folder_dict:
             prf = self.processed_run_folder_dict[name]
             del self.processed_run_folder_dict[name]
@@ -2186,11 +2141,10 @@ class Collection(NextGenerationBase):
         @param file_path: File path
         @type file_path: str | unicode
         @param file_type: File type
-        @type file_type: str
+        @type file_type: str | None
         @return: C{bsf.ngs.ProcessedRunFolder}
         @rtype: bsf.ngs.ProcessedRunFolder
         """
-
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
@@ -2208,7 +2162,6 @@ class Collection(NextGenerationBase):
         @return: Python C{list} of C{bsf.ngs.ProcessedRunFolder} objects
         @rtype: list[bsf.ngs.ProcessedRunFolder]
         """
-
         processed_run_folder_list = list()
         """ @type processed_run_folder_list: list[bsf.ngs.ProcessedRunFolder] """
 
@@ -2226,7 +2179,6 @@ class Collection(NextGenerationBase):
         @return: Python C{list} of C{bsf.ngs.Project} objects
         @rtype: list[bsf.ngs.Project]
         """
-
         project_list = list()
         """ @type project_list: list[bsf.ngs.Project] """
 
@@ -2243,7 +2195,6 @@ class Collection(NextGenerationBase):
         @return: Python C{list} of C{bsf.ngs.Sample} objects
         @rtype: list[bsf.ngs.Sample]
         """
-
         sample_list = list()
         """ @type sample_list: list[bsf.ngs.Sample] """
 
@@ -2270,11 +2221,10 @@ class Collection(NextGenerationBase):
         @type row_dict: dict[str, str | unicode]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample')
-        @type prefix: str
+        @type prefix: str | None
         @return: C{bsf.ngs.Sample}
         @rtype: bsf.ngs.Sample
         """
-
         # NOTE: For the moment, the row_dict has to include keys for 'ProcessedRunFolder',
         # 'Project' and 'Sample'. Maybe, this method could search for a Sample name in
         # the Collection object. However, the problem is that a Collection contains
@@ -2282,10 +2232,9 @@ class Collection(NextGenerationBase):
         # may clash. Therefore, it is probably best to stick to the three fields for
         # unambiguous sample resolution.
 
-        if not prefix:
-            prefix = str()
-
-        key = '{} ProcessedRunFolder Name'.format(prefix).lstrip()
+        key = 'ProcessedRunFolder Name'
+        if prefix:
+            key = prefix + ' ' + key
 
         if key in row_dict and row_dict[key]:
             value = row_dict[key]
@@ -2297,7 +2246,9 @@ class Collection(NextGenerationBase):
 
         prf = self.get_processed_run_folder(file_path=value)
 
-        key = '{} Project Name'.format(prefix).lstrip()
+        key = 'Project Name'
+        if prefix:
+            key = prefix + ' ' + key
 
         if key in row_dict and row_dict[key]:
             value = row_dict[key]
@@ -2306,7 +2257,9 @@ class Collection(NextGenerationBase):
 
         project = prf.project_dict[value]
 
-        key = '{} Sample Name'.format(prefix).lstrip()
+        key = 'Sample Name'
+        if prefix:
+            key = prefix + ' ' + key
 
         if key in row_dict and row_dict[key]:
             value = row_dict[key]
@@ -2325,21 +2278,19 @@ class Collection(NextGenerationBase):
         @type row_dict: dict[str, str | unicode]
         @param prefix: Optional configuration prefix
             (e.g. '[Control] Sample', '[Treatment] Sample', '[Point N] Sample', ...)
-        @type prefix: str
+        @type prefix: str | None
         @return: Python C{tuple} of Python C{str} of '[Prefix] Group' column value and
             Python C{list} of C{bsf.ngs.Sample} objects
         @rtype: (str, list[bsf.ngs.Sample])
         """
-
         sample_list = list()
         """ @type sample_list: list[bsf.ngs.Sample] """
 
         value = str()
 
-        if not prefix:
-            prefix = str()
-
-        key = '{} Group'.format(prefix).lstrip()
+        key = 'Group'
+        if prefix:
+            key = prefix + ' ' + key
 
         # Does the key exist and is its value defined?
         if key in row_dict and row_dict[key]:
@@ -2349,7 +2300,9 @@ class Collection(NextGenerationBase):
             if value in self.sample_group_dict:
                 sample_list.extend(self.sample_group_dict[value])
 
-        key = '{} Sample Name'.format(prefix).lstrip()
+        key = 'Sample Name'
+        if prefix:
+            key = prefix + ' ' + key
 
         if key in row_dict and row_dict[key]:
             value = row_dict[key]
@@ -2367,13 +2320,12 @@ class Collection(NextGenerationBase):
         """Convert a C{bsf.ngs.Collection} into a SampleAnnotationSheet object.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str | unicode | None
         @param name: Name
-        @type name: str
+        @type name: str | unicode | None
         @return: SampleAnnotationSheet object
         @rtype: SampleAnnotationSheet
         """
-
         sas = SampleAnnotationSheet(file_path=file_path, name=name)
 
         # Scan the Collection and its contained objects for additional (annotation) field names.
@@ -2501,13 +2453,12 @@ class Collection(NextGenerationBase):
         """Write as a SampleAnnotationSheet to a file path.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str | unicode | None
         @param name: Name
-        @type name: str
+        @type name: str | unicode | None
         @return:
         @rtype:
         """
-
         sas = self.to_sas(file_path=file_path, name=name)
         sas.to_file_path()
 
@@ -2520,7 +2471,7 @@ class SampleGroup(object):
     The grouping is usually defined in a sample annotation sheet.
     Attributes:
     @ivar name: Name
-    @type name: str
+    @type name: str | unicode
     @ivar sample_list: Python C{list} of C{bsf.ngs.Sample} objects
     @type sample_list: list[bsf.ngs.Sample]
     """
@@ -2536,9 +2487,9 @@ class SampleGroup(object):
         """Initialise a C{bsf.ngs.SampleGroup} object.
 
         @param name: Name
-        @type name: str
+        @type name: str | unicode | None
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
+        @type sample_list: list[bsf.ngs.Sample] | None
         @return:
         @rtype:
         """
@@ -2594,7 +2545,6 @@ class SampleGroup(object):
             Python C{list} value objects of C{bsf.ngs.PairedReads} objects value data
         @rtype: dict[str, list[bsf.ngs.PairedReads]]
         """
-
         group_dict = dict()
         """ @type group_dict: dict[str, list[bsf.ngs.PairedReads]] """
 
