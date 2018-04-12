@@ -178,7 +178,6 @@ class RunInformationFlowcellLayout(object):
         @return:
         @rtype:
         """
-
         super(RunInformationFlowcellLayout, self).__init__()
 
         self.lane_count = lane_count
@@ -214,7 +213,6 @@ class RunInformationRead(object):
         @return:
         @rtype:
         """
-
         super(RunInformationRead, self).__init__()
 
         self.number = number
@@ -230,25 +228,27 @@ class RunInformation(object):
 
     Attributes:
     @ivar file_path: File path
-    @type file_path: str | unicode
+    @type file_path: str | unicode | None
     @ivar file_type: File type
         CASAVA: FASTQ file after post-processing with CASAVA.
         External: other data files.
-    @type file_type: str
+    @type file_type: str | None
     @ivar name: Name
-    @type name: str
+    @type name: str | None
     @ivar run_identifier: Run identifier e.g. 130724_SN815_0089_BC26JBACXX
-    @type run_identifier: str
+    @type run_identifier: str | None
     @ivar run_number: Run number, which may not have to correspond to the run number in the run identifier e.g. 91
-    @type run_number: str
+    @type run_number: str | None
     @ivar flow_cell: Illumina flow cell identifier e.g. C26JBACXX
-    @type flow_cell: str
+    @type flow_cell: str | None
     @ivar instrument: Illumina instrument serial number e.g. SN815
-    @type instrument: str
+    @type instrument: str | None
     @ivar date: Date in YYMMDD format e.g. 130724
-    @type date: str
-    @ivar reads: Python C{list} of C{bsf.illumina.RunInformationRead} objects
-    @type reads: list[bsf.illumina.RunInformationRead]
+    @type date: str | None
+    @ivar flow_cell_layout: C{bsf.illumina.RunInformationFlowcellLayout}
+    @type flow_cell_layout: None | bsf.illumina.RunInformationFlowcellLayout
+    @ivar run_information_read_list: Python C{list} of C{bsf.illumina.RunInformationRead} objects
+    @type run_information_read_list: list[bsf.illumina.RunInformationRead]
     """
 
     @staticmethod
@@ -263,20 +263,19 @@ class RunInformation(object):
         @return: Python C{list} of Python C{str} objects
         @rtype: list[str]
         """
-
         # Split into <Date>_<Instrument>_<Number>_<FCPosition><Flowcell>
-        components = run_identifier.split('_')
+        component_list = run_identifier.split('_')
 
-        if len(components) != 4:
-            warnings.warn('Cannot split Illumina Run Identifier {!r} into its components.'.format(run_identifier))
+        if len(component_list) != 4:
+            warnings.warn('Cannot split Illumina Run Identifier ' + repr(run_identifier) + ' into its components.')
             return
 
         # Strip leading zeros from the <Number>, split <FCPosition> and >Flowcell> elements.
-        components[2] = components[2].lstrip('0')
-        components.append(components[3][1:])
-        components[3] = components[3][:1]
+        component_list[2] = component_list[2].lstrip('0')
+        component_list.append(component_list[3][1:])
+        component_list[3] = component_list[3][:1]
 
-        return components
+        return component_list
 
     @classmethod
     def from_file_path(cls, file_path):
@@ -287,7 +286,6 @@ class RunInformation(object):
         @return: C{bsf.illumina.RunInformation}
         @rtype: bsf.illumina.RunInformation
         """
-
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
@@ -295,7 +293,7 @@ class RunInformation(object):
         run_element = run_info_tree.find(path='Run')
         """ @type run_element: xml.etree.ElementTree.Element | None """
         if run_element is None:
-            raise Exception('Cannot find the <Run> element in the ElementTree of XML file {!r}.'.format(file_path))
+            raise Exception('Cannot find the <Run> element in the ElementTree of XML file ' + repr(file_path))
 
         # Parse meta-information about the Illumina run
 
@@ -303,7 +301,7 @@ class RunInformation(object):
         """ @type run_identifier: str """
         run_number = run_element.get(key='Number')  # e.g. 91
         """ @type run_number: str """
-        run_identifier_components = RunInformation.parse_run_identifier(run_identifier=run_identifier)
+        run_identifier_component_list = RunInformation.parse_run_identifier(run_identifier=run_identifier)
 
         xml_flow_cell = run_element.find(path='Flowcell')
         """ @type xml_flow_cell: xml.etree.ElementTree.Element | None """
@@ -311,7 +309,7 @@ class RunInformation(object):
             flow_cell = xml_flow_cell.text  # e.g. C26JBACXX
             """ @type flow_cell: str """
         else:
-            flow_cell = run_identifier_components[4]
+            flow_cell = run_identifier_component_list[4]
 
         xml_instrument = run_element.find(path='Instrument')
         """ @type xml_instrument: xml.etree.ElementTree.Element | None """
@@ -319,7 +317,7 @@ class RunInformation(object):
             instrument = xml_instrument.text  # e.g. SN815
             """ @type instrument: str """
         else:
-            instrument = run_identifier_components[1]
+            instrument = run_identifier_component_list[1]
 
         xml_date = run_element.find(path='Date')
         """ @type xml_date: xml.etree.ElementTree.Element | None """
@@ -327,18 +325,18 @@ class RunInformation(object):
             date = xml_date.text  # e.g. 130724
             """ @type date: str """
         else:
-            date = run_identifier_components[0]
+            date = run_identifier_component_list[0]
 
         xml_second_read = run_element.find(path='SecondRead')
         """ @type xml_second_read: xml.etree.ElementTree.Element | None """
         if xml_second_read is not None:
             second_read = int(xml_second_read.get(key='FirstCycle'))
         else:
-            second_read = int(0)
+            second_read = 0
 
-        reads = list()
-        """ @type reads: list[bsf.illumina.RunInformationRead] """
-        number = int(1)
+        run_information_read_list = list()
+        """ @type run_information_read_list: list[bsf.illumina.RunInformationRead] """
+        number = 1
 
         for read_element in run_element.find(path='Reads'):
             """ @type read_element: xml.etree.ElementTree.Element | None """
@@ -361,11 +359,13 @@ class RunInformation(object):
                 is_index = read_element.get(key='IsIndexedRead')
                 """ @type is_index: str """
                 if is_index not in ('Y', 'N'):
-                    warning = 'Unexpected value <Read IsIndexedRead="{}"> in Read element attribute IsIndexedRead '. \
-                        format(read_element.get(key='IsIndexedRead'))
-                    warnings.warn(warning)
+                    warnings.warn(
+                        'Unexpected value <Read IsIndexedRead="' +
+                        read_element.get(key='IsIndexedRead') +
+                        '"> in Read element attribute IsIndexedRead ',
+                        UserWarning)
 
-                reads.append(RunInformationRead(
+                run_information_read_list.append(RunInformationRead(
                     number=int(read_element.get(key='Number')),
                     cycles=int(read_element.get(key='NumCycles')),
                     index=bool(is_index == 'Y')))
@@ -384,21 +384,21 @@ class RunInformation(object):
                 # This is a bit convoluted. If a read after the first has a FirstCycle attribute of less than the
                 # FirstCycle attribute of the SecondRead, then it must be the index read. Sigh!
 
-                reads.append(RunInformationRead(
+                run_information_read_list.append(RunInformationRead(
                     number=number,
                     cycles=int(read_element.get(key='LastCycle')) - int(read_element.get(key='FirstCycle')),
                     index=bool(number > 1 and int(read_element.get(key='FirstCycle')) < second_read)))
 
                 number += 1
 
-        reads.sort(key=lambda read: read.number)
+        run_information_read_list.sort(key=lambda run_information_read: run_information_read.number)
 
         # Warn if there is not at least one non-index read.
 
-        non_index_reads = filter(lambda read: not read.index, reads)
+        non_index_reads = filter(lambda run_information_read: not run_information_read.index, run_information_read_list)
         if len(non_index_reads) == 0:
             warnings.warn(
-                'No non-index read in Illumina RunInformation {!r}'.format(file_path),
+                'No non-index read in Illumina RunInformation: ' + repr(file_path),
                 UserWarning)
 
         # Set a paired_end attribute if more than one read without index is defined?
@@ -416,102 +416,69 @@ class RunInformation(object):
         else:
             flow_cell_layout = None
 
-        iri = cls(file_path=file_path, file_type='xml', name=file_name,
-                  run_identifier=run_identifier, run_number=run_number,
-                  flow_cell=flow_cell, instrument=instrument, date=date,
-                  reads=reads, flow_cell_layout=flow_cell_layout)
+        return cls(file_path=file_path,
+                   file_type='xml',
+                   name=file_name,
+                   run_identifier=run_identifier,
+                   run_number=run_number,
+                   flow_cell=flow_cell,
+                   instrument=instrument,
+                   date=date,
+                   run_information_read_list=run_information_read_list,
+                   flow_cell_layout=flow_cell_layout)
 
-        return iri
-
-    def __init__(
-            self,
-            file_path=None,
-            file_type=None,
-            name=None,
-            run_identifier=None,
-            run_number=None,
-            flow_cell=None,
-            instrument=None,
-            date=None,
-            reads=None,
-            flow_cell_layout=None):
+    def __init__(self,
+                 file_path=None,
+                 file_type=None,
+                 name=None,
+                 run_identifier=None,
+                 run_number=None,
+                 flow_cell=None,
+                 instrument=None,
+                 date=None,
+                 flow_cell_layout=None,
+                 run_information_read_list=None):
         """Initialise a C{bsf.illumina.RunInformation} object.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str | unicode | None
         @param file_type: File type (e.g. I{CASAVA}, I{External} or I{Automatic})
-        @type file_type: str
+        @type file_type: str | None
         @param name: Name
-        @type name: str
+        @type name: str | None
         @param run_identifier: Run identifier e.g. I{130724_SN815_0089_BC26JBACXX}
-        @type run_identifier: str
+        @type run_identifier: str | None
         @param run_number: Run number, which may not have to correspond to the run number in the run identifier e.g. 91
-        @type run_number: str
+        @type run_number: str | None
         @param flow_cell: Illumina flow cell identifier
-        @type flow_cell: str
+        @type flow_cell: str | None
         @param instrument: Illumina instrument serial number
-        @type instrument: str
+        @type instrument: str | None
         @param date: Date in YYMMDD format
-        @type date: str
-        @param reads: Python C{list} of C{bsf.illumina.RunInformationRead} objects
-        @type reads: list[bsf.illumina.RunInformationRead]
+        @type date: str | None
         @param flow_cell_layout: C{bsf.illumina.RunInformationFlowcellLayout}
-        @type flow_cell_layout: bsf.illumina.RunInformationFlowcellLayout
+        @type flow_cell_layout: None | bsf.illumina.RunInformationFlowcellLayout
+        @param run_information_read_list: Python C{list} of C{bsf.illumina.RunInformationRead} objects
+        @type run_information_read_list: list[bsf.illumina.RunInformationRead]
         @return:
         @rtype:
         """
-
         super(RunInformation, self).__init__()
 
-        if file_path:
-            self.file_path = file_path
-        else:
-            self.file_path = str()
+        self.file_path = file_path
+        self.file_type = file_type
+        self.name = name
+        self.run_identifier = run_identifier
+        self.run_number = run_number
+        self.date = date
+        self.instrument = instrument
+        self.flow_cell = flow_cell
+        self.flow_cell_layout = flow_cell_layout
 
-        if file_type:
-            self.file_type = file_type
+        if run_information_read_list is None:
+            self.run_information_read_list = list()
         else:
-            self.file_type = str()
-
-        if name:
-            self.name = name
-        else:
-            self.name = str()
-
-        if run_identifier:
-            self.run_identifier = run_identifier
-        else:
-            self.run_identifier = str()
-
-        if run_number:
-            self.run_number = run_number
-        else:
-            self.run_number = str()
-
-        if date:
-            self.date = date
-        else:
-            self.date = str()
-
-        if instrument:
-            self.instrument = str()
-        else:
-            self.instrument = str()
-
-        if flow_cell:
-            self.flow_cell = flow_cell
-        else:
-            self.flow_cell = str()
-
-        if reads:
-            self.reads = reads
-        else:
-            self.reads = list()
-
-        if flow_cell_layout:
-            self.flow_cell_layout = flow_cell_layout
-        else:
-            self.flow_cell_layout = RunInformationFlowcellLayout()
+            self.run_information_read_list = run_information_read_list
 
         return
 
@@ -522,11 +489,10 @@ class RunInformation(object):
         @return: Number of cycles
         @rtype: int
         """
-
         cycle_number = 0
 
-        for read in self.reads:
-            cycle_number += read.cycles
+        for run_information_read in self.run_information_read_list:
+            cycle_number += run_information_read.cycles
 
         return cycle_number
 
@@ -537,17 +503,19 @@ class RunInformation(object):
         @return: The run start date in ISO 8601 format.
         @rtype: str
         """
-
-        return datetime.datetime(
-            int(self.date[0:2]) + 2000,  # year
-            int(self.date[2:4]),  # month
-            int(self.date[4:6]),  # day
-            0,  # hour
-            0,  # minute
-            0,  # second
-            0,  # microsecond
-            dateutil.tz.tzlocal()  # tzinfo
-        ).isoformat()
+        if self.date is None:
+            return
+        else:
+            return datetime.datetime(
+                int(self.date[0:2]) + 2000,  # year
+                int(self.date[2:4]),  # month
+                int(self.date[4:6]),  # day
+                0,  # hour
+                0,  # minute
+                0,  # second
+                0,  # microsecond
+                dateutil.tz.tzlocal()  # tzinfo
+            ).isoformat()
 
     @property
     def get_read_number(self):
@@ -556,8 +524,7 @@ class RunInformation(object):
         @return: Number of reads
         @rtype: int
         """
-
-        return len(self.reads)
+        return len(self.run_information_read_list)
 
     @property
     def get_read_start_list(self):
@@ -571,9 +538,9 @@ class RunInformation(object):
         read_start_list = list()
         """ @type read_start_list: list[int] """
 
-        for read in self.reads:
+        for run_information_read in self.run_information_read_list:
             read_start_list.append(cycle_number)
-            cycle_number += read.cycles
+            cycle_number += run_information_read.cycles
 
         return read_start_list
 
@@ -589,8 +556,8 @@ class RunInformation(object):
         read_end_list = list()
         """ @type read_end_list: list[int] """
 
-        for read in self.reads:
-            cycle_number += read.cycles
+        for run_information_read in self.run_information_read_list:
+            cycle_number += run_information_read.cycles
             read_end_list.append(cycle_number - 1)
 
         return read_end_list
@@ -606,15 +573,14 @@ class RunInformation(object):
         @return: Read structure for Picard C{ExtractIlluminaBarcodes}
         @rtype: str
         """
-
         # TODO: This needs to become smarter to deal with skipped bases, caused by
         # different read and barcode lengths. Skips would have to be inserted.
 
         read_structure = str()
 
-        for read in self.reads:
-            read_structure += str(read.cycles)
-            if read.index:
+        for run_information_read in self.run_information_read_list:
+            read_structure += str(run_information_read.cycles)
+            if run_information_read.index:
                 read_structure += 'B'
             else:
                 read_structure += 'T'
@@ -631,15 +597,14 @@ class RunInformation(object):
         @return: Python C{list} of Python C{str} (read structure) objects
         @rtype: list[str]
         """
-
         read_structure_list = list()
         """ @type read_structure_list: list[str] """
 
-        for read in self.reads:
-            if read.index:
-                read_structure_list.append(str(read.cycles) + 'I')
+        for run_information_read in self.run_information_read_list:
+            if run_information_read.index:
+                read_structure_list.append(str(run_information_read.cycles) + 'I')
             else:
-                read_structure_list.append(str(read.cycles) + 'B')
+                read_structure_list.append(str(run_information_read.cycles) + 'B')
 
         return read_structure_list
 
@@ -652,7 +617,7 @@ class RunParameters(object):
     @ivar file_path: File path
     @type file_path: str | unicode
     @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
-    @type element_tree: xml.etree.ElementTree.ElementTree
+    @type element_tree: None | xml.etree.ElementTree.ElementTree
     """
 
     @classmethod
@@ -660,36 +625,31 @@ class RunParameters(object):
         """Create a C{bsf.illumina.RunParameters} object from a file path.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str | unicode | None
         @return: C{bsf.illumina.RunParameters} object
         @rtype: bsf.illumina.RunParameters
         """
-
         file_path = os.path.normpath(file_path)
+
+        if not os.path.isfile(file_path):
+            file_path = None
+
         return cls(file_path=file_path, element_tree=xml.etree.ElementTree.ElementTree(file=file_path))
 
     def __init__(self, file_path=None, element_tree=None):
         """Initialise a C{bsf.illumina.RunParameters} object.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str | unicode | None
         @param element_tree: C{xml.etree.ElementTree.ElementTree}
-        @type element_tree: xml.etree.ElementTree.ElementTree
+        @type element_tree: None | xml.etree.ElementTree.ElementTree
         @return:
         @rtype:
         """
-
         super(RunParameters, self).__init__()
 
-        if file_path:
-            self.file_path = file_path
-        else:
-            self.file_path = str()
-
-        if element_tree:
-            self.element_tree = element_tree
-        else:
-            self.element_tree = xml.etree.ElementTree.ElementTree()
+        self.file_path = file_path
+        self.element_tree = element_tree
 
         return
 
@@ -888,9 +848,9 @@ class XMLConfiguration(object):
 
     Attributes:
     @ivar file_path: File path
-    @type file_path: str | unicode
+    @type file_path: str | unicode | None
     @ivar element_tree: C{xml.etree.ElementTree.ElementTree}
-    @type element_tree: xml.etree.ElementTree.ElementTree
+    @type element_tree: xml.etree.ElementTree.ElementTree | None
     """
 
     @classmethod
@@ -905,32 +865,26 @@ class XMLConfiguration(object):
         @rtype: bsf.illumina.XMLConfiguration
         """
         file_path = os.path.normpath(file_path)
+
         if not os.path.isfile(file_path):
             file_path = None
+
         return cls(file_path=file_path, element_tree=xml.etree.ElementTree.ElementTree(file=file_path))
 
     def __init__(self, file_path=None, element_tree=None):
         """Initialise a C{bsf.illumina.XMLConfiguration} object.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str | unicode | None
         @param element_tree: C{xml.etree.ElementTree.ElementTree}
-        @type element_tree: xml.etree.ElementTree.ElementTree
+        @type element_tree: xml.etree.ElementTree.ElementTree | None
         @return:
         @rtype:
         """
-
         super(XMLConfiguration, self).__init__()
 
-        if file_path:
-            self.file_path = file_path
-        else:
-            self.file_path = str()
-
-        if element_tree:
-            self.element_tree = element_tree
-        else:
-            self.element_tree = xml.etree.ElementTree.ElementTree()
+        self.file_path = file_path
+        self.element_tree = element_tree
 
         return
 
@@ -958,7 +912,6 @@ class AnalysisConfiguration(XMLConfiguration):
         @return:
         @rtype:
         """
-
         super(AnalysisConfiguration, self).__init__(file_path=file_path, element_tree=element_tree)
 
         self._lane_tile_dict = dict()
@@ -1003,10 +956,9 @@ class AnalysisConfiguration(XMLConfiguration):
         @rtype: bool | None
         """
         if lane in self._lane_tile_dict:
-            lane_dict = self._lane_tile_dict[lane]
-            return tile in lane_dict
+            return tile in self._lane_tile_dict[lane]
         else:
-            return None
+            return
 
 
 class ImageAnalysis(AnalysisConfiguration):
@@ -1042,16 +994,14 @@ class RunFolder(object):
         I{CASAVA}: FASTQ file after post-processing with CASAVA
         I{External}: other data files
     @type file_type: str
-    @ivar name: Name
-    @type name: str
     @ivar date: Date in YYMMDD format
-    @type date: str
+    @type date: str | unicode | None
     @ivar instrument: Illumina instrument serial number
-    @type instrument: str
+    @type instrument: str | unicode | None
     @ivar run: Run serial number
-    @type run: str
+    @type run: str | unicode | None
     @ivar flow_cell: Flow cell identifier
-    @type flow_cell: str
+    @type flow_cell: str | unicode | None
     @ivar run_information: C{bsf.illumina.RunInformation} object
     @type run_information: bsf.illumina.RunInformation
     """
@@ -1097,7 +1047,6 @@ class RunFolder(object):
         @return: C{bsf.illumina.RunFolder}
         @rtype: bsf.illumina.RunFolder
         """
-
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
@@ -1113,16 +1062,15 @@ class RunFolder(object):
 
         # Illumina Run Folders obey a 'YYMMDD_SN000_Run_PositionFCID' schema.
 
-        components = file_name.split('_')
+        component_list = file_name.split('_')
 
         return cls(
             file_path=file_path,
             file_type='Illumina',
-            name='_'.join(components),
-            date=components[0],
-            instrument=components[1],
-            run=components[2],
-            flow_cell=components[3],
+            date=component_list[0],
+            instrument=component_list[1],
+            run=component_list[2],
+            flow_cell=component_list[3],
             run_information=RunInformation.from_file_path(file_path=os.path.join(file_path, 'RunInfo.xml')),
             run_parameters=RunParameters.from_file_path(file_path=run_parameters_path),
             image_analysis=ImageAnalysis.from_file_path(file_path=os.path.join(
@@ -1134,7 +1082,6 @@ class RunFolder(object):
             self,
             file_path=None,
             file_type=None,
-            name=None,
             date=None,
             instrument=None,
             run=None,
@@ -1149,16 +1096,14 @@ class RunFolder(object):
         @type file_path: str | unicode
         @param file_type: File type (e.g. I{CASAVA}, I{External} or I{Automatic})
         @type file_type: str
-        @param name: Name
-        @type name: str
         @param date: Date in I{YYMMDD} format
-        @type date: str
+        @type date: str | unicode | None
         @param instrument: Illumina instrument serial number (e.g. I{SN181}, I{SN815}, ...)
-        @type instrument: str
+        @type instrument: str | unicode | None
         @param run: Run serial number
-        @type run: str
+        @type run: str | unicode | None
         @param flow_cell: The position and flow cell identifier
-        @type flow_cell: str
+        @type flow_cell: str | unicode | None
         @param run_information: C{bsf.illumina.RunInformation}
         @type run_information: bsf.illumina.RunInformation
         @param image_analysis: C{bsf.illumina.ImageAnalysis}
@@ -1168,7 +1113,6 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-
         super(RunFolder, self).__init__()
 
         if file_path:
@@ -1176,35 +1120,11 @@ class RunFolder(object):
         else:
             self.file_path = str()
 
-        if file_type:
-            self.file_type = file_type
-        else:
-            self.file_type = str()
-
-        if name:
-            self.name = name
-        else:
-            self.name = str()
-
-        if date:
-            self.date = date
-        else:
-            self.date = str()
-
-        if instrument:
-            self.instrument = instrument
-        else:
-            self.instrument = str()
-
-        if run:
-            self.run = run
-        else:
-            self.run = str()
-
-        if flow_cell:
-            self.flow_cell = flow_cell
-        else:
-            self.flow_cell = str()
+        self.file_type = file_type
+        self.date = date
+        self.instrument = instrument
+        self.run = run
+        self.flow_cell = flow_cell
 
         if run_information:
             self.run_information = run_information
@@ -1241,8 +1161,16 @@ class RunFolder(object):
         @return: Illumina base-calls directory
         @rtype: str | unicode
         """
-
         return os.path.join(self.file_path, 'Data', 'Intensities', 'BaseCalls')
+
+    @property
+    def get_name(self):
+        """Get the C{bsf.illumina.RunFolder} name.
+
+        @return: Name
+        @rtype: str | unicode
+        """
+        return '_'.join((self.date, self.instrument, self.run, self.flow_cell))
 
     def _check_tiles_base_call(self):
         """Check for missing I{<Tile>} elements in the I{IRF/Data/Intensities/BaseCalls/config.xml}
@@ -1254,15 +1182,15 @@ class RunFolder(object):
         """
         fcl = self.run_information.flow_cell_layout
 
-        for lane in range(1, fcl.lane_count + 1):
+        for lane in range(0 + 1, fcl.lane_count + 1):
             if lane not in self._missing_base_call_tiles:
                 self._missing_base_call_tiles[lane] = dict()
             lane_dict = self._missing_base_call_tiles[lane]
             if self.base_call_analysis.has_lane(lane=str(lane)):
                 # Lanes are not defined of the config.xml file could not be read.
-                for surface in range(1, fcl.surface_count + 1):
-                    for swath in range(1, fcl.swath_count + 1):
-                        for tile in range(1, fcl.tile_count + 1):
+                for surface in range(0 + 1, fcl.surface_count + 1):
+                    for swath in range(0 + 1, fcl.swath_count + 1):
+                        for tile in range(0 + 1, fcl.tile_count + 1):
                             tile = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
                             if not self.base_call_analysis.has_lane_tile(lane=str(lane), tile=tile):
                                 lane_dict[tile] = True
@@ -1280,15 +1208,15 @@ class RunFolder(object):
         """
         fcl = self.run_information.flow_cell_layout
 
-        for lane in range(1, fcl.lane_count + 1):
+        for lane in range(0 + 1, fcl.lane_count + 1):
             if lane not in self._missing_image_analysis_tiles:
                 self._missing_image_analysis_tiles[lane] = dict()
             lane_dict = self._missing_image_analysis_tiles[lane]
             if self.image_analysis.has_lane(lane=str(lane)):
                 # Lanes are not defined of the config.xml file could not be read.
-                for surface in range(1, fcl.surface_count + 1):
-                    for swath in range(1, fcl.swath_count + 1):
-                        for tile in range(1, fcl.tile_count + 1):
+                for surface in range(0 + 1, fcl.surface_count + 1):
+                    for swath in range(0 + 1, fcl.swath_count + 1):
+                        for tile in range(0 + 1, fcl.tile_count + 1):
                             tile = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
                             if not self.image_analysis.has_lane_tile(lane=str(lane), tile=tile):
                                 lane_dict[tile] = True
@@ -1454,7 +1382,6 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -1478,7 +1405,7 @@ class RunFolder(object):
 
         if rta in ('2.5.2',):
             # For RTA 2.5.2 (HiSeq 3000/4000) process IRF/Data/Intensities/BaseCalls/Matrix/L00[1-8] directories.
-            for lane in range(1, fcl.lane_count + 1):
+            for lane in range(0 + 1, fcl.lane_count + 1):
                 lane_name = 'L{:03d}'.format(lane)
                 lane_path = os.path.join(_directory_path, lane_name)
                 if lane_name in _directory_dict:
@@ -1494,7 +1421,7 @@ class RunFolder(object):
 
                 # Process IRF/Data/Intensities/BaseCalls/Matrix/L00[1-8]/C[0-9]+.1/ directories.
 
-                for cycle in range(1, self.run_information.get_cycle_number + 1):
+                for cycle in range(0 + 1, self.run_information.get_cycle_number + 1):
                     cycle_name = 'C{:d}.1'.format(cycle)
                     cycle_path = os.path.join(lane_path, cycle_name)
                     if cycle_name in lane_dict:
@@ -1508,9 +1435,9 @@ class RunFolder(object):
                     if debug > 2:
                         print 'Processing directory', cycle_path
 
-                    for surface in range(1, fcl.surface_count + 1):
-                        for swath in range(1, fcl.swath_count + 1):
-                            for tile in range(1, fcl.tile_count + 1):
+                    for surface in range(0 + 1, fcl.surface_count + 1):
+                        for swath in range(0 + 1, fcl.swath_count + 1):
+                            for tile in range(0 + 1, fcl.tile_count + 1):
                                 # Process tile matrix files.
                                 # s_1_1101_matrix.txt
                                 # s_1_2228_matrix.txt
@@ -1533,7 +1460,7 @@ class RunFolder(object):
                     print '  Remaining entries:', entry_name_list
         else:
             # All other platforms have a flat list of matrix.txt files.
-            for read in range(1, self.run_information.get_read_number + 1):
+            for read in range(0 + 1, self.run_information.get_read_number + 1):
                 # Process read matrix files.
                 # s_1_matrix.txt
                 # s_2_matrix.txt
@@ -1543,7 +1470,7 @@ class RunFolder(object):
                 else:
                     print 'Missing read matrix file', os.path.join(_directory_path, _entry_name)
 
-                for lane in range(1, fcl.lane_count + 1):
+                for lane in range(0 + 1, fcl.lane_count + 1):
                     # Process lane matrix files.
                     # s_1_1_matrix.txt
                     # s_8_2_matrix.txt
@@ -1553,9 +1480,9 @@ class RunFolder(object):
                     else:
                         print 'Missing lane matrix file', os.path.join(_directory_path, _entry_name)
 
-                    for surface in range(1, fcl.surface_count + 1):
-                        for swath in range(1, fcl.swath_count + 1):
-                            for tile in range(1, fcl.tile_count + 1):
+                    for surface in range(0 + 1, fcl.surface_count + 1):
+                        for swath in range(0 + 1, fcl.swath_count + 1):
+                            for tile in range(0 + 1, fcl.tile_count + 1):
                                 # Not all tiles have to exists especially after catastrophic events during the
                                 # cluster generation step.
                                 tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
@@ -1591,7 +1518,6 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -1613,41 +1539,41 @@ class RunFolder(object):
         if debug > 0:
             print 'Processing directory', _directory_path
 
-        for ri_read in self.run_information.reads:
+        for run_information_read in self.run_information.run_information_read_list:
             # Process read phasing files.
             # s_1_phasing.txt
             # s_2_phasing.txt
-            _entry_name = 's_{:d}_phasing.txt'.format(ri_read.number)
+            _entry_name = 's_{:d}_phasing.txt'.format(run_information_read.number)
             if _entry_name in _directory_dict:
                 del _directory_dict[_entry_name]
             else:
                 print 'Missing file', os.path.join(_directory_path, _entry_name)
 
-            for lane in range(1, fcl.lane_count + 1):
+            for lane in range(0 + 1, fcl.lane_count + 1):
                 # Process lane phasing files.
                 # s_1_1_phasing.txt
                 # s_8_3_phasing.txt
-                _entry_name = 's_{:d}_{:d}_phasing.txt'.format(lane, ri_read.number)
+                _entry_name = 's_{:d}_{:d}_phasing.txt'.format(lane, run_information_read.number)
                 if _entry_name in _directory_dict:
                     del _directory_dict[_entry_name]
                 else:
                     print 'Missing file', os.path.join(_directory_path, _entry_name)
                     continue
 
-                for surface in range(1, fcl.surface_count + 1):
-                    for swath in range(1, fcl.swath_count + 1):
-                        for tile in range(1, fcl.tile_count + 1):
+                for surface in range(0 + 1, fcl.surface_count + 1):
+                    for swath in range(0 + 1, fcl.swath_count + 1):
+                        for tile in range(0 + 1, fcl.tile_count + 1):
                             # Not all tiles have to exists especially after catastrophic events during the
                             # cluster generation step.
                             tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
                             if self._is_missing_base_call_tile(lane=lane, tile=tile_name):
                                 continue
-                            if rta in ('1.12.4', '1.12.4.2', '1.13.48', '1.17.21.3') and not ri_read.index:
+                            if rta in ('1.12.4', '1.12.4.2', '1.13.48', '1.17.21.3') and not run_information_read.index:
                                 # Process tile cycle files, which only exist for payload, but not index reads.
                                 # s_1_1_1101_cycle.txt
                                 # s_8_1_2316_cycle.txt
                                 _entry_name = 's_{:1d}_{:1d}_{:1d}{:1d}{:02d}_cycle.txt'. \
-                                    format(lane, ri_read.number, surface, swath, tile)
+                                    format(lane, run_information_read.number, surface, swath, tile)
                                 if _entry_name in _directory_dict:
                                     del _directory_dict[_entry_name]
                                 else:
@@ -1657,7 +1583,7 @@ class RunFolder(object):
                             # s_1_1_1101_phasing.txt
                             # s_8_3_2316_phasing.txt
                             _entry_name = 's_{:1d}_{:1d}_{:1d}{:1d}{:02d}_phasing.txt'. \
-                                format(lane, ri_read.number, surface, swath, tile)
+                                format(lane, run_information_read.number, surface, swath, tile)
                             if _entry_name in _directory_dict:
                                 del _directory_dict[_entry_name]
                             else:
@@ -1666,7 +1592,7 @@ class RunFolder(object):
                             if rta not in ('1.12.4', '1.12.4.2', '1.13.48', '1.17.21.3'):
                                 # Process the tile empirical phasing files.
                                 _entry_name = 'EmpiricalPhasingCorrection_{:1d}_{:1d}_{:1d}{:1d}{:02d}.txt'. \
-                                    format(lane, ri_read.number, surface, swath, tile)
+                                    format(lane, run_information_read.number, surface, swath, tile)
                                 if _entry_name in _directory_dict:
                                     del _directory_dict[_entry_name]
                                 else:
@@ -1675,7 +1601,7 @@ class RunFolder(object):
         if rta not in ('2.5.2',):
             # RTA 2.5.2 (HiSeq 3000/4000) does not have
             # IRF/DataIntensities/BaseCalls/Phasing/s_{lane}_{cycle}_phasing.xml files.
-            for lane in range(1, fcl.lane_count + 1):
+            for lane in range(0 + 1, fcl.lane_count + 1):
                 for read_start in self.run_information.get_read_start_list:
                     _entry_name = 's_{:1d}_{:02d}_phasing.xml'.format(lane, read_start + 1)
                     if _entry_name in _directory_dict:
@@ -1703,7 +1629,6 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -1735,7 +1660,7 @@ class RunFolder(object):
 
         # Process IRF/Data/Intensities/BaseCalls/L00[1-8]/ directories.
 
-        for lane in range(1, fcl.lane_count + 1):
+        for lane in range(0 + 1, fcl.lane_count + 1):
             lane_name = 'L{:03d}'.format(lane)
             lane_path = os.path.join(_directory_path, lane_name)
             if lane_name in _directory_dict:
@@ -1753,7 +1678,7 @@ class RunFolder(object):
 
             if rta in ('2.4.11',):
                 # For NextSeq
-                for cycle in range(1, self.run_information.get_cycle_number + 1):
+                for cycle in range(0 + 1, self.run_information.get_cycle_number + 1):
                     _entry_name = '{:04d}.bcl.bgzf'.format(cycle)
                     if _entry_name in lane_dict:
                         del lane_dict[_entry_name]
@@ -1778,7 +1703,7 @@ class RunFolder(object):
                     print 'Missing lane filter file', os.path.join(lane_path, _entry_name)
             else:
                 # For HiSeq and MiSeq
-                for cycle in range(1, self.run_information.get_cycle_number + 1):
+                for cycle in range(0 + 1, self.run_information.get_cycle_number + 1):
                     cycle_name = 'C{:d}.1'.format(cycle)
                     cycle_path = os.path.join(lane_path, cycle_name)
                     if cycle_name in lane_dict:
@@ -1792,7 +1717,7 @@ class RunFolder(object):
                     if debug > 2:
                         print 'Processing directory', cycle_path
 
-                    for surface in range(1, fcl.surface_count + 1):
+                    for surface in range(0 + 1, fcl.surface_count + 1):
                         # NovaSeq has only L001_<surface>.cbcl files.
                         if rta in ('v3.3.3',):
                             _entry_name = '{}_{:d}.cbcl'.format(lane_name, surface)
@@ -1801,8 +1726,8 @@ class RunFolder(object):
                             else:
                                 print 'Missing cbcl file', os.path.join(cycle_path, _entry_name)
                         else:
-                            for swath in range(1, fcl.swath_count + 1):
-                                for tile in range(1, fcl.tile_count + 1):
+                            for swath in range(0 + 1, fcl.swath_count + 1):
+                                for tile in range(0 + 1, fcl.tile_count + 1):
                                     # Not all tiles have to exists especially after catastrophic events during the
                                     # cluster generation step.
                                     tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
@@ -1846,9 +1771,9 @@ class RunFolder(object):
 
             if rta not in ('2.4.11',):
                 # Not for NextSeq
-                for surface in range(1, fcl.surface_count + 1):
-                    for swath in range(1, fcl.swath_count + 1):
-                        for tile in range(1, fcl.tile_count + 1):
+                for surface in range(0 + 1, fcl.surface_count + 1):
+                    for swath in range(0 + 1, fcl.swath_count + 1):
+                        for tile in range(0 + 1, fcl.tile_count + 1):
                             # Not all tiles have to exists especially after catastrophic events during the
                             # cluster generation step.
                             tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
@@ -1924,7 +1849,6 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-
         rta = self.run_parameters.get_real_time_analysis_version
 
         if rta in ('2.4.11',):
@@ -1979,7 +1903,6 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -2001,12 +1924,12 @@ class RunFolder(object):
         """ @type no_error_cycles: list[int] """
 
         cycles = 1
-        for ri_read in self.run_information.reads:
-            if ri_read.index:
-                no_error_cycles.extend(range(cycles, cycles + ri_read.cycles))
+        for run_information_read in self.run_information.run_information_read_list:
+            if run_information_read.index:
+                no_error_cycles.extend(range(cycles, cycles + run_information_read.cycles))
             else:
-                no_error_cycles.append(cycles + ri_read.cycles - 1)
-            cycles += ri_read.cycles
+                no_error_cycles.append(cycles + run_information_read.cycles - 1)
+            cycles += run_information_read.cycles
 
         if debug > 0:
             print 'Cycles without errorMap files:', no_error_cycles
@@ -2052,7 +1975,7 @@ class RunFolder(object):
 
             # Process IRF/Data/Intensities/L00[1-8]/ directories.
 
-            for lane in range(1, fcl.lane_count + 1):
+            for lane in range(0 + 1, fcl.lane_count + 1):
                 lane_name = 'L{:03d}'.format(lane)
                 lane_path = os.path.join(_directory_path, lane_name)
                 if lane_name in _directory_dict:
@@ -2073,9 +1996,9 @@ class RunFolder(object):
                     else:
                         print 'Missing file', os.path.join(lane_path, _entry_name)
                 else:
-                    for surface in range(1, fcl.surface_count + 1):
-                        for swath in range(1, fcl.swath_count + 1):
-                            for tile in range(1, fcl.tile_count + 1):
+                    for surface in range(0 + 1, fcl.surface_count + 1):
+                        for swath in range(0 + 1, fcl.swath_count + 1):
+                            for tile in range(0 + 1, fcl.tile_count + 1):
                                 # Not all tiles have to exists especially after catastrophic events during the
                                 # cluster generation step.
                                 tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
@@ -2106,7 +2029,7 @@ class RunFolder(object):
                     # as they do no longer store cycle-specific sub directories with
                     # cluster intensity files (*.cif), error map (*.errorMap) and
                     # full width at half maximum (*.FWHMMap) files.
-                    for cycle in range(1, self.run_information.get_cycle_number + 1):
+                    for cycle in range(0 + 1, self.run_information.get_cycle_number + 1):
                         cycle_name = 'C{:d}.1'.format(cycle)
                         cycle_path = os.path.join(lane_path, cycle_name)
                         if cycle_name in lane_dict:
@@ -2120,9 +2043,9 @@ class RunFolder(object):
                         if debug > 2:
                             print 'Processing directory', cycle_path
 
-                        for surface in range(1, fcl.surface_count + 1):
-                            for swath in range(1, fcl.swath_count + 1):
-                                for tile in range(1, fcl.tile_count + 1):
+                        for surface in range(0 + 1, fcl.surface_count + 1):
+                            for swath in range(0 + 1, fcl.swath_count + 1):
+                                for tile in range(0 + 1, fcl.tile_count + 1):
                                     # Not all tiles have to exists especially after catastrophic events during the
                                     # cluster generation step.
                                     tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
@@ -2193,10 +2116,10 @@ class RunFolder(object):
                 # Older RTA version have position (*_pos.txt) files in addition to cluster location (*.clocs) files.
                 # s_1_1101_pos.txt
                 # s_8_2308_pos.txt
-                for lane in range(1, fcl.lane_count + 1):
-                    for surface in range(1, fcl.surface_count + 1):
-                        for swath in range(1, fcl.swath_count + 1):
-                            for tile in range(1, fcl.tile_count + 1):
+                for lane in range(0 + 1, fcl.lane_count + 1):
+                    for surface in range(0 + 1, fcl.surface_count + 1):
+                        for swath in range(0 + 1, fcl.swath_count + 1):
+                            for tile in range(0 + 1, fcl.tile_count + 1):
                                 _entry_name = 's_{}_{:d}{:d}{:02d}_pos.txt'.format(lane, surface, swath, tile)
                                 if _entry_name in _directory_dict:
                                     del _directory_dict[_entry_name]
@@ -2223,7 +2146,6 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -2244,10 +2166,10 @@ class RunFolder(object):
         if debug > 0:
             print 'Processing directory', _directory_path
 
-        for lane in range(1, fcl.lane_count + 1):
-            for surface in range(1, fcl.surface_count + 1):
-                for swath in range(1, fcl.swath_count + 1):
-                    for tile in range(1, fcl.tile_count + 1):
+        for lane in range(0 + 1, fcl.lane_count + 1):
+            for surface in range(0 + 1, fcl.surface_count + 1):
+                for swath in range(0 + 1, fcl.swath_count + 1):
+                    for tile in range(0 + 1, fcl.tile_count + 1):
                         tile_prefix = 'TileStatusL{:d}T{:d}{:d}{:02d}'.format(lane, surface, swath, tile)
                         _entry_name = tile_prefix + '.bin'
                         if _entry_name in _directory_dict:
@@ -2281,7 +2203,6 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-
         rta = self.run_parameters.get_real_time_analysis_version
 
         _directory_name = 'Data'
@@ -2371,7 +2292,6 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-
         rta = self.run_parameters.get_real_time_analysis_version
 
         _directory_name = 'InterOp'
@@ -2436,13 +2356,13 @@ class RunFolder(object):
             """ @type quality_cycle_list: list[int] """
             quality_start_list = list()
             """ @type quality_start_list: list[int] """
-            for read in self.run_information.reads:
-                if not read.index:
-                    quality_cycle_list.extend(range(cycle_number + 24, cycle_number + read.cycles))
+            for run_information_read in self.run_information.run_information_read_list:
+                if not run_information_read.index:
+                    quality_cycle_list.extend(range(cycle_number + 24, cycle_number + run_information_read.cycles))
                     quality_start_list.append(cycle_number + 24)
-                cycle_number += read.cycles
+                cycle_number += run_information_read.cycles
 
-            for cycle in range(1, self.run_information.get_cycle_number + 1):
+            for cycle in range(0 + 1, self.run_information.get_cycle_number + 1):
                 cycle_name = 'C{:d}.1'.format(cycle)
                 cycle_path = os.path.join(_directory_path, cycle_name)
                 if cycle_name in _directory_dict:
@@ -2532,7 +2452,6 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-
         rta = self.run_parameters.get_real_time_analysis_version
 
         if rta in ('2.4.11',):
@@ -2581,7 +2500,6 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-
         rta = self.run_parameters.get_real_time_analysis_version
         flow_cell_barcode = self.run_parameters.get_flow_cell_barcode.upper()
 
@@ -2643,7 +2561,6 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
@@ -2677,7 +2594,7 @@ class RunFolder(object):
 
         # Process the IRF/Thumbnail_Images/L00[1-8]/ directories.
 
-        for lane in range(1, fcl.lane_count + 1):
+        for lane in range(0 + 1, fcl.lane_count + 1):
             lane_name = 'L{:03d}'.format(lane)
             if lane_name in _directory_dict:
                 del _directory_dict[lane_name]
@@ -2693,7 +2610,7 @@ class RunFolder(object):
 
             # Process the IRF/Thumbnail_Images/L00[1-8]/C[0-9]+.1/ directories.
 
-            for cycle in range(1, self.run_information.get_cycle_number + 1):
+            for cycle in range(0 + 1, self.run_information.get_cycle_number + 1):
                 cycle_name = 'C{:d}.1'.format(cycle)
                 cycle_path = os.path.join(lane_path, cycle_name)
                 if cycle_name in lane_dict:
@@ -2707,12 +2624,12 @@ class RunFolder(object):
                 if debug > 2:
                     print 'Processing directory', cycle_path
 
-                for surface in range(1, fcl.surface_count + 1):
-                    for swath in range(1, fcl.swath_count + 1):
+                for surface in range(0 + 1, fcl.surface_count + 1):
+                    for swath in range(0 + 1, fcl.swath_count + 1):
                         if rta in ('v3.3.3',):
                             # NovaSeq has green and red bases.
                             for base in ('green', 'red'):
-                                for tile in range(1, fcl.tile_count + 1):
+                                for tile in range(0 + 1, fcl.tile_count + 1):
                                     # NovaSeq only stores thumbnails for tiles that end in 3. Strange.
                                     # s_2_1103_green.png
                                     # s_2_1103_red.png
@@ -2759,7 +2676,7 @@ class RunFolder(object):
                                 else:
                                     # The HiSeq 2000 platform uses upper case bases.
                                     base = base.upper()
-                                for tile in range(1, fcl.tile_count + 1):
+                                for tile in range(0 + 1, fcl.tile_count + 1):
                                     # s_1_1101_A.jpg
                                     # s_1_2316_T.jpg
                                     tile_file = 's_{:1d}_{:1d}{:1d}{:02d}_{}.jpg'.format(
@@ -2798,7 +2715,6 @@ class RunFolder(object):
         @return:
         @rtype:
         """
-
         rta = self.run_parameters.get_real_time_analysis_version
 
         if rta not in (
@@ -2816,7 +2732,7 @@ class RunFolder(object):
                 '2.7.7',  # HiSeq Control Software HD 3.4.0.38 (HiSeq 3000/4000)
                 'v3.3.3',  # NovaSeq Control Software 1.2.0 (NovaSeq 6000)
         ):
-            raise Exception("Unsupported RTA version: '{}'".format(rta))
+            raise Exception('Unsupported RTA version: ' + repr(rta))
 
         # _directory_name = os.path.basename(self.file_path)
         _directory_path = self.file_path
@@ -2897,8 +2813,8 @@ class RunFolder(object):
             # On HiSeq 3000/4000 and NextSeq platforms.
             _file_name_list.append('RTAConfiguration.xml')
             _file_name_list.append('RTALogs')  # directory
-            for read in range(1, len(self.run_information.reads) + 1):
-                _file_name_list.append('RTARead{:d}Complete.txt'.format(read))
+            for read_number in range(0 + 1, len(self.run_information.run_information_read_list) + 1):
+                _file_name_list.append('RTARead{:d}Complete.txt'.format(read_number))
             if rta not in ('2.4.11',):
                 # Not on the NextSeq platform
                 _file_name_list.append('SequencingComplete.txt')
@@ -2910,9 +2826,9 @@ class RunFolder(object):
             # Other than HiSeq 3000/4000 platforms.
             _file_name_list.append('Basecalling_Netcopy_complete.txt')
             _file_name_list.append('ImageAnalysis_Netcopy_complete.txt')
-            for read in range(1, len(self.run_information.reads) + 1):
-                _file_name_list.append('Basecalling_Netcopy_complete_Read{:d}.txt'.format(read))
-                _file_name_list.append('ImageAnalysis_Netcopy_complete_Read{:d}.txt'.format(read))
+            for read_number in range(0 + 1, len(self.run_information.run_information_read_list) + 1):
+                _file_name_list.append('Basecalling_Netcopy_complete_Read{:d}.txt'.format(read_number))
+                _file_name_list.append('ImageAnalysis_Netcopy_complete_Read{:d}.txt'.format(read_number))
 
         if rta in ('2.4.11',):
             _file_name_list.append('RunCompletionStatus.xml')

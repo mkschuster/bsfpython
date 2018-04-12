@@ -938,7 +938,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             read_structure = str()
             index_read_index = 0  # Number of index reads.
             # Instantiate and sort a new list of RunInformationRead objects.
-            run_information_read_list = list(self._irf.run_information.reads)
+            run_information_read_list = list(self._irf.run_information.run_information_read_list)
             run_information_read_list.sort(cmp=lambda x, y: cmp(x.number, y.number))
             for run_information_read in run_information_read_list:
                 if run_information_read.index:
