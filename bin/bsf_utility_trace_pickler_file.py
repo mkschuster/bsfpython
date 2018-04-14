@@ -27,6 +27,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 
 from bsf import Runnable
@@ -49,12 +51,12 @@ name_space = argument_parser.parse_args()
 
 runnable = Runnable.from_pickler_path(file_path=name_space.pickler_path)
 
-print runnable.trace(level=1)
+print(runnable.trace(level=1))
 
 for runnable_step in runnable.runnable_step_list:
     if name_space.format == 'list':
-        print 'RunnableStep command list:', runnable_step.command_list()
-        print
+        print('RunnableStep command list:', runnable_step.command_list())
+        print()
     elif name_space.format == 'str':
-        print 'RunnableStep command str:', runnable_step.command_str()
-        print
+        print('RunnableStep command str:', runnable_step.command_str())
+        print()

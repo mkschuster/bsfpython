@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 import datetime
 import os
@@ -57,45 +59,45 @@ if file_path is None:
 
 irf = RunFolder.from_file_path(file_path=file_path)
 
-print 'Flow Cell Identifier: ', '_'.join((irf.run_parameters.get_experiment_name,
-                                          irf.run_parameters.get_flow_cell_barcode))
-print 'Read Structure:       ', ' + '.join(irf.run_information.get_read_structure_list)
+print('Flow Cell Identifier: ', '_'.join((irf.run_parameters.get_experiment_name,
+                                          irf.run_parameters.get_flow_cell_barcode)))
+print('Read Structure:       ', ' + '.join(irf.run_information.get_read_structure_list))
 
 file_path_start = os.path.join(file_path, 'Config')
 if os.path.exists(file_path_start):
-    print 'Start date:           ', datetime.date.fromtimestamp(os.stat(file_path_start).st_mtime)
+    print('Start date:           ', datetime.date.fromtimestamp(os.stat(file_path_start).st_mtime))
 
 file_path_end = os.path.join(file_path, 'RTAComplete.txt')
 if os.path.exists(file_path_end):
-    print 'End date:             ', datetime.date.fromtimestamp(os.stat(file_path_end).st_mtime)
+    print('End date:             ', datetime.date.fromtimestamp(os.stat(file_path_end).st_mtime))
 
-print 'Experiment:           ', irf.run_parameters.get_experiment_name
-print 'Flow Cell:            ', irf.run_parameters.get_flow_cell_barcode
+print('Experiment:           ', irf.run_parameters.get_experiment_name)
+print('Flow Cell:            ', irf.run_parameters.get_flow_cell_barcode)
 
 position = irf.run_parameters.get_position
 if position:
-    print 'Position:             ', irf.run_parameters.get_position
+    print('Position:             ', irf.run_parameters.get_position)
 
-print 'Run Identifier:       ', irf.run_information.run_identifier
-print 'Application Name:     ', irf.run_parameters.get_application_name
-print 'Application Version:  ', irf.run_parameters.get_application_version
-print 'RTA Version:          ', irf.run_parameters.get_real_time_analysis_version
+print('Run Identifier:       ', irf.run_information.run_identifier)
+print('Application Name:     ', irf.run_parameters.get_application_name)
+print('Application Version:  ', irf.run_parameters.get_application_version)
+print('RTA Version:          ', irf.run_parameters.get_real_time_analysis_version)
 
 flow_cell_type = irf.run_parameters.get_flow_cell_type
 if flow_cell_type:
-    print 'Flow Cell Type:       ', flow_cell_type
+    print('Flow Cell Type:       ', flow_cell_type)
 
 index_type = irf.run_parameters.get_index_type
 if index_type:
-    print 'Index Type:           ', index_type
+    print('Index Type:           ', index_type)
 
 pe_type = irf.run_parameters.get_pe_type
 if pe_type:
-    print 'Paired-end Type:      ', pe_type
+    print('Paired-end Type:      ', pe_type)
 
 sbs_type = irf.run_parameters.get_sbs_type
 if sbs_type:
-    print 'SBS Type:             ', sbs_type
+    print('SBS Type:             ', sbs_type)
 
 if name_space.check:
     irf.check(debug=name_space.debug)

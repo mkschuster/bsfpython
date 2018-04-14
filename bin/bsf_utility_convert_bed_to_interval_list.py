@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 import os
 
@@ -75,7 +77,7 @@ if name_space.output_path is None or not name_space.output_path:
     if output_path.endswith('.bed'):
         output_path = output_path[:-3] + 'interval_list'
     else:
-        raise Exception('The input-path option does not specify a *.bed file and the output-path opption is missing.')
+        raise Exception('The input-path option does not specify a *.bed file and the output-path option is missing.')
 else:
     output_path = name_space.output_path
 
@@ -142,11 +144,11 @@ for sequence_name in sequence_name_list:
     assert isinstance(sequence_name, str)
     interval_list = sequence_name_dict[sequence_name]
     assert isinstance(interval_list, list)
-    print "Sequence name: {} lines: {}".format(sequence_name, len(interval_list))
+    print('Sequence name: {} lines: {}'.format(sequence_name, len(interval_list)))
     # Sort numerically on the sequence region start field.
     interval_list.sort(cmp=lambda x, y: cmp(int(x[1]), int(y[1])))
 
     for interval_fields in interval_list:
-        output_file.write("\t".join(interval_fields) + "\n")
+        output_file.write('\t'.join(interval_fields) + "\n")
 
 output_file.close()

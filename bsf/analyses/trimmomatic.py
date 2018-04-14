@@ -27,6 +27,8 @@ A package of classes and methods supporting the Trimmomatic tool.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import os
 
 from bsf import Analysis, FilePath, Runnable
@@ -97,6 +99,7 @@ class FilePathTrimmomaticProject(FilePath):
     @ivar sas_path_new: New Sample Annotation Sheet file path
     @type sas_path_new: str | unicode
     """
+
     def __init__(self, prefix, prefix_analysis, project_name):
         """Initialise a C{bsf.analyses.trimmomatic.FilePathTrimmomaticProject} object.
 
@@ -352,8 +355,8 @@ class Trimmomatic(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print self, 'Sample name:', sample.name
-                print sample.trace(level=1)
+                print(self, 'Sample name:', sample.name)
+                print(sample.trace(level=1))
 
             sample_step_list = list()
             """ @type sample_step_list: list[str | unicode] """
@@ -373,7 +376,7 @@ class Trimmomatic(Analysis):
             for paired_reads_name in paired_reads_name_list:
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
-                        print self, 'PairedReads name:', paired_reads.get_name()
+                        print(self, 'PairedReads name:', paired_reads.get_name())
 
                     paired_reads_step_list = list()
                     if 'Trimmomatic Steps' in paired_reads.annotation_dict:
@@ -392,7 +395,7 @@ class Trimmomatic(Analysis):
                     prefix_read_group = '_'.join((stage_read_group.name, paired_reads_name))
 
                     if self.debug > 0:
-                        print 'Trimmomatic Prefix:', prefix_read_group
+                        print('Trimmomatic Prefix:', prefix_read_group)
 
                     file_path_read_group = FilePathTrimmomaticReadGroup(prefix=prefix_read_group)
 

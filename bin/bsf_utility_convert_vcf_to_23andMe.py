@@ -28,6 +28,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 
 argument_parser = argparse.ArgumentParser(
@@ -86,10 +88,10 @@ for line in input_fh:
     elif sample_fields[genotype_index] == './.':
         continue
     else:
-        print 'Unexpected genotype {!r} in line: {}'.format(vcf_fields[9], line)
+        print('Unexpected genotype {!r} in line: {}'.format(vcf_fields[9], line))
 
     # The identifier (ID) is in field 2,  the chromosome (CHROM) in field 0 and the position (POS) in field 1.
-    output_fh.write("\t".join((vcf_fields[2], vcf_fields[0], vcf_fields[1], alleles)) + "\n")
+    output_fh.write('\t'.join((vcf_fields[2], vcf_fields[0], vcf_fields[1], alleles)) + '\n')
 
 input_fh.close()
 output_fh.close()

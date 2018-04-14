@@ -26,6 +26,8 @@ A package of classes and methods supporting Bowtie alignment analyses.
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 from bsf import Analysis, Runnable
 from bsf.process import RunnableStep
 
@@ -179,8 +181,8 @@ class Bowtie1(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print '{!r} Sample name: {}'.format(self, sample.name)
-                print sample.trace(1)
+                print(self, 'Sample name:', repr(sample.name))
+                print(sample.trace(1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
@@ -203,7 +205,7 @@ class Bowtie1(Analysis):
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
                         debug=self.debug))
-                executable_bowtie1 = self.set_stage_runnable(
+                self.set_stage_runnable(
                     stage=stage_bowtie1,
                     runnable=runnable_bowtie1)
 

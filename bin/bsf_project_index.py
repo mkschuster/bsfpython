@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 import inspect
 import os
@@ -163,4 +165,4 @@ for key in key_list:
 # TODO: Functionality of this script needs integrating into the Analysis class.
 output += Analysis.get_html_footer()
 
-print output
+print(output)

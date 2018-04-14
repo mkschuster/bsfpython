@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 
 from bsf.analyses.chip_seq import ChIPSeq
@@ -68,11 +70,11 @@ analysis.run()
 analysis.check_state()
 analysis.submit(name=name_space.stage)
 
-print 'ChIPSeq Analysis'
-print 'Project name:      ', analysis.project_name
-print 'Input directory:   ', analysis.input_directory
-print 'Project directory: ', analysis.project_directory
+print(analysis.name)
+print('Project name:      ', analysis.project_name)
+print('Input directory:   ', analysis.input_directory)
+print('Project directory: ', analysis.project_directory)
 
 if analysis.debug >= 2:
-    print '{!r} final trace:'.format(analysis)
-    print analysis.trace(level=1)
+    print(repr(analysis), 'final trace:')
+    print(analysis.trace(level=1))

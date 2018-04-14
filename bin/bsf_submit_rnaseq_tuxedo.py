@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 
 from bsf.analyses.rna_seq import Tuxedo
@@ -64,14 +66,14 @@ analysis.run()
 analysis.check_state()
 analysis.submit(name=name_space.stage)
 
-print 'Tuxedo Analysis'
-print 'Project name:      ', analysis.project_name
-print 'Genome version:    ', analysis.genome_version
-print 'Input directory:   ', analysis.input_directory
-print 'Output directory:  ', analysis.output_directory
-print 'Project directory: ', analysis.project_directory
-print 'Genome directory:  ', analysis.genome_directory
+print(analysis.name)
+print('Project name:      ', analysis.project_name)
+print('Genome version:    ', analysis.genome_version)
+print('Input directory:   ', analysis.input_directory)
+print('Output directory:  ', analysis.output_directory)
+print('Project directory: ', analysis.project_directory)
+print('Genome directory:  ', analysis.genome_directory)
 
 if analysis.debug >= 2:
-    print '{!r} final trace:'.format(analysis)
-    print analysis.trace(level=1)
+    print(repr(analysis), 'final trace:')
+    print(analysis.trace(level=1))

@@ -27,6 +27,8 @@ A package of classes and methods supporting RNA-Seq analyses.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import errno
 import os
 import pickle
@@ -813,7 +815,7 @@ class Tuxedo(Analysis):
                             _sample_list_new = list()
                             """ @type _sample_list_new: list[bsf.ngs.Sample] """
                             if _group_name and len(_sample_list_old):
-                                # Sample objects are unly useful, if at least one PairedReads object is not excluded.
+                                # Sample objects are only useful, if at least one PairedReads object is not excluded.
                                 for _sample in _sample_list_old:
                                     if not _sample.is_excluded():
                                         _sample_list_new.append(_sample)
@@ -828,10 +830,10 @@ class Tuxedo(Analysis):
                                     for _sample in _sample_list_new:
                                         self.add_sample(sample=_sample)
                                         if self.debug > 1:
-                                            print '  ', prefix, 'Sample name:', _sample.name, \
-                                                'file_path:', _sample.file_path
+                                            print('  ', prefix, 'Sample name:', _sample.name,
+                                                  'file_path:', _sample.file_path)
                                         if self.debug > 2:
-                                            print sample.trace(1)
+                                            print(sample.trace(1))
                             elif i < 1:
                                 # A Control and Treatment prefix is not required.
                                 continue
@@ -865,19 +867,19 @@ class Tuxedo(Analysis):
             # FIXME: The complication is that Sample or ReadGroup objects could be excluded from the Analysis.
             for _comparison_name, _sample_group_list in self._comparison_dict.iteritems():
                 if self.debug > 0:
-                    print 'Comparison name:', _comparison_name
-                    print 'SampleGroup list:'
+                    print('Comparison name:', _comparison_name)
+                    print('SampleGroup list:')
                 if len(_sample_group_list) < 1:
                     warnings.warn('Comparison ' + _comparison_name + ' without SampleGroup objects', UserWarning)
                 for _sample_group in _sample_group_list:
                     if self.debug > 0:
-                        print '  SampleGroup name:', _sample_group.name
-                        print '  SampleGroup Sample list:'
+                        print('  SampleGroup name:', _sample_group.name)
+                        print('  SampleGroup Sample list:')
                     if len(_sample_group.sample_list) < 1:
                         warnings.warn('SampleGroup ' + _sample_group.name + ' without Sample objects')
                     for _sample in _sample_group.sample_list:
                         if self.debug > 0:
-                            print '    Sample name:', _sample.name
+                            print('    Sample name:', _sample.name)
 
             return
 
@@ -1027,8 +1029,8 @@ class Tuxedo(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print self, 'Sample name:', sample.name
-                print sample.trace(1)
+                print(self, 'Sample name:', sample.name)
+                print(sample.trace(1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
@@ -1126,7 +1128,7 @@ class Tuxedo(Analysis):
 
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
-                        print self, 'PairedReads name:', paired_reads.get_name()
+                        print(self, 'PairedReads name:', paired_reads.get_name())
 
                     if paired_reads.reads_1:
                         reads_1_file_path_list.append(paired_reads.reads_1.file_path)
@@ -1143,8 +1145,8 @@ class Tuxedo(Analysis):
                 # has not been retired.
 
                 if self.debug > 0:
-                    print 'Tophat Executable'
-                    print tophat.trace(level=1)
+                    print('Tophat Executable')
+                    print(tophat.trace(level=1))
 
                 pickler_dict_run_tophat = {
                     'prefix': stage_run_tophat.name,
@@ -1410,11 +1412,11 @@ class Tuxedo(Analysis):
         comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
         if self.debug > 0:
-            print 'Tuxedo Comparison dict key list', comparison_name_list
+            print('Tuxedo Comparison dict key list', comparison_name_list)
 
         for comparison_name in comparison_name_list:
             if self.debug > 0:
-                print '  Comparison name:', comparison_name
+                print('  Comparison name:', comparison_name)
 
             sample_group_list = self._comparison_dict[comparison_name]
 
@@ -1570,7 +1572,7 @@ class Tuxedo(Analysis):
 
             for sample_group in sample_group_list:
                 if self.debug > 0:
-                    print '    SampleGroup name:', sample_group.name
+                    print('    SampleGroup name:', sample_group.name)
 
                 per_group_abundances_list = list()
                 """ @type per_group_abundances_list: list[str | unicode] """
@@ -1579,7 +1581,7 @@ class Tuxedo(Analysis):
 
                 for sample in sample_group.sample_list:
                     if self.debug > 0:
-                        print '      Sample name:', sample.name
+                        print('      Sample name:', sample.name)
 
                     paired_reads_dict = sample.get_all_paired_reads(
                         replicate_grouping=self.replicate_grouping,
@@ -1590,7 +1592,7 @@ class Tuxedo(Analysis):
 
                     for paired_reads_name in paired_reads_name_list:
                         if self.debug > 0:
-                            print '        PairedReads name:', paired_reads_name
+                            print('        PairedReads name:', paired_reads_name)
                         # Add the Cufflinks assembled transcripts GTF to the Cuffmerge manifest.
                         cuffmerge_transcript_gtf_list.append(
                             os.path.join('_'.join(('rnaseq_cufflinks', paired_reads_name)), 'transcripts.gtf') + '\n')
@@ -2056,8 +2058,8 @@ class Tuxedo(Analysis):
 
             for sample in self.sample_list:
                 if self.debug > 0:
-                    print self, 'Sample name:', sample.name
-                    print sample.trace(1)
+                    print(self, 'Sample name:', sample.name)
+                    print(sample.trace(1))
 
                 paired_reads_dict = sample.get_all_paired_reads(
                     replicate_grouping=self.replicate_grouping,
@@ -3240,8 +3242,8 @@ class DESeq(Analysis):
 
             for sample in self.sample_list:
                 if self.debug > 0:
-                    print self, 'Sample name:', sample.name
-                    print sample.trace(1)
+                    print(self, 'Sample name:', sample.name)
+                    print(sample.trace(1))
 
                 paired_reads_dict = sample.get_all_paired_reads(
                     replicate_grouping=self.replicate_grouping,

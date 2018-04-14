@@ -26,6 +26,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 import collections
 import datetime
@@ -84,7 +86,7 @@ for aligned_segment in alignment_iterator:
 
     alignment_counter += 1
     if not alignment_counter % log_after_x_processed_reads:
-        print "Processed {} reads".format(alignment_counter)
+        print('Processed {} reads'.format(alignment_counter))
 
 alignment_file.close()
 
@@ -115,13 +117,13 @@ def parse_sam_format(sam_file_handle):
 
     for line in sam_file_handle:
         assert isinstance(line, str)
-        if line.startswith("@"):
+        if line.startswith('@'):
             continue
         columns = line.rstrip().split('\t')
         # Find the column with the BC:Z: tag.
         # The first 11 columns are fixed.
         for i in range(10, len(columns)):
-            if columns[i].startswith("BC:Z:"):
+            if columns[i].startswith('BC:Z:'):
                 barcode_str = columns[i][5:]
                 if barcode_str in barcode_dict:
                     barcode_dict[barcode_str] += 1
@@ -142,8 +144,8 @@ def parse_sam_file(input_filename):
 
     # TODO: breaks if barcode not in 12th column or tag has different name (expecting BC:Z:....)
 
-    print "Processing SAM file (expecting barcode in the 12th column of the SAM file as a tag, " \
-          "like BC:Z:GGAACC (Picard - IlluminaToSam creates these unmapped BAM files)"
+    print('Processing SAM file (expecting barcode in the 12th column of the SAM file as a tag, '
+          'like BC:Z:GGAACC (Picard - IlluminaToSam creates these unmapped BAM files)')
 
     input_file = open(input_filename)
     barcodes = dict()
@@ -151,9 +153,9 @@ def parse_sam_file(input_filename):
     i = 0
     for line in input_file:
         # ignore SAM header (starts with @)
-        if not line.startswith("@"):
+        if not line.startswith('@'):
             # split each line at tabs, extract 12 column, split barcode tag
-            bc = line.split("\t")[11].split(":")[2]
+            bc = line.split('\t')[11].split(':')[2]
 
             # store barcode in a dict
             if bc not in barcodes:
@@ -164,7 +166,7 @@ def parse_sam_file(input_filename):
         # log message
         i += 1
         if i % log_after_x_processed_reads == 0:
-            print "Read " + str(i) + " lines."
+            print('Read ' + str(i) + ' lines.')
 
     input_file.close()
 
@@ -183,17 +185,17 @@ def parse_bam_file(input_filename):
     @rtype: dict
     """
 
-    if platform.system() == "Windows":
-        raise Exception("BAM files not supported on Windows")
+    if platform.system() == 'Windows':
+        raise Exception('BAM files not supported on Windows')
 
-    print "Processing BAM file, running samtools view <bamfile> > <tmp_samfile> (samtools required in PATH!)"
+    print('Processing BAM file, running samtools view <bamfile> > <tmp_samfile> (samtools required in PATH!)')
 
-    tmp_samfile = os.path.splitext(input_filename)[0] + ".tmp.sam"
+    tmp_samfile = os.path.splitext(input_filename)[0] + '.tmp.sam'
 
-    exit_code = os.system("samtools view -h " + input_filename + " > " + tmp_samfile)
+    exit_code = os.system('samtools view -h ' + input_filename + ' > ' + tmp_samfile)
 
     if not exit_code == 0:
-        raise Exception("Error executing samtools. Check if samtools is in your PATH (e.g. which samtools)")
+        raise Exception('Error executing samtools. Check if samtools is in your PATH (e.g. which samtools)')
 
     barcodes = parse_sam_file(tmp_samfile)
 
@@ -205,7 +207,7 @@ def parse_bam_file(input_filename):
 # parses a FASTQ file, processes barcode in header line of each FASTQ entry
 # TODO: breaks if barcode has /1 or /2 at the end (I think FASTQ files created by Picard from PE BAM files have these)
 def parse_fastq_file(input_filename):
-    print "Processing FASTQ file (expecting barcode in the header)"
+    print('Processing FASTQ file (expecting barcode in the header)')
 
     input_file = open(input_filename)
     barcodes = dict()
@@ -213,7 +215,7 @@ def parse_fastq_file(input_filename):
     i = 0
     for line in input_file:
         if i % 4 == 0:
-            bc = line.rstrip().split(":").pop()
+            bc = line.rstrip().split(':').pop()
             if bc not in barcodes:
                 barcodes[bc] = 0
 
@@ -221,19 +223,19 @@ def parse_fastq_file(input_filename):
 
         i += 1
         if i % log_after_x_processed_reads == 0:
-            print "Read " + str(i) + " lines."
+            print('Read ' + str(i) + ' lines.')
 
     input_file.close()
     return barcodes
 
 
-if file_type == ".fastq":
+if file_type == '.fastq':
     barcodes_dict = parse_fastq_file(name_space.input_file)
-elif file_type == ".sam":
+elif file_type == '.sam':
     file_handle = open(name_space.input_file, 'r')
     parse_sam_format(sam_file_handle=file_handle)
     file_handle.close()
-elif file_type == ".bam":
+elif file_type == '.bam':
     executable = Executable(name='samtools_view', program='samtools', sub_command=Command(program='view'))
     sub_command = executable.sub_command
     sub_command.add_option_short(key='f', value='64')  # Select only the first read of a pair.
@@ -258,7 +260,7 @@ elif file_type == ".bam":
 
     thread_out = threading.Thread(
         target=parse_sam_format,
-        kwargs={'sam_file_handle': child_process.stdout})
+        kwargs={'sam_file_handle': child_process.stdout, })
     thread_out.daemon = True  # Thread dies with the program.
     thread_out.start()
 
@@ -281,8 +283,8 @@ elif file_type == ".bam":
 
     while thread_out.is_alive() and thread_join_counter < max_thread_joins:
         thread_lock.acquire(True)
-        # print '[{}] Waiting for STDOUT processor to finish.'. \
-        #     format(datetime.datetime.now().isoformat())
+        # print('[{}] Waiting for STDOUT processor to finish.'.format(
+        #     datetime.datetime.now().isoformat()))
         thread_lock.release()
 
         thread_out.join(timeout=thread_join_timeout)
@@ -292,8 +294,8 @@ elif file_type == ".bam":
 
     while thread_err.is_alive() and thread_join_counter < max_thread_joins:
         thread_lock.acquire(True)
-        # print '[{}] Waiting for STDERR processor to finish.'. \
-        #     format(datetime.datetime.now().isoformat())
+        # print('[{}] Waiting for STDERR processor to finish.'.format(
+        #     datetime.datetime.now().isoformat()))
         thread_lock.release()
 
         thread_err.join(timeout=thread_join_timeout)
@@ -301,41 +303,41 @@ elif file_type == ".bam":
 
     if child_return_code > 0:
         if name_space.debug > 0:
-            print '[{}] Child process {!r} failed with exit code {}'. \
-                format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
+            print('[{}] Child process {!r} failed with exit code {}'.format(
+                datetime.datetime.now().isoformat(), executable.name, +child_return_code))
     elif child_return_code < 0:
         if name_space.debug > 0:
-            print '[{}] Child process {!r} received signal {}.'. \
-                format(datetime.datetime.now().isoformat(), executable.name, -child_return_code)
+            print('[{}] Child process {!r} received signal {}.'.format(
+                datetime.datetime.now().isoformat(), executable.name, -child_return_code))
     else:
         if name_space.debug > 0:
-            print '[{}] Child process {!r} completed successfully {}.'. \
-                format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
+            print('[{}] Child process {!r} completed successfully {}.'.format(
+                datetime.datetime.now().isoformat(), executable.name, +child_return_code))
 else:
-    raise Exception("Unsupported file format.")
+    raise Exception('Unsupported file format.')
 
 # write report
-# outfile = open("unmatched_barcode_report.csv", "w")
-# print dict sorted by highest number of occurence
+# outfile = open('unmatched_barcode_report.csv', 'w')
+# Write dict sorted by highest number of occurrence
 for barcode in collections.OrderedDict(sorted(barcode_dict.items(), reverse=True, key=lambda t: t[1])):
-    message = barcode + ";" + str(barcode_dict[barcode])
+    message = barcode + ';' + str(barcode_dict[barcode])
 
-    # outfile.write(message + "\n")
-    print message
+    # outfile.write(message + '\n')
+    print(message)
 
 # Check again for Illumina Barcodes:
 # outfile.close()
 
-print "--------"
+print('--------')
 
 illumina_adapters = [
-    "ATCACG", "CGATGT", "TTAGGC", "TGACCA", "ACAGTG", "GCCAAT",
-    "CAGATC", "ACTTGA", "GATCAG", "TAGCTT", "GGCTAC", "CTTGTA",
-    "AGTCAA", "AGTTCC", "ATGTCA", "CCGTCC", "GTCCGC", "GTGAAA",
-    "GTGGCC", "GTTTCG", "CGTACG", "GAGTGG", "ACTGAT", "ATTCCT"
+    'ATCACG', 'CGATGT', 'TTAGGC', 'TGACCA', 'ACAGTG', 'GCCAAT',
+    'CAGATC', 'ACTTGA', 'GATCAG', 'TAGCTT', 'GGCTAC', 'CTTGTA',
+    'AGTCAA', 'AGTTCC', 'ATGTCA', 'CCGTCC', 'GTCCGC', 'GTGAAA',
+    'GTGGCC', 'GTTTCG', 'CGTACG', 'GAGTGG', 'ACTGAT', 'ATTCCT'
 ]
 
-# outfile = open("unmatched_barcode_report.illumina.csv", "w")
+# outfile = open('unmatched_barcode_report.illumina.csv', 'w')
 
 for adapter in illumina_adapters:
     assert isinstance(adapter, str)
@@ -343,9 +345,9 @@ for adapter in illumina_adapters:
     if adapter in barcode_dict:
         count = barcode_dict[adapter]
 
-    message = adapter + ";" + str(count)
+    message = adapter + ';' + str(count)
 
-    # outfile.write(message + "\n")
-    print message
+    # outfile.write(message + '\n')
+    print(message)
 
 # outfile.close()

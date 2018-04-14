@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 
 from bsf.analyses import RunBamToFastq
@@ -66,8 +68,8 @@ for stage in bam2fastq.stage_list:
     stage.submit(debug=bam2fastq.debug)
 
     if bam2fastq.debug:
-        print repr(stage)
-        print stage.trace(1)
+        print(repr(stage))
+        print(stage.trace(1))
 
 if args.stage:
     if args.stage == 'report':
@@ -75,12 +77,12 @@ if args.stage:
     elif not submit:
         name_list = [stage.name for stage in bam2fastq.stage_list]
         name_list.append('report')
-        print 'Valid Analysis stages are: {!r}'.format(name_list)
+        print('Valid Analysis stages are:', repr(name_list))
 
-print 'RunBamToFastq Analysis'
-print 'Project name:      ', bam2fastq.project_name
-print 'Genome version:    ', bam2fastq.genome_version
-print 'Input directory:   ', bam2fastq.input_directory
-print 'Output directory:  ', bam2fastq.output_directory
-print 'Project directory: ', bam2fastq.project_directory
-print 'Genome directory:  ', bam2fastq.genome_directory
+print(bam2fastq.name)
+print('Project name:      ', bam2fastq.project_name)
+print('Genome version:    ', bam2fastq.genome_version)
+print('Input directory:   ', bam2fastq.input_directory)
+print('Output directory:  ', bam2fastq.output_directory)
+print('Project directory: ', bam2fastq.project_directory)
+print('Genome directory:  ', bam2fastq.genome_directory)

@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 import os
 import xml.etree.ElementTree
@@ -511,14 +513,12 @@ for main_file_path in input_file:
 if ltfs_free_bytes <= total_size:
     difference_bytes = total_size - ltfs_free_bytes
     difference_readable, difference_unit = convert_into_readable(integer_bytes=difference_bytes)
-    print 'LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Exceeding {:,d} ({:0.1f} {})'. \
-        format(ltfs_total_bytes, ltfs_free_bytes, total_size,
-               difference_bytes, difference_readable, difference_unit)
+    print('LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Exceeding {:,d} ({:0.1f} {})'.format(
+        ltfs_total_bytes, ltfs_free_bytes, total_size, difference_bytes, difference_readable, difference_unit))
 else:
     difference_bytes = ltfs_free_bytes - total_size
     difference_readable, difference_unit = convert_into_readable(integer_bytes=difference_bytes)
-    print "LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Remaining {:,d} ({:0.1f} {})". \
-        format(ltfs_total_bytes, ltfs_free_bytes, total_size,
-               difference_bytes, difference_readable, difference_unit)
+    print('LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Remaining {:,d} ({:0.1f} {})'.format(
+        ltfs_total_bytes, ltfs_free_bytes, total_size, difference_bytes, difference_readable, difference_unit))
 
 linear_tape_file_system_copy.write_batch_file(file_path=name_space.cartridge + '.xml')

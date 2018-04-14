@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 import errno
 import os
@@ -200,8 +202,8 @@ run_tophat = pickler_dict['tophat_executable']
 assert isinstance(run_tophat, Executable)
 
 if args.debug > 1:
-    print 'Executable before conversion'
-    print run_tophat.trace(level=1)
+    print('Executable before conversion')
+    print(run_tophat.trace(level=1))
 
 # Check the list of file paths in the second and third arguments for FASTQ versus BAM files.
 
@@ -259,8 +261,8 @@ else:
     run_tophat.arguments = run_tophat.arguments[:2]
 
 if args.debug > 1:
-    print 'Executable after conversion'
-    print run_tophat.trace(level=1)
+    print('Executable after conversion')
+    print(run_tophat.trace(level=1))
 
 child_return_code = run_tophat.run()
 

@@ -27,6 +27,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 import errno
 import os
@@ -53,7 +55,7 @@ def scan_directory(directory_path, debug=0):
             # For a link, evaluate the link.
             source_path = os.readlink(file_path)
             if not os.path.exists(path=source_path):
-                print 'source {!r} target {!r} of old symbolic link'.format(source_path, file_name)
+                print('source {!r} target {!r} of old symbolic link'.format(source_path, file_name))
                 # Split the entire source path to get the last two components of the source path including
                 # the lanes-specific BAM file and the flow cell directory.
                 source_path_list = list()
@@ -69,7 +71,7 @@ def scan_directory(directory_path, debug=0):
                 source_path = os.path.relpath(
                     os.path.join(name_space.sequences_path, *source_path_list[-2:]),
                     directory_path)
-                print 'source {!r} target {!r} of new symbolic link'.format(source_path, file_name)
+                print('source {!r} target {!r} of new symbolic link'.format(source_path, file_name))
                 # Check that the directory is writable.
                 directory_mode = os.lstat(directory_path)
                 if directory_mode[stat.ST_MODE] & stat.S_IWUSR:
@@ -88,7 +90,7 @@ def scan_directory(directory_path, debug=0):
                             if exception.errno != errno.EEXIST:
                                 raise
                 else:
-                    print 'No write permission for link in directory {!r}.'.format(directory_path)
+                    print('No write permission for link in directory:', repr(directory_path))
 
     return
 

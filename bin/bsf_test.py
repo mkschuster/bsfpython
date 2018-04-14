@@ -26,7 +26,10 @@
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import datetime
+import math
 import re
 import subprocess
 import sys
@@ -37,7 +40,7 @@ from bsf.process import Executable
 
 
 def bsf_test_argument():
-    print 'Parsed via bsf.argument.Argument.from_key_value()'
+    print('Parsed via bsf.argument.Argument.from_key_value()')
     for key, value in (
             ('-switch_short', None),
             ('--switch_long', None),
@@ -49,11 +52,11 @@ def bsf_test_argument():
             ('--option_pair=long', None),
             ('--option=pair space', None)):
         argument = bsf.argument.Argument.from_key_value(key=key, value=value)
-        print argument, argument.get_str(), argument.get_list()
+        print(argument, argument.get_str(), argument.get_list())
 
-    print
+    print()
 
-    print 'Instantiated directly via class method'
+    print('Instantiated directly via class method')
     argument_list = [
         bsf.argument.Switch(key='key'),
         bsf.argument.SwitchLong(key='key'),
@@ -87,9 +90,9 @@ def bsf_test_argument():
     ]
 
     for argument in argument_list:
-        print argument, argument.get_str(), argument.get_list()
+        print(argument, argument.get_str(), argument.get_list())
 
-    print
+    print()
 
     return
 
@@ -110,11 +113,11 @@ def bsf_test_thread(file_handle, thread_lock, debug, executable):
         match = re.search(pattern=r'Submitted batch job (\d+)', string=line)
         thread_lock.acquire(True)
         if debug > 0:
-            print 'Line:', line
+            print('Line:', line)
         if match:
             executable.process_identifier = match.group(1)
         else:
-            print 'Could not parse the process identifier from the SLURM sbatch response line', line
+            print('Could not parse the process identifier from the SLURM sbatch response line', line)
             executable.process_identifier = '9999999'
             executable.process_name = 'testing successful'
         thread_lock.release()
@@ -207,8 +210,8 @@ def bsf_test_subprocess(
         while thread_out.is_alive() and thread_join_counter < max_thread_joins:
             thread_lock.acquire(True)
             if debug > 0:
-                print '[{}] Waiting for STDOUT processor to finish.'. \
-                    format(datetime.datetime.now().isoformat())
+                print('[{}] Waiting for STDOUT processor to finish.'.format(
+                    datetime.datetime.now().isoformat()))
             thread_lock.release()
 
             thread_out.join(timeout=thread_join_timeout)
@@ -219,8 +222,8 @@ def bsf_test_subprocess(
         while thread_err.is_alive() and thread_join_counter < max_thread_joins:
             thread_lock.acquire(True)
             if debug > 0:
-                print '[{}] Waiting for STDERR processor to finish.'. \
-                    format(datetime.datetime.now().isoformat())
+                print('[{}] Waiting for STDERR processor to finish.'.format(
+                    datetime.datetime.now().isoformat()))
             thread_lock.release()
 
             thread_err.join(timeout=thread_join_timeout)
@@ -228,26 +231,287 @@ def bsf_test_subprocess(
 
         if child_return_code > 0:
             if debug > 0:
-                print '[{}] Child process {!r} failed with exit code {}'. \
-                    format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
+                print('[{}] Child process {!r} failed with exit code {}'.format(
+                    datetime.datetime.now().isoformat(), executable.name, +child_return_code))
             attempt_counter += 1
         elif child_return_code < 0:
             if debug > 0:
-                print '[{}] Child process {!r} received signal {}.'. \
-                    format(datetime.datetime.now().isoformat(), executable.name, -child_return_code)
+                print('[{}] Child process {!r} received signal {}.'.format(
+                    datetime.datetime.now().isoformat(), executable.name, -child_return_code))
         else:
             if debug > 0:
-                print '[{}] Child process {!r} completed successfully {}.'. \
-                    format(datetime.datetime.now().isoformat(), executable.name, +child_return_code)
+                print('[{}] Child process {!r} completed successfully {}.'.format(
+                    datetime.datetime.now().isoformat(), executable.name, +child_return_code))
             break
     else:
         if debug > 0:
-            print '[{}] Runnable {!r} exceeded the maximum retry counter {}.'. \
-                format(datetime.datetime.now().isoformat(), executable.name, maximum_attempts)
+            print('[{}] Runnable {!r} exceeded the maximum retry counter {}.'.format(
+                datetime.datetime.now().isoformat(), executable.name, maximum_attempts))
 
-    print executable.trace(level=0)
+    print(executable.trace(level=0))
 
     return child_return_code
 
 
-bsf_test_argument()
+class ExecutableTest(Executable):
+
+    def __init__(
+            self,
+            name=None,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdout_path=None,
+            stderr_path=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            maximum_attempts=1,
+            process_identifier=None,
+            process_name=None,
+            stdin_callable=None,
+            stdin_kwargs=None,
+            stdout_callable=None,
+            stdout_kwargs=None,
+            stderr_callable=None,
+            stderr_kwargs=None):
+
+        super(ExecutableTest, self).__init__(
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            maximum_attempts=maximum_attempts,
+            process_identifier=process_identifier,
+            process_name=process_name
+        )
+
+        self.stdin_callable = stdin_callable
+        self.stdin_kwargs = stdin_kwargs
+        self.stdout_callable = stdout_callable
+        self.stdout_kwargs = stdout_kwargs
+        self.stderr_callable = stderr_callable
+        self.stderr_kwargs = stderr_kwargs
+
+        return
+
+    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+
+        # super(ExecutableTest, self).run(
+        #     max_thread_joins=max_thread_joins,
+        #     thread_join_timeout=thread_join_timeout,
+        #     debug=debug)
+
+        on_posix = 'posix' in sys.builtin_module_names
+
+        child_return_code = 0
+        attempt_counter = 0
+
+        while attempt_counter < self.maximum_attempts:
+
+            child_process = subprocess.Popen(
+                args=self.command_list(),
+                bufsize=0,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=False,
+                close_fds=on_posix)
+            # TODO: It would be wonderful to catch Exceptions here.
+            # OSError: [Errno 2] No such file or directory
+
+            # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
+            # should make sure that buffers are not filling up.
+
+            thread_lock = threading.Lock()
+
+            if self.stdin_callable is not None:
+                self.stdin_kwargs['thread_lock'] = thread_lock
+                thread_in = threading.Thread(
+                    target=self.stdin_callable,
+                    kwargs=self.stdin_kwargs)
+                thread_in.daemon = True  # Thread dies with the program.
+                thread_in.start()
+
+            if self.stdout_callable is None:
+                thread_out = threading.Thread(
+                    target=Executable.process_stdout,
+                    kwargs={
+                        'stdout_handle': child_process.stdout,
+                        'thread_lock': thread_lock,
+                        'stdout_path': self.stdout_path,
+                        'debug': debug,
+                    })
+            else:
+                self.stdout_kwargs['stdout_handle'] = child_process.stdout
+                self.stdout_kwargs['thread_lock'] = thread_lock
+                thread_out = threading.Thread(
+                    target=self.stdout_callable,
+                    kwargs=self.stdout_kwargs)
+                thread_out.daemon = True  # Thread dies with the program.
+                thread_out.start()
+
+            if self.stderr_callable is None:
+                thread_err = threading.Thread(
+                    target=Executable.process_stderr,
+                    kwargs={
+                        'stderr_handle': child_process.stderr,
+                        'thread_lock': thread_lock,
+                        'stderr_path': self.stderr_path,
+                        'debug': debug,
+                    })
+            else:
+                self.stdout_kwargs['stderr_handle'] = child_process.stderr
+                self.stdout_kwargs['thread_lock'] = thread_lock
+                thread_err = threading.Thread(
+                    target=self.stderr_callable,
+                    kwargs=self.stderr_kwargs)
+            thread_err.daemon = True  # Thread dies with the program.
+            thread_err.start()
+
+            # Wait for the child process to finish.
+
+            child_return_code = child_process.wait()
+
+            thread_join_counter = 0
+
+            while thread_out.is_alive() and thread_join_counter < max_thread_joins:
+                thread_lock.acquire(True)
+                if debug > 0:
+                    print('[{}] Waiting for STDOUT processor to finish.'.format(
+                        datetime.datetime.now().isoformat()))
+                thread_lock.release()
+
+                thread_out.join(timeout=thread_join_timeout)
+                thread_join_counter += 1
+
+            thread_join_counter = 0
+
+            while thread_err.is_alive() and thread_join_counter < max_thread_joins:
+                thread_lock.acquire(True)
+                if debug > 0:
+                    print('[{}] Waiting for STDERR processor to finish.'.format(
+                        datetime.datetime.now().isoformat()))
+                thread_lock.release()
+
+                thread_err.join(timeout=thread_join_timeout)
+                thread_join_counter += 1
+
+            if child_return_code > 0:
+                if debug > 0:
+                    print('[{}] Child process {!r} failed with exit code {}'.format(
+                        datetime.datetime.now().isoformat(), self.name, +child_return_code))
+                attempt_counter += 1
+            elif child_return_code < 0:
+                if debug > 0:
+                    print('[{}] Child process {!r} received signal {}.'.format(
+                        datetime.datetime.now().isoformat(), self.name, -child_return_code))
+            else:
+                if debug > 0:
+                    print('[{}] Child process {!r} completed successfully {}.'.format(
+                        datetime.datetime.now().isoformat(), self.name, +child_return_code))
+                break
+
+        else:
+            if debug > 0:
+                print('[{}] Runnable {!r} exceeded the maximum retry counter {}.'.format(
+                    datetime.datetime.now().isoformat(), self.name, self.maximum_attempts))
+
+        return child_return_code
+
+
+class Interval(object):
+    def __init__(self, sequence, start, end, strand, name):
+        """Initialise an C{Interval} object.
+
+        @param sequence:
+        @type sequence: str
+        @param start:
+        @type start: int
+        @param end:
+        @type end: int
+        @param strand:
+        @type strand: int
+        @param name:
+        @type name: str
+        """
+        self.sequence = sequence
+        self.start = start
+        self.end = end
+        self.strand = strand
+        self.name = name
+
+        return
+
+    def __len__(self):
+        return self.end - self.start + 1
+
+
+def bsf_bundle_intervals(file_path=None, tiles=1):
+    total_length = 0
+    """ @type total_length: int """
+
+    interval_list = list()
+    """ @type interval_list: list[Interval] """
+
+    interval_file = open(file_path, 'r')
+    for line in interval_file:
+        if line.startswith('@'):
+            continue
+
+        line_list = line.split()
+        interval = Interval(
+            sequence=line_list[0],
+            start=int(line_list[1]),
+            end=int(line_list[2]),
+            strand=int(line_list[3] + '1'),  # Turn +/- into +1/-1.
+            name=line_list[4])
+        interval_list.append(interval)
+        total_length += len(interval)
+
+    interval_file.close()
+
+    print('Interval number:', len(interval_list))
+    print('Total length:', total_length)
+
+    cumulative_interval = 0
+    """ @type cumulative_interval: int """
+
+    tile_length = total_length / tiles
+    print('Tile length:', tile_length)
+
+    tile_list = list()
+    """ @type tile_list: list[list[Interval]] """
+
+    for interval in interval_list:
+        tile_index = int(math.floor(cumulative_interval / tile_length))
+        if len(tile_list) < tile_index + 1:
+            tile_list.append(list())
+
+        tile_list[tile_index].append(interval)
+        cumulative_interval += len(interval)
+
+    # Print the number of list components for each index.
+
+    for index_list in tile_list:
+        cumulative_interval = 0
+        """ @type cumulative_interval: int """
+        for interval in index_list:
+            cumulative_interval += len(interval)
+        print('Tile index items: ', len(index_list))
+        print('Tile index length:', cumulative_interval)
+
+    return
+
+
+bsf_bundle_intervals(
+    file_path='/data/groups/lab_bsf/resources/interval_lists/TruSight_One_targeted_regions_b37.interval_list',
+    tiles=10)
+# bsf_test_argument()

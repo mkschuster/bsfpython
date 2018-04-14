@@ -45,25 +45,25 @@ def submit(stage, debug=0):
     """
 
     output = str()
-    output += "#! /bin/bash\n"
-    output += "\n"
+    output += '#! /bin/bash\n'
+    output += '\n'
 
     if debug > 0:
-        output += "# BSF-Python debug mode: {}\n".format(debug)
-        output += "\n"
+        output += '# BSF-Python debug mode: ' + repr(debug) + '\n'
+        output += '\n'
 
     for executable in stage.executable_list:
         if not executable.submit:
             output += '# '
         output += executable.command_str()
         if executable.stdout_path:
-            output += " 1>{}".format(executable.stdout_path)
+            output += ' 1>' + executable.stdout_path
         if executable.stderr_path:
-            output += " 2>{}".format(executable.stderr_path)
-        output += "\n"
-        output += "\n"
+            output += ' 2>' + executable.stderr_path
+        output += '\n'
+        output += '\n'
 
-    script_path = os.path.join(stage.working_directory, 'bsfpython_bash_{}.bash'.format(stage.name))
+    script_path = os.path.join(stage.working_directory, 'bsfpython_bash_' + repr(stage.name) + '.bash')
     script_file = open(script_path, 'w')
     script_file.write(output)
     script_file.close()

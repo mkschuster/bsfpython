@@ -28,6 +28,8 @@ Reference: http://www.biomedical-sequencing.at/
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import cgi
 import datetime
 import errno
@@ -360,8 +362,8 @@ class Analysis(object):
         assert isinstance(runnable, Runnable)
 
         if runnable.name in self.runnable_dict:
-            raise Exception("A Runnable with name {!r} already exists in Analysis {!r}".
-                            format(runnable.name, self.project_name))
+            raise Exception('A Runnable with name ' + repr(runnable.name) +
+                            ' already exists in Analysis ' + repr(self.project_name) + '.')
         else:
             self.runnable_dict[runnable.name] = runnable
 
@@ -417,7 +419,7 @@ class Analysis(object):
         stage.set_configuration(configuration=self.configuration, section=section)
 
         if self.debug > 1:
-            print 'Stage configuration section: {!r}.'.format(section)
+            print('Stage configuration section:', repr(section))
 
         # A "bsf.Analysis.Stage" or "bsf.analyses.*.Stage" pseudo-class section specifies
         # Analysis-specific or sub-class-specific options for the Stage, respectively.
@@ -426,7 +428,7 @@ class Analysis(object):
         stage.set_configuration(configuration=self.configuration, section=section)
 
         if self.debug > 1:
-            print 'Stage configuration section: {!r}.'.format(section)
+            print('Stage configuration section:', repr(section))
 
         # A "bsf.Analysis.Stage.name" or "bsf.analyses.*.Stage.name" section specifies defaults
         # for a particular Stage of an Analysis or sub-class, respectively.
@@ -435,7 +437,7 @@ class Analysis(object):
         stage.set_configuration(configuration=self.configuration, section=section)
 
         if self.debug > 1:
-            print 'Stage configuration section: {!r}.'.format(section)
+            print('Stage configuration section:', repr(section))
 
         return stage
 
@@ -457,9 +459,8 @@ class Analysis(object):
 
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
-                'Section {!r} not defined in Configuration files: {!r}'.format(
-                    section,
-                    configuration.file_path_list))
+                'Section ' + repr(section) +
+                ' not defined in Configuration files:\n' + repr(configuration.file_path_list))
 
         # The configuration section is available.
 
@@ -523,7 +524,7 @@ class Analysis(object):
             section += command.program
 
         if self.debug > 1:
-            print 'Command configuration section: {!r}.'.format(section)
+            print('Command configuration section:', repr(section))
 
         command.set_configuration(configuration=self.configuration, section=section)
 
@@ -561,7 +562,7 @@ class Analysis(object):
                 section += '.' + command.program
 
             if self.debug > 1:
-                print 'RunnableStep configuration section: {!r}'.format(section)
+                print('RunnableStep configuration section:', repr(section))
 
             command.set_configuration(configuration=self.configuration, section=section)
 
@@ -599,12 +600,12 @@ class Analysis(object):
         assert isinstance(runnable, Runnable)
 
         if stage not in self.stage_list:
-            raise Exception("A Stage with name {!r} does not exist in the Analysis with name {!r}.".
-                            format(stage.name, self.project_name))
+            raise Exception('A Stage with name ' + repr(stage.name) +
+                            ' does not exist in the Analysis with name ' + repr(self.project_name) + '.')
 
         if runnable.name not in self.runnable_dict:
-            raise Exception("A Runnable with name {!r} does not exist in the Analysis with name {!r}.".
-                            format(runnable.name, self.project_name))
+            raise Exception('A Runnable with name ' + repr(runnable.name) +
+                            ' does not exist in the Analysis with name ' + repr(self.project_name) + '.')
 
         executable = Executable(name=runnable.name, program=Runnable.runner_script)
         executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
@@ -652,7 +653,7 @@ class Analysis(object):
         # As a safety measure, to prevent creation of rogue directory paths, the output_directory has to exist.
 
         if not os.path.isdir(self.output_directory):
-            raise Exception('The Analysis output_directory {!r} does not exist.'.format(self.output_directory))
+            raise Exception('The Analysis output_directory ' + repr(self.output_directory) + ' does not exist.')
 
         # Define project_directory and genome_directory instance variables.
         # If a genome_version option is present, append
@@ -695,8 +696,8 @@ class Analysis(object):
                 sas_prefix=self.sas_prefix)
 
             if self.debug > 1:
-                print '{!r} Collection name: {!r}'.format(self, self.collection.name)
-                print self.collection.trace(1)
+                print(self, 'Collection name:', repr(self.collection.name))
+                print(self.collection.trace(1))
         else:
             # Create an empty Collection.
             self.collection = Collection()
@@ -792,14 +793,14 @@ class Analysis(object):
         str_list += '<html xmlns="http://www.w3.org/1999/xhtml">\n'
         str_list += '<head>\n'
         str_list += '<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />\n'
-        str_list += '<link rel="stylesheet" href="/{}/bsfpython.css" type="text/css" />\n'.format(
-            urllib.quote(s=default.url_relative_projects))
+        str_list += '<link rel="stylesheet" href="/' + urllib.quote(s=default.url_relative_projects) + \
+                    '/bsfpython.css" type="text/css" />\n'
         str_list += '<link rel="schema.DC" href="http://purl.org/DC/elements/1.0/" />\n'
-        str_list += '<meta name="DC.Creator" content="{}" />\n'.format(cgi.escape(s=creator, quote=True))
-        str_list += '<meta name="DC.Date" content="{}" />\n'.format(datetime.datetime.now().isoformat())
-        str_list += '<meta name="DC.Source" content="{}" />\n'.format(cgi.escape(s=source, quote=True))
-        str_list += '<meta name="DC.Title" content="{}" />\n'.format(cgi.escape(s=title, quote=True))
-        str_list += '<title>{}</title>\n'.format(cgi.escape(s=title, quote=True))
+        str_list += '<meta name="DC.Creator" content="' + cgi.escape(s=creator, quote=True) + '" />\n'
+        str_list += '<meta name="DC.Date" content="' + datetime.datetime.now().isoformat() + '" />\n'
+        str_list += '<meta name="DC.Source" content="' + cgi.escape(s=source, quote=True) + '" />\n'
+        str_list += '<meta name="DC.Title" content="' + cgi.escape(s=title, quote=True) + '" />\n'
+        str_list += '<title>' + cgi.escape(s=title, quote=True) + '</title>\n'
         str_list += '</head>\n'
         str_list += '\n'
         str_list += '<body>\n'
@@ -858,27 +859,24 @@ class Analysis(object):
         str_list += '<hr class="footer" />\n'
         str_list += '<p class="footer">\n'
         if institution:
-            str_list += 'This report was generated by {}\n'.format(cgi.escape(s=institution, quote=True))
+            str_list += 'This report was generated by ' + cgi.escape(s=institution, quote=True) + '\n'
 
         # Method bsf.standards.Default.url_absolute_base() would also return the default URL.
         if url_protocol:
-            str_list += '<a href="{}://{}/">{}</a>.\n'.format(
-                url_protocol,
-                url_host_name,
-                cgi.escape(s=url_host_name, quote=True))
+            str_list += '<a href="' + url_protocol + '://' + \
+                        url_host_name + '/">' + cgi.escape(s=url_host_name, quote=True) + '</a>.\n'
         else:
-            str_list += '<a href="//{}/">{}</a>.\n'.format(
-                url_host_name,
-                cgi.escape(s=url_host_name, quote=True))
+            str_list += '<a href="//' + \
+                        url_host_name + '/">' + cgi.escape(s=url_host_name, quote=True) + '</a>.\n'
 
         str_list += '<br class="footer" />\n'
         if contact:
-            str_list += 'Contact: <a href="mailto:{}?subject={}">{}</a>'.format(
-                # After URL quoting, nothing critical needing HTML escaping should be left.
-                urllib.quote(s=contact),
-                urllib.quote(s=title),
-                # The e-mail address outside of an URL still needs HTML quoting.
-                cgi.escape(s=contact, quote=True))
+            # The e-mail address outside of an URL still needs HTML quoting.
+            # After URL quoting, nothing critical needing HTML escaping should be left.
+            str_list += 'Contact: <a href="mailto:' + urllib.quote(s=contact) + \
+                        '?subject=' + urllib.quote(s=title) + '">'
+            str_list += cgi.escape(s=contact, quote=True)
+            str_list += '</a>'
         str_list += '</p>\n'
         str_list += '</body>\n'
         str_list += '</html>\n'
@@ -1027,8 +1025,8 @@ class Analysis(object):
 
         if not os.path.isdir(self.genome_directory):
             answer = raw_input(
-                "Output (genome) directory {!r} does not exist.\n"
-                'Create? [Y/n] '.format(self.genome_directory))
+                'Output (genome) directory ' + repr(self.genome_directory) + ' does not exist.\n'
+                'Create? [Y/n] ')
 
             if not answer or answer == 'Y' or answer == 'y':
                 # In principle, a race condition could occur as the directory
@@ -1040,7 +1038,7 @@ class Analysis(object):
                         raise
             else:
                 raise Exception(
-                    'Output (genome) directory {!r} does not exist.'.format(self.genome_directory))
+                    'Output (genome) directory ' + repr(self.genome_directory) + ' does not exist.')
 
         return
 
@@ -1068,8 +1066,8 @@ class Analysis(object):
 
         if not os.path.isdir(html_path):
             raise Exception(
-                "The public HTML directory path {!r} does not exist.\n"
-                "Please check the optional sub-directory name {!r}.".format(html_path, sub_directory))
+                'The public HTML directory path ' + repr(html_path) + ' does not exist.\n'
+                'Please check the optional sub-directory name ' + repr(sub_directory) + '.')
 
         # The target_path consists of the absolute public_html directory,
         # the analysis-specific sub-directory, the project name and a 128 bit hexadecimal UUID string.
@@ -1092,7 +1090,7 @@ class Analysis(object):
                     # Both paths for os.path.samefile have to exist.
                     # Check for dangling symbolic links.
                     warnings.warn(
-                        'Dangling symbolic link {!r} to {!r}'.format(source_path, file_path),
+                        'Dangling symbolic link ' + repr(source_path) + ' to ' + repr(file_path),
                         UserWarning)
                     continue
                 if os.path.samefile(source_path, self.project_directory):
@@ -1104,12 +1102,11 @@ class Analysis(object):
             # A symbolic link already exists.
             # Ask the user to re-create the symbolic link.
             answer = raw_input(
-                "Public HTML link {!r} to {!r} exists.\n"
-                "Re-create? [y/N] ".format(self.project_directory, final_path))
+                'Public HTML link ' + repr(self.project_directory) + ' to ' + repr(final_path) + ' exists.\n'
+                'Re-create? [y/N] ')
 
             if not answer or answer.upper() == 'N':
-                print 'Public HTML link {!r} to {!r} not reset.'. \
-                    format(self.project_directory, final_path)
+                print('Public HTML link ' + repr(self.project_directory) + ' to ' + repr(final_path) + ' not reset.')
             else:
                 try:
                     os.remove(final_path)
@@ -1126,8 +1123,8 @@ class Analysis(object):
             # A symbolic link does not exist.
             # Ask the user to create a symbolic link.
             answer = raw_input(
-                'Public HTML link {!r} to {!r} does not exist.\n'
-                'Create? [Y/n] '.format(self.project_directory, final_path))
+                'Public HTML link ' + repr(self.project_directory) + ' to ' + repr(final_path) + ' does not exist.\n'
+                'Create? [Y/n] ')
 
             if not answer or answer.upper() == 'Y':
                 try:
@@ -1136,8 +1133,7 @@ class Analysis(object):
                     if exception.errno != errno.EEXIST:
                         raise
             else:
-                print 'Public HTML link {!r} to {!r} not set.'. \
-                    format(self.project_directory, final_path)
+                print('Public HTML link ' + repr(self.project_directory) + ' to ' + repr(final_path) + ' not set.')
 
         return final_path
 
@@ -1186,16 +1182,16 @@ class Analysis(object):
 
             options_dict['hgct_customText'] = 'track'
             for key in key_list:
-                options_dict['hgct_customText'] += ' {}={}'.format(key, track_dict[key])
+                options_dict['hgct_customText'] += ' ' + key + '=' + track_dict[key]
 
         # UCSC protocol
 
-        if ucsc_protocol is None or not ucsc_protocol:
+        if not ucsc_protocol:
             ucsc_protocol = default.ucsc_protocol
 
         # UCSC host name
 
-        if ucsc_host_name is None or not ucsc_host_name:
+        if not ucsc_host_name:
             ucsc_host_name = default.ucsc_host_name
 
         # Strip leading colons to support protocol-independent URLs.
@@ -1261,11 +1257,11 @@ class Analysis(object):
         str_list = list()
         """ @type str_list: list[str | unicode] """
 
-        str_list += 'hub {}_{}\n'.format(self.project_name, prefix)
-        str_list += 'shortLabel {}_{}\n'.format(self.project_name, prefix)
-        str_list += 'longLabel Project {}_{}\n'.format(self.project_name, prefix)
-        str_list += 'genomesFile {}_{}\n'.format(prefix, self.ucsc_name_genomes)
-        str_list += 'email {}\n'.format(self.e_mail)
+        str_list += 'hub ' + '_'.join((self.project_name, prefix)) + '\n'
+        str_list += 'shortLabel ' + '_'.join((self.project_name, prefix)) + '\n'
+        str_list += 'longLabel Project ' + '_'.join((self.project_name, prefix)) + '\n'
+        str_list += 'genomesFile ' + '_'.join((prefix, self.ucsc_name_genomes)) + '\n'
+        str_list += 'email ' + self.e_mail + '\n'
 
         file_handle = open(os.path.join(self.project_directory, '_'.join((prefix, self.ucsc_name_hub))), 'w')
         file_handle.writelines(str_list)
@@ -1300,17 +1296,20 @@ class Analysis(object):
                     continue
                 line_list = line.split()
                 if len(line_list) != 2:
-                    warnings.warn('Malformed line {!r} in UCSC genomes file {!r}\n'
-                                  'Expected exactly two components after line splitting.'.format(line, file_path))
+                    warnings.warn('Malformed line ' + repr(line) + ' in UCSC genomes file ' +
+                                  repr(file_path) + '.\n' +
+                                  'Expected exactly two components after line splitting.')
                 if line_list[0] == 'genome':
                     if genome_version is not None:
-                        warnings.warn('Malformed line {!r} in UCSC genomes file {!r}'
-                                      'Got more than one genomes lines in succession.'.format(line, file_path))
+                        warnings.warn('Malformed line ' + repr(line) + ' in UCSC genomes file ' +
+                                      repr(file_path) + '.\n' +
+                                      "Got more than one 'genomes' lines in succession.")
                     genome_version = line_list[1]
                 if line_list[0] == 'trackDb':
                     if genome_version is None:
-                        warnings.warn('Malformed line {!r} in UCSC genomes file {!r}'
-                                      'Got a trackDb line without a preceding genomes line.'.format(line, file_path))
+                        warnings.warn('Malformed line ' + repr(line) + ' in UCSC genomes file ' +
+                                      repr(file_path) + '.\n' +
+                                      "Got a 'trackDb' line without a preceding genomes line.")
                     else:
                         genome_version_dict[genome_version] = line_list[1]
                         genome_version = None
@@ -1326,8 +1325,8 @@ class Analysis(object):
         genome_version_list = genome_version_dict.keys()
         genome_version_list.sort(cmp=lambda x, y: cmp(x, y))
         for genome_version in genome_version_list:
-            str_list += 'genome {}\n'.format(genome_version)
-            str_list += 'trackDb {}\n'.format(genome_version_dict[genome_version])
+            str_list += 'genome ' + genome_version + '\n'
+            str_list += 'trackDb ' + genome_version_dict[genome_version] + '\n'
             str_list += '\n'
 
         file_handle = open(file_path, 'w')
@@ -1420,8 +1419,8 @@ class Analysis(object):
             stage.submit(debug=self.debug)
 
             if self.debug:
-                print repr(stage)
-                print stage.trace(1)
+                print(repr(stage))
+                print(stage.trace(1))
 
         if name:
             if name == 'report':
@@ -1429,7 +1428,7 @@ class Analysis(object):
             elif not submit:
                 name_list = [stage.name for stage in self.stage_list]
                 name_list.append('report')
-                print 'Valid Analysis Stage names are: {!r}'.format(name_list)
+                print('Valid Analysis Stage names are:', repr(name_list))
 
         return
 
@@ -1683,9 +1682,8 @@ class Stage(object):
 
         if not configuration.config_parser.has_section(section=section):
             raise Exception(
-                'Section {!r} not defined in Configuration files: {!r}'.format(
-                    section,
-                    configuration.file_path_list))
+                'Section ' + repr(section) + ' not defined in Configuration files:\n' +
+                repr(configuration.file_path_list))
 
         # The configuration section is available.
 

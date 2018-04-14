@@ -26,11 +26,13 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 import datetime
 import os
-import sys
 import subprocess
+import sys
 import threading
 
 from bsf.process import Command, Executable
@@ -109,7 +111,7 @@ def process_stdout(input_file_handle, thread_lock, output_file_path, debug=0):
     # Close STDIN of the output process to signal end of stream, then wait for it to exit.
     output_process.stdin.close()
     output_return_code = output_process.wait()
-    print 'Output process return code: {!r}'.format(output_return_code)
+    print('Output process return code:', repr(output_return_code))
     output_file.close()
     thread_lock.release()
 
@@ -218,8 +220,7 @@ thread_join_counter = 0
 while input_thread_out.is_alive() and thread_join_counter < max_thread_joins:
     input_thread_lock.acquire(True)
     if name_space.debug > 0:
-        print '[{}] Waiting for STDOUT processor to finish.'. \
-            format(datetime.datetime.now().isoformat())
+        print('[{}] Waiting for STDOUT processor to finish.'.format(datetime.datetime.now().isoformat()))
     input_thread_lock.release()
 
     input_thread_out.join(timeout=thread_join_timeout)
@@ -230,11 +231,10 @@ thread_join_counter = 0
 while input_thread_err.is_alive() and thread_join_counter < max_thread_joins:
     input_thread_lock.acquire(True)
     if name_space.debug > 0:
-        print '[{}] Waiting for STDERR processor to finish.'. \
-            format(datetime.datetime.now().isoformat())
+        print('[{}] Waiting for STDERR processor to finish.'.format(datetime.datetime.now().isoformat()))
     input_thread_lock.release()
 
     input_thread_err.join(timeout=thread_join_timeout)
     thread_join_counter += 1
 
-print "All done."
+print('All done.')

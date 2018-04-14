@@ -30,6 +30,8 @@ Generate UUIDs for uses such as keeping public sequencing project URLs
 just a bit more private.
 """
 
+from __future__ import print_function
+
 import argparse
 import uuid
 
@@ -47,4 +49,4 @@ name_space = argument_parser.parse_args()
 
 uuid_string = '_'.join((name_space.input, uuid.uuid4().hex)).lstrip('_')
 
-print "UUID: {}".format(uuid_string)
+print('UUID:', repr(uuid_string))

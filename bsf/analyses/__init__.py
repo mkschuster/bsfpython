@@ -27,6 +27,8 @@ A package of classes and methods supporting NGS-specific analyses such as ChIP-S
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import errno
 import os
 import re
@@ -499,17 +501,17 @@ class ChIPSeq(Analysis):
 
                 if not (len(t_sample_list) and len(c_sample_list)):
                     if self.debug > 1:
-                        print 'Redundant comparison line with Treatment {!r} samples {} and Control {!r} samples {}'. \
-                            format(t_name, len(t_sample_list), c_name, len(c_sample_list))
+                        print('Redundant comparison line with Treatment {!r} samples {} and Control {!r} samples {}'.
+                              format(t_name, len(t_sample_list), c_name, len(c_sample_list)))
                     continue
 
                 # Add all control Sample or SampleGroup objects to the Sample list.
 
                 for c_sample in c_sample_list:
                     if self.debug > 1:
-                        print '  Control Sample name:', c_sample.name, 'file_path:', c_sample.file_path
+                        print('  Control Sample name:', c_sample.name, 'file_path:', c_sample.file_path)
                     if self.debug > 2:
-                        print c_sample.trace(1)
+                        print(c_sample.trace(1))
                         # Find the Sample in the unified sample dictionary.
                     if c_sample.name in sample_dict:
                         self.add_sample(sample=sample_dict[c_sample.name])
@@ -518,9 +520,9 @@ class ChIPSeq(Analysis):
 
                 for t_sample in t_sample_list:
                     if self.debug > 1:
-                        print '  Treatment Sample name:', t_sample.name, 'file_path:', t_sample.file_path
+                        print('  Treatment Sample name:', t_sample.name, 'file_path:', t_sample.file_path)
                     if self.debug > 2:
-                        print t_sample.trace(1)
+                        print(t_sample.trace(1))
                     if t_sample.name in sample_dict:
                         self.add_sample(sample=sample_dict[t_sample.name])
 
@@ -660,8 +662,8 @@ class ChIPSeq(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print self, 'Sample name:', sample.name
-                print sample.trace(1)
+                print(self, 'Sample name:', sample.name)
+                print(sample.trace(1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
@@ -1159,7 +1161,7 @@ class ChIPSeq(Analysis):
                                 row_dict['Factor'] = chipseq_comparison.factor
                                 row_dict['Condition'] = chipseq_comparison.condition
                                 row_dict['Treatment'] = chipseq_comparison.treatment
-                                row_dict['Replicate'] = chipseq_comparison.replicate
+                                row_dict['Replicate'] = str(chipseq_comparison.replicate)
                                 row_dict['bamReads'] = os.path.join(
                                     self.genome_directory,
                                     'chipseq_bowtie2_' + t_paired_reads_name,
@@ -2269,8 +2271,8 @@ class RunFastQC(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print self, 'Sample name:', sample.name
-                print sample.trace(1)
+                print(self, 'Sample name:', sample.name)
+                print(sample.trace(1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping)
 
@@ -2299,7 +2301,7 @@ class RunFastQC(Analysis):
 
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
-                        print self, 'PairedReads name:', paired_reads.get_name()
+                        print(self, 'PairedReads name:', paired_reads.get_name())
 
                     if paired_reads.reads_1:
                         reads1.append(paired_reads.reads_1.file_path)
@@ -2352,8 +2354,8 @@ class RunFastQC(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print self, 'Sample name:', sample.name
-                print sample.trace(1)
+                print(self, 'Sample name:', sample.name)
+                print(sample.trace(1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping, full=True)
 
@@ -2505,8 +2507,8 @@ class RunBamToFastq(Analysis):
 
         for sample in self.collection.get_all_samples():
             if self.debug > 0:
-                print self, 'Sample name:', sample.name
-                print sample.trace(1)
+                print(self, 'Sample name:', sample.name)
+                print(sample.trace(1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping)
 
@@ -2516,7 +2518,7 @@ class RunBamToFastq(Analysis):
             for paired_reads_name in paired_reads_name_list:
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
-                        print self, 'PairedReads name:', paired_reads.get_name()
+                        print(self, 'PairedReads name:', paired_reads.get_name())
 
                     # In a BSF Paired Reads object, the SAM or BAM file could potentially
                     # occur as reads1 or reads2 instance variable.

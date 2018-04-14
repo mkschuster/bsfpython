@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 import os
 import re
@@ -78,16 +80,16 @@ irf_pattern = re.compile(pattern=r'^[0-9]{6,6}_.*(?:_sav)?$')
 
 for file_name in file_name_list:
     if name_space.debug:
-        print 'File name: {!r}'.format(file_name)
+        print('File name:', repr(file_name))
     # Process just entries that obey the Illumina Run Folder pattern.
     match = re.search(pattern=irf_pattern, string=file_name)
     if not match:
-        print 'No match: {!r}'.format(file_name)
+        print('No match:', repr(file_name))
         continue
     file_path = os.path.join(name_space.directory, file_name)
     if not (os.path.exists(os.path.join(file_path, 'runParameters.xml')) or
-                os.path.exists(os.path.join(file_path, 'RunParameters.xml'))):
-        print 'Directory {!r} not an Illumina Run Folder'.format(file_name)
+            os.path.exists(os.path.join(file_path, 'RunParameters.xml'))):
+        print('Directory ' + repr(file_name) + ' not an Illumina Run Folder')
         continue
     # Temporarily catch IOError and xml.etree.ElementTree.ParseError exceptions
     # that result from a broken FhGFS file system.
@@ -95,11 +97,11 @@ for file_name in file_name_list:
         irf = RunFolder.from_file_path(file_path=file_path)
     except IOError as exception:
         if name_space.debug:
-            print "\t".join((file_name, '?', '?', '?'))
+            print('\t'.join((file_name, '?', '?', '?')))
         continue
     except xml.etree.ElementTree.ParseError:
         if name_space.debug:
-            print "\t".join((file_name, '?', '?', '?'))
+            print('\t'.join((file_name, '?', '?', '?')))
         continue
 
     root_node = irf.run_parameters.element_tree.getroot()

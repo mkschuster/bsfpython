@@ -27,6 +27,8 @@ A package of classes and methods to run the Bowtie2 short read aligner.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import errno
 import os
 import re
@@ -90,7 +92,7 @@ class ReadGroupContainer(object):
     def get_rg_element(self, tag):
 
         if len(tag) != 2:
-            raise Exception("SAM element tag {!r} is not exactly two characters long.".format(tag))
+            raise Exception('SAM element tag ' + repr(tag) + ' is not exactly two characters long.')
 
         tag_string = tag + ':'
         for element in self.rg_string.split():
@@ -144,7 +146,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     child_return_code = samtools.run()
     if child_return_code:
         raise Exception(
-            'Could not complete the {!r} step on the BAM file for the replicate.'.format(samtools.name))
+            'Could not complete the ' + repr(samtools.name) + ' step on the BAM file for the replicate.')
 
     sam_pg_list = list()
     """ @type sam_pg_list: list[str] """
@@ -185,7 +187,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
 
     child_return_code = java_process.run()
     if child_return_code:
-        raise Exception('Could not complete the {!r} step.'.format(java_process.name))
+        raise Exception('Could not complete the ' + repr(java_process.name) + ' step.')
 
     rgc_list = list()
     """ @type rgc_list: list[ReadGroupContainer] """
@@ -207,7 +209,8 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
                     rgc.fastq_2_path = sam_pu_r2_path
 
                 if not rgc.fastq_1_path:
-                    raise Exception("SAM Read Group {!r} without R1 FASTQ file {!r}.".format(sam_rg, sam_pu_r1_path))
+                    raise Exception(
+                        'SAM Read Group ' + repr(sam_rg) + ' without R1 FASTQ file ' + repr(sam_pu_r1_path) + '.')
 
     return rgc_list
 
@@ -296,20 +299,20 @@ def run_bowtie2(runnable):
         elif rgc.fastq_1_path:
             bowtie2.add_option_short(key='U', value=rgc.fastq_1_path)
         elif rgc.fastq_2_path:
-            raise Exception("Received a FASTQ R2 file {!r}, but no FASTQ R1 file.".format(rgc.fastq_2_path))
+            raise Exception('Received a FASTQ R2 file ' + repr(rgc.fastq_2_path) + ', but no FASTQ R1 file.')
         else:
-            raise Exception("Received neither a FASTQ R1 nor a FASTQ R2 file.")
+            raise Exception('Received neither a FASTQ R1 nor a FASTQ R2 file.')
 
         # Set the STDOUT path by removing '_1.fastq' from the temporary R1 FASTQ file.
         sam_file_path = rgc.fastq_1_path[:-8] + '.sam'
         bowtie2.stdout_path = sam_file_path
         sam_file_path_list.append(sam_file_path)
 
-        print bowtie2.trace(1)
+        print(bowtie2.trace(1))
 
         child_return_code = bowtie2.run()
         if child_return_code:
-            raise Exception('Could not complete the {!r} step.'.format(bowtie2.name))
+            raise Exception('Could not complete the ' + repr(bowtie2.name) + ' step.')
 
         # Remove the temporary FASTQ files.
 
@@ -334,11 +337,11 @@ def run_bowtie2(runnable):
         bowtie2.stdout_path = sam_file_path
         sam_file_path_list.append(sam_file_path)
 
-        print bowtie2.trace(1)
+        print(bowtie2.trace(1))
 
         child_return_code = bowtie2.run()
         if child_return_code:
-            raise Exception('Could not complete the {!r} step.'.format(bowtie2.name))
+            raise Exception('Could not complete the ' + repr(bowtie2.name) + ' step.')
 
             # Do not delete the non-temporary FASTQ files.
 
@@ -359,11 +362,11 @@ def run_bowtie2(runnable):
         bowtie2.stdout_path = sam_file_path
         sam_file_path_list.append(sam_file_path)
 
-        print bowtie2.trace(1)
+        print(bowtie2.trace(1))
 
         child_return_code = bowtie2.run()
         if child_return_code:
-            raise Exception('Could not complete the {!r} step.'.format(bowtie2.name))
+            raise Exception('Could not complete the ' + bowtie2.name + ' step.')
 
             # Do not delete the non-temporary FASTQ files.
 

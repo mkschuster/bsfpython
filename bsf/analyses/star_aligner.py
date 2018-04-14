@@ -30,6 +30,8 @@ Project:  https://github.com/alexdobin/STAR
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import os
 
 import pysam
@@ -409,8 +411,8 @@ class StarAligner(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print self, 'Sample name:', sample.name
-                print sample.trace(1)
+                print(self, 'Sample name:', sample.name)
+                print(sample.trace(1))
 
             runnable_index_list = list()
             """ @type runnable_index_list: list[bsf.Runnable] """
@@ -426,7 +428,7 @@ class StarAligner(Analysis):
             for paired_reads_name in paired_reads_name_list:
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
-                        print self, 'PairedReads name:', paired_reads.get_name()
+                        print(self, 'PairedReads name:', paired_reads.get_name())
 
                     ######################
                     # 1. Alignment Stage #
@@ -667,39 +669,6 @@ class StarAligner(Analysis):
                     name='link',
                     source_path=file_path_merge.merged_bai,
                     target_path=file_path_merge.merged_lnk))
-
-            if False:
-                # Create a RunnableStep for htseq-count.
-                # For the moment, the counting infrastructure in Bioconductor GenomeAlignment is used
-                # that directly yields a RangedSummarizedExperiment object suitable for downstream analysis.
-                runnable_step = runnable_merge.add_runnable_step(
-                    runnable_step=RunnableStep(
-                        name='count',
-                        program='htseq-count',
-                        stdout_path=file_path_merge.merged_tsv))
-                runnable_step.add_option_long(key='format', value='bam')
-                runnable_step.add_option_long(key='order', value='pos')
-                runnable_step.add_option_long(key='stranded', value=self.stranded)
-                runnable_step.add_switch_long(key='quiet')
-
-                runnable_step.arguments.append(file_path_merge.merged_bam)
-                runnable_step.arguments.append(self.transcriptome_gtf)
-
-            if False:
-                # The htseq-qa script no longer seems compatible with the Python matplotlib 1.5.3 module
-                runnable_step = runnable_merge.add_runnable_step(
-                    runnable_step=RunnableStep(
-                        name='qa',
-                        program='htseq-qa'))
-                runnable_step.add_option_long(key='type', value='bam')
-                runnable_step.add_option_long(key='outfile', value=file_path_merge.merged_pdf)
-                # readlength can be guessed from the file
-                # gamma defaults to 0.3
-                # nosplit defaults ot false
-                # NOTE: The 'maxqual' option defaults to 41, but the HiSeq 3000/4000 platform may set 42 as maximum.
-                runnable_step.add_option_long(key='maxqual', value='42')
-
-                runnable_step.arguments.append(file_path_merge.merged_bam)
 
         # Write the AnnotationSheet to disk.
 

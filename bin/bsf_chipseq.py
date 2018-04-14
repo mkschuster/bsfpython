@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 
 from bsf.analyses import ChIPSeq
@@ -67,8 +69,8 @@ for stage in chipseq.stage_list:
     stage.submit(debug=chipseq.debug)
 
     if chipseq.debug:
-        print repr(stage)
-        print stage.trace(1)
+        print(repr(stage))
+        print(stage.trace(1))
 
 if args.stage:
     if args.stage == 'report':
@@ -76,12 +78,12 @@ if args.stage:
     elif not submit:
         name_list = [stage.name for stage in chipseq.stage_list]
         name_list.append('report')
-        print 'Valid Analysis stages are: {!r}'.format(name_list)
+        print('Valid Analysis stages are:', repr(name_list))
 
-print 'ChIP-Seq Analysis'
-print 'Project name:      ', chipseq.project_name
-print 'Genome version:    ', chipseq.genome_version
-print 'Input directory:   ', chipseq.input_directory
-print 'Output directory:  ', chipseq.output_directory
-print 'Project directory: ', chipseq.project_directory
-print 'Genome directory:  ', chipseq.genome_directory
+print(chipseq.name)
+print('Project name:      ', chipseq.project_name)
+print('Genome version:    ', chipseq.genome_version)
+print('Input directory:   ', chipseq.input_directory)
+print('Output directory:  ', chipseq.output_directory)
+print('Project directory: ', chipseq.project_directory)
+print('Genome directory:  ', chipseq.genome_directory)

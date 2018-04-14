@@ -27,6 +27,8 @@ A package of methods supporting the Simple Linux Utility for Resource Management
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import csv
 import datetime
 import errno
@@ -505,22 +507,22 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         """
         column_dict_old, column_dict_new = self.compare_table_definitions()
 
-        # print "Column dict old:", column_dict_old
-        # print "Column dict new:", column_dict_new
+        # print('Column dict old:', column_dict_old)
+        # print('Column dict new:', column_dict_new)
 
         if len(column_dict_new) or len(column_dict_old):
-            print "Attempting to patch SQLite table", self.table_name
+            print('Attempting to patch SQLite table', self.table_name)
 
             table_name_old = '_'.join((self.table_name, 'old'))
 
             # Rename the old table to move it sideways.
             statement = self.statement_alter_table_rename(table_name_new=table_name_old)
-            # print "Statement:", statement
+            # print('Statement:', statement)
             self.get_cursor().execute(statement)
 
             # Create a new table
             statement = self.statement_create_table()
-            # print "Statement:", statement
+            # print('Statement:', statement)
             self.get_cursor().execute(statement)
 
             # Call INSERT INTO ...
@@ -590,7 +592,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
             statement_list.append(table_name_old)
 
             statement = ' '.join(statement_list)
-            # print "Statement:", statement
+            # print('Statement:', statement)
             self.get_cursor().execute(statement)
             # By default, the sqlite3 Python module opens transactions implicitly before a
             # Data Modification Language (DML) statement (i.e. INSERT, UPDATE, DELETE or REPLACE)
@@ -599,7 +601,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
 
             # Drop the old table
             statement = self.statement_drop_table(table_name=table_name_old)
-            # print "Statement:", statement
+            # print('Statement:', statement)
             self.get_cursor().execute(statement)
 
         return
@@ -649,9 +651,9 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         """
 
         if negation:
-            statement = self.statement_select(where_clause='state NOT IN ({})'.format(','.join('?' * len(state_list))))
+            statement = self.statement_select(where_clause='state NOT IN (' + ','.join('?' * len(state_list)) + ')')
         else:
-            statement = self.statement_select(where_clause='state IN ({})'.format(','.join('?' * len(state_list))))
+            statement = self.statement_select(where_clause='state IN (' + ','.join('?' * len(state_list)) + ')')
 
         return self.select(statement=statement, parameters=state_list)
 
@@ -759,12 +761,12 @@ def submit(stage, debug=0):
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
     output = str()
-    output += "#! /bin/bash\n"
-    output += "\n"
+    output += '#! /bin/bash\n'
+    output += '\n'
 
     if debug > 0:
-        output += "# BSF-Python debug mode: {}\n".format(debug)
-        output += "\n"
+        output += '# BSF-Python debug mode: ' + repr(debug) + '\n'
+        output += '\n'
 
     for executable in stage.executable_list:
         executable_drms = Executable(name=executable.name, program='sbatch', sub_command=executable)
@@ -864,9 +866,9 @@ def submit(stage, debug=0):
                 process_identifier_list.append(process_slurm_list[-1].job_id)
             elif debug == 0:
                 warnings.warn(
-                    "While submitting Executable with name {!r}, "
-                    "Executable with name {!r} that it depends on, "
-                    "has not been submitted before.".format(executable.name, executable_name),
+                    'While submitting Executable with name ' + repr(executable.name) + ', ' +
+                    'Executable with name ' + repr(executable_name) + ' that it depends on, ' +
+                    'has not been submitted before.',
                     UserWarning)
         if len(process_identifier_list):
             # Only set the dependency option if there are some on the process identifier list.
@@ -903,14 +905,10 @@ def submit(stage, debug=0):
 
             if child_return_code:
                 raise Exception(
-                    "SLURM sbatch returned exit code {!r}\n"
-                    "STDOUT: {}\n"
-                    "STDERR: {}\n"
-                    "Command list representation: {!r}".format(
-                        child_return_code,
-                        child_stdout,
-                        child_stderr,
-                        executable_drms.command_list()))
+                    'SLURM sbatch returned exit code ' + repr(child_return_code) + '\n' +
+                    'STDOUT: ' + repr(child_stdout) + '\n' +
+                    'STDERR: ' + repr(child_stderr) + '\n' +
+                    'Command list representation: ' + repr(executable_drms.command_list()))
 
             # Parse the multi-line STDOUT string to get the SLURM process identifier and name.
             # The response to the SLURM sbatch command looks like:
@@ -922,12 +920,12 @@ def submit(stage, debug=0):
                 if match:
                     executable.process_identifier = match.group(1)
                 else:
-                    print 'Could not parse the process identifier from the SLURM sbatch response line {}'.format(line)
+                    print('Could not parse the process identifier from the SLURM sbatch response line ', repr(line))
 
         # Copy the SLURM command line to the Bash script.
 
-        output += executable_drms.command_str() + "\n"
-        output += "\n"
+        output += executable_drms.command_str() + '\n'
+        output += '\n'
 
         # Regardless of an actual Executable submission, UPDATE it in or INSERT it into the SQLite database.
 
@@ -953,7 +951,7 @@ def submit(stage, debug=0):
         # The commit statement should affect both insert statements above.
         database_connection.commit()
 
-    script_path = os.path.join(stage.working_directory, 'bsfpython_slurm_{}.bash'.format(stage.name))
+    script_path = os.path.join(stage.working_directory, 'bsfpython_slurm_' + stage.name + '.bash')
     script_file = open(script_path, 'w')
     script_file.write(output)
     script_file.close()
@@ -980,14 +978,14 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
 
     thread_lock.acquire(True)
     if debug > 0:
-        print '[{}] Started Runner {} processor in module {}.'. \
-            format(datetime.datetime.now().isoformat(), 'STDOUT', __name__)
+        print('[' + datetime.datetime.now().isoformat() + ']',
+              "Started Runner 'STDOUT' processor in module " + repr(__name__) + '.')
     output_file = None
     if stdout_path:
         output_file = open(stdout_path, 'w')
         if debug > 0:
-            print '[{}] Opened {} file {!r}.'. \
-                format(datetime.datetime.now().isoformat(), 'STDOUT', stdout_path)
+            print('[' + datetime.datetime.now().isoformat() + ']',
+                  "Opened 'STDOUT' file " + repr(stdout_path) + '.')
     thread_lock.release()
 
     dict_reader = csv.DictReader(f=stdout_handle, delimiter='|')
@@ -1053,12 +1051,13 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
 
     thread_lock.acquire(True)
     if debug > 0:
-        print '[{}] Received EOF on {} pipe.'.format(datetime.datetime.now().isoformat(), 'STDOUT')
+        print('[' + datetime.datetime.now().isoformat() + ']',
+              "Received EOF on 'STDOUT' pipe.")
     if output_file:
         output_file.close()
         if debug > 0:
-            print '[{}] Closed {} file {!r}.'. \
-                format(datetime.datetime.now().isoformat(), 'STDOUT', stdout_path)
+            print('[' + datetime.datetime.now().isoformat() + ']',
+                  "Closed 'STDOUT' file " + repr(stdout_path) + '.')
     thread_lock.release()
 
     # Commit changes to the database and explicitly disconnect.
@@ -1162,8 +1161,8 @@ def check_state(stage, debug=0):
         while thread_out.is_alive() and thread_join_counter < max_thread_joins:
             thread_lock.acquire(True)
             if debug > 0:
-                print '[{}] Waiting for STDOUT processor to finish.'. \
-                    format(datetime.datetime.now().isoformat())
+                print('[' + datetime.datetime.now().isoformat() + ']',
+                      "Waiting for 'STDOUT' processor to finish.")
             thread_lock.release()
 
             thread_out.join(timeout=thread_join_timeout)
@@ -1174,8 +1173,8 @@ def check_state(stage, debug=0):
         while thread_err.is_alive() and thread_join_counter < max_thread_joins:
             thread_lock.acquire(True)
             if debug > 0:
-                print '[{}] Waiting for STDERR processor to finish.'. \
-                    format(datetime.datetime.now().isoformat())
+                print('[' + datetime.datetime.now().isoformat() + ']',
+                      "Waiting for 'STDERR' processor to finish.")
             thread_lock.release()
 
             thread_err.join(timeout=thread_join_timeout)
@@ -1183,17 +1182,20 @@ def check_state(stage, debug=0):
 
         if child_return_code > 0:
             if debug > 0:
-                print '[{}] Child process {!r} failed with exit code {}'. \
-                    format(datetime.datetime.now().isoformat(), executable_drms.name, +child_return_code)
+                print('[' + datetime.datetime.now().isoformat() + ']',
+                      'Child process ' + repr(executable_drms.name) + ' failed with exit code ' +
+                      repr(+child_return_code))
             attempt_counter += 1
         elif child_return_code < 0:
             if debug > 0:
-                print '[{}] Child process {!r} received signal {}.'. \
-                    format(datetime.datetime.now().isoformat(), executable_drms.name, -child_return_code)
+                print('[' + datetime.datetime.now().isoformat() + ']',
+                      'Child process ' + repr(executable_drms.name) + ' received signal ' +
+                      repr(-child_return_code))
         else:
             if debug > 0:
-                print '[{}] Child process {!r} completed successfully {}.'. \
-                    format(datetime.datetime.now().isoformat(), executable_drms.name, +child_return_code)
+                print('[' + datetime.datetime.now().isoformat() + ']',
+                      'Child process ' + repr(executable_drms.name) + ' completed successfully ' +
+                      repr(+child_return_code))
             break
 
     return

@@ -27,6 +27,8 @@ A package of classes and methods supporting ChIP-Seq analyses.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import errno
 import os
 import pickle
@@ -636,17 +638,20 @@ class ChIPSeq(Analysis):
 
                 if not (len(t_sample_list) and len(c_sample_list)):
                     if self.debug > 1:
-                        print 'Redundant comparison line with Treatment:', repr(t_name), 'samples:', len(t_sample_list),
-                        'and Control:', repr(c_name), 'samples:', len(c_sample_list)
+                        print(
+                            'Redundant comparison line with Treatment:', repr(t_name),
+                            'samples:', len(t_sample_list),
+                            'and Control:', repr(c_name),
+                            'samples:', len(c_sample_list))
                     continue
 
                 # Add all control Sample or SampleGroup objects to the Sample list.
 
                 for c_sample in c_sample_list:
                     if self.debug > 1:
-                        print '  Control Sample name:', c_sample.name, 'file_path:', c_sample.file_path
+                        print('  Control Sample name:', c_sample.name, 'file_path:', c_sample.file_path)
                     if self.debug > 2:
-                        print c_sample.trace(1)
+                        print(c_sample.trace(1))
                         # Find the Sample in the unified sample dictionary.
                     if c_sample.name in sample_dict:
                         self.add_sample(sample=sample_dict[c_sample.name])
@@ -655,9 +660,9 @@ class ChIPSeq(Analysis):
 
                 for t_sample in t_sample_list:
                     if self.debug > 1:
-                        print '  Treatment Sample name:', t_sample.name, 'file_path:', t_sample.file_path
+                        print('  Treatment Sample name:', t_sample.name, 'file_path:', t_sample.file_path)
                     if self.debug > 2:
-                        print t_sample.trace(1)
+                        print(t_sample.trace(1))
                     if t_sample.name in sample_dict:
                         self.add_sample(sample=sample_dict[t_sample.name])
 
@@ -749,8 +754,8 @@ class ChIPSeq(Analysis):
 
             for sample in self.sample_list:
                 if self.debug > 0:
-                    print self, 'Sample name:', sample.name
-                    print sample.trace(1)
+                    print(self, 'Sample name:', sample.name)
+                    print(sample.trace(1))
 
                 paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
@@ -882,8 +887,8 @@ class ChIPSeq(Analysis):
 
             for sample in self.sample_list:
                 if self.debug > 0:
-                    print self, 'Sample name:', sample.name
-                    print sample.trace(1)
+                    print(self, 'Sample name:', sample.name)
+                    print(sample.trace(1))
 
                 paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
@@ -1218,7 +1223,7 @@ class ChIPSeq(Analysis):
 
             for factor_name in factor_name_list:
                 if self.debug > 0:
-                    print 'chipseq factor_name:', factor_name
+                    print('chipseq factor_name:', factor_name)
 
                 factor_list = self._factor_dict[factor_name]
                 factor_list.sort(cmp=lambda x, y: cmp(x, y))
@@ -1244,7 +1249,7 @@ class ChIPSeq(Analysis):
                         file_path_diff_bind.sample_annotation_sheet))
 
                 if self.debug > 0:
-                    print 'ChIPSeqDiffBindSheet file_path:', dbs.file_path
+                    print('ChIPSeqDiffBindSheet file_path:', dbs.file_path)
 
                 for chipseq_comparison in factor_list:
                     if not chipseq_comparison.diff_bind:
@@ -1289,7 +1294,7 @@ class ChIPSeq(Analysis):
                                     row_dict['Factor'] = chipseq_comparison.factor
                                     row_dict['Condition'] = chipseq_comparison.condition
                                     row_dict['Treatment'] = chipseq_comparison.treatment
-                                    row_dict['Replicate'] = chipseq_comparison.replicate
+                                    row_dict['Replicate'] = str(chipseq_comparison.replicate)
                                     row_dict['bamReads'] = t_file_path_alignment.aligned_bam
                                     row_dict['bamControl'] = c_file_path_alignment.aligned_bam
                                     row_dict['ControlID'] = c_paired_reads_name
@@ -1356,18 +1361,12 @@ class ChIPSeq(Analysis):
         stage_peak_calling = self.get_stage(name=self.stage_name_peak_calling)
         stage_diff_bind = self.get_stage(name=self.stage_name_diff_bind)
 
-        if True:
-            run_read_comparisons()
-        if False:
-            run_create_bwa_jobs()
-        if True:
-            run_create_bowtie2_jobs()
-        if False:
-            self._create_macs14_jobs()
-        if True:
-            run_create_macs2_jobs()
-        if True:
-            run_create_diff_bind_jobs()
+        run_read_comparisons()
+        # run_create_bwa_jobs()
+        run_create_bowtie2_jobs()
+        # self._create_macs14_jobs()
+        run_create_macs2_jobs()
+        run_create_diff_bind_jobs()
 
         return
 
@@ -1678,8 +1677,9 @@ class ChIPSeq(Analysis):
                                                     ' ChIP-Seq read counts for ' + state + ' of ' + \
                                                     t_paired_reads_name + ' versus ' + c_paired_reads_name + '\n'
                                         str_list += 'bigDataUrl '
-                                        str_list += prefix + '_MACS_wiggle/' + state + '/' + prefix + '_' + \
-                                            state + '_afterfiting_all.bw\n'
+                                        str_list += '/'.join((
+                                            prefix + '_MACS_wiggle', state,
+                                            '_'.join((prefix, state, 'afterfiting', 'all.bw')))) + '\n'
                                         # str_list += 'html ...\n'
                                         if treatment and not absolute:
                                             str_list += 'visibility full\n'

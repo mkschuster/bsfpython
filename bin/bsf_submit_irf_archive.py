@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 
 from bsf.analyses.illumina_run_folder import IlluminaRunFolderArchive
@@ -111,12 +113,12 @@ analysis.run()
 analysis.check_state()
 analysis.submit(name=name_space.stage)
 
-print 'IlluminaRunFolderArchive Analysis'
-print 'Project name:           ', analysis.project_name
-print 'Project directory:      ', analysis.project_directory
-print 'Illumina run directory: ', analysis.run_directory
-print 'Archive directory:      ', analysis.archive_directory
+print(analysis.name)
+print('Project name:           ', analysis.project_name)
+print('Project directory:      ', analysis.project_directory)
+print('Illumina run directory: ', analysis.run_directory)
+print('Archive directory:      ', analysis.archive_directory)
 
 if analysis.debug >= 2:
-    print '{!r} final trace:'.format(analysis)
-    print analysis.trace(level=1)
+    print('{!r} final trace:'.format(analysis))
+    print(analysis.trace(level=1))

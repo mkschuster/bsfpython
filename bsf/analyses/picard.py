@@ -27,6 +27,8 @@ A package of classes and methods modelling Picard analyses data files and data d
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import os
 import re
 import warnings
@@ -1431,8 +1433,8 @@ class DownsampleSam(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print self, 'Sample name:', sample.name
-                print sample.trace(level=1)
+                print(self, 'Sample name:', sample.name)
+                print(sample.trace(level=1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
 
@@ -1442,7 +1444,7 @@ class DownsampleSam(Analysis):
             for paired_reads_name in paired_reads_name_list:
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
-                        print self, 'PairedReads name:', paired_reads.get_name()
+                        print(self, 'PairedReads name:', paired_reads.get_name())
 
                     # Apply some sanity checks.
 
@@ -1538,6 +1540,7 @@ class FilePathSamToFastqReadGroup(FilePath):
     @ivar output_directory: Output directory
     @type output_directory: str | unicode
     """
+
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.picard.FilePathSamToFastqReadGroup} object.
 
@@ -1564,6 +1567,7 @@ class FilePathSamToFastqProject(FilePath):
     @ivar sas_path_new: New Sample Annotation Sheet file path
     @type sas_path_new: str | unicode
     """
+
     def __init__(self, prefix, prefix_analysis, project_name):
         """Initialise a C{bsf.analyses.picard.FilePathSamToFastqProject} object.
 
@@ -1756,8 +1760,8 @@ class SamToFastq(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print self, 'Sample name:', sample.name
-                print sample.trace(level=1)
+                print(self, 'Sample name:', sample.name)
+                print(sample.trace(level=1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
 
@@ -1767,7 +1771,7 @@ class SamToFastq(Analysis):
             for paired_reads_name in paired_reads_name_list:
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
-                        print self, 'PairedReads name:', paired_reads.get_name()
+                        print(self, 'PairedReads name:', paired_reads.get_name())
 
                     # Apply some sanity checks.
 

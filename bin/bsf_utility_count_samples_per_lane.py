@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 import os
 
@@ -52,7 +54,7 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-print 'Lane,Sample Number,Comment'
+print('Lane,Sample Number,Comment')
 
 file_name_list = os.listdir(name_space.directory)
 file_name_list.sort(cmp=lambda x, y: cmp(x, y))
@@ -75,6 +77,6 @@ for file_name in file_name_list:
             key = str(i)
             lane_name = '_'.join((file_name[:-15], key))
             if key in lane_dict:
-                print lane_name + ',' + str(lane_dict[key])
+                print(lane_name + ',' + str(lane_dict[key]))
             else:
-                print lane_name + ',1,not annotated'
+                print(lane_name + ',1,not annotated')

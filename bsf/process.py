@@ -27,6 +27,8 @@ A package of classes and methods modelling processes.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import datetime
 import errno
 import os
@@ -166,9 +168,8 @@ class Command(object):
 
         if not override and argument.key in self.options:
             warnings.warn(
-                'Adding an Argument with key {!r} that exits already in Command.program {!r}.'.format(
-                    argument.key,
-                    self.program),
+                'Adding an Argument with key ' + repr(argument.key) +
+                ' that exits already in Command.program ' + repr(self.program) + '.',
                 UserWarning)
 
         if argument.key not in self.options:
@@ -372,9 +373,8 @@ class Command(object):
 
         if not override and argument.key in self.options:
             warnings.warn(
-                'Setting an Argument with key {!r} that exits already in Command.program {!r}.'.format(
-                    argument.key,
-                    self.program),
+                'Setting an Argument with key ' + repr(argument.key) +
+                ' that exits already in Command.program ' + repr(self.program) + '.',
                 UserWarning)
 
         self.options[argument.key] = [argument]
@@ -575,7 +575,8 @@ class Command(object):
 
         if not configuration.config_parser.has_section(section=section):
             warnings.warn(
-                'Section {!r} not defined in Configuration files: {!r}'.format(section, configuration.file_path_list),
+                'Section ' + repr(section) + ' not defined in Configuration files:\n' +
+                repr(configuration.from_file_path_list),
                 UserWarning)
 
             return
@@ -710,34 +711,36 @@ class Executable(Command):
 
         thread_lock.acquire(True)
         if debug > 0:
-            print '[{}] Started Runner {} processor in module {}.'. \
-                format(datetime.datetime.now().isoformat(), file_type, __name__)
+            print('[' + datetime.datetime.now().isoformat() + ']',
+                  'Started Runner ' + repr(file_type) + ' processor in module ' + repr(__name__) + '.')
         output_file = None
         if file_path:
             output_file = open(file_path, 'w')
             if debug > 0:
-                print '[{}] Opened {} file {!r}.'. \
-                    format(datetime.datetime.now().isoformat(), file_type, file_path)
+                print('[' + datetime.datetime.now().isoformat() + ']',
+                      'Opened ' + repr(file_type) + ' file ' + repr(file_path) + '.')
         thread_lock.release()
 
         for line in file_handle:
             thread_lock.acquire(True)
             if output_file is None:
-                print '[{}] {}: {}'.format(datetime.datetime.now().isoformat(), file_type, line.rstrip())
+                print('[' + datetime.datetime.now().isoformat() + ']',
+                      file_type + ': ' + line.rstrip())
             else:
                 output_file.write(line)
             thread_lock.release()
 
         thread_lock.acquire(True)
         if debug > 0:
-            print '[{}] Received EOF on {} pipe.'.format(datetime.datetime.now().isoformat(), file_type)
+            print('[' + datetime.datetime.now().isoformat() + ']',
+                  'Received EOF on ' + repr(file_type) + ' pipe.')
         if output_file is None:
             pass
         else:
             output_file.close()
             if debug > 0:
-                print '[{}] Closed {} file {!r}.'. \
-                    format(datetime.datetime.now().isoformat(), file_type, file_path)
+                print('[' + datetime.datetime.now().isoformat() + ']',
+                      'Closed ' + repr(file_type) + ' file ' + repr(file_path) + '.')
         thread_lock.release()
 
         return
@@ -840,8 +843,9 @@ class Executable(Command):
         # Further constrain the name instance variable in the Executable class.
 
         if not name:
-            raise Exception("The Executable class requires a non-empty name option {!r} for program option {!r}.".
-                            format(name, program))
+            raise Exception(
+                'The Executable class requires a non-empty name option ' + repr(name) +
+                ' for program ' + repr(program) + '.')
 
         super(Executable, self).__init__(
             name=name,
@@ -1002,8 +1006,8 @@ class Executable(Command):
             while thread_out.is_alive() and thread_join_counter < max_thread_joins:
                 thread_lock.acquire(True)
                 if debug > 0:
-                    print '[{}] Waiting for STDOUT processor to finish.'. \
-                        format(datetime.datetime.now().isoformat())
+                    print('[' + datetime.datetime.now().isoformat() + ']',
+                          'Waiting for STDOUT processor to finish.')
                 thread_lock.release()
 
                 thread_out.join(timeout=thread_join_timeout)
@@ -1014,8 +1018,8 @@ class Executable(Command):
             while thread_err.is_alive() and thread_join_counter < max_thread_joins:
                 thread_lock.acquire(True)
                 if debug > 0:
-                    print '[{}] Waiting for STDERR processor to finish.'. \
-                        format(datetime.datetime.now().isoformat())
+                    print('[' + datetime.datetime.now().isoformat() + ']',
+                          'Waiting for STDERR processor to finish.')
                 thread_lock.release()
 
                 thread_err.join(timeout=thread_join_timeout)
@@ -1023,23 +1027,27 @@ class Executable(Command):
 
             if child_return_code > 0:
                 if debug > 0:
-                    print '[{}] Child process {!r} failed with exit code {}'. \
-                        format(datetime.datetime.now().isoformat(), self.name, +child_return_code)
+                    print('[' + datetime.datetime.now().isoformat() + ']',
+                          'Child process ' + repr(self.name) +
+                          ' failed with exit code ' + repr(+child_return_code) + '.')
                 attempt_counter += 1
             elif child_return_code < 0:
                 if debug > 0:
-                    print '[{}] Child process {!r} received signal {}.'. \
-                        format(datetime.datetime.now().isoformat(), self.name, -child_return_code)
+                    print('[' + datetime.datetime.now().isoformat() + ']',
+                          'Child process ' + repr(self.name) +
+                          ' received signal ' + repr(-child_return_code) + '.')
             else:
                 if debug > 0:
-                    print '[{}] Child process {!r} completed successfully {}.'. \
-                        format(datetime.datetime.now().isoformat(), self.name, +child_return_code)
+                    print('[' + datetime.datetime.now().isoformat() + ']',
+                          'Child process ' + repr(self.name) +
+                          ' completed successfully ' + repr(+child_return_code) + '.')
                 break
 
         else:
             if debug > 0:
-                print '[{}] Runnable {!r} exceeded the maximum retry counter {}.'. \
-                    format(datetime.datetime.now().isoformat(), self.name, self.maximum_attempts)
+                print('[' + datetime.datetime.now().isoformat() + ']',
+                      'Runnable ' + repr(self.name) +
+                      ' exceeded the maximum retry counter ' + repr(self.maximum_attempts) + '.')
 
         return child_return_code
 
@@ -1051,16 +1059,18 @@ class Executable(Command):
         @return:
         @rtype:
         """
-
         if return_code > 0:
-            print '[{}] Child process {!r} failed with return code {}'. \
-                format(datetime.datetime.now().isoformat(), self.name, +return_code)
+            print('[' + datetime.datetime.now().isoformat() + ']',
+                  'Child process ' + repr(self.name) +
+                  ' failed with return code ' + repr(+return_code) + '.')
         elif return_code < 0:
-            print '[{}] Child process {!r} received signal {}.'. \
-                format(datetime.datetime.now().isoformat(), self.name, -return_code)
+            print('[' + datetime.datetime.now().isoformat() + ']',
+                  'Child process ' + repr(self.name) +
+                  ' received signal ' + repr(-return_code) + '.')
         else:
-            print '[{}] Child process {!r} completed with return code {}.'. \
-                format(datetime.datetime.now().isoformat(), self.name, +return_code)
+            print('[' + datetime.datetime.now().isoformat() + ']',
+                  'Child process ' + repr(self.name) +
+                  ' completed with return code ' + repr(+return_code) + '.')
 
         return
 
@@ -1293,7 +1303,7 @@ class RunnableStepChangeMode(RunnableStep):
         @rtype: int
         """
 
-        # Use a dictionary to map stringl literals to integers defined in teh stat module rather than
+        # Use a dictionary to map string literals to integers defined in the stat module rather than
         # evaluating code directly, which can be rather dangerous.
 
         permission_dict = {

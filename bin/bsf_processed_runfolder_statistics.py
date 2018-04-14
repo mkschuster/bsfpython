@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 import os
 import re
@@ -71,4 +73,4 @@ for file_name in os.listdir(prf_path):
 
                     values = line.split()
 
-                    print 'Line: {}'.format(' '.join(values))
+                    print('Line:', ' '.join(values))

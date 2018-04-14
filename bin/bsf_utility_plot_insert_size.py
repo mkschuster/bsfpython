@@ -24,12 +24,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import pysam
+from __future__ import print_function
+
 import argparse
+import os
+
 import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
+import pysam
+import seaborn as sns
 
 parser = argparse.ArgumentParser(description="Plot insert sizes from bam files")
 parser.add_argument('--output',
@@ -48,10 +51,10 @@ args = parser.parse_args()
 data_to_plot = []
 sample_names = []
 for i in args.input:
-    print i
-    sample_name = os.path.basename(i).replace('.bam','')
+    print(i)
+    sample_name = os.path.basename(i).replace('.bam', '')
     sample_names.append(sample_name)
-    bam = pysam.AlignmentFile(i,'rb')
+    bam = pysam.AlignmentFile(i, 'rb')
     count = 0
     insert_sizes = []
     for read in bam:
@@ -72,9 +75,9 @@ for i in range(len(sample_names)):
 df = pd.DataFrame(data=my_data)
 
 # Set up the matplotlib figure
-f, ax = plt.subplots(figsize=((len(sample_names)*2)/3, 6))
+f, ax = plt.subplots(figsize=((len(sample_names) * 2) / 3, 6))
 
-# Draw a violinplot with a narrower bandwidth than the default
+# Draw a violin plot with a narrower bandwidth than the default
 sns.violinplot(data=df, palette="Set3", bw=.2, cut=1, linewidth=1)
 
 # Finalize the figure

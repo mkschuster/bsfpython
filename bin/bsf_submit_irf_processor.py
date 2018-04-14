@@ -26,6 +26,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 import datetime
 import os
@@ -146,11 +148,11 @@ name_space = argument_parser.parse_args()
 #     irf_restore.run()
 #     irf_restore.submit(name=name_space.stage)
 #
-#     print 'IlluminaRunFolderRestore Analysis'
-#     print 'Project name:           ', irf_restore.project_name
-#     print 'Project directory:      ', irf_restore.project_directory
-#     print 'Illumina run directory: ', irf_restore.illumina_directory
-#     print 'Archive directory:      ', irf_restore.archive_directory
+#     print(irf_restore.name)
+#     print('Project name:           ', irf_restore.project_name)
+#     print('Project directory:      ', irf_restore.project_directory)
+#     print('Illumina run directory: ', irf_restore.illumina_directory)
+#     print('Archive directory:      ', irf_restore.archive_directory)
 # else:
 #     irf_restore = None
 
@@ -181,14 +183,14 @@ if name_space.loop:
     # If the --loop option has been set, wait until RTAComplete.txt has been copied.
     loop_counter = int(1)
     while True:
-        print '[{}] Loop {}:'.format(datetime.datetime.now().isoformat(), loop_counter)
+        print('[{}] Loop {}:'.format(datetime.datetime.now().isoformat(), loop_counter))
         loop_counter += int(1)
         try:
             analysis_itb.run()
         except RunFolderNotComplete as exception:
-            print exception
+            print(exception)
         else:
-            print 'Illumina Run Folder seems complete.'
+            print('Illumina Run Folder seems complete.')
             break
         time.sleep(name_space.interval)
 else:
@@ -197,15 +199,15 @@ else:
 analysis_itb.check_state()
 analysis_itb.submit(name=name_space.stage)
 
-print 'IlluminaToBamTools IlluminaToBam Analysis'
-print 'Project name:           ', analysis_itb.project_name
-print 'Project directory:      ', analysis_itb.project_directory
-print 'Illumina run directory: ', analysis_itb.run_directory
-print 'Experiment directory:   ', analysis_itb.experiment_directory
+print(analysis_itb.name)
+print('Project name:           ', analysis_itb.project_name)
+print('Project directory:      ', analysis_itb.project_directory)
+print('Illumina run directory: ', analysis_itb.run_directory)
+print('Experiment directory:   ', analysis_itb.experiment_directory)
 
 if analysis_itb.debug >= 2:
-    print '{!r} final trace:'.format(analysis_itb)
-    print analysis_itb.trace(level=1)
+    print(repr(analysis_itb), 'final trace:')
+    print(analysis_itb.trace(level=1))
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
@@ -261,13 +263,13 @@ if analysis_bid.library_path:
     analysis_bid.check_state()
     analysis_bid.submit(name=name_space.stage)
 
-    print ''
-    print 'IlluminaToBamTools BamIndexDecoder Analysis'
-    print 'Project name:         ', analysis_bid.project_name
-    print 'Project directory:    ', analysis_bid.project_directory
-    print 'Sequences directory:  ', analysis_bid.sequences_directory
-    print 'Experiment directory: ', analysis_bid.experiment_directory
+    print('')
+    print(analysis_bid.name)
+    print('Project name:         ', analysis_bid.project_name)
+    print('Project directory:    ', analysis_bid.project_directory)
+    print('Sequences directory:  ', analysis_bid.sequences_directory)
+    print('Experiment directory: ', analysis_bid.experiment_directory)
 
 if analysis_bid.debug >= 2:
-    print '{!r} final trace:'.format(analysis_bid)
-    print analysis_bid.trace(level=1)
+    print(repr(analysis_bid), 'final trace:')
+    print(analysis_bid.trace(level=1))

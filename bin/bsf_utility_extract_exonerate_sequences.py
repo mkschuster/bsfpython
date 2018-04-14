@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import re
 
 import numpy
@@ -44,7 +46,7 @@ record_dict = SeqIO.index_db(
     filenames=['sequences_{}_pass_hq_2d.fasta'.format(sample_name)],
     format='fasta')
 
-print 'Number of query sequence records: ', len(record_dict)
+print('Number of query sequence records:', len(record_dict))
 
 # TODO: This could possibly run Exonerate as a sub process.
 seqio_dict = dict()
@@ -72,7 +74,7 @@ array_length = max_target_position - min_target_position + 1
 # Use these values to initialise a two-dimensional array i.e. sequence length and A, C, G, T and - letters.
 profile_array = numpy.zeros(shape=(array_length, 5), dtype=numpy.int32)
 
-print "Profile Array shape:", profile_array.shape
+print('Profile Array shape:', profile_array.shape)
 
 for vulgar in vulgar_list:
     # Fetch the corresponding SeqRecord object.
@@ -104,9 +106,9 @@ for vulgar in vulgar_list:
 
     # TODO: Populate the matrix at this stage.
 
-    print "Query: ", vulgar.q_name
+    print('Query:', vulgar.q_name)
     for exonerate_tuple in vulgar.triplet_list:
-        print "Operation: ", ' '.join(exonerate_tuple)
+        print('Operation:', ' '.join(exonerate_tuple))
 
 # Clean up stage: close all SeqIO file handles.
 

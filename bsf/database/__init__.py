@@ -27,6 +27,8 @@ A package that centralises (SQLite) Database access.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import sqlite3
 
 
@@ -139,6 +141,7 @@ class SQLiteMaster(object):
     @ivar sql_statement: SQLite CREATE TABLE statement
     @type sql_statement: str
     """
+
     def __init__(self, sql_object_type, sql_object_name, sql_table_name, root_page, sql_statement):
         """Initialise a C{bsf.database.SQLiteMaster} object.
 
@@ -173,6 +176,7 @@ class SQLiteMasterAdaptor(object):
     @ivar database_connection: C{bsf.database.DatabaseConnection}
     @type database_connection: bsf.database.DatabaseConnection
     """
+
     def __init__(self, database_connection):
         """Initialise a C{bsf.database.SQLiteMasterAdaptor} object.
 
@@ -293,6 +297,7 @@ class SQLiteTableInfo(object):
     @ivar primary_key: Primary key
     @type primary_key: str
     """
+
     def __init__(
             self,
             column_identifier=0,
@@ -333,6 +338,7 @@ class SQLiteTableInfoAdaptor(object):
     @ivar database_connection: C{bsf.database.DatabaseConnection}
     @type database_connection: bsf.database.DatabaseConnection
     """
+
     def __init__(self, database_connection):
         """Initialise a C{bsf.database.SQLiteTableInfoAdaptor}.
 
@@ -442,8 +448,6 @@ class DatabaseAdaptor(object):
         else:
             self.table_constraint = table_constraint
 
-        # FIXME: Experimentally create the table in the __init__() method.
-        # TODO: Should this be moved into the module that uses the Adaptor?
         # Try creating the table once the DatabaseAdaptor gets instantiated.
         # It then needs committing at some stage.
         self.create_table()
@@ -586,10 +590,10 @@ class DatabaseAdaptor(object):
         @return: SQL I{ALTER TABLE table RENAME TO table_name} statement
         @rtype: str
         """
-        if table_name_old is None or not table_name_old:
+        if not table_name_old:
             table_name_old = self.table_name
 
-        if table_name_new is None or not table_name_new:
+        if not table_name_new:
             table_name_new = '_'.join((self.table_name, 'altered'))
 
         statement_list = list()
@@ -718,7 +722,7 @@ class DatabaseAdaptor(object):
         @param statement: Complete SQL I{SELECT} statement
         @type statement: str
         @param parameters: Python C{list} of Python C{str} (parameter) objects or C{None}
-        @type parameters: list[str]
+        @type parameters: list[None | int | float | str | unicode]
         @return: Python C{list} of Python C{object} objects
         @rtype: list[object]
         """
@@ -731,8 +735,6 @@ class DatabaseAdaptor(object):
         else:
             cursor.execute(statement)
 
-        # FIXME: Setting attributes directly only works for type str only!
-        # TODO: Investigate automatic type mapping.
         for row_tuple in cursor.fetchall():
             object_instance = self.object_type()
             object_list.append(object_instance)
@@ -773,9 +775,7 @@ class DatabaseAdaptor(object):
         object_length = len(object_list)
 
         if object_length > 1:
-            raise Exception("SQL database returned more than one row for primary key '" +
-                            primary_key +
-                            "'.")
+            raise Exception('SQL database returned more than one row for primary key ' + repr(primary_key) + '.')
         elif object_length == 1:
             return object_list[0]
         else:
@@ -799,14 +799,16 @@ class DatabaseAdaptor(object):
         try:
             self.get_cursor().execute(self.statement_insert(), value_list)
         except sqlite3.IntegrityError:
-            print 'Encountered sqlite3.IntegrityError for table name', self.table_name, 'on the following SQL fields:'
-            print 'Fields:', self._build_column_insert_expression()
-            print 'Values:', value_list
+            print('Encountered sqlite3.IntegrityError for table name ' +
+                  self.table_name + 'on the following SQL fields:\n' +
+                  'Fields: ' + self._build_column_insert_expression() + '\n' +
+                  'Values: ' + repr(value_list))
             raise
         except sqlite3.OperationalError:
-            print 'Encountered sqlite3.OperationalError for table name', self.table_name, 'on the following SQL fields:'
-            print 'Fields:', self._build_column_insert_expression()
-            print 'Values:', value_list
+            print('Encountered sqlite3.OperationalError for table name ' +
+                  self.table_name + ' on the following SQL fields:\n' +
+                  'Fields: ' + self._build_column_insert_expression() + '\n' +
+                  'Values: ' + repr(value_list))
             raise
 
         # Update the canonical attribute containing the primary key with the last row identifier.
@@ -835,20 +837,26 @@ class DatabaseAdaptor(object):
         if primary_name:
             value_list.append(object_instance.__getattribute__(primary_name))
         else:
-            raise Exception("Cannot update table {!r} without primary key.".format(self.table_name))
+            raise Exception('Cannot update table ' + repr(self.table_name) + ' without primary key.')
 
-        statement = "UPDATE {!r} SET {} WHERE {} = ?".format(
-            self.table_name,
-            self._build_column_update_expression(),
-            primary_name)
+        statement_list = list()
+        """ @type statement_list: list[str] """
 
-        cursor = self.get_cursor()
+        statement_list.append('UPDATE')
+        statement_list.append("'" + self.table_name + "'")
+        statement_list.append('SET')
+        statement_list.append(self._build_column_update_expression())
+        statement_list.append('WHERE')
+        statement_list.append("'" + primary_name + "'")
+        statement_list.append('=')
+        statement_list.append('?')
+
         try:
-            cursor.execute(statement, value_list)
+            self.get_cursor().execute(' '.join(statement_list), value_list)
         except sqlite3.IntegrityError:
-            print 'Encountered SQLite3 integrity error'
-            print '  SQL statement:', statement
-            print '  Values:', value_list
+            print('Encountered SQLite3 integrity error.\n',
+                  '  SQL statement:', ' '.join(statement_list), '\n',
+                  '  Values:', value_list)
             raise
 
         return

@@ -27,6 +27,8 @@ A package of classes and methods supporting variant calling analyses.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import errno
 import math
 import os
@@ -1731,7 +1733,7 @@ class VariantCallingGATK(Analysis):
 
                 for row_dict in annotation_sheet.row_dicts:
                     if self.debug > 0:
-                        print 'Comparison sheet row_dict:', row_dict
+                        print('Comparison sheet row_dict:', row_dict)
 
                     comparison = VariantCallingGATKComparison()
 
@@ -2785,14 +2787,12 @@ class VariantCallingGATK(Analysis):
             _sub_command.add_option_long(key='stats_file', value=file_path_annotate.vep_statistics)
             # Cache options
             _sub_command.add_switch_long(key='cache')
-            if False:
-                # FIXME: For Ensembl VEP 91.
-                _sub_command.add_switch_long(key='offline')
+            # FIXME: For Ensembl VEP 91.
+            # _sub_command.add_switch_long(key='offline')
             _sub_command.add_option_long(key='dir_cache', value=self.vep_cache)
             _sub_command.add_option_long(key='dir_plugins', value=self.vep_plugin)
-            if False:
-                # FIXME: For Ensembl VEP 91.
-                _sub_command.add_option_long(key='fasta_dir', value=self.vep_fasta)
+            # FIXME: For Ensembl VEP 91.
+            # _sub_command.add_option_long(key='fasta_dir', value=self.vep_fasta)
             # Other annotation sources
             _sub_command.add_option_long(  # TODO: Has to be configurable
                 key='plugin',
@@ -3176,8 +3176,8 @@ class VariantCallingGATK(Analysis):
 
         for sample in self.sample_list:
             if self.debug > 0:
-                print self, 'Sample name:', sample.name
-                print sample.trace(1)
+                print(self, 'Sample name:', sample.name)
+                print(sample.trace(1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
             paired_reads_name_list = paired_reads_dict.keys()
@@ -4653,7 +4653,7 @@ class VariantCallingGATK(Analysis):
         comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
         if self.debug > 0:
-            print 'Somatic variant calling comparison:', comparison_name_list
+            print('Somatic variant calling comparison:', comparison_name_list)
 
         for comparison_name in comparison_name_list:
             prefix_somatic = '_'.join((stage_somatic.name, comparison_name))
@@ -4920,8 +4920,8 @@ class VariantCallingGATK(Analysis):
 
             for sample in self.sample_list:
                 if self.debug > 0:
-                    print self, 'Sample name:', sample.name
-                    print sample.trace(1)
+                    print(self, 'Sample name:', sample.name)
+                    print(sample.trace(1))
 
                 paired_reads_dict = sample.get_all_paired_reads(
                     replicate_grouping=self.replicate_grouping,
@@ -5190,8 +5190,8 @@ class VariantCallingGATK(Analysis):
 
             for sample in self.sample_list:
                 if self.debug > 0:
-                    print self, 'Sample name:', sample.name
-                    print sample.trace(1)
+                    print(self, 'Sample name:', sample.name)
+                    print(sample.trace(1))
 
                 paired_reads_dict = sample.get_all_paired_reads(
                     replicate_grouping=self.replicate_grouping,

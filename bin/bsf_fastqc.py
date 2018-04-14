@@ -25,6 +25,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import argparse
 
 from bsf.analyses import RunFastQC
@@ -64,8 +66,8 @@ for stage in fastqc.stage_list:
     stage.submit(debug=fastqc.debug)
 
     if fastqc.debug:
-        print repr(stage)
-        print stage.trace(1)
+        print(repr(stage))
+        print(stage.trace(1))
 
 if args.stage:
     if args.stage == 'report':
@@ -73,10 +75,10 @@ if args.stage:
     elif not submit:
         name_list = [stage.name for stage in fastqc.stage_list]
         name_list.append('report')
-        print 'Valid Analysis stages are: {!r}'.format(name_list)
+        print('Valid Analysis stages are:', repr(name_list))
 
-print 'FastQC Analysis'
-print 'Project name:      ', fastqc.project_name
-print 'Input directory:   ', fastqc.input_directory
-print 'Output directory:  ', fastqc.output_directory
-print 'Project directory: ', fastqc.project_directory
+print(fastqc.name)
+print('Project name:      ', fastqc.project_name)
+print('Input directory:   ', fastqc.input_directory)
+print('Output directory:  ', fastqc.output_directory)
+print('Project directory: ', fastqc.project_directory)

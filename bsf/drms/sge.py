@@ -27,6 +27,8 @@ A package of methods supporting the Son of Grid Engine (SGE) system.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from __future__ import print_function
+
 import errno
 import os
 import re
@@ -418,7 +420,7 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
                 ['maxvmem', 'TEXT'],
                 # arid
                 # Advance reservation identifier. If the job used the resources of an advance reservation,
-                # then this field contains a positive integer identifier; otherwise the value is "0" .
+                # then this field contains a positive integer identifier; otherwise the value is '0' .
                 ['arid', 'TEXT'],
             ])
 
@@ -441,12 +443,12 @@ def submit(stage, debug=0):
     """
 
     output = str()
-    output += "#! /bin/bash\n"
-    output += "\n"
+    output += '#! /bin/bash\n'
+    output += '\n'
 
     if debug > 0:
-        output += "# BSF-Python debug mode: {}\n".format(debug)
-        output += "\n"
+        output += '# BSF-Python debug mode: ' + repr(debug) + '\n'
+        output += '\n'
 
     for executable in stage.executable_list:
         executable_drms = Executable(name=executable.name, program='qsub', sub_command=executable)
@@ -483,27 +485,27 @@ def submit(stage, debug=0):
 
         # Require physical memory to be free ...
         if stage.memory_free_mem:
-            resource_list.append('mem_free={}'.format(stage.memory_free_mem))
+            resource_list.append('mem_free=' + stage.memory_free_mem)
 
         # Require swap memory to be free ...
         if stage.memory_free_swap:
-            resource_list.append('swap_free={}'.format(stage.memory_free_swap))
+            resource_list.append('swap_free=' + stage.memory_free_swap)
 
         # Require virtual memory to be free ...
         if stage.memory_free_virtual:
-            resource_list.append('virtual_free={}'.format(stage.memory_free_virtual))
+            resource_list.append('virtual_free=' + stage.memory_free_virtual)
 
         # Set hard virtual memory limit ...
         if stage.memory_limit_hard:
-            resource_list.append('h_vmem={}'.format(stage.memory_limit_hard))
+            resource_list.append('h_vmem=' + stage.memory_limit_hard)
 
         # Set soft virtual memory limit ...
         if stage.memory_limit_soft:
-            resource_list.append('s_vmem={}'.format(stage.memory_limit_soft))
+            resource_list.append('s_vmem=' + stage.memory_limit_soft)
 
         # Set the host names ...
         for node_name in stage.node_list_include:
-            resource_list.append('hostname={}'.format(node_name))
+            resource_list.append('hostname=' + node_name)
 
         if len(resource_list):
             executable_drms.add_option_short(key='l', value=','.join(resource_list))
@@ -586,14 +588,10 @@ def submit(stage, debug=0):
 
             if child_return_code:
                 raise Exception(
-                    "SGE qsub returned exit code {!r}\n"
-                    "STDOUT: {}\n"
-                    "STDERR: {}\n"
-                    "Command list representation: {!r}".format(
-                        child_return_code,
-                        child_stdout,
-                        child_stderr,
-                        executable_drms.command_list()))
+                    'SGE qsub returned exit code ' + repr(child_return_code) + '\n' +
+                    'STDOUT: ' + child_stdout + '\n' +
+                    'STDERR: ' + child_stderr + '\n' +
+                    'Command list representation: ' + repr(executable_drms.command_list()))
 
             # Parse the multi-line STDOUT string to get the SGE process identifier and name.
             # The response to the SGE qsub command looks like:
@@ -607,14 +605,14 @@ def submit(stage, debug=0):
                     executable.process_identifier = match.group(1)
                     executable.process_name = match.group(2)
                 else:
-                    print 'Could not parse SGE qsub response line {}'.format(line)
+                    print('Could not parse SGE qsub response line:', repr(line))
 
         # Copy the SGE command line to the Bash script.
 
-        output += executable_drms.command_str() + "\n"
-        output += "\n"
+        output += executable_drms.command_str() + '\n'
+        output += '\n'
 
-    script_path = os.path.join(stage.working_directory, 'bsfpython_sge_{}.bash'.format(stage.name))
+    script_path = os.path.join(stage.working_directory, 'bsfpython_sge_' + stage.name + '.bash')
     script_file = open(script_path, 'w')
     script_file.write(output)
     script_file.close()
