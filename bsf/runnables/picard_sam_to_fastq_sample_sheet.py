@@ -4,7 +4,7 @@ A package of classes and methods to clean a sample sheet for the Picard SamToFas
 """
 
 #
-# Copyright 2013 - 2016 Michael K. Schuster
+# Copyright 2013 - 2018 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
