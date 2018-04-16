@@ -39,25 +39,25 @@ class VULGAR(object):
 
     Attributes:
     @ivar q_name: Query name
-    @type q_name: str
+    @type q_name: str | None
     @ivar q_start: Query start
-    @type q_start: str
+    @type q_start: str | None
     @ivar q_end: Query end
-    @type q_end: str
+    @type q_end: str | None
     @ivar q_strand: Query strand
-    @type q_strand: str
+    @type q_strand: str | None
     @ivar t_name: Target name
-    @type t_name: str
+    @type t_name: str | None
     @ivar t_start: Target start
-    @type t_start: str
+    @type t_start: str | None
     @ivar t_end: Target end
-    @type t_end: str
+    @type t_end: str | None
     @ivar t_strand: Target strand
-    @type t_strand: str
+    @type t_strand: str | None
     @ivar score: Score
-    @type score: str
+    @type score: str | None
     @ivar triplet_list: List of (I{operation}, I{query_length}, I{target_length}) tuples
-    @type triplet_list: list[(str, str, str)]
+    @type triplet_list: list[(str, str, str)] | None
     """
 
     @classmethod
@@ -73,9 +73,11 @@ class VULGAR(object):
 
         self = cls()
 
-        self.q_name, self.q_start, self.q_end, self.q_strand, \
-        self.t_name, self.t_start, self.t_end, self.t_strand, \
-        self.score, triplet_str = vulgar_str.split(' ', 9)
+        (
+            self.q_name, self.q_start, self.q_end, self.q_strand,
+            self.t_name, self.t_start, self.t_end, self.t_strand,
+            self.score, triplet_str
+        ) = vulgar_str.split(' ', 9)
 
         triplet_list = triplet_str.split(' ')
         # Further split into triplets by means of a list comprehension.
@@ -91,25 +93,25 @@ class VULGAR(object):
         """Initialise a new C{bsf.exonerate.VULGAR} object.
 
         @param q_name: Query name
-        @type q_name: str
+        @type q_name: str | None
         @param q_start: Query start
-        @type q_start: str
+        @type q_start: str | None
         @param q_end: Query end
-        @type q_end: str
+        @type q_end: str | None
         @param q_strand: Query strand
-        @type q_strand: str
+        @type q_strand: str | None
         @param t_name: Target name
-        @type t_name: str
+        @type t_name: str | None
         @param t_start: Target start
-        @type t_start: str
+        @type t_start: str | None
         @param t_end: Target end
-        @type t_end: str
+        @type t_end: str | None
         @param t_strand: Target strand
-        @type t_strand: str
+        @type t_strand: str | None
         @param score: Score
-        @type score: str
+        @type score: str | None
         @param triplet_list: List of (I{operation}, I{query_length}, I{target_length}) tuples
-        @type triplet_list: list[(str, str, str)]
+        @type triplet_list: list[(str, str, str)] | None
         @return:
         @rtype:
         """
@@ -130,6 +132,11 @@ class VULGAR(object):
         return
 
     def t_start_natural(self):
+        """Return the natural target start coordinate.
+
+        @return: Natural start coordinate
+        @rtype: int
+        """
         if self.t_strand == '+':
             return int(self.t_start)
         elif self.t_strand == '-':
@@ -139,6 +146,11 @@ class VULGAR(object):
             return int(self.t_start)
 
     def t_end_natural(self):
+        """Return the natural end coordinate.
+
+        @return: Natural end coordinate
+        @rtype: int
+        """
         if self.t_strand == '+':
             return int(self.t_end)
         elif self.t_strand == '-':
@@ -156,7 +168,6 @@ def parse_alignment_file(file_path):
     @return: Python C{list} of C{bsf.exonerate.VULGAR} objects
     @rtype: list[bsf.exonerate.VULGAR]
     """
-
     vulgar_list = list()
     """ @type vulgar_list: list[bsf.exonerate.VULGAR] """
 
