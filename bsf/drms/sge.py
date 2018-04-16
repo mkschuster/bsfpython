@@ -47,68 +47,68 @@ class ProcessSGE(object):
     The instance variable names result from the SGE accounting file. See man 5 accounting.
 
     @ivar process_sge_id: Primary key
-    @type process_sge_id: int
+    @type process_sge_id: int | None
     @ivar qname: Name of the cluster queue in which the job has run
-    @type qname: str
+    @type qname: str | None
     @ivar hostname: Name of the execution host
-    @type hostname: str
+    @type hostname: str | None
     @ivar sge_group: The effective group id of the job owner when executing the job
-    @type sge_group: str
+    @type sge_group: str | None
     @ivar owner: Owner of the Grid Engine job
-    @type owner: str
+    @type owner: str | None
     @ivar job_name: Job name
-    @type job_name: str
+    @type job_name: str | None
     @ivar job_number: Job identifier (job number)
-    @type job_number: str
+    @type job_number: str | None
     @ivar account: An account string as specified by the qsub(1) or qalter(1) -A option
-    @type account: str
+    @type account: str | None
     @ivar priority: Priority value assigned to the job, corresponding to the priority parameter in the
         queue configuration (see queue_conf(5))
-    @type priority: str
+    @type priority: str | None
     @ivar submission_time: Submission time
-    @type submission_time: str
+    @type submission_time: str | None
     @ivar start_date: Start time
-    @type start_date: str
+    @type start_date: str | None
     @ivar end_time: End time
-    @type end_time: str
+    @type end_time: str | None
     @ivar failed: Indicates the problem which occurred in case a job could not be started on the execution host
-    @type failed: str
+    @type failed: str | None
     @ivar exit_status: Exit status of the job script (or Grid Engine-specific status in case of certain error
         conditions). The exit status is determined by following the normal shell conventions. If the command
         terminates normally, the value of the command is its exit status. However, in the case that the command
         exits abnormally, a value of 0200 (octal), 128 (decimal) is added to the value of the command to make up
         the exit status.
-    @type exit_status: str
+    @type exit_status: str | None
     @ivar ru_wallclock: Difference between end_time and start_time (see above), except that if the job fails,
         it is zero
-    @type ru_wallclock: str
+    @type ru_wallclock: str | None
     @ivar project: The department which was assigned to the job
-    @type project: str
+    @type project: str | None
     @ivar department: The parallel environment which was selected for the job
-    @type department: str
+    @type department: str | None
     @ivar granted_pe: The number of slots which were dispatched to the job by the scheduler
-    @type granted_pe: str
+    @type granted_pe: str | None
     @ivar slots: The number of slots which were dispatched to the job by the scheduler
-    @type slots: str
+    @type slots: str | None
     @ivar task_number: Array job task index number
-    @type task_number: str
+    @type task_number: str | None
     @ivar cpu: The CPU time usage in seconds
-    @type cpu: str
+    @type cpu: str | None
     @ivar mem: The integral memory usage in Gbytes seconds
-    @type mem: str
+    @type mem: str | None
     @ivar io: The amount of data transferred in input/output operations in GB (if available, otherwise 0)
-    @type io: str
+    @type io: str | None
     @ivar category: A string specifying the job category
-    @type category: str
+    @type category: str | None
     @ivar iow: The input/output wait time in seconds (if available, otherwise 0)
-    @type iow: str
+    @type iow: str | None
     @ivar pe_taskid: If this identifier is set, the task was part of a parallel job, and was passed to Grid Engine
         via the qrsh -inherit interface.
-    @type pe_taskid: str
+    @type pe_taskid: str | None
     @ivar maxvmem: The maximum vmem size in bytes
-    @type maxvmem: str
+    @type maxvmem: str | None
     @ivar arid: Advance reservation identifier
-    @type arid: str
+    @type arid: str | None
     """
 
     def __init__(
@@ -144,72 +144,71 @@ class ProcessSGE(object):
         """Initialise a C{bsf.drms.sge.ProcessSGE}.
 
         @param process_sge_id: Primary key
-        @type process_sge_id: int
+        @type process_sge_id: int | None
         @param qname: Name of the cluster queue in which the job has run
-        @type qname: str
+        @type qname: str | None
         @param hostname: Name of the execution host
-        @type hostname: str
+        @type hostname: str | None
         @param sge_group: The effective group id of the job owner when executing the job
-        @type sge_group: str
+        @type sge_group: str | None
         @param owner: Owner of the Grid Engine job
-        @type owner: str
+        @type owner: str | None
         @param job_name: Job name
-        @type job_name: str
+        @type job_name: str | None
         @param job_number: Job identifier (job number)
-        @type job_number: str
+        @type job_number: str | None
         @param account: An account string as specified by the qsub(1) or qalter(1) -A option
-        @type account: str
+        @type account: str | None
         @param priority: Priority value assigned to the job, corresponding to the priority parameter in the
             queue configuration (see queue_conf(5))
-        @type priority: str
+        @type priority: str | None
         @param submission_time: Submission time
-        @type submission_time: str
+        @type submission_time: str | None
         @param start_date: Start time
-        @type start_date: str
+        @type start_date: str | None
         @param end_time: End time
-        @type end_time: str
+        @type end_time: str | None
         @param failed: Indicates the problem which occurred in case a job could not be started on the execution host
-        @type failed: str
+        @type failed: str | None
         @param exit_status: Exit status of the job script (or Grid Engine-specific status in case of certain error
             conditions). The exit status is determined by following the normal shell conventions. If the command
             terminates normally, the value of the command is its exit status. However, in the case that the command
             exits abnormally, a value of 0200 (octal), 128 (decimal) is added to the value of the command to make up
             the exit status.
-        @type exit_status: str
+        @type exit_status: str | None
         @param ru_wallclock: Difference between end_time and start_time (see above), except that if the job fails,
             it is zero
-        @type ru_wallclock: str
+        @type ru_wallclock: str | None
         @param project: The department which was assigned to the job
-        @type project: str
+        @type project: str | None
         @param department: The parallel environment which was selected for the job
-        @type department: str
+        @type department: str | None
         @param granted_pe: The number of slots which were dispatched to the job by the scheduler
-        @type granted_pe: str
+        @type granted_pe: str | None
         @param slots: The number of slots which were dispatched to the job by the scheduler
-        @type slots: str
+        @type slots: str | None
         @param task_number: Array job task index number
-        @type task_number: str
+        @type task_number: str | None
         @param cpu: The CPU time usage in seconds
-        @type cpu: str
+        @type cpu: str | None
         @param mem: The integral memory usage in Gbytes seconds
-        @type mem: str
+        @type mem: str | None
         @param io: The amount of data transferred in input/output operations in GB (if available, otherwise 0)
-        @type io: str
+        @type io: str | None
         @param category: A string specifying the job category
-        @type category: str
+        @type category: str | None
         @param iow: The input/output wait time in seconds (if available, otherwise 0)
-        @type iow: str
+        @type iow: str | None
         @param pe_taskid: If this identifier is set, the task was part of a parallel job, and was passed to Grid Engine
             via the qrsh -inherit interface.
-        @type pe_taskid: str
+        @type pe_taskid: str | None
         @param maxvmem: The maximum vmem size in bytes
-        @type maxvmem: str
+        @type maxvmem: str | None
         @param arid: Advance reservation identifier
-        @type arid: str
+        @type arid: str | None
         @return:
         @rtype:
         """
-
         super(ProcessSGE, self).__init__()
 
         self.process_sge_id = process_sge_id
@@ -258,55 +257,54 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
         @return:
         @rtype:
         """
-
         super(ProcessSGEAdaptor, self).__init__(
             database_connection=database_connection,
             object_type=ProcessSGE,
             table_name='process_sge',
             column_definition=[
                 # Primary key
-                ['process_sge_id', 'INTEGER PRIMARY KEY ASC AUTOINCREMENT'],
+                ('process_sge_id', 'INTEGER PRIMARY KEY ASC AUTOINCREMENT'),
                 # qname
                 # Name of the cluster queue in which the job has run.
-                ['qname', 'TEXT'],
+                ('qname', 'TEXT'),
                 # hostname
                 # Name of the execution host.
-                ['hostname', 'TEXT'],
+                ('hostname', 'TEXT'),
                 # group
                 # The effective group id of the job owner when executing the job.
                 # Since group is a reserved word in SQL this had to be renamed to sge_group.
-                ['sge_group', 'TEXT'],
+                ('sge_group', 'TEXT'),
                 # owner
                 # Owner of the Grid Engine job.
-                ['owner', 'TEXT'],
+                ('owner', 'TEXT'),
                 # job_name
                 # Job name.
-                ['job_name', 'TEXT'],
+                ('job_name', 'TEXT'),
                 # job_number
                 # Job identifier (job number).
-                ['job_number', 'TEXT'],
+                ('job_number', 'TEXT'),
                 # account
                 # An account string as specified by the qsub(1) or qalter(1) -A option.
-                ['account', 'TEXT'],
+                ('account', 'TEXT'),
                 # priority
                 # Priority value assigned to the job, corresponding to the priority parameter in the queue configuration
                 # (see queue_conf(5)).
-                ['priority', 'TEXT'],
+                ('priority', 'TEXT'),
                 # submission_time
                 # Submission time.
-                ['submission_time', 'TEXT'],
+                ('submission_time', 'TEXT'),
                 # start_time
                 # Start time.
-                ['start_date', 'TEXT'],
+                ('start_date', 'TEXT'),
                 # end_time
                 # End time.
-                ['end_time', 'TEXT'],
+                ('end_time', 'TEXT'),
                 # failed
                 # Indicates the problem which occurred in case a job could not be started on the execution host
                 # (e.g. because the owner of the job did not have a valid account on that machine).
                 # If Grid Engine tries to start a job multiple times, this may lead to multiple entries in the
                 # reporting file corresponding to the same job ID.
-                ['failed', 'TEXT'],
+                ('failed', 'TEXT'),
                 # exit_status
                 # Exit status of the job script (or Grid Engine-specific status in case of certain error conditions).
                 # The exit status is determined by following the normal shell conventions. If the command terminates
@@ -315,10 +313,10 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
                 # the exit status.
                 #
                 # For example: If a job dies through signal 9 (SIGKILL) then the exit status becomes 128 + 9 = 137.
-                ['exit_status', 'TEXT'],
+                ('exit_status', 'TEXT'),
                 # ru_wallclock
                 # Difference between end_time and start_time (see above), except that if the job fails, it is zero.
-                ['ru_wallclock', 'TEXT'],
+                ('ru_wallclock', 'TEXT'),
                 # ru_utime
                 # ru_stime
                 # ru_maxrss
@@ -341,30 +339,30 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
                 #
                 # project
                 # The project which was assigned to the job.
-                ['project', 'TEXT'],
+                ('project', 'TEXT'),
                 # department
                 # The department which was assigned to the job.
-                ['department', 'TEXT'],
+                ('department', 'TEXT'),
                 # granted_pe
                 # The parallel environment which was selected for the job.
-                ['granted_pe', 'TEXT'],
+                ('granted_pe', 'TEXT'),
                 # slots
                 # The number of slots which were dispatched to the job by the scheduler.
-                ['slots', 'TEXT'],
+                ('slots', 'TEXT'),
                 # task_number
                 # Array job task index number.
-                ['task_number', 'TEXT'],
+                ('task_number', 'TEXT'),
                 # cpu
                 # The CPU time usage in seconds.
                 # The value may be affected by the ACCT_RESERVED_USAGE execd parameter (see sge_conf(5)).
-                ['cpu', 'TEXT'],
+                ('cpu', 'TEXT'),
                 # mem
                 # The integral memory usage in Gbytes seconds.
                 # The value may be affected by the ACCT_RESERVED_USAGE execd parameter (see sge_conf(5)).
-                ['mem', 'TEXT'],
+                ('mem', 'TEXT'),
                 # io
                 # The amount of data transferred in input/output operations (if available, otherwise 0).
-                ['io', 'TEXT'],
+                ('io', 'TEXT'),
                 # category
                 # A string specifying the job category.
                 # This contains a space-separated pseudo options list for the sub, with components as follows:
@@ -406,22 +404,22 @@ class ProcessSGEAdaptor(DatabaseAdaptor):
                 #
                 #   -ar ar_id
                 #       The advance reservation into which the job was submitted (only if one was specified).
-                ['category', 'TEXT'],
+                ('category', 'TEXT'),
                 # iow
                 # The input/output wait time in seconds (if available, otherwise 0).
-                ['iow', 'TEXT'],
+                ('iow', 'TEXT'),
                 # pe_taskid
                 # If this identifier is set, the task was part of a parallel job, and was passed to Grid Engine
                 # via the qrsh -inherit interface.
-                ['pe_taskid', 'TEXT'],
+                ('pe_taskid', 'TEXT'),
                 # maxvmem
                 # The maximum vmem size in bytes.
                 # The value may be affected by the ACCT_RESERVED_USAGE execd parameter (see sge_conf(5)).
-                ['maxvmem', 'TEXT'],
+                ('maxvmem', 'TEXT'),
                 # arid
                 # Advance reservation identifier. If the job used the resources of an advance reservation,
                 # then this field contains a positive integer identifier; otherwise the value is '0' .
-                ['arid', 'TEXT'],
+                ('arid', 'TEXT'),
             ])
 
         return
@@ -441,7 +439,6 @@ def submit(stage, debug=0):
     @return:
     @rtype:
     """
-
     output = str()
     output += '#! /bin/bash\n'
     output += '\n'
@@ -630,7 +627,6 @@ def check_state(stage, debug=0):
     @return:
     @rtype:
     """
-
     if stage:
         pass
 

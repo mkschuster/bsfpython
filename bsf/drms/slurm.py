@@ -54,97 +54,96 @@ class ProcessSLURM(object):
     The instance variable names result from the SLURM command C{sacct --parsable --long}
 
     @ivar process_slurm_id: Primary key
-    @type process_slurm_id: int
+    @type process_slurm_id: int | None
     @ivar job_id: The number of the job or job step. It is in the form: job.jobstep
-    @type job_id: str
+    @type job_id: str | None
     @ivar job_id_raw: The number of the job or job step. It is in the form: I{job.jobstep}
-    @type job_id_raw: str
+    @type job_id_raw: str | None
     @ivar job_name: The name of the job or job step
-    @type job_name: str
+    @type job_name: str | None
     @ivar partition: Identifies the partition on which the job ran
-    @type partition: str
+    @type partition: str | None
     @ivar max_vm_size: Maximum virtual memory size of all tasks in job
-    @type max_vm_size: str
+    @type max_vm_size: str | None
     @ivar max_vm_size_node: The node on which the maximum virtual memory size occurred
-    @type max_vm_size_node: str
+    @type max_vm_size_node: str | None
     @ivar max_vm_size_task: The task identifier where the maximum virtual memory size occurred
-    @type max_vm_size_task: str
+    @type max_vm_size_task: str | None
     @ivar average_vm_size: Average virtual memory size of all tasks in job
-    @type average_vm_size: str
+    @type average_vm_size: str | None
     @ivar max_rss: Maximum resident set size of all tasks in job
-    @type max_rss: str
+    @type max_rss: str | None
     @ivar max_rss_node: The node on which the maximum resident set size occurred
-    @type max_rss_node: str
+    @type max_rss_node: str | None
     @ivar max_rss_task: The task identifier where the maximum resident set size occurred
-    @type max_rss_task: str
+    @type max_rss_task: str | None
     @ivar average_rss: Average resident set size of all tasks in job
-    @type average_rss: str
+    @type average_rss: str | None
     @ivar max_pages: Maximum number of page faults of all tasks in job
-    @type max_pages: str
+    @type max_pages: str | None
     @ivar max_pages_node: The node on which the maximum number of page faults occurred
-    @type max_pages_node: str
+    @type max_pages_node: str | None
     @ivar max_pages_task: The task identifier where the maximum number of page faults occurred
-    @type max_pages_task: str
+    @type max_pages_task: str | None
     @ivar average_pages: Average number of page faults of all tasks in job
-    @type average_pages: str
+    @type average_pages: str | None
     @ivar min_cpu: Minimum (system + user) CPU time of all tasks in job
-    @type min_cpu: str
+    @type min_cpu: str | None
     @ivar min_cpu_node: The node on which the minimum CPU time occurred
-    @type min_cpu_node: str
+    @type min_cpu_node: str | None
     @ivar min_cpu_task: The task identifier where the minimum CPU time occurred
-    @type min_cpu_task: str
+    @type min_cpu_task: str | None
     @ivar average_cpu: Average (system + user) CPU time of all tasks in job
-    @type average_cpu: str
+    @type average_cpu: str | None
     @ivar number_tasks: Total number of tasks in a job or step
-    @type number_tasks: str
+    @type number_tasks: str | None
     @ivar allocated_cpus: Count of allocated CPUs
-    @type allocated_cpus: str
+    @type allocated_cpus: str | None
     @ivar elapsed: The jobs elapsed time
-    @type elapsed: str
+    @type elapsed: str | None
     @ivar state: Displays the job status, or state
         Value can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or NODE_FAIL
-    @type state: str
+    @type state: str | None
     @ivar exit_code: The exit code returned by the job script or salloc, typically as set by the exit() function.
         Following the colon is the signal that caused the process to terminate if it was terminated by a signal.
-    @type exit_code: str
+    @type exit_code: str | None
     @ivar average_cpu_frequency: Average weighted CPU frequency of all tasks in job, in kHz
-    @type average_cpu_frequency: str
+    @type average_cpu_frequency: str | None
     @ivar requested_cpu_frequency_min: Requested minimum CPU frequency for the step, in kHz
-    @type requested_cpu_frequency_min: str
+    @type requested_cpu_frequency_min: str | None
     @ivar requested_cpu_frequency_max: Requested maximum CPU frequency for the step, in kHz
-    @type requested_cpu_frequency_max: str
+    @type requested_cpu_frequency_max: str | None
     @ivar requested_cpu_frequency_gov: Requested CPU governor
-    @type requested_cpu_frequency_gov: str
+    @type requested_cpu_frequency_gov: str | None
     @ivar requested_memory: Minimum required memory for the job, in MB
-    @type requested_memory: str
+    @type requested_memory: str | None
     @ivar consumed_energy: Total energy consumed by all tasks in job, in joules
-    @type consumed_energy: str
+    @type consumed_energy: str | None
     @ivar max_disk_read: Maximum number of bytes read by all tasks in job
-    @type max_disk_read: str
+    @type max_disk_read: str | None
     @ivar max_disk_read_node: The node on which the maximum number of bytes read occurred
-    @type max_disk_read_node: str
+    @type max_disk_read_node: str | None
     @ivar max_disk_read_task: The task identifier where the maximum number of bytes read occurred
-    @type max_disk_read_task: str
+    @type max_disk_read_task: str | None
     @ivar average_disk_read: Average number of bytes read by all tasks in job
-    @type average_disk_read: str
+    @type average_disk_read: str | None
     @ivar max_disk_write: Maximum number of bytes written by all tasks in job
-    @type max_disk_write: str
+    @type max_disk_write: str | None
     @ivar max_disk_write_node: The node on which the maximum number of bytes written occurred
-    @type max_disk_write_node: str
+    @type max_disk_write_node: str | None
     @ivar max_disk_write_task: The task identifier where the maximum number of bytes written occurred
-    @type max_disk_write_task: str
+    @type max_disk_write_task: str | None
     @ivar average_disk_write: Average number of bytes written by all tasks in job
-    @type average_disk_write: str
+    @type average_disk_write: str | None
     @ivar allocated_gres: Allocated generic consumable resources
-    @type allocated_gres: str
+    @type allocated_gres: str | None
     @ivar requested_gres: Requested generic consumable resources
-    @type requested_gres: str
+    @type requested_gres: str | None
     @ivar allocated_tres: Allocated trackable resources
-    @type allocated_tres: str
+    @type allocated_tres: str | None
     @ivar requested_tres: Requested trackable resources
-    @type requested_tres: str
+    @type requested_tres: str | None
     """
-
     def __init__(
             self,
             process_slurm_id=None,
@@ -194,99 +193,100 @@ class ProcessSLURM(object):
         """Initialise a C{bsf.drms.slurm.ProcessSLURM}.
 
         @param process_slurm_id:
-        @type process_slurm_id: int
+        @type process_slurm_id: int | None
         @param job_id: The number of the job or job step. It is in the form: I{job.jobstep}
-        @type job_id: str
+        @type job_id: str | None
         @param job_id_raw: The number of the job or job step. It is in the form: I{job.jobstep}
-        @type job_id_raw: str
+        @type job_id_raw: str | None
         @param job_name: The name of the job or job step
-        @type job_name: str
+        @type job_name: str | None
         @param partition: Identifies the partition on which the job ran
-        @type partition: str
+        @type partition: str | None
         @param max_vm_size: Maximum virtual memory size of all tasks in job
-        @type max_vm_size: str
+        @type max_vm_size: str | None
         @param max_vm_size_node: The node on which the maximum virtual memory size occurred
-        @type max_vm_size_node: str
+        @type max_vm_size_node: str | None
         @param max_vm_size_task: The task identifier where the maximum virtual memory size occurred
-        @type max_vm_size_task: str
+        @type max_vm_size_task: str | None
         @param average_vm_size: Average virtual memory size of all tasks in job
-        @type average_vm_size: str
+        @type average_vm_size: str | None
         @param max_rss: Maximum resident set size of all tasks in job
-        @type max_rss: str
+        @type max_rss: str | None
         @param max_rss_node: The node on which the maximum resident set size occurred
-        @type max_rss_node: str
+        @type max_rss_node: str | None
         @param max_rss_task: The task identifier where the maximum resident set size occurred
-        @type max_rss_task: str
+        @type max_rss_task: str | None
         @param average_rss: Average resident set size of all tasks in job
-        @type average_rss: str
+        @type average_rss: str | None
         @param max_pages: Maximum number of page faults of all tasks in job
-        @type max_pages: str
+        @type max_pages: str | None
         @param max_pages_node: The node on which the maximum number of page faults occurred
-        @type max_pages_node: str
+        @type max_pages_node: str | None
         @param max_pages_task: The task identifier where the maximum number of page faults occurred
-        @type max_pages_task: str
+        @type max_pages_task: str | None
         @param average_pages: Average number of page faults of all tasks in job
-        @type average_pages: str
+        @type average_pages: str | None
         @param min_cpu: Minimum (system + user) CPU time of all tasks in job
-        @type min_cpu: str
+        @type min_cpu: str | None
         @param min_cpu_node: The node on which the minimum CPU time occurred
-        @type min_cpu_node: str
+        @type min_cpu_node: str | None
         @param min_cpu_task: The task identifier where the minimum CPU time occurred
-        @type min_cpu_task: str
+        @type min_cpu_task: str | None
         @param average_cpu: Average (system + user) CPU time of all tasks in job
-        @type average_cpu: str
+        @type average_cpu: str | None
         @param number_tasks: Total number of tasks in a job or step
-        @type number_tasks: str
+        @type number_tasks: str | None
         @param allocated_cpus: Count of allocated CPUs
-        @type allocated_cpus: str
+        @type allocated_cpus: str | None
         @param elapsed: The jobs elapsed time
-        @type elapsed: str
+        @type elapsed: str | None
         @param state: Displays the job status, or state.
             Value can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or NODE_FAIL
-        @type state: str
+        @type state: str | None
         @param exit_code: The exit code returned by the job script or salloc, typically as set by the exit() function.
             Following the colon is the signal that caused the process to  terminate if it was terminated by a signal.
-        @type exit_code: str
+        @type exit_code: str | None
         @param average_cpu_frequency: Average weighted CPU frequency of all tasks in job, in kHz
-        @type average_cpu_frequency: str
+        @type average_cpu_frequency: str | None
         @param requested_cpu_frequency_min: Requested minimum CPU frequency for the step, in kHz
-        @type requested_cpu_frequency_min: str
+        @type requested_cpu_frequency_min: str | None
         @param requested_cpu_frequency_max: Requested maximum CPU frequency for the step, in kHz
-        @type requested_cpu_frequency_max: str
+        @type requested_cpu_frequency_max: str | None
         @param requested_cpu_frequency_gov: Requested CPU governor
-        @type requested_cpu_frequency_gov: str
+        @type requested_cpu_frequency_gov: str | None
         @param requested_memory: Minimum required memory for the job, in MB
-        @type requested_memory: str
+        @type requested_memory: str | None
         @param consumed_energy: Total energy consumed by all tasks in job, in joules
-        @type consumed_energy: str
+        @type consumed_energy: str | None
         @param max_disk_read: Maximum number of bytes read by all tasks in job
-        @type max_disk_read: str
+        @type max_disk_read: str | None
         @param max_disk_read_node: The node on which the maximum number of bytes read occurred
-        @type max_disk_read_node: str
+        @type max_disk_read_node: str | None
         @param max_disk_read_task: The task identifier where the maximum number of bytes read occurred
-        @type max_disk_read_task: str
+        @type max_disk_read_task: str | None
         @param average_disk_read: Average number of bytes read by all tasks in job
-        @type average_disk_read: str
+        @type average_disk_read: str | None
         @param max_disk_write: Maximum number of bytes written by all tasks in job
-        @type max_disk_write: str
+        @type max_disk_write: str | None
         @param max_disk_write_node: The node on which the maximum number of bytes written occurred
-        @type max_disk_write_node: str
+        @type max_disk_write_node: str | None
         @param max_disk_write_task: The task identifier where the maximum number of bytes written occurred
-        @type max_disk_write_task: str
+        @type max_disk_write_task: str | None
         @param average_disk_write: Average number of bytes written by all tasks in job
-        @type average_disk_write: str
+        @type average_disk_write: str | None
         @param allocated_gres: Allocated generic consumable resources
-        @type allocated_gres: str
+        @type allocated_gres: str | None
         @param requested_gres: Requested generic consumable resources
-        @type requested_gres: str
+        @type requested_gres: str | None
         @param allocated_tres: Allocated trackable resources
-        @type allocated_tres: str
+        @type allocated_tres: str | None
         @param requested_tres: Requested trackable resources
-        @type requested_tres: str
+        @type requested_tres: str | None
         @return:
         @rtype:
         """
         super(ProcessSLURM, self).__init__()
+
         self.process_slurm_id = process_slurm_id
         self.job_id = job_id
         self.job_id_raw = job_id_raw
@@ -359,137 +359,137 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
             table_name='process_slurm',
             column_definition=[
                 # Primary key
-                ['process_slurm_id', 'INTEGER PRIMARY KEY ASC AUTOINCREMENT'],
+                ('process_slurm_id', 'INTEGER PRIMARY KEY ASC AUTOINCREMENT'),
                 # JobID
                 # The number of the job or job step. It is in the form: job.jobstep.
-                ['job_id', 'TEXT UNIQUE'],
+                ('job_id', 'TEXT UNIQUE'),
                 # JobIDRaw
                 #
-                ['job_id_raw', 'TEXT'],
+                ('job_id_raw', 'TEXT'),
                 # JobName
                 # The name of the job or job step.
-                ['job_name', 'TEXT'],
+                ('job_name', 'TEXT'),
                 # Partition
                 # Identifies the partition on which the job ran.
-                ['partition', 'TEXT'],
+                ('partition', 'TEXT'),
                 # MaxVMSize
                 # Maximum virtual memory size of all tasks in job.
-                ['max_vm_size', 'TEXT'],
+                ('max_vm_size', 'TEXT'),
                 # MaxVMSizeNode
                 # The node on which the maximum virtual memory size occurred.
-                ['max_vm_size_node', 'TEXT'],
+                ('max_vm_size_node', 'TEXT'),
                 # MaxVMSizeTask
                 # The task identifier where the maximum virtual memory size occurred.
-                ['max_vm_size_task', 'TEXT'],
+                ('max_vm_size_task', 'TEXT'),
                 # AveVMSize
                 # Average virtual memory size of all tasks in job.
-                ['average_vm_size', 'TEXT'],
+                ('average_vm_size', 'TEXT'),
                 # MaxRSS
                 # Maximum resident set size of all tasks in job.
-                ['max_rss', 'TEXT'],
+                ('max_rss', 'TEXT'),
                 # MaxRSSNode
                 # The node on which the maximum resident set size occurred.
-                ['max_rss_node', 'TEXT'],
+                ('max_rss_node', 'TEXT'),
                 # MaxRSSTask
                 # The task identifier where the maximum resident set size occurred.
-                ['max_rss_task', 'TEXT'],
+                ('max_rss_task', 'TEXT'),
                 # AveRSS
                 # Average resident set size of all tasks in job.
-                ['average_rss', 'TEXT'],
+                ('average_rss', 'TEXT'),
                 # MaxPages
                 # Maximum number of page faults of all tasks in job.
-                ['max_pages', 'TEXT'],
+                ('max_pages', 'TEXT'),
                 # MaxPagesNode
                 # The node on which the maximum number of page faults occurred.
-                ['max_pages_node', 'TEXT'],
+                ('max_pages_node', 'TEXT'),
                 # MaxPagesTask
                 # The task identifier where the maximum number of page faults occurred.
-                ['max_pages_task', 'TEXT'],
+                ('max_pages_task', 'TEXT'),
                 # AvePages
                 # Average number of page faults of all tasks in job.
-                ['average_pages', 'TEXT'],
+                ('average_pages', 'TEXT'),
                 # MinCPU
                 # Minimum (system + user) CPU time of all tasks in job.
-                ['min_cpu', 'TEXT'],
+                ('min_cpu', 'TEXT'),
                 # MinCPUNode
                 # The node on which the minimum CPU time occurred.
-                ['min_cpu_node', 'TEXT'],
+                ('min_cpu_node', 'TEXT'),
                 # MinCPUTask
                 # The task identifier where the minimum CPU time occurred.
-                ['min_cpu_task', 'TEXT'],
+                ('min_cpu_task', 'TEXT'),
                 # AveCPU
                 # Average (system + user) CPU time of all tasks in job.
-                ['average_cpu', 'TEXT'],
+                ('average_cpu', 'TEXT'),
                 # NTasks
                 # Total number of tasks in a job or step.
-                ['number_tasks', 'TEXT'],
+                ('number_tasks', 'TEXT'),
                 # AllocCPUS
                 # Count of allocated CPUs. Equivalent to NCPUS.
-                ['allocated_cpus', 'TEXT'],
+                ('allocated_cpus', 'TEXT'),
                 # Elapsed
                 # The jobs elapsed time.
-                ['elapsed', 'TEXT'],
+                ('elapsed', 'TEXT'),
                 # State
                 # Displays the job status, or state.
                 # Value can be RUNNING, RESIZING, SUSPENDED, COMPLETED, CANCELLED, FAILED, TIMEOUT, PREEMPTED or
                 # NODE_FAIL.
-                ['state', 'TEXT'],
+                ('state', 'TEXT'),
                 # ExitCode
                 # The exit code returned by the job script or salloc, typically as set by the exit() function.
                 # Following the colon is the signal that caused the process to  terminate if it was terminated by
                 # a signal.
-                ['exit_code', 'TEXT'],
+                ('exit_code', 'TEXT'),
                 # AveCPUFreq
                 # Average weighted CPU frequency of all tasks in job, in kHz.
-                ['average_cpu_frequency', 'TEXT'],
+                ('average_cpu_frequency', 'TEXT'),
                 # ReqCPUFreqMin
                 # Requested minimum CPU frequency for the step, in kHz.
-                ['requested_cpu_frequency_min', 'TEXT'],
+                ('requested_cpu_frequency_min', 'TEXT'),
                 # ReqCPUFreqMax
                 # Requested maximum CPU frequency for the step, in kHz.
-                ['requested_cpu_frequency_max', 'TEXT'],
+                ('requested_cpu_frequency_max', 'TEXT'),
                 # ReqCPUFreqGov
                 # Requested CPU frequency governor.
-                ['requested_cpu_frequency_gov', 'TEXT'],
+                ('requested_cpu_frequency_gov', 'TEXT'),
                 # ReqMem
                 # Minimum required memory for the job, in MB.
-                ['requested_memory', 'TEXT'],
+                ('requested_memory', 'TEXT'),
                 # ConsumedEnergy
                 # Total energy consumed by all tasks in job, in joules.
-                ['consumed_energy', 'TEXT'],
+                ('consumed_energy', 'TEXT'),
                 # MaxDiskRead
                 # Maximum number of bytes read by all tasks in job.
-                ['max_disk_read', 'TEXT'],
+                ('max_disk_read', 'TEXT'),
                 # MaxDiskReadNode
                 # The node on which the maximum number of bytes read occurred.
-                ['max_disk_read_node', 'TEXT'],
+                ('max_disk_read_node', 'TEXT'),
                 # MaxDiskReadTask
                 # The task identifier where the maximum number of bytes read occurred.
-                ['max_disk_read_task', 'TEXT'],
+                ('max_disk_read_task', 'TEXT'),
                 # AveDiskRead
                 # Average number of bytes read by all tasks in job.
-                ['average_disk_read', 'TEXT'],
+                ('average_disk_read', 'TEXT'),
                 # MaxDiskWrite
                 # Maximum number of bytes written by all tasks in job.
-                ['max_disk_write', 'TEXT'],
+                ('max_disk_write', 'TEXT'),
                 # MaxDiskWriteNode
                 # The node on which the maximum number of bytes written occurred.
-                ['max_disk_write_node', 'TEXT'],
+                ('max_disk_write_node', 'TEXT'),
                 # MaxDiskWriteTask
                 # The task identifier where the maximum number of bytes written occurred.
-                ['max_disk_write_task', 'TEXT'],
+                ('max_disk_write_task', 'TEXT'),
                 # AveDiskWrite
                 # Average number of bytes written by all tasks in job.
-                ['average_disk_write', 'TEXT'],
+                ('average_disk_write', 'TEXT'),
                 # AllocGRES
                 # Names and counts of generic resources allocated.
-                ['allocated_gres', 'TEXT'],
+                ('allocated_gres', 'TEXT'),
                 # ReqGRES
-                ['requested_gres', 'TEXT'],
+                ('requested_gres', 'TEXT'),
                 # AllocTRES
-                ['allocated_tres', 'TEXT'],
+                ('allocated_tres', 'TEXT'),
                 # ReqTRES
-                ['requested_tres', 'TEXT'],
+                ('requested_tres', 'TEXT'),
             ])
 
         # NOTE: Experimentally patch the table definition for this DatabaseAdaptor.
@@ -616,11 +616,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
         @rtype: list[bsf.drms.slurm.ProcessSLURM]
         """
-        statement = self.statement_select(where_clause='job_name = ?')
-        parameters = list()
-        parameters.append(name)
-
-        return self.select(statement=statement, parameters=parameters)
+        return self.select(statement=self.statement_select(where_clause='job_name = ?'), parameters=[name])
 
     def select_all_by_state(self, state=None):
         """Select all C{bsf.drms.slurm.ProcessSLURM} objects by I{state}.
@@ -631,6 +627,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         @rtype: list[bsf.drms.slurm.ProcessSLURM]
         """
         parameters = list()
+
         if state is None:
             statement = self.statement_select(where_clause='state IS NULL')
         else:
@@ -643,13 +640,12 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         """Select all C{bsf.drms.slurm.ProcessSLURM} objects by a list of states.
 
         @param state_list: State
-        @type state_list: list[bsf.drms.slurm.ProcessSLURM.state]
+        @type state_list: list[str | unicode]
         @param negation: Negation i.e. SQL NOT IN
         @type negation: bool
         @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
         @rtype: list[bsf.drms.slurm.ProcessSLURM]
         """
-
         if negation:
             statement = self.statement_select(where_clause='state NOT IN (' + ','.join('?' * len(state_list)) + ')')
         else:
@@ -665,11 +661,7 @@ class ProcessSLURMAdaptor(DatabaseAdaptor):
         @return: Python C{list} of C{bsf.drms.slurm.ProcessSLURM} objects
         @rtype: bsf.drms.slurm.ProcessSLURM
         """
-        statement = self.statement_select(where_clause='job_id = ?')
-        parameters = list()
-        parameters.append(job_id)
-
-        object_list = self.select(statement=statement, parameters=parameters)
+        object_list = self.select(statement=self.statement_select(where_clause='job_id = ?'), parameters=[job_id])
         object_length = len(object_list)
 
         if object_length > 1:
@@ -753,9 +745,7 @@ def submit(stage, debug=0):
     @return:
     @rtype:
     """
-
     # Open or create a database.
-
     database_connection = DatabaseConnection(file_path=os.path.join(stage.working_directory, database_file_name))
     job_submission_adaptor = JobSubmissionAdaptor(database_connection=database_connection)
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
@@ -975,7 +965,6 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
     @return:
     @rtype:
     """
-
     thread_lock.acquire(True)
     if debug > 0:
         print('[' + datetime.datetime.now().isoformat() + ']',
@@ -1077,9 +1066,7 @@ def check_state(stage, debug=0):
     @return:
     @rtype:
     """
-
     # Open or create a database.
-
     database_connection = DatabaseConnection(file_path=os.path.join(stage.working_directory, database_file_name))
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
