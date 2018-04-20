@@ -41,7 +41,7 @@ import time
 import warnings
 
 import bsf.argument
-from bsf.standards import Configuration
+import bsf.standards
 
 
 class Command(object):
@@ -570,12 +570,12 @@ class Command(object):
         @return:
         @rtype:
         """
-        assert isinstance(configuration, Configuration)
+        assert isinstance(configuration, bsf.standards.Configuration)
         assert isinstance(section, str)
 
         if not configuration.config_parser.has_section(section=section):
             warnings.warn(
-                'Section ' + repr(section) + ' not defined in Configuration files:\n' +
+                'Section ' + repr(section) + ' not defined in configuration files:\n' +
                 repr(configuration.from_file_path_list),
                 UserWarning)
 

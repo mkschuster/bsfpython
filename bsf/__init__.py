@@ -42,9 +42,9 @@ import urllib
 import uuid
 import warnings
 
-from bsf.ngs import Collection, Sample
-from bsf.process import Command, Executable, RunnableStep
-from bsf.standards import Configuration, Default, Operator
+import bsf.ngs
+import bsf.process
+import bsf.standards
 
 
 def _comma_separated_to_list(value_string):
@@ -115,8 +115,8 @@ class Analysis(object):
         """
 
         return cls.from_configuration(
-            configuration=Configuration.from_file_path_list(
-                file_path_list=[Configuration.global_file_path, config_path]))
+            configuration=bsf.standards.Configuration.from_file_path_list(
+                file_path_list=[bsf.standards.Configuration.global_file_path, config_path]))
 
     @classmethod
     def from_configuration(cls, configuration):
@@ -128,7 +128,7 @@ class Analysis(object):
         @rtype: bsf.Analysis
         """
 
-        assert isinstance(configuration, Configuration)
+        assert isinstance(configuration, bsf.standards.Configuration)
 
         analysis = cls(configuration=configuration)
 
@@ -137,7 +137,7 @@ class Analysis(object):
 
         analysis.set_configuration(
             configuration=analysis.configuration,
-            section=Configuration.section_from_instance(instance=analysis))
+            section=bsf.standards.Configuration.section_from_instance(instance=analysis))
 
         return analysis
 
@@ -203,9 +203,9 @@ class Analysis(object):
         super(Analysis, self).__init__()
 
         if configuration is None:
-            self.configuration = Configuration()
+            self.configuration = bsf.standards.Configuration()
         else:
-            assert isinstance(configuration, Configuration)
+            assert isinstance(configuration, bsf.standards.Configuration)
             self.configuration = configuration
 
         if project_name is None:
@@ -275,9 +275,9 @@ class Analysis(object):
             self.runnable_dict = runnable_dict
 
         if collection is None:
-            self.collection = Collection()
+            self.collection = bsf.ngs.Collection()
         else:
-            assert isinstance(collection, Collection)
+            assert isinstance(collection, bsf.ngs.Collection)
             self.collection = collection
 
         if sample_list is None:
@@ -381,7 +381,7 @@ class Analysis(object):
         @return:
         @rtype:
         """
-        assert isinstance(sample, Sample)
+        assert isinstance(sample, bsf.ngs.Sample)
 
         if sample not in self.sample_list:
             self.sample_list.append(sample)
@@ -415,7 +415,7 @@ class Analysis(object):
 
         # A "bsf.Stage" section specifies defaults for all Stage objects of an Analysis.
 
-        section = Configuration.section_from_instance(instance=stage)
+        section = bsf.standards.Configuration.section_from_instance(instance=stage)
         stage.set_configuration(configuration=self.configuration, section=section)
 
         if self.debug > 1:
@@ -424,7 +424,7 @@ class Analysis(object):
         # A "bsf.Analysis.Stage" or "bsf.analyses.*.Stage" pseudo-class section specifies
         # Analysis-specific or sub-class-specific options for the Stage, respectively.
 
-        section = '.'.join((Configuration.section_from_instance(instance=self), 'Stage'))
+        section = '.'.join((bsf.standards.Configuration.section_from_instance(instance=self), 'Stage'))
         stage.set_configuration(configuration=self.configuration, section=section)
 
         if self.debug > 1:
@@ -433,7 +433,7 @@ class Analysis(object):
         # A "bsf.Analysis.Stage.name" or "bsf.analyses.*.Stage.name" section specifies defaults
         # for a particular Stage of an Analysis or sub-class, respectively.
 
-        section = '.'.join((Configuration.section_from_instance(instance=self), 'Stage', stage.name))
+        section = '.'.join((bsf.standards.Configuration.section_from_instance(instance=self), 'Stage', stage.name))
         stage.set_configuration(configuration=self.configuration, section=section)
 
         if self.debug > 1:
@@ -454,7 +454,7 @@ class Analysis(object):
         @return:
         @rtype:
         """
-        assert isinstance(configuration, Configuration)
+        assert isinstance(configuration, bsf.standards.Configuration)
         assert isinstance(section, str)
 
         if not configuration.config_parser.has_section(section=section):
@@ -511,13 +511,14 @@ class Analysis(object):
         @rtype:
         """
         # TODO: Phase out this method.
-        # Once all accessory scripts are converted to Runnable and RunnableStep objects this method becomes redundant.
-        assert isinstance(command, Command)
+        # Once all accessory scripts are converted to Runnable and bsf.process.RunnableStep objects,
+        # this method becomes redundant.
+        assert isinstance(command, bsf.process.Command)
 
-        section = Configuration.section_from_instance(instance=command)
+        section = bsf.standards.Configuration.section_from_instance(instance=command)
 
-        # For plain Executable objects append the value of the
-        # Executable.program to make the configuration section more meaningful.
+        # For plain bsf.process.Executable objects append the value of the
+        # bsf.process.Executable.program to make the configuration section more meaningful.
 
         if section == 'bsf.process.Executable':
             section += '.'
@@ -553,7 +554,7 @@ class Analysis(object):
             @return:
             @rtype:
             """
-            assert isinstance(command, Command)
+            assert isinstance(command, bsf.process.Command)
             assert isinstance(prefix, str)
 
             if command.name:
@@ -571,11 +572,11 @@ class Analysis(object):
 
             return
 
-        assert isinstance(runnable_step, RunnableStep)
+        assert isinstance(runnable_step, bsf.process.RunnableStep)
 
         # Initially, the configuration section prefix is based on the Analysis class name and the Analysis Stage.name.
 
-        prefix = Configuration.section_from_instance(instance=self)
+        prefix = bsf.standards.Configuration.section_from_instance(instance=self)
 
         _set_configuration(command=runnable_step, section=prefix)
 
@@ -607,10 +608,10 @@ class Analysis(object):
             raise Exception('A Runnable with name ' + repr(runnable.name) +
                             ' does not exist in the Analysis with name ' + repr(self.project_name) + '.')
 
-        executable = Executable(name=runnable.name, program=Runnable.runner_script)
+        executable = bsf.process.Executable(name=runnable.name, program=Runnable.runner_script)
         executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
 
-        # Only submit the Executable if the status file does not exist already.
+        # Only submit the bsf.process.Executable if the status file does not exist already.
         if os.path.exists(runnable.absolute_runnable_status_file_path(success=True)):
             executable.submit = False
 
@@ -640,15 +641,15 @@ class Analysis(object):
 
         self.cache_directory = self.configuration.get_absolute_path(
             file_path=self.cache_directory,
-            default_path=Default.absolute_cache())
+            default_path=bsf.standards.Default.absolute_cache())
 
         self.input_directory = self.configuration.get_absolute_path(
             file_path=self.input_directory,
-            default_path=Default.absolute_samples())
+            default_path=bsf.standards.Default.absolute_samples())
 
         self.output_directory = self.configuration.get_absolute_path(
             file_path=self.output_directory,
-            default_path=Default.absolute_projects())
+            default_path=bsf.standards.Default.absolute_projects())
 
         # As a safety measure, to prevent creation of rogue directory paths, the output_directory has to exist.
 
@@ -676,19 +677,19 @@ class Analysis(object):
                     raise
 
         if not self.e_mail:
-            self.e_mail = Operator.get_e_mail()
+            self.e_mail = bsf.standards.Operator.get_e_mail()
             if not self.e_mail:
                 raise Exception("An 'Analysis' requires an 'e_mail' configuration option.")
 
         if self.sas_file:
-            # Populate a Collection from a SampleAnnotationSheet.
+            # Populate a bsf.ngs.Collection from a SampleAnnotationSheet.
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
 
             # NOTE: Do no longer search for configuration files and sample annotation sheets in the project directory.
             # if not os.path.isabs(self.sas_file) and not os.path.exists(self.sas_file):
             #     self.sas_file = os.path.join(self.project_directory, self.sas_file)
 
-            self.collection = Collection.from_sas_path(
+            self.collection = bsf.ngs.Collection.from_sas_path(
                 file_path=self.input_directory,
                 file_type='Automatic',
                 name=self.project_name,
@@ -699,8 +700,8 @@ class Analysis(object):
                 print(self, 'Collection name:', repr(self.collection.name))
                 print(self.collection.trace(1))
         else:
-            # Create an empty Collection.
-            self.collection = Collection()
+            # Create an empty bsf.ngs.Collection.
+            self.collection = bsf.ngs.Collection()
 
         return
 
@@ -764,7 +765,7 @@ class Analysis(object):
         @rtype: list[str | unicode]
         """
 
-        default = Default.get_global_default()
+        default = bsf.standards.Default.get_global_default()
 
         if creator is None or not creator:
             creator = getpass.getuser()
@@ -836,13 +837,13 @@ class Analysis(object):
         @rtype: list[str | unicode]
         """
 
-        default = Default.get_global_default()
+        default = bsf.standards.Default.get_global_default()
 
         if not contact:
-            contact = Operator.get_contact()
+            contact = bsf.standards.Operator.get_contact()
 
         if not institution:
-            institution = Operator.get_institution()
+            institution = bsf.standards.Operator.get_institution()
 
         if not url_protocol:
             url_protocol = default.url_protocol
@@ -1025,7 +1026,7 @@ class Analysis(object):
 
         if not os.path.isdir(self.genome_directory):
             answer = raw_input(
-                'Output (genome) directory ' + repr(self.genome_directory) + ' does not exist.\n'
+                'Output (genome) directory ' + repr(self.genome_directory) + ' does not exist.\n' +
                 'Create? [Y/n] ')
 
             if not answer or answer == 'Y' or answer == 'y':
@@ -1047,7 +1048,8 @@ class Analysis(object):
 
         The link will be placed in the specified sub directory and contain
         the project name followed by a 128 bit hexadecimal UUID string.
-        If not specified, the sub directory defaults to the Default.url_relative_projects instance variable.
+        If not specified, the sub directory defaults to the bsf.standards.Default.url_relative_projects
+        instance variable.
 
         @param sub_directory: C{bsf.Analysis}-specific directory
         @type sub_directory: str
@@ -1055,7 +1057,7 @@ class Analysis(object):
         @rtype: str
         @raise Exception: Public HTML path does not exist
         """
-        default = Default.get_global_default()
+        default = bsf.standards.Default.get_global_default()
 
         if sub_directory is None:
             sub_directory = default.url_relative_projects
@@ -1066,7 +1068,7 @@ class Analysis(object):
 
         if not os.path.isdir(html_path):
             raise Exception(
-                'The public HTML directory path ' + repr(html_path) + ' does not exist.\n'
+                'The public HTML directory path ' + repr(html_path) + ' does not exist.\n' +
                 'Please check the optional sub-directory name ' + repr(sub_directory) + '.')
 
         # The target_path consists of the absolute public_html directory,
@@ -1102,7 +1104,7 @@ class Analysis(object):
             # A symbolic link already exists.
             # Ask the user to re-create the symbolic link.
             answer = raw_input(
-                'Public HTML link ' + repr(self.project_directory) + ' to ' + repr(final_path) + ' exists.\n'
+                'Public HTML link ' + repr(self.project_directory) + ' to ' + repr(final_path) + ' exists.\n' +
                 'Re-create? [y/N] ')
 
             if not answer or answer.upper() == 'N':
@@ -1123,7 +1125,7 @@ class Analysis(object):
             # A symbolic link does not exist.
             # Ask the user to create a symbolic link.
             answer = raw_input(
-                'Public HTML link ' + repr(self.project_directory) + ' to ' + repr(final_path) + ' does not exist.\n'
+                'Public HTML link ' + repr(self.project_directory) + ' to ' + repr(final_path) + ' does not exist.\n' +
                 'Create? [Y/n] ')
 
             if not answer or answer.upper() == 'Y':
@@ -1161,7 +1163,7 @@ class Analysis(object):
         @rtype: str
         """
 
-        default = Default.get_global_default()
+        default = bsf.standards.Default.get_global_default()
 
         if options_dict is None:
             options_dict = dict()
@@ -1219,7 +1221,7 @@ class Analysis(object):
             # The track hub URL requires the link name, i.e. the link path base name, to be inserted.
             link_name = os.path.basename(link_path.rstrip('/'))
             options_dict['hubUrl'] = '/'.join((
-                Default.url_absolute_projects(),
+                bsf.standards.Default.url_absolute_projects(),
                 link_name,
                 '_'.join((self.prefix, self.ucsc_name_hub))))
 
@@ -1316,7 +1318,7 @@ class Analysis(object):
             file_handle.close()
 
         # Resolve an eventual alias for the UCSC genome assembly name in "genome_version/prefix_tracks.txt".
-        genome_version_dict[Default.genome_alias_ucsc(genome_version=self.genome_version)] = \
+        genome_version_dict[bsf.standards.Default.genome_alias_ucsc(genome_version=self.genome_version)] = \
             '/'.join((self.genome_version, '_'.join((prefix, self.ucsc_name_tracks))))
 
         str_list = list()
@@ -1406,7 +1408,7 @@ class Analysis(object):
         for runnable in self.runnable_dict.values():
             runnable.to_pickler_path()
 
-        # Submit all Executable objects of all Stage objects.
+        # Submit all bsf.process.Executable objects of all Stage objects.
 
         submit = 0
 
@@ -1677,7 +1679,7 @@ class Stage(object):
         @rtype:
         """
 
-        assert isinstance(configuration, Configuration)
+        assert isinstance(configuration, bsf.standards.Configuration)
         assert isinstance(section, str)
 
         if not configuration.config_parser.has_section(section=section):
@@ -1762,7 +1764,7 @@ class Stage(object):
         @rtype: bsf.process.Executable
         """
 
-        assert isinstance(executable, Executable)
+        assert isinstance(executable, bsf.process.Executable)
 
         self.executable_list.append(executable)
 
@@ -1972,7 +1974,7 @@ class Runnable(object):
         if runnable_step is None:
             return
 
-        assert isinstance(runnable_step, RunnableStep)
+        assert isinstance(runnable_step, bsf.process.RunnableStep)
 
         self.runnable_step_list.append(runnable_step)
 
@@ -2058,11 +2060,11 @@ class Runnable(object):
         """
 
         if self.cache_directory:
-            return Configuration.get_absolute_path(
+            return bsf.standards.Configuration.get_absolute_path(
                 file_path=self.get_relative_cache_directory_path,
                 default_path=self.cache_directory)
         else:
-            return Configuration.get_absolute_path(
+            return bsf.standards.Configuration.get_absolute_path(
                 file_path=self.get_relative_cache_directory_path,
                 default_path=self.working_directory)
 
@@ -2155,7 +2157,7 @@ class Runnable(object):
         @return: Status file path
         @rtype: str
         """
-        assert isinstance(runnable_step, RunnableStep)
+        assert isinstance(runnable_step, bsf.process.RunnableStep)
 
         if success:
             return '_'.join((self.name, runnable_step.name, 'completed.txt'))
@@ -2174,7 +2176,7 @@ class Runnable(object):
         @return:
         @rtype:
         """
-        assert isinstance(runnable_step, RunnableStep)
+        assert isinstance(runnable_step, bsf.process.RunnableStep)
 
         status_path = self.runnable_step_status_file_path(runnable_step=runnable_step, success=success)
         open(status_path, 'w').close()
@@ -2191,7 +2193,7 @@ class Runnable(object):
         @return:
         @rtype:
         """
-        assert isinstance(runnable_step, RunnableStep)
+        assert isinstance(runnable_step, bsf.process.RunnableStep)
 
         if runnable_step is None:
             return

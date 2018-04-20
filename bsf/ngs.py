@@ -33,8 +33,8 @@ import stat
 import warnings
 import weakref
 
-from bsf.annotation import AnnotationSheet
-from bsf.standards import Configuration
+import bsf.annotation
+import bsf.standards
 
 
 class NextGenerationBase(object):
@@ -693,8 +693,8 @@ class PairedReads(NextGenerationBase):
             if self.reads_1.file_type == 'CASAVA':
                 if reads.read == 'R1':
                     raise Exception(
-                        'PairedReads reads_1 has already been defined.\n'
-                        '  reads_1: ' + repr(self.reads_1.file_path) + '\n'
+                        'PairedReads reads_1 has already been defined.\n' +
+                        '  reads_1: ' + repr(self.reads_1.file_path) + '\n' +
                         '  reads:   ' + repr(reads.file_path))
                 elif reads.read == 'R2':
                     self.reads_2 = reads
@@ -719,8 +719,8 @@ class PairedReads(NextGenerationBase):
                     return True
                 elif reads.read == 'R2':
                     raise Exception(
-                        'PairedReads reads_2 has already been defined.\n'
-                        '  reads_2: ' + repr(self.reads_2.file_path) + '\n'
+                        'PairedReads reads_2 has already been defined.\n' +
+                        '  reads_2: ' + repr(self.reads_2.file_path) + '\n' +
                         '  reads:   ' + repr(reads.file_path))
                 else:
                     raise Exception('Unknown Reads read attribute: ' + repr(reads.read))
@@ -1801,7 +1801,7 @@ class Collection(NextGenerationBase):
             is_new_file_path = False
             if _key in row_dict and row_dict[_key]:
                 new_reads.file_path = row_dict[_key]
-                new_reads.file_path = Configuration.get_absolute_path(
+                new_reads.file_path = bsf.standards.Configuration.get_absolute_path(
                     file_path=new_reads.file_path,
                     default_path=collection.file_path)
                 # Check for a non-matching, i.e. new "file_path" instance variable.
@@ -2153,7 +2153,9 @@ class Collection(NextGenerationBase):
         else:
             return self.add_processed_run_folder(
                 prf=ProcessedRunFolder.from_file_path(
-                    file_path=Configuration.get_absolute_path(file_path=file_path, default_path=self.file_path),
+                    file_path=bsf.standards.Configuration.get_absolute_path(
+                        file_path=file_path,
+                        default_path=self.file_path),
                     file_type=file_type))
 
     def get_all_processed_run_folders(self):
@@ -2563,7 +2565,7 @@ class SampleGroup(object):
         return group_dict
 
 
-class SampleAnnotationSheet(AnnotationSheet):
+class SampleAnnotationSheet(bsf.annotation.AnnotationSheet):
     """The C{bsf.ngs.SampleAnnotationSheet} class represents a Comma-Separated Value (CSV) table of sample information
     after running the C{bsf.analyses.illumina_to_bam_tools.IlluminaToBamTools.BamIndexDecoder} C{bsf.Analysis}.
 
@@ -2593,30 +2595,30 @@ class SampleAnnotationSheet(AnnotationSheet):
     _test_methods = {
         # File Type
         'ProcessedRunFolder Name': [
-            AnnotationSheet.check_alphanumeric,
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
         'Project Name': [
-            AnnotationSheet.check_alphanumeric,
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
         'Project Size': [
-            AnnotationSheet.check_numeric,
+            bsf.annotation.AnnotationSheet.check_numeric,
         ],
         'Sample Name': [
-            AnnotationSheet.check_alphanumeric,
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
         'PairedReads Index 1': [
-            AnnotationSheet.check_sequence,
+            bsf.annotation.AnnotationSheet.check_sequence,
         ],
         'PairedReads Index 2': [
-            AnnotationSheet.check_sequence,
+            bsf.annotation.AnnotationSheet.check_sequence,
         ],
         # PairedReads ReadGroup
         'Reads1 Name': [
-            AnnotationSheet.check_alphanumeric,
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
         # Reads1 File
         'Reads2 Name': [
-            AnnotationSheet.check_alphanumeric,
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
         # Reads2 File
     }
