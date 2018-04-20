@@ -37,8 +37,8 @@ import xml.etree.ElementTree
 
 import dateutil.tz
 
-from bsf.annotation import AnnotationSheet
-from bsf.standards import Configuration, Default
+import bsf.annotation
+import bsf.standards
 
 
 class Adaptors(object):
@@ -81,7 +81,7 @@ class Adaptors(object):
         @return: C{bsf.illumina.Adaptors}
         @rtype: bsf.illumina.Adaptors
         """
-        annotation_sheet = AnnotationSheet.from_file_path(
+        annotation_sheet = bsf.annotation.AnnotationSheet.from_file_path(
             file_path=file_path,
             file_type='excel_tab',
             name='Illumina Adaptors')
@@ -1012,24 +1012,24 @@ class RunFolder(object):
     def absolute_file_path(name):
         """Return the absolute file path for an Illumina Run Folder (IRF) name.
 
-        This method first checks for existence in C{Default.absolute_illumina_run()}, before
-        checking in C{Default.absolute_illumina_sav()}.
+        This method first checks for existence in C{bsf.standards.Default.absolute_illumina_run()}, before
+        checking in C{bsf.standards.Default.absolute_illumina_sav()}.
         @param name: Illumina Run Folder (IRF) name
         @type name: str | unicode
         @return: Absolute file path
         @rtype: str | unicode | None
         """
         # Check the Illumina Run Folder directory.
-        file_path = Configuration.get_absolute_path(
+        file_path = bsf.standards.Configuration.get_absolute_path(
             file_path=name,
-            default_path=Default.absolute_illumina_run())
+            default_path=bsf.standards.Default.absolute_illumina_run())
         if os.path.exists(file_path):
             return file_path
 
         # Check the Illumina Sequence Analysis Viewer directory.
-        file_path = Configuration.get_absolute_path(
+        file_path = bsf.standards.Configuration.get_absolute_path(
             file_path=name,
-            default_path=Default.absolute_illumina_sav())
+            default_path=bsf.standards.Default.absolute_illumina_sav())
         if os.path.exists(file_path):
             return file_path
 
@@ -1461,7 +1461,7 @@ class RunFolder(object):
                     entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
                     print('  Remaining entries:', entry_name_list)
         else:
-            # All other platforms have a flat list of matrix.txt files.
+            # All other instruments have a flat list of matrix.txt files.
             for read in range(0 + 1, self.run_information.get_read_number + 1):
                 # Process read matrix files.
                 # s_1_matrix.txt
@@ -1824,7 +1824,7 @@ class RunFolder(object):
         # Check the IRF/Data/Intensities/BaseCalls/SampleSheet.csv file.
 
         if rta in ('1.18.54',):
-            # Only the MiSeq platform has this file.
+            # Only the MiSeq instrument has this file.
             _entry_name = 'SampleSheet.csv'
             if _entry_name in _directory_dict:
                 del _directory_dict[_entry_name]
@@ -1944,7 +1944,7 @@ class RunFolder(object):
             debug=debug)
 
         if rta in ('2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
-            # The HiSeq 3000/4000 platform has:
+            # The HiSeq 3000/4000 instrument has:
             # s.locs
 
             # Process the IRF/Data/Intensities/s.locs file.
@@ -1955,7 +1955,7 @@ class RunFolder(object):
             else:
                 print('Missing file', os.path.join(_directory_path, _entry_name))
         else:
-            # The HiSeq 2000 platform has:
+            # The HiSeq 2000 instrument has:
             # config.xml
             # L00[1-8]
             # Offsets
@@ -2007,7 +2007,7 @@ class RunFolder(object):
                                 if self._is_missing_image_analysis_tile(lane=lane, tile=tile_name):
                                     continue
                                 if rta in ('1.18.54',):
-                                    # The MiSeq platform uses locs files. Sigh.
+                                    # The MiSeq instrument uses locs files. Sigh.
                                     # s_1_1101.locs
                                     # s_1_2119.locs
                                     _entry_name = 's_{}_{:d}{:d}{:02d}.locs'.format(lane, surface, swath, tile)
@@ -2027,7 +2027,7 @@ class RunFolder(object):
                 # Process IRF/Data/Intensities/L00[1-8]/C[0-9]+.1 directories.
 
                 if rta not in ('1.18.54', '1.18.64', '2.4.11'):
-                    # Exclude the MiSeq, NextSeq and HiSeq 2500 platforms,
+                    # Exclude the MiSeq, NextSeq and HiSeq 2500 instruments,
                     # as they do no longer store cycle-specific sub directories with
                     # cluster intensity files (*.cif), error map (*.errorMap) and
                     # full width at half maximum (*.FWHMMap) files.
@@ -2152,7 +2152,7 @@ class RunFolder(object):
         rta = self.run_parameters.get_real_time_analysis_version
 
         if rta not in ('1.18.54',):
-            # Check the IRF/Data/TileStatus/ directory that only exist on the MiSeq platform.
+            # Check the IRF/Data/TileStatus/ directory that only exist on the MiSeq instrument.
             return
 
         _directory_name = 'TileStatus'
@@ -2228,7 +2228,7 @@ class RunFolder(object):
             debug=debug)
 
         if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
-            # Exclude the HiSeq 3000/4000 and NextSeq platforms.
+            # Exclude the HiSeq 3000/4000 and NextSeq instruments.
             # Check the IRF/Data/ImageSize.dat file.
             _entry_name = 'ImageSize.dat'
             if _entry_name in _directory_dict:
@@ -2318,24 +2318,24 @@ class RunFolder(object):
         ]
 
         if rta in ('1.18.54',):
-            # Only on the MiSeq platform.
+            # Only on the MiSeq instrument.
             _file_name_list.append('IndexMetricsOut.bin')
 
         if rta in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
-            # HiSeq 3000/4000 and NextSeq platforms
+            # HiSeq 3000/4000 and NextSeq instruments.
             _file_name_list.append('EmpiricalPhasingMetricsOut.bin')
             _file_name_list.append('EventMetricsOut.bin')
             _file_name_list.append('PFGridMetricsOut.bin')
             _file_name_list.append('RegistrationMetricsOut.bin')
 
         if rta in ('2.7.3', '2.7.6', '2.7.7'):
-            # HiSeq 3000/4000 platform, excluding RTA 2.5.2 version
+            # HiSeq 3000/4000 instrument, excluding RTA 2.5.2 version.
             _file_name_list.append('ColorMatrixMetricsOut.bin')
             _file_name_list.append('FWHMGridMetricsOut.bin')
             _file_name_list.append('StaticRunMetricsOut.bin')
 
         if rta in ('v3.3.3',):
-            # NovaSeq platform
+            # NovaSeq instrument.
             _file_name_list.append('AlignmentMetricsOut.bin')
             _file_name_list.append('BasecallingMetricsOut.bin')
             _file_name_list.append('EmpiricalPhasingMetricsOut.bin')
@@ -2425,7 +2425,7 @@ class RunFolder(object):
             _file_name_list.append('ImageMetricsOut.bin')
 
         if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
-            # Other than HiSeq 3000/4000, NextSeq and NovaSeq platforms
+            # Other than HiSeq 3000/4000, NextSeq and NovaSeq instruments.
             _file_name_list.append('ControlMetricsOut.bin')
 
         self._check_files(
@@ -2522,19 +2522,19 @@ class RunFolder(object):
         """ @type _file_name_list: list[str | unicode] """
 
         if rta in ('1.18.54',):
-            # The MiSeq platform uses the reagent kit barcode.
+            # The MiSeq instrument uses the reagent kit barcode.
             _file_name_list.append(
                 self.run_parameters.element_tree.find(path='ReagentKitRFIDTag/SerialNumber').text + '.xml')
             _file_name_list.append('RunState.xml')
         elif rta in ('2.4.11',):
-            # The NextSeq platform uses the reagent kit barcode.
+            # The NextSeq instrument uses the reagent kit barcode.
             _file_name_list.append(
                 self.run_parameters.element_tree.find(path='ReagentKitSerial').text + '.xml')
         else:
             _file_name_list.append(flow_cell_barcode + '.xml')
 
             if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
-                # The HiSeq 3000/4000 and NovaSeq platforms do not have a 'FCID_RunState.xml' file.
+                # The HiSeq 3000/4000 and NovaSeq instruments do not have a 'FCID_RunState.xml' file.
                 _file_name_list.append(flow_cell_barcode + '_RunState.xml')
 
         self._check_files(
@@ -2567,7 +2567,7 @@ class RunFolder(object):
         rta = self.run_parameters.get_real_time_analysis_version
 
         if rta in ('2.4.11',):
-            # Not on the NextSeq platform
+            # Not on the NextSeq instrument.
             return
 
         flow_cell_barcode = self.run_parameters.get_flow_cell_barcode.lower()
@@ -2647,7 +2647,7 @@ class RunFolder(object):
                             for base in ('a', 'c', 'g', 't'):
                                 # Process swath image and zprof files.
                                 if rta in ('1.18.54',):
-                                    # The MiSeq platform does not have swath image and zprof files.
+                                    # The MiSeq instrument does not have swath image and zprof files.
                                     pass
                                 else:
                                     # c6nk1anxx_c001_l1_t001_bot_s1_a.jpg
@@ -2663,7 +2663,7 @@ class RunFolder(object):
 
                                     _entry_name += '.zprof'
                                     if rta in ('2.5.2', '2.7.3', '2.7.6', '2.7.7') and base in ('c', 'g', 't'):
-                                        # The HiSeq 3000/4000 platform does not have swath files for bases c, g and t.
+                                        # The HiSeq 3000/4000 instrument does not have swath files for bases c, g and t.
                                         pass
                                     else:
                                         if _entry_name in cycle_dict:
@@ -2673,10 +2673,10 @@ class RunFolder(object):
 
                                 # Process tile image files.
                                 if rta in ('1.18.54', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
-                                    # The HiSeq 3000/4000 and MiSeq platforms use lower case bases.
+                                    # The HiSeq 3000/4000 and MiSeq instruments use lower case bases.
                                     pass
                                 else:
-                                    # The HiSeq 2000 platform uses upper case bases.
+                                    # The HiSeq 2000 instrument uses upper case bases.
                                     base = base.upper()
                                 for tile in range(0 + 1, fcl.tile_count + 1):
                                     # s_1_1101_A.jpg
@@ -2768,7 +2768,7 @@ class RunFolder(object):
         # Check the IRF/PeriodicSaveRates/ directory.
 
         if rta not in ('1.18.54', 'v3.3.3'):
-            # Not for MiSeq and NovaSeq platforms.
+            # Not for MiSeq and NovaSeq instruments.
             self._check_periodic_save_rates(
                 directory_dict=_directory_dict,
                 directory_path=_directory_path,
@@ -2797,35 +2797,36 @@ class RunFolder(object):
         ]
 
         if rta in ('2.4.11', 'v3.3.3'):
-            # On the NextSeq and NovaSeq platforms
+            # On the NextSeq and NovaSeq instruments.
             _file_name_list.append('RunParameters.xml')
         else:
-            # On all but the NextSeq platform
+            # On all but the NextSeq instrument.
             _file_name_list.append('runParameters.xml')
 
         if rta in ('1.18.54',):
-            # The MiSeq platform has a sample annotation sheet.
+            # The MiSeq instrument has a sample annotation sheet.
             _file_name_list.append('SampleSheet.csv')
 
         if rta not in ('1.18.54', '2.4.11', 'v3.3.3'):
-            # Not for MiSeq, NextSeq and NovaSeq platforms.
+            # Not for MiSeq, NextSeq and NovaSeq instruments.
             _file_name_list.append('First_Base_Report.htm')
 
         if rta in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
-            # On HiSeq 3000/4000 and NextSeq platforms.
+            # On HiSeq 3000/4000 and NextSeq instruments.
             _file_name_list.append('RTAConfiguration.xml')
             _file_name_list.append('RTALogs')  # directory
             for read_number in range(0 + 1, len(self.run_information.run_information_read_list) + 1):
                 _file_name_list.append('RTARead{:d}Complete.txt'.format(read_number))
             if rta not in ('2.4.11',):
-                # Not on the NextSeq platform
+                # Not on the NextSeq instrument.
                 _file_name_list.append('SequencingComplete.txt')
         elif rta in ('v3.3.3',):
             _file_name_list.append('CopyComplete.txt')
             _file_name_list.append('RTA3.cfg')
+            _file_name_list.append('RunComplete.txt')
             _file_name_list.append('SequenceComplete.txt')
         else:
-            # Other than HiSeq 3000/4000 platforms.
+            # Other than HiSeq 3000/4000 and NovaSeq instruments.
             _file_name_list.append('Basecalling_Netcopy_complete.txt')
             _file_name_list.append('ImageAnalysis_Netcopy_complete.txt')
             for read_number in range(0 + 1, len(self.run_information.run_information_read_list) + 1):
