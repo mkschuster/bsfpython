@@ -27,16 +27,15 @@ A package of classes and methods supporting analyses to archive and restore Illu
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import errno
 import os
 
-from bsf import Analysis, FilePath, Runnable
-from bsf.illumina import RunFolder, RunFolderNotComplete
-from bsf.process import Command, RunnableStep, RunnableStepSleep
-from bsf.standards import Default
+import bsf
+import bsf.illumina
+import bsf.process
+import bsf.standards
 
 
-class IlluminaRunFolderArchive(Analysis):
+class IlluminaRunFolderArchive(bsf.Analysis):
     """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} class represents the logic to archive
     an Illumina Run Folder in a format suitable for magnetic tape libraries.
 
@@ -55,13 +54,15 @@ class IlluminaRunFolderArchive(Analysis):
     @type stage_name_archive_folder: str
     @cvar compress_archive_files: Compress archive files with GNU Zip
     @type compress_archive_files: bool
+    @ivar archive_directory: Archive directory
+    @type archive_directory: str | unicode | None
     @ivar run_directory: File path to an I{Illumina Run Folder}
-    @type run_directory: str | unicode
+    @type run_directory: str | unicode | None
     @ivar experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
         Illumina Run Folder parameters
-    @type experiment_name: str
+    @type experiment_name: str | None
     @ivar force: Force processing of incomplete Illumina Run Folders
-    @type force: bool
+    @type force: bool | None
     """
 
     name = 'Illumina Run Folder Archive Analysis'
@@ -143,7 +144,7 @@ class IlluminaRunFolderArchive(Analysis):
             archive_directory=None,
             run_directory=None,
             experiment_name=None,
-            force=False):
+            force=None):
         """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.Analysis}.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -173,18 +174,17 @@ class IlluminaRunFolderArchive(Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param archive_directory: Archive directory
-        @type archive_directory: str | unicode
+        @type archive_directory: str | unicode | None
         @param run_directory: File path to an I{Illumina Run Folder}
-        @type run_directory: str | unicode
+        @type run_directory: str | unicode | None
         @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
             Illumina Run Folder parameters
-        @type experiment_name: str
+        @type experiment_name: str | None
         @param force: Force processing of incomplete Illumina Run Folders
-        @type force: bool
+        @type force: bool | None
         @return:
         @rtype:
         """
-
         super(IlluminaRunFolderArchive, self).__init__(
             configuration=configuration,
             project_name=project_name,
@@ -201,44 +201,12 @@ class IlluminaRunFolderArchive(Analysis):
 
         # Sub-class specific ...
 
-        if archive_directory is None:
-            self.archive_directory = str()
-        else:
-            self.archive_directory = archive_directory
-
-        if run_directory is None:
-            self.run_directory = str()
-        else:
-            self.run_directory = run_directory
-
-        if experiment_name is None:
-            self.experiment_name = str()
-        else:
-            self.experiment_name = experiment_name
-
-        if force is None:
-            self.force = False
-        else:
-            assert isinstance(force, bool)
-            self.force = force
-
-        self._run_name = None
-        """ @type _run_name: str | unicode | None """
+        self.archive_directory = archive_directory
+        self.run_directory = run_directory
+        self.experiment_name = experiment_name
+        self.force = force
 
         return
-
-    @property
-    def get_run_name(self):
-        """Get the Illumina Run Folder name.
-
-        @return: Illumina Run Folder name
-        @rtype: str | unicode
-        """
-
-        if self._run_name is None:
-            self._run_name = os.path.basename(self.run_directory)
-
-        return self._run_name
 
     def set_configuration(self, configuration, section):
         """Set instance variables of a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.Analysis}
@@ -253,7 +221,6 @@ class IlluminaRunFolderArchive(Analysis):
         @return:
         @rtype:
         """
-
         super(IlluminaRunFolderArchive, self).set_configuration(configuration=configuration, section=section)
 
         # Sub-class specific ...
@@ -287,30 +254,35 @@ class IlluminaRunFolderArchive(Analysis):
 
         Archive an I{Illumina Run Folder} in a format suitable for magnetic tape libraries.
 
+        Pre-Process Illumina Run Folder:
             1. Check if the Illumina Run has finished by testing for an
                 RTAComplete.txt file.
             2. Check if an archive process is already running by testing for an
                 archive directory.
-            3. Create an archive directory.
-            4. Reset the file permissions for all directories via the find utility.
+            3. Reset the file permissions for all directories via the find utility.
                 find . -type d -execdir chmod u=rwx,g=rx,o= {} \+
-            5. Reset the file permissions for all regular files via the find utility.
+            4. Reset the file permissions for all regular files via the find utility.
                 find . -type f -execdir chmod u=rw,g=r,o= {} \+
-            6. Compress all files in the IRF/Logs/ directory.
+            5. Compress all files in the IRF/Logs/ directory.
                 gzip --best --recursive Logs/
-            7. Compress all files in the IRF/Data/RTALogs/ directory if it exists.
+            6. Compress all files in the IRF/Data/RTALogs/ directory if it exists.
                 gzip --best --recursive IRF/Data/RTALogs/
-            8. Compress all IRF/Data/Intensities/BaseCalls/L00[1-8]/C1.1/*.bcl files.
+            7. Compress all files in the IRF/RTALogs/ directory if it exists.
+                gzip --best --recursive IRF/RTALogs/
+            8. Create the archive directory.
+        Lane specific:
+            1. Compress all IRF/Data/Intensities/BaseCalls/L00[1-8]/C1.1/*.bcl files.
                 find IRF/Data/Intensities/BaseCalls/L00[1-8] -name '*.bcl' -execdir gzip --best --verbose {} \+
-            9. Run the GNU Tar utility over each IRF/Data/Intensities/L00[1-8]/ directory,
+            2. Run the GNU Tar utility over each IRF/Data/Intensities/L00[1-8]/ directory,
                but exclude compressed cluster locations (*.clocs) files.
-            10. Run the GNU Tar utility over the remaining Illumina Run folder,
-                but exclude directories with cluster intensity (*.cif) files.
-            11. Calculate a MD5 checksum.
+            3. Calculate a MD5 checksum.
+        Illumina Run Folder-specific:
+            1. Run the GNU Tar utility over the remaining Illumina Run folder,
+               but exclude directories with cluster intensity (*.cif) files.
+            2. Calculate a MD5 checksum.
         @return:
         @rtype:
         """
-
         # Define an Illumina Run Folder directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
         # expand any environment variables i.e. on UNIX ${NAME} or $NAME
@@ -322,7 +294,12 @@ class IlluminaRunFolderArchive(Analysis):
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
-            default_path=Default.absolute_illumina_run())
+            default_path=bsf.standards.Default.absolute_illumina_run())
+
+        # The Illumina Run Folder name would also be available from the bsf.illumina.RunFolder.get_name property below,
+        # but using the file path provides more flexibility outside of the fixed runParameters.xml configuration file.
+
+        run_name = os.path.basename(self.run_directory)
 
         # Check that the Illumina Run Folder exists.
 
@@ -336,7 +313,7 @@ class IlluminaRunFolderArchive(Analysis):
         # Alternatively, require force to start archiving.
 
         if not (os.path.exists(path=os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
-            raise RunFolderNotComplete(
+            raise bsf.illumina.RunFolderNotComplete(
                 'The Illumina run directory {!r} is not complete.'.format(self.run_directory))
 
         # Define an Illumina Run Folder archive directory.
@@ -348,12 +325,8 @@ class IlluminaRunFolderArchive(Analysis):
             self.archive_directory = self.configuration.get_absolute_path(
                 file_path=self.archive_directory,
                 default_path=os.path.dirname(self.run_directory))
-
-            # Raise an Exception if the archive directory does not exist at this stage.
-            if not os.path.isdir(self.archive_directory):
-                raise Exception('The archive directory {!r} does not exist.'.format(self.archive_directory))
         else:
-            # If an archive directory has not been defined, simply append 'archive' to the run directory.
+            # If an archive directory has not been defined, simply append 'archive' to the run directory path.
             self.archive_directory = '_'.join((self.run_directory, 'archive'))
 
         # Check that the directory above the archive directory exists to avoid creation of rogue paths.
@@ -363,18 +336,11 @@ class IlluminaRunFolderArchive(Analysis):
                             format(os.path.dirname(self.archive_directory)))
 
         # 2. Check if a process is already running by testing for an archive directory.
-        # 3. Create the archive directory.
 
         if os.path.isdir(self.archive_directory) and not self.force:
             raise Exception('An archive directory {!r} exists already.'.format(self.archive_directory))
-        else:
-            try:
-                os.makedirs(self.archive_directory)
-            except OSError as exception:
-                if exception.errno != errno.EEXIST:
-                    raise
 
-        irf = RunFolder.from_file_path(file_path=self.run_directory)
+        irf = bsf.illumina.RunFolder.from_file_path(file_path=self.run_directory)
 
         # The experiment name (e.g. BSF_0000) is used as part of the project_name.
         # Read it from the configuration file or from the
@@ -382,6 +348,8 @@ class IlluminaRunFolderArchive(Analysis):
 
         if not self.experiment_name:
             self.experiment_name = irf.run_parameters.get_experiment_name
+            if not self.experiment_name:
+                raise Exception('An experiment_name has not been defined.')
 
         # The project name is a concatenation of the experiment name and the Illumina flow cell identifier.
         # In case it has not been specified in the configuration file, read it from the
@@ -400,7 +368,7 @@ class IlluminaRunFolderArchive(Analysis):
         # Pre-process on folder level.
 
         runnable_pre_process_folder = self.add_runnable(
-            runnable=Runnable(
+            runnable=bsf.Runnable(
                 name=self.get_prefix_pre_process(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
@@ -409,25 +377,22 @@ class IlluminaRunFolderArchive(Analysis):
             stage=stage_pre_process_folder,
             runnable=runnable_pre_process_folder)
 
-        # executable_pre_process_folder.dependencies.extend()
-
-        # TODO:
         # 0. Check whether Picard ExtractIlluminaBarcodes has written any
         # s_<lane>_<tile>_barcode.txt(.gz) files into the BaseCalls directory.
         # Keeping them is rather pointless and they should be removed.
         # http://picard.sourceforge.net/command-line-overview.shtml#ExtractIlluminaBarcodes
 
-        # 4. Reset all file permissions for directories.
+        # 3. Reset all file permissions for directories.
 
         reset_directory_permissions = runnable_pre_process_folder.add_runnable_step(
-            runnable_step=RunnableStep(
+            runnable_step=bsf.process.RunnableStep(
                 name='reset_directory_permissions',
                 program='find',
-                sub_command=Command(
+                sub_command=bsf.process.Command(
                     program=self.run_directory,
-                    sub_command=Command(
+                    sub_command=bsf.process.Command(
                         program='-execdir',
-                        sub_command=Command(
+                        sub_command=bsf.process.Command(
                             program='chmod')))))
 
         find_command = reset_directory_permissions.sub_command  # directory option
@@ -438,17 +403,17 @@ class IlluminaRunFolderArchive(Analysis):
         chmod_command.arguments.append('{}')
         chmod_command.arguments.append('+')
 
-        # 5. Reset all file permissions for regular files.
+        # 4. Reset all file permissions for regular files.
 
         reset_file_permissions = runnable_pre_process_folder.add_runnable_step(
-            runnable_step=RunnableStep(
+            runnable_step=bsf.process.RunnableStep(
                 name='reset_file_permissions',
                 program='find',
-                sub_command=Command(
+                sub_command=bsf.process.Command(
                     program=self.run_directory,
-                    sub_command=Command(
+                    sub_command=bsf.process.Command(
                         program='-execdir',
-                        sub_command=Command(
+                        sub_command=bsf.process.Command(
                             program='chmod')))))
 
         find_command = reset_file_permissions.sub_command  # directory option
@@ -459,12 +424,12 @@ class IlluminaRunFolderArchive(Analysis):
         chmod_command.arguments.append('{}')
         chmod_command.arguments.append('+')
 
-        # 6. Compress all files in the IRF/Logs/ and IRF/Logs/IALogs/ directories.
+        # 5. Compress all files in the IRF/Logs/ and IRF/Logs/IALogs/ directories.
         #    The NextSeq compresses into a single Logs.zip file.
 
         if irf.run_parameters.get_instrument_type not in ('NextSeq',):
             compress_logs = runnable_pre_process_folder.add_runnable_step(
-                runnable_step=RunnableStep(
+                runnable_step=bsf.process.RunnableStep(
                     name='compress_logs',
                     program='gzip'))
 
@@ -472,13 +437,14 @@ class IlluminaRunFolderArchive(Analysis):
             compress_logs.add_switch_long(key='recursive')
             compress_logs.arguments.append(os.path.join(self.run_directory, 'Logs'))
 
-        # 7. Compress all files in the IRF/Data/RTALogs/ directory if it exists.
+        # 6. Compress all files in the IRF/Data/RTALogs/ directory if it exists.
         #    It does not on the HiSeq 3000/4000 and NovaSeq platforms.
 
         if os.path.isdir(os.path.join(self.run_directory, 'Data', 'RTALogs')):
-            compress_rta_logs = runnable_pre_process_folder.add_runnable_step(runnable_step=RunnableStep(
-                name='compress_rta_logs',
-                program='gzip'))
+            compress_rta_logs = runnable_pre_process_folder.add_runnable_step(
+                runnable_step=bsf.process.RunnableStep(
+                    name='compress_rta_logs',
+                    program='gzip'))
 
             compress_rta_logs.add_switch_long(key='best')
             compress_rta_logs.add_switch_long(key='recursive')
@@ -488,13 +454,21 @@ class IlluminaRunFolderArchive(Analysis):
         #    It only exists on the HiSeq 3000/4000 platform.
 
         if os.path.isdir(os.path.join(self.run_directory, 'RTALogs')):
-            compress_rta_logs = runnable_pre_process_folder.add_runnable_step(runnable_step=RunnableStep(
-                name='compress_rta_logs',
-                program='gzip'))
+            compress_rta_logs = runnable_pre_process_folder.add_runnable_step(
+                runnable_step=bsf.process.RunnableStep(
+                    name='compress_rta_logs',
+                    program='gzip'))
 
             compress_rta_logs.add_switch_long(key='best')
             compress_rta_logs.add_switch_long(key='recursive')
             compress_rta_logs.arguments.append(os.path.join(self.run_directory, 'RTALogs'))
+
+        # 8. Create the archive directory.
+
+        runnable_pre_process_folder.add_runnable_step(
+            runnable_step=bsf.process.RunnableStepMakeDirectory(
+                name='make_directory',
+                directory_path=self.archive_directory))
 
         # Process per lane.
 
@@ -515,7 +489,7 @@ class IlluminaRunFolderArchive(Analysis):
             # Process the IRF/Data/Intensities/BaseCalls/ directory.
 
             runnable_base_calls = self.add_runnable(
-                runnable=Runnable(
+                runnable=bsf.Runnable(
                     name=self.get_prefix_base_calls(project_name=self.project_name, lane=str(lane_int)),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
@@ -526,19 +500,19 @@ class IlluminaRunFolderArchive(Analysis):
             # Set a dependency on the executable_pre_process_folder
             executable_base_calls.dependencies.append(executable_pre_process_folder.name)
 
-            # 8. Compress all base call (*.bcl) files.
+            # 1. Compress all base call (*.bcl) files.
 
             compress_base_calls = runnable_base_calls.add_runnable_step(
-                runnable_step=RunnableStep(
+                runnable_step=bsf.process.RunnableStep(
                     name='compress_base_calls',
                     program='find',
-                    sub_command=Command(
+                    sub_command=bsf.process.Command(
                         program=os.path.join(
                             self.run_directory, 'Data', 'Intensities', 'BaseCalls',
                             'L{:03d}'.format(lane_int)),
-                        sub_command=Command(
+                        sub_command=bsf.process.Command(
                             program='-execdir',
-                            sub_command=Command(
+                            sub_command=bsf.process.Command(
                                 program='gzip')))))
 
             find_command = compress_base_calls.sub_command  # directory option
@@ -557,7 +531,7 @@ class IlluminaRunFolderArchive(Analysis):
                 # Process IRF/Data/Intensities/L00[1-8]/ directories if they exist.
 
                 runnable_intensities = self.add_runnable(
-                    runnable=Runnable(
+                    runnable=bsf.Runnable(
                         name=self.get_prefix_intensities(project_name=self.project_name, lane=str(lane_int)),
                         code_module='bsf.runnables.generic',
                         working_directory=self.project_directory))
@@ -566,13 +540,13 @@ class IlluminaRunFolderArchive(Analysis):
                     runnable=runnable_intensities)
                 executable_intensities.dependencies.append(executable_pre_process_folder.name)
 
-                # 9. Run GNU Tar over the IRF/Data/Intensities/L00[1-8]/ directories, but exclude
+                # 2. Run GNU Tar over the IRF/Data/Intensities/L00[1-8]/ directories, but exclude
                 # (compressed) cluster locations (*.clocs and *.locs) files
                 # that are essential for extracting base calls and must be archived with the
                 # IRF/Data/Intensities/BaseCalls/ directory.
                 # Since *_pos.txt files are in IRF/Data/Intensities/, they do not need excluding.
 
-                archive_file_path = '_'.join((self.get_run_name, 'L{:03d}'.format(lane_int)))
+                archive_file_path = '_'.join((run_name, 'L{:03d}'.format(lane_int)))
                 if self.compress_archive_files:
                     archive_file_path = '.'.join((archive_file_path, 'tar', 'gz'))
                 else:
@@ -580,7 +554,7 @@ class IlluminaRunFolderArchive(Analysis):
                 archive_file_path = os.path.join(self.archive_directory, archive_file_path)
 
                 archive_intensities = runnable_intensities.add_runnable_step(
-                    runnable_step=RunnableStep(
+                    runnable_step=bsf.process.RunnableStep(
                         name='archive_intensities',
                         program='tar'))
 
@@ -618,10 +592,10 @@ class IlluminaRunFolderArchive(Analysis):
                         'L{:03d}'.format(lane_int),
                         'C*'))
 
-                # Calculate a MD5 checksum.
+                # 3. Calculate a MD5 checksum.
 
                 md5_sum = runnable_intensities.add_runnable_step(
-                    runnable_step=RunnableStep(
+                    runnable_step=bsf.process.RunnableStep(
                         name='md5sum',
                         program='md5sum',
                         stdout_path=archive_file_path + '.md5'))
@@ -633,7 +607,7 @@ class IlluminaRunFolderArchive(Analysis):
         # Process the whole run folder.
 
         runnable_archive_folder = self.add_runnable(
-            runnable=Runnable(
+            runnable=bsf.Runnable(
                 name=self.get_prefix_archive_folder(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
@@ -642,10 +616,10 @@ class IlluminaRunFolderArchive(Analysis):
             runnable=runnable_archive_folder)
         executable_archive_folder.dependencies.extend(archive_folder_dependencies)
 
-        # 10. Run the GNU Tar utility over the remaining Illumina Run folder,
+        # 1. Run the GNU Tar utility over the remaining Illumina Run folder,
         #     but exclude directories with cluster intensity (*.cif) files.
 
-        archive_file_path = self.get_run_name
+        archive_file_path = run_name
         if self.compress_archive_files:
             archive_file_path = '.'.join((archive_file_path, 'tar', 'gz'))
         else:
@@ -653,7 +627,7 @@ class IlluminaRunFolderArchive(Analysis):
         archive_file_path = os.path.join(self.archive_directory, archive_file_path)
 
         archive_folder = runnable_archive_folder.add_runnable_step(
-            runnable_step=RunnableStep(
+            runnable_step=bsf.process.RunnableStep(
                 name='archive_folder',
                 program='tar'))
 
@@ -667,10 +641,10 @@ class IlluminaRunFolderArchive(Analysis):
 
         archive_folder.arguments.append(os.path.basename(self.run_directory))
 
-        # 11. Calculate a MD5 checksum.
+        # 2. Calculate a MD5 checksum.
 
         md5_sum = runnable_archive_folder.add_runnable_step(
-            runnable_step=RunnableStep(
+            runnable_step=bsf.process.RunnableStep(
                 name='md5_sum',
                 program='md5sum',
                 stdout_path=archive_file_path + '.md5'))
@@ -682,8 +656,24 @@ class IlluminaRunFolderArchive(Analysis):
         return
 
 
-class FilePathIlluminaRunFolderRestore(FilePath):
+class FilePathIlluminaRunFolderRestore(bsf.FilePath):
+    """The C{bsf.analyses.illumina_run_folder.FilePathIlluminaRunFolderRestore} models files in an archive directory.
+
+    Attributes:
+    @ivar folder: Folder GNU Tar archive file
+    @type folder: str | unicode
+    @ivar intensities: Intensities GNU Tar archive file
+    @type intensities: str | unicode
+    """
+
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.illumina_run_folder.FilePathIlluminaRunFolderRestore} object.
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathIlluminaRunFolderRestore, self).__init__(prefix=prefix)
 
         self.folder = '_'.join((prefix, 'Folder.tar'))
@@ -693,7 +683,7 @@ class FilePathIlluminaRunFolderRestore(FilePath):
         return
 
 
-class IlluminaRunFolderRestore(Analysis):
+class IlluminaRunFolderRestore(bsf.Analysis):
     """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} class represents the logic to restore an
     Illumina Run Folder from a format suitable for magnetic tape libraries.
 
@@ -711,16 +701,13 @@ class IlluminaRunFolderRestore(Analysis):
     @cvar maximum_lane_number: Maximum number of lanes
     @type maximum_lane_number: int
     @ivar archive_directory: File path to an archive directory
-    @type archive_directory: str | unicode
+    @type archive_directory: str | unicode | None
     @ivar illumina_directory: File path to the directory of I{Illumina Run Folder} directories
-    @type illumina_directory: str | unicode
-    @ivar experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
-        Illumina Run Folder parameters
-    @type experiment_name: str
+    @type illumina_directory: str | unicode | None
     @ivar extract_intensities: Extract cluster intensity file (*.cif) directories
-    @type extract_intensities: bool
+    @type extract_intensities: bool | None
     @ivar force: Force processing of incomplete Illumina Run Folders
-    @type force: bool
+    @type force: bool | None
     """
 
     name = 'Illumina Run Folder Restore Analysis'
@@ -789,7 +776,6 @@ class IlluminaRunFolderRestore(Analysis):
             sample_list=None,
             archive_directory=None,
             illumina_directory=None,
-            experiment_name=None,
             extract_intensities=False,
             force=False):
         """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} C{bsf.Analysis}.
@@ -821,20 +807,16 @@ class IlluminaRunFolderRestore(Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param archive_directory: File path to an archive directory
-        @type archive_directory: str | unicode
+        @type archive_directory: str | unicode | None
         @param illumina_directory: File path to the directory of I{Illumina Run Folder} directories
-        @type illumina_directory: str | unicode
-        @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
-            Illumina Run Folder parameters
-        @type experiment_name: str
+        @type illumina_directory: str | unicode | None
         @param extract_intensities: Extract cluster intensity file (*.cif) directories
-        @type extract_intensities: bool
+        @type extract_intensities: bool | None
         @param force: Force processing of incomplete Illumina Run Folders
-        @type force: bool
+        @type force: bool | None
         @return:
         @rtype:
         """
-
         super(IlluminaRunFolderRestore, self).__init__(
             configuration=configuration,
             project_name=project_name,
@@ -851,68 +833,12 @@ class IlluminaRunFolderRestore(Analysis):
 
         # Sub-class specific ...
 
-        if archive_directory is None:
-            self.archive_directory = str()
-        else:
-            self.archive_directory = archive_directory
-
-        if illumina_directory is None:
-            self.illumina_directory = str()
-        else:
-            self.illumina_directory = illumina_directory
-
-        if experiment_name is None:
-            self.experiment_name = str()
-        else:
-            self.experiment_name = experiment_name
-
-        if extract_intensities is None:
-            self.extract_intensities = False
-        else:
-            assert isinstance(extract_intensities, bool)
-            self.extract_intensities = extract_intensities
-
-        if force is None:
-            self.force = False
-        else:
-            assert isinstance(force, bool)
-            self.force = force
-
-        self._run_directory_name = None
-        """ @type _run_directory_name: str | unicode """
-
-        self._run_directory_path = None
-        """ @type _run_directory_path: str | unicode """
+        self.archive_directory = archive_directory
+        self.illumina_directory = illumina_directory
+        self.extract_intensities = extract_intensities
+        self.force = force
 
         return
-
-    @property
-    def get_run_directory_name(self):
-        """Get the Illumina Run Folder name.
-
-        @return: Illumina Run Folder name
-        @rtype: str | unicode
-        """
-
-        if self._run_directory_name is None:
-            self.archive_directory = os.path.normpath(self.archive_directory)
-            # Strip the '_archive' suffix i.e. the last 8 characters to get the run directory.
-            self._run_directory_name = os.path.basename(self.archive_directory)[:-8]
-
-        return self._run_directory_name
-
-    @property
-    def get_run_directory_path(self):
-        """Get the Illumina Run Folder path.
-
-        @return: Illumina Run Folder path
-        @rtype: str | unicode
-        """
-
-        if self._run_directory_path is None:
-            self._run_directory_path = os.path.join(self.illumina_directory, self.get_run_directory_name)
-
-        return self._run_directory_path
 
     def set_configuration(self, configuration, section):
         """Set instance variables of a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} C{bsf.Analysis}
@@ -926,7 +852,6 @@ class IlluminaRunFolderRestore(Analysis):
         @return:
         @rtype:
         """
-
         super(IlluminaRunFolderRestore, self).set_configuration(configuration=configuration, section=section)
 
         # Sub-class specific ...
@@ -943,12 +868,6 @@ class IlluminaRunFolderRestore(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.illumina_directory = configuration.config_parser.get(section=section, option=option)
 
-        # Get the experiment name.
-
-        option = 'experiment_name'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.experiment_name = configuration.config_parser.get(section=section, option=option)
-
         option = 'expand_intensities'
         if configuration.config_parser.has_option(section=section, option=option):
             self.extract_intensities = configuration.config_parser.getboolean(section=section, option=option)
@@ -960,7 +879,7 @@ class IlluminaRunFolderRestore(Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRunnable} C{bsf.Analysis}.
+        """Run this C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} C{bsf.Analysis}.
 
         Restore an Illumina Run Folder from a format suitable for magnetic tape libraries.
             1. Extract the IRF_Folder.tar file.
@@ -969,12 +888,18 @@ class IlluminaRunFolderRestore(Analysis):
         @return:
         @rtype:
         """
+        if not self.archive_directory:
+            raise Exception('The archive_directory has not been defined.')
+
+        self.archive_directory = self.configuration.get_absolute_path(
+            file_path=self.archive_directory)
 
         if not os.path.isdir(self.archive_directory):
             raise Exception('The Illumina run archive {!r} does not exist.'.format(self.archive_directory))
 
-        if not self.illumina_directory:
-            self.illumina_directory = Default.absolute_illumina_run()
+        self.illumina_directory = self.configuration.get_absolute_path(
+            file_path=self.illumina_directory,
+            default_path=bsf.standards.Default.absolute_illumina_run())
 
         if not os.path.isdir(self.illumina_directory):
             raise Exception('The directory of Illumina Run Folder directories {!r} does not exist.'.
@@ -982,19 +907,23 @@ class IlluminaRunFolderRestore(Analysis):
 
         # The Illumina Run Folder must *not* already exist unless the force option has been set.
 
-        if os.path.exists(self.get_run_directory_path) and not self.force:
-            raise Exception('The Illumina Run Folder directory {!r} exists already.'.
-                            format(self.get_run_directory_path))
+        run_directory_name = os.path.basename(self.archive_directory)[:-8]
+        run_directory_path = os.path.join(self.illumina_directory, run_directory_name)
 
+        if os.path.exists(run_directory_path) and not self.force:
+            raise Exception('The Illumina Run Folder directory {!r} exists already.'.
+                            format(run_directory_path))
+
+        # A FilePath object cannot be used, because instruments have a varable number of lanes.
         file_path_dict = {
-            'folder': '_'.join((self.get_run_directory_name, 'Folder.tar')),
-            'intensities': '_'.join((self.get_run_directory_name, 'Intensities.tar')),
+            'folder': '_'.join((run_directory_name, 'Folder.tar')),
+            'intensities': '_'.join((run_directory_name, 'Intensities.tar')),
         }
 
         # Add additional, lane-specific keys.
         for lane_int in range(0 + 1, self.maximum_lane_number + 1):
             file_path_dict['L{:03d}'.format(lane_int)] = \
-                '_'.join((self.get_run_directory_name, 'L{:03d}.tar'.format(lane_int)))
+                '_'.join((run_directory_name, 'L{:03d}.tar'.format(lane_int)))
 
         # At least the IRF_Folder.tar, IRF_Intensities.tar and IRF_L001.tar files have to be there.
 
@@ -1016,7 +945,7 @@ class IlluminaRunFolderRestore(Analysis):
         # Extract the IRF_Folder.tar file.
 
         runnable_extract_folder = self.add_runnable(
-            runnable=Runnable(
+            runnable=bsf.Runnable(
                 name=self.get_prefix_extract_archive(project_name=self.project_name, lane='folder'),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
@@ -1025,7 +954,7 @@ class IlluminaRunFolderRestore(Analysis):
             runnable=runnable_extract_folder)
 
         extract_folder = runnable_extract_folder.add_runnable_step(
-            runnable_step=RunnableStep(
+            runnable_step=bsf.process.RunnableStep(
                 name='extract_folder',
                 program='tar'))
 
@@ -1038,7 +967,7 @@ class IlluminaRunFolderRestore(Analysis):
         # Compress all files in the IRF/Logs and IRF/Data/RTALogs directories.
 
         runnable_compress_logs = self.add_runnable(
-            runnable=Runnable(
+            runnable=bsf.Runnable(
                 name=self.get_prefix_compress_logs(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
@@ -1048,39 +977,44 @@ class IlluminaRunFolderRestore(Analysis):
         executable_compress_logs.dependencies.append(executable_extract_folder.name)
 
         compress_logs = runnable_compress_logs.add_runnable_step(
-            runnable_step=RunnableStep(
+            runnable_step=bsf.process.RunnableStep(
                 name='compress_logs',
                 program='gzip'))
 
         compress_logs.add_switch_long(key='best')
         compress_logs.add_switch_long(key='recursive')
-        compress_logs.arguments.append(os.path.join(self.get_run_directory_path, 'Logs'))
+        compress_logs.arguments.append(os.path.join(run_directory_path, 'Logs'))
 
         compress_rta_logs = runnable_compress_logs.add_runnable_step(
-            runnable_step=RunnableStep(
+            runnable_step=bsf.process.RunnableStep(
                 name='compress_rta_logs',
                 program='gzip'))
 
         compress_rta_logs.add_switch_long(key='best')
         compress_rta_logs.add_switch_long(key='recursive')
-        compress_rta_logs.arguments.append(os.path.join(self.get_run_directory_path, 'Data', 'RTALogs'))
+        compress_rta_logs.arguments.append(os.path.join(run_directory_path, 'Data', 'RTALogs'))
 
         # Extract the IRF_intensities.tar file.
 
-        runnable_extract_intensities = self.add_runnable(runnable=Runnable(
-            name=self.get_prefix_extract_archive(project_name=self.project_name, lane='intensities'),
-            code_module='bsf.runnables.generic',
-            working_directory=self.project_directory))
+        runnable_extract_intensities = self.add_runnable(
+            runnable=bsf.Runnable(
+                name=self.get_prefix_extract_archive(project_name=self.project_name, lane='intensities'),
+                code_module='bsf.runnables.generic',
+                working_directory=self.project_directory))
         executable_extract_intensities = self.set_stage_runnable(
             stage=stage_extract_archive,
             runnable=runnable_extract_intensities)
 
         # Sleep 60 seconds to allow the first process to create all directories.
-        runnable_extract_intensities.add_runnable_step(runnable_step=RunnableStepSleep(name='sleep', sleep_time=60.0))
+        runnable_extract_intensities.add_runnable_step(
+            runnable_step=bsf.process.RunnableStepSleep(
+                name='sleep',
+                sleep_time=60.0))
 
-        extract_intensities = runnable_extract_intensities.add_runnable_step(runnable_step=RunnableStep(
-            name='extract_intensities',
-            program='tar'))
+        extract_intensities = runnable_extract_intensities.add_runnable_step(
+            runnable_step=bsf.process.RunnableStep(
+                name='extract_intensities',
+                program='tar'))
 
         extract_intensities.add_switch_long(key='extract')
         extract_intensities.add_option_long(key='directory', value=self.illumina_directory)
@@ -1096,20 +1030,25 @@ class IlluminaRunFolderRestore(Analysis):
             if not os.path.exists(os.path.join(self.archive_directory, file_path_dict['L{:03d}'.format(lane_int)])):
                 continue
 
-            runnable_extract_lane = self.add_runnable(runnable=Runnable(
-                name=self.get_prefix_extract_archive(project_name=self.project_name, lane=str(lane_int)),
-                code_module='bsf.runnables.generic',
-                working_directory=self.project_directory))
+            runnable_extract_lane = self.add_runnable(
+                runnable=bsf.Runnable(
+                    name=self.get_prefix_extract_archive(project_name=self.project_name, lane=str(lane_int)),
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.project_directory))
             self.set_stage_runnable(
                 stage=stage_extract_archive,
                 runnable=runnable_extract_lane)
 
             # Sleep 90 seconds to allow the first process to create all directories.
-            runnable_extract_lane.add_runnable_step(runnable_step=RunnableStepSleep(name='sleep', sleep_time=90.0))
+            runnable_extract_lane.add_runnable_step(
+                runnable_step=bsf.process.RunnableStepSleep(
+                    name='sleep',
+                    sleep_time=90.0))
 
-            extract_lane = runnable_extract_lane.add_runnable_step(runnable_step=RunnableStep(
-                name='extract_lane',
-                program='tar'))
+            extract_lane = runnable_extract_lane.add_runnable_step(
+                runnable_step=bsf.process.RunnableStep(
+                    name='extract_lane',
+                    program='tar'))
 
             extract_lane.add_switch_long(key='extract')
             extract_lane.add_option_long(key='directory', value=self.illumina_directory)
@@ -1122,29 +1061,31 @@ class IlluminaRunFolderRestore(Analysis):
 
             # Create one process per lane to compress the base call (*.bcl) files.
 
-            runnable_compress_base_calls = self.add_runnable(runnable=Runnable(
-                name=self.get_prefix_compress_base_calls(project_name=self.project_name, lane=str(lane_int)),
-                code_module='bsf.runnables.generic',
-                working_directory=self.project_directory))
+            runnable_compress_base_calls = self.add_runnable(
+                runnable=bsf.Runnable(
+                    name=self.get_prefix_compress_base_calls(project_name=self.project_name, lane=str(lane_int)),
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.project_directory))
             executable_compress_base_calls = self.set_stage_runnable(
                 stage=stage_compress_base_calls,
                 runnable=runnable_compress_base_calls)
             executable_compress_base_calls.dependencies.append(executable_extract_intensities.name)
 
-            # Since find has a somewhat broken syntax, definition of the RunnableStep gets a bit complex.
+            # Since find has a somewhat broken syntax, definition of the bsf.process.RunnableStep gets a bit complex.
             # The following command line needs to be run
             # find IRF/Data/Intensities/BaseCalls/L000 -name '*.bcl' -execdir gzip --best {} +
-            compress_base_calls = runnable_compress_base_calls.add_runnable_step(runnable_step=RunnableStep(
-                name='compress_base_calls',
-                program='find',
-                sub_command=Command(
-                    program=os.path.join(
-                        self.get_run_directory_path, 'Data', 'Intensities', 'BaseCalls',
-                        'L{:03d}'.format(lane_int)),
-                    sub_command=Command(
-                        program='-execdir',
-                        sub_command=Command(
-                            program='gzip')))))
+            compress_base_calls = runnable_compress_base_calls.add_runnable_step(
+                runnable_step=bsf.process.RunnableStep(
+                    name='compress_base_calls',
+                    program='find',
+                    sub_command=bsf.process.Command(
+                        program=os.path.join(
+                            run_directory_path, 'Data', 'Intensities', 'BaseCalls',
+                            'L{:03d}'.format(lane_int)),
+                        sub_command=bsf.process.Command(
+                            program='-execdir',
+                            sub_command=bsf.process.Command(
+                                program='gzip')))))
 
             find_command = compress_base_calls.sub_command  # directory option
             find_command.add_option_short(key='name', value='*.bcl')
