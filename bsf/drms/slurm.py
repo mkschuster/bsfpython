@@ -40,9 +40,8 @@ import sys
 import threading
 import warnings
 
-from bsf.database import DatabaseConnection, \
-    JobSubmission, JobSubmissionAdaptor, DatabaseAdaptor
-from bsf.process import Executable
+import bsf.database
+import bsf.process
 
 output_directory_name = 'bsfpython_slurm_output'
 database_file_name = 'bsfpython_slurm_jobs.db'
@@ -144,6 +143,7 @@ class ProcessSLURM(object):
     @ivar requested_tres: Requested trackable resources
     @type requested_tres: str | None
     """
+
     def __init__(
             self,
             process_slurm_id=None,
@@ -335,7 +335,7 @@ class ProcessSLURM(object):
         return
 
 
-class ProcessSLURMAdaptor(DatabaseAdaptor):
+class ProcessSLURMAdaptor(bsf.database.DatabaseAdaptor):
     """C{bsf.drms.slurm.ProcessSLURMAdaptor} class providing database access for the
     C{bsf.drms.slurm.ProcessSLURM} class.
 
@@ -746,8 +746,9 @@ def submit(stage, debug=0):
     @rtype:
     """
     # Open or create a database.
-    database_connection = DatabaseConnection(file_path=os.path.join(stage.working_directory, database_file_name))
-    job_submission_adaptor = JobSubmissionAdaptor(database_connection=database_connection)
+    database_connection = bsf.database.DatabaseConnection(
+        file_path=os.path.join(stage.working_directory, database_file_name))
+    job_submission_adaptor = bsf.database.JobSubmissionAdaptor(database_connection=database_connection)
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
     output = str()
@@ -759,7 +760,7 @@ def submit(stage, debug=0):
         output += '\n'
 
     for executable in stage.executable_list:
-        executable_drms = Executable(name=executable.name, program='sbatch', sub_command=executable)
+        executable_drms = bsf.process.Executable(name=executable.name, program='sbatch', sub_command=executable)
 
         # Add Stage-specific options.
 
@@ -851,7 +852,7 @@ def submit(stage, debug=0):
         for executable_name in executable.dependencies:
             process_slurm_list = process_slurm_adaptor.select_all_by_job_name(name=executable_name)
             if len(process_slurm_list):
-                # This Executable has been submitted at least once before.
+                # This bsf.process.Executable has been submitted at least once before.
                 # For the moment, set the dependency on the last submission.
                 process_identifier_list.append(process_slurm_list[-1].job_id)
             elif debug == 0:
@@ -903,7 +904,7 @@ def submit(stage, debug=0):
             # Parse the multi-line STDOUT string to get the SLURM process identifier and name.
             # The response to the SLURM sbatch command looks like:
             # Submitted batch job 137657
-            # Set the result in the Executable.process_identifier instance variable.
+            # Set the result in the bsf.process.Executable.process_identifier instance variable.
 
             for line in child_stdout.splitlines(False):
                 match = re.search(pattern=r'Submitted batch job (\d+)', string=line)
@@ -917,20 +918,20 @@ def submit(stage, debug=0):
         output += executable_drms.command_str() + '\n'
         output += '\n'
 
-        # Regardless of an actual Executable submission, UPDATE it in or INSERT it into the SQLite database.
+        # Regardless of an actual bsf.process.Executable submission, UPDATE it in or INSERT it into the SQLite database.
 
         job_submission = job_submission_adaptor.select_by_name(name=executable.name)
         if job_submission:
             job_submission.command = executable.command_str()
             job_submission_adaptor.update(object_instance=job_submission)
         else:
-            job_submission = JobSubmission(
+            job_submission = bsf.database.JobSubmission(
                 executable_id=0,
                 name=executable.name,
                 command=executable.command_str())
             job_submission_adaptor.insert(object_instance=job_submission)
 
-        # Only store a ProcessSLURM, if an Executable has been submitted into SLURM.
+        # Only store a ProcessSLURM, if an bsf.process.Executable has been submitted into SLURM.
 
         if executable.process_identifier:
             process_slurm = process_slurm_adaptor.select_by_job_id(job_id=executable.process_identifier)
@@ -1067,7 +1068,8 @@ def check_state(stage, debug=0):
     @rtype:
     """
     # Open or create a database.
-    database_connection = DatabaseConnection(file_path=os.path.join(stage.working_directory, database_file_name))
+    database_connection = bsf.database.DatabaseConnection(
+        file_path=os.path.join(stage.working_directory, database_file_name))
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
     process_slurm_list = list()
@@ -1086,19 +1088,19 @@ def check_state(stage, debug=0):
         return
 
     # TODO: The Executable class, so far, does not allow setting specific STDOUT and STDERR handlers ...
-    executable_drms = Executable(name='sacct', program='sacct')
+    executable_drms = bsf.process.Executable(name='sacct', program='sacct')
     executable_drms.add_option_long(key='jobs', value=','.join(map(lambda x: x.job_id, process_slurm_list)))
     executable_drms.add_switch_long(key='long')
     executable_drms.add_switch_long(key='parsable')
 
-    # Executable.run() parameters.
+    # bsf.process.Executable.run() parameters.
     max_thread_joins = 10
     thread_join_timeout = 10
 
     attempt_counter = 0
 
-    # TODO: ... therefore, the following block is a complete duplication of code in method Executable.run().
-    # TODO: Requires re-engineering of the Executable class.
+    # TODO: ... therefore, the following block is a complete duplication of code in method bsf.process.Executable.run().
+    # TODO: Requires re-engineering of the bsf.process.Executable class.
 
     while attempt_counter < executable_drms.maximum_attempts:
 
@@ -1129,7 +1131,7 @@ def check_state(stage, debug=0):
         thread_out.start()
 
         thread_err = threading.Thread(
-            target=Executable.process_stderr,
+            target=bsf.process.Executable.process_stderr,
             kwargs={
                 'stderr_handle': child_process.stderr,
                 'thread_lock': thread_lock,

@@ -35,8 +35,8 @@ import re
 import subprocess
 import sys
 
-from bsf.database import DatabaseAdaptor
-from bsf.process import Executable
+import bsf.database
+import bsf.process
 
 output_directory_name = 'bsfpython_sge_output'
 
@@ -243,7 +243,7 @@ class ProcessSGE(object):
         return
 
 
-class ProcessSGEAdaptor(DatabaseAdaptor):
+class ProcessSGEAdaptor(bsf.database.DatabaseAdaptor):
     """C{bsf.drms.sge.ProcessSGEAdaptor} class providing database access for the C{bsf.drms.sge.ProcessSGE} class.
 
     The SQL column names result from the SGE accounting file. See man 5 accounting.
@@ -448,7 +448,7 @@ def submit(stage, debug=0):
         output += '\n'
 
     for executable in stage.executable_list:
-        executable_drms = Executable(name=executable.name, program='qsub', sub_command=executable)
+        executable_drms = bsf.process.Executable(name=executable.name, program='qsub', sub_command=executable)
 
         # Add Stage-specific options.
 
@@ -545,7 +545,7 @@ def submit(stage, debug=0):
             executable_drms.add_option_short(key='e', value=output_directory_name)
             executable_drms.add_option_short(key='o', value=output_directory_name)
 
-        # Add Executable-specific options.
+        # Add bsf.process.Executable-specific options.
 
         if executable.hold:
             executable_drms.add_switch_short(key='h')

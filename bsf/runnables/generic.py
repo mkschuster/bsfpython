@@ -34,7 +34,7 @@ import errno
 import os
 import shutil
 
-from bsf.process import RunnableStep
+import bsf.process
 
 
 def run(runnable):
@@ -68,7 +68,7 @@ def run(runnable):
         source_path = runnable.cache_path_dict[key]
         target_path = os.path.join(runnable.get_absolute_cache_directory_path, os.path.basename(source_path))
 
-        runnable_step = RunnableStep(name='_'.join((runnable.name, 'cache', key)), program='cp')
+        runnable_step = bsf.process.RunnableStep(name='_'.join((runnable.name, 'cache', key)), program='cp')
         runnable_step.add_switch_short(key='p')
         runnable_step.arguments.append(source_path)
         runnable_step.arguments.append(target_path)
@@ -103,8 +103,9 @@ def run(runnable):
             if exception.errno != errno.EEXIST:
                 raise
 
-    # Check the Python list of RunnableStep objects in reverse order to see what has completed already.
-    # If a RunnableStep is complete, it will be the first one on the list to become the previous RunnableStep.
+    # Check the Python list of bsf.process.RunnableStep objects in reverse order to see what has completed already.
+    # If a bsf.process.RunnableStep is complete, it will be the first one on the list to become the
+    # previous bsf.process.RunnableStep.
 
     runnable_step_list = list()
     """ @type runnable_step_list: list[bsf.process.RunnableStep] """
@@ -116,14 +117,15 @@ def run(runnable):
             break
     runnable_step_list.reverse()
 
-    # Work through the list of RunnableStep objects in logical order. Keep track of the previous RunnableStep.
+    # Work through the list of bsf.process.RunnableStep objects in logical order.
+    # Keep track of the previous bsf.process.RunnableStep.
 
     child_return_code = 0
     runnable_step_current = None
     runnable_step_previous = None
 
     for runnable_step_current in runnable_step_list:
-        # Check for a RunnableStep-specific status file.
+        # Check for a bsf.process.RunnableStep-specific status file.
         if os.path.exists(path=runnable.runnable_step_status_file_path(
                 runnable_step=runnable_step_current,
                 success=True)):
@@ -141,7 +143,7 @@ def run(runnable):
         if child_return_code != 0:
             break
 
-        # Delete the list of file paths that the current RunnableStep declared to be obsolete now.
+        # Delete the list of file paths that the current bsf.process.RunnableStep declared to be obsolete now.
 
         runnable_step_current.remove_obsolete_file_paths()
 
@@ -149,7 +151,7 @@ def run(runnable):
 
         runnable.runnable_step_status_file_create(runnable_step=runnable_step_current, success=True)
 
-        # Remove the status file of the previous RunnableStep, if it has been defined at this stage.
+        # Remove the status file of the previous bsf.process.RunnableStep, if it has been defined at this stage.
 
         if runnable_step_previous is not None:
             runnable.runnable_step_status_file_remove(runnable_step=runnable_step_previous)

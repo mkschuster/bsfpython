@@ -29,7 +29,8 @@ A package of classes and methods to clean a sample sheet for the Picard SamToFas
 
 import os
 
-from bsf.ngs import Collection
+import bsf.argument
+import bsf.ngs
 
 
 def run(runnable):
@@ -40,6 +41,7 @@ def run(runnable):
     @return:
     @rtype:
     """
+
     def run_get_value(key):
         """Get the value of the first C{bsf.argument.OptionLong} object registered under a key
         in the first C{bsf.process.RunnableStep} object of this C{bsf.Runnable} object.
@@ -65,7 +67,7 @@ def run(runnable):
     file_path_new = run_get_value(key='sas_path_new')
     minimum_size = int(run_get_value(key='minimum_size'))
 
-    collection = Collection.from_sas_path(
+    collection = bsf.ngs.Collection.from_sas_path(
         file_path='',
         file_type='',
         name='picard_sam_to_fastq',
