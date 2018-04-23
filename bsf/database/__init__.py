@@ -703,6 +703,32 @@ class DatabaseAdaptor(object):
 
         return ' '.join(statement_list)
 
+    def statement_update(self):
+        """Build a SQL I{UPDATE} statement.
+
+        @return: SQL I{UPDATE} statement
+        @rtype: str | unicode
+        """
+        primary_name = self._get_column_name_for_primary()
+
+        if not primary_name:
+            raise Exception(
+                'Cannot create a SQL UPDATE statement ' + repr(self.table_name) + ' without a primary key.')
+
+        statement_list = list()
+        """ @type statement_list: list[str] """
+
+        statement_list.append('UPDATE')
+        statement_list.append(self.table_name)
+        statement_list.append('SET')
+        statement_list.append(self._build_column_update_expression())
+        statement_list.append('WHERE')
+        statement_list.append(primary_name)
+        statement_list.append('=')
+        statement_list.append('?')
+
+        return ' '.join(statement_list)
+
     def create_table(self):
         """Execute a SQL I{CREATE TABLE} statement for the canonical C{bsf.database.DatabaseAdaptor} table.
 
@@ -836,31 +862,19 @@ class DatabaseAdaptor(object):
         # Get the list of values by using the column definition and reading attributes of the same name
         # from the Python object.
 
-        value_list = map(lambda x: object_instance.__getattribute__(x), self._get_column_name_list_without_primary())
-
         primary_name = self._get_column_name_for_primary()
-        if primary_name:
-            value_list.append(object_instance.__getattribute__(primary_name))
-        else:
-            raise Exception('Cannot update table ' + repr(self.table_name) + ' without primary key.')
 
-        statement_list = list()
-        """ @type statement_list: list[str] """
+        if not primary_name:
+            raise Exception('Cannot update table ' + repr(self.table_name) + ' without a primary key.')
 
-        statement_list.append('UPDATE')
-        statement_list.append(self.table_name)
-        statement_list.append('SET')
-        statement_list.append(self._build_column_update_expression())
-        statement_list.append('WHERE')
-        statement_list.append(primary_name)
-        statement_list.append('=')
-        statement_list.append('?')
+        value_list = map(lambda x: object_instance.__getattribute__(x), self._get_column_name_list_without_primary())
+        value_list.append(object_instance.__getattribute__(primary_name))
 
         try:
-            self.get_cursor().execute(' '.join(statement_list), value_list)
+            self.get_cursor().execute(self.statement_update(), value_list)
         except sqlite3.IntegrityError:
             print('Encountered SQLite3 integrity error.\n',
-                  '  SQL statement:', ' '.join(statement_list), '\n',
+                  '  SQL statement:', self.statement_update(), '\n',
                   '  Values:', value_list)
             raise
 
