@@ -610,7 +610,7 @@ class DatabaseAdaptor(object):
 
         statement_list.append('ALTER')
         statement_list.append('TABLE')
-        statement_list.append("'" + table_name_old + "'")
+        statement_list.append(table_name_old)
         statement_list.append('RENAME')
         statement_list.append('TO')
         statement_list.append(table_name_new)
@@ -628,7 +628,7 @@ class DatabaseAdaptor(object):
 
         statement_list.append('CREATE')
         statement_list.append('TABLE')
-        statement_list.append("'" + self.table_name + "'")
+        statement_list.append(self.table_name)
         statement_list.append('(' + self._build_column_definition_expression() + ')')
 
         return ' '.join(statement_list)
@@ -647,7 +647,7 @@ class DatabaseAdaptor(object):
         statement_list.append('TABLE')
         statement_list.append('IF')
         statement_list.append('EXISTS')
-        statement_list.append("'" + table_name + "'")
+        statement_list.append(table_name)
 
         return ' '.join(statement_list)
 
@@ -662,7 +662,7 @@ class DatabaseAdaptor(object):
 
         statement_list.append('INSERT')
         statement_list.append('INTO')
-        statement_list.append("'" + self.table_name + "'")
+        statement_list.append(self.table_name)
         statement_list.append('(' + self._build_column_insert_expression() + ')')
         statement_list.append('VALUES')
         statement_list.append('(' + self._build_value_insert_expression() + ')')
@@ -687,7 +687,7 @@ class DatabaseAdaptor(object):
         statement_list.append('SELECT')
         statement_list.append(self._build_column_result_expression())
         statement_list.append('FROM')
-        statement_list.append("'" + self.table_name + "'")
+        statement_list.append(self.table_name)
 
         if where_clause:
             statement_list.append('WHERE')
@@ -848,11 +848,11 @@ class DatabaseAdaptor(object):
         """ @type statement_list: list[str] """
 
         statement_list.append('UPDATE')
-        statement_list.append("'" + self.table_name + "'")
+        statement_list.append(self.table_name)
         statement_list.append('SET')
         statement_list.append(self._build_column_update_expression())
         statement_list.append('WHERE')
-        statement_list.append("'" + primary_name + "'")
+        statement_list.append(primary_name)
         statement_list.append('=')
         statement_list.append('?')
 
