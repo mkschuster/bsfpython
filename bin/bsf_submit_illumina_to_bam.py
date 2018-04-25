@@ -96,7 +96,7 @@ print(analysis.name)
 print('Project name:           ', analysis.project_name)
 print('Project directory:      ', analysis.project_directory)
 print('Illumina run directory: ', analysis.run_directory)
-print('Experiment directory:   ', analysis.experiment_directory)
+print('Experiment directory:   ', analysis.get_experiment_directory)
 
 if analysis.debug >= 2:
     print(repr(analysis), 'final trace:')

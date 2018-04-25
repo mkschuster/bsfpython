@@ -144,7 +144,7 @@ print(analysis.name)
 print('Project name:         ', analysis.project_name)
 print('Project directory:    ', analysis.project_directory)
 print('Sequences directory:  ', analysis.sequences_directory)
-print('Experiment directory: ', analysis.experiment_directory)
+print('Experiment directory: ', analysis.get_experiment_directory)
 
 if analysis.debug >= 2:
     print(repr(analysis), 'final trace:')

@@ -203,7 +203,7 @@ print(analysis_itb.name)
 print('Project name:           ', analysis_itb.project_name)
 print('Project directory:      ', analysis_itb.project_directory)
 print('Illumina run directory: ', analysis_itb.run_directory)
-print('Experiment directory:   ', analysis_itb.experiment_directory)
+print('Experiment directory:   ', analysis_itb.get_experiment_directory)
 
 if analysis_itb.debug >= 2:
     print(repr(analysis_itb), 'final trace:')
@@ -268,7 +268,7 @@ if analysis_bid.library_path:
     print('Project name:         ', analysis_bid.project_name)
     print('Project directory:    ', analysis_bid.project_directory)
     print('Sequences directory:  ', analysis_bid.sequences_directory)
-    print('Experiment directory: ', analysis_bid.experiment_directory)
+    print('Experiment directory: ', analysis_bid.get_experiment_directory)
 
 if analysis_bid.debug >= 2:
     print(repr(analysis_bid), 'final trace:')
