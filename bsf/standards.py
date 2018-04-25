@@ -83,18 +83,23 @@ class Configuration(object):
         @return: Absolute path
         @rtype: None | str | unicode
         """
-        if file_path is None:
-            return
+        if file_path:
+            file_path = os.path.expanduser(file_path)
+            file_path = os.path.expandvars(file_path)
 
-        absolute_path = os.path.expanduser(path=file_path)
-        absolute_path = os.path.expandvars(path=absolute_path)
+            if os.path.isabs(file_path):
+                return os.path.normpath(file_path)
 
-        if default_path and not os.path.isabs(absolute_path):
-            default_path = os.path.expanduser(path=default_path)
-            default_path = os.path.expandvars(path=default_path)
-            absolute_path = os.path.join(default_path, absolute_path)
+        if default_path:
+            default_path = os.path.expanduser(default_path)
+            default_path = os.path.expandvars(default_path)
 
-        return os.path.normpath(absolute_path)
+            if file_path:
+                return os.path.normpath(os.path.join(default_path, file_path))
+            else:
+                return os.path.normpath(default_path)
+
+        return file_path
 
     @staticmethod
     def section_from_instance(instance):
