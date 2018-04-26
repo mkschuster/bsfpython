@@ -1050,7 +1050,7 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
                   "Closed 'STDOUT' file " + repr(stdout_path) + '.')
     thread_lock.release()
 
-    # Commit changes to the database and explicitly disconnect.
+    # Commit changes to the database and explicitly disconnect so that other threads have access.
     process_slurm_adaptor.commit()
     process_slurm_adaptor.disconnect()
 
@@ -1086,6 +1086,9 @@ def check_state(stage, debug=0):
     # Return if no ProcessSLURM objects need updating.
     if not process_slurm_list:
         return
+
+    if debug > 0:
+        print('Number of ProcessSLURM objects to check:', len(process_slurm_list))
 
     # TODO: The Executable class, so far, does not allow setting specific STDOUT and STDERR handlers ...
     executable_drms = bsf.process.Executable(name='sacct', program='sacct')
