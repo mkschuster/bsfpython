@@ -29,60 +29,45 @@ from __future__ import print_function
 
 import argparse
 
-from bsf.analyses import RunBamToFastq
+import bsf.analyses
 
-parser = argparse.ArgumentParser(description='BAM To FASTQ analysis driver script.')
+argument_parser = argparse.ArgumentParser(
+    description=bsf.analyses.RunBamToFastq.name + ' driver script.')
 
-parser.add_argument('--debug', required=False, type=int,
-                    help='Debug level')
+argument_parser.add_argument(
+    '--debug',
+    help='Debug level',
+    required=False,
+    type=int)
 
-parser.add_argument('--stage', required=False,
-                    help='Limit job submission to a particular Analysis stage')
+argument_parser.add_argument(
+    '--stage',
+    help='Limit job submission to a particular Analysis stage',
+    required=False)
 
-parser.add_argument('configuration',
-                    help='Configuration file (*.ini)')
+argument_parser.add_argument(
+    'configuration',
+    help='Configuration file (*.ini)')
 
-args = parser.parse_args()
+name_space = argument_parser.parse_args()
 
 # Create a RunBamToFastq BSF Analysis and run it.
 
-bam2fastq = RunBamToFastq.from_config_file_path(config_path=args.configuration)
+analysis = bsf.analyses.RunBamToFastq.from_config_file_path(config_path=name_space.configuration)
 
-if args.debug:
-    bam2fastq.debug = args.debug
+if name_space.debug:
+    analysis.debug = name_space.debug
 
-bam2fastq.run()
+# Do the work.
 
-# Submit all Executable objects of all Stage objects.
+analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
-submit = 0
-
-for stage in bam2fastq.stage_list:
-
-    if args.stage:
-        if args.stage == stage.name:
-            submit += 1
-        else:
-            continue
-
-    stage.submit(debug=bam2fastq.debug)
-
-    if bam2fastq.debug:
-        print(repr(stage))
-        print(stage.trace(1))
-
-if args.stage:
-    if args.stage == 'report':
-        pass
-    elif not submit:
-        name_list = [stage.name for stage in bam2fastq.stage_list]
-        name_list.append('report')
-        print('Valid Analysis stages are:', repr(name_list))
-
-print(bam2fastq.name)
-print('Project name:      ', bam2fastq.project_name)
-print('Genome version:    ', bam2fastq.genome_version)
-print('Input directory:   ', bam2fastq.input_directory)
-print('Output directory:  ', bam2fastq.output_directory)
-print('Project directory: ', bam2fastq.project_directory)
-print('Genome directory:  ', bam2fastq.genome_directory)
+print(analysis.name)
+print('Project name:      ', analysis.project_name)
+print('Genome version:    ', analysis.genome_version)
+print('Input directory:   ', analysis.input_directory)
+print('Output directory:  ', analysis.output_directory)
+print('Project directory: ', analysis.project_directory)
+print('Genome directory:  ', analysis.genome_directory)

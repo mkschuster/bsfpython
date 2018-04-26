@@ -29,11 +29,11 @@ from __future__ import print_function
 
 import argparse
 
-from bsf.analyses.illumina_run_folder import IlluminaRunFolderRestore
-from bsf.standards import Configuration
+import bsf.analyses.illumina_run_folder
+import bsf.standards
 
 argument_parser = argparse.ArgumentParser(
-    description='IlluminaRunFolderRestore Analysis driver script.')
+    description=bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -49,7 +49,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=Configuration.global_file_path,
+    default=bsf.standards.Configuration.global_file_path,
     help='configuration (*.ini) file path',
     required=False,
     type=str)
@@ -85,7 +85,8 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF IlluminaRunFolderRestore analysis, run and submit it.
 
-analysis = IlluminaRunFolderRestore.from_config_file_path(config_path=name_space.configuration)
+analysis = bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore.from_config_file_path(
+    config_path=name_space.configuration)
 """ @type analysis: bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore """
 
 # Set arguments that override the configuration file.

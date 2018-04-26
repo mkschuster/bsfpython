@@ -33,12 +33,14 @@ import datetime
 import os
 import time
 
-from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder, IlluminaToBam
-from bsf.illumina import RunFolder, RunFolderNotComplete
-from bsf.standards import Configuration
+import bsf.analyses.illumina_to_bam_tools
+import bsf.illumina
+import bsf.standards
 
 argument_parser = argparse.ArgumentParser(
-    description='IlluminaToBamTools Illumina2bam and BamIndexDecoder Analysis driver script.')
+    description=
+    bsf.analyses.illumina_to_bam_tools.IlluminaToBam.name + ' and ' +
+    bsf.analyses.illumina_to_bam_tools.BamIndexDecoder.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -93,7 +95,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=Configuration.global_file_path,
+    default=bsf.standards.Configuration.global_file_path,
     help='configuration (*.ini) file path',
     required=False,
     type=str)
@@ -158,7 +160,8 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF IlluminaToBam analysis, run and submit it.
 
-analysis_itb = IlluminaToBam.from_config_file_path(config_path=name_space.configuration)
+analysis_itb = bsf.analyses.illumina_to_bam_tools.IlluminaToBam.from_config_file_path(
+    config_path=name_space.configuration)
 """ @type analysis_itb: bsf.analyses.illumina_to_bam_tools.IlluminaToBam """
 
 # Set arguments that override the configuration file.
@@ -187,7 +190,7 @@ if name_space.loop:
         loop_counter += int(1)
         try:
             analysis_itb.run()
-        except RunFolderNotComplete as exception:
+        except bsf.illumina.RunFolderNotComplete as exception:
             print(exception)
         else:
             print('Illumina Run Folder seems complete.')
@@ -211,7 +214,8 @@ if analysis_itb.debug >= 2:
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
-analysis_bid = BamIndexDecoder.from_config_file_path(config_path=name_space.configuration)
+analysis_bid = bsf.analyses.illumina_to_bam_tools.BamIndexDecoder.from_config_file_path(
+    config_path=name_space.configuration)
 """ @type analysis_bid: bsf.analyses.illumina_to_bam_tools.BamIndexDecoder """
 
 # Transfer the project name from the IlluminaToBam to the BamIndexDecoder analysis.
@@ -238,7 +242,8 @@ if name_space.mode:
         raise Exception("Unknown output mode " + name_space.mode)
 else:
     analysis_bid.lanes = \
-        RunFolder.from_file_path(file_path=analysis_itb.run_directory).run_information.flow_cell_layout.lane_count
+        bsf.illumina.RunFolder.from_file_path(
+            file_path=analysis_itb.run_directory).run_information.flow_cell_layout.lane_count
 
 if name_space.no_validation:
     assert isinstance(name_space.no_validation, bool)

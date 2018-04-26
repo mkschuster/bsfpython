@@ -29,61 +29,45 @@ from __future__ import print_function
 
 import argparse
 
-from bsf.analyses import ChIPSeq
+import bsf.analyses
 
-parser = argparse.ArgumentParser(description='ChIP-Seq analysis driver script.')
+argument_parser = argparse.ArgumentParser(
+    description=bsf.analyses.ChIPSeq.name + ' driver script.')
 
-parser.add_argument('--debug', required=False, type=int,
-                    help='Debug level')
+argument_parser.add_argument(
+    '--debug',
+    help='Debug level',
+    required=False,
+    type=int)
 
-parser.add_argument('--stage', required=False,
-                    help='Limit job submission to a particular Analysis stage')
+argument_parser.add_argument(
+    '--stage',
+    help='Limit job submission to a particular Analysis stage',
+    required=False)
 
-parser.add_argument('configuration',
-                    help='Configuration file (*.ini)')
+argument_parser.add_argument(
+    'configuration',
+    help='Configuration file (*.ini)')
 
-args = parser.parse_args()
+name_space = argument_parser.parse_args()
 
 # Create a BSF ChIPSeq analysis and run it.
 
-chipseq = ChIPSeq.from_config_file_path(config_path=args.configuration)
+analysis = bsf.analyses.ChIPSeq.from_config_file_path(config_path=name_space.configuration)
 
-if args.debug:
-    chipseq.debug = args.debug
+if name_space.debug:
+    analysis.debug = name_space.debug
 
-chipseq.run()
-chipseq.check_state()
+# Do the work.
 
-# Submit all Executable objects of all Stage objects.
+analysis.run()
+analysis.check_state()
+analysis.submit(name=name_space.stage)
 
-submit = 0
-
-for stage in chipseq.stage_list:
-
-    if args.stage:
-        if args.stage == stage.name:
-            submit += 1
-        else:
-            continue
-
-    stage.submit(debug=chipseq.debug)
-
-    if chipseq.debug:
-        print(repr(stage))
-        print(stage.trace(1))
-
-if args.stage:
-    if args.stage == 'report':
-        chipseq.report()
-    elif not submit:
-        name_list = [stage.name for stage in chipseq.stage_list]
-        name_list.append('report')
-        print('Valid Analysis stages are:', repr(name_list))
-
-print(chipseq.name)
-print('Project name:      ', chipseq.project_name)
-print('Genome version:    ', chipseq.genome_version)
-print('Input directory:   ', chipseq.input_directory)
-print('Output directory:  ', chipseq.output_directory)
-print('Project directory: ', chipseq.project_directory)
-print('Genome directory:  ', chipseq.genome_directory)
+print(analysis.name)
+print('Project name:      ', analysis.project_name)
+print('Genome version:    ', analysis.genome_version)
+print('Input directory:   ', analysis.input_directory)
+print('Output directory:  ', analysis.output_directory)
+print('Project directory: ', analysis.project_directory)
+print('Genome directory:  ', analysis.genome_directory)

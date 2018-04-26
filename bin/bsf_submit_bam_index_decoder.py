@@ -30,11 +30,11 @@ from __future__ import print_function
 import argparse
 import os
 
-from bsf.analyses.illumina_to_bam_tools import BamIndexDecoder
-from bsf.standards import Configuration
+import bsf.analyses.illumina_to_bam_tools
+import bsf.standards
 
 argument_parser = argparse.ArgumentParser(
-    description='IlluminaToBamTools BamIndexDecoder Analysis driver script.')
+    description=bsf.analyses.illumina_to_bam_tools.BamIndexDecoder.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -50,7 +50,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=Configuration.global_file_path,
+    default=bsf.standards.Configuration.global_file_path,
     help='configuration (*.ini) file path',
     required=False,
     type=str)
@@ -86,13 +86,14 @@ name_space = argument_parser.parse_args()
 # --project-name. The --library-path argument can be worked out on the basis
 # of the --project-name.
 
-if name_space.configuration == Configuration.global_file_path:
+if name_space.configuration == bsf.standards.Configuration.global_file_path:
     if name_space.project_name is None:
         raise Exception("argument --project-name is required if --configuration is not set")
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
-analysis = BamIndexDecoder.from_config_file_path(config_path=name_space.configuration)
+analysis = bsf.analyses.illumina_to_bam_tools.BamIndexDecoder.from_config_file_path(
+    config_path=name_space.configuration)
 """ @type analysis: bsf.analyses.illumina_to_bam_tools.BamIndexDecoder """
 
 # Set arguments that override the configuration file.

@@ -29,11 +29,11 @@ from __future__ import print_function
 
 import argparse
 
-from bsf.analyses.picard import ExtractIlluminaRunFolder
-from bsf.standards import Configuration
+import bsf.analyses.picard
+import bsf.standards
 
 argument_parser = argparse.ArgumentParser(
-    description='Picard ExtractIlluminaRunFolder Analysis driver script.')
+    description=bsf.analyses.picard.ExtractIlluminaRunFolder.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -55,7 +55,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=Configuration.global_file_path,
+    default=bsf.standards.Configuration.global_file_path,
     help='configuration (*.ini) file path',
     required=False,
     type=str)
@@ -75,7 +75,7 @@ name_space = argument_parser.parse_args()
 
 # Create a ExtractIlluminaRunFolder analysis, run and submit it.
 
-analysis = ExtractIlluminaRunFolder.from_config_file_path(config_path=name_space.configuration)
+analysis = bsf.analyses.picard.ExtractIlluminaRunFolder.from_config_file_path(config_path=name_space.configuration)
 """ @type analysis: bsf.analyses.picard.ExtractIlluminaRunFolder """
 
 # Set arguments that override the configuration file.
@@ -97,6 +97,8 @@ if name_space.mode:
     elif name_space.mode == 'miseq':
         analysis.lanes = 1
     elif name_space.mode == 'nextseq':
+        analysis.lanes = 4
+    elif name_space.mode == 'novaseq':
         analysis.lanes = 4
     else:
         raise Exception("Unknown output mode " + name_space.mode)

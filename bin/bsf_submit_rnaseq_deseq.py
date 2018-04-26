@@ -29,10 +29,10 @@ from __future__ import print_function
 
 import argparse
 
-from bsf.analyses.rna_seq import DESeq
+import bsf.analyses.rna_seq
 
 argument_parser = argparse.ArgumentParser(
-    description='RNA-Seq DESeq Analysis driver script.')
+    description=bsf.analyses.rna_seq.DESeq.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -55,7 +55,7 @@ name_space = argument_parser.parse_args()
 
 # Create a DESeq Analysis and run it.
 
-analysis = DESeq.from_config_file_path(config_path=name_space.configuration)
+analysis = bsf.analyses.rna_seq.DESeq.from_config_file_path(config_path=name_space.configuration)
 """ @type analysis: bsf.analyses.rna_seq.DESeq """
 
 if name_space.debug:

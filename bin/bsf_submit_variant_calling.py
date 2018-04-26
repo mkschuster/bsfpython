@@ -29,10 +29,10 @@ from __future__ import print_function
 
 import argparse
 
-from bsf.analyses.variant_calling import VariantCallingGATK
+import bsf.analyses.variant_calling
 
 argument_parser = argparse.ArgumentParser(
-    description='VariantCallingGATK Analysis driver script.')
+    description=bsf.analyses.variant_calling.VariantCallingGATK.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -55,7 +55,7 @@ name_space = argument_parser.parse_args()
 
 # Create a VariantCallingGATK Analysis and run it.
 
-analysis = VariantCallingGATK.from_config_file_path(config_path=name_space.configuration)
+analysis = bsf.analyses.variant_calling.VariantCallingGATK.from_config_file_path(config_path=name_space.configuration)
 """ @type analysis: bsf.analyses.variant_calling.VariantCallingGATK """
 
 if name_space.debug:

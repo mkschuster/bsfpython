@@ -29,11 +29,11 @@ from __future__ import print_function
 
 import argparse
 
-from bsf.analyses.picard import CollectHiSeqXPfFailMetrics
-from bsf.standards import Configuration
+import bsf.analyses.picard
+import bsf.standards
 
 argument_parser = argparse.ArgumentParser(
-    description='Picard CollectHiSeqXPfFailMetrics Analysis driver script.')
+    description=bsf.analyses.picard.CollectHiSeqXPfFailMetrics.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -49,7 +49,7 @@ argument_parser.add_argument(
 
 argument_parser.add_argument(
     '--configuration',
-    default=Configuration.global_file_path,
+    default=bsf.standards.Configuration.global_file_path,
     help='configuration (*.ini) file path',
     required=False,
     type=str)
@@ -70,13 +70,13 @@ name_space = argument_parser.parse_args()
 # This analysis requires either a non-default --configuration argument or a
 # --irf argument.
 
-if name_space.configuration == Configuration.global_file_path:
+if name_space.configuration == bsf.standards.Configuration.global_file_path:
     if name_space.irf is None:
         raise Exception("argument --irf is required if --configuration is not set")
 
 # Create a CollectHiSeqXPfFailMetrics analysis, run and submit it.
 
-analysis = CollectHiSeqXPfFailMetrics.from_config_file_path(config_path=name_space.configuration)
+analysis = bsf.analyses.picard.CollectHiSeqXPfFailMetrics.from_config_file_path(config_path=name_space.configuration)
 """ @type analysis: bsf.analyses.picard.CollectHiSeqXPfFailMetrics """
 
 # Set arguments that override the configuration file.

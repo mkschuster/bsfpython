@@ -29,10 +29,10 @@ from __future__ import print_function
 
 import argparse
 
-from bsf.analyses.star_aligner import StarAligner
+import bsf.analyses.star_aligner
 
 argument_parser = argparse.ArgumentParser(
-    description='StarAligner Analysis driver script.')
+    description=bsf.analyses.star_aligner.StarAligner.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -55,7 +55,7 @@ name_space = argument_parser.parse_args()
 
 # Create a StarAligner Analysis and run it.
 
-analysis = StarAligner.from_config_file_path(config_path=name_space.configuration)
+analysis = bsf.analyses.star_aligner.StarAligner.from_config_file_path(config_path=name_space.configuration)
 """ @type analysis: bsf.analyses.star_aligner.StarAligner """
 
 if name_space.debug:

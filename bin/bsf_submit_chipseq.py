@@ -29,10 +29,10 @@ from __future__ import print_function
 
 import argparse
 
-from bsf.analyses.chip_seq import ChIPSeq
+import bsf.analyses.chip_seq
 
 argument_parser = argparse.ArgumentParser(
-    description='ChIPSeq Analysis driver script.')
+    description=bsf.analyses.chip_seq.ChIPSeq.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -55,7 +55,7 @@ name_space = argument_parser.parse_args()
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
-analysis = ChIPSeq.from_config_file_path(config_path=name_space.configuration)
+analysis = bsf.analyses.chip_seq.ChIPSeq.from_config_file_path(config_path=name_space.configuration)
 """ @type analysis: bsf.analyses.chip_seq.ChIPSeq """
 
 # Set arguments that override the configuration file.
