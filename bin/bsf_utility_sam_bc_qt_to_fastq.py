@@ -32,6 +32,7 @@ import argparse
 import gzip
 import os
 import re
+import warnings
 
 import pysam
 
@@ -63,14 +64,33 @@ argument_parser.add_argument(
     help='Picard-style intervals file path',
     required=False)
 
+argument_parser.add_argument(
+    '--npf-reads',
+    action='store_true',
+    dest='npf_reads',
+    help='include reads not passing vendor quality filters')
+
+
 name_space = argument_parser.parse_args()
+
+vendor_filter = not name_space.npf_reads
 
 alignment_file = pysam.AlignmentFile(name_space.input_path, 'rb', check_sq=False)
 
 # Open a GzipFile object for each ReadGroup on the basis of @RG PU entries.
 
+# This procedure only works for query name sorted SAM files.
+
+header_dict = alignment_file.header['HD']
+
+if 'SO' in header_dict:
+    if header_dict['SO'] not in ('queryname', 'unsorted'):
+        raise Exception("Can only work on 'queryname' or 'unsorted' BAM files")
+else:
+    warnings.warn("Could not find a 'SO' tag in the '@HD' line.")
+
 gzip_file_dict = dict()
-""" @type file_dict: dict[str, gzip.GzipFile] """
+""" @type gzip_file_dict: dict[str, list[gzip.GzipFile]] """
 
 for read_group_dict in alignment_file.header['RG']:
     """ @type read_group_dict: dict[str, str] """
@@ -81,23 +101,46 @@ for read_group_dict in alignment_file.header['RG']:
         repl='_',
         string=read_group_dict['PU'])
 
-    gzip_file_dict[read_group_dict['ID']] = gzip.GzipFile(
-        filename=os.path.join(name_space.output_path, platform_unit + '_i.fastq.gz'),
-        mode='wb',
-        compresslevel=9)
+    if read_group_dict['ID'] not in gzip_file_dict:
+        gzip_file_dict[read_group_dict['ID']] = list()
+    else:
+        warnings.warn('ReadGroup ID already present:', read_group_dict['ID'])
+
+    gzip_file_list = gzip_file_dict[read_group_dict['ID']]
+
+    for suffix in ('1', '2', 'i'):
+        gzip_file_list.append(gzip.GzipFile(
+            filename=os.path.join(name_space.output_path, platform_unit + '_' + suffix + '.fastq.gz'),
+            mode='wb',
+            compresslevel=9))
 
 for aligned_segment in alignment_file:
-    """ @type aligned_segment: pysam.AlignedSegment """
+    """ @type aligned_segment: pysam.libcalignedsegment.AlignedSegment """
+    if vendor_filter and aligned_segment.is_qcfail:
+        continue
+
+    # Assign the AlignedSegment to its ReadGroup-specific GzipFile.
+    if aligned_segment.is_read1:
+        gzip_file = gzip_file_dict[aligned_segment.get_tag('RG')][0]
+    else:
+        gzip_file = gzip_file_dict[aligned_segment.get_tag('RG')][1]
+
+    gzip_file.write('@' + aligned_segment.query_name + '\n')
+    gzip_file.write(aligned_segment.query_sequence + '\n')
+    gzip_file.write('+\n')
+    gzip_file.write(pysam.array_to_qualitystring(aligned_segment.query_qualities) + '\n')
+
     if aligned_segment.has_tag('BC'):
         # Assign the AlignedSegment to its ReadGroup-specific GzipFile.
-        gzip_file = gzip_file_dict[aligned_segment.get_tag('RG')]
+        gzip_file = gzip_file_dict[aligned_segment.get_tag('RG')][2]
 
         gzip_file.write('@' + aligned_segment.query_name + '\n')
         gzip_file.write(aligned_segment.get_tag('BC') + '\n')
         gzip_file.write('+\n')
         gzip_file.write(aligned_segment.get_tag('QT') + '\n')
 
-for gzip_file in gzip_file_dict.itervalues():
-    gzip_file.close()
+for read_group_id in gzip_file_dict.iterkeys():
+    for gzip_file in gzip_file_dict[read_group_id]:
+        gzip_file.close()
 
 alignment_file.close()
