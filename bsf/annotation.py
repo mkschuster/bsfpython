@@ -43,11 +43,11 @@ class AnnotationSheet(object):
 
     Attributes:
     @ivar file_path: File path
-    @type file_path: str | unicode
+    @type file_path: str | unicode | None
     @ivar file_type: File type (i.e. I{excel} or I{excel-tab} defined in the C{csv.Dialect} class)
     @type file_type: str
     @ivar name: Name
-    @type name: str
+    @type name: str | None
     @ivar field_names: Python C{list} of Python C{str} (field name) objects
     @type field_names: list[str]
     @ivar test_methods: Python C{dict} of Python C{str} (field name) key data and
@@ -77,7 +77,7 @@ class AnnotationSheet(object):
     _regular_expression_multiple_underscore = re.compile(pattern='_{2,}')
     """ @type _regular_expression_multiple_underscore: re.RegexObject """
 
-    # File type (i.e. "excel" or "excel-tab" defined in the csv.Dialect class)
+    # File type (i.e. 'excel' or 'excel-tab' defined in the csv.Dialect class)
     _file_type = 'excel'
     """ @type _file_type: str """
 
@@ -113,7 +113,6 @@ class AnnotationSheet(object):
         @return: Python C{tuple} of Python C{str} (warning message) and Python C{str} (column value)
         @rtype: (str, str)
         """
-
         message = str()
 
         if column_name not in row_dict:
@@ -148,7 +147,6 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-
         messages, column_value = cls.check_column_value(
             row_number=row_number,
             row_dict=row_dict,
@@ -248,7 +246,6 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-
         messages, column_value = cls.check_column_value(
             row_number=row_number,
             row_dict=row_dict,
@@ -279,7 +276,6 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-
         return cls._check_numeric(
             row_number=row_number,
             row_dict=row_dict,
@@ -302,7 +298,6 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-
         return cls._check_numeric(
             row_number=row_number,
             row_dict=row_dict,
@@ -325,7 +320,6 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-
         return cls._check_numeric(
             row_number=row_number,
             row_dict=row_dict,
@@ -553,7 +547,6 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-
         messages, column_value = cls.check_column_value(
             row_number=row_number,
             row_dict=row_dict,
@@ -582,7 +575,6 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-
         messages, column_value = cls.check_column_value(
             row_number=row_number,
             row_dict=row_dict,
@@ -611,7 +603,6 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-
         messages, column_value = cls.check_column_value(
             row_number=row_number,
             row_dict=row_dict,
@@ -642,7 +633,6 @@ class AnnotationSheet(object):
         @return: C{bsf.annotation.AnnotationSheet}
         @rtype: bsf.annotation.AnnotationSheet
         """
-
         annotation_sheet = cls(file_path=file_path, file_type=file_type, name=name)
 
         annotation_sheet.csv_reader_open()
@@ -666,30 +656,26 @@ class AnnotationSheet(object):
         """Initialise a C{bsf.annotation.AnnotationSheet} object.
 
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str | unicode | None
         @param file_type: File type (i.e. I{excel} or I{excel_tab} defined in the C{csv.Dialect} class)
-        @type file_type: str
-        @param name: Name
-        @type name: str
+        @type file_type: str | None
+        @param name: Name | None
+        @type name: str | None
         @param header: Header line
-        @type header: bool
+        @type header: bool | None
         @param field_names: Python C{list} of Python C{str} (field name) objects
-        @type field_names: list[str]
+        @type field_names: list[str] | None
         @param test_methods: Python C{dict} of Python C{str} (field name) key data and
             Python C{list} of Python C{classmethod} value data
-        @type test_methods: dict[str, list[classmethod]]
+        @type test_methods: dict[str, list[classmethod]] | None
         @param row_dicts: Python C{list} of Python C{dict} objects
-        @type row_dicts: list[dict[str, str | unicode]]
+        @type row_dicts: list[dict[str, str | unicode]] | None
         @return:
         @rtype:
         """
-
         super(AnnotationSheet, self).__init__()
 
-        if file_path is None:
-            self.file_path = str()
-        else:
-            self.file_path = file_path
+        self.file_path = file_path
 
         if file_type is None:
             # Copy the class variable.
@@ -697,10 +683,7 @@ class AnnotationSheet(object):
         else:
             self.file_type = file_type
 
-        if name is None:
-            self.name = str()
-        else:
-            self.name = name
+        self.name = name
 
         if header is None:
             # Copy the class variable.
@@ -747,7 +730,6 @@ class AnnotationSheet(object):
         @return: Trace information
         @rtype: str
         """
-
         indent = '  ' * level
         output = str()
         output += '{}{!r}\n'.format(indent, self)
@@ -771,6 +753,8 @@ class AnnotationSheet(object):
         @return:
         @rtype:
         """
+        if not self.file_path:
+            raise Exception('Cannot read an AnnotationSheet without a valid file_name.')
 
         # Although the AnnotationSheet is initialised with an empty Python list object,
         # the DictReader really needs None to automatically populate the fieldnames instance variable.
@@ -807,7 +791,6 @@ class AnnotationSheet(object):
         @return: Python C{dict} of column key and row value data
         @rtype: dict[str, str | unicode]
         """
-
         return self._csv_reader_object.next()
 
     def csv_reader_close(self):
@@ -816,7 +799,6 @@ class AnnotationSheet(object):
         @return:
         @rtype:
         """
-
         self._csv_reader_object = None
         self._csv_reader_file.close()
         self._csv_reader_file = None
@@ -830,9 +812,11 @@ class AnnotationSheet(object):
         @return:
         @rtype:
         """
+        if not self.file_path:
+            raise Exception('Cannot write an AnnotationSheet without a valid file_name.')
 
         if not self.field_names:
-            raise Exception("A csv.DictWriter object requires a Python list of field_names.")
+            raise Exception('A csv.DictWriter object requires a Python list of field_names.')
 
         if self.file_type:
             csv_file_type = self.file_type
@@ -858,7 +842,6 @@ class AnnotationSheet(object):
         @return:
         @rtype:
         """
-
         self._csv_writer_object.writerow(rowdict=row_dict)
 
         return
@@ -869,7 +852,6 @@ class AnnotationSheet(object):
         @return:
         @rtype:
         """
-
         self._csv_writer_object = None
         self._csv_writer_file.close()
         self._csv_writer_file = None
@@ -885,7 +867,6 @@ class AnnotationSheet(object):
         @return:
         @rtype:
         """
-
         warnings.warn(
             'Sorting of AnnotationSheet objects has to implemented in the sub-class.',
             UserWarning)
@@ -898,7 +879,6 @@ class AnnotationSheet(object):
         @return: Warning messages
         @rtype: str
         """
-
         messages = str()
         row_number = 0
 
@@ -916,12 +896,35 @@ class AnnotationSheet(object):
 
         return messages
 
-    def to_file_path(self):
-        """Write a C{bsf.annotation.AnnotationSheet} to a file path.
+    def adjust_field_names(self):
+        """Adjust the Python C{list} of Python C{str} field names to keys used in Python C{dict} (row) objects.
 
         @return:
         @rtype:
         """
+        field_names = list()
+
+        for row_dict in self.row_dicts:
+            for key in row_dict.iterkeys():
+                if key not in field_names:
+                    field_names.append(key)
+
+        del self.field_names[:]
+
+        self.field_names.extend(sorted(field_names))
+
+        return
+
+    def to_file_path(self, adjust_field_names=None):
+        """Write a C{bsf.annotation.AnnotationSheet} to a file path.
+
+        @param adjust_field_names: Clear and adjust the Python C{list} of Python C{str} filed name objects
+        @type adjust_field_names: bool
+        @return:
+        @rtype:
+        """
+        if adjust_field_names:
+            self.adjust_field_names()
 
         self.csv_writer_open()
 
