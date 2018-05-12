@@ -35,16 +35,16 @@ import pickle
 import re
 import warnings
 
-from bsf import Analysis, FilePath, Runnable
-from bsf.analyses.star_aligner import StarAligner
-from bsf.annotation import AnnotationSheet
-from bsf.executables import TopHat
-from bsf.ngs import SampleGroup
-from bsf.process import Executable, RunnableStep, RunnableStepCopy, RunnableStepLink, RunnableStepMakeDirectory
-from bsf.standards import Default
+import bsf
+import bsf.analyses.star_aligner
+import bsf.annotation
+import bsf.executables
+import bsf.ngs
+import bsf.process
+import bsf.standards
 
 
-class FilePathTophat(FilePath):
+class FilePathTophat(bsf.FilePath):
     """The C{bsf.analyses.rna_seq.FilePathTophat} models files in a sample-specific TopHat directory.
 
     Attributes:
@@ -121,7 +121,7 @@ class FilePathTophat(FilePath):
         return
 
 
-class FilePathCufflinks(FilePath):
+class FilePathCufflinks(bsf.FilePath):
     """The C{bsf.analyses.rna_seq.FilePathCufflinks} models files in a sample-specific Cufflinks directory.
 
     Attributes:
@@ -186,7 +186,7 @@ class FilePathCufflinks(FilePath):
         return
 
 
-class FilePathCuffmerge(FilePath):
+class FilePathCuffmerge(bsf.FilePath):
     """The C{bsf.analyses.rna_seq.FilePathCuffmerge} models files in a comparison-specific Cuffmerge directory.
 
     Attributes:
@@ -239,7 +239,7 @@ class FilePathCuffmerge(FilePath):
         return
 
 
-class FilePathCuffquant(FilePath):
+class FilePathCuffquant(bsf.FilePath):
     """The C{bsf.analyses.rna_seq.FilePathCuffquant} models files in a sample-specific Cuffquant directory.
 
     Attributes:
@@ -268,7 +268,7 @@ class FilePathCuffquant(FilePath):
         return
 
 
-class FilePathCuffnorm(FilePath):
+class FilePathCuffnorm(bsf.FilePath):
     """The C{bsf.analyses.rna_seq.FilePathCuffnorm} models files in a comparison-specific Cuffnorm directory.
 
     Attributes:
@@ -294,7 +294,7 @@ class FilePathCuffnorm(FilePath):
         return
 
 
-class FilePathCuffdiff(FilePath):
+class FilePathCuffdiff(bsf.FilePath):
     """The C{bsf.analyses.rna_seq.FilePathCuffdiff} models files in a comparison-specific Cuffdiff directory.
 
     Attributes:
@@ -319,7 +319,7 @@ class FilePathCuffdiff(FilePath):
         return
 
 
-class FilePathMonocle(FilePath):
+class FilePathMonocle(bsf.FilePath):
     """The C{bsf.analyses.rna_seq.FilePathMonocle} models files in a comparison-specific Monocle directory.
 
     Attributes:
@@ -328,6 +328,7 @@ class FilePathMonocle(FilePath):
     @ivar annotation_tsv: Monocle annotation TSV
     @type annotation_tsv: str | unicode
     """
+
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.rna_seq.FilePathMonocle} object
 
@@ -344,7 +345,7 @@ class FilePathMonocle(FilePath):
         return
 
 
-class TuxedoSamplePairSheet(AnnotationSheet):
+class TuxedoSamplePairSheet(bsf.annotation.AnnotationSheet):
     """The C{bsf.analyses.rna_seq.TuxedoSamplePairSheet} class represents C{bsf.ngs.Sample} pairs.
 
     The C{bsf.ngs.Sample} pairs are defined by the C{bsf_rnaseq_process_cuffdiff.R} script.
@@ -362,7 +363,7 @@ class TuxedoSamplePairSheet(AnnotationSheet):
     _test_methods = dict()
 
 
-class Tuxedo(Analysis):
+class Tuxedo(bsf.Analysis):
     """Tuxedo RNASeq C{bsf.Analysis} sub-class.
 
     Attributes:
@@ -736,7 +737,7 @@ class Tuxedo(Analysis):
                     """ @type _sample_group_list: list[bsf.ngs.SampleGroup] """
 
                     for _group_name, _sample_list in self.collection.sample_group_dict.iteritems():
-                        _sample_group = SampleGroup(name=_group_name, sample_list=_sample_list)
+                        _sample_group = bsf.ngs.SampleGroup(name=_group_name, sample_list=_sample_list)
                         # SampleGroup objects are only useful, if at least one Sample object is not excluded.
                         if not _sample_group.is_excluded():
                             _sample_group_list.append(_sample_group)
@@ -758,7 +759,7 @@ class Tuxedo(Analysis):
                     for _sample in self.sample_list:
                         # Sample objects are only useful, if at least one PairedReads object is not excluded.
                         if not _sample.is_excluded():
-                            _sample_group_list.append(SampleGroup(name=_sample.name, sample_list=[_sample]))
+                            _sample_group_list.append(bsf.ngs.SampleGroup(name=_sample.name, sample_list=[_sample]))
 
                     # Sort the list of comparison groups by group name.
                     _sample_group_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
@@ -769,7 +770,7 @@ class Tuxedo(Analysis):
                     self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
                     # Read and process the comparison file, which includes adding only those Sample objects,
                     # which are referenced in a comparison.
-                    annotation_sheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
+                    annotation_sheet = bsf.annotation.AnnotationSheet.from_file_path(file_path=self.comparison_path)
                     regular_expression = re.compile(pattern='\W')
 
                     for row_dict in annotation_sheet.row_dicts:
@@ -813,7 +814,7 @@ class Tuxedo(Analysis):
 
                                 if len(_sample_list_new):
                                     _comparison_name_list.append(_group_name)
-                                    _sample_group_list.append(SampleGroup(
+                                    _sample_group_list.append(bsf.ngs.SampleGroup(
                                         name=_group_name,
                                         sample_list=_sample_list_new))
                                     # Also expand each Python list of bsf.ngs.Sample objects to get all those
@@ -850,7 +851,7 @@ class Tuxedo(Analysis):
                 # with all Sample objects from the Collection.
                 # This means that most pipeline stages with the exception of Cuffdiff can run.
                 self.sample_list.extend(self.collection.get_all_samples(exclude=True))
-                self._comparison_dict['global'] = [SampleGroup(
+                self._comparison_dict['global'] = [bsf.ngs.SampleGroup(
                     name='global',
                     sample_list=self.collection.get_all_samples(exclude=True))]
 
@@ -897,7 +898,7 @@ class Tuxedo(Analysis):
 
         # Get global defaults.
 
-        default = Default.get_global_default()
+        default = bsf.standards.Default.get_global_default()
 
         # Method configuration with regards to Cuffquant and Cuffdiff.
         run_cuffquant_before_cuffdiff = False
@@ -921,7 +922,7 @@ class Tuxedo(Analysis):
 
         if not self.genome_index_path:
             self.genome_index_path = os.path.join(
-                Default.absolute_genome_resource(genome_version=self.genome_version),
+                bsf.standards.Default.absolute_genome_resource(genome_version=self.genome_version),
                 default.indices['bowtie2'],
                 self.genome_version)
 
@@ -941,7 +942,7 @@ class Tuxedo(Analysis):
             # prepend the default transcriptomes directory.
             self.transcriptome_index_path = self.configuration.get_absolute_path(
                 file_path=self.transcriptome_index_path,
-                default_path=Default.absolute_transcriptome_resource(transcriptome_version=''))
+                default_path=bsf.standards.Default.absolute_transcriptome_resource(transcriptome_version=''))
 
             if not os.path.isdir(self.transcriptome_index_path):
                 raise Exception('Reference transcriptome index directory {!r} does not exist.'.
@@ -972,7 +973,8 @@ class Tuxedo(Analysis):
             # prepend the default transcriptomes directory.
             self.transcriptome_gtf_path = self.configuration.get_absolute_path(
                 file_path=self.transcriptome_gtf_path,
-                default_path=Default.absolute_transcriptome_resource(transcriptome_version=self.transcriptome_version))
+                default_path=bsf.standards.Default.absolute_transcriptome_resource(
+                    transcriptome_version=self.transcriptome_version))
 
             if not os.path.exists(self.transcriptome_gtf_path):
                 raise Exception('Reference transcriptome GTF file {!r} does not exist.'.
@@ -980,13 +982,15 @@ class Tuxedo(Analysis):
         else:
             # Neither was provided, automatically discover on the basis of the transcriptome version.
             self.transcriptome_index_path = os.path.join(
-                Default.absolute_transcriptome_resource(transcriptome_version=self.transcriptome_version),
+                bsf.standards.Default.absolute_transcriptome_resource(
+                    transcriptome_version=self.transcriptome_version),
                 default.indices['tophat'],
                 self.transcriptome_version,  # TopHat puts the transcriptome index into a sub directory.
                 self.transcriptome_version)
 
             self.transcriptome_gtf_path = os.path.join(
-                Default.absolute_transcriptome_resource(transcriptome_version=self.transcriptome_version),
+                bsf.standards.Default.absolute_transcriptome_resource(
+                    transcriptome_version=self.transcriptome_version),
                 default.indices['tophat'],
                 self.transcriptome_version) + '.gtf'
             if not os.path.exists(self.transcriptome_gtf_path):
@@ -1068,14 +1072,14 @@ class Tuxedo(Analysis):
                 #         stage=stage_run_tophat,
                 #         runnable=runnable_run_tophat)
                 #
-                # Create a new Tophat RunnableStep.
+                # Create a new Tophat bsf.process.RunnableStep.
 
                 # tophat = runnable_run_tophat.add_runnable_step(
-                #     runnable_step=RunnableStep(
+                #     runnable_step=bsf.process.RunnableStep(
                 #     name='tophat2',
                 #     program='tophat2'))
 
-                tophat = TopHat(
+                tophat = bsf.executables.TopHat(
                     name='_'.join(('rnaseq_tophat', paired_reads_name)),
                     analysis=self)
 
@@ -1143,12 +1147,12 @@ class Tuxedo(Analysis):
                 tophat.arguments.append(','.join(reads_1_file_path_list))
                 tophat.arguments.append(','.join(reads_2_file_path_list))
 
-                # Create a new rnaseq_run_tophat Executable.
+                # Create a new rnaseq_run_tophat bsf.process.Executable.
                 # TODO: The following code block is required as long as the bsf_run_rnaseq_tophat.py script
                 # has not been retired.
 
                 if self.debug > 0:
-                    print('Tophat Executable')
+                    print('Tophat bsf.process.Executable')
                     print(tophat.trace(level=1))
 
                 pickler_dict_run_tophat = {
@@ -1166,10 +1170,10 @@ class Tuxedo(Analysis):
                 pickler_file.close()
 
                 executable_run_tophat = stage_run_tophat.add_executable(
-                    executable=Executable(
+                    executable=bsf.process.Executable(
                         name='_'.join((stage_run_tophat.name, paired_reads_name)),
                         program='bsf_run_rnaseq_tophat.py'))
-                # Set dependencies on previous Runnable or Executable objects.
+                # Set dependencies on previous Runnable or bsf.process.Executable objects.
                 # None.
 
                 # Set rnaseq_run_tophat options.
@@ -1177,20 +1181,20 @@ class Tuxedo(Analysis):
                 executable_run_tophat.add_option_long(key='pickler_path', value=pickler_path)
                 executable_run_tophat.add_option_long(key='debug', value=str(self.debug))
 
-                # Only submit this Executable if the 'align_summary.txt' file does not exist.
+                # Only submit this bsf.process.Executable if the 'align_summary.txt' file does not exist.
                 file_path_temporary = os.path.join(self.genome_directory, file_path_tophat.align_summary)
                 if os.path.exists(file_path_temporary) and os.path.getsize(file_path_temporary) > 0:
                     executable_run_tophat.submit = False
 
                 # TODO: End of code block.
 
-                # Create a new rnaseq_process_tophat Executable.
+                # Create a new rnaseq_process_tophat bsf.process.Executable.
 
                 executable_process_tophat = stage_process_tophat.add_executable(
-                    executable=Executable(
+                    executable=bsf.process.Executable(
                         name='_'.join((stage_process_tophat.name, paired_reads_name)),
                         program='bsf_rnaseq_process_tophat2.sh'))
-                # Set dependencies on previous Runnable or Executable objects.
+                # Set dependencies on previous Runnable or bsf.process.Executable objects.
                 executable_process_tophat.dependencies.append(executable_run_tophat.name)
 
                 # Set rnaseq_process_tophat options.
@@ -1200,7 +1204,7 @@ class Tuxedo(Analysis):
                 executable_process_tophat.arguments.append(file_path_tophat.output_directory)
                 executable_process_tophat.arguments.append(genome_sizes_path)
 
-                # Only submit this Executable if the 'accepted_hits.bam.bai' file does not exist.
+                # Only submit this bsf.process.Executable if the 'accepted_hits.bam.bai' file does not exist.
                 file_path_temporary = os.path.join(
                     self.genome_directory,
                     file_path_tophat.accepted_hits_bai)
@@ -1235,7 +1239,7 @@ class Tuxedo(Analysis):
                 file_path_cufflinks = FilePathCufflinks(prefix=prefix_cufflinks)
 
                 runnable_run_cufflinks = self.add_runnable(
-                    runnable=Runnable(
+                    runnable=bsf.Runnable(
                         name=prefix_run_cufflinks,
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
@@ -1244,18 +1248,18 @@ class Tuxedo(Analysis):
                 executable_run_cufflinks = self.set_stage_runnable(
                     stage=stage_run_cufflinks,
                     runnable=runnable_run_cufflinks)
-                # Set dependencies for subsequent Runnable or Executable objects.
+                # Set dependencies for subsequent Runnable or bsf.process.Executable objects.
                 runnable_run_cufflinks_list.append(runnable_run_cufflinks)
-                # Set dependencies on previous Runnable or Executable objects.
+                # Set dependencies on previous Runnable or bsf.process.Executable objects.
                 executable_run_cufflinks.dependencies.append(executable_run_tophat.name)
 
-                # Create a new Cufflinks RunnableStep.
+                # Create a new Cufflinks bsf.process.RunnableStep.
 
                 runnable_step = runnable_run_cufflinks.add_runnable_step(
-                    runnable_step=RunnableStep(
+                    runnable_step=bsf.process.RunnableStep(
                         name='cufflinks',
                         program='cufflinks'))
-                """ @type runnable_step: RunnableStep """
+                """ @type runnable_step: bsf.process.RunnableStep """
 
                 # Cufflinks has a GTF option, in which case it will not assemble
                 # novel transcripts and a GTF-guide option in which case it will
@@ -1315,10 +1319,10 @@ class Tuxedo(Analysis):
                 # Convert the resulting transcripts GTF file into a UCSC genePred file.
 
                 runnable_step = runnable_run_cufflinks.add_runnable_step(
-                    runnable_step=RunnableStep(
+                    runnable_step=bsf.process.RunnableStep(
                         name='gtf_to_gp',
                         program='gtfToGenePred'))
-                """ @type runnable_step: RunnableStep """
+                """ @type runnable_step: bsf.process.RunnableStep """
                 runnable_step.add_switch_short(key='genePredExt')
                 runnable_step.arguments.append(file_path_cufflinks.transcripts_gtf)
                 runnable_step.arguments.append(file_path_cufflinks.temporary_gene_prediction)
@@ -1326,39 +1330,39 @@ class Tuxedo(Analysis):
                 # Convert the UCSC genePred into a UCSC bigGenePred file.
 
                 runnable_step = runnable_run_cufflinks.add_runnable_step(
-                    runnable_step=RunnableStep(
+                    runnable_step=bsf.process.RunnableStep(
                         name='gp_to_bgp',
                         program='genePredToBigGenePred',
                         obsolete_file_path_list=[
                             file_path_cufflinks.temporary_gene_prediction,
                         ]))
-                """ @type runnable_step: RunnableStep """
+                """ @type runnable_step: bsf.process.RunnableStep """
                 runnable_step.arguments.append(file_path_cufflinks.temporary_gene_prediction)
                 runnable_step.arguments.append(file_path_cufflinks.temporary_big_gene_prediction)
 
                 # Run bedSort on the UCSC bigGenePred file to sort field 1 in lexicographic mode and 2 in numeric mode.
 
                 runnable_step = runnable_run_cufflinks.add_runnable_step(
-                    runnable_step=RunnableStep(
+                    runnable_step=bsf.process.RunnableStep(
                         name='bed_sort',
                         program='bedSort',
                         obsolete_file_path_list=[
                             file_path_cufflinks.temporary_big_gene_prediction,
                         ]))
-                """ @type runnable_step: RunnableStep """
+                """ @type runnable_step: bsf.process.RunnableStep """
                 runnable_step.arguments.append(file_path_cufflinks.temporary_big_gene_prediction)
                 runnable_step.arguments.append(file_path_cufflinks.temporary_sorted_tsv)
 
                 # Convert the sorted UCSC bigGenePred into a bigBed file.
 
                 runnable_step = runnable_run_cufflinks.add_runnable_step(
-                    runnable_step=RunnableStep(
+                    runnable_step=bsf.process.RunnableStep(
                         name='bgp_to_bb',
                         program='bedToBigBed',
                         obsolete_file_path_list=[
                             file_path_cufflinks.temporary_sorted_tsv,
                         ]))
-                """ @type runnable_step: RunnableStep """
+                """ @type runnable_step: bsf.process.RunnableStep """
                 # TODO: The location of the autoSQL file needs to be configurable.
                 runnable_step.add_option_pair_short(key='as', value='/scratch/lab_bsf/resources/UCSC/bigGenePred.as')
                 runnable_step.add_switch_short(key='tab')
@@ -1369,27 +1373,27 @@ class Tuxedo(Analysis):
 
                 # Add a symbolic link for the transcripts bigBed file, that includes a sample name prefix.
                 runnable_run_cufflinks.add_runnable_step(
-                    runnable_step=RunnableStepLink(
+                    runnable_step=bsf.process.RunnableStepLink(
                         name='link_transcripts_bb',
                         source_path=file_path_cufflinks.transcripts_bb_link_source,
                         target_path=file_path_cufflinks.transcripts_bb_link_target))
 
                 # Add a symbolic link for the transcripts GTF file, that includes a sample name prefix.
                 runnable_run_cufflinks.add_runnable_step(
-                    runnable_step=RunnableStepLink(
+                    runnable_step=bsf.process.RunnableStepLink(
                         name='link_transcripts_gtf',
                         source_path=file_path_cufflinks.transcripts_gtf_link_source,
                         target_path=file_path_cufflinks.transcripts_gtf_link_target))
 
-        # Create one process_cufflinks Executable to process all sub-directories.
+        # Create one process_cufflinks bsf.process.Executable to process all sub-directories.
 
         if len(runnable_run_cufflinks_list):
             # TODO: Convert this into a Runnable and RunnableStep.
             executable_process_cufflinks = stage_process_cufflinks.add_executable(
-                executable=Executable(
+                executable=bsf.process.Executable(
                     name=stage_process_cufflinks.name,
                     program='bsf_rnaseq_process_cufflinks.R'))
-            # Set dependencies on previous Runnable or Executable objects.
+            # Set dependencies on previous Runnable or bsf.process.Executable objects.
             for runnable_run_cufflinks in runnable_run_cufflinks_list:
                 executable_process_cufflinks.dependencies.append(runnable_run_cufflinks.name)
 
@@ -1446,7 +1450,7 @@ class Tuxedo(Analysis):
             file_path_cuffmerge = FilePathCuffmerge(prefix=prefix_cuffmerge)
 
             runnable_run_cuffmerge = self.add_runnable(
-                runnable=Runnable(
+                runnable=bsf.Runnable(
                     name=prefix_cuffmerge,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
@@ -1455,19 +1459,19 @@ class Tuxedo(Analysis):
             executable_run_cuffmerge = self.set_stage_runnable(
                 stage=stage_run_cuffmerge,
                 runnable=runnable_run_cuffmerge)
-            # Submit the Executable if the status file AND the sample group list above supports it.
+            # Submit the bsf.process.Executable if the status file AND the sample group list above supports it.
             executable_run_cuffmerge.submit &= cuffmerge_cuffnorm_submit
             # Set a dependency on all other Cuffmerge process to avoid file contention.
             executable_cuffmerge_dict[prefix_cuffmerge] = executable_run_cuffmerge
 
             if self.novel_transcripts:
-                # Create a new Cuffmerge RunnableStep.
+                # Create a new Cuffmerge bsf.process.RunnableStep.
 
                 runnable_step_cuffmerge = runnable_run_cuffmerge.add_runnable_step(
-                    runnable_step=RunnableStep(
+                    runnable_step=bsf.process.RunnableStep(
                         name='cuffmerge',
                         program='cuffmerge'))
-                """ @type runnable_step_cuffmerge: RunnableStep """
+                """ @type runnable_step_cuffmerge: bsf.process.RunnableStep """
 
                 # Set rnaseq_cuffmerge options.
 
@@ -1496,12 +1500,12 @@ class Tuxedo(Analysis):
                 # cuffcompare -s hg38.fa -C -G -o test_gtf -r hg38_e87.gtf hg38_e87.gtf
 
                 runnable_run_cuffmerge.add_runnable_step(
-                    runnable_step=RunnableStepMakeDirectory(
+                    runnable_step=bsf.process.RunnableStepMakeDirectory(
                         name='make_directory',
                         directory_path=file_path_cuffmerge.output_directory))
 
                 runnable_run_cuffmerge.add_runnable_step(
-                    runnable_step=RunnableStepCopy(
+                    runnable_step=bsf.process.RunnableStepCopy(
                         name='copy',
                         source_path=self.transcriptome_gtf_path,
                         target_path=file_path_cuffmerge.merged_gtf))
@@ -1509,10 +1513,10 @@ class Tuxedo(Analysis):
             # Convert the resulting merged GTF file into a UCSC genePred file.
 
             runnable_step = runnable_run_cuffmerge.add_runnable_step(
-                runnable_step=RunnableStep(
+                runnable_step=bsf.process.RunnableStep(
                     name='gtf_to_gp',
                     program='gtfToGenePred'))
-            """ @type runnable_step: RunnableStep """
+            """ @type runnable_step: bsf.process.RunnableStep """
             runnable_step.add_switch_short(key='genePredExt')
             runnable_step.arguments.append(file_path_cuffmerge.merged_gtf)
             runnable_step.arguments.append(file_path_cuffmerge.temporary_gene_prediction)
@@ -1520,39 +1524,39 @@ class Tuxedo(Analysis):
             # Convert the UCSC genePred into a UCSC bigGenePred file.
 
             runnable_step = runnable_run_cuffmerge.add_runnable_step(
-                runnable_step=RunnableStep(
+                runnable_step=bsf.process.RunnableStep(
                     name='gp_to_bgp',
                     program='genePredToBigGenePred',
                     obsolete_file_path_list=[
                         file_path_cuffmerge.temporary_gene_prediction,
                     ]))
-            """ @type runnable_step: RunnableStep """
+            """ @type runnable_step: bsf.process.RunnableStep """
             runnable_step.arguments.append(file_path_cuffmerge.temporary_gene_prediction)
             runnable_step.arguments.append(file_path_cuffmerge.temporary_big_gene_prediction)
 
             # Run bedSort on the UCSC bigGenePred file to sort field 1 in lexicographic mode and 2 in numeric mode.
 
             runnable_step = runnable_run_cuffmerge.add_runnable_step(
-                runnable_step=RunnableStep(
+                runnable_step=bsf.process.RunnableStep(
                     name='bed_sort',
                     program='bedSort',
                     obsolete_file_path_list=[
                         file_path_cuffmerge.temporary_big_gene_prediction,
                     ]))
-            """ @type runnable_step: RunnableStep """
+            """ @type runnable_step: bsf.process.RunnableStep """
             runnable_step.arguments.append(file_path_cuffmerge.temporary_big_gene_prediction)
             runnable_step.arguments.append(file_path_cuffmerge.temporary_sorted_tsv)
 
             # Convert the sorted UCSC bigGenePred into a bigBed file.
 
             runnable_step = runnable_run_cuffmerge.add_runnable_step(
-                runnable_step=RunnableStep(
+                runnable_step=bsf.process.RunnableStep(
                     name='bgp_to_bb',
                     program='bedToBigBed',
                     obsolete_file_path_list=[
                         file_path_cuffmerge.temporary_sorted_tsv,
                     ]))
-            """ @type runnable_step: RunnableStep """
+            """ @type runnable_step: bsf.process.RunnableStep """
             # TODO: The location of the autoSQL file needs to be configurable.
             runnable_step.add_option_pair_short(key='as', value='/scratch/lab_bsf/resources/UCSC/bigGenePred.as')
             runnable_step.add_switch_short(key='tab')
@@ -1563,14 +1567,14 @@ class Tuxedo(Analysis):
 
             # Add a symbolic link for the merged bigBed file, that includes a comparison name prefix.
             runnable_run_cuffmerge.add_runnable_step(
-                runnable_step=RunnableStepLink(
+                runnable_step=bsf.process.RunnableStepLink(
                     name='link_merged_bb',
                     source_path=file_path_cuffmerge.merged_bb_link_source,
                     target_path=file_path_cuffmerge.merged_bb_link_target))
 
             # Add a symbolic link for the merged GTF file, that includes a comparison name prefix.
             runnable_run_cuffmerge.add_runnable_step(
-                runnable_step=RunnableStepLink(
+                runnable_step=bsf.process.RunnableStepLink(
                     name='link_merged_gtf',
                     source_path=file_path_cuffmerge.merged_gtf_link_source,
                     target_path=file_path_cuffmerge.merged_gtf_link_target))
@@ -1579,7 +1583,7 @@ class Tuxedo(Analysis):
 
             file_path_monocle = FilePathMonocle(prefix=prefix_monocle)
 
-            monocle_annotation_sheet = AnnotationSheet(
+            monocle_annotation_sheet = bsf.annotation.AnnotationSheet(
                 file_path=os.path.join(self.genome_directory, file_path_monocle.annotation_tsv),
                 file_type='excel-tab',
                 header=True)
@@ -1627,7 +1631,7 @@ class Tuxedo(Analysis):
                             os.path.join('_'.join(('rnaseq_tophat', paired_reads_name)), 'accepted_hits.bam')
 
                         runnable_run_cuffquant = self.add_runnable(
-                            runnable=Runnable(
+                            runnable=bsf.Runnable(
                                 name=prefix_cuffquant,
                                 code_module='bsf.runnables.generic',
                                 working_directory=self.genome_directory,
@@ -1641,13 +1645,13 @@ class Tuxedo(Analysis):
 
                         executable_run_cuffquant.dependencies.append(executable_run_cuffmerge.name)
 
-                        # Create a new cuffquant RunnableStep.
+                        # Create a new cuffquant bsf.process.RunnableStep.
 
                         runnable_step_cuffquant = runnable_run_cuffquant.add_runnable_step(
-                            runnable_step=RunnableStep(
+                            runnable_step=bsf.process.RunnableStep(
                                 name='cuffquant',
                                 program='cuffquant'))
-                        """ @type runnable_step_cuffquant: RunnableStep """
+                        """ @type runnable_step_cuffquant: bsf.process.RunnableStep """
 
                         # Set Cuffquant options.
 
@@ -1730,7 +1734,7 @@ class Tuxedo(Analysis):
             file_path_run_cuffnorm = FilePathCuffnorm(prefix=prefix_run_cuffnorm)
 
             runnable_run_cuffnorm = self.add_runnable(
-                runnable=Runnable(
+                runnable=bsf.Runnable(
                     name=prefix_run_cuffnorm,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
@@ -1739,17 +1743,17 @@ class Tuxedo(Analysis):
             executable_run_cuffnorm = self.set_stage_runnable(
                 stage=stage_run_cuffnorm,
                 runnable=runnable_run_cuffnorm)
-            # Submit the Executable if the status file AND the sample group list above supports it.
+            # Submit the bsf.process.Executable if the status file AND the sample group list above supports it.
             executable_run_cuffnorm.submit &= cuffmerge_cuffnorm_submit
             executable_run_cuffnorm.dependencies.extend(cuffdiff_cuffnorm_dependencies)
 
-            # Create a new Cuffnorm RunnableStep.
+            # Create a new Cuffnorm bsf.process.RunnableStep.
 
             runnable_step_cuffnorm = runnable_run_cuffnorm.add_runnable_step(
-                runnable_step=RunnableStep(
+                runnable_step=bsf.process.RunnableStep(
                     name='cuffnorm',
                     program='cuffnorm'))
-            """ @type runnable_step: RunnableStep """
+            """ @type runnable_step: bsf.process.RunnableStep """
 
             # Set Cuffnorm options.
 
@@ -1792,7 +1796,7 @@ class Tuxedo(Analysis):
                 file_path_run_cuffdiff = FilePathCuffdiff(prefix=prefix_run_cuffdiff)
 
                 runnable_run_cuffdiff = self.add_runnable(
-                    runnable=Runnable(
+                    runnable=bsf.Runnable(
                         name=prefix_run_cuffdiff,
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
@@ -1809,13 +1813,13 @@ class Tuxedo(Analysis):
                     # Add the executable_run_cuffmerge dependency to the executable_run_cuffdiff process.
                     executable_run_cuffdiff.dependencies.append(executable_run_cuffmerge.name)
 
-                # Create a new Cuffdiff RunnableStep.
+                # Create a new Cuffdiff bsf.process.RunnableStep.
 
                 runnable_step_cuffdiff = runnable_run_cuffdiff.add_runnable_step(
-                    runnable_step=RunnableStep(
+                    runnable_step=bsf.process.RunnableStep(
                         name='cuffdiff',
                         program='cuffdiff'))
-                """ @type runnable_step: RunnableStep """
+                """ @type runnable_step: bsf.process.RunnableStep """
 
                 # Set Cuffdiff options.
 
@@ -1871,10 +1875,10 @@ class Tuxedo(Analysis):
                         annotation_dict=cuffdiff_cuffnorm_alignments_dict)
                     runnable_step_cuffdiff.arguments.append(file_path_run_cuffdiff.alignments_tsv)
 
-                # Create a new rnaseq_process_cuffdiff Executable.
+                # Create a new rnaseq_process_cuffdiff bsf.process.Executable.
 
                 executable_process_cuffdiff = stage_process_cuffdiff.add_executable(
-                    executable=Executable(
+                    executable=bsf.process.Executable(
                         name='_'.join((stage_process_cuffdiff.name, comparison_name)),
                         program='bsf_rnaseq_process_cuffdiff.R'))
                 executable_process_cuffdiff.dependencies.append(executable_run_cuffdiff.name)
@@ -1898,7 +1902,7 @@ class Tuxedo(Analysis):
 
                 # None so far.
 
-        # Finally, set dependencies on all other Cuffmerge Executable objects to avoid file contention.
+        # Finally, set dependencies on all other Cuffmerge bsf.process.Executable objects to avoid file contention.
         for prefix_cuffmerge in executable_cuffmerge_dict.keys():
             for executable_cuffmerge in executable_cuffmerge_dict.values():
                 if prefix_cuffmerge != executable_cuffmerge.name:
@@ -2976,7 +2980,7 @@ class Tuxedo(Analysis):
         return
 
 
-class FilePathDESeq(FilePath):
+class FilePathDESeq(bsf.FilePath):
     """The C{bsf.analyses.rna_seq.FilePathDESeq} models files in a comparison-specific DESeq directory.
     """
 
@@ -2995,7 +2999,7 @@ class FilePathDESeq(FilePath):
         return
 
 
-class DESeq(Analysis):
+class DESeq(bsf.Analysis):
     """DESeq RNASeq C{bsf.Analysis} sub-class.
 
     Attributes:
@@ -3232,7 +3236,7 @@ class DESeq(Analysis):
 
         self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
 
-        design_sheet = AnnotationSheet.from_file_path(
+        design_sheet = bsf.annotation.AnnotationSheet.from_file_path(
             file_path=self.comparison_path,
             file_type='excel',
             name='DESeq Design Table')
@@ -3241,7 +3245,7 @@ class DESeq(Analysis):
 
         self.contrast_path = self.configuration.get_absolute_path(file_path=self.contrast_path)
 
-        contrast_sheet = AnnotationSheet.from_file_path(
+        contrast_sheet = bsf.annotation.AnnotationSheet.from_file_path(
             file_path=self.contrast_path,
             file_type='excel',
             name='DESeq Contrast Table')
@@ -3261,7 +3265,7 @@ class DESeq(Analysis):
                     if exception.errno != errno.EEXIST:
                         raise
 
-            annotation_sheet = AnnotationSheet(
+            annotation_sheet = bsf.annotation.AnnotationSheet(
                 file_path=os.path.join(comparison_directory, prefix + '_samples.tsv'),
                 file_type='excel-tab',
                 # file_type='excel',
@@ -3285,8 +3289,10 @@ class DESeq(Analysis):
 
                 row_dict = {
                     'sample': sample.name,
-                    'bam_path': StarAligner.get_prefix_star_aligner_merge(sample_name=sample.name) + '.bam',
-                    'bai_path': StarAligner.get_prefix_star_aligner_merge(sample_name=sample.name) + '.bai',
+                    'bam_path': bsf.analyses.star_aligner.StarAligner.get_prefix_star_aligner_merge(
+                        sample_name=sample.name) + '.bam',
+                    'bai_path': bsf.analyses.star_aligner.StarAligner.get_prefix_star_aligner_merge(
+                        sample_name=sample.name) + '.bai',
                 }
                 """ @type row_dict: dict[str, str | unicode] """
                 # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample DESeq *'.
