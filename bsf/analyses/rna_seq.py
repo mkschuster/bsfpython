@@ -274,6 +274,8 @@ class FilePathCuffnorm(FilePath):
     Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str | unicode
+    @ivar abundances_tsv: Abundances TSV file
+    @type abundances_tsv: str | unicode
     """
 
     def __init__(self, prefix):
@@ -313,6 +315,31 @@ class FilePathCuffdiff(FilePath):
         self.output_directory = prefix
         self.abundances_tsv = prefix + '_abundances.tsv'
         self.alignments_tsv = prefix + '_alignments.tsv'
+
+        return
+
+
+class FilePathMonocle(FilePath):
+    """The C{bsf.analyses.rna_seq.FilePathMonocle} models files in a comparison-specific Monocle directory.
+
+    Attributes:
+    @ivar output_directory: Output directory
+    @type output_directory: str | unicode
+    @ivar annotation_tsv: Monocle annotation TSV
+    @type annotation_tsv: str | unicode
+    """
+    def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.rna_seq.FilePathMonocle} object
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
+        super(FilePathMonocle, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
+        self.annotation_tsv = prefix + '_annotation.tsv'
 
         return
 
@@ -361,31 +388,33 @@ class Tuxedo(Analysis):
     @type stage_name_run_cuffdiff: str
     @cvar stage_name_process_cuffdiff: C{bsf.Stage.name} for the process Cuffdiff stage
     @type stage_name_process_cuffdiff: str
+    @cvar stage_name_monocle: C{bsf.Stage.name} for the Monocle stage
+    @type stage_name_monocle: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
-    @type replicate_grouping: bool
+    @type replicate_grouping: bool | None
     @ivar comparison_path: Comparison file path
-    @type comparison_path: str | unicode
+    @type comparison_path: str | unicode | None
     @ivar genome_index_path: Bowtie genome index path
-    @type genome_index_path: str | unicode
+    @type genome_index_path: str | unicode | None
     @ivar genome_fasta_path: Reference genome sequence FASTA file path
-    @type genome_fasta_path: str | unicode
+    @type genome_fasta_path: str | unicode | None
     @ivar transcriptome_version: Transcriptome version
-    @type transcriptome_version: str
+    @type transcriptome_version: str | None
     @ivar transcriptome_index_path: Tophat transcriptome index path
-    @type transcriptome_index_path: str | unicode
+    @type transcriptome_index_path: str | unicode | None
     @ivar transcriptome_gtf_path: Reference transcriptome GTF file path
-    @type transcriptome_gtf_path: str | unicode
+    @type transcriptome_gtf_path: str | unicode | None
     @ivar mask_gtf_path: GTF file path to mask transcripts
-    @type mask_gtf_path: str | unicode
+    @type mask_gtf_path: str | unicode | None
     @ivar multi_read_correction: Apply multi-read correction
-    @type multi_read_correction: bool
+    @type multi_read_correction: bool | None
     @ivar library_type: Library type
         Cuffquant and Cuffdiff I{fr-unstranded} (default), I{fr-firststrand} or I{fr-secondstrand}
-    @type library_type: str
+    @type library_type: str | None
     @ivar novel_transcripts: Assemble novel transcripts
-    @type novel_transcripts: bool
+    @type novel_transcripts: bool | None
     @ivar no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
-    @type no_length_correction: bool
+    @type no_length_correction: bool | None
     """
 
     name = 'RNA-seq Analysis'
@@ -403,6 +432,7 @@ class Tuxedo(Analysis):
     stage_name_run_cuffnorm = '_'.join((prefix, 'cuffnorm'))
     stage_name_run_cuffdiff = '_'.join((prefix, 'cuffdiff'))
     stage_name_process_cuffdiff = '_'.join((prefix, 'process_cuffdiff'))
+    stage_name_monocle = '_'.join((prefix, 'monocle'))
 
     @classmethod
     def get_prefix_rnaseq_run_tophat(cls, paired_reads_name):
@@ -470,6 +500,17 @@ class Tuxedo(Analysis):
         """
         return '_'.join((cls.stage_name_process_cuffdiff, comparison_name))
 
+    @classmethod
+    def get_prefix_rnaseq_monocle(cls, comparison_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param comparison_name: Comparison name
+        @type comparison_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.stage_name_monocle, comparison_name))
+
     def __init__(
             self,
             configuration=None,
@@ -484,7 +525,7 @@ class Tuxedo(Analysis):
             stage_list=None,
             collection=None,
             sample_list=None,
-            replicate_grouping=False,
+            replicate_grouping=None,
             comparison_path=None,
             genome_index_path=None,
             genome_fasta_path=None,
@@ -495,7 +536,7 @@ class Tuxedo(Analysis):
             multi_read_correction=None,
             library_type=None,
             novel_transcripts=None,
-            no_length_correction=False):
+            no_length_correction=None):
         """Initialise a C{bsf.analyses.rna_seq.Tuxedo} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -525,30 +566,30 @@ class Tuxedo(Analysis):
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
-        @type replicate_grouping: bool
+        @type replicate_grouping: bool | None
         @param comparison_path: Comparison file path
-        @type comparison_path: str | unicode
+        @type comparison_path: str | unicode | None
         @param genome_index_path: Bowtie genome index path
-        @type genome_index_path: str | unicode
+        @type genome_index_path: str | unicode | None
         @param genome_fasta_path: Reference genome sequence FASTA file path
-        @type genome_fasta_path: str | unicode
+        @type genome_fasta_path: str | unicode | None
         @param transcriptome_version: Transcriptome version
-        @type transcriptome_version: str
+        @type transcriptome_version: str | None
         @param transcriptome_index_path: Tophat transcriptome index path
-        @type transcriptome_index_path: str | unicode
+        @type transcriptome_index_path: str | unicode | None
         @param transcriptome_gtf_path: Reference transcriptome GTF file path
-        @type transcriptome_gtf_path: str | unicode
+        @type transcriptome_gtf_path: str | unicode | None
         @param mask_gtf_path: GTF file path to mask transcripts
-        @type mask_gtf_path: str | unicode
+        @type mask_gtf_path: str | unicode | None
         @param multi_read_correction: Apply multi-read correction
-        @type multi_read_correction: bool
+        @type multi_read_correction: bool | None
         @param library_type: Library type
             Cuffquant and Cuffdiff I{fr-unstranded} (default), I{fr-firststrand} or I{fr-secondstrand}
-        @type library_type: str
+        @type library_type: str | None
         @param novel_transcripts: Assemble novel transcripts
-        @type novel_transcripts: bool
+        @type novel_transcripts: bool | None
         @param no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
-        @type no_length_correction: bool
+        @type no_length_correction: bool | None
         @return:
         @rtype:
         """
@@ -569,68 +610,18 @@ class Tuxedo(Analysis):
 
         # Sub-class specific ...
 
-        if replicate_grouping is None:
-            self.replicate_grouping = False
-        else:
-            assert isinstance(replicate_grouping, bool)
-            self.replicate_grouping = replicate_grouping
-
-        if comparison_path is None:
-            self.comparison_path = str()
-        else:
-            self.comparison_path = comparison_path
-
-        if genome_index_path is None:
-            self.genome_index_path = str()
-        else:
-            self.genome_index_path = genome_index_path
-
-        if genome_fasta_path is None:
-            self.genome_fasta_path = str()
-        else:
-            self.genome_fasta_path = genome_fasta_path
-
-        if transcriptome_version is None:
-            self.transcriptome_version = str()
-        else:
-            self.transcriptome_version = transcriptome_version
-
-        if transcriptome_index_path is None:
-            self.transcriptome_index_path = str()
-        else:
-            self.transcriptome_index_path = transcriptome_index_path
-
-        if transcriptome_gtf_path is None:
-            self.transcriptome_gtf_path = str()
-        else:
-            self.transcriptome_gtf_path = transcriptome_gtf_path
-
-        if mask_gtf_path is None:
-            self.mask_gtf_path = str()
-        else:
-            self.mask_gtf_path = mask_gtf_path
-
-        if multi_read_correction is None:
-            self.multi_read_correction = False
-        else:
-            assert isinstance(multi_read_correction, bool)
-            self.multi_read_correction = multi_read_correction
-
-        if library_type is None:
-            self.library_type = str()
-        else:
-            self.library_type = library_type
-
-        if novel_transcripts is None:
-            self.novel_transcripts = True
-        else:
-            self.novel_transcripts = novel_transcripts
-
-        if no_length_correction is None:
-            self.no_length_correction = False
-        else:
-            assert isinstance(no_length_correction, bool)
-            self.no_length_correction = no_length_correction
+        self.replicate_grouping = replicate_grouping
+        self.comparison_path = comparison_path
+        self.genome_index_path = genome_index_path
+        self.genome_fasta_path = genome_fasta_path
+        self.transcriptome_version = transcriptome_version
+        self.transcriptome_index_path = transcriptome_index_path
+        self.transcriptome_gtf_path = transcriptome_gtf_path
+        self.mask_gtf_path = mask_gtf_path
+        self.multi_read_correction = multi_read_correction
+        self.library_type = library_type
+        self.novel_transcripts = novel_transcripts
+        self.no_length_correction = no_length_correction
 
         self._comparison_dict = dict()
         """ @type _comparison_dict: dict[str, list[bsf.ngs.SampleGroup]] """
@@ -914,12 +905,12 @@ class Tuxedo(Analysis):
         # Tuxedo requires a genome version.
 
         if not self.genome_version:
-            raise Exception('A Tuxedo analysis requires a genome_version configuration option.')
+            raise Exception('A ' + self.name + " requires a 'genome_version' configuration option.")
 
         # Tuxedo requires a transcriptome version.
 
         if not self.transcriptome_version:
-            raise Exception('A Tuxedo analysis requires a transcriptome_version configuration option.')
+            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
 
         run_read_comparisons()
 
@@ -937,10 +928,11 @@ class Tuxedo(Analysis):
         if not self.genome_fasta_path:
             self.genome_fasta_path = self.genome_index_path + '.fa'
 
-        genome_sizes_path = self.genome_fasta_path + '.fai'
-
         if not os.path.exists(self.genome_fasta_path):
             raise Exception('Genome FASTA file path {!r} does not exists.'.format(self.genome_fasta_path))
+
+        # TODO: Make this configurable via a genome configuration option?
+        genome_sizes_path = self.genome_fasta_path + '.fai'
 
         # Define a reference transcriptome index directory or a GTF file path.
 
@@ -1002,7 +994,17 @@ class Tuxedo(Analysis):
                                 format(self.transcriptome_gtf_path))
 
         if not self.transcriptome_gtf_path:
-            raise Exception('Reference transcriptome GTF file not defined.')
+            raise Exception('Reference transcriptome GTF file not defined.\n' +
+                            'A ' + self.name + " requires a 'transcriptome_index' or 'transcriptome_gtf' " +
+                            "configuration option.")
+
+        if not self.library_type:
+            raise Exception('A ' + self.name + " requires a 'library_type' configuration option.")
+
+        library_type_tuple = ('fr-unstranded', 'fr-firststrand', 'fr-secondstrand')
+        if self.library_type not in library_type_tuple:
+            raise Exception("Invalid 'library_type' configuration option: " + self.library_type + '\n' +
+                            'Supported types: ' + repr(library_type_tuple))
 
         # Read configuration options.
 
@@ -1019,6 +1021,7 @@ class Tuxedo(Analysis):
         stage_run_cuffnorm = self.get_stage(name=self.stage_name_run_cuffnorm)
         stage_run_cuffdiff = self.get_stage(name=self.stage_name_run_cuffdiff)
         stage_process_cuffdiff = self.get_stage(name=self.stage_name_process_cuffdiff)
+        # stage_monocle = self.get_stage(name=self.stage_name_monocle)
 
         runnable_run_cufflinks_list = list()
         """ @type runnable_run_cufflinks_list: list[Runnable] """
@@ -1489,6 +1492,8 @@ class Tuxedo(Analysis):
             else:
                 # If novel transcripts are not assembled, create RunnableStep objects to create the output directory
                 # and copy the reference transcriptome GTF file.
+                # FIXME: Since the Ensembl GTF does not have p_id and tss_id attributes, cuffcompare needs running.
+                # cuffcompare -s hg38.fa -C -G -o test_gtf -r hg38_e87.gtf hg38_e87.gtf
 
                 runnable_run_cuffmerge.add_runnable_step(
                     runnable_step=RunnableStepMakeDirectory(
@@ -1569,6 +1574,15 @@ class Tuxedo(Analysis):
                     name='link_merged_gtf',
                     source_path=file_path_cuffmerge.merged_gtf_link_source,
                     target_path=file_path_cuffmerge.merged_gtf_link_target))
+
+            prefix_monocle = self.get_prefix_rnaseq_monocle(comparison_name=comparison_name)
+
+            file_path_monocle = FilePathMonocle(prefix=prefix_monocle)
+
+            monocle_annotation_sheet = AnnotationSheet(
+                file_path=os.path.join(self.genome_directory, file_path_monocle.annotation_tsv),
+                file_type='excel-tab',
+                header=True)
 
             for sample_group in sample_group_list:
                 if self.debug > 0:
@@ -1683,6 +1697,21 @@ class Tuxedo(Analysis):
 
                         cuffdiff_cuffnorm_dependencies.append(executable_run_cuffquant.name)
 
+                        # Write Monocle annotation.
+                        # FIXME: ReadGroup versus Sample level
+                        # Depending on the replicate_grouping instance variable, the abundance file can be on
+                        # the read_group or sample level, while Monocle annotation will always be on the sample level.
+                        monocle_row_dict = {
+                            'file': file_path_cuffquant.abundances,
+                            'sample_name': sample.name
+                        }
+                        """ @type monocle_row_dict: dict[str, str | unicode] """
+                        # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample Monocle *'.
+                        for annotation_key in filter(lambda x: x.startswith('Monocle '), sample.annotation_dict.keys()):
+                            monocle_row_dict[annotation_key[8:]] = sample.annotation_dict[annotation_key][0]
+
+                        monocle_annotation_sheet.row_dicts.append(monocle_row_dict)
+
                 cuffdiff_cuffnorm_abundances_dict[sample_group.name] = per_group_abundances_list
                 cuffdiff_cuffnorm_alignments_dict[sample_group.name] = per_group_alignments_list
 
@@ -1751,6 +1780,9 @@ class Tuxedo(Analysis):
                 annotation_path=os.path.join(self.genome_directory, file_path_run_cuffnorm.abundances_tsv),
                 annotation_dict=cuffdiff_cuffnorm_abundances_dict)
             runnable_step_cuffnorm.arguments.append(file_path_run_cuffnorm.abundances_tsv)
+
+            # Adjust field names to the annotation before writing to disk.
+            monocle_annotation_sheet.to_file_path(adjust_field_names=True)
 
             if len(self._comparison_dict[comparison_name]) >= 2:
                 # Create a Cuffdiff Runnable per comparison if there are at least two SampleGroup objects.
@@ -3204,8 +3236,6 @@ class DESeq(Analysis):
             file_path=self.comparison_path,
             file_type='excel',
             name='DESeq Design Table')
-        # Convert the CSV configuration table into a TSV analysis table.
-        design_sheet.file_type = 'excel-tab'
 
         # Read the contrasts file.
 
@@ -3215,8 +3245,6 @@ class DESeq(Analysis):
             file_path=self.contrast_path,
             file_type='excel',
             name='DESeq Contrast Table')
-        # Convert the CSV configuration table into a TSV analysis table.
-        contrast_sheet.file_type = 'excel-tab'
 
         # TODO: Adjust by introducing a new class RNASeqComparisonSheet(AnnotationSheet) in this module?
         for design_row_dict in design_sheet.row_dicts:
@@ -3267,21 +3295,17 @@ class DESeq(Analysis):
 
                 annotation_sheet.row_dicts.append(row_dict)
 
-            # Process all row_dict objects to get the superset of field names.
-            for row_dict in annotation_sheet.row_dicts:
-                for key in row_dict.iterkeys():
-                    if key not in annotation_sheet.field_names:
-                        annotation_sheet.field_names.append(key)
-
             # Write the DESeq Sample Annotation Sheet to disk.
-            annotation_sheet.to_file_path()
+            annotation_sheet.to_file_path(adjust_field_names=True)
 
-            # Write the DESeq Design Annotation Sheet to disk.
+            # Re-write the Annotation Sheet objects for DESeq designs and contrasts to new file paths in the
+            # genome directory. Convert the CSV configuration tables into TSV analysis tables.
             design_sheet.file_path = os.path.join(comparison_directory, prefix + '_designs.tsv')
+            design_sheet.file_type = 'excel-tab'
             design_sheet.to_file_path()
 
-            # Write the DESeq Contrast Annotation Sheet to disk.
             contrast_sheet.file_path = os.path.join(comparison_directory, prefix + '_contrasts.tsv')
+            contrast_sheet.file_type = 'excel-tab'
             contrast_sheet.to_file_path()
 
         return
