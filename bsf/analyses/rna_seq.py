@@ -212,10 +212,24 @@ class FilePathCuffmerge(bsf.FilePath):
     @type temporary_big_gene_prediction: str | unicode
     @ivar temporary_sorted_tsv: Temporary sorted tab-separated value (TSV) file
     @type temporary_sorted_tsv: str | unicode
+    @ivar cuffcompare_prefix: Cuffcompare output prefix, including the cuffmerge directory path
+    @type cuffcompare_prefix: str | unicode
+    @ivar cuffcompare_combined_gtf: Cuffcompare merged GTF file
+    @type cuffcompare_combined_gtf: str | unicode
+    @ivar cuffcompare_loci: Cuffcomapre loci file
+    @type cuffcompare_loci: str | unicode
+    @ivar cuffcompare_stats: Cuffcompare stats file
+    @type cuffcompare_stats: str | unicode
+    @ivar cuffcompare_tracking: Cuffcompare tracking file
+    @type cuffcompare_tracking: str | unicode
+    @ivar cuffcompare_refmap: Cuffcompare merged.gtf.refmap
+    @type cuffcompare_refmap: str | unicode
+    @ivar cuffcompare_tmap: Cuffcompare merged.gtf.tmap
+    @type cuffcompare_tmap: str | unicode
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rna_seq.FilePathCufflinks} object
+        """Initialise a C{bsf.analyses.rna_seq.FilePathCuffmerge} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -235,6 +249,13 @@ class FilePathCuffmerge(bsf.FilePath):
         self.temporary_gene_prediction = os.path.join(prefix, 'merged_gene_prediction.tsv')
         self.temporary_big_gene_prediction = os.path.join(prefix, 'merged_big_gene_prediction.tsv')
         self.temporary_sorted_tsv = os.path.join(prefix, 'merged_sorted.tsv')
+        self.cuffcompare_prefix = os.path.join(prefix, 'cuffcmp')
+        self.cuffcompare_combined_gtf = self.cuffcompare_prefix + '.combined.gtf'
+        self.cuffcompare_loci = self.cuffcompare_prefix + '.loci'
+        self.cuffcompare_stats = self.cuffcompare_prefix + '.stats'
+        self.cuffcompare_tracking = self.cuffcompare_prefix + '.tracking'
+        self.cuffcompare_refmap = self.cuffcompare_prefix + '.merged.gtf.refmap'
+        self.cuffcompare_tmap = self.cuffcompare_prefix + '.merged.gtf.tmap'
 
         return
 
@@ -1496,8 +1517,6 @@ class Tuxedo(bsf.Analysis):
             else:
                 # If novel transcripts are not assembled, create RunnableStep objects to create the output directory
                 # and copy the reference transcriptome GTF file.
-                # FIXME: Since the Ensembl GTF does not have p_id and tss_id attributes, cuffcompare needs running.
-                # cuffcompare -s hg38.fa -C -G -o test_gtf -r hg38_e87.gtf hg38_e87.gtf
 
                 runnable_run_cuffmerge.add_runnable_step(
                     runnable_step=bsf.process.RunnableStepMakeDirectory(
@@ -1509,6 +1528,34 @@ class Tuxedo(bsf.Analysis):
                         name='copy',
                         source_path=self.transcriptome_gtf_path,
                         target_path=file_path_cuffmerge.merged_gtf))
+
+                # Run cuffcompare in a self-comparison mode to get 'tss_id' and 'p_id' attributes populated.
+
+                runnable_step = runnable_run_cuffmerge.add_runnable_step(
+                    runnable_step=bsf.process.RunnableStep(
+                        name='cuffcompare',
+                        program='cuffcompare',
+                        obsolete_file_path_list=[file_path_cuffmerge.merged_gtf]))
+                runnable_step.add_switch_short(key='C')  # include 'contained' transcripts
+                runnable_step.add_switch_short(key='G')  # generic GFF input fields, i.e. not a Cufflinks GTF
+                runnable_step.add_option_short(key='o', value=file_path_cuffmerge.cuffcompare_prefix)
+                runnable_step.add_option_short(key='r', value=self.transcriptome_gtf_path)  # reference GTF
+                runnable_step.add_option_short(key='s', value=self.genome_fasta_path)  # reference sequence
+                runnable_step.arguments.append(file_path_cuffmerge.merged_gtf)
+
+                # Move 'cuffcmp.combined.gtf' to 'merged.gtf' and delete obsolete files.
+                runnable_run_cuffmerge.add_runnable_step(
+                    runnable_step=bsf.process.RunnableStepMove(
+                        name='move_combined_gtf',
+                        source_path=file_path_cuffmerge.cuffcompare_combined_gtf,
+                        target_path=file_path_cuffmerge.merged_gtf,
+                        obsolete_file_path_list=[
+                            file_path_cuffmerge.cuffcompare_loci,
+                            file_path_cuffmerge.cuffcompare_stats,
+                            file_path_cuffmerge.cuffcompare_tracking,
+                            file_path_cuffmerge.cuffcompare_refmap,
+                            file_path_cuffmerge.cuffcompare_tmap,
+                        ]))
 
             # Convert the resulting merged GTF file into a UCSC genePred file.
 
@@ -1707,7 +1754,8 @@ class Tuxedo(bsf.Analysis):
                         # the read_group or sample level, while Monocle annotation will always be on the sample level.
                         monocle_row_dict = {
                             'file': file_path_cuffquant.abundances,
-                            'sample_name': sample.name
+                            # 'sample_name' is used by Monocle in the plot_cell_clusters() function internally.
+                            'original_name': sample.name
                         }
                         """ @type monocle_row_dict: dict[str, str | unicode] """
                         # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample Monocle *'.
