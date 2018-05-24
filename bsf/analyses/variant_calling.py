@@ -179,7 +179,7 @@ class FilePathAlignment(FilePath):
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.variant_calling.FilePathAlignment} object
+        """Initialise a C{bsf.analyses.variant_calling.FilePathAlignment} object.
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -196,43 +196,43 @@ class FilePathAlignment(FilePath):
 
 
 class FilePathProcessReadGroup(FilePath):
-    """The C{bsf.analyses.variant_calling.FilePathAlignment} models files in a sample-specific directory.
+    """The C{bsf.analyses.variant_calling.FilePathProcessReadGroup} models files in a sample-specific directory.
 
     Attributes:
-    @ivar duplicates_marked_bam: Picard Mark Duplicates BAM file
+    @ivar duplicates_marked_bam: Picard Mark Duplicates BAM file path
     @type duplicates_marked_bam: str | unicode
-    @ivar duplicates_marked_bai: Picard Mark Duplicates BAI file
+    @ivar duplicates_marked_bai: Picard Mark Duplicates BAI file path
     @type duplicates_marked_bai: str | unicode
-    @ivar duplicates_marked_md5: Picard Mark Duplicates MD5 check sum file
+    @ivar duplicates_marked_md5: Picard Mark Duplicates MD5 check sum file path
     @type duplicates_marked_md5: str | unicode
-    @ivar duplicate_metrics: Picard Mark Duplicates metrics file
+    @ivar duplicate_metrics: Picard Mark Duplicates Metrics TSV file path
     @type duplicate_metrics: str | unicode
-    @ivar realigner_targets: GATK
+    @ivar realigner_targets: GATK RealignerTargetCreator interval list file path
     @type realigner_targets: str | unicode
-    @ivar realigned_bam: Re-aligned BAM file
+    @ivar realigned_bam: GATK re-aligned BAM file path
     @type realigned_bam: str | unicode
-    @ivar realigned_bai: Re-aligned BAI file
+    @ivar realigned_bai: GATK re-aligned BAI file path
     @type realigned_bai: str | unicode
-    @ivar realigned_md5: Re-aligned MD5 check sum file
+    @ivar realigned_md5: GATK re-aligned MD5 check sum file path
     @type realigned_md5: str | unicode
-    @ivar recalibration_table_pre:
+    @ivar recalibration_table_pre: GATK pre-recalibration table file path
     @type recalibration_table_pre: str | unicode
-    @ivar recalibration_table_post:
+    @ivar recalibration_table_post: GATK post-recalibration table file path
     @type recalibration_table_post: str | unicode
-    @ivar recalibration_plot:
+    @ivar recalibration_plot: GATK Recalibration plot PDF file path
     @type recalibration_plot: str | unicode
-    @ivar recalibrated_bam: Recalibrated BAM file
+    @ivar recalibrated_bam: Recalibrated BAM file path
     @type recalibrated_bam: str | unicode
-    @ivar recalibrated_bai: Recalibrated BAI file
+    @ivar recalibrated_bai: Recalibrated BAI file path
     @type recalibrated_bai: str | unicode
-    @ivar recalibrated_md5: Recalibrated BAM MD5 check sum file
+    @ivar recalibrated_md5: Recalibrated BAM MD5 check sum file path
     @type recalibrated_md5: str | unicode
-    @ivar alignment_summary_metrics: Picard Collect Alignment Summary metrics file
+    @ivar alignment_summary_metrics: Picard Collect Alignment Summary metrics file path
     @type alignment_summary_metrics: str | unicode
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.variant_calling.FilePathProcessReadGroup} object
+        """Initialise a C{bsf.analyses.variant_calling.FilePathProcessReadGroup} object.
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -261,8 +261,43 @@ class FilePathProcessReadGroup(FilePath):
 
 
 class FilePathProcessSample(FilePath):
+    """The C{bsf.analyses.variant_calling.FilePathProcessSample} models files in a sample-specific directory.
+
+    Attributes:
+    @ivar merged_bam: Merged BAM file path
+    @type merged_bam: str | unicode
+    @ivar merged_bai: Merged BAI file path
+    @type merged_bai: str | unicode
+    @ivar merged_md5: Merged MD5 check sum file path
+    @type merged_md5: str | unicode
+    @ivar duplicates_marked_bam: Duplicates-marked BAM file path
+    @type duplicates_marked_bam: str | unicode
+    @ivar duplicates_marked_bai: Duplicates-marked BAI file path
+    @type duplicates_marked_bai: str | unicode
+    @ivar duplicates_marked_md5: Duplicates-marked MD5 check sum file path
+    @type duplicates_marked_md5: str | unicode
+    @ivar duplicate_metrics: Duplicate metrics TSV file path
+    @type duplicate_metrics: str | unicode
+    @ivar realigner_targets: Re-aligner target file path
+    @type realigner_targets: str | unicode
+    @ivar realigned_bam: Re-aligned BAM file path
+    @type realigned_bam: str | unicode
+    @ivar realigned_bai: Re-aligned BAI file path
+    @type realigned_bai: str | unicode
+    @ivar realigned_md5: Re-aligned MD5 check sum file path
+    @type realigned_md5: str | unicode
+    @ivar realigned_bam_bai: Re-aligned BAM BAI file path
+    @type realigned_bam_bai: str | unicode
+    @ivar alignment_summary_metrics: Alignment summary metrics TSV file path
+    @type alignment_summary_metrics: str | unicode
+    @ivar raw_variants_gvcf_vcf: Raw variants gVCF file path
+    @type raw_variants_gvcf_vcf: str | unicode
+    @ivar raw_variants_gvcf_tbi: Raw variants TBI file path
+    @type raw_variants_gvcf_tbi: str | unicode
+    """
+
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.variant_calling.FilePathProcessSample} object
+        """Initialise a C{bsf.analyses.variant_calling.FilePathProcessSample} object.
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -291,8 +326,43 @@ class FilePathProcessSample(FilePath):
 
 
 class FilePathDiagnoseSample(FilePath):
+    """The C{bsf.analyses.variant_calling.FilePathDiagnoseSample} models files in a sample-specific directory.
+
+    Attributes:
+    @ivar diagnose_targets_vcf: Diagnose Targets VCF file path
+    @type diagnose_targets_vcf: str | unicode
+    @ivar diagnose_targets_tbi: Diagnose Targets TBI file path
+    @type diagnose_targets_tbi: str | unicode
+    @ivar missing_intervals: Missing intervals file path
+    @type missing_intervals: str | unicode
+    @ivar missing_report: Missing GATK Report file path
+    @type missing_report: str | unicode
+    @ivar callable_bed: Callable BED file path
+    @type callable_bed: str | unicode
+    @ivar callable_txt: Callable text file path
+    @type callable_txt: str | unicode
+    @ivar callable_bb: Callable BigBed file path
+    @type callable_bb: str | unicode
+    @ivar sorted_bed: Sorted BED file path
+    @type sorted_bed: str | unicode
+    @ivar non_callable_loci_tsv: Non-callable Loci TSV file path
+    @type non_callable_loci_tsv: str | unicode
+    @ivar non_callable_regions_tsv: Non-callable Regions TSV file path
+    @type non_callable_regions_tsv: str | unicode
+    @ivar non_callable_summary_tsv: Non-callable Summary TSV file path
+    @type non_callable_summary_tsv: str | unicode
+    @ivar hybrid_selection_metrics: Hybrid Selection Metrics TSV file path
+    @type hybrid_selection_metrics: str | unicode
+    @ivar insert_size_pdf: Insert size plot PDF file path
+    @type insert_size_pdf: str | unicode
+    @ivar insert_size_png: Insert size plot PNG file path
+    @type insert_size_png: str | unicode
+    @ivar insert_size_tsv: Insert size TSV file path
+    @type insert_size_tsv: str | unicode
+    """
+
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.variant_calling.FilePathDiagnoseSample} object
+        """Initialise a C{bsf.analyses.variant_calling.FilePathDiagnoseSample} object.
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -323,8 +393,17 @@ class FilePathDiagnoseSample(FilePath):
 
 
 class FilePathMergeCohort(FilePath):
+    """The C{bsf.analyses.variant_calling.FilePathMergeCohort} models files in a cohort-specific directory.
+
+    Attributes:
+    @ivar combined_gvcf_vcf: Combined gVCF file path
+    @type combined_gvcf_vcf: str | unicode
+    @ivar combined_gvcf_tbi: Combined TBI file path
+    @type combined_gvcf_tbi: str | unicode
+    """
+
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.variant_calling.FilePathMergeCohort} object
+        """Initialise a C{bsf.analyses.variant_calling.FilePathMergeCohort} object.
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -340,8 +419,17 @@ class FilePathMergeCohort(FilePath):
 
 
 class FilePathGenotypeCohort(FilePath):
+    """The C{bsf.analyses.variant_calling.FilePathGenotypeCohort} models files in a cohort-specific directory.
+
+    Attributes:
+    @ivar genotyped_raw_vcf: Genotyped raw VCF file path
+    @type genotyped_raw_vcf: str | unicode
+    @ivar genotyped_raw_tbi: Genotyped raw TBI file path
+    @type genotyped_raw_tbi: str | unicode
+    """
+
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.variant_calling.FilePathGenotypeCohort} object
+        """Initialise a C{bsf.analyses.variant_calling.FilePathGenotypeCohort} object.
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -357,8 +445,37 @@ class FilePathGenotypeCohort(FilePath):
 
 
 class FilePathProcessCohort(FilePath):
+    """The C{bsf.analyses.variant_calling.FilePathGenotypeCohort} models files in a cohort-specific directory.
+
+    Attributes:
+    @ivar recalibrated_snp_raw_indel_vcf: Recalibrated SNP raw InDel VCF file path
+    @type recalibrated_snp_raw_indel_vcf: str | unicode
+    @ivar recalibrated_snp_raw_indel_tbi: Recalibrated SNP raw InDel TBI file path
+    @type recalibrated_snp_raw_indel_tbi: str | unicode
+    @ivar recalibrated_snp_recalibrated_indel_vcf: Recalibrated SNP recalibrated InDel VCF file path
+    @type recalibrated_snp_recalibrated_indel_vcf: str | unicode
+    @ivar recalibrated_snp_recalibrated_indel_tbi: Recalibrated SNP recalibrated InDel TBI file path
+    @type recalibrated_snp_recalibrated_indel_tbi: str | unicode
+    @ivar multi_sample_vcf: Multi-sample VCF file path
+    @type multi_sample_vcf: str | unicode
+    @ivar multi_sample_tbi: Multi-sample TBI file path
+    @type multi_sample_tbi: str | unicode
+    @ivar recalibration_indel: Recalibration InDel file path
+    @type recalibration_indel: str | unicode
+    @ivar recalibration_snp: Recalibation SNP file path
+    @type recalibration_snp: str | unicode
+    @ivar tranches_indel: Tranches InDel file path
+    @type tranches_indel: str | unicode
+    @ivar tranches_snp: Tranches SNP file path
+    @type tranches_snp: str | unicode
+    @ivar plots_indel: Plots InDel R script file path
+    @type plots_indel: str | unicode
+    @ivar plots_snp: Plots SNP R script file path
+    @type plots_snp: str | unicode
+    """
+
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.variant_calling.FilePathProcessCohort} object
+        """Initialise a C{bsf.analyses.variant_calling.FilePathProcessCohort} object.
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -384,8 +501,27 @@ class FilePathProcessCohort(FilePath):
 
 
 class FilePathAnnotateSnpEff(FilePath):
+    """The C{bsf.analyses.variant_calling.FilePathAnnotateSnpEff} models snpEff-annotated, cohort-specific files.
+
+    Attributes:
+    @ivar snpeff_vcf: snpEff VCF file path
+    @type snpeff_vcf: str | unicode
+    @ivar snpeff_vcf_bgz: Bgzip-compressed snpEff VCF file path
+    @type snpeff_vcf_bgz: str | unicode
+    @ivar snpeff_vcf_tbi: Tabix-indexed snpEff VCF file path
+    @type snpeff_vcf_tbi: str | unicode
+    @ivar snpeff_genes: snpEff genes annotation TXT file path
+    @type snpeff_genes: str | unicode
+    @ivar snpeff_stats: snpEff statistics HTML file path
+    @type snpeff_stats: str | unicode
+    @ivar annotated_vcf: Annotated VCF file path
+    @type annotated_vcf: str | unicode
+    @ivar annotated_tbi: Annotated TBI file path
+    @type annotated_tbi: str | unicode
+    """
+
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.variant_calling.FilePathAnnotateSnpEff} object
+        """Initialise a C{bsf.analyses.variant_calling.FilePathAnnotateSnpEff} object.
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -406,6 +542,33 @@ class FilePathAnnotateSnpEff(FilePath):
 
 
 class FilePathAnnotateVEP(FilePath):
+    """The C{bsf.analyses.variant_calling.FilePathAnnotateVEP} models Ensembl VEP-annotated, cohort-specific files.
+
+    Attributes:
+    @ivar vep_statistics: Ensembl VEP statistics HTML file path
+    @type vep_statistics: str | unicode
+    @ivar vep_complete_raw_vcf: Ensembl VEP complete raw VCF file path
+    @type vep_complete_raw_vcf: str | unicode
+    @ivar vep_complete_raw_vcf_bgz: Ensembl VEP complete, raw Bgzip-compressed VCF file path
+    @type vep_complete_raw_vcf_bgz: str | unicode
+    @ivar vep_complete_raw_vcf_tbi: Ensembl VEP complete, raw Tabix-indexed TBI file path
+    @type vep_complete_raw_vcf_tbi: str | unicode
+    @ivar vep_filtered_raw_vcf: Ensembl VEP filtered, raw VCF file path
+    @type vep_filtered_raw_vcf: str | unicode
+    @ivar vep_filtered_raw_vcf_bgz: Ensembl VEP filtered, raw Bgzip-compressed VCF file path
+    @type vep_filtered_raw_vcf_bgz: str | unicode
+    @ivar vep_filtered_raw_vcf_tbi: Ensembl VEP filtered, raw Tabix-indexed TBI file path
+    @type vep_filtered_raw_vcf_tbi: str | unicode
+    @ivar vep_complete_vcf_bgz: Ensembl VEP complete VCF file path
+    @type vep_complete_vcf_bgz: str | unicode
+    @ivar vep_complete_vcf_tbi: Ensembl VEP complete TBI file path
+    @type vep_complete_vcf_tbi: str | unicode
+    @ivar vep_filtered_vcf_bgz: Ensembl VEP filtered VCF file path
+    @type vep_filtered_vcf_bgz: str | unicode
+    @ivar vep_filtered_vcf_tbi: Ensembl VEP filtered TBI file path
+    @type vep_filtered_vcf_tbi: str | unicode
+    """
+
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.variant_calling.FilePathAnnotateVEP} object
 
@@ -436,6 +599,17 @@ class FilePathAnnotateVEP(FilePath):
 
 
 class FilePathSplitCohort(FilePath):
+    """The C{bsf.analyses.variant_calling.FilePathSplitCohort} models sample-specific files.
+
+    Attributes:
+    @ivar sample_vcf: Sample VCF file path
+    @type sample_vcf: str | unicode
+    @ivar sample_tbi: Sample TBI file path
+    @type sample_tbi: str | unicode
+    @ivar sample_tsv: Sample TSV file path
+    @type sample_tsv: str | unicode
+    """
+
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.variant_calling.FilePathSplitCohort} object
 
@@ -507,8 +681,17 @@ class FilePathSummary(FilePath):
 
 
 class FilePathSomatic(FilePath):
+    """The C{bsf.analyses.variant_calling.FilePathSomatic} models files in somatic scatter and gathering.
+
+    Attributes:
+    @ivar somatic_vcf: Somatic VCF file path
+    @type somatic_vcf: str | unicode
+    @ivar somatic_tbi: Somatic TBI file path
+    @type somatic_tbi: str | unicode
+    """
+
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.variant_calling.FilePathSomatic} object
+        """Initialise a C{bsf.analyses.variant_calling.FilePathSomatic} object.
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -524,8 +707,17 @@ class FilePathSomatic(FilePath):
 
 
 class FilePathSomaticScatterGather(FilePath):
+    """The C{bsf.analyses.variant_calling.FilePathSomaticScatterGather} models files in somatic scatter and gathering.
+
+    Attributes:
+    @ivar somatic_vcf: Somatic VSF file path
+    @type somatic_vcf: str | unicode
+    @ivar somatic_tbi: Somatic TBI file path
+    @type somatic_tbi: str | unicode
+    """
+
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.variant_calling.FilePathSomaticScatterGather} object
+        """Initialise a C{bsf.analyses.variant_calling.FilePathSomaticScatterGather} object.
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -541,8 +733,15 @@ class FilePathSomaticScatterGather(FilePath):
 
 
 class FilePathSplitSomatic(FilePath):
+    """The C{bsf.analyses.variant_calling.FilePathSplitSomatic} models sample-specific somatic variant calling files.
+
+    Attributes:
+    @ivar comparison_tsv: Comparison-specific TSV file path
+    @type comparison_tsv: str | unicode
+    """
+
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.variant_calling.FilePathSplitSomatic} object
+        """Initialise a C{bsf.analyses.variant_calling.FilePathSplitSomatic} object.
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -561,11 +760,11 @@ class VariantCallingGATKComparison(object):
 
     Attributes:
     @ivar normal_sample: Normal sample
-    @type normal_sample: bsf.ngs.Sample
+    @type normal_sample: bsf.ngs.Sample | None
     @ivar tumor_sample: Tumour sample
-    @type tumor_sample: bsf.ngs.Sample
+    @type tumor_sample: bsf.ngs.Sample | None
     @ivar panel_of_normal_path: File path to a Panel-Of-Normal (PON) VCF file.
-    @type panel_of_normal_path: str | unicode
+    @type panel_of_normal_path: str | unicode | None
     """
 
     def __init__(
@@ -576,16 +775,16 @@ class VariantCallingGATKComparison(object):
         """Initialise a C{bsf.analyses.variant_calling.VariantCallingGATKComparison} object.
 
         @param normal_sample: Normal sample
-        @type normal_sample: bsf.ngs.Sample
+        @type normal_sample: bsf.ngs.Sample | None
         @param tumor_sample: Tumour sample
-        @type tumor_sample: bsf.ngs.Sample
+        @type tumor_sample: bsf.ngs.Sample | None
         @param panel_of_normal_path: File path to a Panel-Of-Normal (PON) VCF file.
-        @type panel_of_normal_path: str | unicode
+        @type panel_of_normal_path: str | unicode | None
         """
 
-        self.normal_sample = normal_sample  # Can be None.
-        self.tumor_sample = tumor_sample  # Can be None.
-        self.panel_of_normal_path = panel_of_normal_path  # Can be None.
+        self.normal_sample = normal_sample
+        self.tumor_sample = tumor_sample
+        self.panel_of_normal_path = panel_of_normal_path
 
         return
 
@@ -729,17 +928,17 @@ class VariantCallingGATK(Analysis):
     @ivar bwa_genome_db: Genome sequence file path with BWA index
     @type bwa_genome_db: str | unicode
     @ivar comparison_path: Comparison file path
-    @type comparison_path: str | unicode
+    @type comparison_path: str | unicode | None
     @ivar cohort_name: Cohort name
-    @type cohort_name: str
+    @type cohort_name: str | None
     @ivar accessory_cohort_gvcfs: Python C{list} of Python C{str} or C{unicode} (GVCF file path) objects
     @type accessory_cohort_gvcfs: list[str | unicode]
     @ivar skip_mark_duplicates: Skip the Picard MarkDuplicates step
-    @type skip_mark_duplicates: bool
+    @type skip_mark_duplicates: bool | None
     @ivar skip_indel_realignment: Skip the GATK RealignerTargetCreator and GATK IndelRealigner steps
-    @type skip_indel_realignment: bool
+    @type skip_indel_realignment: bool | None
     @ivar known_sites_discovery: VCF file path for variant discovery via The Haplotype Caller or Unified Genotyper
-    @type known_sites_discovery: str | unicode
+    @type known_sites_discovery: str | unicode | None
     @ivar known_sites_realignment: Python C{list} of Python C{str} or C{unicode} (VCF file paths)
         for realignment
     @type known_sites_realignment: list[str | unicode]
@@ -753,13 +952,13 @@ class VariantCallingGATK(Analysis):
         Python C{str} (file path) and Python C{list} of Python C{str} (annotation) value data
     @type annotation_resources_dict: dict[str, (str | unicode, list[str])]
     @ivar truth_sensitivity_filter_level_indel: Truth sensitivity filter level for INDELs
-    @type truth_sensitivity_filter_level_indel: str
+    @type truth_sensitivity_filter_level_indel: str | None
     @ivar truth_sensitivity_filter_level_snp: Truth sensitivity filter level for SNPs
-    @type truth_sensitivity_filter_level_snp: str
+    @type truth_sensitivity_filter_level_snp: str | None
     @ivar vqsr_skip_indel: Skip the Variant Quality Score Recalibration on INDELs
-    @type vqsr_skip_indel: None | bool
+    @type vqsr_skip_indel: bool | None
     @ivar vqsr_skip_snp: Skip the Variant Quality Score Recalibration on SNPs
-    @type vqsr_skip_snp: None | bool
+    @type vqsr_skip_snp: bool | None
     @ivar vqsr_resources_indel_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
     @type vqsr_resources_indel_dict: dict[str, dict[str, str | unicode]]
     @ivar vqsr_resources_snp_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
@@ -769,61 +968,61 @@ class VariantCallingGATK(Analysis):
     @ivar vqsr_annotations_snp_list: Python C{list} of Python C{str} (variant annotation) objects
     @type vqsr_annotations_snp_list: list[str]
     @ivar vqsr_bad_lod_cutoff_indel: LOD score cutoff for negative training set for INDELs
-    @type vqsr_bad_lod_cutoff_indel: None | float
+    @type vqsr_bad_lod_cutoff_indel: float | None
     @ivar vqsr_bad_lod_cutoff_snp: LOD score cutoff for negative training set for SNPs
-    @type vqsr_bad_lod_cutoff_snp: None | float
+    @type vqsr_bad_lod_cutoff_snp: float | None
     @ivar vqsr_max_gaussians_pos_indel: Maximum number of Gaussians in the positive training for INDELs
-    @type vqsr_max_gaussians_pos_indel: None | int
+    @type vqsr_max_gaussians_pos_indel: int | None
     @ivar vqsr_max_gaussians_pos_snp: Maximum number of Gaussians in the positive training for SNPs
-    @type vqsr_max_gaussians_pos_snp: None | int
+    @type vqsr_max_gaussians_pos_snp: int | None
     @ivar exclude_intervals_list: Python C{list} of Python C{str} (intervals) to exclude from the analysis
     @type exclude_intervals_list: list[str]
     @ivar include_intervals_list: Python C{list} of Python C{str} (intervals) to include in the analysis
     @type include_intervals_list: list[str]
     @ivar interval_padding: Interval padding
-    @type interval_padding: int
+    @type interval_padding: int | None
     @ivar number_of_tiles_cohort: Number of genomic tiles for scattering in stage variant_calling_process_cohort
-    @type number_of_tiles_cohort: int
+    @type number_of_tiles_cohort: int | None
     @ivar number_of_chunks_cohort: Number of chunks for gathering in stage variant_calling_process_cohort
-    @type number_of_chunks_cohort: int
+    @type number_of_chunks_cohort: int | None
     @ivar number_of_tiles_somatic: Number of genomic tiles for scattering in stage variant_calling_somatic
-    @type number_of_tiles_somatic: int
+    @type number_of_tiles_somatic: int | None
     @ivar number_of_chunks_somatic: Number of chunks for gathering in stage variant_calling_somatic
-    @type number_of_chunks_somatic: int
+    @type number_of_chunks_somatic: int | None
     @ivar gatk_bundle_version: GATK resource bundle version
-    @type gatk_bundle_version: str
+    @type gatk_bundle_version: str | None
     @ivar snpeff_genome_version: snpEff genome version
-    @type snpeff_genome_version: str
+    @type snpeff_genome_version: str | None
     @ivar genome_annotation_gtf: Genome annotation Gene Transfer Format (GTF) file path
-    @type genome_annotation_gtf: str | unicode
+    @type genome_annotation_gtf: str | unicode | None
     @ivar vep_assembly: Ensembl Variant Effect Predictor (VEP) assembly
-    @type vep_assembly: None | str | unicode
+    @type vep_assembly: str | unicode | None
     @ivar vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
-    @type vep_cache: None | str | unicode
+    @type vep_cache: str | unicode | None
     @ivar vep_fasta: Ensembl Variant Effect Predictor (VEP) FASTA directory
-    @type vep_fasta: None | str | unicode
+    @type vep_fasta: str | unicode | None
     @ivar vep_plugin: Ensembl Variant Effect Predictor (VEP) plug-in directory
-    @type vep_plugin: None | str | unicode
+    @type vep_plugin: str | unicode | None
     @ivar vep_species: Ensembl Variant Effect Predictor (VEP) species
-    @type vep_species: None | str | unicode
+    @type vep_species: str | unicode | None
     @ivar vep_source: Ensembl Variant Effect Predictor (VEP) source directory
-    @type vep_source: None | str | unicode
+    @type vep_source: str | unicode | None
     @ivar vep_sql_user: Ensembl Variant Effect Predictor (VEP) SQL database user name
-    @type vep_sql_user: None | str | unicode
+    @type vep_sql_user: str | unicode | None
     @ivar vep_sql_pass: Ensembl Variant Effect Predictor (VEP) SQL database password
-    @type vep_sql_pass: None | str | unicode
+    @type vep_sql_pass: str | unicode | None
     @ivar vep_sql_host: Ensembl Variant Effect Predictor (VEP) SQL host
-    @type vep_sql_host: None | str | unicode
+    @type vep_sql_host: str | unicode | None
     @ivar vep_sql_port: Ensembl Variant Effect Predictor (VEP) SQL TCP/IP port
-    @type vep_sql_port: None | str | unicode
+    @type vep_sql_port: str | unicode | None
     @ivar classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
-    @type classpath_gatk: None | str | unicode
+    @type classpath_gatk: str | unicode | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: None | str | unicode
+    @type classpath_picard: str | unicode | None
     @ivar classpath_snpeff: snpEff tool Java Archive (JAR) class path directory
-    @type classpath_snpeff: None | str | unicode
+    @type classpath_snpeff: str | unicode | None
     @ivar classpath_vcf_filter: VCF.Filter tool Java Archive (JAR) class path directory
-    @type classpath_vcf_filter: None | str | unicode
+    @type classpath_vcf_filter: str | unicode | None
     """
 
     name = 'Variant Calling Analysis'
@@ -865,8 +1064,8 @@ class VariantCallingGATK(Analysis):
             comparison_path=None,
             cohort_name=None,
             accessory_cohort_gvcfs=None,
-            skip_mark_duplicates=False,
-            skip_indel_realignment=False,
+            skip_mark_duplicates=None,
+            skip_indel_realignment=None,
             known_sites_discovery=None,
             known_sites_realignment=None,
             known_sites_recalibration=None,
@@ -874,8 +1073,8 @@ class VariantCallingGATK(Analysis):
             annotation_resources_dict=None,
             truth_sensitivity_filter_level_indel=None,
             truth_sensitivity_filter_level_snp=None,
-            vqsr_skip_indel=False,
-            vqsr_skip_snp=False,
+            vqsr_skip_indel=None,
+            vqsr_skip_snp=None,
             vqsr_resources_indel_dict=None,
             vqsr_resources_snp_dict=None,
             vqsr_annotations_indel_list=None,
@@ -942,17 +1141,17 @@ class VariantCallingGATK(Analysis):
         @param bwa_genome_db: Genome sequence file path with BWA index
         @type bwa_genome_db: str | unicode
         @param comparison_path: Comparison file path
-        @type comparison_path: str | unicode
+        @type comparison_path: str | unicode | None
         @param cohort_name: Cohort name
-        @type cohort_name: str
+        @type cohort_name: str | None
         @param accessory_cohort_gvcfs: Python C{list} of Python C{str} or C{unicode} (GVCF file path) objects
-        @type accessory_cohort_gvcfs: list[str | unicode]
+        @type accessory_cohort_gvcfs: list[str | unicode] | None
         @param skip_mark_duplicates: Skip the Picard MarkDuplicates step
-        @type skip_mark_duplicates: bool
+        @type skip_mark_duplicates: bool | None
         @param skip_indel_realignment: Skip the GATK RealignerTargetCreator and GATK IndelRealigner steps
-        @type skip_indel_realignment: bool
+        @type skip_indel_realignment: bool | None
         @param known_sites_discovery: VCF file path for variant discovery via The Haplotype Caller or Unified Genotyper
-        @type known_sites_discovery: str | unicode
+        @type known_sites_discovery: str | unicode | None
         @param known_sites_realignment: Python C{list} of Python C{str} or C{unicode} (VCF file paths)
             for realignment
         @type known_sites_realignment: list[str | unicode]
@@ -966,13 +1165,13 @@ class VariantCallingGATK(Analysis):
             Python C{str} (file path) and Python C{list} of Python C{str} (annotation) value data
         @type annotation_resources_dict: dict[str, (str | unicode, list[str])]
         @param truth_sensitivity_filter_level_indel: Truth sensitivity filter level for INDELs
-        @type truth_sensitivity_filter_level_indel: str
+        @type truth_sensitivity_filter_level_indel: str | None
         @param truth_sensitivity_filter_level_snp: Truth sensitivity filter level for SNPs
-        @type truth_sensitivity_filter_level_snp: str
+        @type truth_sensitivity_filter_level_snp: str | None
         @param vqsr_skip_indel: Skip the Variant Quality Score Recalibration on INDELs
-        @type vqsr_skip_indel: None | bool
+        @type vqsr_skip_indel: bool | None
         @param vqsr_skip_snp: Skip the Variant Quality Score Recalibration on SNPs
-        @type vqsr_skip_snp: None | bool
+        @type vqsr_skip_snp: bool | None
         @param vqsr_resources_indel_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
         @type vqsr_resources_indel_dict: dict[str, dict[str, str | unicode]]
         @param vqsr_resources_snp_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
@@ -982,61 +1181,61 @@ class VariantCallingGATK(Analysis):
         @param vqsr_annotations_snp_list: Python C{list} of Python C{str} (variant annotation) objects
         @type vqsr_annotations_snp_list: list[str]
         @param vqsr_bad_lod_cutoff_indel: LOD score cutoff for negative training set for INDELs
-        @type vqsr_bad_lod_cutoff_indel: None | float
+        @type vqsr_bad_lod_cutoff_indel: float | None
         @param vqsr_bad_lod_cutoff_snp: LOD score cutoff for negative training set for SNPs
-        @type vqsr_bad_lod_cutoff_snp: None | float
+        @type vqsr_bad_lod_cutoff_snp: float | None
         @param vqsr_max_gaussians_pos_indel: Maximum number of Gaussians in the positive training for INDELs
-        @type vqsr_max_gaussians_pos_indel: None | int
+        @type vqsr_max_gaussians_pos_indel: int | None
         @param vqsr_max_gaussians_pos_snp: Maximum number of Gaussians in the positive training for SNPs
-        @type vqsr_max_gaussians_pos_snp: None | int
+        @type vqsr_max_gaussians_pos_snp: int | None
         @param exclude_intervals_list: Python C{list} of Python C{str} (intervals) to exclude from the analysis
         @type exclude_intervals_list: list[str]
         @param include_intervals_list: Python C{list} of Python C{str} (intervals) to include in the analysis
         @type include_intervals_list: list[str]
         @param interval_padding: Interval padding
-        @type interval_padding: int
+        @type interval_padding: int | None
         @param number_of_tiles_cohort: Number of genomic tiles for scattering in stage variant_calling_process_cohort
-        @type number_of_tiles_cohort: int
+        @type number_of_tiles_cohort: int | None
         @param number_of_chunks_cohort: Number of chunks for gathering in stage variant_calling_process_cohort
-        @type number_of_chunks_cohort: int
+        @type number_of_chunks_cohort: int | None
         @param number_of_tiles_somatic: Number of genomic tiles for scattering in stage variant_calling_somatic
-        @type number_of_tiles_somatic: int
+        @type number_of_tiles_somatic: int | None
         @param number_of_chunks_somatic: Number of chunks for gathering in stage variant_calling_somatic
-        @type number_of_chunks_somatic: int
+        @type number_of_chunks_somatic: int | None
         @param gatk_bundle_version: GATK resource bundle version
-        @type gatk_bundle_version: str
+        @type gatk_bundle_version: str | None
         @param snpeff_genome_version: snpEff genome version
-        @type snpeff_genome_version: str
+        @type snpeff_genome_version: str | None
         @param genome_annotation_gtf: Genome annotation Gene Transfer Format (GTF) file path
-        @type genome_annotation_gtf: str | unicode
+        @type genome_annotation_gtf: str | unicode | None
         @param vep_assembly: Ensembl Variant Effect Predictor (VEP) assembly
-        @type vep_assembly: None | str | unicode
+        @type vep_assembly: str | unicode | None
         @param vep_fasta: Ensembl Variant Effect Predictor (VEP) FASTA directory
-        @type vep_fasta: None | str | unicode
+        @type vep_fasta: str | unicode | None
         @param vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
-        @type vep_cache: None | str | unicode
+        @type vep_cache: str | unicode | None
         @param vep_plugin: Ensembl Variant Effect Predictor (VEP) plug-in directory
-        @type vep_plugin: None | str | unicode
+        @type vep_plugin: str | unicode | None
         @param vep_species: Ensembl Variant Effect Predictor (VEP) species
-        @type vep_species: None | str | unicode
+        @type vep_species: str | unicode | None
         @param vep_source: Ensembl Variant Effect Predictor (VEP) source directory
-        @type vep_source: None | str | unicode
+        @type vep_source: str | unicode | None
         @param vep_sql_user: Ensembl Variant Effect Predictor (VEP) SQL database user name
-        @type vep_sql_user: None | str | unicode
+        @type vep_sql_user: str | unicode | None
         @param vep_sql_pass: Ensembl Variant Effect Predictor (VEP) SQL database password
-        @type vep_sql_pass: None | str | unicode
+        @type vep_sql_pass: str | unicode | None
         @param vep_sql_host: Ensembl Variant Effect Predictor (VEP) SQL host
-        @type vep_sql_host: None | str | unicode
+        @type vep_sql_host: str | unicode | None
         @param vep_sql_port: Ensembl Variant Effect Predictor (VEP) SQL TCP/IP port
-        @type vep_sql_port: None | str | unicode
+        @type vep_sql_port: str | unicode | None
         @param classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
-        @type classpath_gatk: None | str | unicode
+        @type classpath_gatk: str | unicode | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: None | str | unicode
+        @type classpath_picard: str | unicode | None
         @param classpath_snpeff: snpEff tool Java Archive (JAR) class path directory
-        @type classpath_snpeff: None | str | unicode
+        @type classpath_snpeff: str | unicode | None
         @param classpath_vcf_filter: VCF.Filter tool Java Archive (JAR) class path directory
-        @type classpath_vcf_filter: None | str | unicode
+        @type classpath_vcf_filter: str | unicode | None
         @return:
         @rtype:
         """
@@ -1067,35 +1266,17 @@ class VariantCallingGATK(Analysis):
         else:
             self.bwa_genome_db = bwa_genome_db
 
-        if comparison_path is None:
-            self.comparison_path = str()
-        else:
-            self.comparison_path = comparison_path
-
-        if cohort_name is None:
-            self.cohort_name = str()
-        else:
-            self.cohort_name = cohort_name
+        self.comparison_path = comparison_path
+        self.cohort_name = cohort_name
 
         if accessory_cohort_gvcfs is None:
             self.accessory_cohort_gvcfs = list()
         else:
             self.accessory_cohort_gvcfs = accessory_cohort_gvcfs
 
-        if skip_mark_duplicates is None:
-            self.skip_mark_duplicates = False
-        else:
-            self.skip_mark_duplicates = skip_mark_duplicates
-
-        if skip_indel_realignment is None:
-            self.skip_indel_realignment = False
-        else:
-            self.skip_indel_realignment = skip_indel_realignment
-
-        if known_sites_discovery is None:
-            self.known_sites_discovery = str()
-        else:
-            self.known_sites_discovery = known_sites_discovery
+        self.skip_mark_duplicates = skip_mark_duplicates
+        self.skip_indel_realignment = skip_indel_realignment
+        self.known_sites_discovery = known_sites_discovery
 
         if known_sites_realignment is None:
             self.known_sites_realignment = list()
@@ -1117,25 +1298,11 @@ class VariantCallingGATK(Analysis):
         else:
             self.annotation_resources_dict = annotation_resources_dict
 
-        if truth_sensitivity_filter_level_indel is None:
-            self.truth_sensitivity_filter_level_indel = str()
-        else:
-            self.truth_sensitivity_filter_level_indel = truth_sensitivity_filter_level_indel
+        self.truth_sensitivity_filter_level_indel = truth_sensitivity_filter_level_indel
+        self.truth_sensitivity_filter_level_snp = truth_sensitivity_filter_level_snp
 
-        if truth_sensitivity_filter_level_snp is None:
-            self.truth_sensitivity_filter_level_snp = str()
-        else:
-            self.truth_sensitivity_filter_level_snp = truth_sensitivity_filter_level_snp
-
-        if vqsr_skip_indel is None:
-            self.vqsr_skip_indel = False
-        else:
-            self.vqsr_skip_indel = vqsr_skip_indel
-
-        if vqsr_skip_snp is None:
-            self.vqsr_skip_snp = False
-        else:
-            self.vqsr_skip_snp = vqsr_skip_snp
+        self.vqsr_skip_indel = vqsr_skip_indel
+        self.vqsr_skip_snp = vqsr_skip_snp
 
         if vqsr_resources_indel_dict is None:
             self.vqsr_resources_indel_dict = dict()
@@ -1172,45 +1339,14 @@ class VariantCallingGATK(Analysis):
         else:
             self.include_intervals_list = include_intervals_list
 
-        if interval_padding is None:
-            self.interval_padding = 0
-        else:
-            self.interval_padding = interval_padding
-
-        if number_of_tiles_cohort is None:
-            self.number_of_tiles_cohort = 0
-        else:
-            self.number_of_tiles_cohort = number_of_tiles_cohort
-
-        if number_of_chunks_cohort is None:
-            self.number_of_chunks_cohort = 0
-        else:
-            self.number_of_chunks_cohort = number_of_chunks_cohort
-
-        if number_of_tiles_somatic is None:
-            self.number_of_tiles_somatic = 0
-        else:
-            self.number_of_tiles_somatic = number_of_tiles_somatic
-
-        if number_of_chunks_somatic is None:
-            self.number_of_chunks_somatic = 0
-        else:
-            self.number_of_chunks_somatic = number_of_chunks_somatic
-
-        if gatk_bundle_version is None:
-            self.gatk_bundle_version = str()
-        else:
-            self.gatk_bundle_version = gatk_bundle_version
-
-        if snpeff_genome_version is None:
-            self.snpeff_genome_version = str()
-        else:
-            self.snpeff_genome_version = snpeff_genome_version
-
-        if genome_annotation_gtf is None:
-            self.genome_annotation_gtf = str()
-        else:
-            self.genome_annotation_gtf = genome_annotation_gtf
+        self.interval_padding = interval_padding
+        self.number_of_tiles_cohort = number_of_tiles_cohort
+        self.number_of_chunks_cohort = number_of_chunks_cohort
+        self.number_of_tiles_somatic = number_of_tiles_somatic
+        self.number_of_chunks_somatic = number_of_chunks_somatic
+        self.gatk_bundle_version = gatk_bundle_version
+        self.snpeff_genome_version = snpeff_genome_version
+        self.genome_annotation_gtf = genome_annotation_gtf
 
         self.vep_assembly = vep_assembly
         self.vep_cache = vep_cache
@@ -1894,9 +2030,9 @@ class VariantCallingGATK(Analysis):
                 """ @type sq_entry: dict """
                 total_length += int(sq_entry['LN'])
 
-            if tiles:
+            if tiles > 0:
                 tile_length = float(total_length) / float(tiles)
-            elif width:
+            elif width > 0:
                 tile_length = float(width)
             else:
                 # The intervals are just the natural sequence regions.
@@ -2466,7 +2602,8 @@ class VariantCallingGATK(Analysis):
                     elif _target_intervals.targets_path:
                         # If not running on genome tiles, the MuTect2 analysis is run on the target intervals, only.
                         _runnable_step.add_gatk_option(key='intervals', value=_target_intervals.targets_path)
-                        _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                        if self.interval_padding is not None:
+                            _runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
                 if self.known_sites_discovery:
                     _runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
                 for _file_path in self.known_somatic_discovery:
@@ -2511,8 +2648,8 @@ class VariantCallingGATK(Analysis):
                     temporary_tile_index_list = list()
                     """ @type temporary_tile_index_list: list[int] """
                     # Partition the index list into chunks of given size.
-                    partition_list = [tile_index_list[offset:offset + self.number_of_chunks_cohort]
-                                      for offset in range(0, len(tile_index_list), self.number_of_chunks_cohort)]
+                    partition_list = [tile_index_list[offset:offset + self.number_of_chunks_somatic]
+                                      for offset in range(0, len(tile_index_list), self.number_of_chunks_somatic)]
 
                     for partition_index in range(0, len(partition_list)):
                         chunk_index_list = partition_list[partition_index]
@@ -3136,10 +3273,10 @@ class VariantCallingGATK(Analysis):
         run_read_comparisons()
 
         # Create genomic tiles for scatter gather approaches.
-        if self.number_of_tiles_cohort:
+        if self.number_of_tiles_cohort is not None:
             self._tile_region_cohort_list = run_create_genome_tiles(tiles=self.number_of_tiles_cohort, width=0)
 
-        if self.number_of_tiles_somatic:
+        if self.number_of_tiles_somatic is not None:
             self._tile_region_somatic_list = run_create_genome_tiles(tiles=self.number_of_tiles_somatic, width=0)
 
         stage_align_lane = self.get_stage(name=self.stage_name_align_lane)
@@ -3904,7 +4041,8 @@ class VariantCallingGATK(Analysis):
             if target_intervals.targets_path:
                 # If target intervals are available, the Haplotype Caller analysis is run only on them.
                 runnable_step.add_gatk_option(key='intervals', value=target_intervals.targets_path)
-                runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+                if self.interval_padding is not None:
+                    runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
             else:
                 # If target intervals are not available, decoy sequences etc. can be excluded
                 # from the genome-wide Haplotype Caller analysis.
