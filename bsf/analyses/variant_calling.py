@@ -2002,15 +2002,18 @@ class VariantCallingGATK(Analysis):
             ),
         }
 
-        def run_create_genome_tiles(tiles=1, width=0):
+        def run_create_genome_tiles(tiles=None, width=None, sequences=None):
             """Private function to create genomic tiles for scattering and a partitioned list of indices for gathering.
 
             The tiles are created on the basis of a Picard sequence dictionary accompanying the genome FASTA file.
-            If both tiles and width are 0, then the sequence regions serve as natural tiles.
+            Sequence regions can serve as natural tiles, alternatively a number of tiles aor a tile width can be
+            requested. If both tiles and width are not defined or 0, no tiling is attempted.
             @param tiles: Number of tiles for scattering
-            @type tiles: int
+            @type tiles: int | None
             @param width: Tile width for scattering
-            @type width: int
+            @type width: int | None
+            @param sequences: Tile on sequence regions (i.e. SAM @SQ entries)
+            @type sequences: bool | None
             @return: Python C{list} of Python C{list} (tiles) of Python C{tuple} (tile region) of
                 Python C{str} (sequence region), Python C{int} (start) and Python C{int} (end)
             @rtype: list[list[(str, int, int)]]
@@ -2030,11 +2033,7 @@ class VariantCallingGATK(Analysis):
                 """ @type sq_entry: dict """
                 total_length += int(sq_entry['LN'])
 
-            if tiles > 0:
-                tile_length = float(total_length) / float(tiles)
-            elif width > 0:
-                tile_length = float(width)
-            else:
+            if sequences:
                 # The intervals are just the natural sequence regions.
                 # Thus the start coordinate is always 1 and the end coordinate is the sequence length (@SQ SL).
                 # 1 2 3 ... 7 8 9
@@ -2043,6 +2042,17 @@ class VariantCallingGATK(Analysis):
                 # length = end - start + 1 = 9 - 1 + 1 = 9
                 for sq_entry in alignment_file.header['SQ']:
                     tile_region_list.append([(str(sq_entry['SN']), 1, int(sq_entry['LN']))])
+
+                return tile_region_list
+
+            if tiles is not None and tiles > 0:
+                tile_length = float(total_length) / float(tiles)
+            elif width is not None and width > 0:
+                tile_length = float(width)
+            else:
+                # Do not tile at all, if neither a number of tiles nor a tile width was provided.
+                # Return a list of a single tuple with an empty sequence region, start and end coordinates.
+                tile_region_list.append([('', 0, 0)])
 
                 return tile_region_list
 
@@ -3273,11 +3283,8 @@ class VariantCallingGATK(Analysis):
         run_read_comparisons()
 
         # Create genomic tiles for scatter gather approaches.
-        if self.number_of_tiles_cohort is not None:
-            self._tile_region_cohort_list = run_create_genome_tiles(tiles=self.number_of_tiles_cohort, width=0)
-
-        if self.number_of_tiles_somatic is not None:
-            self._tile_region_somatic_list = run_create_genome_tiles(tiles=self.number_of_tiles_somatic, width=0)
+        self._tile_region_cohort_list = run_create_genome_tiles(tiles=self.number_of_tiles_cohort)
+        self._tile_region_somatic_list = run_create_genome_tiles(tiles=self.number_of_tiles_somatic)
 
         stage_align_lane = self.get_stage(name=self.stage_name_align_lane)
         stage_process_lane = self.get_stage(name=self.stage_name_process_lane)
