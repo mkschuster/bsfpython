@@ -340,9 +340,11 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
 
         return
 
-    def to_file_path(self):
+    def to_file_path(self, adjust_field_names=None):
         """Write a C{bsf.analyses.ChIPSeqDiffBindSheet} to a file.
 
+        @param adjust_field_names: Clear and adjust the Python C{list} of Python C{str} field name objects
+        @type adjust_field_names: bool
         @return:
         @rtype:
         """
@@ -350,7 +352,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         # Override the method from the super-class to automatically sort before writing to a file.
 
         self.sort()
-        super(ChIPSeqDiffBindSheet, self).to_file_path()
+        super(ChIPSeqDiffBindSheet, self).to_file_path(adjust_field_names=adjust_field_names)
 
         return
 
@@ -806,9 +808,9 @@ class ChIPSeq(Analysis):
                     read_group = str()
 
                     for paired_reads in paired_reads_dict[paired_reads_name]:
-                        if paired_reads.reads_1:
+                        if paired_reads.reads_1 is not None:
                             reads1.append(paired_reads.reads_1.file_path)
-                        if paired_reads.reads_2:
+                        if paired_reads.reads_2 is not None:
                             reads2.append(paired_reads.reads_2.file_path)
                         if not read_group and paired_reads.read_group:
                             read_group = paired_reads.read_group
@@ -934,9 +936,9 @@ class ChIPSeq(Analysis):
                     file_path_list_2 = list()
 
                     for paired_reads in paired_reads_dict[paired_reads_name]:
-                        if paired_reads.reads_1.file_path:
+                        if paired_reads.reads_1 is not None:
                             file_path_list_1.append(paired_reads.reads_1.file_path)
-                        if paired_reads.reads_2.file_path:
+                        if paired_reads.reads_2 is not None:
                             file_path_list_2.append(paired_reads.reads_2.file_path)
 
                     if len(file_path_list_1) and not len(file_path_list_2):

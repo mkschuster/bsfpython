@@ -44,9 +44,9 @@ class NextGenerationBase(object):
 
     Attributes:
     @ivar name: Name
-    @type name: str | unicode
+    @type name: str | unicode | None
     @ivar file_path: File path
-    @type file_path: str | unicode
+    @type file_path: str | unicode | None
     @ivar file_type: File type
         I{CASAVA}: FASTQ file after post-processing with CASAVA
         I{External}: other data files
@@ -78,16 +78,8 @@ class NextGenerationBase(object):
         """
         super(NextGenerationBase, self).__init__()
 
-        if name is None:
-            self.name = str()
-        else:
-            self.name = name
-
-        if file_path is None:
-            self.file_path = str()
-        else:
-            self.file_path = file_path
-
+        self.name = name
+        self.file_path = file_path
         self.file_type = file_type
 
         if annotation_dict is None:
@@ -470,13 +462,13 @@ class PairedReads(NextGenerationBase):
     @ivar reads_2: Second C{bsf.ngs.Reads} object
     @type reads_2: bsf.ngs.Reads
     @ivar exclude: Exclude from processing
-    @type exclude: bool
+    @type exclude: bool | None
     @ivar index_1: Index sequence 1
-    @type index_1: str
+    @type index_1: str | None
     @ivar index_2: Index sequence 2
-    @type index_2: str
+    @type index_2: str | None
     @ivar read_group: SAM read group (@RG) information
-    @type read_group: str
+    @type read_group: str | None
     @ivar weak_reference_sample: C{weakref.ReferenceType} to a C{bsf.ngs.Sample}
     @type weak_reference_sample: weakref.ReferenceType | None
     """
@@ -572,25 +564,10 @@ class PairedReads(NextGenerationBase):
                 self.reads_2 = reads_2
                 reads_2.weak_reference_paired_reads = weakref.ReferenceType(self)
 
-        if exclude is None:
-            self.exclude = False
-        else:
-            self.exclude = exclude
-
-        if index_1 is None:
-            self.index_1 = str()
-        else:
-            self.index_1 = index_1
-
-        if index_2 is None:
-            self.index_2 = str()
-        else:
-            self.index_2 = index_2
-
-        if read_group is None:
-            self.read_group = str()
-        else:
-            self.read_group = read_group
+        self.exclude = exclude
+        self.index_1 = index_1
+        self.index_2 = index_2
+        self.read_group = read_group
 
         self.weak_reference_sample = weak_reference_sample
 
@@ -665,9 +642,9 @@ class PairedReads(NextGenerationBase):
         output += '{}  exclude:    {!r}\n'.format(indent, self.exclude)
         output += '{}  read_group: {!r}\n'.format(indent, self.read_group)
 
-        if isinstance(self.reads_1, Reads):
+        if self.reads_1 is not None:
             output += self.reads_1.trace(level + 1)
-        if isinstance(self.reads_2, Reads):
+        if self.reads_2 is not None:
             output += self.reads_2.trace(level + 1)
 
         return output
@@ -688,7 +665,7 @@ class PairedReads(NextGenerationBase):
 
         assert isinstance(reads, Reads)
 
-        if self.reads_1:
+        if self.reads_1 is not None:
             if not self.reads_1.match_paired(reads=reads):
                 return False
 
@@ -710,7 +687,7 @@ class PairedReads(NextGenerationBase):
                     'Method not implemented for file types other than CASAVA.',
                     UserWarning)
 
-        if self.reads_2:
+        if self.reads_2 is not None:
             if not self.reads_2.match_paired(reads=reads):
                 return False
 
@@ -757,7 +734,8 @@ class PairedReads(NextGenerationBase):
         if not self.reads_1.match(reads=paired_reads.reads_1):
             return False
 
-        if (self.reads_2 and paired_reads.reads_2) and not self.reads_2.match(reads=paired_reads.reads_2):
+        if (self.reads_2 is not None and paired_reads.reads_2 is not None) \
+                and not self.reads_2.match(reads=paired_reads.reads_2):
             return False
 
         return True
@@ -901,14 +879,14 @@ class Sample(NextGenerationBase):
         """Initialise a C{bsf.ngs.Sample} object.
 
         @param name: Name
-        @type name: str | unicode
+        @type name: str | unicode | None
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str | unicode | None
         @param file_type: File type
-        @type file_type: str
+        @type file_type: str | None
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
-        @type annotation_dict: dict[str, list[str]]
+        @type annotation_dict: dict[str, list[str]] | None
         @param paired_reads_list: Python C{list} of C{bsf.ngs.PairedReads} objects
         @type paired_reads_list: list[bsf.ngs.PairedReads] | None
         @param weak_reference_project: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Project} object
@@ -1179,16 +1157,16 @@ class Project(NextGenerationBase):
         For a I{file_type} I{CASAVA} the name is automatically populated,
         while C{bsf.ngs.Sample} objects are automatically discovered.
         @param name: Name
-        @type name: str | unicode
+        @type name: str | unicode | None
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str | unicode | None
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
-        @type file_type: str
+        @type file_type: str | None
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
-        @type annotation_dict: dict[str, list[str]]
+        @type annotation_dict: dict[str, list[str]] | None
         @param sample_dict: Python C{dict} of C{bsf.ngs.Sample.name} key objects and C{bsf.ngs.Sample} value objects
-        @type sample_dict: dict[str, bsf.ngs.Sample]
+        @type sample_dict: dict[str, bsf.ngs.Sample] | None
         @param weak_reference_prf: C{weakref.ReferenceType} pointing at a C{bsf.ngs.ProcessedRunFolder} object
         @type weak_reference_prf: weakref.ReferenceType | None
         @raise Exception: If C{bsf.ngs.Sample.name} values are not unique for I{file_type} I{CASAVA}
@@ -1415,14 +1393,14 @@ class ProcessedRunFolder(NextGenerationBase):
         """Initialise a C{bsf.ngs.ProcessedRunFolder} object.
 
         @param name: Name
-        @type name: str | unicode
+        @type name: str | unicode | None
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str | unicode | None
         @param file_type: File type (e.g. I{CASAVA}, I{External} or I{Automatic})
-        @type file_type: str
+        @type file_type: str | None
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
-        @type annotation_dict: dict[str, list[str]]
+        @type annotation_dict: dict[str, list[str]] | None
         @param prefix: Prefix
         @type prefix: str | unicode | None
         @param flow_cell: Flow cell identifier
@@ -1430,7 +1408,7 @@ class ProcessedRunFolder(NextGenerationBase):
         @param version: Version
         @type version: str | unicode | None
         @param project_dict: Python C{dict} of C{bsf.ngs.Project.name} key objects and C{bsf.ngs.Project} value objects
-        @type project_dict: dict[str, bsf.ngs.Project]
+        @type project_dict: dict[str, bsf.ngs.Project] | None
         @param weak_reference_collection: C{weakref.ReferenceType} pointing at a C{bsf.ngs.Collection} object
         @type weak_reference_collection: weakref.ReferenceType | None
         @return:
@@ -2331,6 +2309,8 @@ class Collection(NextGenerationBase):
                         paired_reads.exclude = Collection._boolean_states[_value]
                     else:
                         raise ValueError('Value in field ' + repr(_key) + ' is not a boolean: ' + repr(_value))
+                else:
+                    paired_reads.exclude = False
 
             _key = 'PairedReads Index 1'
             if sas_prefix:
@@ -2425,21 +2405,21 @@ class Collection(NextGenerationBase):
         """Initialise a C{bsf.ngs.Collection} object.
 
         @param name: Name
-        @type name: str | unicode
+        @type name: str | unicode | None
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str | unicode | None
         @param file_type: File type (e.g. I{CASAVA}, I{External}, ...)
-        @type file_type: str
+        @type file_type: str | None
         @param annotation_dict: Python C{dict} for annotation of Python C{str} key and
             Python C{list} of Python C{str} value data
-        @type annotation_dict: dict[str, list[str]]
+        @type annotation_dict: dict[str, list[str]] | None
         @param processed_run_folder_dict: Python C{dict} of C{bsf.ngs.ProcessedRunFolder.name} key objects and
             C{bsf.ngs.ProcessedRunFolder} value objects
-        @type processed_run_folder_dict: dict[str, bsf.ngs.ProcessedRunFolder]
+        @type processed_run_folder_dict: dict[str, bsf.ngs.ProcessedRunFolder] | None
         @param sample_group_dict: Python C{dict} of Python C{str} (group name) key objects and
             second-level Python C{dict} value objects of C{bsf.ngs.Sample.name} key objects and
             C{bsf.ngs.Sample} value objects
-        @type sample_group_dict: dict[str, list[bsf.ngs.Sample]]
+        @type sample_group_dict: dict[str, list[bsf.ngs.Sample]] | None
         @return:
         @rtype:
         """
@@ -2864,6 +2844,8 @@ class Collection(NextGenerationBase):
                                     key=sample_annotation_field,
                                     value=annotation)
                     for paired_reads in sample.paired_reads_list:
+                        if paired_reads.exclude is None:
+                            paired_reads.exclude = False
                         row_dict = row_dict_add(
                             _row_dict=row_dict,
                             key='PairedReads Exclude',

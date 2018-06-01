@@ -389,8 +389,8 @@ class Trimmomatic(Analysis):
 
                     # Maybe this case should be allowed after Trimmomatic trimming,
                     # where only the second Read survives.
-                    if paired_reads.reads_2 and not paired_reads.reads_1:
-                        raise Exception('PairedReads object with reads1 but no reads2 object.', UserWarning)
+                    if paired_reads.reads_1 is None and paired_reads.reads_2 is not None:
+                        raise Exception('PairedReads object with a reads_2, but no reads_1 object.')
 
                     prefix_read_group = '_'.join((stage_read_group.name, paired_reads_name))
 
@@ -430,8 +430,7 @@ class Trimmomatic(Analysis):
                             java_jar_path=self.classpath_trimmomatic))
                     """ @type runnable_step_read_group: bsf.process.RunnableStepJava """
 
-                    if paired_reads.reads_2 is None or not paired_reads.reads_2.name:
-                        # FIXME: For the moment, PairedReads.reads2 is always defined.
+                    if paired_reads.reads_2 is None:
                         runnable_step_read_group.sub_command.sub_command = Command(program='SE')
                     else:
                         runnable_step_read_group.sub_command.sub_command = Command(program='PE')
@@ -440,8 +439,7 @@ class Trimmomatic(Analysis):
                     sub_command = runnable_step_read_group.sub_command.sub_command
                     sub_command.add_option_short(key='trimlog', value=file_path_read_group.trim_log_tsv)
 
-                    if paired_reads.reads_2 is None or not paired_reads.reads_2.name:
-                        # FIXME: For the moment, PairedReads.reads2 is always defined.
+                    if paired_reads.reads_2 is None:
                         file_path_read_group.reads_1u = os.path.join(
                             file_path_read_group.output_directory,
                             paired_reads.reads_1.name + 'U.fastq.gz')
@@ -522,8 +520,7 @@ class Trimmomatic(Analysis):
                     elif len(sample_step_list):
                         sub_command.arguments.extend(sample_step_list)
                     else:
-                        if paired_reads.reads_2 is None or not paired_reads.reads_2.name:
-                            # FIXME: For the moment, PairedReads.reads2 is always defined.
+                        if paired_reads.reads_2 is None:
                             sub_command.arguments.extend(self.trimming_step_se_list)
                         else:
                             sub_command.arguments.extend(self.trimming_step_pe_list)

@@ -1158,9 +1158,9 @@ class Tuxedo(bsf.Analysis):
                     if self.debug > 0:
                         print(self, 'PairedReads name:', paired_reads.get_name())
 
-                    if paired_reads.reads_1:
+                    if paired_reads.reads_1 is not None:
                         reads_1_file_path_list.append(paired_reads.reads_1.file_path)
-                    if paired_reads.reads_2:
+                    if paired_reads.reads_2 is not None:
                         reads_2_file_path_list.append(paired_reads.reads_2.file_path)
 
                 # Pass lists of files into Tophat, regardless of whether read 2 exists.

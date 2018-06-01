@@ -926,7 +926,7 @@ class VariantCallingGATK(Analysis):
     @ivar replicate_grouping: Group individual C{bsf.ngs.PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool
     @ivar bwa_genome_db: Genome sequence file path with BWA index
-    @type bwa_genome_db: str | unicode
+    @type bwa_genome_db: str | unicode | None
     @ivar comparison_path: Comparison file path
     @type comparison_path: str | unicode | None
     @ivar cohort_name: Cohort name
@@ -1139,7 +1139,7 @@ class VariantCallingGATK(Analysis):
             for processing or run them separately
         @type replicate_grouping: bool
         @param bwa_genome_db: Genome sequence file path with BWA index
-        @type bwa_genome_db: str | unicode
+        @type bwa_genome_db: str | unicode | None
         @param comparison_path: Comparison file path
         @type comparison_path: str | unicode | None
         @param cohort_name: Cohort name
@@ -1261,11 +1261,7 @@ class VariantCallingGATK(Analysis):
         else:
             self.replicate_grouping = replicate_grouping
 
-        if bwa_genome_db is None:
-            self.bwa_genome_db = str()
-        else:
-            self.bwa_genome_db = bwa_genome_db
-
+        self.bwa_genome_db = bwa_genome_db
         self.comparison_path = comparison_path
         self.cohort_name = cohort_name
 
@@ -2788,8 +2784,7 @@ class VariantCallingGATK(Analysis):
                     file_path_object=file_path_annotate,
                     debug=self.debug))
 
-            reference_annotate = runnable_annotate.get_absolute_cache_file_path(
-                file_path=self.bwa_genome_db)
+            reference_annotate = runnable_annotate.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
 
             # Run the snpEff tool for functional variant annotation.
 
@@ -3380,9 +3375,9 @@ class VariantCallingGATK(Analysis):
                 read_group = str()
 
                 for paired_reads in paired_reads_dict[paired_reads_name]:
-                    if paired_reads.reads_1:
+                    if paired_reads.reads_1 is not None:
                         reads1.append(paired_reads.reads_1.file_path)
-                    if paired_reads.reads_2:
+                    if paired_reads.reads_2 is not None:
                         reads2.append(paired_reads.reads_2.file_path)
                     if not read_group and paired_reads.read_group:
                         read_group = paired_reads.read_group
@@ -4206,7 +4201,7 @@ class VariantCallingGATK(Analysis):
                     runnable_step=RunnableStepGATK(
                         name='diagnose_sample_gatk_diagnose_target',
                         java_temporary_path=runnable_diagnose_sample.get_relative_temporary_directory_path,
-                        java_heap_maximum='Xmx6G',
+                        java_heap_maximum='Xmx8G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type runnable_step: RunnableStepGATK """
                 self.set_runnable_step_configuration(runnable_step=runnable_step)
@@ -4233,7 +4228,7 @@ class VariantCallingGATK(Analysis):
                     runnable_step=RunnableStepGATK(
                         name='diagnose_sample_gatk_qualify_missing_intervals',
                         java_temporary_path=runnable_diagnose_sample.get_relative_temporary_directory_path,
-                        java_heap_maximum='Xmx6G',
+                        java_heap_maximum='Xmx8G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type runnable_step: RunnableStepGATK """
                 self.set_runnable_step_configuration(runnable_step=runnable_step)
@@ -4262,7 +4257,7 @@ class VariantCallingGATK(Analysis):
                     runnable_step=RunnableStepPicard(
                         name='diagnose_sample_picard_collect_hybrid_selection_metrics',
                         java_temporary_path=runnable_diagnose_sample.get_relative_temporary_directory_path,
-                        java_heap_maximum='Xmx6G',
+                        java_heap_maximum='Xmx12G',
                         picard_classpath=self.classpath_picard,
                         picard_command='CollectHsMetrics'))
                 """ @type runnable_step: RunnableStepPicard """

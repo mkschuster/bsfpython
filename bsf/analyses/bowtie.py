@@ -221,9 +221,9 @@ class Bowtie1(Analysis):
                 reads_list_2 = list()
 
                 for paired_reads in paired_reads_dict[paired_reads_name]:
-                    if paired_reads.reads_1:
+                    if paired_reads.reads_1 is not None:
                         reads_list_1.append(paired_reads.reads_1.file_path)
-                    if paired_reads.reads_2:
+                    if paired_reads.reads_2 is not None:
                         reads_list_2.append(paired_reads.reads_2.file_path)
 
                 if len(reads_list_1) and not len(reads_list_2):

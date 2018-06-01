@@ -1967,7 +1967,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         self.library_path = library_path
         # FIXME: Phase out the run_directory?
         # The run_directory is only required to instantiate a bsf.illumina.RunFolder object.
-        # If this could be done at run time via the @RG PU filed in the archive BAM file,
+        # If this could be done at run time via the @RG PU field in the archive BAM file,
         # the run_folder option would no longer be required.
         self.run_directory = run_directory
         self.sequences_directory = sequences_directory
@@ -2733,8 +2733,8 @@ class DownsampleSam(bsf.Analysis):
 
                     # Apply some sanity checks.
 
-                    if paired_reads.reads_2 and not paired_reads.reads_1:
-                        raise Exception('PairedReads object with reads_1 but no reads_2 object.', UserWarning)
+                    if paired_reads.reads_1 is None and paired_reads.reads_2 is not None:
+                        raise Exception('PairedReads object with a reads_2, but no reads_1 object.')
 
                     reads = paired_reads.reads_1
                     if not (reads.file_path.endswith('.bam') or reads.file_path.endswith('.sam')):
@@ -3060,8 +3060,8 @@ class SamToFastq(bsf.Analysis):
 
                     # Apply some sanity checks.
 
-                    if paired_reads.reads_2 and not paired_reads.reads_1:
-                        raise Exception('PairedReads object with reads_1 but no reads_2 object.', UserWarning)
+                    if paired_reads.reads_1 is None and paired_reads.reads_2 is not None:
+                        raise Exception('PairedReads object with a reads_2, but no reads_2 object.')
 
                     reads = paired_reads.reads_1
                     if reads.file_path.endswith('.bam'):

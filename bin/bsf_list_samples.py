@@ -86,7 +86,7 @@ for project_name in project_name_list:
 
         if args.full:
             for paired_reads in sample.paired_reads_list:
-                if paired_reads.reads_1:
+                if paired_reads.reads_1 is not None:
                     row_dict['File1'] = paired_reads.reads_1.file_path
                     # row_dict['Reads1'] = paired_reads.reads1.name
                     # Deduce the Reads.name from the base name without file extensions.
@@ -99,7 +99,7 @@ for project_name in project_name_list:
                 else:
                     row_dict['File1'] = str()
                     row_dict['Reads1'] = str()
-                if paired_reads.reads_2:
+                if paired_reads.reads_2 is not None:
                     row_dict['File2'] = paired_reads.reads_2.file_path
                     # row_dict['Reads2'] = paired_reads.reads2.name
                     # Deduce the Reads.name from the base name without file extensions.

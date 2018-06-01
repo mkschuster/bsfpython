@@ -257,9 +257,11 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
 
         return
 
-    def to_file_path(self):
+    def to_file_path(self, adjust_field_names=None):
         """Write a C{bsf.analyses.ChIPSeqDiffBindSheet} to a file.
 
+        @param adjust_field_names: Clear and adjust the Python C{list} of Python C{str} field name objects
+        @type adjust_field_names: bool
         @return:
         @rtype:
         """
@@ -267,7 +269,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         # Override the method from the super-class to automatically sort before writing to a file.
 
         self.sort()
-        super(ChIPSeqDiffBindSheet, self).to_file_path()
+        super(ChIPSeqDiffBindSheet, self).to_file_path(adjust_field_names=adjust_field_names)
 
         return
 
@@ -692,9 +694,9 @@ class ChIPSeq(Analysis):
                 reads2 = list()
 
                 for paired_reads in paired_reads_dict[paired_reads_name]:
-                    if paired_reads.reads_1:
+                    if paired_reads.reads_1 is not None:
                         reads1.append(paired_reads.reads_1.file_path)
-                    if paired_reads.reads_2:
+                    if paired_reads.reads_2 is not None:
                         reads2.append(paired_reads.reads_2.file_path)
 
                 if len(reads1) and not len(reads2):
@@ -2303,9 +2305,9 @@ class RunFastQC(Analysis):
                     if self.debug > 0:
                         print(self, 'PairedReads name:', paired_reads.get_name())
 
-                    if paired_reads.reads_1:
+                    if paired_reads.reads_1 is not None:
                         reads1.append(paired_reads.reads_1.file_path)
-                    if paired_reads.reads_2:
+                    if paired_reads.reads_2 is not None:
                         reads2.append(paired_reads.reads_2.file_path)
 
                 fastqc.arguments.append(' '.join(reads1 + reads2))
@@ -2523,7 +2525,7 @@ class RunBamToFastq(Analysis):
                     # In a BSF Paired Reads object, the SAM or BAM file could potentially
                     # occur as reads1 or reads2 instance variable.
 
-                    if paired_reads.reads_1:
+                    if paired_reads.reads_1 is not None:
                         file_name = paired_reads.reads_1.file_path
                         file_name = file_name.rstrip('/ ')
                         file_name = os.path.basename(file_name)
@@ -2540,7 +2542,7 @@ class RunBamToFastq(Analysis):
                             sam_to_fastq.arguments.append(os.path.join(JavaClassPath.get_picard(), 'picard.jar'))
                             sam_to_fastq.arguments.append(os.path.join(self.genome_directory, match.group(1)))
 
-                    if paired_reads.reads_2:
+                    if paired_reads.reads_2 is not None:
                         file_name = paired_reads.reads_2.file_path
                         file_name = file_name.rstrip('/ ')
                         file_name = os.path.basename(file_name)
