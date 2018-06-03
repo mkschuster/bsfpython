@@ -159,7 +159,7 @@ class Configuration(object):
 
         if len(configuration._config_path_list) == 0:
             raise Exception(
-                'None of the configuration files exists: {!r}'.format(configuration.file_path_list))
+                'None of the configuration files exists:\n' + repr(configuration.file_path_list))
 
         return configuration
 
@@ -255,24 +255,14 @@ class Default(object):
     @type directory_gatk_bundle: str | unicode
     @ivar directory_intervals: Directory for interval list files
     @type directory_intervals: str | unicode
+    @ivar directory_cosmic: Sub-directory for COSMIC data
+    @type directory_cosmic: str | unicode
     @ivar directory_snpeff_data: snpEff database directory
     @type directory_snpeff_data: str | unicode
     @ivar indices: Python C{dict} of program name key and index directory name value data
     @type indices: dict[str, str]
     @ivar genome_aliases_ucsc_dict: Alias of genome assembly names for the UCSC Genome Browser
     @type genome_aliases_ucsc_dict: dict[str, str]
-    @ivar ucsc_protocol: UCSC Genome Browser URL protocol (i.e. http, https, ...)
-    @type ucsc_protocol: str
-    @ivar ucsc_host_name: UCSC Genome Browser URL host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
-    @type ucsc_host_name: str
-    @ivar url_protocol: URL protocol (i.e. HTTP)
-    @type url_protocol: str
-    @ivar url_host_name: URL host name
-    @type url_host_name:str
-    @ivar url_relative_dna: Sub-directory for DNA sequences
-    @type url_relative_dna: str
-    @ivar url_relative_projects: Sub-directory for analysis projects
-    @type url_relative_projects: str
     """
 
     global_default = None
@@ -321,15 +311,10 @@ class Default(object):
             directory_transcriptomes=None,
             directory_gatk_bundle=None,
             directory_intervals=None,
+            directory_cosmic=None,
             directory_snpeff_data=None,
             indices=None,
-            genome_aliases_ucsc_dict=None,
-            ucsc_protocol=None,
-            ucsc_host_name=None,
-            url_protocol=None,
-            url_host_name=None,
-            url_relative_dna=None,
-            url_relative_projects=None):
+            genome_aliases_ucsc_dict=None):
         """Initialise a C{bsf.standards.Default} object.
 
         @param directory_cache: Local cache directory on the compute node (e.g. /dev/shm)
@@ -356,24 +341,14 @@ class Default(object):
         @type directory_gatk_bundle: str | unicode
         @param directory_intervals: Directory for interval list files
         @type directory_intervals: str | unicode
+        @param directory_cosmic: Sub-directory for COSMIC data
+        @type directory_cosmic: str | unicode
         @param directory_snpeff_data: snpEff database directory
         @type directory_snpeff_data: str | unicode
         @param indices: Python C{dict} of program name key and index directory name value data
         @type indices: dict[str, str]
         @param genome_aliases_ucsc_dict: Alias of genome assembly names for the UCSC Genome Browser
         @type genome_aliases_ucsc_dict: dict[str, str]
-        @param ucsc_protocol: UCSC Genome Browser URL protocol (i.e. http, https, ...)
-        @type ucsc_protocol: str
-        @param ucsc_host_name: UCSC Genome Browser URL host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...)
-        @type ucsc_host_name: str
-        @param url_protocol: URL protocol (i.e. HTTP)
-        @type url_protocol: str
-        @param url_host_name: URL host name
-        @type url_host_name:str
-        @param url_relative_dna: Sub-directory for DNA sequences
-        @type url_relative_dna: str
-        @param url_relative_projects: Sub-directory for analysis projects
-        @type url_relative_projects: str
         @return:
         @rtype:
         """
@@ -442,6 +417,11 @@ class Default(object):
         else:
             self.directory_intervals = directory_intervals
 
+        if directory_cosmic is None:
+            self.directory_cosmic = str()
+        else:
+            self.directory_cosmic = directory_cosmic
+
         if directory_snpeff_data is None:
             self.directory_snpeff_data = str()
         else:
@@ -460,40 +440,6 @@ class Default(object):
             self.genome_aliases_ucsc_dict = dict()
         else:
             self.genome_aliases_ucsc_dict = genome_aliases_ucsc_dict
-
-        # Set UCSC Genome Browser information.
-
-        if ucsc_protocol is None:
-            self.ucsc_protocol = str()
-        else:
-            self.ucsc_protocol = ucsc_protocol
-
-        if ucsc_host_name is None:
-            self.ucsc_host_name = str()
-        else:
-            self.ucsc_host_name = ucsc_host_name
-
-        # Set URL information.
-
-        if url_protocol is None:
-            self.url_protocol = str()
-        else:
-            self.url_protocol = url_protocol
-
-        if url_host_name is None:
-            self.url_host_name = str()
-        else:
-            self.url_host_name = url_host_name
-
-        if url_relative_dna is None:
-            self.url_relative_dna = str()
-        else:
-            self.url_relative_dna = url_relative_dna
-
-        if url_relative_projects is None:
-            self.url_relative_projects = str()
-        else:
-            self.url_relative_projects = url_relative_projects
 
         return
 
@@ -528,6 +474,7 @@ class Default(object):
         self.directory_transcriptomes = cp.get(section=section, option='transcriptomes')
         self.directory_gatk_bundle = cp.get(section=section, option='gatk_bundle')
         self.directory_intervals = cp.get(section=section, option='intervals')
+        self.directory_cosmic = cp.get(section=section, option='cosmic')
         self.directory_snpeff_data = cp.get(section=section, option='snpeff_data')
 
         section = 'indices'
@@ -540,18 +487,6 @@ class Default(object):
         if cp.has_section(section=section):
             for option in cp.options(section=section):
                 self.genome_aliases_ucsc_dict[option] = cp.get(section=section, option=option)
-
-        section = 'ucsc'
-
-        self.ucsc_protocol = cp.get(section=section, option='protocol')
-        self.ucsc_host_name = cp.get(section=section, option='host_name')
-
-        section = 'url'
-
-        self.url_protocol = cp.get(section=section, option='protocol')
-        self.url_host_name = cp.get(section=section, option='host_name')
-        self.url_relative_dna = cp.get(section=section, option='relative_dna')
-        self.url_relative_projects = cp.get(section=section, option='relative_projects')
 
         return
 
@@ -728,8 +663,7 @@ class Default(object):
         default = Default.get_global_default()
 
         if genome_index not in default.indices:
-            raise Exception(
-                'Unknown genome index name {!r}.'.format(genome_index))
+            raise Exception('Unknown genome index name ' + repr(genome_index) + '.')
 
         return os.path.join(
             Default.absolute_genome_resource(genome_version=genome_version),
@@ -767,6 +701,21 @@ class Default(object):
             return os.path.join(default.directory_home, default.directory_intervals)
 
     @staticmethod
+    def absolute_cosmic():
+        """Get the absolute directory path for COSMIC data files.
+
+        @return: Absolute path to the COSMIC directory
+        @rtype: str | unicode
+        """
+
+        default = Default.get_global_default()
+
+        if os.path.isabs(default.directory_cosmic):
+            return default.directory_cosmic
+        else:
+            return os.path.join(default.directory_home, default.directory_cosmic)
+
+    @staticmethod
     def absolute_transcriptome_resource(transcriptome_version):
         """Get the absolute path to the transcriptome resource directory.
 
@@ -799,8 +748,7 @@ class Default(object):
         default = Default.get_global_default()
 
         if transcriptome_index not in default.indices:
-            raise Exception(
-                'Unknown transcriptome index name {!r}.'.format(transcriptome_index))
+            raise Exception('Unknown transcriptome index name ' + repr(transcriptome_index) + '.')
 
         return os.path.join(
             Default.absolute_transcriptome_resource(transcriptome_version=transcriptome_version),
@@ -823,43 +771,6 @@ class Default(object):
         return Default.absolute_transcriptome_index(
             transcriptome_version=transcriptome_version,
             transcriptome_index=transcriptome_index) + '.gtf'
-
-    @staticmethod
-    def url_absolute_base():
-        """Return the absolute URL to the web site.
-
-        @return: URL string
-        @rtype: str
-        """
-
-        default = Default.get_global_default()
-
-        # Strip leading colons to support protocol-independent URLs.
-        return '{}://{}'.format(default.url_protocol, default.url_host_name).lstrip(':')
-
-    @staticmethod
-    def url_absolute_dna():
-        """Return the absolute URL to the DNA directory.
-
-        @return: URL string
-        @rtype: str
-        """
-
-        default = Default.get_global_default()
-
-        return '/'.join((default.url_absolute_base(), default.url_relative_dna))
-
-    @staticmethod
-    def url_absolute_projects():
-        """Return the absolute URL to the analysis projects directory.
-
-        @return: URL string
-        @rtype: str
-        """
-
-        default = Default.get_global_default()
-
-        return '/'.join((default.url_absolute_base(), default.url_relative_projects))
 
     @staticmethod
     def genome_alias_ucsc(genome_version):
@@ -1203,3 +1114,111 @@ class Operator(InitialisationBase):
         @rtype: None | str | unicode
         """
         return cls.get(option='sequencing_centre')
+
+
+class UCSC(InitialisationBase):
+    """The C{bsf.standards.UCSC} class models UCSC Genome Browser uniform resource locator (URL) defaults.
+
+    The defaults are read form the [ucsc] section of the global configuration file.
+    Attributes:
+    @cvar section: C{SafeConfigParser} section for the operator
+    @type section: str | unicode
+    """
+
+    section = 'ucsc'
+
+    @classmethod
+    def get_protocol(cls):
+        """Get the UCSC Genome Browser URL protocol (i.e. 'http' or 'https').
+
+        @return: Protocol
+        @rtype: str
+        """
+        return cls.get(option='protocol')
+
+    @classmethod
+    def get_host_name(cls):
+        """Get the UCSC Genome Browser URL host name (e.g. genome.ucsc.edu, genome-euro.ucsc.edu, ...).
+
+        @return: Host name
+        @rtype: str
+        """
+        return cls.get(option='host_name')
+
+
+class URL(InitialisationBase):
+    """The C{bsf.standards.URL} class models web server uniform resource locator (URL) defaults.
+
+    The defaults are read form the [url] section of the global configuration file.
+    Attributes:
+    @cvar section: C{SafeConfigParser} section for the operator
+    @type section: str | unicode
+    """
+
+    section = 'url'
+
+    @classmethod
+    def get_protocol(cls):
+        """Get the web server URL protocol (i.e. 'http' or 'https').
+
+        @return: Protocol
+        @rtype: str
+        """
+        return cls.get(option='protocol')
+
+    @classmethod
+    def get_host_name(cls):
+        """Get the web server host name.
+
+        @return: Host name
+        @rtype: str
+        """
+        return cls.get(option='host_name')
+
+    @classmethod
+    def get_relative_dna(cls):
+        """Get the relative URL to the DNA directory.
+
+        @return: Relative 'DNA' URL path
+        @rtype: str
+        """
+        return cls.get(option='relative_dna')
+
+    @classmethod
+    def get_relative_projects(cls):
+        """Get the relative URL to the analysis projects directory.
+
+        @return: Relative 'projects' URL path
+        @rtype: str
+        """
+        return cls.get(option='relative_projects')
+
+    @classmethod
+    def get_absolute_base(cls):
+        """Get the absolute URL to the base directory.
+
+        @return: URL string
+        @rtype: str
+        """
+        if cls.get_protocol():
+            return cls.get_protocol() + '://' + cls.get_host_name()
+        else:
+            return '//' + cls.get_host_name()
+
+    @classmethod
+    def get_absolute_dna(cls):
+        """Get the absolute URL to the DNA directory.
+
+        @return: URL string
+        @rtype: str
+        """
+        return '/'.join((cls.get_absolute_base(), cls.get_relative_dna()))
+
+    @classmethod
+    def get_absolute_projects(cls):
+        """Get the absolute URL to the analysis projects directory.
+
+        @return: URL string
+        @rtype: str
+        """
+        return '/'.join((cls.get_absolute_base(), cls.get_relative_projects()))

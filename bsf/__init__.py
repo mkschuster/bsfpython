@@ -765,8 +765,6 @@ class Analysis(object):
         @rtype: list[str | unicode]
         """
 
-        default = bsf.standards.Default.get_global_default()
-
         if creator is None or not creator:
             creator = getpass.getuser()
             # The getpass.getuser method just relies on environment variables,
@@ -794,7 +792,7 @@ class Analysis(object):
         str_list += '<html xmlns="http://www.w3.org/1999/xhtml">\n'
         str_list += '<head>\n'
         str_list += '<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />\n'
-        str_list += '<link rel="stylesheet" href="/' + urllib.quote(s=default.url_relative_projects) + \
+        str_list += '<link rel="stylesheet" href="/' + urllib.quote(s=bsf.standards.URL.get_relative_projects()) + \
                     '/bsfpython.css" type="text/css" />\n'
         str_list += '<link rel="schema.DC" href="http://purl.org/DC/elements/1.0/" />\n'
         str_list += '<meta name="DC.Creator" content="' + cgi.escape(s=creator, quote=True) + '" />\n'
@@ -837,8 +835,6 @@ class Analysis(object):
         @rtype: list[str | unicode]
         """
 
-        default = bsf.standards.Default.get_global_default()
-
         if not contact:
             contact = bsf.standards.Operator.get_contact()
 
@@ -846,10 +842,10 @@ class Analysis(object):
             institution = bsf.standards.Operator.get_institution()
 
         if not url_protocol:
-            url_protocol = default.url_protocol
+            url_protocol = bsf.standards.URL.get_protocol()
 
         if not url_host_name:
-            url_host_name = default.url_host_name
+            url_host_name = bsf.standards.URL.get_host_name()
 
         if not title:
             title = ' '.join((self.project_name, self.name))
@@ -1060,7 +1056,7 @@ class Analysis(object):
         default = bsf.standards.Default.get_global_default()
 
         if sub_directory is None:
-            sub_directory = default.url_relative_projects
+            sub_directory = bsf.standards.URL.get_relative_projects()
 
         html_path = os.path.join(default.absolute_public_html(), sub_directory)
 
@@ -1189,12 +1185,12 @@ class Analysis(object):
         # UCSC protocol
 
         if not ucsc_protocol:
-            ucsc_protocol = default.ucsc_protocol
+            ucsc_protocol = bsf.standards.UCSC.get_protocol()
 
         # UCSC host name
 
         if not ucsc_host_name:
-            ucsc_host_name = default.ucsc_host_name
+            ucsc_host_name = bsf.standards.UCSC.get_host_name()
 
         # Strip leading colons to support protocol-independent URLs.
         return cgi.escape(
@@ -1221,7 +1217,7 @@ class Analysis(object):
             # The track hub URL requires the link name, i.e. the link path base name, to be inserted.
             link_name = os.path.basename(link_path.rstrip('/'))
             options_dict['hubUrl'] = '/'.join((
-                bsf.standards.Default.url_absolute_projects(),
+                bsf.standards.URL.get_absolute_projects(),
                 link_name,
                 '_'.join((self.prefix, self.ucsc_name_hub))))
 
