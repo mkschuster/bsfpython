@@ -144,10 +144,7 @@ output += Analysis.get_html_header(
     title='Project {} Overview'.format(project_name),
     source=inspect.getfile(inspect.currentframe()))
 
-key_list = report_dict.keys()
-key_list.sort(cmp=lambda x, y: cmp(x, y))
-
-for key in key_list:
+for key in sorted(report_dict):
 
     # TODO: Unfortunately, fastqc_report.html documents exist both in the top-level directory,
     # as well as directly from FastQC in sample-specific sub-directories.

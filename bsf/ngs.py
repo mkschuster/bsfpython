@@ -357,7 +357,7 @@ class Reads(NextGenerationBase):
         output += '{}  file_path: {!r}\n'.format(indent, self.file_path)
         output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
         output += '{}  annotation_dict:\n'.format(indent, self.annotation_dict)
-        for annotation_key in self.annotation_dict.keys():
+        for annotation_key in sorted(self.annotation_dict):
             output += '{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key])
         output += '{}  barcode:   {!r}\n'.format(indent, self.barcode)
         output += '{}  lane:      {!r}\n'.format(indent, self.lane)
@@ -633,7 +633,7 @@ class PairedReads(NextGenerationBase):
         output += '{}  file_path:  {!r}\n'.format(indent, self.file_path)
         output += '{}  file_type:  {!r}\n'.format(indent, self.file_type)
         output += '{}  annotation_dict:\n'.format(indent, self.annotation_dict)
-        for annotation_key in self.annotation_dict.keys():
+        for annotation_key in sorted(self.annotation_dict):
             output += '{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key])
         output += '{}  reads_1:    {!r}\n'.format(indent, self.reads_1)
         output += '{}  reads_2:    {!r}\n'.format(indent, self.reads_2)
@@ -929,7 +929,7 @@ class Sample(NextGenerationBase):
         output += '{}  file_path: {!r}\n'.format(indent, self.file_path)
         output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
         output += '{}  annotation_dict:\n'.format(indent, self.annotation_dict)
-        for annotation_key in self.annotation_dict.keys():
+        for annotation_key in sorted(self.annotation_dict):
             output += '{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key])
         output += '{}  paired_reads:\n'.format(indent)
         for paired_reads in self.paired_reads_list:
@@ -1208,10 +1208,10 @@ class Project(NextGenerationBase):
         output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
         output += '{}  name:      {!r}\n'.format(indent, self.name)
         output += '{}  annotation_dict:\n'.format(indent, self.annotation_dict)
-        for annotation_key in self.annotation_dict.keys():
+        for annotation_key in sorted(self.annotation_dict):
             output += '{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key])
         output += '{}  sample_dict:\n'.format(indent)
-        for sample_name in self.sample_dict.keys():
+        for sample_name in sorted(self.sample_dict):
             output += self.sample_dict[sample_name].trace(level + 1)
 
         return output
@@ -1262,10 +1262,7 @@ class Project(NextGenerationBase):
         sample_list = list()
         """ @type sample_list: list[bsf.ngs.Sample] """
 
-        sample_name_list = self.sample_dict.keys()
-        sample_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-        for sample_name in sample_name_list:
+        for sample_name in sorted(self.sample_dict):
             sample = self.sample_dict[sample_name]
             if not (exclude and sample.is_excluded()):
                 sample_list.append(sample)
@@ -1457,10 +1454,10 @@ class ProcessedRunFolder(NextGenerationBase):
         output += '{}  flow_cell: {!r}\n'.format(indent, self.flow_cell)
         output += '{}  version:   {!r}\n'.format(indent, self.version)
         output += '{}  annotation_dict:\n'.format(indent, self.annotation_dict)
-        for annotation_key in self.annotation_dict.keys():
+        for annotation_key in sorted(self.annotation_dict):
             output += '{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key])
         output += '{}  project_dict:\n'.format(indent)
-        for project_name in self.project_dict.keys():
+        for project_name in sorted(self.project_dict):
             output += self.project_dict[project_name].trace(level + 1)
 
         return output
@@ -1509,10 +1506,7 @@ class ProcessedRunFolder(NextGenerationBase):
         project_list = list()
         """ @type project_list: list[bsf.ngs.Project] """
 
-        project_name_list = self.project_dict.keys()
-        project_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-        for project_name in project_name_list:
+        for project_name in sorted(self.project_dict):
             project_list.append(self.project_dict[project_name])
 
         return project_list
@@ -2460,15 +2454,13 @@ class Collection(NextGenerationBase):
         output += '{}  file_path: {!r}\n'.format(indent, self.file_path)
         output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
         output += '{}  annotation_dict:\n'.format(indent, self.annotation_dict)
-        for annotation_key in self.annotation_dict.keys():
+        for annotation_key in sorted(self.annotation_dict):
             output += '{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key])
         output += '{}  processed_run_folder_dict:\n'.format(indent)
-        for prf_name in self.processed_run_folder_dict.keys():
+        for prf_name in sorted(self.processed_run_folder_dict):
             output += self.processed_run_folder_dict[prf_name].trace(level + 1)
         output += '{}  sample_group_dict:\n'.format(indent)
-        sample_group_name_list = self.sample_group_dict.keys()
-        sample_group_name_list.sort(cmp=lambda x, y: cmp(x, y))
-        for sample_group_name in sample_group_name_list:
+        for sample_group_name in sorted(self.sample_group_dict):
             output += '{}    group: {!r}\n'.format(indent, sample_group_name)
             # List all Sample objects of this Python list object.
             for sample in self.sample_group_dict[sample_group_name]:
@@ -2545,10 +2537,7 @@ class Collection(NextGenerationBase):
         processed_run_folder_list = list()
         """ @type processed_run_folder_list: list[bsf.ngs.ProcessedRunFolder] """
 
-        processed_run_folder_name_list = self.processed_run_folder_dict.keys()
-        processed_run_folder_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-        for processed_run_folder_name in processed_run_folder_name_list:
+        for processed_run_folder_name in sorted(self.processed_run_folder_dict):
             processed_run_folder_list.append(self.processed_run_folder_dict[processed_run_folder_name])
 
         return processed_run_folder_list
@@ -2711,25 +2700,25 @@ class Collection(NextGenerationBase):
         # Scan the Collection and its contained objects for additional (annotation) field names.
 
         for prf in self.processed_run_folder_dict.itervalues():
-            if prf.annotation_dict is not None:
+            if prf.annotation_dict:  # not None and not empty
                 for prf_annotation_key in prf.annotation_dict.iterkeys():
                     prf_annotation_field = ' '.join(('ProcessedRunFolder', prf_annotation_key))
                     if prf_annotation_field not in sas.field_names:
                         sas.field_names.append(prf_annotation_field)
             for project in prf.project_dict.itervalues():
-                if project.annotation_dict is not None:
+                if project.annotation_dict:  # not None and not empty
                     for project_annotation_key in project.annotation_dict.iterkeys():
                         project_annotation_field = ' '.join(('Project', project_annotation_key))
                         if project_annotation_field not in sas.field_names:
                             sas.field_names.append(project_annotation_field)
                 for sample in project.sample_dict.itervalues():
-                    if sample.annotation_dict is not None:
+                    if sample.annotation_dict:  # not None and not empty
                         for sample_annotation_key in sample.annotation_dict.iterkeys():
                             sample_annotation_field = ' '.join(('Sample', sample_annotation_key))
                             if sample_annotation_field not in sas.field_names:
                                 sas.field_names.append(sample_annotation_field)
                     for paired_reads in sample.paired_reads_list:
-                        if paired_reads.annotation_dict is not None:
+                        if paired_reads.annotation_dict:  # not None and not empty
                             for paired_reads_annotation_key in paired_reads.annotation_dict.iterkeys():
                                 paired_reads_annotation_field = ' '.join(('PairedReads', paired_reads_annotation_key))
                                 if paired_reads_annotation_field not in sas.field_names:
@@ -2801,41 +2790,29 @@ class Collection(NextGenerationBase):
         row_dict = None
         """ @type row_dict: dict[str, str] """
 
-        prf_name_list = self.processed_run_folder_dict.keys()
-        prf_name_list.sort(cmp=lambda x, y: cmp(x, y))
-        for prf_name in prf_name_list:
+        for prf_name in sorted(self.processed_run_folder_dict):
             prf = self.processed_run_folder_dict[prf_name]
             row_dict = row_dict_add(_row_dict=row_dict, key='ProcessedRunFolder Name', value=prf.name)
-            if prf.annotation_dict is not None:
-                prf_annotation_key_list = prf.annotation_dict.keys()
-                prf_annotation_key_list.sort(cmp=lambda x, y: cmp(x, y))
-                for prf_annotation_key in prf_annotation_key_list:
+            if prf.annotation_dict:  # not None and not empty
+                for prf_annotation_key in sorted(prf.annotation_dict):
                     prf_annotation_list = prf.annotation_dict[prf_annotation_key]
                     prf_annotation_field = ' '.join(('ProcessedRunFolder', prf_annotation_key))
                     for annotation in prf_annotation_list:
                         row_dict = row_dict_add(_row_dict=row_dict, key=prf_annotation_field, value=annotation)
-            project_name_list = prf.project_dict.keys()
-            project_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            for project_name in project_name_list:
+            for project_name in sorted(prf.project_dict):
                 project = prf.project_dict[project_name]
                 row_dict = row_dict_add(_row_dict=row_dict, key='Project Name', value=project.name)
-                if project.annotation_dict is not None:
-                    project_annotation_key_list = project.annotation_dict.keys()
-                    project_annotation_key_list.sort(cmp=lambda x, y: cmp(x, y))
-                    for project_annotation_key in project_annotation_key_list:
+                if project.annotation_dict:  # not None and not empty
+                    for project_annotation_key in sorted(project.annotation_dict):
                         project_annotation_list = project.annotation_dict[project_annotation_key]
                         project_annotation_field = ' '.join(('Project', project_annotation_key))
                         for annotation in project_annotation_list:
                             row_dict = row_dict_add(_row_dict=row_dict, key=project_annotation_field, value=annotation)
-                sample_name_list = project.sample_dict.keys()
-                sample_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                for sample_name in sample_name_list:
+                for sample_name in sorted(project.sample_dict):
                     sample = project.sample_dict[sample_name]
                     row_dict = row_dict_add(_row_dict=row_dict, key='Sample Name', value=sample.name)
-                    if sample.annotation_dict is not None:
-                        sample_annotation_key_list = sample.annotation_dict.keys()
-                        sample_annotation_key_list.sort(cmp=lambda x, y: cmp(x, y))
-                        for sample_annotation_key in sample_annotation_key_list:
+                    if sample.annotation_dict:  # not None and not empty
+                        for sample_annotation_key in sorted(sample.annotation_dict):
                             sample_annotation_list = sample.annotation_dict[sample_annotation_key]
                             sample_annotation_field = ' '.join(('Sample', sample_annotation_key))
                             for annotation in sample_annotation_list:
@@ -2880,10 +2857,8 @@ class Collection(NextGenerationBase):
                                 _row_dict=row_dict,
                                 key='Reads2 File',
                                 value=paired_reads.reads_2.file_path)
-                        if paired_reads.annotation_dict is not None:
-                            paired_reads_annotation_key_list = paired_reads.annotation_dict.keys()
-                            paired_reads_annotation_key_list.sort(cmp=lambda x, y: cmp(x, y))
-                            for paired_reads_annotation_key in paired_reads_annotation_key_list:
+                        if paired_reads.annotation_dict:  # not None and not empty
+                            for paired_reads_annotation_key in sorted(paired_reads.annotation_dict):
                                 paired_reads_annotation_list = paired_reads.annotation_dict[paired_reads_annotation_key]
                                 paired_reads_annotation_field = ' '.join(('PairedReads', paired_reads_annotation_key))
                                 for annotation in paired_reads_annotation_list:
@@ -2998,14 +2973,14 @@ class SampleGroup(object):
         """ @type group_dict: dict[str, list[bsf.ngs.PairedReads]] """
 
         for sample in self.sample_list:
-            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=replicate_grouping)
-            for paired_reads_name in paired_reads_dict.keys():
+            for paired_reads_name, paired_reads_list in \
+                    sample.get_all_paired_reads(replicate_grouping=replicate_grouping).iteritems():
                 if paired_reads_name not in group_dict:
                     group_dict[paired_reads_name] = list()
 
                 # Add PairedReads objects one-by-one and check if they are not already there.
 
-                for paired_reads in paired_reads_dict[paired_reads_name]:
+                for paired_reads in paired_reads_list:
                     if paired_reads not in group_dict[paired_reads_name]:
                         group_dict[paired_reads_name].append(paired_reads)
 

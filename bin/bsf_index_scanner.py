@@ -93,10 +93,7 @@ alignment_file.close()
 alignment_file = open(name_space.output_file, 'w')
 alignment_file.write('Barcode\tCount\n')
 
-barcode_list = barcode_dict.keys()
-barcode_list.sort()
-
-for barcode in barcode_list:
+for barcode in sorted(barcode_dict):
     alignment_file.write(barcode + '\t' + str(barcode_dict[barcode]) + '\n')
 
 alignment_file.close()

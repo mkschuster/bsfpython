@@ -370,10 +370,7 @@ class Trimmomatic(Analysis):
             # more high-level analyses generally do.
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=False)
 
-            paired_reads_name_list = paired_reads_dict.keys()
-            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for paired_reads_name in paired_reads_name_list:
+            for paired_reads_name in sorted(paired_reads_dict):
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
                         print(self, 'PairedReads name:', paired_reads.get_name())
@@ -628,16 +625,9 @@ class Trimmomatic(Analysis):
             # more high-level analyses generally do.
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=False)
 
-            paired_reads_name_list = paired_reads_dict.keys()
-            if not len(paired_reads_name_list):
+            if not paired_reads_dict:
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
-            # paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            # This analysis is special in that read group names carry 'P' or 'U' suffices and samples carry additional
-            # read groups after trimming that do no longer correspond to the initial Runnable objects. Sigh.
-            paired_reads_name_list = dict(map(lambda x: (x[:-1], True), paired_reads_name_list)).keys()
-            paired_reads_name_list.sort()
 
             report_list += '<tr>\n'
             report_list += '<td class="left">' + sample.name + '</td>\n'
@@ -647,7 +637,11 @@ class Trimmomatic(Analysis):
             report_list += '<td class="center"></td>\n'  # Summary TSV
             report_list += '</tr>\n'
 
-            for paired_reads_name in paired_reads_name_list:
+            # This analysis is special in that read group names carry 'P' or 'U' suffices and samples carry additional
+            # read groups after trimming that do no longer correspond to the initial Runnable objects. Sigh.
+            # Transiently create a Python dict without the suffix and sort its keys (bsf.ngs.PairedReads.name).
+
+            for paired_reads_name in sorted(dict(map(lambda x: (x[:-1], True), paired_reads_dict.iterkeys()))):
                 prefix_read_group = '_'.join((self.stage_name_read_group, paired_reads_name))
 
                 # The second read may still not be there.

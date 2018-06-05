@@ -723,14 +723,9 @@ class ChIPSeq(Analysis):
 
             # Sort the comparison keys alphabetically and assign replicate numbers into ChIPSeqComparison objects.
 
-            for key_1 in level_1_dict.keys():
-                level_2_dict = level_1_dict[key_1]
-
-                key_2_list = level_2_dict.keys()
-                key_2_list.sort(cmp=lambda x, y: cmp(x, y))
-
+            for key_1, level_2_dict in level_1_dict.iteritems():
                 i = 1
-                for key_2 in key_2_list:
+                for key_2 in sorted(level_2_dict):
                     if not self._comparison_dict[key_2].diff_bind:
                         continue
                     level_2_dict[key_2] = i
@@ -761,10 +756,7 @@ class ChIPSeq(Analysis):
 
                 paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                paired_reads_name_list = paired_reads_dict.keys()
-                paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                for paired_reads_name in paired_reads_name_list:
+                for paired_reads_name in sorted(paired_reads_dict):
                     prefix_read_group = self.get_prefix_chipseq_alignment(paired_reads_name=paired_reads_name)
 
                     file_path_read_group = FilePathAlignment(prefix=prefix_read_group)
@@ -894,10 +886,7 @@ class ChIPSeq(Analysis):
 
                 paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                paired_reads_name_list = paired_reads_dict.keys()
-                paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                for paired_reads_name in paired_reads_name_list:
+                for paired_reads_name in sorted(paired_reads_dict):
                     prefix_read_group = self.get_prefix_chipseq_alignment(paired_reads_name=paired_reads_name)
 
                     file_path_read_group = FilePathAlignment(prefix=prefix_read_group)
@@ -1027,27 +1016,16 @@ class ChIPSeq(Analysis):
             @rtype:
             """
 
-            comparison_name_list = self._comparison_dict.keys()
-            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for comparison_name in comparison_name_list:
+            for comparison_name in sorted(self._comparison_dict):
                 chipseq_comparison = self._comparison_dict[comparison_name]
                 factor = chipseq_comparison.factor.upper()
                 for t_sample in chipseq_comparison.t_samples:
                     t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
-
-                    t_paired_reads_name_list = t_paired_reads_dict.keys()
-                    t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                    for t_paired_reads_name in t_paired_reads_name_list:
+                    for t_paired_reads_name in sorted(t_paired_reads_dict):
                         for c_sample in chipseq_comparison.c_samples:
                             c_paired_reads_dict = c_sample.get_all_paired_reads(
                                 replicate_grouping=self.replicate_grouping)
-
-                            c_paired_reads_name_list = c_paired_reads_dict.keys()
-                            c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                            for c_paired_reads_name in c_paired_reads_name_list:
+                            for c_paired_reads_name in sorted(c_paired_reads_dict):
                                 c_prefix_alignment = self.get_prefix_chipseq_alignment(
                                     paired_reads_name=c_paired_reads_name)
                                 t_prefix_alignment = self.get_prefix_chipseq_alignment(
@@ -1209,21 +1187,14 @@ class ChIPSeq(Analysis):
 
             # Reorganise the ChIPSeqComparison objects by factor.
 
-            comparison_name_list = self._comparison_dict.keys()
-            # comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for comparison_name in comparison_name_list:
-                chipseq_comparison = self._comparison_dict[comparison_name]
+            for chipseq_comparison in self._comparison_dict.itervalues():
                 if not chipseq_comparison.diff_bind:
                     continue
                 if chipseq_comparison.factor not in self._factor_dict:
                     self._factor_dict[chipseq_comparison.factor] = list()
                 self._factor_dict[chipseq_comparison.factor].append(chipseq_comparison)
 
-            factor_name_list = self._factor_dict.keys()
-            factor_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for factor_name in factor_name_list:
+            for factor_name in sorted(self._factor_dict):
                 if self.debug > 0:
                     print('chipseq factor_name:', factor_name)
 
@@ -1256,22 +1227,13 @@ class ChIPSeq(Analysis):
                 for chipseq_comparison in factor_list:
                     if not chipseq_comparison.diff_bind:
                         continue
-
                     for t_sample in chipseq_comparison.t_samples:
                         t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
-
-                        t_paired_reads_name_list = t_paired_reads_dict.keys()
-                        t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                        for t_paired_reads_name in t_paired_reads_name_list:
+                        for t_paired_reads_name in sorted(t_paired_reads_dict):
                             for c_sample in chipseq_comparison.c_samples:
                                 c_paired_reads_dict = c_sample.get_all_paired_reads(
                                     replicate_grouping=self.replicate_grouping)
-
-                                c_paired_reads_name_list = c_paired_reads_dict.keys()
-                                c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                                for c_paired_reads_name in c_paired_reads_name_list:
+                                for c_paired_reads_name in sorted(c_paired_reads_dict):
                                     # Get prefixes and FilePath objects for treatment and control.
                                     c_prefix_alignment = self.get_prefix_chipseq_alignment(
                                         paired_reads_name=c_paired_reads_name)
@@ -1382,27 +1344,15 @@ class ChIPSeq(Analysis):
         stage_macs14 = self.get_stage(name='macs14')
         stage_process_macs14 = self.get_stage(name='process_macs14')
 
-        comparison_name_list = self._comparison_dict.keys()
-        comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-        for comparison_name in comparison_name_list:
+        for comparison_name in sorted(self._comparison_dict):
             chipseq_comparison = self._comparison_dict[comparison_name]
             factor = chipseq_comparison.factor.upper()
-
             for t_sample in chipseq_comparison.t_samples:
                 t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
-
-                t_paired_reads_name_list = t_paired_reads_dict.keys()
-                t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                for t_paired_reads_name in t_paired_reads_name_list:
+                for t_paired_reads_name in sorted(t_paired_reads_dict):
                     for c_sample in chipseq_comparison.c_samples:
                         c_paired_reads_dict = c_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
-
-                        c_paired_reads_name_list = c_paired_reads_dict.keys()
-                        c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                        for c_paired_reads_name in c_paired_reads_name_list:
+                        for c_paired_reads_name in sorted(c_paired_reads_dict):
                             macs14 = stage_macs14.add_executable(
                                 executable=Macs14(
                                     name='chipseq_macs14_' + t_paired_reads_name + '__' + c_paired_reads_name,
@@ -1560,27 +1510,16 @@ class ChIPSeq(Analysis):
             str_list += '</thead>\n'
             str_list += '<tbody>\n'
 
-            comparison_name_list = self._comparison_dict.keys()
-            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for comparison_name in comparison_name_list:
+            for comparison_name in sorted(self._comparison_dict):
                 chipseq_comparison = self._comparison_dict[comparison_name]
                 for t_sample in chipseq_comparison.t_samples:
                     t_paired_reads_dict = t_sample.get_all_paired_reads(
                         replicate_grouping=self.replicate_grouping)
-
-                    t_paired_reads_name_list = t_paired_reads_dict.keys()
-                    t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                    for t_paired_reads_name in t_paired_reads_name_list:
+                    for t_paired_reads_name in sorted(t_paired_reads_dict):
                         for c_sample in chipseq_comparison.c_samples:
                             c_paired_reads_dict = c_sample.get_all_paired_reads(
                                 replicate_grouping=self.replicate_grouping)
-
-                            c_paired_reads_name_list = c_paired_reads_dict.keys()
-                            c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                            for c_paired_reads_name in c_paired_reads_name_list:
+                            for c_paired_reads_name in sorted(c_paired_reads_dict):
                                 # prefix = 'chipseq_macs14_'  + t_paired_reads_name + '__' + c_paired_reads_name
                                 str_list += '<tr>\n'
                                 # if treatment and absolute:
@@ -1631,26 +1570,15 @@ class ChIPSeq(Analysis):
             str_list = list()
             """ @type str_list: list[str | unicode] """
 
-            comparison_name_list = self._comparison_dict.keys()
-            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for comparison_name in comparison_name_list:
+            for comparison_name in sorted(self._comparison_dict):
                 chipseq_comparison = self._comparison_dict[comparison_name]
                 for t_sample in chipseq_comparison.t_samples:
                     t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
-
-                    t_paired_reads_name_list = t_paired_reads_dict.keys()
-                    t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                    for t_paired_reads_name in t_paired_reads_name_list:
+                    for t_paired_reads_name in sorted(t_paired_reads_dict):
                         for c_sample in chipseq_comparison.c_samples:
                             c_paired_reads_dict = c_sample.get_all_paired_reads(
                                 replicate_grouping=self.replicate_grouping)
-
-                            c_paired_reads_name_list = c_paired_reads_dict.keys()
-                            c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                            for c_paired_reads_name in c_paired_reads_name_list:
+                            for c_paired_reads_name in sorted(c_paired_reads_dict):
                                 # prefix = 'chipseq_macs14_' + t_paired_reads_name + '__' + c_paired_reads_name
                                 prefix = t_paired_reads_name + '__' + c_paired_reads_name
 
@@ -1732,10 +1660,7 @@ class ChIPSeq(Analysis):
             for sample in self.sample_list:
                 paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
-                paired_reads_name_list = paired_reads_dict.keys()
-                paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                for paired_reads_name in paired_reads_name_list:
+                for paired_reads_name in sorted(paired_reads_dict):
                     #
                     # Add a UCSC trackDB entry.
                     #
@@ -1821,27 +1746,16 @@ class ChIPSeq(Analysis):
             str_list += '</thead>\n'
             str_list += '<tbody>\n'
 
-            comparison_name_list = self._comparison_dict.keys()
-            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for comparison_name in comparison_name_list:
+            for comparison_name in sorted(self._comparison_dict):
                 chipseq_comparison = self._comparison_dict[comparison_name]
                 for t_sample in chipseq_comparison.t_samples:
                     t_paired_reads_dict = t_sample.get_all_paired_reads(
                         replicate_grouping=self.replicate_grouping)
-
-                    t_paired_reads_name_list = t_paired_reads_dict.keys()
-                    t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                    for t_paired_reads_name in t_paired_reads_name_list:
+                    for t_paired_reads_name in sorted(t_paired_reads_dict):
                         for c_sample in chipseq_comparison.c_samples:
                             c_paired_reads_dict = c_sample.get_all_paired_reads(
                                 replicate_grouping=self.replicate_grouping)
-
-                            c_paired_reads_name_list = c_paired_reads_dict.keys()
-                            c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                            for c_paired_reads_name in c_paired_reads_name_list:
+                            for c_paired_reads_name in sorted(c_paired_reads_dict):
                                 runnable_peak_calling = self.runnable_dict[self.get_prefix_chipseq_peak_calling(
                                     t_paired_reads_name=t_paired_reads_name,
                                     c_paired_reads_name=c_paired_reads_name)]
@@ -1891,10 +1805,7 @@ class ChIPSeq(Analysis):
             str_list += '</thead>\n'
             str_list += '<tbody>\n'
 
-            factor_name_list = self._factor_dict.keys()
-            factor_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for factor_name in factor_name_list:
+            for factor_name in sorted(self._factor_dict):
                 prefix_diff_bind = self.get_prefix_diff_bind(factor_name=factor_name)
                 # runnable_diff_bind = self.runnable_dict[prefix_diff_bind]
                 # file_path_diff_bind = runnable_diff_bind.file_path_object
@@ -2092,27 +2003,16 @@ class ChIPSeq(Analysis):
 
             composite_groups = dict()
             """ @type composite_groups: dict[str, bool] """
-            comparison_name_list = self._comparison_dict.keys()
-            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for comparison_name in comparison_name_list:
+            for comparison_name in sorted(self._comparison_dict):
                 chipseq_comparison = self._comparison_dict[comparison_name]
                 factor_name = chipseq_comparison.factor.upper()
                 for t_sample in chipseq_comparison.t_samples:
                     t_paired_reads_dict = t_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
-
-                    t_paired_reads_name_list = t_paired_reads_dict.keys()
-                    t_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                    for t_paired_reads_name in t_paired_reads_name_list:
+                    for t_paired_reads_name in sorted(t_paired_reads_dict):
                         for c_sample in chipseq_comparison.c_samples:
                             c_paired_reads_dict = c_sample.get_all_paired_reads(
                                 replicate_grouping=self.replicate_grouping)
-
-                            c_paired_reads_name_list = c_paired_reads_dict.keys()
-                            c_paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                            for c_paired_reads_name in c_paired_reads_name_list:
+                            for c_paired_reads_name in sorted(c_paired_reads_dict):
                                 runnable_peak_calling = self.runnable_dict[self.get_prefix_chipseq_peak_calling(
                                     t_paired_reads_name=t_paired_reads_name,
                                     c_paired_reads_name=c_paired_reads_name)]
@@ -2331,11 +2231,7 @@ class ChIPSeq(Analysis):
 
             for sample in self.sample_list:
                 paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
-
-                paired_reads_name_list = paired_reads_dict.keys()
-                paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                for paired_reads_name in paired_reads_name_list:
+                for paired_reads_name in sorted(paired_reads_dict):
                     prefix_alignment = self.get_prefix_chipseq_alignment(paired_reads_name=paired_reads_name)
                     runnable_alignment = self.runnable_dict[prefix_alignment]
                     file_path_alignment = runnable_alignment.file_path_object

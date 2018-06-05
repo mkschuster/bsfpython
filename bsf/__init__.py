@@ -315,9 +315,7 @@ class Analysis(object):
         output += '{}  sample_list: {!r}\n'.format(indent, self.sample_list)
 
         output += '{}  Python dict of Runnable objects:\n'.format(indent)
-        runnable_name_list = self.runnable_dict.keys()
-        runnable_name_list.sort(cmp=lambda x, y: cmp(x, y))
-        for runnable_name in runnable_name_list:
+        for runnable_name in sorted(self.runnable_dict):
             output += '{}    Key: {!r} Runnable: {!r}\n'.format(
                 indent, runnable_name, self.runnable_dict[runnable_name])
             runnable = self.runnable_dict[runnable_name]
@@ -1175,11 +1173,8 @@ class Analysis(object):
         # UCSC "track" configuration dictionary.
 
         if track_dict:
-            key_list = track_dict.keys()
-            key_list.sort(cmp=lambda x, y: cmp(x, y))
-
             options_dict['hgct_customText'] = 'track'
-            for key in key_list:
+            for key in sorted(track_dict):
                 options_dict['hgct_customText'] += ' ' + key + '=' + track_dict[key]
 
         # UCSC protocol
@@ -1320,9 +1315,7 @@ class Analysis(object):
         str_list = list()
         """ @type str_list: list[str | unicode] """
 
-        genome_version_list = genome_version_dict.keys()
-        genome_version_list.sort(cmp=lambda x, y: cmp(x, y))
-        for genome_version in genome_version_list:
+        for genome_version in sorted(genome_version_dict):
             str_list += 'genome ' + genome_version + '\n'
             str_list += 'trackDb ' + genome_version_dict[genome_version] + '\n'
             str_list += '\n'
@@ -1947,9 +1940,7 @@ class Runnable(object):
         output += '{}  debug: {!r}\n'.format(indent, self.debug)
 
         output += '{}  Python dict of Python str (cache path) objects:\n'.format(indent)
-        key_list = self.cache_path_dict.keys()
-        key_list.sort(cmp=lambda x, y: cmp(x, y))
-        for key in key_list:
+        for key in sorted(self.cache_path_dict):
             output += '{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.cache_path_dict[key])
 
         output += '{}  Python list of RunnableStep objects:\n'.format(indent)

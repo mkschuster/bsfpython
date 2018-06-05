@@ -1062,13 +1062,11 @@ class Tuxedo(bsf.Analysis):
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
-            paired_reads_name_list = paired_reads_dict.keys()
-            if not len(paired_reads_name_list):
+            if not paired_reads_dict:
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
-            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            for paired_reads_name in paired_reads_name_list:
+            for paired_reads_name in sorted(paired_reads_dict):
                 # Create a Tophat Runnable per paired_reads_name.
 
                 # TODO: Activate the new code once the bsf_run_rnaseq_tophat.py script has been retired.
@@ -1436,13 +1434,7 @@ class Tuxedo(bsf.Analysis):
         executable_cuffmerge_dict = dict()
         """ @type executable_cuffmerge_dict: dict[str, bsf.process.Executable] """
 
-        comparison_name_list = self._comparison_dict.keys()
-        comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-        if self.debug > 0:
-            print('Tuxedo Comparison dict key list', comparison_name_list)
-
-        for comparison_name in comparison_name_list:
+        for comparison_name in sorted(self._comparison_dict):
             if self.debug > 0:
                 print('  Comparison name:', comparison_name)
 
@@ -1652,10 +1644,7 @@ class Tuxedo(bsf.Analysis):
                         replicate_grouping=self.replicate_grouping,
                         exclude=True)
 
-                    paired_reads_name_list = paired_reads_dict.keys()
-                    paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-                    for paired_reads_name in paired_reads_name_list:
+                    for paired_reads_name in sorted(paired_reads_dict):
                         if self.debug > 0:
                             print('        PairedReads name:', paired_reads_name)
                         # Add the Cufflinks assembled transcripts GTF to the Cuffmerge manifest.
@@ -1759,7 +1748,8 @@ class Tuxedo(bsf.Analysis):
                         }
                         """ @type monocle_row_dict: dict[str, str | unicode] """
                         # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample Monocle *'.
-                        for annotation_key in filter(lambda x: x.startswith('Monocle '), sample.annotation_dict.keys()):
+                        for annotation_key in filter(
+                                lambda x: x.startswith('Monocle '), sample.annotation_dict.iterkeys()):
                             monocle_row_dict[annotation_key[8:]] = sample.annotation_dict[annotation_key][0]
 
                         monocle_annotation_sheet.row_dicts.append(monocle_row_dict)
@@ -1951,7 +1941,7 @@ class Tuxedo(bsf.Analysis):
                 # None so far.
 
         # Finally, set dependencies on all other Cuffmerge bsf.process.Executable objects to avoid file contention.
-        for prefix_cuffmerge in executable_cuffmerge_dict.keys():
+        for prefix_cuffmerge in executable_cuffmerge_dict.iterkeys():
             for executable_cuffmerge in executable_cuffmerge_dict.values():
                 if prefix_cuffmerge != executable_cuffmerge.name:
                     executable_cuffmerge.dependencies.append(prefix_cuffmerge)
@@ -2149,13 +2139,11 @@ class Tuxedo(bsf.Analysis):
                     replicate_grouping=self.replicate_grouping,
                     exclude=True)
 
-                paired_reads_name_list = paired_reads_dict.keys()
-                if not len(paired_reads_name_list):
+                if not paired_reads_dict:
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
-                paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                for paired_reads_name in paired_reads_name_list:
+                for paired_reads_name in sorted(paired_reads_dict):
                     # Cufflinks produces genes.fpkm_tracking, isoforms.fpkm_tracking,
                     # skipped.gtf and transcripts.gtf.
 
@@ -2254,6 +2242,7 @@ class Tuxedo(bsf.Analysis):
             str_list += '</thead>\n'
             str_list += '<tbody>\n'
 
+            # Since the sorted list of comparison names is used several times below, sort it only once.
             comparison_name_list = self._comparison_dict.keys()
             comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
@@ -2836,13 +2825,11 @@ class Tuxedo(bsf.Analysis):
                     replicate_grouping=self.replicate_grouping,
                     exclude=True)
 
-                paired_reads_name_list = paired_reads_dict.keys()
-                if not len(paired_reads_name_list):
+                if not paired_reads_dict:
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
-                paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-                for paired_reads_name in paired_reads_name_list:
+                for paired_reads_name in sorted(paired_reads_dict):
                     #
                     # Add a trackDB entry for each Tophat accepted_hits.bam file.
                     #
@@ -2992,10 +2979,7 @@ class Tuxedo(bsf.Analysis):
 
             # Comparison-specific tracks
 
-            comparison_name_list = self._comparison_dict.keys()
-            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for comparison_name in comparison_name_list:
+            for comparison_name in sorted(self._comparison_dict):
                 #
                 # Add a trackDB entry for each Cuffmerge merged.bb file.
                 #
@@ -3329,11 +3313,9 @@ class DESeq(bsf.Analysis):
                     replicate_grouping=self.replicate_grouping,
                     exclude=True)
 
-                paired_reads_name_list = paired_reads_dict.keys()
-                if not len(paired_reads_name_list):
+                if not paired_reads_dict:
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
-                paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
                 row_dict = {
                     'sample': sample.name,
@@ -3344,7 +3326,7 @@ class DESeq(bsf.Analysis):
                 }
                 """ @type row_dict: dict[str, str | unicode] """
                 # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample DESeq *'.
-                for annotation_key in filter(lambda x: x.startswith('DESeq '), sample.annotation_dict.keys()):
+                for annotation_key in filter(lambda x: x.startswith('DESeq '), sample.annotation_dict.iterkeys()):
                     row_dict[annotation_key[6:]] = sample.annotation_dict[annotation_key][0]
 
                 annotation_sheet.row_dicts.append(row_dict)

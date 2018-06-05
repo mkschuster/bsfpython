@@ -419,13 +419,11 @@ class StarAligner(Analysis):
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
-            paired_reads_name_list = paired_reads_dict.keys()
-            if not len(paired_reads_name_list):
+            if not paired_reads_dict:
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
-            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
-            for paired_reads_name in paired_reads_name_list:
+            for paired_reads_name in sorted(paired_reads_dict):
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
                         print(self, 'PairedReads name:', paired_reads.get_name())
@@ -748,11 +746,9 @@ class StarAligner(Analysis):
                 paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping,
                                                                 exclude=True)
 
-                paired_reads_name_list = paired_reads_dict.keys()
-                if not len(paired_reads_name_list):
+                if not paired_reads_dict:
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
-                # paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
                 runnable_merge = self.runnable_dict[
                     '_'.join((self.stage_name_merge, sample.name))]
@@ -947,11 +943,9 @@ class StarAligner(Analysis):
                     replicate_grouping=self.replicate_grouping,
                     exclude=True)
 
-                paired_reads_name_list = paired_reads_dict.keys()
-                if not len(paired_reads_name_list):
+                if not paired_reads_dict:
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
-                # paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
 
                 runnable_merge = self.runnable_dict[
                     '_'.join((self.stage_name_merge, sample.name))]

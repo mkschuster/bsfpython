@@ -841,10 +841,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         cell_dependency_list = list()
         """ @type cell_dependency_list: list[str] """
 
-        lane_str_list = flow_cell_dict.keys()
-        lane_str_list.sort(cmp=lambda x, y: cmp(x, y))
-
-        for lane_str in lane_str_list:
+        for lane_str in sorted(flow_cell_dict):
             file_path_lane = FilePathExtractIlluminaLane(
                 prefix=self.get_prefix_lane(
                     project_name=self.project_name,
@@ -1773,13 +1770,13 @@ class IlluminaDemultiplexSamSheet(bsf.annotation.AnnotationSheet):
 
     _test_methods = dict()
 
-    def adjust(self, unassigned_file_path, index_read_number):
+    def adjust(self, index_read_number):
         """Adjust the C{bsf.analyses.picard.IlluminaBasecallsToSamSheet} by inserting the
         file path for unassigned reads and by adjusting the index columns to the number of
         index reads.
 
-        @param unassigned_file_path: File path for unassigned reads
-        @type unassigned_file_path: str | unicode
+        #@param unassigned_file_path: File path for unassigned reads
+        #@type unassigned_file_path: str | unicode
         @param index_read_number: Number of index reads
         @type index_read_number: int
         @return:
@@ -2194,10 +2191,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         cell_dependency_list = list()
         """ @type cell_dependency_list: list[str] """
 
-        lane_str_list = flow_cell_dict.keys()
-        lane_str_list.sort(cmp=lambda x, y: cmp(x, y))
-
-        for lane_str in lane_str_list:
+        for lane_str in sorted(flow_cell_dict):
             file_path_lane = FilePathIlluminaDemultiplexSamLane(
                 project_name=self.project_name,
                 lane=lane_str,
@@ -2278,7 +2272,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
             # Instantiate and sort a new list of RunInformationRead objects.
             # FIXME: How to make the Illumina Run Folder available?
             # The IRF could be read form the @RG PU field, but that is not available at the time the run is configured.
-            # Alternatively, the IRF has to passed in.
+            # Alternatively, the IRF has to be passed in.
             run_information_read_list = list(irf.run_information.run_information_read_list)
             run_information_read_list.sort(cmp=lambda x, y: cmp(x.number, y.number))
             for run_information_read in run_information_read_list:
@@ -2295,9 +2289,9 @@ class IlluminaDemultiplexSam(bsf.Analysis):
             # Adjust the IlluminaBaseCallsToSamSheet by adding an entry for unassigned reads and constrain
             # the columns to the number of index reads.
             ibs_sheet.adjust(
-                unassigned_file_path=os.path.join(
-                    file_path_lane.samples_directory,
-                    run_get_sample_file_name(sample_name='0')),
+                # unassigned_file_path=os.path.join(
+                #     file_path_lane.samples_directory,
+                #     run_get_sample_file_name(sample_name='0')),
                 index_read_number=index_read_index)
 
             # Create a Runnable and Executable for the lane stage.
@@ -2723,10 +2717,7 @@ class DownsampleSam(bsf.Analysis):
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
 
-            paired_reads_name_list = paired_reads_dict.keys()
-            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for paired_reads_name in paired_reads_name_list:
+            for paired_reads_name in sorted(paired_reads_dict):
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
                         print(self, 'PairedReads name:', paired_reads.get_name())
@@ -3050,10 +3041,7 @@ class SamToFastq(bsf.Analysis):
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
 
-            paired_reads_name_list = paired_reads_dict.keys()
-            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for paired_reads_name in paired_reads_name_list:
+            for paired_reads_name in sorted(paired_reads_dict):
                 for paired_reads in paired_reads_dict[paired_reads_name]:
                     if self.debug > 0:
                         print(self, 'PairedReads name:', paired_reads.get_name())
@@ -3087,7 +3075,7 @@ class SamToFastq(bsf.Analysis):
                                 string=read_group_dict['PU'])
                             read_group_list = ['@RG']
                             read_group_list.extend(map(lambda x: ':'.join((x, read_group_dict[x])),
-                                                       read_group_dict.keys()))
+                                                       read_group_dict.iterkeys()))
                             if read_group_dict == alignment_file.header['RG'][0]:
                                 # Use the '==' rather than the 'is' operator, since dictionaries do not seem to be
                                 # at the same memory address.

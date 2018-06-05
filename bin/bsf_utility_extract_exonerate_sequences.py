@@ -49,7 +49,7 @@ record_dict = SeqIO.index_db(
 print('Number of query sequence records:', len(record_dict))
 
 # TODO: This could possibly run Exonerate as a sub process.
-seqio_dict = dict()
+seq_io_dict = dict()
 
 # TODO: To analyse these pairwise alignments it would be good to create a profile from all pairwise alignments.
 # First run: Establish the maximum target (reference) region that appears in the alignments.
@@ -96,13 +96,13 @@ for vulgar in vulgar_list:
     else:
         identifier = vulgar.t_name
 
-    if identifier in seqio_dict:
-        seqio = seqio_dict[identifier]
+    if identifier in seq_io_dict:
+        seq_io = seq_io_dict[identifier]
     else:
-        seqio = open("test_aligned_{}_to_{}.fasta".format(sample_name, identifier), 'w')
-        seqio_dict[identifier] = seqio
+        seq_io = open("test_aligned_{}_to_{}.fasta".format(sample_name, identifier), 'w')
+        seq_io_dict[identifier] = seq_io
 
-    SeqIO.write(sequences=q_record, handle=seqio, format='fasta')
+    SeqIO.write(sequences=q_record, handle=seq_io, format='fasta')
 
     # TODO: Populate the matrix at this stage.
 
@@ -112,5 +112,5 @@ for vulgar in vulgar_list:
 
 # Clean up stage: close all SeqIO file handles.
 
-for key in seqio_dict.keys():
-    seqio_dict[key].close()
+for seq_io in seq_io_dict.itervalues():
+    seq_io.close()

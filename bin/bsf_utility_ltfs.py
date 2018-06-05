@@ -350,10 +350,7 @@ class LinearTapeFileSystemCopy(object):
         ltfs_data = xml.etree.ElementTree.Element(tag='data')
         ltfs_specification.append(element=ltfs_data)
 
-        source_path_list = self.ltfs_directory_dict.keys()
-        source_path_list.sort(lambda x, y: cmp(x, y))
-
-        for source_path in source_path_list:
+        for source_path in sorted(self.ltfs_directory_dict):
             ltfs_directory = self.ltfs_directory_dict[source_path]
 
             ltfs_file = xml.etree.ElementTree.Element(tag='file')

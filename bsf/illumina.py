@@ -115,16 +115,16 @@ class Adaptors(object):
         @param sequence: Sequence
         @type sequence: str
         @param adaptor_class: Adaptor class
-        @type adaptor_class: str
+        @type adaptor_class: str | None
         @param adaptor_type: Adaptor type
-        @type adaptor_type: str
+        @type adaptor_type: str | None
         @param adaptor_name: Adaptor name
-        @type adaptor_name: str
+        @type adaptor_name: str | None
         @return: Python C{tuple} of Python C{str} (adaptor class), Python C{str} (adaptor type) and
             Python C{str} (adaptor name)
         @rtype: (str, str, str)
         """
-        if adaptor_class is not None and adaptor_class:
+        if adaptor_class:  # not None and not empty
             adaptor_class_list = [adaptor_class]
         else:
             adaptor_class_list = self.adaptor_dict.keys()
@@ -132,7 +132,7 @@ class Adaptors(object):
         # Iterate over all adaptor classes.
         for adaptor_class_key in adaptor_class_list:
             class_dict = self.adaptor_dict[adaptor_class_key]
-            if adaptor_type is not None and adaptor_type:
+            if adaptor_type:  # not None and not empty
                 adaptor_type_list = [adaptor_type]
             else:
                 adaptor_type_list = class_dict.keys()
@@ -140,7 +140,7 @@ class Adaptors(object):
             # Iterate over all adaptor types.
             for adaptor_type_key in adaptor_type_list:
                 type_dict = class_dict[adaptor_type_key]
-                if adaptor_name is not None and adaptor_name:
+                if adaptor_name:  # not None and not empty
                     adaptor_name_list = [adaptor_name]
                 else:
                     adaptor_name_list = type_dict.keys()
@@ -1366,9 +1366,7 @@ class RunFolder(object):
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
-            entry_name_list = _directory_dict.keys()
-            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print('  Remaining entries:', entry_name_list)
+            print('  Remaining entries:', sorted(_directory_dict))
 
         return
 
@@ -1451,15 +1449,11 @@ class RunFolder(object):
 
                     if len(cycle_dict):
                         print(cycle_path, 'with number of entries:', str(len(cycle_dict)))
-                        entry_name_list = cycle_dict.keys()
-                        entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                        print('  Remaining entries:', entry_name_list)
+                        print('  Remaining entries:', sorted(cycle_dict))
 
                 if len(lane_dict):
                     print(lane_path, 'with number of entries:', str(len(lane_dict)))
-                    entry_name_list = lane_dict.keys()
-                    entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                    print('  Remaining entries:', entry_name_list)
+                    print('  Remaining entries:', sorted(lane_dict))
         else:
             # All other instruments have a flat list of matrix.txt files.
             for read in range(0 + 1, self.run_information.get_read_number + 1):
@@ -1502,9 +1496,7 @@ class RunFolder(object):
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
-            entry_name_list = _directory_dict.keys()
-            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print('  Remaining entries:', entry_name_list)
+            print('  Remaining entries:', sorted(_directory_dict))
 
         return
 
@@ -1613,9 +1605,7 @@ class RunFolder(object):
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
-            entry_name_list = _directory_dict.keys()
-            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print('  Remaining entries:', entry_name_list)
+            print('  Remaining entries:', sorted(_directory_dict))
 
         return
 
@@ -1765,9 +1755,7 @@ class RunFolder(object):
 
                     if len(cycle_dict):
                         print(cycle_path, 'with number of entries:', str(len(cycle_dict)))
-                        entry_name_list = cycle_dict.keys()
-                        entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                        print('  Remaining entries:', entry_name_list)
+                        print('  Remaining entries:', sorted(cycle_dict))
 
             # Process control and filter files.
 
@@ -1803,9 +1791,7 @@ class RunFolder(object):
 
             if len(lane_dict):
                 print(lane_path, 'with number of entries:', str(len(lane_dict)))
-                entry_name_list = lane_dict.keys()
-                entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                print('  Remaining entries:', entry_name_list)
+                print('  Remaining entries:', sorted(lane_dict))
 
         # Process the IRF/Data/Intensities/BaseCalls/Matrix/ directory.
 
@@ -1833,9 +1819,7 @@ class RunFolder(object):
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
-            entry_name_list = _directory_dict.keys()
-            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print('  Remaining entries:', entry_name_list)
+            print('  Remaining entries:', sorted(_directory_dict))
 
         return
 
@@ -1887,9 +1871,7 @@ class RunFolder(object):
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
-            entry_name_list = _directory_dict.keys()
-            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print('  Remaining entries:', entry_name_list)
+            print('  Remaining entries:', sorted(_directory_dict))
 
         return
 
@@ -2087,15 +2069,11 @@ class RunFolder(object):
 
                         if len(cycle_dict):
                             print(cycle_path, 'with number of entries:', str(len(cycle_dict)))
-                            entry_name_list = cycle_dict.keys()
-                            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                            print('  Remaining entries:', entry_name_list)
+                            print('  Remaining entries:', sorted(cycle_dict))
 
                 if len(lane_dict):
                     print(lane_path, 'with number of entries:', str(len(lane_dict)))
-                    entry_name_list = lane_dict.keys()
-                    entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                    print('  Remaining entries:', entry_name_list)
+                    print('  Remaining entries:', sorted(lane_dict))
 
             # Check the IRF/Data/Intensities/Offsets/ directory.
 
@@ -2130,9 +2108,7 @@ class RunFolder(object):
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
-            entry_name_list = _directory_dict.keys()
-            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print('  Remaining entries:', entry_name_list)
+            print('  Remaining entries:', sorted(_directory_dict))
 
         return
 
@@ -2187,9 +2163,7 @@ class RunFolder(object):
 
         if len(directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
-            entry_name_list = _directory_dict.keys()
-            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print('  Remaining entries:', entry_name_list)
+            print('  Remaining entries:', sorted(_directory_dict))
 
         return
 
@@ -2276,9 +2250,7 @@ class RunFolder(object):
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
-            entry_name_list = _directory_dict.keys()
-            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print('  Remaining entries:', entry_name_list)
+            print('  Remaining entries:', sorted(_directory_dict))
 
         return
 
@@ -2417,9 +2389,7 @@ class RunFolder(object):
 
                 if len(cycle_dict):
                     print(cycle_path, 'with number of entries:', str(len(cycle_dict)))
-                    entry_name_list = cycle_dict.keys()
-                    entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                    print('  Remaining entries:', entry_name_list)
+                    print('  Remaining entries:', sorted(cycle_dict))
 
         if rta not in ('1.18.54', '2.4.11', '2.5.2'):
             _file_name_list.append('ImageMetricsOut.bin')
@@ -2436,9 +2406,7 @@ class RunFolder(object):
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
-            entry_name_list = _directory_dict.keys()
-            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print('  Remaining entries:', entry_name_list)
+            print('  Remaining entries:', sorted(_directory_dict))
 
         return
 
@@ -2484,9 +2452,7 @@ class RunFolder(object):
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
-            entry_name_list = _directory_dict.keys()
-            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print('  Remaining entries:', entry_name_list)
+            print('  Remaining entries:', sorted(_directory_dict))
 
         return
 
@@ -2545,9 +2511,7 @@ class RunFolder(object):
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
-            entry_name_list = _directory_dict.keys()
-            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print('  Remaining entries:', entry_name_list)
+            print('  Remaining entries:', sorted(_directory_dict))
 
         return
 
@@ -2690,21 +2654,15 @@ class RunFolder(object):
 
                 if len(cycle_dict):
                     print(cycle_path, 'with number of entries:', str(len(cycle_dict)))
-                    entry_name_list = cycle_dict.keys()
-                    entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                    print('  Remaining entries:', entry_name_list)
+                    print('  Remaining entries:', sorted(cycle_dict))
 
             if len(lane_dict):
                 print(lane_path, 'with number of entries:', str(len(lane_dict)))
-                entry_name_list = lane_dict.keys()
-                entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-                print('  Remaining entries:', entry_name_list)
+                print('  Remaining entries:', sorted(lane_dict))
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
-            entry_name_list = _directory_dict.keys()
-            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print('  Remaining entries:', entry_name_list)
+            print('  Remaining entries:', sorted(_directory_dict))
 
         return
 
@@ -2844,8 +2802,6 @@ class RunFolder(object):
 
         if len(_directory_dict):
             print(_directory_path, 'with number of entries:', str(len(_directory_dict)))
-            entry_name_list = _directory_dict.keys()
-            entry_name_list.sort(cmp=lambda x, y: cmp(x, y))
-            print('  Remaining entries:', entry_name_list)
+            print('  Remaining entries:', sorted(_directory_dict))
 
         return

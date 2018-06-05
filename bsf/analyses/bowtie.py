@@ -186,11 +186,8 @@ class Bowtie1(Analysis):
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
-            paired_reads_name_list = paired_reads_dict.keys()
-            paired_reads_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-            for paired_reads_name in paired_reads_name_list:
-                if not len(paired_reads_dict[paired_reads_name]):
+            for paired_reads_name in sorted(paired_reads_dict):
+                if not paired_reads_dict[paired_reads_name]:
                     # Skip replicate keys, which PairedReads objects have all been excluded.
                     continue
 

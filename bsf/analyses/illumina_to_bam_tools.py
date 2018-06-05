@@ -163,7 +163,7 @@ class LibraryAnnotationSheet(bsf.annotation.AnnotationSheet):
 
         flow_cell_dict = dict()
         # TODO: Since the Python dict holds a dict of complex types, another object would be justified.
-        # See barcode_dict: {}, sample_dict: {} amd library_name: ''
+        # See barcode_dict: {}, sample_dict: {} and library_name: ''
 
         row_number = 0
 
@@ -244,30 +244,31 @@ class LibraryAnnotationSheet(bsf.annotation.AnnotationSheet):
 
             # Check that all lanes have annotation.
             if lane_str not in flow_cell_dict:
-                messages += 'No annotation for lane number {!r}.\n'.format(lane_int)
+                messages += 'No annotation for lane number ' + repr(lane_int) + '.\n'
                 continue
 
             # Check that all or none of the rows have index sequence 1 or 2 populated.
             no_index_1 = 0
             no_index_2 = 0
-            for key in flow_cell_dict[lane_str]['barcode_dict'].keys():
+            for key in flow_cell_dict[lane_str]['barcode_dict'].iterkeys():
                 if key[:9] == '-NoIndex-':
                     no_index_1 += 1
                 if key[-9:] == '-NoIndex-':
                     no_index_2 += 1
 
             if not (no_index_1 == 0 or no_index_1 == len(flow_cell_dict[lane_str]['barcode_dict'])):
-                messages += 'Some empty barcode_sequence_1 fields in lane {}.\n'.format(lane_int)
+                messages += 'Some empty barcode_sequence_1 fields in lane ' + repr(lane_int) + '.\n'
             if not (no_index_2 == 0 or no_index_2 == len(flow_cell_dict[lane_str]['barcode_dict'])):
-                messages += 'Some empty barcode_sequence_2 fields in lane {}.\n'.format(lane_int)
+                messages += 'Some empty barcode_sequence_2 fields in lane ' + repr(lane_int) + '.\n'
 
             # Check that all barcode sequences have the same length.
             # This test also finds cases of missing sequences tested for above.
-            key_list = flow_cell_dict[lane_str]['barcode_dict'].keys()
-            key_length = len(key_list[0])
-            for key in key_list[1:]:
+            key_length = None
+            for key in flow_cell_dict[lane_str]['barcode_dict']:
+                if key_length is None:
+                    key_length = len(key)
                 if len(key) != key_length:
-                    messages += 'Mismatching barcode sequence lengths in lane {}.\n'.format(lane_int)
+                    messages += 'Mismatching barcode sequence lengths in lane ' + repr(lane_int) + '.\n'
 
         return messages
 
@@ -1553,10 +1554,7 @@ class BamIndexDecoder(bsf.Analysis):
         cell_dependency_list = list()
         """ @type cell_dependency_list: list[str] """
 
-        lane_str_list = flow_cell_dict.keys()
-        lane_str_list.sort(cmp=lambda x, y: cmp(x, y))
-
-        for lane_str in lane_str_list:
+        for lane_str in sorted(flow_cell_dict):
             file_path_lane = FilePathBamIndexDecoderLane(
                 project_name=self.project_name,
                 lane=lane_str,

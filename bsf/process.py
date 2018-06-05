@@ -134,7 +134,7 @@ class Command(object):
 
         output += '{}  options:\n'.format(indent)
 
-        for key in self.options.keys():
+        for key in sorted(self.options):
             output += '{}    key: {!r} Argument objects:\n'.format(indent, key)
             for argument in self.options[key]:
                 output += argument.trace(level=level + 2)
@@ -609,10 +609,7 @@ class Command(object):
 
         # Add all options and switches in alphabetical order.
 
-        argument_key_list = self.options.keys()
-        argument_key_list.sort(cmp=lambda x, y: cmp(x, y))
-
-        for argument_key in argument_key_list:
+        for argument_key in sorted(self.options):
             for argument in self.options[argument_key]:
                 command_line.extend(argument.get_list())
 
@@ -642,10 +639,7 @@ class Command(object):
 
         # Add all options and switches in alphabetical order.
 
-        argument_key_list = self.options.keys()
-        argument_key_list.sort(cmp=lambda x, y: cmp(x, y))
-
-        for argument_key in argument_key_list:
+        for argument_key in sorted(self.options):
             for argument in self.options[argument_key]:
                 command_line += ' ' + argument.get_str()
 

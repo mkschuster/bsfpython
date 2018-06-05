@@ -69,17 +69,9 @@ input_directory = Configuration.get_absolute_path(
     default_path=Default.absolute_sequences())
 
 prf = ProcessedRunFolder.from_file_path(file_path=input_directory, file_type='Automatic')
-
-project_name_list = prf.project_dict.keys()
-project_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-for project_name in project_name_list:
+for project_name in sorted(prf.project_dict):
     project = prf.project_dict[project_name]
-
-    sample_name_list = project.sample_dict.keys()
-    sample_name_list.sort(cmp=lambda x, y: cmp(x, y))
-
-    for sample_name in sample_name_list:
+    for sample_name in sorted(project.sample_dict):
         sample = project.sample_dict[sample_name]
 
         row_dict = {'ProcessedRunFolder': prf.name, 'Project': project.name, 'Sample': sample.name}
