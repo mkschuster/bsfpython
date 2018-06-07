@@ -603,22 +603,22 @@ class Trimmomatic(Analysis):
         report_list = list()
         """ @type report_list: list[str | unicode] """
 
-        report_list += '<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n'
-        report_list += '\n'
+        report_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+        report_list.append('\n')
 
-        report_list += '<h2 id="aliquot_and_sample_level">Aliquot and Sample Level</h2>\n'
-        report_list += '\n'
-        report_list += '<table id="aliquot_and_sample_table">\n'
-        report_list += '<thead>\n'
-        report_list += '<tr>\n'
-        report_list += '<th>Sample</th>\n'
-        report_list += '<th>Aliquot</th>\n'
-        report_list += '<th>Coverage</th>\n'
-        report_list += '<th>Frequency</th>\n'
-        report_list += '<th>Summary</th>\n'
-        report_list += '</tr>\n'
-        report_list += '</thead>\n'
-        report_list += '<tbody>\n'
+        report_list.append('<h2 id="aliquot_and_sample_level">Aliquot and Sample Level</h2>\n')
+        report_list.append('\n')
+        report_list.append('<table id="aliquot_and_sample_table">\n')
+        report_list.append('<thead>\n')
+        report_list.append('<tr>\n')
+        report_list.append('<th>Sample</th>\n')
+        report_list.append('<th>Aliquot</th>\n')
+        report_list.append('<th>Coverage</th>\n')
+        report_list.append('<th>Frequency</th>\n')
+        report_list.append('<th>Summary</th>\n')
+        report_list.append('</tr>\n')
+        report_list.append('</thead>\n')
+        report_list.append('<tbody>\n')
 
         for sample in self.sample_list:
             # The Trimmomatic analysis does not obey excluded PairedReads objects,
@@ -629,13 +629,13 @@ class Trimmomatic(Analysis):
                 # Skip Sample objects, which PairedReads objects have all been excluded.
                 continue
 
-            report_list += '<tr>\n'
-            report_list += '<td class="left">' + sample.name + '</td>\n'
-            report_list += '<td class="left"></td>\n'  # Aliquot
-            report_list += '<td class="center"></td>\n'  # Coverage PNG
-            report_list += '<td class="center"></td>\n'  # Frequency PNG
-            report_list += '<td class="center"></td>\n'  # Summary TSV
-            report_list += '</tr>\n'
+            report_list.append('<tr>\n')
+            report_list.append('<td class="left">' + sample.name + '</td>\n')
+            report_list.append('<td class="left"></td>\n')  # Aliquot
+            report_list.append('<td class="center"></td>\n')  # Coverage PNG
+            report_list.append('<td class="center"></td>\n')  # Frequency PNG
+            report_list.append('<td class="center"></td>\n')  # Summary TSV
+            report_list.append('</tr>\n')
 
             # This analysis is special in that read group names carry 'P' or 'U' suffices and samples carry additional
             # read groups after trimming that do no longer correspond to the initial Runnable objects. Sigh.
@@ -652,33 +652,33 @@ class Trimmomatic(Analysis):
                 file_path_read_group = runnable_read_group.file_path_object
                 """ @type file_path_read_group: FilePathTrimmomaticReadGroup """
 
-                report_list += '<tr>\n'
+                report_list.append('<tr>\n')
                 # Sample
-                report_list += '<td class="left"></td>\n'
+                report_list.append('<td class="left"></td>\n')
                 # Aliquot
-                report_list += '<td class="left">' + paired_reads_name + '</td>\n'
+                report_list.append('<td class="left">' + paired_reads_name + '</td>\n')
                 # Coverage
-                report_list += '<td class="center">'
-                report_list += '<a href="' + file_path_read_group.coverage_png + '">'
-                report_list += '<img alt="Coverage ' + runnable_read_group.name + '"'
-                report_list += ' src="' + file_path_read_group.coverage_png + '"'
-                report_list += ' height="100" width="100" />'
-                report_list += '</a>'
-                report_list += '</td>\n'
+                report_list.append('<td class="center">')
+                report_list.append('<a href="' + file_path_read_group.coverage_png + '">')
+                report_list.append('<img alt="Coverage ' + runnable_read_group.name + '"')
+                report_list.append(' src="' + file_path_read_group.coverage_png + '"')
+                report_list.append(' height="100" width="100" />')
+                report_list.append('</a>')
+                report_list.append('</td>\n')
                 # Frequency
-                report_list += '<td class="center">'
-                report_list += '<a href="' + file_path_read_group.frequency_png + '">PNG</a>'
-                report_list += '</td>\n'
+                report_list.append('<td class="center">')
+                report_list.append('<a href="' + file_path_read_group.frequency_png + '">PNG</a>')
+                report_list.append('</td>\n')
                 # The frequency plots provide little information that does not necessarily justify
                 # adding another set of images onto the HTML report.
-                report_list += '<td class="center">'
-                report_list += '<a href="' + file_path_read_group.summary_tsv + '">TSV</a>'
-                report_list += '</td>\n'
-                report_list += '</tr>\n'
+                report_list.append('<td class="center">')
+                report_list.append('<a href="' + file_path_read_group.summary_tsv + '">TSV</a>')
+                report_list.append('</td>\n')
+                report_list.append('</tr>\n')
 
-        report_list += '</tbody>\n'
-        report_list += '</table>\n'
-        report_list += '\n'
+        report_list.append('</tbody>\n')
+        report_list.append('</table>\n')
+        report_list.append('\n')
 
         self.report_to_file(content=report_list)
 

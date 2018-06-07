@@ -721,26 +721,26 @@ class StarAligner(Analysis):
             str_list = list()
             """ @type str_list: list[str | unicode] """
 
-            str_list += '<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n'
-            str_list += '\n'
+            str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+            str_list.append('\n')
 
-            str_list += '<p id="ucsc_track_hub">'
-            str_list += self.ucsc_hub_html_anchor(link_path=link_path)
-            str_list += '</p>\n'
-            str_list += '\n'
+            str_list.append('<p id="ucsc_track_hub">')
+            str_list.extend(self.ucsc_hub_html_anchor(link_path=link_path))
+            str_list.append('</p>\n')
+            str_list.append('\n')
 
-            str_list += '<h2 id="sample_section">Sample Table</h2>\n'
-            str_list += '\n'
-            str_list += '<table id="sample_table">\n'
-            str_list += '<thead>\n'
-            str_list += '<tr>\n'
-            str_list += '<th>Sample</th>\n'
-            str_list += '<th>BAM</th>\n'
-            str_list += '<th>BAI</th>\n'
-            str_list += '<th>MD5</th>\n'
-            str_list += '</tr>\n'
-            str_list += '</thead>\n'
-            str_list += '<tbody>\n'
+            str_list.append('<h2 id="sample_section">Sample Table</h2>\n')
+            str_list.append('\n')
+            str_list.append('<table id="sample_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th>Sample</th>\n')
+            str_list.append('<th>BAM</th>\n')
+            str_list.append('<th>BAI</th>\n')
+            str_list.append('<th>MD5</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
 
             for sample in self.sample_list:
                 paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping,
@@ -755,162 +755,162 @@ class StarAligner(Analysis):
                 file_path_merge = runnable_merge.file_path_object
                 """ @type file_path_merge: FilePathStarMerge """
 
-                str_list += '<tr>\n'
+                str_list.append('<tr>\n')
                 # Sample
-                str_list += '<td class="left">' + sample.name + '</td>\n'
+                str_list.append('<td class="left">' + sample.name + '</td>\n')
                 # BAM
-                str_list += '<td class="center">'
-                str_list += '<a href="' + file_path_merge.merged_bam + '">'
-                str_list += '<abbr title="Binary Alignment/Map">BAM</abbr>'
-                str_list += '</a>'
-                str_list += '</td>\n'
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_merge.merged_bam + '">')
+                str_list.append('<abbr title="Binary Alignment/Map">BAM</abbr>')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
                 # BAI
-                str_list += '<td class="center">'
-                str_list += '<a href="' + file_path_merge.merged_bai + '">'
-                str_list += '<abbr title="Binary Alignment/Map Index">BAI</abbr>'
-                str_list += '</a>'
-                str_list += '</td>\n'
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_merge.merged_bai + '">')
+                str_list.append('<abbr title="Binary Alignment/Map Index">BAI</abbr>')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
                 # MD5
-                str_list += '<td class="center">'
-                str_list += '<a href="' + file_path_merge.merged_md5 + '">'
-                str_list += '<abbr title="Message Digest 5 Checksum">MD5</abbr>'
-                str_list += '</a>'
-                str_list += '</td>\n'
-                str_list += '</tr>\n'
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_merge.merged_md5 + '">')
+                str_list.append('<abbr title="Message Digest 5 Checksum">MD5</abbr>')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
+                str_list.append('</tr>\n')
 
-            str_list += '</tbody>\n'
-            str_list += '</table>\n'
-            str_list += '\n'
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
 
-            str_list += '<h2 id="qc_plots">QC Plots</h2>\n'
-            str_list += '\n'
-            str_list += '<table id="qc_table">\n'
-            str_list += '<thead>\n'
-            str_list += '<tr>\n'
-            str_list += '<th>Sample</th>\n'
-            str_list += '<th>Read Group</th>\n'
-            str_list += '<th>Metrics</th>\n'
-            str_list += '</tr>\n'
-            str_list += '</thead>\n'
-            str_list += '<tbody>\n'
+            str_list.append('<h2 id="qc_plots">QC Plots</h2>\n')
+            str_list.append('\n')
+            str_list.append('<table id="qc_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th>Sample</th>\n')
+            str_list.append('<th>Read Group</th>\n')
+            str_list.append('<th>Metrics</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
 
             runnable_summary = self.runnable_dict[self.stage_name_summary]
             file_path_summary = runnable_summary.file_path_object
             """ @type file_path_summary: FilePathStarSummary """
 
             # Alignment Summary Plots
-            str_list += '<tr>\n'
-            str_list += '<td class="center">'
-            str_list += '<a href="' + file_path_summary.alignment_sample_pdf + '">'
-            str_list += '<img alt="Mapped - Sample"'
-            str_list += ' src="' + file_path_summary.alignment_sample_png + '"'
-            str_list += ' height="100" width="100" />'
-            str_list += '</a>'
-            str_list += '</td>\n'
-            str_list += '<td class="center">'
-            str_list += '<a href="' + file_path_summary.alignment_read_group_pdf + '">'
-            str_list += '<img alt="Mapped - Read Group"'
-            str_list += ' src="' + file_path_summary.alignment_read_group_png + '"'
-            str_list += ' height="100" width="100" />'
-            str_list += '</a>'
-            str_list += '</td>\n'
-            str_list += '<td class="left">Mapped</td>\n'
-            str_list += '</tr>\n'
+            str_list.append('<tr>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.alignment_sample_pdf + '">')
+            str_list.append('<img alt="Mapped - Sample"')
+            str_list.append(' src="' + file_path_summary.alignment_sample_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.alignment_read_group_pdf + '">')
+            str_list.append('<img alt="Mapped - Read Group"')
+            str_list.append(' src="' + file_path_summary.alignment_read_group_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="left">Mapped</td>\n')
+            str_list.append('</tr>\n')
 
             # Mapped Fraction Plots
-            str_list += '<tr>\n'
-            str_list += '<td class="center">'
-            str_list += '<a href="' + file_path_summary.mapped_fraction_sample_pdf + '">'
-            str_list += '<img alt="Mapped Fraction - Sample"'
-            str_list += ' src="' + file_path_summary.mapped_fraction_sample_png + '"'
-            str_list += ' height="100" width="100" />'
-            str_list += '</a>'
-            str_list += '</td>\n'
-            str_list += '<td class="center">'
-            str_list += '<a href="' + file_path_summary.mapped_fraction_read_group_pdf + '">'
-            str_list += '<img alt="Mapped Fraction - Read Group"'
-            str_list += ' src="' + file_path_summary.mapped_fraction_read_group_png + '"'
-            str_list += ' height="100" width="100" />'
-            str_list += '</a>'
-            str_list += '</td>\n'
-            str_list += '<td class="left">Mapped Fraction</td>\n'
-            str_list += '</tr>\n'
+            str_list.append('<tr>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.mapped_fraction_sample_pdf + '">')
+            str_list.append('<img alt="Mapped Fraction - Sample"')
+            str_list.append(' src="' + file_path_summary.mapped_fraction_sample_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.mapped_fraction_read_group_pdf + '">')
+            str_list.append('<img alt="Mapped Fraction - Read Group"')
+            str_list.append(' src="' + file_path_summary.mapped_fraction_read_group_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="left">Mapped Fraction</td>\n')
+            str_list.append('</tr>\n')
 
             # Mapped Number Plots
-            str_list += '<tr>\n'
-            str_list += '<td class="center">'
-            str_list += '<a href="' + file_path_summary.mapped_number_sample_pdf + '">'
-            str_list += '<img alt="Mapped Number - Sample"'
-            str_list += ' src="' + file_path_summary.mapped_number_sample_png + '"'
-            str_list += ' height="100" width="100" />'
-            str_list += '</a>'
-            str_list += '</td>\n'
-            str_list += '<td class="center">'
-            str_list += '<a href="' + file_path_summary.mapped_number_read_group_pdf + '">'
-            str_list += '<img alt="Mapped Number - Read Group"'
-            str_list += ' src="' + file_path_summary.mapped_number_read_group_png + '"'
-            str_list += ' height="100" width="100" />'
-            str_list += '</a>'
-            str_list += '</td>\n'
-            str_list += '<td class="left">Mapped Number</td>\n'
-            str_list += '</tr>\n'
+            str_list.append('<tr>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.mapped_number_sample_pdf + '">')
+            str_list.append('<img alt="Mapped Number - Sample"')
+            str_list.append(' src="' + file_path_summary.mapped_number_sample_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.mapped_number_read_group_pdf + '">')
+            str_list.append('<img alt="Mapped Number - Read Group"')
+            str_list.append(' src="' + file_path_summary.mapped_number_read_group_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="left">Mapped Number</td>\n')
+            str_list.append('</tr>\n')
 
             # Junction Fraction Plots
-            str_list += '<tr>\n'
-            str_list += '<td class="center">'
-            str_list += '<a href="' + file_path_summary.junction_fraction_sample_pdf + '">'
-            str_list += '<img alt="Junction Fraction - Sample"'
-            str_list += ' src="' + file_path_summary.junction_fraction_sample_png + '"'
-            str_list += ' height="100" width="100" />'
-            str_list += '</a>'
-            str_list += '</td>\n'
-            str_list += '<td class="center">'
-            str_list += '<a href="' + file_path_summary.junction_fraction_read_group_pdf + '">'
-            str_list += '<img alt="Junction Fraction - Read Group"'
-            str_list += ' src="' + file_path_summary.junction_fraction_read_group_png + '"'
-            str_list += ' height="100" width="100" />'
-            str_list += '</a>'
-            str_list += '</td>\n'
-            str_list += '<td class="left">Junction Fraction</td>\n'
-            str_list += '</tr>\n'
+            str_list.append('<tr>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.junction_fraction_sample_pdf + '">')
+            str_list.append('<img alt="Junction Fraction - Sample"')
+            str_list.append(' src="' + file_path_summary.junction_fraction_sample_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.junction_fraction_read_group_pdf + '">')
+            str_list.append('<img alt="Junction Fraction - Read Group"')
+            str_list.append(' src="' + file_path_summary.junction_fraction_read_group_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="left">Junction Fraction</td>\n')
+            str_list.append('</tr>\n')
 
             # Junction Number Plots
-            str_list += '<tr>\n'
-            str_list += '<td class="center">'
-            str_list += '<a href="' + file_path_summary.junction_number_sample_pdf + '">'
-            str_list += '<img alt="Junction Number - Sample"'
-            str_list += ' src="' + file_path_summary.junction_number_sample_png + '"'
-            str_list += ' height="100" width="100" />'
-            str_list += '</a>'
-            str_list += '</td>\n'
-            str_list += '<td class="center">'
-            str_list += '<a href="' + file_path_summary.junction_number_read_group_pdf + '">'
-            str_list += '<img alt="Junction Number - Read Group"'
-            str_list += ' src="' + file_path_summary.junction_number_read_group_png + '"'
-            str_list += ' height="100" width="100" />'
-            str_list += '</a>'
-            str_list += '</td>\n'
-            str_list += '<td class="left">Junction Number</td>\n'
-            str_list += '</tr>\n'
+            str_list.append('<tr>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.junction_number_sample_pdf + '">')
+            str_list.append('<img alt="Junction Number - Sample"')
+            str_list.append(' src="' + file_path_summary.junction_number_sample_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.junction_number_read_group_pdf + '">')
+            str_list.append('<img alt="Junction Number - Read Group"')
+            str_list.append(' src="' + file_path_summary.junction_number_read_group_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="left">Junction Number</td>\n')
+            str_list.append('</tr>\n')
 
             # Summary Tables
-            str_list += '<tr>\n'
-            str_list += '<td class="center">'
-            str_list += '<a href="' + file_path_summary.table_sample + '">'
-            str_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
-            str_list += '</a>'
-            str_list += '</td>\n'
-            str_list += '<td class="center">'
-            str_list += '<a href="' + file_path_summary.table_read_group + '">'
-            str_list += '<abbr title="Tab-Separated Value">TSV</abbr>'
-            str_list += '</a>'
-            str_list += '</td>\n'
-            str_list += '<td class="left">Summary</td>\n'
-            str_list += '</tr>\n'
+            str_list.append('<tr>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.table_sample + '">')
+            str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.table_read_group + '">')
+            str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="left">Summary</td>\n')
+            str_list.append('</tr>\n')
 
-            str_list += '</tbody>\n'
-            str_list += '</table>\n'
-            str_list += '\n'
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
 
             self.report_to_file(content=str_list)
 
@@ -928,13 +928,13 @@ class StarAligner(Analysis):
 
             # Group via UCSC super tracks.
 
-            str_list += 'track Alignments\n'
-            str_list += 'shortLabel Alignments\n'
-            str_list += 'longLabel STAR alignments\n'
-            str_list += 'visibility hide\n'
-            str_list += 'superTrack on\n'
-            str_list += 'group alignments\n'
-            str_list += '\n'
+            str_list.append('track Alignments\n')
+            str_list.append('shortLabel Alignments\n')
+            str_list.append('longLabel STAR alignments\n')
+            str_list.append('visibility hide\n')
+            str_list.append('superTrack on\n')
+            str_list.append('group alignments\n')
+            str_list.append('\n')
 
             # Sample-specific tracks
 
@@ -956,23 +956,23 @@ class StarAligner(Analysis):
                 # Add a trackDB entry for each Tophat accepted_hits.bam file.
                 #
                 # Common settings
-                str_list += 'track ' + sample.name + '_alignments\n'
-                str_list += 'type bam\n'
-                str_list += 'shortLabel ' + sample.name + '_alignments\n'
-                str_list += 'longLabel ' + sample.name + ' STAR alignments\n'
-                str_list += 'bigDataUrl ' + file_path_merge.merged_bam + '\n'
-                # str_list += 'html ...\n'
-                str_list += 'visibility dense\n'
+                str_list.append('track ' + sample.name + '_alignments\n')
+                str_list.append('type bam\n')
+                str_list.append('shortLabel ' + sample.name + '_alignments\n')
+                str_list.append('longLabel ' + sample.name + ' STAR alignments\n')
+                str_list.append('bigDataUrl ' + file_path_merge.merged_bam + '\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility dense\n')
 
                 # Common optional settings
-                str_list += 'color 0,0,0\n'
+                str_list.append('color 0,0,0\n')
 
                 # bam/cram - Compressed Sequence Alignment track settings
                 # None
 
                 # Composite track settings
-                str_list += 'parent Alignments\n'
-                str_list += '\n'
+                str_list.append('parent Alignments\n')
+                str_list.append('\n')
 
             self.ucsc_hub_to_file(content=str_list)
 
