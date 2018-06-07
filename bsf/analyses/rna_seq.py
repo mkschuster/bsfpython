@@ -2004,131 +2004,131 @@ class Tuxedo(bsf.Analysis):
             str_list = list()
             """ @type str_list: list[str | unicode] """
 
-            str_list += '<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n'
-            str_list += '\n'
+            str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+            str_list.append('\n')
 
             # TopHat and Cufflinks table.
 
-            str_list += '<h2 id="transcriptome_browsing">Transcriptome Browsing</h2>\n'
-            str_list += '\n'
+            str_list.append('<h2 id="transcriptome_browsing">Transcriptome Browsing</h2>\n')
+            str_list.append('\n')
 
-            str_list += '<h3 id="read_alignments">Read Alignments</h3>\n'
-            str_list += '\n'
+            str_list.append('<h3 id="read_alignments">Read Alignments</h3>\n')
+            str_list.append('\n')
 
-            str_list += '<p id ="tophat">'
+            str_list.append('<p id ="tophat">')
             # http://tophat.cbcb.umd.edu/manual.html
-            str_list += '<a href="http://ccb.jhu.edu/software/tophat/index.shtml"><strong>TopHat</strong></a> '
-            str_list += 'aligns RNA-Seq reads to a genome in order to identify '
-            str_list += 'exon-exon splice junctions. It is built on the ultra fast '
-            str_list += 'short read mapping program '
-            str_list += '<a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">'
-            str_list += '<strong>Bowtie 2</strong>'
-            str_list += '</a>.'
-            str_list += '</p>\n'
-            str_list += '\n'
+            str_list.append('<a href="http://ccb.jhu.edu/software/tophat/index.shtml"><strong>TopHat</strong></a> ')
+            str_list.append('aligns RNA-Seq reads to a genome in order to identify ')
+            str_list.append('exon-exon splice junctions. It is built on the ultra fast ')
+            str_list.append('short read mapping program ')
+            str_list.append('<a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">')
+            str_list.append('<strong>Bowtie 2</strong>')
+            str_list.append('</a>.')
+            str_list.append('</p>\n')
+            str_list.append('\n')
 
-            str_list += '<p id="track_hub">'
-            str_list += 'View TopHat <strong>read alignments</strong> tracks for each sample\n'
-            str_list += 'in their genomic context via the project-specific '
-            str_list += self.ucsc_hub_html_anchor(link_path=link_path)
-            str_list += '.'
-            str_list += '</p>\n'
-            str_list += '\n'
+            str_list.append('<p id="track_hub">')
+            str_list.append('View TopHat <strong>read alignments</strong> tracks for each sample\n')
+            str_list.append('in their genomic context via the project-specific ')
+            str_list.extend(self.ucsc_hub_html_anchor(link_path=link_path))
+            str_list.append('.')
+            str_list.append('</p>\n')
+            str_list.append('\n')
 
-            str_list += '<p>'
-            str_list += '<a href="rnaseq_tophat_alignment_summary.pdf">'
-            str_list += '<img '
-            str_list += 'alt="TopHat Alignment Summary" '
-            str_list += 'id="tophat_alignment_summary_img" '
-            str_list += 'src="rnaseq_tophat_alignment_summary.png" '
-            str_list += 'height="80" '
-            str_list += 'width="80" '
-            str_list += '/>'
-            str_list += '</a> '
-            str_list += 'Alignment summary statistics <a href="rnaseq_tophat_alignment_summary.tsv">TSV</a>'
-            str_list += '</p>\n'
+            str_list.append('<p>')
+            str_list.append('<a href="rnaseq_tophat_alignment_summary.pdf">')
+            str_list.append('<img ')
+            str_list.append('alt="TopHat Alignment Summary" ')
+            str_list.append('id="tophat_alignment_summary_img" ')
+            str_list.append('src="rnaseq_tophat_alignment_summary.png" ')
+            str_list.append('height="80" ')
+            str_list.append('width="80" ')
+            str_list.append('/>')
+            str_list.append('</a> ')
+            str_list.append('Alignment summary statistics <a href="rnaseq_tophat_alignment_summary.tsv">TSV</a>')
+            str_list.append('</p>\n')
 
-            str_list += '<h3 id="alignment_events">Splice Junctions, Insertions and Deletions</h3>\n'
-            str_list += '\n'
+            str_list.append('<h3 id="alignment_events">Splice Junctions, Insertions and Deletions</h3>\n')
+            str_list.append('\n')
 
-            str_list += '<p>'
-            str_list += 'TopHat reports <strong>splice junctions</strong> on the basis of RNA-Seq\n'
-            str_list += 'read alignments in UCSC BED track format.\n'
-            str_list += 'Each junction consists of two connected BED blocks,\n'
-            str_list += 'where each block is as long as the maximal overhang\n'
-            str_list += 'of any read spanning the junction. The score is\n'
-            str_list += 'the number of alignments spanning the junction.\n'
-            str_list += 'UCSC BED tracks of <strong>insertions</strong> and\n'
-            str_list += '<strong>deletions</strong> are also reported by TopHat.'
-            str_list += '</p>\n'
+            str_list.append('<p>')
+            str_list.append('TopHat reports <strong>splice junctions</strong> on the basis of RNA-Seq\n')
+            str_list.append('read alignments in UCSC BED track format.\n')
+            str_list.append('Each junction consists of two connected BED blocks,\n')
+            str_list.append('where each block is as long as the maximal overhang\n')
+            str_list.append('of any read spanning the junction. The score is\n')
+            str_list.append('the number of alignments spanning the junction.\n')
+            str_list.append('UCSC BED tracks of <strong>insertions</strong> and\n')
+            str_list.append('<strong>deletions</strong> are also reported by TopHat.')
+            str_list.append('</p>\n')
 
-            str_list += '<p>'
-            str_list += 'View the corresponding TopHat tracks for junctions, deletions and insertions\n'
-            str_list += 'for each sample in their genomic context via the project-specific\n'
-            str_list += self.ucsc_hub_html_anchor(link_path=link_path)
-            str_list += '.'
-            str_list += '</p>\n'
-            str_list += '\n'
+            str_list.append('<p>')
+            str_list.append('View the corresponding TopHat tracks for junctions, deletions and insertions\n')
+            str_list.append('for each sample in their genomic context via the project-specific\n')
+            str_list.extend(self.ucsc_hub_html_anchor(link_path=link_path))
+            str_list.append('.')
+            str_list.append('</p>\n')
+            str_list.append('\n')
 
-            # str_list += '<p>'
-            # str_list += 'Follow the links below to attach\n'
-            # str_list += 'Tophat junction, deletion and insertion annotation to the\n'
-            # str_list += 'UCSC Genome Browser. Since each file needs transferring to\n'
-            # str_list += 'the UCSC site, subsequent pages will take some time to load.'
-            # str_list += '</p>\n'
+            # str_list.append('<p>')
+            # str_list.append('Follow the links below to attach\n')
+            # str_list.append('Tophat junction, deletion and insertion annotation to the\n')
+            # str_list.append('UCSC Genome Browser. Since each file needs transferring to\n')
+            # str_list.append('the UCSC site, subsequent pages will take some time to load.')
+            # str_list.append('</p>\n')
 
-            str_list += '<h2 id="gene_expression_profiles">Gene Expression Profiles</h2>\n'
-            str_list += '\n'
+            str_list.append('<h2 id="gene_expression_profiles">Gene Expression Profiles</h2>\n')
+            str_list.append('\n')
 
-            str_list += '<p id="cufflinks">'
+            str_list.append('<p id="cufflinks">')
             # http://cufflinks.cbcb.umd.edu/howitworks.html
-            str_list += '<a href="http://cole-trapnell-lab.github.io/cufflinks/"><strong>Cufflinks</strong></a>\n'
-            str_list += 'assembles aligned RNA-Seq reads into transcripts,\n'
-            str_list += 'estimates their abundances, and tests for differential\n'
-            str_list += 'expression and regulation transcriptome-wide.\n'
-            str_list += 'It accepts aligned RNA-Seq reads and assembles the alignments into a parsimonious set of\n'
-            str_list += 'transcripts. Cufflinks then estimates the relative abundances of these transcripts based\n'
-            str_list += 'on how many reads support each one, taking into account biases in library preparation '
-            str_list += 'protocols.'
-            str_list += '</p>\n'
+            str_list.append('<a href="http://cole-trapnell-lab.github.io/cufflinks/"><strong>Cufflinks</strong></a>\n')
+            str_list.append('assembles aligned RNA-Seq reads into transcripts,\n')
+            str_list.append('estimates their abundances, and tests for differential\n')
+            str_list.append('expression and regulation transcriptome-wide.\n')
+            str_list.append('It accepts aligned RNA-Seq reads and assembles the alignments into a parsimonious set\n')
+            str_list.append('of transcripts. Cufflinks then estimates the relative abundances of these transcripts\n')
+            str_list.append('based on how many reads support each one, taking into account biases in library\n')
+            str_list.append('preparation protocols.')
+            str_list.append('</p>\n')
 
-            str_list += '<p>'
-            str_list += 'The Cufflinks <strong>assembled transcripts</strong> can be attached to the \n'
-            str_list += 'UCSC Genome Browser, by following the "Transcript Assembly" links\n'
-            str_list += 'below.\n'
-            str_list += 'The isoforms.fpkm_tracking and genes.fpkm_tracking files\n'
-            str_list += 'contain the estimated isoform or gene expression values in the generic\n'
+            str_list.append('<p>')
+            str_list.append('The Cufflinks <strong>assembled transcripts</strong> can be attached to the \n')
+            str_list.append('UCSC Genome Browser, by following the "Transcript Assembly" links\n')
+            str_list.append('below.\n')
+            str_list.append('The isoforms.fpkm_tracking and genes.fpkm_tracking files\n')
+            str_list.append('contain the estimated isoform or gene expression values in the generic\n')
             # http://cufflinks.cbcb.umd.edu/manual.html#fpkm_tracking_format
-            str_list += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
-                        'fpkm-tracking-format">FPKM Tracking format</a>.\n'
-            str_list += 'The isoforms.count_tracking and genes.count_tracking files\n'
-            str_list += 'contain the scaled isoform or gene count values in the generic\n'
-            str_list += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
-                        'count-tracking-format">Count Tracking format</a>.'
-            str_list += '</p>\n'
+            str_list.append('<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' +
+                            'fpkm-tracking-format">FPKM Tracking format</a>.\n')
+            str_list.append('The isoforms.count_tracking and genes.count_tracking files\n')
+            str_list.append('contain the scaled isoform or gene count values in the generic\n')
+            str_list.append('<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' +
+                            'count-tracking-format">Count Tracking format</a>.')
+            str_list.append('</p>\n')
 
-            str_list += '<p>'
-            str_list += 'Please see a more detailed description of\n'
+            str_list.append('<p>')
+            str_list.append('Please see a more detailed description of\n')
             # http://cufflinks.cbcb.umd.edu/manual.html#cufflinks_output
-            str_list += '<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' \
-                        'output-formats-used-in-the-cufflinks-suite">Cufflinks output</a>.'
-            str_list += '</p>\n'
+            str_list.append('<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' +
+                            'output-formats-used-in-the-cufflinks-suite">Cufflinks output</a>.')
+            str_list.append('</p>\n')
 
-            str_list += '<table id="gene_expression_table">\n'
-            str_list += '<thead>\n'
-            str_list += '<tr>\n'
-            str_list += '<th>Sample</th>\n'
-            str_list += '<th>Assembled Transcripts</th>\n'
-            str_list += '<th>Gene FPKM</th>\n'
-            str_list += '<th>Transcript FPKM</th>\n'
-            str_list += '<th>Genes (Symbols)</th>\n'
-            str_list += '<th>Isoforms (Symbols)</th>\n'
-            str_list += '<th>Aligned BAM file</th>\n'
-            str_list += '<th>Aligned BAI file</th>\n'
-            str_list += '<th>Unaligned BAM file</th>\n'
-            str_list += '</tr>\n'
-            str_list += '</thead>\n'
-            str_list += '<tbody>\n'
+            str_list.append('<table id="gene_expression_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th>Sample</th>\n')
+            str_list.append('<th>Assembled Transcripts</th>\n')
+            str_list.append('<th>Gene FPKM</th>\n')
+            str_list.append('<th>Transcript FPKM</th>\n')
+            str_list.append('<th>Genes (Symbols)</th>\n')
+            str_list.append('<th>Isoforms (Symbols)</th>\n')
+            str_list.append('<th>Aligned BAM file</th>\n')
+            str_list.append('<th>Aligned BAI file</th>\n')
+            str_list.append('<th>Unaligned BAM file</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
 
             for sample in self.sample_list:
                 if self.debug > 0:
@@ -2149,98 +2149,98 @@ class Tuxedo(bsf.Analysis):
 
                     path_prefix = 'rnaseq_cufflinks_' + paired_reads_name
 
-                    str_list += '<tr>\n'
+                    str_list.append('<tr>\n')
                     # Sample
-                    str_list += '<td class="left">' + paired_reads_name + '</td>\n'
+                    str_list.append('<td class="left">' + paired_reads_name + '</td>\n')
                     # Assembled Transcripts
-                    str_list += '<td class="center">'
-                    str_list += relative_anchor(
+                    str_list.append('<td class="center">')
+                    str_list.append(relative_anchor(
                         prefix=path_prefix,
                         suffix='transcripts.gtf',
-                        text='Transcript Assembly')
-                    str_list += '</td>\n'
+                        text='Transcript Assembly'))
+                    str_list.append('</td>\n')
                     # Gene FPKM
-                    str_list += '<td class="center">'
-                    str_list += '<a href="' + path_prefix + '/genes.fpkm_tracking">Genes FPKM</a>'
-                    str_list += '</td>\n'
+                    str_list.append('<td class="center">')
+                    str_list.append('<a href="' + path_prefix + '/genes.fpkm_tracking">Genes FPKM</a>')
+                    str_list.append('</td>\n')
                     # Transcript FPKM
-                    str_list += '<td class="center">'
-                    str_list += '<a href="' + path_prefix + '/isoforms.fpkm_tracking">Isoforms FPKM</a>'
-                    str_list += '</td>\n'
+                    str_list.append('<td class="center">')
+                    str_list.append('<a href="' + path_prefix + '/isoforms.fpkm_tracking">Isoforms FPKM</a>')
+                    str_list.append('</td>\n')
                     # Genes (Symbols)
-                    str_list += '<td class="center">'
-                    str_list += relative_anchor(
+                    str_list.append('<td class="center">')
+                    str_list.append(relative_anchor(
                         prefix=path_prefix,
                         suffix='genes_fpkm_tracking.tsv',
-                        text='Genes (Symbols)')
-                    str_list += '</td>\n'
+                        text='Genes (Symbols)'))
+                    str_list.append('</td>\n')
                     # Isoforms (Symbols)
-                    str_list += '<td class="center">'
-                    str_list += relative_anchor(
+                    str_list.append('<td class="center">')
+                    str_list.append(relative_anchor(
                         prefix=path_prefix,
                         suffix='isoforms_fpkm_tracking.tsv',
-                        text='Isoforms (Symbols)')
+                        text='Isoforms (Symbols)'))
 
                     # TODO: The aligned BAM and BAI files and the unaligned BAM file are currently non standard.
                     # The files have a 'rnaseq_tophat_' prefix, but are in the 'rnaseq_cufflinks_' directory.
                     # This will be resolved when the process_tophat step gets re-engineered.
                     # Aligned BAM file
-                    str_list += '</td>\n'
-                    str_list += '<td class="center">'
-                    str_list += '<a href="' + path_prefix + '/rnaseq_tophat_' + paired_reads_name + \
-                                '_accepted_hits.bam">Aligned BAM</a>'
-                    str_list += '</td>\n'
+                    str_list.append('</td>\n')
+                    str_list.append('<td class="center">')
+                    str_list.append('<a href="' + path_prefix + '/rnaseq_tophat_' + paired_reads_name +
+                                    '_accepted_hits.bam">Aligned BAM</a>')
+                    str_list.append('</td>\n')
                     # Aligned BAI file
-                    str_list += '<td class="center">'
-                    str_list += '<a href="' + path_prefix + '/rnaseq_tophat_' + paired_reads_name + \
-                                '_accepted_hits.bam.bai">Aligned BAI</a>'
-                    str_list += '</td>\n'
+                    str_list.append('<td class="center">')
+                    str_list.append('<a href="' + path_prefix + '/rnaseq_tophat_' + paired_reads_name +
+                                    '_accepted_hits.bam.bai">Aligned BAI</a>')
+                    str_list.append('</td>\n')
                     # Unaligned BAM file
-                    str_list += '<td class="center">'
-                    str_list += '<a href="' + path_prefix + '/rnaseq_tophat_' + paired_reads_name + \
-                                '_unmapped.bam">Unaligned BAM</a>'
-                    str_list += '</td>\n'
-                    str_list += '</tr>\n'
+                    str_list.append('<td class="center">')
+                    str_list.append('<a href="' + path_prefix + '/rnaseq_tophat_' + paired_reads_name +
+                                    '_unmapped.bam">Unaligned BAM</a>')
+                    str_list.append('</td>\n')
+                    str_list.append('</tr>\n')
 
-            str_list += '</tbody>\n'
-            str_list += '</table>\n'
-            str_list += '\n'
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
 
             # Cuffdiff produces cds_exp.diff, gene_exp.diff, isoform_exp.diff
             # promoters.diff, splicing.diff and tss_group_exp.diff amongst many others.
 
-            str_list += '<h2 id="differential_expression">Differential Expression</h2>\n'
-            str_list += '\n'
+            str_list.append('<h2 id="differential_expression">Differential Expression</h2>\n')
+            str_list.append('\n')
 
-            str_list += '<p id="cuffdiff">'
+            str_list.append('<p id="cuffdiff">')
             # http://cufflinks.cbcb.umd.edu/howitworks.html#diff
-            str_list += '<a href="http://cole-trapnell-lab.github.io/cufflinks/"><strong>Cufflinks</strong></a>\n'
-            str_list += 'finds significant changes in transcript\n'
-            str_list += 'expression, splicing, and promoter use.'
-            str_list += '</p>\n'
-            str_list += '\n'
+            str_list.append('<a href="http://cole-trapnell-lab.github.io/cufflinks/"><strong>Cufflinks</strong></a>\n')
+            str_list.append('finds significant changes in transcript\n')
+            str_list.append('expression, splicing, and promoter use.')
+            str_list.append('</p>\n')
+            str_list.append('\n')
 
-            str_list += '<h3 id="all_genes">All Genes</h3>\n'
+            str_list.append('<h3 id="all_genes">All Genes</h3>\n')
 
-            str_list += '<table id="differential_expression_table">\n'
-            str_list += '<thead>\n'
-            str_list += '<tr>\n'
-            str_list += '<th>Comparison</th>\n'
-            str_list += '<th>Samples</th>\n'
-            str_list += '<th>Replicates</th>\n'
-            str_list += '<th>Coding Sequences</th>\n'
-            str_list += '<th>Genes</th>\n'
-            str_list += '<th>Isoforms</th>\n'
-            str_list += '<th>Promoters</th>\n'
-            str_list += '<th>Splicing</th>\n'
-            str_list += '<th>Transcription Start Sites</th>\n'
-            str_list += '<th>Gene FPKM Replicates</th>\n'
-            str_list += '<th>Gene Count Replicates</th>\n'
-            str_list += '<th>Isoform FPKM Replicates</th>\n'
-            str_list += '<th>Isoform Count Replicates</th>\n'
-            str_list += '</tr>\n'
-            str_list += '</thead>\n'
-            str_list += '<tbody>\n'
+            str_list.append('<table id="differential_expression_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th>Comparison</th>\n')
+            str_list.append('<th>Samples</th>\n')
+            str_list.append('<th>Replicates</th>\n')
+            str_list.append('<th>Coding Sequences</th>\n')
+            str_list.append('<th>Genes</th>\n')
+            str_list.append('<th>Isoforms</th>\n')
+            str_list.append('<th>Promoters</th>\n')
+            str_list.append('<th>Splicing</th>\n')
+            str_list.append('<th>Transcription Start Sites</th>\n')
+            str_list.append('<th>Gene FPKM Replicates</th>\n')
+            str_list.append('<th>Gene Count Replicates</th>\n')
+            str_list.append('<th>Isoform FPKM Replicates</th>\n')
+            str_list.append('<th>Isoform Count Replicates</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
 
             # Since the sorted list of comparison names is used several times below, sort it only once.
             comparison_name_list = self._comparison_dict.keys()
@@ -2251,94 +2251,94 @@ class Tuxedo(bsf.Analysis):
 
                 # Link to comparison-specific symbolic links in the directory after cummeRbund processing.
 
-                str_list += '<tr>\n'
+                str_list.append('<tr>\n')
                 # Comparison
-                str_list += '<td class="left">' + comparison_name + '</td>\n'
+                str_list.append('<td class="left">' + comparison_name + '</td>\n')
                 # Samples
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='samples.tsv',
-                    text='Samples')
-                str_list += '</td>\n'
+                    text='Samples'))
+                str_list.append('</td>\n')
                 # Replicates
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='replicates.tsv',
-                    text='Replicates')
-                str_list += '</td>\n'
+                    text='Replicates'))
+                str_list.append('</td>\n')
                 # Coding Sequences
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='cds_exp_diff.tsv',
-                    text='Coding Sequences')
-                str_list += '</td>\n'
+                    text='Coding Sequences'))
+                str_list.append('</td>\n')
                 # Genes
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='genes_exp_diff.tsv',
-                    text='<strong>Genes</strong>')
-                str_list += '</td>\n'
+                    text='<strong>Genes</strong>'))
+                str_list.append('</td>\n')
                 # Isoforms
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_exp_diff.tsv',
-                    text='Isoforms')
-                str_list += '</td>\n'
+                    text='Isoforms'))
+                str_list.append('</td>\n')
                 # Promoters
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='promoters_diff.tsv',
-                    text='Promoters')
-                str_list += '</td>\n'
+                    text='Promoters'))
+                str_list.append('</td>\n')
                 # Splicing
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='splicing_diff.tsv',
-                    text='Splicing')
-                str_list += '</td>\n'
+                    text='Splicing'))
+                str_list.append('</td>\n')
                 # Transcription Start Sites
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='tss_group_exp_diff.tsv',
-                    text='Transcription Start Sites')
-                str_list += '</td>\n'
+                    text='Transcription Start Sites'))
+                str_list.append('</td>\n')
                 # Gene FPKM Replicates
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='genes_fpkm_replicates.tsv',
-                    text='Gene FPKM Replicates')
-                str_list += '</td>\n'
+                    text='Gene FPKM Replicates'))
+                str_list.append('</td>\n')
                 # Gene Count Replicates
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='genes_counts_replicates.tsv',
-                    text='Gene Count Replicates')
-                str_list += '</td>\n'
+                    text='Gene Count Replicates'))
+                str_list.append('</td>\n')
                 # Isoform FPKM Replicates
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_fpkm_replicates.tsv',
-                    text='Isoform FPKM Replicates')
-                str_list += '</td>\n'
+                    text='Isoform FPKM Replicates'))
+                str_list.append('</td>\n')
                 # Isoform Count Replicates
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_counts_replicates.tsv',
-                    text='Isoform Count Replicates')
-                str_list += '</td>\n'
-                str_list += '</tr>\n'
+                    text='Isoform Count Replicates'))
+                str_list.append('</td>\n')
+                str_list.append('</tr>\n')
 
                 # Read sample pair information if available.
 
@@ -2351,31 +2351,31 @@ class Tuxedo(bsf.Analysis):
                     sample_pair_sheet = TuxedoSamplePairSheet.from_file_path(file_path=sample_pair_path)
 
                     for row_dict in sample_pair_sheet.row_dicts:
-                        str_list += '<tr>\n'
+                        str_list.append('<tr>\n')
                         # Comparison
-                        str_list += '<td></td>\n'
+                        str_list.append('<td></td>\n')
                         # Samples
                         # Replicates
                         # Coding Sequences
-                        str_list += '<td class="left" colspan="3">'
-                        str_list += '<strong>' + row_dict['V1'] + '</strong>'
-                        str_list += ' versus '
-                        str_list += '<strong>' + row_dict['V2'] + '</strong>'
-                        str_list += '</td>\n'
+                        str_list.append('<td class="left" colspan="3">')
+                        str_list.append('<strong>' + row_dict['V1'] + '</strong>')
+                        str_list.append(' versus ')
+                        str_list.append('<strong>' + row_dict['V2'] + '</strong>')
+                        str_list.append('</td>\n')
                         # Genes
-                        str_list += '<td class="center">'
-                        str_list += relative_anchor(
+                        str_list.append('<td class="center">')
+                        str_list.append(relative_anchor(
                             prefix=path_prefix,
                             suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_diff.tsv')),
-                            text='<strong>Genes</strong>')
-                        str_list += '</td>\n'
+                            text='<strong>Genes</strong>'))
+                        str_list.append('</td>\n')
                         # Isoforms
-                        str_list += '<td class="center">'
-                        str_list += relative_anchor(
+                        str_list.append('<td class="center">')
+                        str_list.append(relative_anchor(
                             prefix=path_prefix,
                             suffix='_'.join((row_dict['V1'], row_dict['V2'], 'isoforms_diff.tsv')),
-                            text='Isoforms')
-                        str_list += '</td>\n'
+                            text='Isoforms'))
+                        str_list.append('</td>\n')
                         # Promoters
                         # Splicing
                         # Transcription Start Sites
@@ -2383,307 +2383,307 @@ class Tuxedo(bsf.Analysis):
                         # Gene Count Replicates
                         # Isoform FPKM Replicates
                         # Isoform Count Replicates
-                        str_list += '<td class="left" colspan="7"></td>\n'
-                        str_list += '</tr>\n'
+                        str_list.append('<td class="left" colspan="7"></td>\n')
+                        str_list.append('</tr>\n')
 
-            str_list += '</tbody>\n'
-            str_list += '</table>\n'
-            str_list += '\n'
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
 
-            str_list += '<h3 id="significant_genes">Significant Genes</h3>\n'
+            str_list.append('<h3 id="significant_genes">Significant Genes</h3>\n')
 
-            str_list += '<table id="significant_genes_table">\n'
-            str_list += '<thead>\n'
-            str_list += '<tr>\n'
-            str_list += '<th>Comparison</th>\n'
-            str_list += '<th>Genes</th>\n'
-            str_list += '<th>Isoforms</th>\n'
-            str_list += '</tr>\n'
-            str_list += '</thead>\n'
-            str_list += '<tbody>\n'
+            str_list.append('<table id="significant_genes_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th>Comparison</th>\n')
+            str_list.append('<th>Genes</th>\n')
+            str_list.append('<th>Isoforms</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
 
             for comparison_name in comparison_name_list:
                 path_prefix = 'rnaseq_process_cuffdiff_' + comparison_name
 
-                str_list += '<tr>\n'
+                str_list.append('<tr>\n')
                 # Comparison
-                str_list += '<td class="left">' + comparison_name + '</td>\n'
+                str_list.append('<td class="left">' + comparison_name + '</td>\n')
                 # Genes
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='genes_significance_matrix.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_significance_matrix.png',
-                        text='Significance Matrix Plot - Genes - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Significance Matrix Plot - Genes - ' + comparison_name)))
+                str_list.append('</td>\n')
                 # Isoforms
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_significance_matrix.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_significance_matrix.png',
-                        text='Significance Matrix Plot - Isoforms - ' + comparison_name))
-                str_list += '</td>\n'
-                str_list += '</tr>\n'
+                        text='Significance Matrix Plot - Isoforms - ' + comparison_name)))
+                str_list.append('</td>\n')
+                str_list.append('</tr>\n')
 
-            str_list += '</tbody>\n'
-            str_list += '</table>\n'
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
 
             # Show cummeRbund quality plots.
 
-            str_list += '<h2 id="quality_plots">Quality Plots</h2>\n'
-            str_list += '\n'
+            str_list.append('<h2 id="quality_plots">Quality Plots</h2>\n')
+            str_list.append('\n')
 
-            str_list += '<p>'
-            str_list += '</p>\n'
-            str_list += '\n'
+            str_list.append('<p>')
+            str_list.append('</p>\n')
+            str_list.append('\n')
 
-            str_list += '<table id="quality_plots_table">\n'
-            str_list += '<thead>\n'
-            str_list += '<tr>\n'
-            str_list += '<th>Comparison</th>\n'
-            str_list += '<th>Dispersion Plot - Genes</th>\n'
-            str_list += '<th>Dispersion Plot - Isoforms</th>\n'
-            str_list += '<th>Squared Coefficient of Variation - Genes</th>\n'
-            str_list += '<th>Squared Coefficient of Variation - Isoforms</th>\n'
-            str_list += '<th>Density Plot without Replicates - Genes</th>\n'
-            str_list += '<th>Density Plot with Replicates - Genes</th>\n'
-            str_list += '<th>Density Plot without Replicates - Isoforms</th>\n'
-            str_list += '<th>Density Plot with Replicates - Isoforms</th>\n'
-            str_list += '<th>Box Plot without Replicates - Genes</th>\n'
-            str_list += '<th>Box Plot with Replicates - Genes</th>\n'
-            str_list += '<th>Box Plot without Replicates - Isoforms</th>\n'
-            str_list += '<th>Box Plot with Replicates - Isoforms</th>\n'
-            str_list += '<th>Scatter Matrix Plot - Genes</th>\n'
-            str_list += '<th>Scatter Matrix Plot - Isoforms</th>\n'
-            str_list += '<th>Dendrogram Plot</th>\n'
-            str_list += '<th>Volcano Matrix Plot - Genes</th>\n'
-            str_list += '<th>Multidimensional Scaling Plot - Genes</th>\n'
-            str_list += '<th>Principal Component Analysis Plot - Genes</th>\n'
-            str_list += '</tr>\n'
-            str_list += '</thead>\n'
-            str_list += '<tbody>\n'
+            str_list.append('<table id="quality_plots_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th>Comparison</th>\n')
+            str_list.append('<th>Dispersion Plot - Genes</th>\n')
+            str_list.append('<th>Dispersion Plot - Isoforms</th>\n')
+            str_list.append('<th>Squared Coefficient of Variation - Genes</th>\n')
+            str_list.append('<th>Squared Coefficient of Variation - Isoforms</th>\n')
+            str_list.append('<th>Density Plot without Replicates - Genes</th>\n')
+            str_list.append('<th>Density Plot with Replicates - Genes</th>\n')
+            str_list.append('<th>Density Plot without Replicates - Isoforms</th>\n')
+            str_list.append('<th>Density Plot with Replicates - Isoforms</th>\n')
+            str_list.append('<th>Box Plot without Replicates - Genes</th>\n')
+            str_list.append('<th>Box Plot with Replicates - Genes</th>\n')
+            str_list.append('<th>Box Plot without Replicates - Isoforms</th>\n')
+            str_list.append('<th>Box Plot with Replicates - Isoforms</th>\n')
+            str_list.append('<th>Scatter Matrix Plot - Genes</th>\n')
+            str_list.append('<th>Scatter Matrix Plot - Isoforms</th>\n')
+            str_list.append('<th>Dendrogram Plot</th>\n')
+            str_list.append('<th>Volcano Matrix Plot - Genes</th>\n')
+            str_list.append('<th>Multidimensional Scaling Plot - Genes</th>\n')
+            str_list.append('<th>Principal Component Analysis Plot - Genes</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
 
             for comparison_name in comparison_name_list:
                 path_prefix = 'rnaseq_process_cuffdiff_' + comparison_name
 
-                str_list += '<tr>\n'
+                str_list.append('<tr>\n')
                 # Comparison
-                str_list += '<td class="left">' + comparison_name + '</td>\n'
+                str_list.append('<td class="left">' + comparison_name + '</td>\n')
 
                 # Dispersion Plots for Genes and Isoforms
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='genes_dispersion.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_dispersion.png',
-                        text='Dispersion Plot - Genes - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Dispersion Plot - Genes - ' + comparison_name)))
+                str_list.append('</td>\n')
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_dispersion.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_dispersion.png',
-                        text='Dispersion Plot - Isoforms - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Dispersion Plot - Isoforms - ' + comparison_name)))
+                str_list.append('</td>\n')
 
                 # Squared Coefficient of Variation (SCV) Plots for Genes and Isoforms
 
-                str_list += '<td class="center">'
+                str_list.append('<td class="center">')
                 if os.path.exists(
                         path=os.path.join(self.genome_directory, path_prefix, path_prefix + '_genes_scv.png')):
-                    str_list += relative_anchor(
+                    str_list.append(relative_anchor(
                         prefix=path_prefix,
                         suffix='genes_scv.pdf',
                         text=relative_image(
                             prefix=path_prefix,
                             suffix='genes_scv.png',
-                            text='Squared Coefficient of Variation (SCV) - Genes - ' + comparison_name))
-                str_list += '</td>\n'
+                            text='Squared Coefficient of Variation (SCV) - Genes - ' + comparison_name)))
+                str_list.append('</td>\n')
 
-                str_list += '<td class="center">'
+                str_list.append('<td class="center">')
                 if os.path.exists(
                         path=os.path.join(self.genome_directory, path_prefix, path_prefix + '_isoforms_scv.png')):
-                    str_list += relative_anchor(
+                    str_list.append(relative_anchor(
                         prefix=path_prefix,
                         suffix='isoforms_scv.pdf',
                         text=relative_image(
                             prefix=path_prefix,
                             suffix='isoforms_scv.png',
-                            text='Squared Coefficient of Variation (SCV) - Isoforms - ' + comparison_name))
-                str_list += '</td>\n'
+                            text='Squared Coefficient of Variation (SCV) - Isoforms - ' + comparison_name)))
+                str_list.append('</td>\n')
 
                 # Density Plots for Genes without and with Replicates
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='genes_density_wo_replicates.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_density_wo_replicates.png',
-                        text='Density Plot without Replicates - Genes - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Density Plot without Replicates - Genes - ' + comparison_name)))
+                str_list.append('</td>\n')
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='genes_density_w_replicates.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_density_w_replicates.png',
-                        text='Density Plot with Replicates - Genes - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Density Plot with Replicates - Genes - ' + comparison_name)))
+                str_list.append('</td>\n')
 
                 # Density Plots for Isoforms without and with Replicates
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_density_wo_replicates.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_density_wo_replicates.png',
-                        text='Density Plot without Replicates - Isoforms - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Density Plot without Replicates - Isoforms - ' + comparison_name)))
+                str_list.append('</td>\n')
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_density_w_replicates.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_density_w_replicates.png',
-                        text='Density Plot with Replicates - Isoforms - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Density Plot with Replicates - Isoforms - ' + comparison_name)))
+                str_list.append('</td>\n')
 
                 # Box Plots for Genes without and with Replicates
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='genes_box_wo_replicates.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_box_wo_replicates.png',
-                        text='Box Plot without Replicates - Genes - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Box Plot without Replicates - Genes - ' + comparison_name)))
+                str_list.append('</td>\n')
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='genes_box_w_replicates.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_box_w_replicates.png',
-                        text='Box Plot with Replicates - Genes - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Box Plot with Replicates - Genes - ' + comparison_name)))
+                str_list.append('</td>\n')
 
                 # Box Plots for Isoforms with and without Replicates
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_box_wo_replicates.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_box_wo_replicates.png',
-                        text='Box Plot without Replicates - Isoforms - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Box Plot without Replicates - Isoforms - ' + comparison_name)))
+                str_list.append('</td>\n')
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_box_w_replicates.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_box_w_replicates.png',
-                        text='Box Plot with Replicates - Isoforms - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Box Plot with Replicates - Isoforms - ' + comparison_name)))
+                str_list.append('</td>\n')
 
                 # Scatter Matrix Plot for Genes and Isoforms
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='genes_scatter_matrix.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_scatter_matrix.png',
-                        text='Scatter Matrix Plot - Genes - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Scatter Matrix Plot - Genes - ' + comparison_name)))
+                str_list.append('</td>\n')
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_scatter_matrix.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='isoforms_scatter_matrix.png',
-                        text='Scatter Matrix Plot - Isoforms - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Scatter Matrix Plot - Isoforms - ' + comparison_name)))
+                str_list.append('</td>\n')
 
                 # Dendrogram Plot for Genes
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='genes_dendrogram.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_dendrogram.png',
-                        text='Dendrogram Plot - Genes - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Dendrogram Plot - Genes - ' + comparison_name)))
+                str_list.append('</td>\n')
 
                 # Volcano Matrix Plot for Genes
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='genes_volcano_matrix.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_volcano_matrix.png',
-                        text='Volcano Matrix Plot - Genes - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Volcano Matrix Plot - Genes - ' + comparison_name)))
+                str_list.append('</td>\n')
 
                 # Multidimensional Scaling Plot for Genes
 
-                str_list += '<td class="center">'
+                str_list.append('<td class="center">')
                 if os.path.exists(
                         path=os.path.join(self.genome_directory, path_prefix, path_prefix + '_genes_mds.png')):
-                    str_list += relative_anchor(
+                    str_list.append(relative_anchor(
                         prefix=path_prefix,
                         suffix='genes_mds.pdf',
                         text=relative_image(
                             prefix=path_prefix,
                             suffix='genes_mds.png',
-                            text='Multidimensional Scaling Plot - Genes - ' + comparison_name))
-                str_list += '</td>\n'
+                            text='Multidimensional Scaling Plot - Genes - ' + comparison_name)))
+                str_list.append('</td>\n')
 
                 # Principal Component Analysis Plot for Genes
 
-                str_list += '<td class="center">'
-                str_list += relative_anchor(
+                str_list.append('<td class="center">')
+                str_list.append(relative_anchor(
                     prefix=path_prefix,
                     suffix='genes_pca.pdf',
                     text=relative_image(
                         prefix=path_prefix,
                         suffix='genes_pca.png',
-                        text='Principal Component Analysis Plot - Genes - ' + comparison_name))
-                str_list += '</td>\n'
+                        text='Principal Component Analysis Plot - Genes - ' + comparison_name)))
+                str_list.append('</td>\n')
 
-                str_list += '</tr>\n'
+                str_list.append('</tr>\n')
 
                 # Read sample pair information if available.
 
@@ -2696,55 +2696,55 @@ class Tuxedo(bsf.Analysis):
                     sample_pair_sheet = TuxedoSamplePairSheet.from_file_path(file_path=sample_pair_path)
 
                     for row_dict in sample_pair_sheet.row_dicts:
-                        str_list += '<tr>\n'
+                        str_list.append('<tr>\n')
 
                         # Comparison
-                        str_list += '<td class="left"></td>\n'
-                        str_list += '<td class="left" colspan="10">'
-                        str_list += '<strong>' + row_dict['V1'] + '</strong>'
-                        str_list += ' versus '
-                        str_list += '<strong>' + row_dict['V2'] + '</strong>'
-                        str_list += '</td>\n'
+                        str_list.append('<td class="left"></td>\n')
+                        str_list.append('<td class="left" colspan="10">')
+                        str_list.append('<strong>' + row_dict['V1'] + '</strong>')
+                        str_list.append(' versus ')
+                        str_list.append('<strong>' + row_dict['V2'] + '</strong>')
+                        str_list.append('</td>\n')
 
-                        str_list += '<td class="center">'
-                        str_list += relative_anchor(
+                        str_list.append('<td class="center">')
+                        str_list.append(relative_anchor(
                             prefix=path_prefix,
                             suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_scatter.pdf')),
                             text=relative_image(
                                 prefix=path_prefix,
                                 suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_scatter.png')),
-                                text='Scatter Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2']))
-                        str_list += '</td>\n'
+                                text='Scatter Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2'])))
+                        str_list.append('</td>\n')
 
-                        str_list += '<td class="center"></td>\n'
+                        str_list.append('<td class="center"></td>\n')
 
-                        str_list += '<td class="center">'
-                        str_list += relative_anchor(
+                        str_list.append('<td class="center">')
+                        str_list.append(relative_anchor(
                             prefix=path_prefix,
                             suffix='_'.join((row_dict['V1'], row_dict['V2'], 'maplot.pdf')),
                             text=relative_image(
                                 prefix=path_prefix,
                                 suffix='_'.join((row_dict['V1'], row_dict['V2'], 'maplot.png')),
-                                text='M vs A Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2']))
-                        str_list += '</td>\n'
+                                text='M vs A Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2'])))
+                        str_list.append('</td>\n')
 
-                        str_list += '<td class="center">'
-                        str_list += relative_anchor(
+                        str_list.append('<td class="center">')
+                        str_list.append(relative_anchor(
                             prefix=path_prefix,
                             suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_volcano.pdf')),
                             text=relative_image(
                                 prefix=path_prefix,
                                 suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_volcano.png')),
-                                text='Volcano Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2']))
-                        str_list += '</td>\n'
+                                text='Volcano Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2'])))
+                        str_list.append('</td>\n')
 
-                        str_list += '<td class="center" colspan="4"></td>\n'
+                        str_list.append('<td class="center" colspan="4"></td>\n')
 
-                        str_list += '</tr>\n'
+                        str_list.append('</tr>\n')
 
-            str_list += '</tbody>\n'
-            str_list += '</table>\n'
-            str_list += '\n'
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
 
             self.report_to_file(content=str_list)
 
@@ -2762,61 +2762,61 @@ class Tuxedo(bsf.Analysis):
 
             # Group via UCSC super tracks.
 
-            str_list += 'track Alignments\n'
-            str_list += 'shortLabel Alignments\n'
-            str_list += 'longLabel TopHat RNA-Seq read alignments\n'
-            str_list += 'visibility hide\n'
-            str_list += 'superTrack on\n'
-            str_list += 'group alignments\n'
-            str_list += '\n'
+            str_list.append('track Alignments\n')
+            str_list.append('shortLabel Alignments\n')
+            str_list.append('longLabel TopHat RNA-Seq read alignments\n')
+            str_list.append('visibility hide\n')
+            str_list.append('superTrack on\n')
+            str_list.append('group alignments\n')
+            str_list.append('\n')
 
-            str_list += 'track Assemblies\n'
-            str_list += 'shortLabel Assemblies\n'
-            str_list += 'longLabel Cuffmerge transcript structures\n'
-            str_list += 'visibility full\n'
-            str_list += 'superTrack on\n'
-            str_list += 'group assemblies\n'
-            str_list += '\n'
+            str_list.append('track Assemblies\n')
+            str_list.append('shortLabel Assemblies\n')
+            str_list.append('longLabel Cuffmerge transcript structures\n')
+            str_list.append('visibility full\n')
+            str_list.append('superTrack on\n')
+            str_list.append('group assemblies\n')
+            str_list.append('\n')
 
-            str_list += 'track Coverage\n'
-            str_list += 'shortLabel Coverage\n'
-            str_list += 'longLabel TopHat RNA-Seq alignment coverage\n'
-            str_list += 'visibility full\n'
-            str_list += 'superTrack on\n'
-            str_list += 'group coverage\n'
-            str_list += '\n'
+            str_list.append('track Coverage\n')
+            str_list.append('shortLabel Coverage\n')
+            str_list.append('longLabel TopHat RNA-Seq alignment coverage\n')
+            str_list.append('visibility full\n')
+            str_list.append('superTrack on\n')
+            str_list.append('group coverage\n')
+            str_list.append('\n')
 
-            str_list += 'track Deletions\n'
-            str_list += 'shortLabel Deletions\n'
-            str_list += 'longLabel TopHat RNA-Seq deletions\n'
-            str_list += 'visibility hide\n'
-            str_list += 'superTrack on\n'
-            str_list += 'group alignments\n'
-            str_list += '\n'
+            str_list.append('track Deletions\n')
+            str_list.append('shortLabel Deletions\n')
+            str_list.append('longLabel TopHat RNA-Seq deletions\n')
+            str_list.append('visibility hide\n')
+            str_list.append('superTrack on\n')
+            str_list.append('group alignments\n')
+            str_list.append('\n')
 
-            str_list += 'track Insertions\n'
-            str_list += 'shortLabel Insertions\n'
-            str_list += 'longLabel TopHat RNA-Seq insertions\n'
-            str_list += 'visibility hide\n'
-            str_list += 'superTrack on\n'
-            str_list += 'group alignments\n'
-            str_list += '\n'
+            str_list.append('track Insertions\n')
+            str_list.append('shortLabel Insertions\n')
+            str_list.append('longLabel TopHat RNA-Seq insertions\n')
+            str_list.append('visibility hide\n')
+            str_list.append('superTrack on\n')
+            str_list.append('group alignments\n')
+            str_list.append('\n')
 
-            str_list += 'track Junctions\n'
-            str_list += 'shortLabel Junctions\n'
-            str_list += 'longLabel TopHat RNA-Seq splice junctions\n'
-            str_list += 'visibility show\n'
-            str_list += 'superTrack on\n'
-            str_list += 'group alignments\n'
-            str_list += '\n'
+            str_list.append('track Junctions\n')
+            str_list.append('shortLabel Junctions\n')
+            str_list.append('longLabel TopHat RNA-Seq splice junctions\n')
+            str_list.append('visibility show\n')
+            str_list.append('superTrack on\n')
+            str_list.append('group alignments\n')
+            str_list.append('\n')
 
-            str_list += 'track Transcripts\n'
-            str_list += 'shortLabel Transcripts\n'
-            str_list += 'longLabel Cufflinks transcript structures\n'
-            str_list += 'visibility show\n'
-            str_list += 'superTrack on\n'
-            str_list += 'group transcripts\n'
-            str_list += '\n'
+            str_list.append('track Transcripts\n')
+            str_list.append('shortLabel Transcripts\n')
+            str_list.append('longLabel Cufflinks transcript structures\n')
+            str_list.append('visibility show\n')
+            str_list.append('superTrack on\n')
+            str_list.append('group transcripts\n')
+            str_list.append('\n')
 
             # Sample-specific tracks
 
@@ -2834,148 +2834,148 @@ class Tuxedo(bsf.Analysis):
                     # Add a trackDB entry for each Tophat accepted_hits.bam file.
                     #
                     # Common settings
-                    str_list += 'track ' + paired_reads_name + '_alignments\n'
-                    str_list += 'type bam\n'
-                    str_list += 'shortLabel ' + paired_reads_name + '_alignments\n'
-                    str_list += 'longLabel ' + paired_reads_name + ' TopHat RNA-Seq read alignments\n'
-                    str_list += 'bigDataUrl rnaseq_tophat_' + paired_reads_name + '/accepted_hits.bam\n'
-                    # str_list += 'html ...\n'
-                    str_list += 'visibility dense\n'
+                    str_list.append('track ' + paired_reads_name + '_alignments\n')
+                    str_list.append('type bam\n')
+                    str_list.append('shortLabel ' + paired_reads_name + '_alignments\n')
+                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-Seq read alignments\n')
+                    str_list.append('bigDataUrl rnaseq_tophat_' + paired_reads_name + '/accepted_hits.bam\n')
+                    # str_list.append('html ...\n')
+                    str_list.append('visibility dense\n')
 
                     # Common optional settings
-                    str_list += 'color 0,0,0\n'
+                    str_list.append('color 0,0,0\n')
 
                     # bam/cram - Compressed Sequence Alignment track settings
                     # None
 
                     # Composite track settings
-                    str_list += 'parent Alignments\n'
-                    str_list += '\n'
+                    str_list.append('parent Alignments\n')
+                    str_list.append('\n')
 
                     #
                     # Add a trackDB entry for each Tophat accepted_hits.bw file.
                     #
                     # Common settings
-                    str_list += 'track ' + paired_reads_name + '_coverage\n'
+                    str_list.append('track ' + paired_reads_name + '_coverage\n')
                     # TODO: The bigWig type must declare the expected signal range.
                     # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
-                    str_list += 'type bigWig\n'
-                    str_list += 'shortLabel ' + paired_reads_name + '_coverage\n'
-                    str_list += 'longLabel ' + paired_reads_name + ' TopHat RNA-Seq alignment coverage\n'
-                    str_list += 'bigDataUrl rnaseq_tophat_' + paired_reads_name + '/accepted_hits.bw\n'
-                    # str_list += 'html ...\n'
-                    str_list += 'visibility full\n'
+                    str_list.append('type bigWig\n')
+                    str_list.append('shortLabel ' + paired_reads_name + '_coverage\n')
+                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-Seq alignment coverage\n')
+                    str_list.append('bigDataUrl rnaseq_tophat_' + paired_reads_name + '/accepted_hits.bw\n')
+                    # str_list.append('html ...\n')
+                    str_list.append('visibility full\n')
 
                     # Common optional settings
-                    str_list += 'color 0,0,0\n'
+                    str_list.append('color 0,0,0\n')
 
                     # bigWig - Signal graphing track settings
-                    str_list += 'alwaysZero on\n'
-                    str_list += 'autoScale on\n'
-                    str_list += 'graphTypeDefault bar\n'
-                    str_list += 'maxHeightPixels 100:60:20\n'
-                    # str_list += 'maxWindowToQuery 10000000\n'
-                    # str_list += 'smoothingWindow 5\n'
-                    # str_list += 'transformFunc NONE\n'
-                    # str_list += 'viewLimits 0:45\n'
-                    # str_list += 'viewLimitsMax 0:50\n'
-                    # str_list += 'windowingFunction maximum\n'
-                    # str_list += 'yLineMark <#>\n'
-                    # str_list += 'yLineOnOff on \n'
-                    # str_list += 'gridDefault on\n'
+                    str_list.append('alwaysZero on\n')
+                    str_list.append('autoScale on\n')
+                    str_list.append('graphTypeDefault bar\n')
+                    str_list.append('maxHeightPixels 100:60:20\n')
+                    # str_list.append('maxWindowToQuery 10000000\n')
+                    # str_list.append('smoothingWindow 5\n')
+                    # str_list.append('transformFunc NONE\n')
+                    # str_list.append('viewLimits 0:45\n')
+                    # str_list.append('viewLimitsMax 0:50\n')
+                    # str_list.append('windowingFunction maximum\n')
+                    # str_list.append('yLineMark <#>\n')
+                    # str_list.append('yLineOnOff on \n')
+                    # str_list.append('gridDefault on\n')
 
                     # Composite track settings
-                    str_list += 'parent Coverage\n'
-                    str_list += 'centerLabelsDense off\n'
-                    str_list += '\n'
+                    str_list.append('parent Coverage\n')
+                    str_list.append('centerLabelsDense off\n')
+                    str_list.append('\n')
 
                     #
                     # Add a trackDB entry for each Tophat deletions.bb file.
                     #
                     # Common settings
-                    str_list += 'track ' + paired_reads_name + '_deletions\n'
-                    str_list += 'type bigBed\n'
-                    str_list += 'shortLabel ' + paired_reads_name + '_deletions\n'
-                    str_list += 'longLabel ' + paired_reads_name + ' TopHat RNA-Seq deletions\n'
-                    str_list += 'bigDataUrl rnaseq_tophat_' + paired_reads_name + '/deletions.bb\n'
-                    # str_list += 'html ...\n'
-                    str_list += 'visibility hide\n'
+                    str_list.append('track ' + paired_reads_name + '_deletions\n')
+                    str_list.append('type bigBed\n')
+                    str_list.append('shortLabel ' + paired_reads_name + '_deletions\n')
+                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-Seq deletions\n')
+                    str_list.append('bigDataUrl rnaseq_tophat_' + paired_reads_name + '/deletions.bb\n')
+                    # str_list.append('html ...\n')
+                    str_list.append('visibility hide\n')
 
                     # Common optional settings
-                    str_list += 'color 0,0,0\n'
+                    str_list.append('color 0,0,0\n')
 
                     # bigBed - Item or region track settings
                     # None
 
                     # Composite track settings
-                    str_list += 'parent Deletions\n'
-                    str_list += '\n'
+                    str_list.append('parent Deletions\n')
+                    str_list.append('\n')
 
                     #
                     # Add a trackDB entry for each Tophat insertions.bb file.
                     #
                     # Common settings
-                    str_list += 'track insertions_' + paired_reads_name + '\n'
-                    str_list += 'type bigBed\n'
-                    str_list += 'shortLabel ' + paired_reads_name + '_insertions\n'
-                    str_list += 'longLabel ' + paired_reads_name + ' TopHat RNA-Seq insertions\n'
-                    str_list += 'bigDataUrl rnaseq_tophat_' + paired_reads_name + '/insertions.bb\n'
-                    # str_list += 'html ...\n'
-                    str_list += 'visibility hide\n'
+                    str_list.append('track insertions_' + paired_reads_name + '\n')
+                    str_list.append('type bigBed\n')
+                    str_list.append('shortLabel ' + paired_reads_name + '_insertions\n')
+                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-Seq insertions\n')
+                    str_list.append('bigDataUrl rnaseq_tophat_' + paired_reads_name + '/insertions.bb\n')
+                    # str_list.append('html ...\n')
+                    str_list.append('visibility hide\n')
 
                     # Common optional settings
-                    str_list += 'color 0,0,0\n'
+                    str_list.append('color 0,0,0\n')
 
                     # bigBed - Item or region track settings
                     # None
 
                     # Composite track settings
-                    str_list += 'parent Insertions\n'
-                    str_list += '\n'
+                    str_list.append('parent Insertions\n')
+                    str_list.append('\n')
 
                     #
                     # Add a trackDB entry for each Tophat junctions.bb file.
                     #
                     # Common settings
-                    str_list += 'track ' + paired_reads_name + '_junctions\n'
-                    str_list += 'type bigBed\n'
-                    str_list += 'shortLabel ' + paired_reads_name + '_junctions\n'
-                    str_list += 'longLabel ' + paired_reads_name + ' TopHat RNA-Seq splice junctions\n'
-                    str_list += 'bigDataUrl rnaseq_tophat_' + paired_reads_name + '/junctions.bb\n'
-                    # str_list += 'html ...\n'
-                    str_list += 'visibility pack\n'
+                    str_list.append('track ' + paired_reads_name + '_junctions\n')
+                    str_list.append('type bigBed\n')
+                    str_list.append('shortLabel ' + paired_reads_name + '_junctions\n')
+                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-Seq splice junctions\n')
+                    str_list.append('bigDataUrl rnaseq_tophat_' + paired_reads_name + '/junctions.bb\n')
+                    # str_list.append('html ...\n')
+                    str_list.append('visibility pack\n')
 
                     # Common optional settings
-                    str_list += 'color 0,0,0\n'
+                    str_list.append('color 0,0,0\n')
 
                     # bigBed - Item or region track settings
                     # None
 
                     # Composite track settings
-                    str_list += 'parent Junctions\n'
-                    str_list += '\n'
+                    str_list.append('parent Junctions\n')
+                    str_list.append('\n')
 
                     #
                     # Add a trackDB entry for each Tophat transcripts.bb file.
                     #
                     # Common settings
-                    str_list += 'track ' + paired_reads_name + '_transcripts\n'
-                    str_list += 'type bigGenePred\n'
-                    str_list += 'shortLabel ' + paired_reads_name + '_transcripts\n'
-                    str_list += 'longLabel ' + paired_reads_name + ' Cufflinks transcript assembly\n'
-                    str_list += 'bigDataUrl rnaseq_cufflinks_' + paired_reads_name + '/transcripts.bb\n'
-                    # str_list += 'html ...\n'
-                    str_list += 'visibility hide\n'
+                    str_list.append('track ' + paired_reads_name + '_transcripts\n')
+                    str_list.append('type bigGenePred\n')
+                    str_list.append('shortLabel ' + paired_reads_name + '_transcripts\n')
+                    str_list.append('longLabel ' + paired_reads_name + ' Cufflinks transcript assembly\n')
+                    str_list.append('bigDataUrl rnaseq_cufflinks_' + paired_reads_name + '/transcripts.bb\n')
+                    # str_list.append('html ...\n')
+                    str_list.append('visibility hide\n')
 
                     # Common optional settings
-                    str_list += 'color 0,0,0\n'
+                    str_list.append('color 0,0,0\n')
 
                     # bigGenePred - Gene Annotations settings
                     # None
 
                     # Composite track settings
-                    str_list += 'parent Transcripts\n'
-                    str_list += '\n'
+                    str_list.append('parent Transcripts\n')
+                    str_list.append('\n')
 
             # Comparison-specific tracks
 
@@ -2984,23 +2984,23 @@ class Tuxedo(bsf.Analysis):
                 # Add a trackDB entry for each Cuffmerge merged.bb file.
                 #
                 # Common settings
-                str_list += 'track ' + comparison_name + '_assembly\n'
-                str_list += 'type bigGenePred\n'
-                str_list += 'shortLabel ' + comparison_name + '_assembly\n'
-                str_list += 'longLabel ' + comparison_name + ' Cufflinks transcript assembly\n'
-                str_list += 'bigDataUrl rnaseq_cuffmerge_' + comparison_name + '/merged.bb\n'
-                # str_list += 'html ...\n'
-                str_list += 'visibility pack\n'
+                str_list.append('track ' + comparison_name + '_assembly\n')
+                str_list.append('type bigGenePred\n')
+                str_list.append('shortLabel ' + comparison_name + '_assembly\n')
+                str_list.append('longLabel ' + comparison_name + ' Cufflinks transcript assembly\n')
+                str_list.append('bigDataUrl rnaseq_cuffmerge_' + comparison_name + '/merged.bb\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility pack\n')
 
                 # Common optional settings
-                str_list += 'color 0,0,0\n'
+                str_list.append('color 0,0,0\n')
 
                 # bigGenePred - Gene Annotations settings
                 # None
 
                 # Composite track settings
-                str_list += 'parent Assemblies\n'
-                str_list += '\n'
+                str_list.append('parent Assemblies\n')
+                str_list.append('\n')
 
             self.ucsc_hub_to_file(content=str_list)
 
@@ -3044,26 +3044,21 @@ class DESeq(bsf.Analysis):
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
     @ivar comparison_path: Comparison file path
-    @type comparison_path: str | unicode
+    @type comparison_path: str | unicode | None
     @ivar contrast_path: Contrast file path
-    @type contrast_path: str | unicode
+    @type contrast_path: str | unicode | None
     @ivar genome_fasta_path: Reference genome sequence FASTA file path
-    @type genome_fasta_path: str | unicode
+    @type genome_fasta_path: str | unicode | None
     @ivar transcriptome_gtf_path: Reference transcriptome GTF file path
-    @type transcriptome_gtf_path: str | unicode
+    @type transcriptome_gtf_path: str | unicode | None
     @ivar transcriptome_index_path: Tophat transcriptome index path
-    @type transcriptome_index_path: str | unicode
-    @ivar design_formula: Design formula
-    @type design_formula: str | unicode
-    @ivar library_type: Library type
-        Cuffquant and Cuffdiff I{fr-unstranded} (default), I{fr-firststrand} or I{fr-secondstrand}
-    @type library_type: str
+    @type transcriptome_index_path: str | unicode | None
     """
 
-    name = 'RNA-seq Analysis'
+    name = 'DESeq RNA-seq Analysis'
     prefix = 'rnaseq'
 
-    # Replicate stage
+    # DESeq stage
     stage_name_deseq = '_'.join((prefix, 'deseq'))
 
     def __init__(
@@ -3085,9 +3080,7 @@ class DESeq(bsf.Analysis):
             contrast_path=None,
             genome_fasta_path=None,
             transcriptome_gtf_path=None,
-            transcriptome_index_path=None,
-            design_formula=None,
-            library_type=None):
+            transcriptome_index_path=None):
         """Initialise a C{bsf.analyses.rna_seq.DESeq} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -3119,20 +3112,15 @@ class DESeq(bsf.Analysis):
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
         @type replicate_grouping: bool
         @param comparison_path: Comparison file path
-        @type comparison_path: str | unicode
+        @type comparison_path: str | unicode | None
         @param contrast_path: Contrast file path
-        @type contrast_path: str | unicode
+        @type contrast_path: str | unicode | None
         @param genome_fasta_path: Reference genome sequence FASTA file path
-        @type genome_fasta_path: str | unicode
+        @type genome_fasta_path: str | unicode | None
         @param transcriptome_gtf_path: Reference transcriptome GTF file path
-        @type transcriptome_gtf_path: str | unicode
+        @type transcriptome_gtf_path: str | unicode | None
         @param transcriptome_index_path: Tophat transcriptome index path
-        @type transcriptome_index_path: str | unicode
-        @param design_formula: Design formula
-        @type design_formula: str | unicode
-        @param library_type: Library type
-            Cuffquant and Cuffdiff I{fr-unstranded} (default), I{fr-firststrand} or I{fr-secondstrand}
-        @type library_type: str
+        @type transcriptome_index_path: str | unicode | None
         @return:
         @rtype:
         """
@@ -3153,46 +3141,12 @@ class DESeq(bsf.Analysis):
 
         # Sub-class specific ...
 
-        if replicate_grouping is None:
-            self.replicate_grouping = False
-        else:
-            assert isinstance(replicate_grouping, bool)
-            self.replicate_grouping = replicate_grouping
-
-        if comparison_path is None:
-            self.comparison_path = str()
-        else:
-            self.comparison_path = comparison_path
-
-        if contrast_path is None:
-            self.contrast_path = str()
-        else:
-            self.contrast_path = contrast_path
-
-        if genome_fasta_path is None:
-            self.genome_fasta_path = str()
-        else:
-            self.genome_fasta_path = genome_fasta_path
-
-        if transcriptome_gtf_path is None:
-            self.transcriptome_gtf_path = str()
-        else:
-            self.transcriptome_gtf_path = transcriptome_gtf_path
-
-        if transcriptome_index_path is None:
-            self.transcriptome_index_path = str()
-        else:
-            self.transcriptome_index_path = transcriptome_index_path
-
-        if design_formula is None:
-            self.design_formula = str()
-        else:
-            self.design_formula = design_formula
-
-        if library_type is None:
-            self.library_type = str()
-        else:
-            self.library_type = library_type
+        self.replicate_grouping = replicate_grouping
+        self.comparison_path = comparison_path
+        self.contrast_path = contrast_path
+        self.genome_fasta_path = genome_fasta_path
+        self.transcriptome_gtf_path = transcriptome_gtf_path
+        self.transcriptome_index_path = transcriptome_index_path
 
         return
 
@@ -3237,14 +3191,6 @@ class DESeq(bsf.Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.transcriptome_index_path = configuration.config_parser.get(section=section, option=option)
 
-        option = 'design_formula'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.design_formula = configuration.config_parser.get(section=section, option=option)
-
-        option = 'library_type'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.library_type = configuration.config_parser.get(section=section, option=option)
-
         return
 
     def run(self):
@@ -3258,7 +3204,7 @@ class DESeq(bsf.Analysis):
         # DESeq requires a genome version.
 
         if not self.genome_version:
-            raise Exception('A DESeq analysis requires a genome_version configuration option.')
+            raise Exception('A ' + self.name + " requires a 'genome_version' configuration option.")
 
         # For DESeq, all samples need adding to the Analysis regardless.
         for sample in self.collection.get_all_samples():
@@ -3268,6 +3214,9 @@ class DESeq(bsf.Analysis):
 
         self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
 
+        if not self.comparison_path:
+            raise Exception('A ' + self.name + " requires a 'comparison_path' configuration option.")
+
         design_sheet = bsf.annotation.AnnotationSheet.from_file_path(
             file_path=self.comparison_path,
             file_type='excel',
@@ -3276,6 +3225,9 @@ class DESeq(bsf.Analysis):
         # Read the contrasts file.
 
         self.contrast_path = self.configuration.get_absolute_path(file_path=self.contrast_path)
+
+        if not self.contrast_path:
+            raise Exception('A ' + self.name + " requires a 'contrast_path' configuration option.")
 
         contrast_sheet = bsf.annotation.AnnotationSheet.from_file_path(
             file_path=self.contrast_path,
