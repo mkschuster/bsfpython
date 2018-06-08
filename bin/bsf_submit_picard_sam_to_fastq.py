@@ -28,6 +28,7 @@
 from __future__ import print_function
 
 import argparse
+import sys
 
 import bsf.analyses.picard
 import bsf.standards
@@ -110,4 +111,4 @@ print('Genome directory:  ', analysis.genome_directory)
 
 if analysis.debug >= 2:
     print(repr(analysis), 'final trace:')
-    print(analysis.trace(level=1))
+    sys.stdout.writelines(analysis.trace(level=1))

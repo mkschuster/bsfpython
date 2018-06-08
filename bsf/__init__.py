@@ -38,6 +38,7 @@ import importlib
 import inspect
 import os
 import pickle
+import sys
 import urllib
 import uuid
 import warnings
@@ -293,42 +294,44 @@ class Analysis(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
-
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  project_name: {!r}\n'.format(indent, self.project_name)
-        output += '{}  genome_version: {!r}\n'.format(indent, self.genome_version)
-        output += '{}  cache_directory: {!r}\n'.format(indent, self.cache_directory)
-        output += '{}  input_directory: {!r}\n'.format(indent, self.input_directory)
-        output += '{}  output_directory: {!r}\n'.format(indent, self.output_directory)
-        output += '{}  genome_directory: {!r}\n'.format(indent, self.genome_directory)
-        output += '{}  sas_file: {!r}\n'.format(indent, self.sas_file)
-        output += '{}  sas_prefix: {!r}\n'.format(indent, self.sas_prefix)
-        output += '{}  e_mail: {!r}\n'.format(indent, self.e_mail)
-        output += '{}  debug: {!r}\n'.format(indent, self.debug)
-        output += '{}  stage_list: {!r}\n'.format(indent, self.stage_list)
-        output += '{}  runnable_dict: {!r}\n'.format(indent, self.runnable_dict)
-        output += '{}  collection: {!r}\n'.format(indent, self.collection)
-        output += '{}  sample_list: {!r}\n'.format(indent, self.sample_list)
 
-        output += '{}  Python dict of Runnable objects:\n'.format(indent)
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  project_name: {!r}\n'.format(indent, self.project_name))
+        str_list.append('{}  genome_version: {!r}\n'.format(indent, self.genome_version))
+        str_list.append('{}  cache_directory: {!r}\n'.format(indent, self.cache_directory))
+        str_list.append('{}  input_directory: {!r}\n'.format(indent, self.input_directory))
+        str_list.append('{}  output_directory: {!r}\n'.format(indent, self.output_directory))
+        str_list.append('{}  genome_directory: {!r}\n'.format(indent, self.genome_directory))
+        str_list.append('{}  sas_file: {!r}\n'.format(indent, self.sas_file))
+        str_list.append('{}  sas_prefix: {!r}\n'.format(indent, self.sas_prefix))
+        str_list.append('{}  e_mail: {!r}\n'.format(indent, self.e_mail))
+        str_list.append('{}  debug: {!r}\n'.format(indent, self.debug))
+        str_list.append('{}  stage_list: {!r}\n'.format(indent, self.stage_list))
+        str_list.append('{}  runnable_dict: {!r}\n'.format(indent, self.runnable_dict))
+        str_list.append('{}  collection: {!r}\n'.format(indent, self.collection))
+        str_list.append('{}  sample_list: {!r}\n'.format(indent, self.sample_list))
+
+        str_list.append('{}  Python dict of Runnable objects:\n'.format(indent))
         for runnable_name in sorted(self.runnable_dict):
-            output += '{}    Key: {!r} Runnable: {!r}\n'.format(
-                indent, runnable_name, self.runnable_dict[runnable_name])
+            str_list.append('{}    Key: {!r} Runnable: {!r}\n'.format(
+                indent, runnable_name, self.runnable_dict[runnable_name]))
             runnable = self.runnable_dict[runnable_name]
-            output += runnable.trace(level=level + 2)
+            str_list.extend(runnable.trace(level=level + 2))
 
-        output += '{}  Python List of Sample objects:\n'.format(indent)
+        str_list.append('{}  Python List of Sample objects:\n'.format(indent))
         for sample in self.sample_list:
-            output += '{}    Sample name: {!r} file_path: {!r}\n'.format(indent, sample.name, sample.file_path)
+            str_list.append('{}    Sample name: {!r} file_path: {!r}\n'.format(indent, sample.name, sample.file_path))
 
         if self.collection:
-            output += self.collection.trace(level + 1)
+            str_list.extend(self.collection.trace(level=level + 1))
 
-        return output
+        return str_list
 
     def add_stage(self, stage):
         """Convenience method to facilitate initialising, adding and returning a C{bsf.Stage}.
@@ -696,7 +699,7 @@ class Analysis(object):
 
             if self.debug > 1:
                 print(self, 'Collection name:', repr(self.collection.name))
-                print(self.collection.trace(1))
+                sys.stdout.writelines(self.collection.trace(level=1))
         else:
             # Create an empty bsf.ngs.Collection.
             self.collection = bsf.ngs.Collection()
@@ -1415,7 +1418,7 @@ class Analysis(object):
 
             if self.debug:
                 print(repr(stage))
-                print(stage.trace(1))
+                sys.stdout.writelines(stage.trace(level=1))
 
         if name:
             if name == 'report':
@@ -1629,35 +1632,37 @@ class Stage(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
-
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  name:                 {!r}\n'.format(indent, self.name)
-        output += '{}  working_directory:    {!r}\n'.format(indent, self.working_directory)
-        output += '{}  implementation:       {!r}\n'.format(indent, self.implementation)
-        output += '{}  memory_free_mem:      {!r}\n'.format(indent, self.memory_free_mem)
-        output += '{}  memory_free_swap:     {!r}\n'.format(indent, self.memory_free_swap)
-        output += '{}  memory_free_virtual:  {!r}\n'.format(indent, self.memory_free_virtual)
-        output += '{}  memory_limit_hard:    {!r}\n'.format(indent, self.memory_limit_hard)
-        output += '{}  memory_limit_soft:    {!r}\n'.format(indent, self.memory_limit_soft)
-        output += '{}  node_list_exclude:    {!r}\n'.format(indent, self.node_list_exclude)
-        output += '{}  node_list_include:    {!r}\n'.format(indent, self.node_list_include)
-        output += '{}  time_limit:           {!r}\n'.format(indent, self.time_limit)
-        output += '{}  queue:                {!r}\n'.format(indent, self.queue)
-        output += '{}  parallel_environment: {!r}\n'.format(indent, self.parallel_environment)
-        output += '{}  threads:              {!r}\n'.format(indent, self.threads)
-        output += '{}  hold:                 {!r}\n'.format(indent, self.hold)
-        output += '{}  is_script:            {!r}\n'.format(indent, self.is_script)
 
-        output += '{}  executable_list:\n'.format(indent)
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  name:                 {!r}\n'.format(indent, self.name))
+        str_list.append('{}  working_directory:    {!r}\n'.format(indent, self.working_directory))
+        str_list.append('{}  implementation:       {!r}\n'.format(indent, self.implementation))
+        str_list.append('{}  memory_free_mem:      {!r}\n'.format(indent, self.memory_free_mem))
+        str_list.append('{}  memory_free_swap:     {!r}\n'.format(indent, self.memory_free_swap))
+        str_list.append('{}  memory_free_virtual:  {!r}\n'.format(indent, self.memory_free_virtual))
+        str_list.append('{}  memory_limit_hard:    {!r}\n'.format(indent, self.memory_limit_hard))
+        str_list.append('{}  memory_limit_soft:    {!r}\n'.format(indent, self.memory_limit_soft))
+        str_list.append('{}  node_list_exclude:    {!r}\n'.format(indent, self.node_list_exclude))
+        str_list.append('{}  node_list_include:    {!r}\n'.format(indent, self.node_list_include))
+        str_list.append('{}  time_limit:           {!r}\n'.format(indent, self.time_limit))
+        str_list.append('{}  queue:                {!r}\n'.format(indent, self.queue))
+        str_list.append('{}  parallel_environment: {!r}\n'.format(indent, self.parallel_environment))
+        str_list.append('{}  threads:              {!r}\n'.format(indent, self.threads))
+        str_list.append('{}  hold:                 {!r}\n'.format(indent, self.hold))
+        str_list.append('{}  is_script:            {!r}\n'.format(indent, self.is_script))
+
+        str_list.append('{}  executable_list:\n'.format(indent))
 
         for executable in self.executable_list:
-            output += executable.trace(level=level + 2)
+            str_list.extend(executable.trace(level=level + 2))
 
-        return output
+        return str_list
 
     def set_configuration(self, configuration, section):
         """Set instance variables of a C{bsf.Stage} via a C{bsf.standards.Configuration} section.
@@ -1928,30 +1933,32 @@ class Runnable(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
-
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  name: {!r}\n'.format(indent, self.name)
-        output += '{}  code_module: {!r}\n'.format(indent, self.code_module)
-        output += '{}  working_directory: {!r}\n'.format(indent, self.working_directory)
-        output += '{}  cache_directory: {!r}\n'.format(indent, self.cache_directory)
-        output += '{}  cache_path_dict: {!r}\n'.format(indent, self.cache_path_dict)
-        output += '{}  file_path_object: {!r}\n'.format(indent, self.file_path_object)
-        output += '{}  runnable_step_list: {!r}\n'.format(indent, self.runnable_step_list)
-        output += '{}  debug: {!r}\n'.format(indent, self.debug)
 
-        output += '{}  Python dict of Python str (cache path) objects:\n'.format(indent)
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  name: {!r}\n'.format(indent, self.name))
+        str_list.append('{}  code_module: {!r}\n'.format(indent, self.code_module))
+        str_list.append('{}  working_directory: {!r}\n'.format(indent, self.working_directory))
+        str_list.append('{}  cache_directory: {!r}\n'.format(indent, self.cache_directory))
+        str_list.append('{}  cache_path_dict: {!r}\n'.format(indent, self.cache_path_dict))
+        str_list.append('{}  file_path_object: {!r}\n'.format(indent, self.file_path_object))
+        str_list.append('{}  runnable_step_list: {!r}\n'.format(indent, self.runnable_step_list))
+        str_list.append('{}  debug: {!r}\n'.format(indent, self.debug))
+
+        str_list.append('{}  Python dict of Python str (cache path) objects:\n'.format(indent))
         for key in sorted(self.cache_path_dict):
-            output += '{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.cache_path_dict[key])
+            str_list.append('{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.cache_path_dict[key]))
 
-        output += '{}  Python list of RunnableStep objects:\n'.format(indent)
+        str_list.append('{}  Python list of RunnableStep objects:\n'.format(indent))
         for runnable_step in self.runnable_step_list:
-            output += runnable_step.trace(level=level + 1)
+            str_list.extend(runnable_step.trace(level=level + 1))
 
-        return output
+        return str_list
 
     def add_runnable_step(self, runnable_step=None):
         """Convenience method to facilitate initialising, adding and returning a C{bsf.process.RunnableStep}.

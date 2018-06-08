@@ -32,6 +32,7 @@ from __future__ import print_function
 import errno
 import os
 import pickle
+import sys
 import warnings
 
 import bsf.process
@@ -653,7 +654,7 @@ class ChIPSeq(Analysis):
                     if self.debug > 1:
                         print('  Control Sample name:', c_sample.name, 'file_path:', c_sample.file_path)
                     if self.debug > 2:
-                        print(c_sample.trace(1))
+                        sys.stdout.writelines(c_sample.trace(level=1))
                         # Find the Sample in the unified sample dictionary.
                     if c_sample.name in sample_dict:
                         self.add_sample(sample=sample_dict[c_sample.name])
@@ -664,7 +665,7 @@ class ChIPSeq(Analysis):
                     if self.debug > 1:
                         print('  Treatment Sample name:', t_sample.name, 'file_path:', t_sample.file_path)
                     if self.debug > 2:
-                        print(t_sample.trace(1))
+                        sys.stdout.writelines(t_sample.trace(level=1))
                     if t_sample.name in sample_dict:
                         self.add_sample(sample=sample_dict[t_sample.name])
 
@@ -752,7 +753,7 @@ class ChIPSeq(Analysis):
             for sample in self.sample_list:
                 if self.debug > 0:
                     print(self, 'Sample name:', sample.name)
-                    print(sample.trace(1))
+                    sys.stdout.writelines(sample.trace(level=1))
 
                 paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 
@@ -882,7 +883,7 @@ class ChIPSeq(Analysis):
             for sample in self.sample_list:
                 if self.debug > 0:
                     print(self, 'Sample name:', sample.name)
-                    print(sample.trace(1))
+                    sys.stdout.writelines(sample.trace(level=1))
 
                 paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
 

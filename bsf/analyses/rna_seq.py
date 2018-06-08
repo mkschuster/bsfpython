@@ -33,6 +33,7 @@ import errno
 import os
 import pickle
 import re
+import sys
 import warnings
 
 import bsf
@@ -846,7 +847,7 @@ class Tuxedo(bsf.Analysis):
                                             print('  ', prefix, 'Sample name:', _sample.name,
                                                   'file_path:', _sample.file_path)
                                         if self.debug > 2:
-                                            print(sample.trace(1))
+                                            sys.stdout.writelines(sample.trace(level=1))
                             elif i < 1:
                                 # A Control and Treatment prefix is not required.
                                 continue
@@ -1058,7 +1059,7 @@ class Tuxedo(bsf.Analysis):
         for sample in self.sample_list:
             if self.debug > 0:
                 print(self, 'Sample name:', sample.name)
-                print(sample.trace(1))
+                sys.stdout.writelines(sample.trace(level=1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
@@ -1172,7 +1173,7 @@ class Tuxedo(bsf.Analysis):
 
                 if self.debug > 0:
                     print('Tophat bsf.process.Executable')
-                    print(tophat.trace(level=1))
+                    sys.stdout.writelines(tophat.trace(level=1))
 
                 pickler_dict_run_tophat = {
                     'prefix': stage_run_tophat.name,
@@ -2133,7 +2134,7 @@ class Tuxedo(bsf.Analysis):
             for sample in self.sample_list:
                 if self.debug > 0:
                     print(self, 'Sample name:', sample.name)
-                    print(sample.trace(1))
+                    sys.stdout.writelines(sample.trace(level=1))
 
                 paired_reads_dict = sample.get_all_paired_reads(
                     replicate_grouping=self.replicate_grouping,
@@ -2748,6 +2749,10 @@ class Tuxedo(bsf.Analysis):
 
             self.report_to_file(content=str_list)
 
+            if self.debug > 0:
+                print('Report list:')
+                print(repr(str_list))
+
             return
 
         def report_hub():
@@ -3259,7 +3264,7 @@ class DESeq(bsf.Analysis):
             for sample in self.sample_list:
                 if self.debug > 0:
                     print(self, 'Sample name:', sample.name)
-                    print(sample.trace(1))
+                    sys.stdout.writelines(sample.trace(level=1))
 
                 paired_reads_dict = sample.get_all_paired_reads(
                     replicate_grouping=self.replicate_grouping,

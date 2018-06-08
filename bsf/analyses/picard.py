@@ -31,6 +31,7 @@ from __future__ import print_function
 
 import os
 import re
+import sys
 import warnings
 import weakref
 
@@ -2713,7 +2714,7 @@ class DownsampleSam(bsf.Analysis):
         for sample in self.sample_list:
             if self.debug > 0:
                 print(self, 'Sample name:', sample.name)
-                print(sample.trace(level=1))
+                sys.stdout.writelines(sample.trace(level=1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
 
@@ -3037,7 +3038,7 @@ class SamToFastq(bsf.Analysis):
         for sample in self.sample_list:
             if self.debug > 0:
                 print(self, 'Sample name:', sample.name)
-                print(sample.trace(level=1))
+                sys.stdout.writelines(sample.trace(level=1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
 

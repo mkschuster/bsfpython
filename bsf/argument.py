@@ -107,15 +107,17 @@ class Argument(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str |unicode]
         """
         indent = '  ' * level
 
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  key: {!r}\n'.format(indent, self.key)
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
 
-        return output
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  key: {!r}\n'.format(indent, self.key))
+
+        return str_list
 
     def get_str(self):
         """Get the string representation as Python C{str} or C{unicode}
@@ -209,19 +211,21 @@ class Option(Switch):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
         indent = '  ' * level
 
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  key: {!r}\n'.format(indent, self.key)
-        output += '{}  value:   {!r}\n'.format(indent, self.value)
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  key: {!r}\n'.format(indent, self.key))
+        str_list.append('{}  value:   {!r}\n'.format(indent, self.value))
 
         # Do not call (i.e. trace) the super class, as the separation of key and value becomes quite confusing.
-        # output += super(Option, self).trace(level=level + 1)
+        # str_list.extend(super(Option, self).trace(level=level + 1))
 
-        return output
+        return str_list
 
     def get_str(self):
         """Get the string representation as Python C{str} or C{unicode}

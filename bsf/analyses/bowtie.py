@@ -28,6 +28,8 @@ A package of classes and methods supporting Bowtie alignment analyses.
 
 from __future__ import print_function
 
+import sys
+
 from bsf import Analysis, Runnable
 from bsf.process import RunnableStep
 
@@ -182,7 +184,7 @@ class Bowtie1(Analysis):
         for sample in self.sample_list:
             if self.debug > 0:
                 print(self, 'Sample name:', repr(sample.name))
-                print(sample.trace(1))
+                sys.stdout.writelines(sample.trace(level=1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 

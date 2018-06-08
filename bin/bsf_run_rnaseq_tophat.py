@@ -33,6 +33,7 @@ import os
 import pickle
 import re
 import shutil
+import sys
 
 from bsf.process import Command, Executable
 from bsf.standards import Default, JavaClassPath
@@ -203,7 +204,7 @@ assert isinstance(run_tophat, Executable)
 
 if args.debug > 1:
     print('Executable before conversion')
-    print(run_tophat.trace(level=1))
+    sys.stdout.writelines(run_tophat.trace(level=1))
 
 # Check the list of file paths in the second and third arguments for FASTQ versus BAM files.
 
@@ -262,7 +263,7 @@ else:
 
 if args.debug > 1:
     print('Executable after conversion')
-    print(run_tophat.trace(level=1))
+    sys.stdout.writelines(run_tophat.trace(level=1))
 
 child_return_code = run_tophat.run()
 

@@ -728,24 +728,27 @@ class AnnotationSheet(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  file_path:    {!r}\n'.format(indent, self.file_path)
-        output += '{}  file_type:    {!r}\n'.format(indent, self.file_type)
-        output += '{}  name:         {!r}\n'.format(indent, self.name)
-        output += '{}  header:       {!r}\n'.format(indent, self.header)
-        output += '{}  field_names:  {!r}\n'.format(indent, self.field_names)
-        output += '{}  test_methods: {!r}\n'.format(indent, self.test_methods)
-        output += '{}  row_dicts:    {}\n'.format(indent, self.row_dicts)
 
-        output += '{}  Row dictionaries {}:\n'.format(indent, self.row_dicts)
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  file_path:    {!r}\n'.format(indent, self.file_path))
+        str_list.append('{}  file_type:    {!r}\n'.format(indent, self.file_type))
+        str_list.append('{}  name:         {!r}\n'.format(indent, self.name))
+        str_list.append('{}  header:       {!r}\n'.format(indent, self.header))
+        str_list.append('{}  field_names:  {!r}\n'.format(indent, self.field_names))
+        str_list.append('{}  test_methods: {!r}\n'.format(indent, self.test_methods))
+        str_list.append('{}  row_dicts:    {}\n'.format(indent, self.row_dicts))
+
+        str_list.append('{}  Row dictionaries {}:\n'.format(indent, self.row_dicts))
         for row_dict in self.row_dicts:
-            output += '{}    {!r}\n'.format(indent, row_dict)
+            str_list.append('{}    {!r}\n'.format(indent, row_dict))
 
-        return output
+        return str_list
 
     def csv_reader_open(self):
         """Open a Comma-Separated Value (CSV) file linked to a C{bsf.annotation.AnnotationSheet} object for reading
@@ -918,7 +921,7 @@ class AnnotationSheet(object):
     def to_file_path(self, adjust_field_names=None):
         """Write a C{bsf.annotation.AnnotationSheet} to a file path.
 
-        @param adjust_field_names: Clear and adjust the Python C{list} of Python C{str} filed name objects
+        @param adjust_field_names: Clear and adjust the Python C{list} of Python C{str} field name objects
         @type adjust_field_names: bool
         @return:
         @rtype:

@@ -33,6 +33,7 @@ import errno
 import math
 import os
 import pickle
+import sys
 import warnings
 
 import pysam
@@ -3299,7 +3300,7 @@ class VariantCallingGATK(bsf.Analysis):
         for sample in self.sample_list:
             if self.debug > 0:
                 print(self, 'Sample name:', sample.name)
-                print(sample.trace(1))
+                sys.stdout.writelines(sample.trace(level=1))
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
 
@@ -5046,7 +5047,7 @@ class VariantCallingGATK(bsf.Analysis):
             for sample in self.sample_list:
                 if self.debug > 0:
                     print(self, 'Sample name:', sample.name)
-                    print(sample.trace(1))
+                    sys.stdout.writelines(sample.trace(level=1))
 
                 paired_reads_dict = sample.get_all_paired_reads(
                     replicate_grouping=self.replicate_grouping,
@@ -5314,7 +5315,7 @@ class VariantCallingGATK(bsf.Analysis):
             for sample in self.sample_list:
                 if self.debug > 0:
                     print(self, 'Sample name:', sample.name)
-                    print(sample.trace(1))
+                    sys.stdout.writelines(sample.trace(level=1))
 
                 paired_reads_dict = sample.get_all_paired_reads(
                     replicate_grouping=self.replicate_grouping,

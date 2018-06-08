@@ -248,7 +248,7 @@ def bsf_test_subprocess(
             print('[{}] Runnable {!r} exceeded the maximum retry counter {}.'.format(
                 datetime.datetime.now().isoformat(), executable.name, maximum_attempts))
 
-    print(executable.trace(level=0))
+    sys.stdout.writelines(executable.trace(level=0))
 
     return child_return_code
 

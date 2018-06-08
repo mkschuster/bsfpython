@@ -33,6 +33,7 @@ import errno
 import os
 import re
 import shutil
+import sys
 
 import bsf
 from bsf import Analysis
@@ -308,7 +309,7 @@ def run_bowtie2(runnable):
         bowtie2.stdout_path = sam_file_path
         sam_file_path_list.append(sam_file_path)
 
-        print(bowtie2.trace(1))
+        sys.stdout.writelines(bowtie2.trace(level=1))
 
         child_return_code = bowtie2.run()
         if child_return_code:
@@ -337,7 +338,7 @@ def run_bowtie2(runnable):
         bowtie2.stdout_path = sam_file_path
         sam_file_path_list.append(sam_file_path)
 
-        print(bowtie2.trace(1))
+        sys.stdout.writelines(bowtie2.trace(level=1))
 
         child_return_code = bowtie2.run()
         if child_return_code:
@@ -362,7 +363,7 @@ def run_bowtie2(runnable):
         bowtie2.stdout_path = sam_file_path
         sam_file_path_list.append(sam_file_path)
 
-        print(bowtie2.trace(1))
+        sys.stdout.writelines(bowtie2.trace(level=1))
 
         child_return_code = bowtie2.run()
         if child_return_code:

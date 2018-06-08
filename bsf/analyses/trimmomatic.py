@@ -30,6 +30,7 @@ A package of classes and methods supporting the Trimmomatic tool.
 from __future__ import print_function
 
 import os
+import sys
 
 from bsf import Analysis, FilePath, Runnable
 from bsf.ngs import Reads, PairedReads
@@ -356,7 +357,7 @@ class Trimmomatic(Analysis):
         for sample in self.sample_list:
             if self.debug > 0:
                 print(self, 'Sample name:', sample.name)
-                print(sample.trace(level=1))
+                sys.stdout.writelines(sample.trace(level=1))
 
             sample_step_list = list()
             """ @type sample_step_list: list[str | unicode] """

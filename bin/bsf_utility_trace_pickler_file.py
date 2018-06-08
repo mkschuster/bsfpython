@@ -30,6 +30,7 @@
 from __future__ import print_function
 
 import argparse
+import sys
 
 from bsf import Runnable
 
@@ -51,7 +52,7 @@ name_space = argument_parser.parse_args()
 
 runnable = Runnable.from_pickler_path(file_path=name_space.pickler_path)
 
-print(runnable.trace(level=1))
+sys.stdout.writelines(runnable.trace(level=1))
 
 for runnable_step in runnable.runnable_step_list:
     if name_space.format == 'list':

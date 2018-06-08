@@ -31,6 +31,7 @@ from __future__ import print_function
 import argparse
 import datetime
 import os
+import sys
 import time
 
 import bsf.analyses.illumina_to_bam_tools
@@ -210,7 +211,7 @@ print('Experiment directory:   ', analysis_itb.get_experiment_directory)
 
 if analysis_itb.debug >= 2:
     print(repr(analysis_itb), 'final trace:')
-    print(analysis_itb.trace(level=1))
+    sys.stdout.writelines(analysis_itb.trace(level=1))
 
 # Create a BSF BamIndexDecoder analysis, run and submit it.
 
@@ -277,4 +278,4 @@ if analysis_bid.library_path:
 
 if analysis_bid.debug >= 2:
     print(repr(analysis_bid), 'final trace:')
-    print(analysis_bid.trace(level=1))
+    sys.stdout.writelines(analysis_bid.trace(level=1))

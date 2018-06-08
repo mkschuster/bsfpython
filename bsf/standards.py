@@ -199,16 +199,18 @@ class Configuration(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
-
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  file_path_list: {!r}\n'.format(indent, self.file_path_list)
-        output += '{}  config_parser:  {!r}\n'.format(indent, self.config_parser)
 
-        return output
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  file_path_list: {!r}\n'.format(indent, self.file_path_list))
+        str_list.append('{}  config_parser:  {!r}\n'.format(indent, self.config_parser))
+
+        return str_list
 
     def get_expanded_directory(self, section, option):
         """Get configuration information for a directory and expand it.

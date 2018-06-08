@@ -28,6 +28,7 @@
 from __future__ import print_function
 
 import argparse
+import sys
 
 import bsf.analyses.illumina_run_folder
 import bsf.standards
@@ -122,4 +123,4 @@ print('Archive directory:      ', analysis.archive_directory)
 
 if analysis.debug >= 2:
     print('{!r} final trace:'.format(analysis))
-    print(analysis.trace(level=1))
+    sys.stdout.writelines(analysis.trace(level=1))

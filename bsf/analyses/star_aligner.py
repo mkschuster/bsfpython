@@ -33,6 +33,7 @@ Project:  https://github.com/alexdobin/STAR
 from __future__ import print_function
 
 import os
+import sys
 
 import pysam
 
@@ -412,7 +413,7 @@ class StarAligner(Analysis):
         for sample in self.sample_list:
             if self.debug > 0:
                 print(self, 'Sample name:', sample.name)
-                print(sample.trace(1))
+                sys.stdout.writelines(sample.trace(level=1))
 
             runnable_index_list = list()
             """ @type runnable_index_list: list[bsf.Runnable] """

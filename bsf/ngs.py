@@ -347,24 +347,27 @@ class Reads(NextGenerationBase):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  weak_reference_paired_reads: {!r}\n'.format(indent, self.weak_reference_paired_reads)
-        output += '{}  name:      {!r}\n'.format(indent, self.name)
-        output += '{}  file_path: {!r}\n'.format(indent, self.file_path)
-        output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
-        output += '{}  annotation_dict:\n'.format(indent, self.annotation_dict)
-        for annotation_key in sorted(self.annotation_dict):
-            output += '{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key])
-        output += '{}  barcode:   {!r}\n'.format(indent, self.barcode)
-        output += '{}  lane:      {!r}\n'.format(indent, self.lane)
-        output += '{}  read:      {!r}\n'.format(indent, self.read)
-        output += '{}  chunk:     {!r}\n'.format(indent, self.chunk)
 
-        return output
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  weak_reference_paired_reads: {!r}\n'.format(indent, self.weak_reference_paired_reads))
+        str_list.append('{}  name:      {!r}\n'.format(indent, self.name))
+        str_list.append('{}  file_path: {!r}\n'.format(indent, self.file_path))
+        str_list.append('{}  file_type: {!r}\n'.format(indent, self.file_type))
+        str_list.append('{}  annotation_dict:\n'.format(indent, self.annotation_dict))
+        for annotation_key in sorted(self.annotation_dict):
+            str_list.append('{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key]))
+        str_list.append('{}  barcode:   {!r}\n'.format(indent, self.barcode))
+        str_list.append('{}  lane:      {!r}\n'.format(indent, self.lane))
+        str_list.append('{}  read:      {!r}\n'.format(indent, self.read))
+        str_list.append('{}  chunk:     {!r}\n'.format(indent, self.chunk))
+
+        return str_list
 
     def match(self, reads):
         """Match C{bsf.ngs.Reads} objects.
@@ -623,31 +626,34 @@ class PairedReads(NextGenerationBase):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  weak_reference_sample: {!r}\n'.format(indent, self.weak_reference_sample)
-        output += '{}  name:       {!r}\n'.format(indent, self.name)
-        output += '{}  file_path:  {!r}\n'.format(indent, self.file_path)
-        output += '{}  file_type:  {!r}\n'.format(indent, self.file_type)
-        output += '{}  annotation_dict:\n'.format(indent, self.annotation_dict)
+
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  weak_reference_sample: {!r}\n'.format(indent, self.weak_reference_sample))
+        str_list.append('{}  name:       {!r}\n'.format(indent, self.name))
+        str_list.append('{}  file_path:  {!r}\n'.format(indent, self.file_path))
+        str_list.append('{}  file_type:  {!r}\n'.format(indent, self.file_type))
+        str_list.append('{}  annotation_dict:\n'.format(indent, self.annotation_dict))
         for annotation_key in sorted(self.annotation_dict):
-            output += '{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key])
-        output += '{}  reads_1:    {!r}\n'.format(indent, self.reads_1)
-        output += '{}  reads_2:    {!r}\n'.format(indent, self.reads_2)
-        output += '{}  index_1:    {!r}\n'.format(indent, self.index_1)
-        output += '{}  index_2:    {!r}\n'.format(indent, self.index_2)
-        output += '{}  exclude:    {!r}\n'.format(indent, self.exclude)
-        output += '{}  read_group: {!r}\n'.format(indent, self.read_group)
+            str_list.append('{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key]))
+        str_list.append('{}  reads_1:    {!r}\n'.format(indent, self.reads_1))
+        str_list.append('{}  reads_2:    {!r}\n'.format(indent, self.reads_2))
+        str_list.append('{}  index_1:    {!r}\n'.format(indent, self.index_1))
+        str_list.append('{}  index_2:    {!r}\n'.format(indent, self.index_2))
+        str_list.append('{}  exclude:    {!r}\n'.format(indent, self.exclude))
+        str_list.append('{}  read_group: {!r}\n'.format(indent, self.read_group))
 
         if self.reads_1 is not None:
-            output += self.reads_1.trace(level + 1)
+            str_list.extend(self.reads_1.trace(level=level + 1))
         if self.reads_2 is not None:
-            output += self.reads_2.trace(level + 1)
+            str_list.extend(self.reads_2.trace(level=level + 1))
 
-        return output
+        return str_list
 
     def add_reads(self, reads):
         """Add a C{bsf.ngs.Reads} object.
@@ -919,23 +925,26 @@ class Sample(NextGenerationBase):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  weak_reference_project: {!r}\n'.format(indent, self.weak_reference_project)
-        output += '{}  name:      {!r}\n'.format(indent, self.name)
-        output += '{}  file_path: {!r}\n'.format(indent, self.file_path)
-        output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
-        output += '{}  annotation_dict:\n'.format(indent, self.annotation_dict)
-        for annotation_key in sorted(self.annotation_dict):
-            output += '{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key])
-        output += '{}  paired_reads:\n'.format(indent)
-        for paired_reads in self.paired_reads_list:
-            output += paired_reads.trace(level + 1)
 
-        return output
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  weak_reference_project: {!r}\n'.format(indent, self.weak_reference_project))
+        str_list.append('{}  name:      {!r}\n'.format(indent, self.name))
+        str_list.append('{}  file_path: {!r}\n'.format(indent, self.file_path))
+        str_list.append('{}  file_type: {!r}\n'.format(indent, self.file_type))
+        str_list.append('{}  annotation_dict:\n'.format(indent, self.annotation_dict))
+        for annotation_key in sorted(self.annotation_dict):
+            str_list.append('{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key]))
+        str_list.append('{}  paired_reads:\n'.format(indent))
+        for paired_reads in self.paired_reads_list:
+            str_list.extend(paired_reads.trace(level=level + 1))
+
+        return str_list
 
     def match(self, sample):
         """Match C{bsf.ngs.Sample} objects.
@@ -1198,23 +1207,26 @@ class Project(NextGenerationBase):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  weak_reference_prf: {!r}\n'.format(indent, self.weak_reference_prf)
-        output += '{}  file_path: {!r}\n'.format(indent, self.file_path)
-        output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
-        output += '{}  name:      {!r}\n'.format(indent, self.name)
-        output += '{}  annotation_dict:\n'.format(indent, self.annotation_dict)
-        for annotation_key in sorted(self.annotation_dict):
-            output += '{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key])
-        output += '{}  sample_dict:\n'.format(indent)
-        for sample_name in sorted(self.sample_dict):
-            output += self.sample_dict[sample_name].trace(level + 1)
 
-        return output
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  weak_reference_prf: {!r}\n'.format(indent, self.weak_reference_prf))
+        str_list.append('{}  file_path: {!r}\n'.format(indent, self.file_path))
+        str_list.append('{}  file_type: {!r}\n'.format(indent, self.file_type))
+        str_list.append('{}  name:      {!r}\n'.format(indent, self.name))
+        str_list.append('{}  annotation_dict:\n'.format(indent, self.annotation_dict))
+        for annotation_key in sorted(self.annotation_dict):
+            str_list.append('{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key]))
+        str_list.append('{}  sample_dict:\n'.format(indent))
+        for sample_name in sorted(self.sample_dict):
+            str_list.extend(self.sample_dict[sample_name].trace(level=level + 1))
+
+        return str_list
 
     def add_sample(self, sample):
         """Add a C{bsf.ngs.Sample} object to a C{bsf.ngs.Project} object and set
@@ -1441,26 +1453,29 @@ class ProcessedRunFolder(NextGenerationBase):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  weak_reference_collection: {!r}\n'.format(indent, self.weak_reference_collection)
-        output += '{}  file_path: {!r}\n'.format(indent, self.file_path)
-        output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
-        output += '{}  name:      {!r}\n'.format(indent, self.name)
-        output += '{}  prefix:    {!r}\n'.format(indent, self.prefix)
-        output += '{}  flow_cell: {!r}\n'.format(indent, self.flow_cell)
-        output += '{}  version:   {!r}\n'.format(indent, self.version)
-        output += '{}  annotation_dict:\n'.format(indent, self.annotation_dict)
-        for annotation_key in sorted(self.annotation_dict):
-            output += '{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key])
-        output += '{}  project_dict:\n'.format(indent)
-        for project_name in sorted(self.project_dict):
-            output += self.project_dict[project_name].trace(level + 1)
 
-        return output
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  weak_reference_collection: {!r}\n'.format(indent, self.weak_reference_collection))
+        str_list.append('{}  file_path: {!r}\n'.format(indent, self.file_path))
+        str_list.append('{}  file_type: {!r}\n'.format(indent, self.file_type))
+        str_list.append('{}  name:      {!r}\n'.format(indent, self.name))
+        str_list.append('{}  prefix:    {!r}\n'.format(indent, self.prefix))
+        str_list.append('{}  flow_cell: {!r}\n'.format(indent, self.flow_cell))
+        str_list.append('{}  version:   {!r}\n'.format(indent, self.version))
+        str_list.append('{}  annotation_dict:\n'.format(indent, self.annotation_dict))
+        for annotation_key in sorted(self.annotation_dict):
+            str_list.append('{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key]))
+        str_list.append('{}  project_dict:\n'.format(indent))
+        for project_name in sorted(self.project_dict):
+            str_list.extend(self.project_dict[project_name].trace(level=level + 1))
+
+        return str_list
 
     def add_project(self, project):
         """Add a C{bsf.ngs.Project} object to the C{bsf.ngs.ProcessedRunFolder} object and set
@@ -2445,28 +2460,32 @@ class Collection(NextGenerationBase):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  name:      {!r}\n'.format(indent, self.name)
-        output += '{}  file_path: {!r}\n'.format(indent, self.file_path)
-        output += '{}  file_type: {!r}\n'.format(indent, self.file_type)
-        output += '{}  annotation_dict:\n'.format(indent, self.annotation_dict)
+
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  name:      {!r}\n'.format(indent, self.name))
+        str_list.append('{}  file_path: {!r}\n'.format(indent, self.file_path))
+        str_list.append('{}  file_type: {!r}\n'.format(indent, self.file_type))
+        str_list.append('{}  annotation_dict:\n'.format(indent, self.annotation_dict))
         for annotation_key in sorted(self.annotation_dict):
-            output += '{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key])
-        output += '{}  processed_run_folder_dict:\n'.format(indent)
+            str_list.append('{}    {!r} {!r}\n'.format(indent, annotation_key, self.annotation_dict[annotation_key]))
+        str_list.append('{}  processed_run_folder_dict:\n'.format(indent))
         for prf_name in sorted(self.processed_run_folder_dict):
-            output += self.processed_run_folder_dict[prf_name].trace(level + 1)
-        output += '{}  sample_group_dict:\n'.format(indent)
+            str_list.extend(self.processed_run_folder_dict[prf_name].trace(level=level + 1))
+        str_list.append('{}  sample_group_dict:\n'.format(indent))
         for sample_group_name in sorted(self.sample_group_dict):
-            output += '{}    group: {!r}\n'.format(indent, sample_group_name)
+            str_list.append('{}    group: {!r}\n'.format(indent, sample_group_name))
             # List all Sample objects of this Python list object.
             for sample in self.sample_group_dict[sample_group_name]:
-                output += '{}      Sample name: {!r} file_path: {!r}\n'.format(indent, sample.name, sample.file_path)
+                str_list.append('{}      Sample name: {!r} file_path: {!r}\n'.format(
+                    indent, sample.name, sample.file_path))
 
-        return output
+        return str_list
 
     def add_processed_run_folder(self, prf):
         """Add a C{bsf.ngs.ProcessedRunFolder} object to the C{bsf.ngs.Collection} object and
@@ -2730,21 +2749,21 @@ class Collection(NextGenerationBase):
         field_names.sort(cmp=lambda x, y: cmp(x, y))
 
         sas.field_names = list()
-        sas.field_names += filter(lambda x: x.startswith('File Type'), field_names)
+        sas.field_names.extend(filter(lambda x: x.startswith('File Type'), field_names))
         field_names = filter(lambda x: not x.startswith('File Type'), field_names)
-        sas.field_names += filter(lambda x: x.startswith('ProcessedRunFolder'), field_names)
+        sas.field_names.extend(filter(lambda x: x.startswith('ProcessedRunFolder'), field_names))
         field_names = filter(lambda x: not x.startswith('ProcessedRunFolder'), field_names)
-        sas.field_names += filter(lambda x: x.startswith('Project'), field_names)
+        sas.field_names.extend(filter(lambda x: x.startswith('Project'), field_names))
         field_names = filter(lambda x: not x.startswith('Project'), field_names)
-        sas.field_names += filter(lambda x: x.startswith('Sample'), field_names)
+        sas.field_names.extend(filter(lambda x: x.startswith('Sample'), field_names))
         field_names = filter(lambda x: not x.startswith('Sample'), field_names)
-        sas.field_names += filter(lambda x: x.startswith('PairedReads'), field_names)
+        sas.field_names.extend(filter(lambda x: x.startswith('PairedReads'), field_names))
         field_names = filter(lambda x: not x.startswith('PairedReads'), field_names)
-        sas.field_names += filter(lambda x: x.startswith('Reads1'), field_names)
+        sas.field_names.extend(filter(lambda x: x.startswith('Reads1'), field_names))
         field_names = filter(lambda x: not x.startswith('Reads1'), field_names)
-        sas.field_names += filter(lambda x: x.startswith('Reads2'), field_names)
+        sas.field_names.extend(filter(lambda x: x.startswith('Reads2'), field_names))
         field_names = filter(lambda x: not x.startswith('Reads2'), field_names)
-        sas.field_names += field_names
+        sas.field_names.extend(field_names)
 
         # Finally, construct the SampleAnnotationSheet.
 

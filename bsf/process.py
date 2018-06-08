@@ -119,39 +119,39 @@ class Command(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
-
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  name:               {!r}\n'. \
-            format(indent, self.name)
-        output += '{}  program:            {!r}\n'. \
-            format(indent, self.program)
+
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  name:               {!r}\n'.format(indent, self.name))
+        str_list.append('{}  program:            {!r}\n'.format(indent, self.program))
 
         # List all options
 
-        output += '{}  options:\n'.format(indent)
+        str_list.append('{}  options:\n'.format(indent))
 
         for key in sorted(self.options):
-            output += '{}    key: {!r} Argument objects:\n'.format(indent, key)
+            str_list.append('{}    key: {!r} Argument objects:\n'.format(indent, key))
             for argument in self.options[key]:
-                output += argument.trace(level=level + 2)
+                str_list.extend(argument.trace(level=level + 2))
 
         # List all arguments
 
-        output += '{}  arguments:\n'.format(indent)
+        str_list.append('{}  arguments:\n'.format(indent))
 
         i = 0
         for argument in self.arguments:
-            output += '{}    {:2d}: {!r}\n'.format(indent, i, argument)
+            str_list.append('{}    {:2d}: {!r}\n'.format(indent, i, argument))
             i += 1
 
         if self.sub_command:
-            output += self.sub_command.trace(level=level + 1)
+            str_list.extend(self.sub_command.trace(level=level + 1))
 
-        return output
+        return str_list
 
     def add_argument(self, argument, override):
         """Add a C{bsf.argument.Argument} or one of its sub-classes.
@@ -897,41 +897,36 @@ class Executable(Command):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
-
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  stdout_path:        {!r}\n'. \
-            format(indent, self.stdout_path)
-        output += '{}  stderr_path:        {!r}\n'. \
-            format(indent, self.stderr_path)
-        output += '{}  hold:               {!r}\n'. \
-            format(indent, self.hold)
-        output += '{}  submit:             {!r}\n'. \
-            format(indent, self.submit)
-        output += '{}  maximum_attempts: {!r}\n'. \
-            format(indent, self.maximum_attempts)
-        output += '{}  process_identifier: {!r}\n'. \
-            format(indent, self.process_identifier)
-        output += '{}  process_name:       {!r}\n'. \
-            format(indent, self.process_name)
+
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  stdout_path:        {!r}\n'.format(indent, self.stdout_path))
+        str_list.append('{}  stderr_path:        {!r}\n'.format(indent, self.stderr_path))
+        str_list.append('{}  hold:               {!r}\n'.format(indent, self.hold))
+        str_list.append('{}  submit:             {!r}\n'.format(indent, self.submit))
+        str_list.append('{}  maximum_attempts:   {!r}\n'.format(indent, self.maximum_attempts))
+        str_list.append('{}  process_identifier: {!r}\n'.format(indent, self.process_identifier))
+        str_list.append('{}  process_name:       {!r}\n'.format(indent, self.process_name))
 
         # List all dependencies.
 
-        output += '{}  dependencies:\n'.format(indent)
+        str_list.append('{}  dependencies:\n'.format(indent))
 
         i = 0
         for dependency in self.dependencies:
-            output += '{}    {:2d} {!r}\n'.format(indent, i, dependency)
+            str_list.append('{}    {:2d} {!r}\n'.format(indent, i, dependency))
             i += 1
 
         # Trace the Command super-class.
 
-        output += super(Executable, self).trace(level=level + 1)
+        str_list.extend(super(Executable, self).trace(level=level + 1))
 
-        return output
+        return str_list
 
     def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
         """Run a C{bsf.process.Executable} via the Python C{subprocess.Popen} class.
@@ -1155,16 +1150,18 @@ class RunnableStep(Executable):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: str
+        @rtype: list[str | unicode]
         """
-
         indent = '  ' * level
-        output = str()
-        output += '{}{!r}\n'.format(indent, self)
-        output += '{}  obsolete_file_path_list: {!r}\n'.format(indent, self.obsolete_file_path_list)
-        output += super(RunnableStep, self).trace(level=level + 1)
 
-        return output
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  obsolete_file_path_list: {!r}\n'.format(indent, self.obsolete_file_path_list))
+        str_list.extend(super(RunnableStep, self).trace(level=level + 1))
+
+        return str_list
 
     def remove_obsolete_file_paths(self):
         """Remove file paths on the C{bsf.process.RunnableStep.obsolete_file_path_list} Python C{list}.

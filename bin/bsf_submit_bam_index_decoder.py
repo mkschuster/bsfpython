@@ -29,6 +29,7 @@ from __future__ import print_function
 
 import argparse
 import os
+import sys
 
 import bsf.analyses.illumina_to_bam_tools
 import bsf.standards
@@ -149,4 +150,4 @@ print('Experiment directory: ', analysis.get_experiment_directory)
 
 if analysis.debug >= 2:
     print(repr(analysis), 'final trace:')
-    print(analysis.trace(level=1))
+    sys.stdout.writelines(analysis.trace(level=1))
