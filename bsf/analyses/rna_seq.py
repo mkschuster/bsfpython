@@ -1956,31 +1956,32 @@ class Tuxedo(bsf.Analysis):
         """
 
         def relative_anchor(prefix, suffix, text):
-            """Create a relative HTML anchor element.
+            """Create a HTML anchor element with a relative reference path.
 
             <a href="prefix/prefix_suffix">text</a>
             @param prefix: Prefix
-            @type prefix: str
+            @type prefix: str | unicode
             @param suffix: Suffix
-            @type suffix: str
+            @type suffix: str | unicode
             @param text: Link text
-            @type text: str
-            @return: Relative URL
-            @rtype: str
+            @type text: str | unicode
+            @return: HTML anchor element
+            @rtype: str | unicode
             """
             return '<a href="' + prefix + '/' + prefix + '_' + suffix + '">' + text + '</a>'
 
         def relative_image(prefix, suffix, text):
-            """Create a relative HTML image element
+            """Create a HTML image element with a relative source path.
 
             <img alt="text" src="prefix/prefix_suffix" height="80" width="80" />
             @param prefix: Prefix
-            @type prefix: str
+            @type prefix: str | unicode
             @param suffix: Suffix
-            @type suffix: str
+            @type suffix: str | unicode
             @param text: Alternative text
-            @type text: str
-            @return:
+            @type text: str | unicode
+            @return: HTML image element
+            @rtype: str | unicode
             """
             return '<img' + \
                    ' alt="' + text + '"' + \
@@ -3044,8 +3045,10 @@ class DESeq(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_deseq: C{bsf.Stage.name} for the run DESeq stage
-    @type stage_name_deseq: str
+    @cvar stage_name_analysis: C{bsf.Stage.name} for the DESeq analysis stage
+    @type stage_name_analysis: str
+    @cvar stage_name_results: C{bsf.Stage.name} for the DESeq results stage
+    @type stage_name_results: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
     @ivar comparison_path: Comparison file path
@@ -3061,10 +3064,11 @@ class DESeq(bsf.Analysis):
     """
 
     name = 'DESeq RNA-seq Analysis'
-    prefix = 'rnaseq'
+    prefix = '_'.join(('rnaseq', 'deseq'))
 
-    # DESeq stage
-    stage_name_deseq = '_'.join((prefix, 'deseq'))
+    # DESeq analysis stage
+    stage_name_analysis = '_'.join((prefix, 'analysis'))
+    stage_name_results = '_'.join((prefix, 'results'))
 
     def __init__(
             self,
@@ -3243,7 +3247,7 @@ class DESeq(bsf.Analysis):
         for design_row_dict in design_sheet.row_dicts:
             design_name = design_row_dict['design']
 
-            prefix = '_'.join((self.stage_name_deseq, design_name))
+            prefix = '_'.join((self.prefix, design_name))
 
             comparison_directory = os.path.join(self.genome_directory, prefix)
 
@@ -3300,5 +3304,419 @@ class DESeq(bsf.Analysis):
             contrast_sheet.file_path = os.path.join(comparison_directory, prefix + '_contrasts.tsv')
             contrast_sheet.file_type = 'excel-tab'
             contrast_sheet.to_file_path()
+
+        return
+
+    def report(self):
+
+        # FIXME: This is a duplication of the Tuxedo class above.
+        # Move to @classmethod Analysis.get_html_anchor(prefix, suffix, text)?
+        def relative_anchor(prefix, suffix, text):
+            """Create a HTML anchor element with a relative reference path.
+
+            <a href="prefix/prefix_suffix">text</a>
+            @param prefix: Prefix
+            @type prefix: str | unicode
+            @param suffix: Suffix
+            @type suffix: str | unicode
+            @param text: Link text
+            @type text: str | unicode
+            @return: HTML anchor element
+            @rtype: str | unicode
+            """
+            return '<a href="' + prefix + '/' + prefix + '_' + suffix + '">' + text + '</a>'
+
+        # FIXME: This is a duplication of the Tuxedo class above.
+        # Move to @classmethod Analysis.get_html_image(prefix, suffix, text)?
+        def relative_image(prefix, suffix, text):
+            """Create a HTML image element with a relative source path.
+
+            <img alt="text" src="prefix/prefix_suffix" height="80" width="80" />
+            @param prefix: Prefix
+            @type prefix: str | unicode
+            @param suffix: Suffix
+            @type suffix: str | unicode
+            @param text: Alternative text
+            @type text: str | unicode
+            @return: HTML image element
+            @rtype: str | unicode
+            """
+            return '<img' + \
+                   ' alt="' + text + '"' + \
+                   ' src="' + prefix + '/' + prefix + '_' + suffix + '"' + \
+                   ' height="80"' + \
+                   ' width="80"' + \
+                   ' />'
+
+        def relative_image_source(prefix, suffix):
+            """Get a relative HTML image source path.
+
+            @param prefix: Prefix
+            @type prefix: str
+            @param suffix: Suffix
+            @type suffix: str
+            @return: Relative HTML image source path
+            @rtype: str | unicode
+            """
+            return prefix + '/' + prefix + '_' + suffix
+
+        def report_html():
+            """Private function to create a HTML report.
+
+            @return:
+            @rtype:
+            """
+
+            # Create a symbolic link containing the project name and a UUID.
+            self.create_public_project_link()
+
+            # This code only needs the public URL.
+
+            # Write a HTML document.
+
+            str_list = list()
+            """ @type str_list: list[str | unicode] """
+
+            str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+            str_list.append('\n')
+
+            # Likelihood Ratio Testing (LRT) Table
+
+            # Read the designs table as a backup, in case the design-specific LRT summary table is not available.
+
+            design_sheet = bsf.annotation.AnnotationSheet.from_file_path(
+                file_path=self.comparison_path,
+                file_type='excel',
+                name='DESeq Design Table')
+
+            str_list.append('<h2 id="lrt">Likelihood Ratio Testing (LRT)</h2>\n')
+            str_list.append('\n')
+
+            str_list.append('<table id="lrt_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th class="left">Design</th>\n')
+            str_list.append('<th class="left">Model Formula</th>\n')
+            str_list.append('<th class="left">Reduced Name</th>\n')
+            str_list.append('<th class="left">Reduced Formula</th>\n')
+            str_list.append('<th class="left">Differential Genes</th>\n')
+            str_list.append('<th class="left">Significant Genes</th>\n')
+            str_list.append('<th class="left">Significant Number</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
+
+            for design_row_dict in design_sheet.row_dicts:
+                design_prefix = '_'.join((self.prefix, design_row_dict['design']))
+                lrt_summary_path = os.path.join(
+                    self.genome_directory,
+                    design_prefix,
+                    design_prefix + '_lrt_summary.tsv')
+                if os.path.exists(lrt_summary_path):
+                    lrt_summary_sheet = bsf.annotation.AnnotationSheet.from_file_path(
+                        file_path=lrt_summary_path,
+                        file_type='excel-tab',
+                        name='DESeq LRT Summary Table')
+                    lrt_row_dict_list = lrt_summary_sheet.row_dicts
+                else:
+                    lrt_row_dict_list = list()
+                    for reduced_tuple in design_row_dict['reduced_formulas'].split(';'):
+                        reduced_name, reduced_formula = reduced_tuple.split(':')
+                        lrt_row_dict_list.append({
+                            'design': design_row_dict['design'],
+                            'full_formula': design_row_dict['full_formula'],
+                            'reduced_name': reduced_name,
+                            'reduced_formula': reduced_formula,
+                            'significant': '',
+                        })
+
+                # for reduced_tuple in design_row_dict['reduced_formulas'].split(';'):
+                #     reduced_name, reduced_formula = reduced_tuple.split(':')
+                for lrt_row_dict in lrt_row_dict_list:
+                    str_list.append('<tr>\n')
+                    str_list.append('<td>' + lrt_row_dict['design'] + '</td>\n')
+                    str_list.append('<td>' + lrt_row_dict['full_formula'] + '</td>\n')
+                    str_list.append('<td>' + lrt_row_dict['reduced_name'] + '</td>\n')
+                    str_list.append('<td>' + lrt_row_dict['reduced_formula'] + '</td>\n')
+                    # Differential genes
+                    str_list.append('<td>' +
+                                    relative_anchor(
+                                        prefix=design_prefix,
+                                        suffix='_'.join(('lrt', lrt_row_dict['reduced_name'], '.tsv')),
+                                        text='<abbr title="Tab-Separated Value">TSV</abbr>') +
+                                    '</td>\n')
+                    # Significant genes
+                    str_list.append('<td>' +
+                                    relative_anchor(
+                                        prefix=design_prefix,
+                                        suffix='_'.join(('lrt', lrt_row_dict['reduced_name'], 'significant.tsv')),
+                                        text='<abbr title="Tab-Separated Value">TSV</abbr>') +
+                                    '</td>\n')
+                    if lrt_row_dict['significant']:
+                        str_list.append('<td class="right">{:,}</td>\n'.format(int(lrt_row_dict['significant'])))
+                    else:
+                        str_list.append('<td class="right"></td>\n')
+                    str_list.append('</tr>\n')
+
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
+
+            # Contrast table.
+
+            str_list.append('<h2 id="contrasts">Contrasts</h2>\n')
+            str_list.append('\n')
+
+            str_list.append('<table id="contrasts_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th class="left">Design</th>\n')
+            str_list.append('<th class="left">Contrast</th>\n')
+            str_list.append('<th class="left">Numerator</th>\n')
+            str_list.append('<th class="left">Denominator</th>\n')
+            str_list.append('<th class="left">Differential Genes</th>\n')
+            str_list.append('<th class="left">Significant Genes</th>\n')
+            str_list.append('<th class="left">Significant Number</th>\n')
+            str_list.append('<th class="left">MA Plot</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
+
+            # Read the contrast file as a backup, in case a design-specific summary table was not available.
+
+            contrast_sheet = bsf.annotation.AnnotationSheet.from_file_path(
+                file_path=self.contrast_path,
+                file_type='excel',
+                name='DESeq Contrasts Table')
+
+            # Re-index the contrast sheet on design names.
+            contrast_dict = dict()
+            """ @type contrast_dict: dict[str, list] """
+
+            for contrast_row_dict in contrast_sheet.row_dicts:
+                if contrast_row_dict['Design'] not in contrast_dict:
+                    contrast_dict[contrast_row_dict['Design']] = list()
+                contrast_dict[contrast_row_dict['Design']].append(contrast_row_dict)
+
+            for design_name in sorted(contrast_dict):
+                design_prefix = '_'.join((self.prefix, design_name))
+                contrasts_summary_path = os.path.join(
+                    self.genome_directory,
+                    design_prefix,
+                    design_prefix + '_contrasts_summary.tsv')
+                if os.path.exists(contrasts_summary_path):
+                    summary_sheet = bsf.annotation.AnnotationSheet.from_file_path(
+                        file_path=contrasts_summary_path,
+                        file_type='excel-tab',
+                        name='DESeq Contrasts Summary Table')
+                    summary_row_dicts = summary_sheet.row_dicts
+                else:
+                    summary_row_dicts = contrast_dict[design_name]
+
+                for row_dict in summary_row_dicts:
+                    str_list.append('<tr>\n')
+                    # Design
+                    str_list.append('<td class="left">' + row_dict['Design'] + '</td>\n')
+                    # Contrast
+                    str_list.append('<td class="left">' + row_dict['Label'] + '</td>\n')
+                    # Numerator
+                    str_list.append('<td class="left">' + row_dict['Numerator'] + '</td>\n')
+                    # Denominator
+                    str_list.append('<td class="left">' + row_dict['Denominator'] + '</td>\n')
+                    # TSV
+                    numerator = row_dict['Numerator']
+                    denominator = row_dict['Denominator']
+                    if not denominator:
+                        denominator = 'intercept'
+                    # Differential Genes
+                    str_list.append('<td>' +
+                                    relative_anchor(
+                                        prefix=design_prefix,
+                                        suffix='_'.join(('contrast', numerator, 'against', denominator,
+                                                         'genes.tsv')),
+                                        text='<abbr title="Tab-Separated Value">TSV</abbr>') +
+                                    '</td>\n')
+                    # Significant Genes
+                    str_list.append('<td>' +
+                                    relative_anchor(
+                                        prefix=design_prefix,
+                                        suffix='_'.join(('contrast', numerator, 'against', denominator,
+                                                         'significant.tsv')),
+                                        text='<abbr title="Tab-Separated Value">TSV</abbr>') +
+                                    '</td>\n')
+                    # Significant Number
+                    if 'Significant' in row_dict:
+                        str_list.append('<td class="right">{:,}</td>\n'.format(int(row_dict['Significant'])))
+                    else:
+                        str_list.append('<td></td>\n')
+                    # MA Plot
+                    str_list.append('<td>' +
+                                    relative_anchor(
+                                        prefix=design_prefix,
+                                        suffix='_'.join(('contrast', numerator, 'against', denominator, 'ma.pdf')),
+                                        text=relative_image(
+                                            prefix=design_prefix,
+                                            suffix='_'.join(('contrast', numerator, 'against', denominator, 'ma.png')),
+                                            text='MA plot')) +
+                                    '</td>\n')
+                    str_list.append('</tr>\n')
+
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
+
+            # Link MDS and PCA plots.
+
+            str_list.append('<h2 id="plots">Plots</h2>\n')
+            str_list.append('\n')
+
+            str_list.append('<table id="plot_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th class="left">Design</th>\n')
+            str_list.append('<th class="left">MDS Blind</th>\n')
+            str_list.append('<th class="left">MDS Model</th>\n')
+            str_list.append('<th class="left">PCA Blind</th>\n')
+            str_list.append('<th class="left">PCA Model</th>\n')
+            # str_list.append('<th>Plot Aesthetics</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
+
+            for design_row_dict in design_sheet.row_dicts:
+                design_prefix = '_'.join((self.prefix, design_row_dict['design']))
+                for plot_instance in design_row_dict['plot_aes'].split('|'):
+                    ggplot_geom, ggplot_aes_list = plot_instance.split(':')
+                    plot_path = '__'.join((ggplot_geom[5:], ggplot_aes_list.replace(',', '_').replace('=', '_')))
+                    str_list.append('<tr>\n')
+                    # Design
+                    str_list.append('<td>' + design_row_dict['design'] + '</td>\n')
+                    for plot_type in ('mds', 'pca'):
+                        for model_type in ('blind', 'model'):
+                            plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
+                            plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
+                            if os.path.exists(
+                                    os.path.join(
+                                        self.genome_directory,
+                                        relative_image_source(prefix=design_prefix, suffix=plot_path_png))):
+                                str_list.append(
+                                    '<td>' +
+                                    relative_anchor(
+                                        prefix=design_prefix,
+                                        suffix=plot_path_pdf,
+                                        text=relative_image(
+                                            prefix=design_prefix,
+                                            suffix=plot_path_png,
+                                            text=plot_type + ' plot')) +
+                                    '</td>\n')
+                            else:
+                                str_list.append('<td></td>\n')
+                    # Plot Aesthetics
+                    # str_list.append('<td>' + plot_instance + '</td>\n')
+                    str_list.append('</tr>\n')
+
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
+
+            # Additional tables
+
+            str_list.append('<h2 id="tables">Additional Tables</h2>\n')
+            str_list.append('\n')
+
+            str_list.append('<table id="table_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th class="left">Design</th>\n')
+            str_list.append('<th class="left">Raw Counts</th>\n')
+            str_list.append('<th class="left">VST Blind Counts</th>\n')
+            str_list.append('<th class="left">VST Model Counts</th>\n')
+            str_list.append('<th class="left">FPKMs</th>\n')
+            str_list.append('<th class="left">Samples</th>\n')
+            str_list.append('<th class="left">Annotation</th>\n')
+            str_list.append('<th class="left">Contrasts</th>\n')
+            str_list.append('<th class="left">LRT</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
+
+            for design_row_dict in design_sheet.row_dicts:
+                design_prefix = '_'.join((self.prefix, design_row_dict['design']))
+
+                str_list.append('<tr>\n')
+
+                str_list.append('<td>' + design_row_dict['design'] + '</td>\n')
+
+                str_list.append('<td>')
+                str_list.append(relative_anchor(
+                    prefix=design_prefix,
+                    suffix='counts_raw.tsv',
+                    text='<abbr title="Tab-Separated Value">TSV</abbr>'))
+                str_list.append('</td>\n')
+
+                str_list.append('<td>')
+                str_list.append(relative_anchor(
+                    prefix=design_prefix,
+                    suffix='counts_vst_blind.tsv',
+                    text='<abbr title="Tab-Separated Value">TSV</abbr>'))
+                str_list.append('</td>\n')
+
+                str_list.append('<td>')
+                str_list.append(relative_anchor(
+                    prefix=design_prefix,
+                    suffix='counts_vst_model.tsv',
+                    text='<abbr title="Tab-Separated Value">TSV</abbr>'))
+                str_list.append('</td>\n')
+
+                str_list.append('<td>')
+                str_list.append(relative_anchor(
+                    prefix=design_prefix,
+                    suffix='fpkms.tsv',
+                    text='<abbr title="Tab-Separated Value">TSV</abbr>'))
+                str_list.append('</td>\n')
+
+                str_list.append('<td>')
+                str_list.append(relative_anchor(
+                    prefix=design_prefix,
+                    suffix='samples.tsv',
+                    text='<abbr title="Tab-Separated Value">TSV</abbr>'))
+                str_list.append('</td>\n')
+
+                str_list.append('<td>')
+                str_list.append(relative_anchor(
+                    prefix=design_prefix,
+                    suffix='annotation.tsv',
+                    text='<abbr title="Tab-Separated Value">TSV</abbr>'))
+                str_list.append('</td>\n')
+
+                str_list.append('<td>')
+                str_list.append(relative_anchor(
+                    prefix=design_prefix,
+                    suffix='contrasts_summary.tsv',
+                    text='<abbr title="Tab-Separated Value">TSV</abbr>'))
+                str_list.append('</td>\n')
+
+                str_list.append('<td>')
+                str_list.append(relative_anchor(
+                    prefix=design_prefix,
+                    suffix='lrt_summary.tsv',
+                    text='<abbr title="Tab-Separated Value">TSV</abbr>'))
+                str_list.append('</td>\n')
+
+                str_list.append('</tr>\n')
+
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
+
+            self.report_to_file(content=str_list)
+
+            if self.debug > 0:
+                print('Report list:')
+                print(repr(str_list))
+
+            return
+
+        report_html()
 
         return
