@@ -792,7 +792,7 @@ class Analysis(object):
         str_list.append('\n')
         str_list.append('<html xmlns="http://www.w3.org/1999/xhtml">\n')
         str_list.append('<head>\n')
-        str_list.append('<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />\n')
+        str_list.append('<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n')
         str_list.append('<link rel="stylesheet" href="/' + urllib.quote(s=bsf.standards.URL.get_relative_projects()) +
                         '/bsfpython.css" type="text/css" />\n')
         str_list.append('<link rel="schema.DC" href="http://purl.org/DC/elements/1.0/" />\n')
