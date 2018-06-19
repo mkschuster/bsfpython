@@ -35,13 +35,12 @@ import sys
 import time
 
 import bsf.analyses.illumina_to_bam_tools
+import bsf.analyses.picard
 import bsf.illumina
 import bsf.standards
 
 argument_parser = argparse.ArgumentParser(
-    description=
-    bsf.analyses.illumina_to_bam_tools.IlluminaToBam.name + ' and ' +
-    bsf.analyses.illumina_to_bam_tools.BamIndexDecoder.name + ' driver script.')
+    description='Illumina Run Folder processor driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -54,6 +53,11 @@ argument_parser.add_argument(
     help='limit job submission to a particular Analysis stage',
     required=False,
     type=str)
+
+argument_parser.add_argument(
+    '--illumina2bam',
+    action='store_true',
+    help='Use Illumina2bam rather than Picard tools')
 
 # argument_parser.add_argument(
 #     '--archive-directory',
@@ -159,123 +163,245 @@ name_space = argument_parser.parse_args()
 # else:
 #     irf_restore = None
 
-# Create a BSF IlluminaToBam analysis, run and submit it.
+if name_space.illumina2bam:
+    # Create an IlluminaToBam analysis, run and submit it.
 
-analysis_itb = bsf.analyses.illumina_to_bam_tools.IlluminaToBam.from_config_file_path(
-    config_path=name_space.configuration)
-""" @type analysis_itb: bsf.analyses.illumina_to_bam_tools.IlluminaToBam """
+    analysis_itb = bsf.analyses.illumina_to_bam_tools.IlluminaToBam.from_config_file_path(
+        config_path=name_space.configuration)
+    """ @type analysis_itb: bsf.analyses.illumina_to_bam_tools.IlluminaToBam """
 
-# Set arguments that override the configuration file.
+    # Set arguments that override the configuration file.
 
-if name_space.debug:
-    assert isinstance(name_space.debug, int)
-    analysis_itb.debug = name_space.debug
+    if name_space.debug:
+        assert isinstance(name_space.debug, int)
+        analysis_itb.debug = name_space.debug
 
-if name_space.irf:
-    assert isinstance(name_space.irf, (str, unicode))
-    analysis_itb.run_directory = name_space.irf
+    if name_space.irf:
+        assert isinstance(name_space.irf, (str, unicode))
+        analysis_itb.run_directory = name_space.irf
 
-# if irf_restore is not None:
-#     # If the IlluminaRunFolderRestore has not run, the run folder is not complete.
-#     itb.run_directory = irf_restore.get_run_directory_path
-#     itb.force = True
+    # if irf_restore is not None:
+    #     # If the IlluminaRunFolderRestore has not run, the run folder is not complete.
+    #     itb.run_directory = irf_restore.get_run_directory_path
+    #     itb.force = True
 
-# Do the work.
+    # Do the work.
 
-if name_space.loop:
-    assert isinstance(name_space.loop, bool)
-    # If the --loop option has been set, wait until RTAComplete.txt has been copied.
-    loop_counter = int(1)
-    while True:
-        print('[{}] Loop {}:'.format(datetime.datetime.now().isoformat(), loop_counter))
-        loop_counter += int(1)
-        try:
-            analysis_itb.run()
-        except bsf.illumina.RunFolderNotComplete as exception:
-            print(exception)
-        else:
-            print('Illumina Run Folder seems complete.')
-            break
-        time.sleep(name_space.interval)
-else:
-    analysis_itb.run()
-
-analysis_itb.check_state()
-analysis_itb.submit(name=name_space.stage)
-
-print(analysis_itb.name)
-print('Project name:           ', analysis_itb.project_name)
-print('Project directory:      ', analysis_itb.project_directory)
-print('Illumina run directory: ', analysis_itb.run_directory)
-print('Experiment directory:   ', analysis_itb.get_experiment_directory)
-
-if analysis_itb.debug >= 2:
-    print(repr(analysis_itb), 'final trace:')
-    sys.stdout.writelines(analysis_itb.trace(level=1))
-
-# Create a BSF BamIndexDecoder analysis, run and submit it.
-
-analysis_bid = bsf.analyses.illumina_to_bam_tools.BamIndexDecoder.from_config_file_path(
-    config_path=name_space.configuration)
-""" @type analysis_bid: bsf.analyses.illumina_to_bam_tools.BamIndexDecoder """
-
-# Transfer the project name from the IlluminaToBam to the BamIndexDecoder analysis.
-
-analysis_bid.project_name = analysis_itb.project_name
-
-# Set arguments that override the configuration file.
-
-if name_space.debug:
-    assert isinstance(name_space.debug, int)
-    analysis_bid.debug = name_space.debug
-
-if name_space.mode:
-    assert isinstance(name_space.mode, str)
-    if name_space.mode == 'high':
-        analysis_bid.lanes = 8
-    elif name_space.mode == 'rapid':
-        analysis_bid.lanes = 2
-    elif name_space.mode == 'miseq':
-        analysis_bid.lanes = 1
-    elif name_space.mode == 'nextseq':
-        analysis_bid.lanes = 4
+    if name_space.loop:
+        assert isinstance(name_space.loop, bool)
+        # If the --loop option has been set, wait until RTAComplete.txt has been copied.
+        loop_counter = int(1)
+        while True:
+            print('[{}] Loop {}:'.format(datetime.datetime.now().isoformat(), loop_counter))
+            loop_counter += int(1)
+            try:
+                analysis_itb.run()
+            except bsf.illumina.RunFolderNotComplete as exception:
+                print(exception)
+            else:
+                print('Illumina Run Folder seems complete.')
+                break
+            time.sleep(name_space.interval)
     else:
-        raise Exception("Unknown output mode " + name_space.mode)
+        analysis_itb.run()
+
+    analysis_itb.check_state()
+    analysis_itb.submit(name=name_space.stage)
+
+    print(analysis_itb.name)
+    print('Project name:           ', analysis_itb.project_name)
+    print('Project directory:      ', analysis_itb.project_directory)
+    print('Illumina run directory: ', analysis_itb.run_directory)
+    print('Experiment directory:   ', analysis_itb.get_experiment_directory)
+
+    if analysis_itb.debug >= 2:
+        print(repr(analysis_itb), 'final trace:')
+        sys.stdout.writelines(analysis_itb.trace(level=1))
+
+    # Create a BamIndexDecoder analysis, run and submit it.
+
+    analysis_bid = bsf.analyses.illumina_to_bam_tools.BamIndexDecoder.from_config_file_path(
+        config_path=name_space.configuration)
+    """ @type analysis_bid: bsf.analyses.illumina_to_bam_tools.BamIndexDecoder """
+
+    # Transfer the project name from the IlluminaToBam to the BamIndexDecoder analysis.
+
+    analysis_bid.project_name = analysis_itb.project_name
+
+    # Set arguments that override the configuration file.
+
+    if name_space.debug:
+        assert isinstance(name_space.debug, int)
+        analysis_bid.debug = name_space.debug
+
+    if name_space.mode:
+        assert isinstance(name_space.mode, str)
+        if name_space.mode == 'high':
+            analysis_bid.lanes = 8
+        elif name_space.mode == 'rapid':
+            analysis_bid.lanes = 2
+        elif name_space.mode == 'miseq':
+            analysis_bid.lanes = 1
+        elif name_space.mode == 'nextseq':
+            analysis_bid.lanes = 4
+        elif name_space.mode == 'novaseq':
+            analysis_bid.lanes = 4
+        else:
+            raise Exception("Unknown output mode " + name_space.mode)
+    else:
+        analysis_bid.lanes = \
+            bsf.illumina.RunFolder.from_file_path(
+                file_path=analysis_itb.run_directory).run_information.flow_cell_layout.lane_count
+
+    if name_space.no_validation:
+        assert isinstance(name_space.no_validation, bool)
+        analysis_bid.force = name_space.no_validation
+
+    if name_space.library_path:
+        assert isinstance(name_space.library_path, (str, unicode))
+        analysis_bid.library_path = name_space.library_path
+
+    # If a library file has not been defined so far, check,
+    # if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
+
+    if not analysis_bid.library_path:
+        library_path = '_'.join((analysis_bid.project_name, 'libraries.csv'))
+        if os.path.exists(path=library_path):
+            analysis_bid.library_path = library_path
+
+    if analysis_bid.library_path:
+        # Do the work if, at this stage, a library file has been set.
+
+        analysis_bid.run()
+        analysis_bid.check_state()
+        analysis_bid.submit(name=name_space.stage)
+
+        print('')
+        print(analysis_bid.name)
+        print('Project name:         ', analysis_bid.project_name)
+        print('Project directory:    ', analysis_bid.project_directory)
+        print('Sequences directory:  ', analysis_bid.sequences_directory)
+        print('Experiment directory: ', analysis_bid.get_experiment_directory)
+
+    if analysis_bid.debug >= 2:
+        print(repr(analysis_bid), 'final trace:')
+        sys.stdout.writelines(analysis_bid.trace(level=1))
 else:
-    analysis_bid.lanes = \
-        bsf.illumina.RunFolder.from_file_path(
-            file_path=analysis_itb.run_directory).run_information.flow_cell_layout.lane_count
+    # Create an IlluminaMultiplexSam analysis, run and submit it.
 
-if name_space.no_validation:
-    assert isinstance(name_space.no_validation, bool)
-    analysis_bid.force = name_space.no_validation
+    analysis_ims = bsf.analyses.picard.IlluminaMultiplexSam.from_config_file_path(config_path=name_space.configuration)
+    """ @type analysis_ims: bsf.analyses.picard.IlluminaMultiplexSam """
 
-if name_space.library_path:
-    assert isinstance(name_space.library_path, (str, unicode))
-    analysis_bid.library_path = name_space.library_path
+    # Set arguments that override the configuration file.
 
-# If a library file has not been defined so far, check,
-# if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
+    if name_space.debug:
+        assert isinstance(name_space.debug, int)
+        analysis_ims.debug = name_space.debug
 
-if not analysis_bid.library_path:
-    library_path = '_'.join((analysis_bid.project_name, 'libraries.csv'))
-    if os.path.exists(path=library_path):
-        analysis_bid.library_path = library_path
+    if name_space.irf:
+        assert isinstance(name_space.irf, (str, unicode))
+        analysis_ims.run_directory = name_space.irf
 
-if analysis_bid.library_path:
-    # Do the work if, at this stage, a library file has been set.
+    # Do the work.
 
-    analysis_bid.run()
-    analysis_bid.check_state()
-    analysis_bid.submit(name=name_space.stage)
+    if name_space.loop:
+        assert isinstance(name_space.loop, bool)
+        # If the --loop option has been set, wait until RTAComplete.txt has been copied.
+        loop_counter = int(1)
+        while True:
+            print('[{}] Loop {}:'.format(datetime.datetime.now().isoformat(), loop_counter))
+            loop_counter += int(1)
+            try:
+                analysis_ims.run()
+            except bsf.illumina.RunFolderNotComplete as exception:
+                print(exception)
+            else:
+                print('Illumina Run Folder seems complete.')
+                break
+            time.sleep(name_space.interval)
+    else:
+        analysis_ims.run()
 
-    print('')
-    print(analysis_bid.name)
-    print('Project name:         ', analysis_bid.project_name)
-    print('Project directory:    ', analysis_bid.project_directory)
-    print('Sequences directory:  ', analysis_bid.sequences_directory)
-    print('Experiment directory: ', analysis_bid.get_experiment_directory)
+    analysis_ims.check_state()
+    analysis_ims.submit(name=name_space.stage)
 
-if analysis_bid.debug >= 2:
-    print(repr(analysis_bid), 'final trace:')
-    sys.stdout.writelines(analysis_bid.trace(level=1))
+    print(analysis_ims.name)
+    print('Project name:           ', analysis_ims.project_name)
+    print('Project directory:      ', analysis_ims.project_directory)
+    print('Illumina run directory: ', analysis_ims.run_directory)
+    print('Experiment directory:   ', analysis_ims.get_experiment_directory)
+
+    if analysis_ims.debug >= 2:
+        print(repr(analysis_ims), 'final trace:')
+        sys.stdout.writelines(analysis_ims.trace(level=1))
+
+    # Create a IlluminaDemultiplexSam analysis, run and submit it.
+
+    analysis_ids = bsf.analyses.picard.IlluminaDemultiplexSam.from_config_file_path(
+        config_path=name_space.configuration)
+    """ @type analysis_ids: bsf.analyses.picard.IlluminaDemultiplexSam """
+
+    # Transfer the project_name and run_directory from the IlluminaMultiplexSam to the
+    # IlluminaDemultiplexSam analysis.
+
+    analysis_ids.project_name = analysis_ims.project_name
+    analysis_ids.run_directory = analysis_ims.run_directory
+
+    # Set arguments that override the configuration file.
+
+    if name_space.debug:
+        assert isinstance(name_space.debug, int)
+        analysis_ids.debug = name_space.debug
+
+    if name_space.mode:
+        assert isinstance(name_space.mode, str)
+        if name_space.mode == 'high':
+            analysis_ids.lanes = 8
+        elif name_space.mode == 'rapid':
+            analysis_ids.lanes = 2
+        elif name_space.mode == 'miseq':
+            analysis_ids.lanes = 1
+        elif name_space.mode == 'nextseq':
+            analysis_ids.lanes = 4
+        elif name_space.mode == 'novaseq':
+            analysis_ids.lanes = 4
+        else:
+            raise Exception("Unknown output mode " + name_space.mode)
+    else:
+        analysis_ids.lanes = \
+            bsf.illumina.RunFolder.from_file_path(
+                file_path=analysis_ims.run_directory).run_information.flow_cell_layout.lane_count
+
+    if name_space.no_validation:
+        assert isinstance(name_space.no_validation, bool)
+        analysis_ids.force = name_space.no_validation
+
+    if name_space.library_path:
+        assert isinstance(name_space.library_path, (str, unicode))
+        analysis_ids.library_path = name_space.library_path
+
+    # If a library file has not been defined so far, check,
+    # if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
+
+    if not analysis_ids.library_path:
+        library_path = '_'.join((analysis_ids.project_name, 'libraries.csv'))
+        if os.path.exists(path=library_path):
+            analysis_ids.library_path = library_path
+
+    if analysis_ids.library_path:
+        # Do the work if, at this stage, a library file has been set.
+
+        analysis_ids.run()
+        analysis_ids.check_state()
+        analysis_ids.submit(name=name_space.stage)
+
+        print('')
+        print(analysis_ids.name)
+        print('Project name:         ', analysis_ids.project_name)
+        print('Project directory:    ', analysis_ids.project_directory)
+        print('Sequences directory:  ', analysis_ids.sequences_directory)
+        print('Experiment directory: ', analysis_ids.get_experiment_directory)
+
+    if analysis_ids.debug >= 2:
+        print(repr(analysis_ids), 'final trace:')
+        sys.stdout.writelines(analysis_ids.trace(level=1))
