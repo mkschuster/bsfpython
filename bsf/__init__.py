@@ -742,6 +742,56 @@ class Analysis(object):
     # def escape_space(text):
     #     return text.replace(' ', '%20')
 
+    @staticmethod
+    def get_html_anchor(prefix, suffix, text):
+        """Create a HTML anchor element with a relative reference path.
+
+        <a href="prefix/prefix_suffix">text</a>
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @param suffix: Suffix
+        @type suffix: str | unicode
+        @param text: Link text
+        @type text: str | unicode
+        @return: HTML anchor element
+        @rtype: str | unicode
+        """
+        return '<a href="' + prefix + '/' + prefix + '_' + suffix + '">' + text + '</a>'
+
+    @staticmethod
+    def get_html_image(prefix, suffix, text, height=None, width=None):
+        """Create a HTML image element with a relative source path.
+
+        <img alt="text" src="prefix/prefix_suffix" height="80" width="80" />
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @param suffix: Suffix
+        @type suffix: str | unicode
+        @param text: Alternative text
+        @type text: str | unicode
+        @param height: Image height attribute
+        @type height: str
+        @param width: Image width attribute
+        @type width: str
+        @return: HTML image element
+        @rtype: str | unicode
+        """
+        str_list = list()
+
+        str_list.append('<img')
+        str_list.append('alt="' + text + '"')
+        str_list.append('src="' + prefix + '/' + prefix + '_' + suffix + '"')
+
+        if height:  # not None and not empty
+            str_list.append('height="' + height + '"')
+
+        if width:  # not None and not empty
+            str_list.append('width="' + width + '"')
+
+        str_list.append('/>')
+
+        return ' '.join(str_list)
+
     def get_html_header(
             self,
             strict=True,

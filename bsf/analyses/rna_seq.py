@@ -1955,41 +1955,6 @@ class Tuxedo(bsf.Analysis):
         @rtype:
         """
 
-        def relative_anchor(prefix, suffix, text):
-            """Create a HTML anchor element with a relative reference path.
-
-            <a href="prefix/prefix_suffix">text</a>
-            @param prefix: Prefix
-            @type prefix: str | unicode
-            @param suffix: Suffix
-            @type suffix: str | unicode
-            @param text: Link text
-            @type text: str | unicode
-            @return: HTML anchor element
-            @rtype: str | unicode
-            """
-            return '<a href="' + prefix + '/' + prefix + '_' + suffix + '">' + text + '</a>'
-
-        def relative_image(prefix, suffix, text):
-            """Create a HTML image element with a relative source path.
-
-            <img alt="text" src="prefix/prefix_suffix" height="80" width="80" />
-            @param prefix: Prefix
-            @type prefix: str | unicode
-            @param suffix: Suffix
-            @type suffix: str | unicode
-            @param text: Alternative text
-            @type text: str | unicode
-            @return: HTML image element
-            @rtype: str | unicode
-            """
-            return '<img' + \
-                   ' alt="' + text + '"' + \
-                   ' src="' + prefix + '/' + prefix + '_' + suffix + '"' + \
-                   ' height="80"' + \
-                   ' width="80"' + \
-                   ' />'
-
         def report_html():
             """Private function to create a HTML report.
 
@@ -2156,7 +2121,7 @@ class Tuxedo(bsf.Analysis):
                     str_list.append('<td class="left">' + paired_reads_name + '</td>\n')
                     # Assembled Transcripts
                     str_list.append('<td class="center">')
-                    str_list.append(relative_anchor(
+                    str_list.append(self.get_html_anchor(
                         prefix=path_prefix,
                         suffix='transcripts.gtf',
                         text='Transcript Assembly'))
@@ -2171,14 +2136,14 @@ class Tuxedo(bsf.Analysis):
                     str_list.append('</td>\n')
                     # Genes (Symbols)
                     str_list.append('<td class="center">')
-                    str_list.append(relative_anchor(
+                    str_list.append(self.get_html_anchor(
                         prefix=path_prefix,
                         suffix='genes_fpkm_tracking.tsv',
                         text='Genes (Symbols)'))
                     str_list.append('</td>\n')
                     # Isoforms (Symbols)
                     str_list.append('<td class="center">')
-                    str_list.append(relative_anchor(
+                    str_list.append(self.get_html_anchor(
                         prefix=path_prefix,
                         suffix='isoforms_fpkm_tracking.tsv',
                         text='Isoforms (Symbols)'))
@@ -2258,84 +2223,84 @@ class Tuxedo(bsf.Analysis):
                 str_list.append('<td class="left">' + comparison_name + '</td>\n')
                 # Samples
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='samples.tsv',
                     text='Samples'))
                 str_list.append('</td>\n')
                 # Replicates
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='replicates.tsv',
                     text='Replicates'))
                 str_list.append('</td>\n')
                 # Coding Sequences
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='cds_exp_diff.tsv',
                     text='Coding Sequences'))
                 str_list.append('</td>\n')
                 # Genes
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='genes_exp_diff.tsv',
                     text='<strong>Genes</strong>'))
                 str_list.append('</td>\n')
                 # Isoforms
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_exp_diff.tsv',
                     text='Isoforms'))
                 str_list.append('</td>\n')
                 # Promoters
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='promoters_diff.tsv',
                     text='Promoters'))
                 str_list.append('</td>\n')
                 # Splicing
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='splicing_diff.tsv',
                     text='Splicing'))
                 str_list.append('</td>\n')
                 # Transcription Start Sites
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='tss_group_exp_diff.tsv',
                     text='Transcription Start Sites'))
                 str_list.append('</td>\n')
                 # Gene FPKM Replicates
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='genes_fpkm_replicates.tsv',
                     text='Gene FPKM Replicates'))
                 str_list.append('</td>\n')
                 # Gene Count Replicates
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='genes_counts_replicates.tsv',
                     text='Gene Count Replicates'))
                 str_list.append('</td>\n')
                 # Isoform FPKM Replicates
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_fpkm_replicates.tsv',
                     text='Isoform FPKM Replicates'))
                 str_list.append('</td>\n')
                 # Isoform Count Replicates
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_counts_replicates.tsv',
                     text='Isoform Count Replicates'))
@@ -2366,14 +2331,14 @@ class Tuxedo(bsf.Analysis):
                         str_list.append('</td>\n')
                         # Genes
                         str_list.append('<td class="center">')
-                        str_list.append(relative_anchor(
+                        str_list.append(self.get_html_anchor(
                             prefix=path_prefix,
                             suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_diff.tsv')),
                             text='<strong>Genes</strong>'))
                         str_list.append('</td>\n')
                         # Isoforms
                         str_list.append('<td class="center">')
-                        str_list.append(relative_anchor(
+                        str_list.append(self.get_html_anchor(
                             prefix=path_prefix,
                             suffix='_'.join((row_dict['V1'], row_dict['V2'], 'isoforms_diff.tsv')),
                             text='Isoforms'))
@@ -2412,23 +2377,27 @@ class Tuxedo(bsf.Analysis):
                 str_list.append('<td class="left">' + comparison_name + '</td>\n')
                 # Genes
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='genes_significance_matrix.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='genes_significance_matrix.png',
-                        text='Significance Matrix Plot - Genes - ' + comparison_name)))
+                        text='Significance Matrix Plot - Genes - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
                 # Isoforms
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_significance_matrix.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='isoforms_significance_matrix.png',
-                        text='Significance Matrix Plot - Isoforms - ' + comparison_name)))
+                        text='Significance Matrix Plot - Isoforms - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
                 str_list.append('</tr>\n')
 
@@ -2480,23 +2449,27 @@ class Tuxedo(bsf.Analysis):
                 # Dispersion Plots for Genes and Isoforms
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='genes_dispersion.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='genes_dispersion.png',
-                        text='Dispersion Plot - Genes - ' + comparison_name)))
+                        text='Dispersion Plot - Genes - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_dispersion.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='isoforms_dispersion.png',
-                        text='Dispersion Plot - Isoforms - ' + comparison_name)))
+                        text='Dispersion Plot - Isoforms - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 # Squared Coefficient of Variation (SCV) Plots for Genes and Isoforms
@@ -2504,159 +2477,187 @@ class Tuxedo(bsf.Analysis):
                 str_list.append('<td class="center">')
                 if os.path.exists(
                         path=os.path.join(self.genome_directory, path_prefix, path_prefix + '_genes_scv.png')):
-                    str_list.append(relative_anchor(
+                    str_list.append(self.get_html_anchor(
                         prefix=path_prefix,
                         suffix='genes_scv.pdf',
-                        text=relative_image(
+                        text=self.get_html_image(
                             prefix=path_prefix,
                             suffix='genes_scv.png',
-                            text='Squared Coefficient of Variation (SCV) - Genes - ' + comparison_name)))
+                            text='Squared Coefficient of Variation (SCV) - Genes - ' + comparison_name,
+                            height='80',
+                            width='80')))
                 str_list.append('</td>\n')
 
                 str_list.append('<td class="center">')
                 if os.path.exists(
                         path=os.path.join(self.genome_directory, path_prefix, path_prefix + '_isoforms_scv.png')):
-                    str_list.append(relative_anchor(
+                    str_list.append(self.get_html_anchor(
                         prefix=path_prefix,
                         suffix='isoforms_scv.pdf',
-                        text=relative_image(
+                        text=self.get_html_image(
                             prefix=path_prefix,
                             suffix='isoforms_scv.png',
-                            text='Squared Coefficient of Variation (SCV) - Isoforms - ' + comparison_name)))
+                            text='Squared Coefficient of Variation (SCV) - Isoforms - ' + comparison_name,
+                            height='80',
+                            width='80')))
                 str_list.append('</td>\n')
 
                 # Density Plots for Genes without and with Replicates
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='genes_density_wo_replicates.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='genes_density_wo_replicates.png',
-                        text='Density Plot without Replicates - Genes - ' + comparison_name)))
+                        text='Density Plot without Replicates - Genes - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='genes_density_w_replicates.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='genes_density_w_replicates.png',
-                        text='Density Plot with Replicates - Genes - ' + comparison_name)))
+                        text='Density Plot with Replicates - Genes - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 # Density Plots for Isoforms without and with Replicates
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_density_wo_replicates.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='isoforms_density_wo_replicates.png',
-                        text='Density Plot without Replicates - Isoforms - ' + comparison_name)))
+                        text='Density Plot without Replicates - Isoforms - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_density_w_replicates.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='isoforms_density_w_replicates.png',
-                        text='Density Plot with Replicates - Isoforms - ' + comparison_name)))
+                        text='Density Plot with Replicates - Isoforms - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 # Box Plots for Genes without and with Replicates
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='genes_box_wo_replicates.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='genes_box_wo_replicates.png',
-                        text='Box Plot without Replicates - Genes - ' + comparison_name)))
+                        text='Box Plot without Replicates - Genes - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='genes_box_w_replicates.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='genes_box_w_replicates.png',
-                        text='Box Plot with Replicates - Genes - ' + comparison_name)))
+                        text='Box Plot with Replicates - Genes - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 # Box Plots for Isoforms with and without Replicates
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_box_wo_replicates.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='isoforms_box_wo_replicates.png',
-                        text='Box Plot without Replicates - Isoforms - ' + comparison_name)))
+                        text='Box Plot without Replicates - Isoforms - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_box_w_replicates.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='isoforms_box_w_replicates.png',
-                        text='Box Plot with Replicates - Isoforms - ' + comparison_name)))
+                        text='Box Plot with Replicates - Isoforms - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 # Scatter Matrix Plot for Genes and Isoforms
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='genes_scatter_matrix.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='genes_scatter_matrix.png',
-                        text='Scatter Matrix Plot - Genes - ' + comparison_name)))
+                        text='Scatter Matrix Plot - Genes - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='isoforms_scatter_matrix.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='isoforms_scatter_matrix.png',
-                        text='Scatter Matrix Plot - Isoforms - ' + comparison_name)))
+                        text='Scatter Matrix Plot - Isoforms - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 # Dendrogram Plot for Genes
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='genes_dendrogram.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='genes_dendrogram.png',
-                        text='Dendrogram Plot - Genes - ' + comparison_name)))
+                        text='Dendrogram Plot - Genes - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 # Volcano Matrix Plot for Genes
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='genes_volcano_matrix.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='genes_volcano_matrix.png',
-                        text='Volcano Matrix Plot - Genes - ' + comparison_name)))
+                        text='Volcano Matrix Plot - Genes - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 # Multidimensional Scaling Plot for Genes
@@ -2664,25 +2665,29 @@ class Tuxedo(bsf.Analysis):
                 str_list.append('<td class="center">')
                 if os.path.exists(
                         path=os.path.join(self.genome_directory, path_prefix, path_prefix + '_genes_mds.png')):
-                    str_list.append(relative_anchor(
+                    str_list.append(self.get_html_anchor(
                         prefix=path_prefix,
                         suffix='genes_mds.pdf',
-                        text=relative_image(
+                        text=self.get_html_image(
                             prefix=path_prefix,
                             suffix='genes_mds.png',
-                            text='Multidimensional Scaling Plot - Genes - ' + comparison_name)))
+                            text='Multidimensional Scaling Plot - Genes - ' + comparison_name,
+                            height='80',
+                            width='80')))
                 str_list.append('</td>\n')
 
                 # Principal Component Analysis Plot for Genes
 
                 str_list.append('<td class="center">')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=path_prefix,
                     suffix='genes_pca.pdf',
-                    text=relative_image(
+                    text=self.get_html_image(
                         prefix=path_prefix,
                         suffix='genes_pca.png',
-                        text='Principal Component Analysis Plot - Genes - ' + comparison_name)))
+                        text='Principal Component Analysis Plot - Genes - ' + comparison_name,
+                        height='80',
+                        width='80')))
                 str_list.append('</td>\n')
 
                 str_list.append('</tr>\n')
@@ -2709,35 +2714,41 @@ class Tuxedo(bsf.Analysis):
                         str_list.append('</td>\n')
 
                         str_list.append('<td class="center">')
-                        str_list.append(relative_anchor(
+                        str_list.append(self.get_html_anchor(
                             prefix=path_prefix,
                             suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_scatter.pdf')),
-                            text=relative_image(
+                            text=self.get_html_image(
                                 prefix=path_prefix,
                                 suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_scatter.png')),
-                                text='Scatter Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2'])))
+                                text='Scatter Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2'],
+                                height='80',
+                                width='80')))
                         str_list.append('</td>\n')
 
                         str_list.append('<td class="center"></td>\n')
 
                         str_list.append('<td class="center">')
-                        str_list.append(relative_anchor(
+                        str_list.append(self.get_html_anchor(
                             prefix=path_prefix,
                             suffix='_'.join((row_dict['V1'], row_dict['V2'], 'maplot.pdf')),
-                            text=relative_image(
+                            text=self.get_html_image(
                                 prefix=path_prefix,
                                 suffix='_'.join((row_dict['V1'], row_dict['V2'], 'maplot.png')),
-                                text='M vs A Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2'])))
+                                text='M vs A Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2'],
+                                height='80',
+                                width='80')))
                         str_list.append('</td>\n')
 
                         str_list.append('<td class="center">')
-                        str_list.append(relative_anchor(
+                        str_list.append(self.get_html_anchor(
                             prefix=path_prefix,
                             suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_volcano.pdf')),
-                            text=relative_image(
+                            text=self.get_html_image(
                                 prefix=path_prefix,
                                 suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_volcano.png')),
-                                text='Volcano Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2'])))
+                                text='Volcano Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2'],
+                                height='80',
+                                width='80')))
                         str_list.append('</td>\n')
 
                         str_list.append('<td class="center" colspan="4"></td>\n')
@@ -3308,45 +3319,10 @@ class DESeq(bsf.Analysis):
         return
 
     def report(self):
-
-        # FIXME: This is a duplication of the Tuxedo class above.
-        # Move to @classmethod Analysis.get_html_anchor(prefix, suffix, text)?
-        def relative_anchor(prefix, suffix, text):
-            """Create a HTML anchor element with a relative reference path.
-
-            <a href="prefix/prefix_suffix">text</a>
-            @param prefix: Prefix
-            @type prefix: str | unicode
-            @param suffix: Suffix
-            @type suffix: str | unicode
-            @param text: Link text
-            @type text: str | unicode
-            @return: HTML anchor element
-            @rtype: str | unicode
-            """
-            return '<a href="' + prefix + '/' + prefix + '_' + suffix + '">' + text + '</a>'
-
-        # FIXME: This is a duplication of the Tuxedo class above.
-        # Move to @classmethod Analysis.get_html_image(prefix, suffix, text)?
-        def relative_image(prefix, suffix, text):
-            """Create a HTML image element with a relative source path.
-
-            <img alt="text" src="prefix/prefix_suffix" height="80" width="80" />
-            @param prefix: Prefix
-            @type prefix: str | unicode
-            @param suffix: Suffix
-            @type suffix: str | unicode
-            @param text: Alternative text
-            @type text: str | unicode
-            @return: HTML image element
-            @rtype: str | unicode
-            """
-            return '<img' + \
-                   ' alt="' + text + '"' + \
-                   ' src="' + prefix + '/' + prefix + '_' + suffix + '"' + \
-                   ' height="80"' + \
-                   ' width="80"' + \
-                   ' />'
+        """Create a C{bsf.analyses.rna_seq.DESeq} report in HTML format.
+        @return:
+        @rtype:
+        """
 
         def relative_image_source(prefix, suffix):
             """Get a relative HTML image source path.
@@ -3440,14 +3416,14 @@ class DESeq(bsf.Analysis):
                     str_list.append('<td>' + lrt_row_dict['reduced_formula'] + '</td>\n')
                     # Differential genes
                     str_list.append('<td>' +
-                                    relative_anchor(
+                                    self.get_html_anchor(
                                         prefix=design_prefix,
                                         suffix='_'.join(('lrt', lrt_row_dict['reduced_name'], '.tsv')),
                                         text='<abbr title="Tab-Separated Value">TSV</abbr>') +
                                     '</td>\n')
                     # Significant genes
                     str_list.append('<td>' +
-                                    relative_anchor(
+                                    self.get_html_anchor(
                                         prefix=design_prefix,
                                         suffix='_'.join(('lrt', lrt_row_dict['reduced_name'], 'significant.tsv')),
                                         text='<abbr title="Tab-Separated Value">TSV</abbr>') +
@@ -3530,7 +3506,7 @@ class DESeq(bsf.Analysis):
                         denominator = 'intercept'
                     # Differential Genes
                     str_list.append('<td>' +
-                                    relative_anchor(
+                                    self.get_html_anchor(
                                         prefix=design_prefix,
                                         suffix='_'.join(('contrast', numerator, 'against', denominator,
                                                          'genes.tsv')),
@@ -3538,7 +3514,7 @@ class DESeq(bsf.Analysis):
                                     '</td>\n')
                     # Significant Genes
                     str_list.append('<td>' +
-                                    relative_anchor(
+                                    self.get_html_anchor(
                                         prefix=design_prefix,
                                         suffix='_'.join(('contrast', numerator, 'against', denominator,
                                                          'significant.tsv')),
@@ -3551,13 +3527,15 @@ class DESeq(bsf.Analysis):
                         str_list.append('<td></td>\n')
                     # MA Plot
                     str_list.append('<td>' +
-                                    relative_anchor(
+                                    self.get_html_anchor(
                                         prefix=design_prefix,
                                         suffix='_'.join(('contrast', numerator, 'against', denominator, 'ma.pdf')),
-                                        text=relative_image(
+                                        text=self.get_html_image(
                                             prefix=design_prefix,
                                             suffix='_'.join(('contrast', numerator, 'against', denominator, 'ma.png')),
-                                            text='MA plot')) +
+                                            text='MA plot',
+                                            height='80',
+                                            width='80')) +
                                     '</td>\n')
                     str_list.append('</tr>\n')
 
@@ -3601,13 +3579,15 @@ class DESeq(bsf.Analysis):
                                         relative_image_source(prefix=design_prefix, suffix=plot_path_png))):
                                 str_list.append(
                                     '<td>' +
-                                    relative_anchor(
+                                    self.get_html_anchor(
                                         prefix=design_prefix,
                                         suffix=plot_path_pdf,
-                                        text=relative_image(
+                                        text=self.get_html_image(
                                             prefix=design_prefix,
                                             suffix=plot_path_png,
-                                            text=plot_type + ' plot')) +
+                                            text=plot_type + ' plot',
+                                            height='80',
+                                            width='80')) +
                                     '</td>\n')
                             else:
                                 str_list.append('<td></td>\n')
@@ -3648,56 +3628,56 @@ class DESeq(bsf.Analysis):
                 str_list.append('<td>' + design_row_dict['design'] + '</td>\n')
 
                 str_list.append('<td>')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=design_prefix,
                     suffix='counts_raw.tsv',
                     text='<abbr title="Tab-Separated Value">TSV</abbr>'))
                 str_list.append('</td>\n')
 
                 str_list.append('<td>')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=design_prefix,
                     suffix='counts_vst_blind.tsv',
                     text='<abbr title="Tab-Separated Value">TSV</abbr>'))
                 str_list.append('</td>\n')
 
                 str_list.append('<td>')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=design_prefix,
                     suffix='counts_vst_model.tsv',
                     text='<abbr title="Tab-Separated Value">TSV</abbr>'))
                 str_list.append('</td>\n')
 
                 str_list.append('<td>')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=design_prefix,
                     suffix='fpkms.tsv',
                     text='<abbr title="Tab-Separated Value">TSV</abbr>'))
                 str_list.append('</td>\n')
 
                 str_list.append('<td>')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=design_prefix,
                     suffix='samples.tsv',
                     text='<abbr title="Tab-Separated Value">TSV</abbr>'))
                 str_list.append('</td>\n')
 
                 str_list.append('<td>')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=design_prefix,
                     suffix='annotation.tsv',
                     text='<abbr title="Tab-Separated Value">TSV</abbr>'))
                 str_list.append('</td>\n')
 
                 str_list.append('<td>')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=design_prefix,
                     suffix='contrasts_summary.tsv',
                     text='<abbr title="Tab-Separated Value">TSV</abbr>'))
                 str_list.append('</td>\n')
 
                 str_list.append('<td>')
-                str_list.append(relative_anchor(
+                str_list.append(self.get_html_anchor(
                     prefix=design_prefix,
                     suffix='lrt_summary.tsv',
                     text='<abbr title="Tab-Separated Value">TSV</abbr>'))
