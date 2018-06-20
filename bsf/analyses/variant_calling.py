@@ -947,7 +947,7 @@ class VariantCallingGATK(bsf.Analysis):
     @ivar annotation_resources_dict: Python C{dict} of Python C{str} (annotation resource name) key and
         Python C{tuple} of
         Python C{str} (file path) and Python C{list} of Python C{str} (annotation) value data
-    @type annotation_resources_dict: dict[str, (str | unicode, list[str])]
+    @type annotation_resources_dict: dict[str, (str | unicode, list[str])] | None
     @ivar truth_sensitivity_filter_level_indel: Truth sensitivity filter level for INDELs
     @type truth_sensitivity_filter_level_indel: str | None
     @ivar truth_sensitivity_filter_level_snp: Truth sensitivity filter level for SNPs
@@ -1160,7 +1160,7 @@ class VariantCallingGATK(bsf.Analysis):
         @param annotation_resources_dict: Python C{dict} of Python C{str} (annotation resource name) key and
             Python C{tuple} of
             Python C{str} (file path) and Python C{list} of Python C{str} (annotation) value data
-        @type annotation_resources_dict: dict[str, (str | unicode, list[str])]
+        @type annotation_resources_dict: dict[str, (str | unicode, list[str])] | None
         @param truth_sensitivity_filter_level_indel: Truth sensitivity filter level for INDELs
         @type truth_sensitivity_filter_level_indel: str | None
         @param truth_sensitivity_filter_level_snp: Truth sensitivity filter level for SNPs
@@ -1267,10 +1267,7 @@ class VariantCallingGATK(bsf.Analysis):
         self.known_sites_recalibration = known_sites_recalibration
         self.known_somatic_discovery = known_somatic_discovery
 
-        if annotation_resources_dict is None:
-            self.annotation_resources_dict = dict()
-        else:
-            self.annotation_resources_dict = annotation_resources_dict
+        self.annotation_resources_dict = annotation_resources_dict
 
         self.truth_sensitivity_filter_level_indel = truth_sensitivity_filter_level_indel
         self.truth_sensitivity_filter_level_snp = truth_sensitivity_filter_level_snp
@@ -1371,14 +1368,15 @@ class VariantCallingGATK(bsf.Analysis):
             @return: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
             @rtype: dict[str, dict[str, str | unicode]] | None
             """
-
             if variation_type not in ('indel', 'snp'):
-                raise Exception("Variation type has to be 'indel' or 'snp', not {!r}.".format(variation_type))
+                raise Exception("Variation type has to be 'indel' or 'snp', not " + repr(variation_type) + '.')
 
             # The vqsr_resources_indel|snp options of the current configuration section hold a comma-separated list
             # of resources that should correspond to a sub-section in the configuration file.
             vqsr_option = '_'.join(('vqsr_resources', variation_type))
             if config_parser.has_option(section=section, option=vqsr_option):
+                if vqsr_resources_dict is None:
+                    vqsr_resources_dict = dict()
                 # Split the resource list on a comma, split white space characters and remove remaining empty strings.
                 for resource_key in filter(
                         lambda x: x != '',
@@ -1399,15 +1397,13 @@ class VariantCallingGATK(bsf.Analysis):
                                     option=resource_option)
                             else:
                                 raise Exception(
-                                    'Missing configuration option {!r} in section {!r}'.format(
-                                        resource_option,
-                                        resource_section))
+                                    'Missing configuration option ' + repr(resource_option) +
+                                    ' in section ' + repr(resource_section) + '.')
                     else:
                         raise Exception(
-                            'Missing configuration section {!r} declared in option {!r} {!r}.'.format(
-                                resource_section,
-                                vqsr_option,
-                                config_parser.get(section=section, option=vqsr_option)))
+                            'Missing configuration section ' + repr(resource_section) +
+                            ' declared in option ' + repr(vqsr_option) + ' ' +
+                            repr(config_parser.get(section=section, option=vqsr_option)) + '.')
 
             return vqsr_resources_dict
 
@@ -1416,13 +1412,15 @@ class VariantCallingGATK(bsf.Analysis):
 
             @param annotation_resources_dict: Python dict of Python str (annotation resource name) key and
                 Python tuple of Python str (file path) and Python list of Python str (annotation) value data
-            @type annotation_resources_dict: dict
-            @return:
-            @rtype:
+            @type annotation_resources_dict: dict[str, (str | unicode, list[str])]
+            @return: Python dict of Python str (annotation resource name) key and
+                Python tuple of Python str (file path) and Python list of Python str (annotation) value data
+            @rtype: dict[str, (str | unicode, list[str])]
             """
-
             annotation_option = 'annotation_resources'
             if config_parser.has_option(section=section, option=annotation_option):
+                if annotation_resources_dict is None:
+                    annotation_resources_dict = dict()
                 # Split the resource list on a comma, split white space characters and remove remaining empty strings.
                 for resource_name in filter(
                         lambda x: x != '',
@@ -1437,9 +1435,8 @@ class VariantCallingGATK(bsf.Analysis):
                             file_path = config_parser.get(section=resource_section, option=resource_option)
                         else:
                             raise Exception(
-                                'Missing configuration option {!r} in configuration section {!r}.'.format(
-                                    resource_option,
-                                    resource_section))
+                                'Missing configuration option ' + repr(resource_option) +
+                                ' in configuration section ' + repr(resource_section) + '.')
                         resource_option = 'annotations'
                         if config_parser.has_option(section=resource_section, option=resource_option):
                             # Split the annotation list on a comma, split white space characters and
@@ -1452,19 +1449,17 @@ class VariantCallingGATK(bsf.Analysis):
                                         option=resource_option).split(',')))
                         else:
                             raise Exception(
-                                'Missing configuration option {!r} in configuration section {!r}.'.format(
-                                    resource_option,
-                                    resource_section))
+                                'Missing configuration option ' + repr(resource_option) +
+                                ' in configuration section ' + repr(resource_section) + '.')
                         # Create a dict key and a tuple of a Python str and Python list.
                         annotation_resources_dict[resource_name] = file_path, annotation_list
                     else:
                         raise Exception(
-                            'Missing configuration section {!r} declared in option {!r} {!r}.'.format(
-                                resource_section,
-                                annotation_option,
-                                config_parser.get(section=section, option=annotation_option)))
+                            'Missing configuration section ' + repr(resource_section) +
+                            ' declared in option ' + repr(annotation_option) + ' ' +
+                            repr(config_parser.get(section=section, option=annotation_option)) + '.')
 
-            return
+            return annotation_resources_dict
 
         # Start of set_configuration() method body.
 
@@ -1599,7 +1594,8 @@ class VariantCallingGATK(bsf.Analysis):
 
         # Set additionally requested annotation resources for the GATK AnnotateVariants step.
 
-        set_annotation_configuration(annotation_resources_dict=self.annotation_resources_dict)
+        self.annotation_resources_dict = set_annotation_configuration(
+            annotation_resources_dict=self.annotation_resources_dict)
 
         # Single VCF file of known sites for the
         # GATK HaplotypeCaller and GenotypeGVCFs steps.
@@ -2812,16 +2808,17 @@ class VariantCallingGATK(bsf.Analysis):
                 _runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
 
             # Add annotation resources and their corresponding expression options.
-            for _resource_name, (_file_path, _annotation_list) in self.annotation_resources_dict.iteritems():
-                if _file_path and _annotation_list:
-                    _runnable_step.add_gatk_option(
-                        key=':'.join(('resource', _resource_name)),
-                        value=_file_path)
-                    for _annotation in _annotation_list:
+            if self.annotation_resources_dict:  # not None and not empty
+                for _resource_name, (_file_path, _annotation_list) in self.annotation_resources_dict.iteritems():
+                    if _file_path and _annotation_list:
                         _runnable_step.add_gatk_option(
-                            key='expression',
-                            value='.'.join((_resource_name, _annotation)),
-                            override=True)
+                            key=':'.join(('resource', _resource_name)),
+                            value=_file_path)
+                        for _annotation in _annotation_list:
+                            _runnable_step.add_gatk_option(
+                                key='expression',
+                                value='.'.join((_resource_name, _annotation)),
+                                override=True)
 
             _runnable_step.add_gatk_option(key='variant', value=vcf_file_path)
             # The AlleleBalanceBySample annotation does not seem to work in either GATK 3.1-1 or GATK 3.2-0.
@@ -2893,11 +2890,11 @@ class VariantCallingGATK(bsf.Analysis):
             _sub_command.add_option_long(key='stats_file', value=file_path_annotate.vep_statistics)
             # Cache options
             _sub_command.add_switch_long(key='cache')
-            # FIXME: For Ensembl VEP 91.
+            # FIXME: For Ensembl VEP 91 'offline'.
             # _sub_command.add_switch_long(key='offline')
             _sub_command.add_option_long(key='dir_cache', value=self.vep_cache)
             _sub_command.add_option_long(key='dir_plugins', value=self.vep_plugin)
-            # FIXME: For Ensembl VEP 91.
+            # FIXME: For Ensembl VEP 91 'fasta_dir'.
             # _sub_command.add_option_long(key='fasta_dir', value=self.vep_fasta)
             # Other annotation sources
             _sub_command.add_option_long(  # TODO: Has to be configurable
@@ -3138,15 +3135,16 @@ class VariantCallingGATK(bsf.Analysis):
 
         # Dict of annotation resources
 
-        for resource_name, (file_path, annotation_list) in self.annotation_resources_dict.iteritems():
-            file_path = self.configuration.get_absolute_path(
-                file_path=file_path,
-                default_path=self.get_gatk_bundle_path)
-            if os.path.exists(file_path):
-                self.annotation_resources_dict[resource_name] = file_path, annotation_list
-            else:
-                raise Exception('The file path ' + repr(file_path) +
-                                ' in annotation resource ' + repr(resource_name) + ' does not exist.')
+        if self.annotation_resources_dict:  # not None and not empty
+            for resource_name, (file_path, annotation_list) in self.annotation_resources_dict.iteritems():
+                file_path = self.configuration.get_absolute_path(
+                    file_path=file_path,
+                    default_path=self.get_gatk_bundle_path)
+                if os.path.exists(file_path):
+                    self.annotation_resources_dict[resource_name] = file_path, annotation_list
+                else:
+                    raise Exception('The file path ' + repr(file_path) +
+                                    ' in annotation resource ' + repr(resource_name) + ' does not exist.')
 
         # Known sites for cohort variant discovery
 
@@ -4660,13 +4658,14 @@ class VariantCallingGATK(bsf.Analysis):
             for field_name in variants_to_table_fields['snpeff']:
                 runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
             # Automatically add all fields defined for the Variant Annotator resources, above.
-            for resource_name, (file_path, annotation_list) in self.annotation_resources_dict.iteritems():
-                if file_path and annotation_list:
-                    for annotation in annotation_list:
-                        runnable_step.add_gatk_option(
-                            key='fields',
-                            value='.'.join((resource_name, annotation)),
-                            override=True)
+            if self.annotation_resources_dict:  # not None and not empty
+                for resource_name, (file_path, annotation_list) in self.annotation_resources_dict.iteritems():
+                    if file_path and annotation_list:
+                        for annotation in annotation_list:
+                            runnable_step.add_gatk_option(
+                                key='fields',
+                                value='.'.join((resource_name, annotation)),
+                                override=True)
 
             # Split the Ensembl Variant Effect Predictor-annotated multi-sample VCF file.
 
@@ -4907,13 +4906,14 @@ class VariantCallingGATK(bsf.Analysis):
             for field_name in variants_to_table_fields['snpeff']:
                 runnable_step.add_gatk_option(key='fields', value=field_name, override=True)
             # Automatically add all fields defined for the Variant Annotator resources, above.
-            for resource_name, (file_path, annotation_list) in self.annotation_resources_dict.iteritems():
-                if file_path and annotation_list:
-                    for annotation in annotation_list:
-                        runnable_step.add_gatk_option(
-                            key='fields',
-                            value='.'.join((resource_name, annotation)),
-                            override=True)
+            if self.annotation_resources_dict:  # not None and not empty
+                for resource_name, (file_path, annotation_list) in self.annotation_resources_dict.iteritems():
+                    if file_path and annotation_list:
+                        for annotation in annotation_list:
+                            runnable_step.add_gatk_option(
+                                key='fields',
+                                value='.'.join((resource_name, annotation)),
+                                override=True)
 
             # Split the somatic Ensembl VEP-annotated VCF file into a TSV file.
 
