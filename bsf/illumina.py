@@ -1022,14 +1022,14 @@ class RunFolder(object):
         # Check the Illumina Run Folder directory.
         file_path = bsf.standards.Configuration.get_absolute_path(
             file_path=name,
-            default_path=bsf.standards.Default.absolute_illumina_run())
+            default_path=bsf.standards.FilePath.get_illumina_run(absolute=True))
         if os.path.exists(file_path):
             return file_path
 
         # Check the Illumina Sequence Analysis Viewer directory.
         file_path = bsf.standards.Configuration.get_absolute_path(
             file_path=name,
-            default_path=bsf.standards.Default.absolute_illumina_sav())
+            default_path=bsf.standards.FilePath.get_illumina_sav(absolute=True))
         if os.path.exists(file_path):
             return file_path
 

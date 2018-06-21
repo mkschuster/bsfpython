@@ -846,7 +846,7 @@ class VariantCallingGATKTargetIntervals(object):
             if target_intervals.targets_path and not os.path.isabs(target_intervals.targets_path):
                 target_intervals.targets_path = bsf.standards.Configuration.get_absolute_path(
                     file_path=target_intervals.targets_path,
-                    default_path=bsf.standards.Default.absolute_intervals())
+                    default_path=bsf.standards.FilePath.get_resource_intervals(absolute=True))
 
         if 'Probe Intervals' in sample.annotation_dict:
             probe_interval_list = sample.annotation_dict['Probe Intervals']
@@ -858,7 +858,7 @@ class VariantCallingGATKTargetIntervals(object):
             if target_intervals.probes_path and not os.path.isabs(target_intervals.probes_path):
                 target_intervals.probes_path = bsf.standards.Configuration.get_absolute_path(
                     file_path=target_intervals.probes_path,
-                    default_path=bsf.standards.Default.absolute_intervals())
+                    default_path=bsf.standards.FilePath.get_resource_intervals(absolute=True))
 
         return target_intervals
 
@@ -1336,9 +1336,10 @@ class VariantCallingGATK(bsf.Analysis):
         @return: Absolute GATK bundle directory
         @rtype: str | unicode
         """
-        return bsf.standards.Default.absolute_gatk_bundle(
+        return bsf.standards.FilePath.get_resource_gatk_bundle(
             gatk_bundle_version=self.gatk_bundle_version,
-            genome_version=self.genome_version)
+            genome_version=self.genome_version,
+            absolute=True)
 
     def set_configuration(self, configuration, section):
         """Set instance variables of a C{bsf.analyses.variant_calling.VariantCallingGATK} via a
@@ -3125,7 +3126,7 @@ class VariantCallingGATK(bsf.Analysis):
             for i, file_path in enumerate(self.accessory_cohort_gvcfs):
                 file_path = self.configuration.get_absolute_path(
                     file_path=file_path,
-                    default_path=bsf.standards.Default.absolute_projects())
+                    default_path=bsf.standards.FilePath.get_projects(absolute=True))
                 if os.path.exists(file_path):
                     self.accessory_cohort_gvcfs[i] = file_path
                 else:
@@ -3188,7 +3189,7 @@ class VariantCallingGATK(bsf.Analysis):
             for i, file_path in enumerate(self.known_somatic_discovery):
                 file_path = self.configuration.get_absolute_path(
                     file_path=file_path,
-                    default_path=bsf.standards.Default.absolute_cosmic())
+                    default_path=bsf.standards.FilePath.get_resource_cosmic(absolute=True))
                 if os.path.exists(file_path):
                     self.known_somatic_discovery[i] = file_path
                 else:
@@ -3252,7 +3253,7 @@ class VariantCallingGATK(bsf.Analysis):
         if self.genome_annotation_gtf and not os.path.isabs(self.genome_annotation_gtf):
             self.genome_annotation_gtf = self.configuration.get_absolute_path(
                 file_path=self.genome_annotation_gtf,
-                default_path=bsf.standards.Default.absolute_intervals())
+                default_path=bsf.standards.FilePath.get_resource_intervals(absolute=True))
             # TODO: Use the transcriptome directory as the default location.
             # Create a new, genome-specific configuration object in the bsf.standards module.
 

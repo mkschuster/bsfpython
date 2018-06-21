@@ -944,7 +944,7 @@ class Tuxedo(bsf.Analysis):
 
         if not self.genome_index_path:
             self.genome_index_path = os.path.join(
-                bsf.standards.Default.absolute_genome_resource(genome_version=self.genome_version),
+                bsf.standards.FilePath.get_resource_genome(genome_version=self.genome_version, absolute=True),
                 default.indices['bowtie2'],
                 self.genome_version)
 
@@ -964,7 +964,9 @@ class Tuxedo(bsf.Analysis):
             # prepend the default transcriptomes directory.
             self.transcriptome_index_path = self.configuration.get_absolute_path(
                 file_path=self.transcriptome_index_path,
-                default_path=bsf.standards.Default.absolute_transcriptome_resource(transcriptome_version=''))
+                default_path=bsf.standards.FilePath.get_resource_transcriptome(
+                    transcriptome_version=None,
+                    absolute=True))
 
             if not os.path.isdir(self.transcriptome_index_path):
                 raise Exception('Reference transcriptome index directory {!r} does not exist.'.
@@ -992,11 +994,12 @@ class Tuxedo(bsf.Analysis):
                                 format(self.transcriptome_gtf_path))
         elif self.transcriptome_gtf_path:
             # Check if transcriptome_gtf_path is absolute and if not,
-            # prepend the default transcriptomes directory.
+            # prepend the default transcriptome directory.
             self.transcriptome_gtf_path = self.configuration.get_absolute_path(
                 file_path=self.transcriptome_gtf_path,
-                default_path=bsf.standards.Default.absolute_transcriptome_resource(
-                    transcriptome_version=self.transcriptome_version))
+                default_path=bsf.standards.FilePath.get_resource_transcriptome(
+                    transcriptome_version=self.transcriptome_version,
+                    absolute=True))
 
             if not os.path.exists(self.transcriptome_gtf_path):
                 raise Exception('Reference transcriptome GTF file {!r} does not exist.'.
@@ -1004,15 +1007,17 @@ class Tuxedo(bsf.Analysis):
         else:
             # Neither was provided, automatically discover on the basis of the transcriptome version.
             self.transcriptome_index_path = os.path.join(
-                bsf.standards.Default.absolute_transcriptome_resource(
-                    transcriptome_version=self.transcriptome_version),
+                bsf.standards.FilePath.get_resource_transcriptome(
+                    transcriptome_version=self.transcriptome_version,
+                    absolute=True),
                 default.indices['tophat'],
                 self.transcriptome_version,  # TopHat puts the transcriptome index into a sub directory.
                 self.transcriptome_version)
 
             self.transcriptome_gtf_path = os.path.join(
-                bsf.standards.Default.absolute_transcriptome_resource(
-                    transcriptome_version=self.transcriptome_version),
+                bsf.standards.FilePath.get_resource_transcriptome(
+                    transcriptome_version=self.transcriptome_version,
+                    absolute=True),
                 default.indices['tophat'],
                 self.transcriptome_version) + '.gtf'
             if not os.path.exists(self.transcriptome_gtf_path):

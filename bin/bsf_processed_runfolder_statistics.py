@@ -32,9 +32,10 @@ import os
 import re
 import stat
 
-from bsf.standards import Default
+import bsf.standards
 
-parser = argparse.ArgumentParser(description='Collect statistics from a processed run folder after de-multiplexing.')
+parser = argparse.ArgumentParser(
+    description='Collect statistics from a processed run folder after de-multiplexing.')
 
 parser.add_argument('input',
                     help='Processed run folder directory')
@@ -43,8 +44,9 @@ args = parser.parse_args()
 
 prf_path = args.input
 
-if not os.path.isabs(prf_path):
-    prf_path = os.path.join(Default.absolute_sequences(), prf_path)
+prf_path = bsf.standards.Configuration.get_absolute_path(
+    file_path=prf_path,
+    default_path=bsf.standards.FilePath.get_sequences(absolute=True))
 
 if not os.path.exists(path=prf_path):
     raise Exception('Could not find processed run folder directory {!r}'.format(prf_path))

@@ -294,7 +294,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
-            default_path=bsf.standards.Default.absolute_illumina_run())
+            default_path=bsf.standards.FilePath.get_illumina_run(absolute=True))
 
         # The Illumina Run Folder name would also be available from the bsf.illumina.RunFolder.get_name property below,
         # but using the file path provides more flexibility outside of the fixed runParameters.xml configuration file.
@@ -899,7 +899,7 @@ class IlluminaRunFolderRestore(bsf.Analysis):
 
         self.illumina_directory = self.configuration.get_absolute_path(
             file_path=self.illumina_directory,
-            default_path=bsf.standards.Default.absolute_illumina_run())
+            default_path=bsf.standards.FilePath.get_illumina_run(absolute=True))
 
         if not os.path.isdir(self.illumina_directory):
             raise Exception('The directory of Illumina Run Folder directories {!r} does not exist.'.

@@ -233,34 +233,6 @@ class Default(object):
     Attributes:
     @cvar global_default: Global C{bsf.standards.Default}
     @type global_default: bsf.standards.Default
-    @ivar directory_cache: Local cache directory on the compute node (e.g. /dev/shm)
-    @type directory_cache: str | unicode
-    @ivar directory_home: Home directory for all data
-    @type directory_home: str | unicode
-    @ivar directory_illumina_run: Sub-directory for Illumina Run Folders
-    @type directory_illumina_run: str | unicode
-    @ivar directory_illumina_sav: Sub-directory for Illumina Sequence Analysis Viewer (SAV) Folders
-    @type directory_illumina_sav: str | unicode
-    @ivar directory_sequences: Sub-directory for sequences
-    @type directory_sequences: str | unicode
-    @ivar directory_samples: Sub-directory for processed samples
-    @type directory_samples: str | unicode
-    @ivar directory_projects: Sub-directory for processed projects
-    @type directory_projects: str | unicode
-    @ivar directory_public_html: Sub-directory for the web server
-    @type directory_public_html: str | unicode
-    @ivar directory_genomes: Directory for genomes and their annotation
-    @type directory_genomes: str | unicode
-    @ivar directory_transcriptomes: Sub-directory for transcriptomes
-    @type directory_transcriptomes: str | unicode
-    @ivar directory_gatk_bundle: Sub-directory for GATK bundle data
-    @type directory_gatk_bundle: str | unicode
-    @ivar directory_intervals: Directory for interval list files
-    @type directory_intervals: str | unicode
-    @ivar directory_cosmic: Sub-directory for COSMIC data
-    @type directory_cosmic: str | unicode
-    @ivar directory_snpeff_data: snpEff database directory
-    @type directory_snpeff_data: str | unicode
     @ivar indices: Python C{dict} of program name key and index directory name value data
     @type indices: dict[str, str]
     @ivar genome_aliases_ucsc_dict: Alias of genome assembly names for the UCSC Genome Browser
@@ -301,52 +273,10 @@ class Default(object):
 
     def __init__(
             self,
-            directory_cache=None,
-            directory_home=None,
-            directory_illumina_run=None,
-            directory_illumina_sav=None,
-            directory_sequences=None,
-            directory_samples=None,
-            directory_projects=None,
-            directory_public_html=None,
-            directory_genomes=None,
-            directory_transcriptomes=None,
-            directory_gatk_bundle=None,
-            directory_intervals=None,
-            directory_cosmic=None,
-            directory_snpeff_data=None,
             indices=None,
             genome_aliases_ucsc_dict=None):
         """Initialise a C{bsf.standards.Default} object.
 
-        @param directory_cache: Local cache directory on the compute node (e.g. /dev/shm)
-        @type directory_cache: str | unicode
-        @param directory_home: Home directory for all data
-        @type directory_home: str | unicode
-        @param directory_illumina_run: Sub-directory for Illumina Run Folders
-        @type directory_illumina_run: str | unicode
-        @param directory_illumina_sav: Sub-directory for Illumina Sequence Analysis Viewer (SAV) Folders
-        @type directory_illumina_sav: str | unicode
-        @param directory_sequences: Sub-directory for sequences
-        @type directory_sequences: str | unicode
-        @param directory_samples: Sub-directory for processed samples
-        @type directory_samples: str | unicode
-        @param directory_projects: Sub-directory for processed projects
-        @type directory_projects: str | unicode
-        @param directory_public_html: Sub-directory for the web server
-        @type directory_public_html: str | unicode
-        @param directory_genomes: Directory for genomes and their annotation
-        @type directory_genomes: str | unicode
-        @param directory_transcriptomes: Sub-directory for transcriptomes
-        @type directory_transcriptomes: str | unicode
-        @param directory_gatk_bundle: Sub-directory for GATK bundle data
-        @type directory_gatk_bundle: str | unicode
-        @param directory_intervals: Directory for interval list files
-        @type directory_intervals: str | unicode
-        @param directory_cosmic: Sub-directory for COSMIC data
-        @type directory_cosmic: str | unicode
-        @param directory_snpeff_data: snpEff database directory
-        @type directory_snpeff_data: str | unicode
         @param indices: Python C{dict} of program name key and index directory name value data
         @type indices: dict[str, str]
         @param genome_aliases_ucsc_dict: Alias of genome assembly names for the UCSC Genome Browser
@@ -356,78 +286,6 @@ class Default(object):
         """
 
         super(Default, self).__init__()
-
-        # Set directory information.
-
-        if directory_cache is None:
-            self.directory_cache = str()
-        else:
-            self.directory_cache = directory_cache
-
-        if directory_home is None:
-            self.directory_home = str()
-        else:
-            self.directory_home = directory_home
-
-        if directory_illumina_run is None:
-            self.directory_illumina_run = str()
-        else:
-            self.directory_illumina_run = directory_illumina_run
-
-        if directory_illumina_sav is None:
-            self.directory_illumina_sav = str()
-        else:
-            self.directory_illumina_sav = directory_illumina_sav
-
-        if directory_sequences is None:
-            self.directory_sequences = str()
-        else:
-            self.directory_sequences = directory_sequences
-
-        if directory_samples is None:
-            self.directory_samples = str()
-        else:
-            self.directory_samples = directory_samples
-
-        if directory_projects is None:
-            self.directory_projects = str()
-        else:
-            self.directory_projects = directory_projects
-
-        if directory_public_html is None:
-            self.directory_public_html = str()
-        else:
-            self.directory_public_html = directory_public_html
-
-        if directory_genomes is None:
-            self.directory_genomes = str()
-        else:
-            self.directory_genomes = directory_genomes
-
-        if directory_transcriptomes is None:
-            self.directory_transcriptomes = str()
-        else:
-            self.directory_transcriptomes = directory_transcriptomes
-
-        if directory_gatk_bundle is None:
-            self.directory_gatk_bundle = str()
-        else:
-            self.directory_gatk_bundle = directory_gatk_bundle
-
-        if directory_intervals is None:
-            self.directory_intervals = str()
-        else:
-            self.directory_intervals = directory_intervals
-
-        if directory_cosmic is None:
-            self.directory_cosmic = str()
-        else:
-            self.directory_cosmic = directory_cosmic
-
-        if directory_snpeff_data is None:
-            self.directory_snpeff_data = str()
-        else:
-            self.directory_snpeff_data = directory_snpeff_data
 
         # Set index information.
 
@@ -462,23 +320,6 @@ class Default(object):
         # Reading configuration cannot be done via a single Python dict,
         # because each option really needs defining.
 
-        section = 'directories'
-
-        self.directory_cache = cp.get(section=section, option='cache')
-        self.directory_home = cp.get(section=section, option='home')
-        self.directory_illumina_run = cp.get(section=section, option='illumina_run')
-        self.directory_illumina_sav = cp.get(section=section, option='illumina_sav')
-        self.directory_sequences = cp.get(section=section, option='sequences')
-        self.directory_samples = cp.get(section=section, option='samples')
-        self.directory_projects = cp.get(section=section, option='projects')
-        self.directory_public_html = cp.get(section=section, option='public_html')
-        self.directory_genomes = cp.get(section=section, option='genomes')
-        self.directory_transcriptomes = cp.get(section=section, option='transcriptomes')
-        self.directory_gatk_bundle = cp.get(section=section, option='gatk_bundle')
-        self.directory_intervals = cp.get(section=section, option='intervals')
-        self.directory_cosmic = cp.get(section=section, option='cosmic')
-        self.directory_snpeff_data = cp.get(section=section, option='snpeff_data')
-
         section = 'indices'
 
         for option in cp.options(section=section):
@@ -491,163 +332,6 @@ class Default(object):
                 self.genome_aliases_ucsc_dict[option] = cp.get(section=section, option=option)
 
         return
-
-    @staticmethod
-    def absolute_cache():
-        """
-        Get the absolute directory path for the cache directory.
-
-        @return: Absolute path to the cache directory
-        @rtype: str | unicode
-        """
-
-        default = Default.get_global_default()
-
-        return default.directory_cache
-
-    @staticmethod
-    def absolute_home():
-        """
-        Get the absolute directory path for the home directory.
-
-        @return: Absolute path to the home directory
-        @rtype: str | unicode
-        """
-
-        default = Default.get_global_default()
-
-        return default.directory_home
-
-    @staticmethod
-    def absolute_illumina_run():
-        """Get the absolute directory path for Illumina Run Folders.
-
-        @return: Absolute path to the Illumina Run Folder directory
-        @rtype: str | unicode
-        """
-
-        default = Default.get_global_default()
-
-        if os.path.isabs(default.directory_illumina_run):
-            return default.directory_illumina_run
-        else:
-            return os.path.join(default.directory_home, default.directory_illumina_run)
-
-    @staticmethod
-    def absolute_illumina_sav():
-        """Get the absolute directory path for Illumina Sequence Analysis Viewer (SAV) Folders.
-
-        @return: Absolute path to the Illumina Sequence Analysis Viewer (SAV) Folders directory
-        @rtype: str | unicode
-        """
-
-        default = Default.get_global_default()
-
-        if os.path.isabs(default.directory_illumina_sav):
-            return default.directory_illumina_sav
-        else:
-            return os.path.join(default.directory_home, default.directory_illumina_sav)
-
-    @staticmethod
-    def absolute_sequences():
-        """Get the absolute directory path for processed lanes.
-
-        @return: Absolute path to the processed lanes directory
-        @rtype: str | unicode
-        """
-
-        default = Default.get_global_default()
-
-        if os.path.isabs(default.directory_sequences):
-            return default.directory_sequences
-        else:
-            return os.path.join(default.directory_home, default.directory_sequences)
-
-    @staticmethod
-    def absolute_projects():
-        """Get the absolute directory path for projects.
-
-        @return: Absolute path to the projects directory
-        @rtype: str | unicode
-        """
-
-        default = Default.get_global_default()
-
-        if os.path.isabs(default.directory_projects):
-            return default.directory_projects
-        else:
-            return os.path.join(default.directory_home, default.directory_projects)
-
-    @staticmethod
-    def absolute_samples():
-        """Get the absolute directory path for processed samples.
-
-        @return: Absolute path to the processed samples directory
-        @rtype: str | unicode
-        """
-
-        default = Default.get_global_default()
-
-        if os.path.isabs(default.directory_samples):
-            return default.directory_samples
-        else:
-            return os.path.join(default.directory_home, default.directory_samples)
-
-    @staticmethod
-    def absolute_public_html():
-        """Get the absolute directory path for public HTML documents.
-
-        @return: Absolute path to the public HTML directory
-        @rtype: str | unicode
-        """
-
-        default = Default.get_global_default()
-
-        if os.path.isabs(default.directory_public_html):
-            return default.directory_public_html
-        else:
-            return os.path.join(default.directory_home, default.directory_public_html)
-
-    @staticmethod
-    def absolute_gatk_bundle(gatk_bundle_version, genome_version):
-        """Get the absolute directory path for the Genome Analysis Toolkit (GATK) bundle.
-
-        @param gatk_bundle_version: The GATK bundle version
-        @type gatk_bundle_version: str
-        @param genome_version: The genome version (e.g. b37, ...)
-        @type genome_version: str
-        @return: Absolute path to the GATK bundle directory
-        @rtype: str | unicode
-        """
-
-        default = Default.get_global_default()
-
-        file_path = default.directory_gatk_bundle
-
-        if gatk_bundle_version:
-            file_path = os.path.join(file_path, gatk_bundle_version)
-
-        if genome_version:
-            file_path = os.path.join(file_path, genome_version)
-
-        return file_path
-
-    @staticmethod
-    def absolute_genome_resource(genome_version):
-        """Get the absolute path to the genome resource directory.
-
-        @param genome_version: The genome version (e.g. mm10, ...)
-        @type genome_version: str
-        @return: Absolute path to the genome resource directory
-        @rtype: str | unicode
-        """
-
-        default = Default.get_global_default()
-
-        if genome_version:
-            return os.path.join(default.directory_genomes, genome_version)
-        else:
-            return default.directory_genomes
 
     @staticmethod
     def absolute_genome_index(genome_version, genome_index):
@@ -668,7 +352,7 @@ class Default(object):
             raise Exception('Unknown genome index name ' + repr(genome_index) + '.')
 
         return os.path.join(
-            Default.absolute_genome_resource(genome_version=genome_version),
+            FilePath.get_resource_genome(genome_version=genome_version, absolute=True),
             default.indices[genome_index],
             genome_version)
 
@@ -686,53 +370,6 @@ class Default(object):
         """
 
         return Default.absolute_genome_index(genome_version=genome_version, genome_index=genome_index) + '.fa'
-
-    @staticmethod
-    def absolute_intervals():
-        """Get the absolute directory path for interval list files.
-
-        @return: Absolute path to the interval list directory
-        @rtype: str | unicode
-        """
-
-        default = Default.get_global_default()
-
-        if os.path.isabs(default.directory_intervals):
-            return default.directory_intervals
-        else:
-            return os.path.join(default.directory_home, default.directory_intervals)
-
-    @staticmethod
-    def absolute_cosmic():
-        """Get the absolute directory path for COSMIC data files.
-
-        @return: Absolute path to the COSMIC directory
-        @rtype: str | unicode
-        """
-
-        default = Default.get_global_default()
-
-        if os.path.isabs(default.directory_cosmic):
-            return default.directory_cosmic
-        else:
-            return os.path.join(default.directory_home, default.directory_cosmic)
-
-    @staticmethod
-    def absolute_transcriptome_resource(transcriptome_version):
-        """Get the absolute path to the transcriptome resource directory.
-
-        @param transcriptome_version: The transcriptome version (e.g. mm10_e87, ...)
-        @type transcriptome_version: str
-        @return: Absolute path to the transcriptome resource directory
-        @rtype: str | unicode
-        """
-
-        default = Default.get_global_default()
-
-        if transcriptome_version:
-            return os.path.join(default.directory_transcriptomes, transcriptome_version)
-        else:
-            return default.directory_transcriptomes
 
     @staticmethod
     def absolute_transcriptome_index(transcriptome_version, transcriptome_index):
@@ -753,7 +390,7 @@ class Default(object):
             raise Exception('Unknown transcriptome index name ' + repr(transcriptome_index) + '.')
 
         return os.path.join(
-            Default.absolute_transcriptome_resource(transcriptome_version=transcriptome_version),
+            FilePath.get_resource_transcriptome(transcriptome_version=transcriptome_version, absolute=True),
             default.indices[transcriptome_index],
             transcriptome_version)
 
@@ -1069,6 +706,243 @@ class EnsemblVEP(object):
         @rtype: None | str | unicode
         """
         return cls.get(option='sql_port', genome_version=genome_version)
+
+
+class FilePath(InitialisationBase):
+    """The C{bsf.standards.FilePath} class models file path defaults.
+
+    The defaults are read form the [directories] section of the global configuration file.
+    Attributes:
+    @cvar section: C{SafeConfigParser} section for the operator
+    @type section: str | unicode
+    """
+
+    section = 'directories'
+
+    @classmethod
+    def get_cache(cls):
+        """Get the (absolute) cache directory path locally on the compute node (e.g. /dev/shm).
+
+        @return: Cache directory path
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='cache')
+
+    @classmethod
+    def get_home(cls):
+        """Get the (absolute) Home directory path.
+
+        @return: Home directory path
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='home')
+
+    @classmethod
+    def _prepend_home(cls, absolute=True, file_path=None):
+        """Private class method to prepend the I{home} directory.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @param file_path: File path
+        @type file_path: None | str | unicode
+        @return: File path
+        @rtype: None | str | unicode
+        """
+        if file_path is None:
+            return
+
+        if absolute and not os.path.isabs(file_path):
+            return os.path.join(cls.get_home(), file_path)
+        else:
+            return file_path
+
+    @classmethod
+    def get_illumina_run(cls, absolute=True):
+        """Get the Illumina Run Folder (IRF) directory path.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Illumina Run Folder directory path
+        @rtype: None | str | unicode
+        """
+        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='illumina_run'))
+
+    @classmethod
+    def get_illumina_sav(cls, absolute=True):
+        """Get the Illumina Sequence Analysis Viewer (SAV) directory path.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Illumina Sequence Analysis Viewer directory path
+        @rtype: None | str | unicode
+        """
+        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='illumina_sav'))
+
+    @classmethod
+    def get_sequences(cls, absolute=True):
+        """Get the Sequences directory path.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Sequences directory path
+        @rtype: None | str | unicode
+        """
+        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='sequences'))
+
+    @classmethod
+    def get_samples(cls, absolute=True):
+        """Get the Samples directory path.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Samples directory path
+        @rtype: None | str | unicode
+        """
+        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='samples'))
+
+    @classmethod
+    def get_projects(cls, absolute=True):
+        """Get the Analysis Projects directory path.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Analysis projects directory path
+        @rtype: None | str | unicode
+        """
+        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='projects'))
+
+    @classmethod
+    def get_public_html(cls, absolute=True):
+        """Get the Web Server directory path.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Web server directory path
+        @rtype: None | str | unicode
+        """
+        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='public_html'))
+
+    @classmethod
+    def get_resource(cls, absolute=True):
+        """Get the Resources directory path.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Resources directory path
+        @rtype: None | str | unicode
+        """
+        return cls._prepend_home(absolute=absolute, file_path=cls.get(option='resources'))
+
+    @classmethod
+    def _prepend_resource(cls, absolute=True, file_path=None):
+        """Private class method to prepend the I{resource} directory.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @param file_path: File path
+        @type file_path: None | str | unicode
+        @return: File path
+        @rtype: None | str | unicode
+        """
+        if file_path is None:
+            return
+
+        if absolute and not os.path.isabs(file_path):
+            return os.path.join(cls.get_resource(absolute=absolute), file_path)
+        else:
+            return file_path
+
+    @classmethod
+    def get_resource_genome(cls, genome_version=None, absolute=True):
+        """Get the Genome resource directory path.
+
+        @param genome_version: The genome version (e.g. mm10, ...)
+        @type genome_version: None | str
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Genome directory path
+        @rtype: None | str | unicode
+        """
+        file_path = cls.get(option='genomes')
+
+        if genome_version:
+            file_path = os.path.join(file_path, genome_version)
+
+        return cls._prepend_resource(absolute=absolute, file_path=file_path)
+
+    @classmethod
+    def get_resource_transcriptome(cls, transcriptome_version=None, absolute=True):
+        """Get the Transcriptome resource directory path.
+
+        @param transcriptome_version: The transcriptome version (e.g. mm10_e87, ...)
+        @type transcriptome_version: None | str
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Transcriptome resource directory path
+        @rtype: None | str | unicode
+        """
+        file_path = cls.get(option='transcriptomes')
+
+        if transcriptome_version:
+            file_path = os.path.join(file_path, transcriptome_version)
+
+        return cls._prepend_resource(absolute=absolute, file_path=file_path)
+
+    @classmethod
+    def get_resource_gatk_bundle(cls, gatk_bundle_version=None, genome_version=None, absolute=True):
+        """Get the GATK Bundle resource directory path.
+
+        @param gatk_bundle_version: The GATK bundle version
+        @type gatk_bundle_version: None | str
+        @param genome_version: The genome version (e.g. b37, ...)
+        @type genome_version: None | str
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: GATK Bundle resource directory path
+        @rtype: None | str | unicode
+        """
+        file_path = cls.get(option='gatk_bundle')
+
+        if gatk_bundle_version:
+            file_path = os.path.join(file_path, gatk_bundle_version)
+
+        if genome_version:
+            file_path = os.path.join(file_path, genome_version)
+
+        return cls._prepend_resource(absolute=absolute, file_path=file_path)
+
+    @classmethod
+    def get_resource_intervals(cls, absolute=True):
+        """Get the Target Intervals resource directory path.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Target Intervals resource directory path
+        @rtype: None | str | unicode
+        """
+        return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='intervals'))
+
+    @classmethod
+    def get_resource_cosmic(cls, absolute=True):
+        """Get the COSMIC resource directory path.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: COSMIC resource directory path
+        @rtype: None | str | unicode
+        """
+        return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='cosmic'))
+
+    @classmethod
+    def get_resource_snpeff_data(cls, absolute=True):
+        """Get the snpEff Data resource directory path.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: snpEff Data resource directory path
+        @rtype: None | str | unicode
+        """
+        return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='snpeff_data'))
 
 
 class Operator(InitialisationBase):

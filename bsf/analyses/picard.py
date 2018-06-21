@@ -262,7 +262,7 @@ class PicardIlluminaRunFolder(bsf.Analysis):
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
-            default_path=bsf.standards.Default.absolute_illumina_run())
+            default_path=bsf.standards.FilePath.get_illumina_run(absolute=True))
 
         # Check that the Illumina Run Folder exists.
 
@@ -766,7 +766,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         self.samples_directory = self.configuration.get_absolute_path(
             file_path=self.samples_directory,
-            default_path=bsf.standards.Default.absolute_samples())
+            default_path=bsf.standards.FilePath.get_samples(absolute=True))
 
         # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
 
@@ -1450,7 +1450,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
-            default_path=bsf.standards.Default.absolute_illumina_run())
+            default_path=bsf.standards.FilePath.get_illumina_run(absolute=True))
 
         # Check that the Illumina Run Folder exists.
 
@@ -1496,7 +1496,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             self.sequences_directory = self.configuration.get_absolute_path(
                 file_path=self.sequences_directory)
         else:
-            self.sequences_directory = bsf.standards.Default.absolute_sequences()
+            self.sequences_directory = bsf.standards.FilePath.get_sequences(absolute=True)
 
         # As a safety measure, to prevent creation of rogue directory paths, the sequences_directory has to exist.
 
@@ -2116,11 +2116,11 @@ class IlluminaDemultiplexSam(bsf.Analysis):
 
         self.sequences_directory = self.configuration.get_absolute_path(
             file_path=self.sequences_directory,
-            default_path=bsf.standards.Default.absolute_sequences())
+            default_path=bsf.standards.FilePath.get_sequences(absolute=True))
 
         self.samples_directory = self.configuration.get_absolute_path(
             file_path=self.samples_directory,
-            default_path=bsf.standards.Default.absolute_samples())
+            default_path=bsf.standards.FilePath.get_samples(absolute=True))
 
         # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
 

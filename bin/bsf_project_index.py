@@ -33,8 +33,8 @@ import os
 import re
 import stat
 
-from bsf import Analysis
-from bsf.standards import Default
+import bsf
+import bsf.standards
 
 
 def scan_directory(report_dict_local, directory_root, directory_path=None):
@@ -82,7 +82,7 @@ def scan_projects(project_name_local):
     @type project_name_local: str | unicode
     """
 
-    directory_path = os.path.join(Default.absolute_public_html(), 'projects')
+    directory_path = os.path.join(bsf.standards.FilePath.get_public_html(absolute=True), 'projects')
 
     for file_name in os.listdir(directory_path):
         match = re.search(pattern=r'^{}'.format(project_name_local), string=file_name)
@@ -107,7 +107,10 @@ if not os.path.isabs(project_directory):
     # prepend the absolute public html directory.
     # TODO: This does not deal with sub-directories i.e. public_html/projects correctly.
 
-    project_directory = os.path.join(Default.absolute_public_html(), 'projects', project_directory)
+    project_directory = os.path.join(
+        bsf.standards.FilePath.get_public_html(absolute=True),
+        'projects',
+        project_directory)
 
     if not os.path.isdir(project_directory):
 
@@ -119,7 +122,10 @@ if not os.path.isabs(project_directory):
         if not project_name:
             raise Exception('Cannot locate project directory for project {!r}.'.format(name_space.project))
 
-        project_directory = os.path.join(Default.absolute_public_html(), 'projects', project_name)
+        project_directory = os.path.join(
+            bsf.standards.FilePath.get_public_html(absolute=True),
+            'projects',
+            project_name)
 
 report_dict = dict()
 
@@ -140,7 +146,7 @@ if re.search(pattern=r'^[0-9a-f]{32,32}$', string=components[-1]):
 output = str()
 
 # TODO: Functionality of this script needs integrating into the Analysis class.
-output += Analysis.get_html_header(
+output += bsf.Analysis.get_html_header(
     title='Project {} Overview'.format(project_name),
     source=inspect.getfile(inspect.currentframe()))
 
@@ -160,6 +166,6 @@ for key in sorted(report_dict):
     output += '</ul>\n'
 
 # TODO: Functionality of this script needs integrating into the Analysis class.
-output += Analysis.get_html_footer()
+output += bsf.Analysis.get_html_footer()
 
 print(output)

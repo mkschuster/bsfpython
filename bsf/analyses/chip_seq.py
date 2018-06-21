@@ -742,11 +742,16 @@ class ChIPSeq(Analysis):
             @rtype:
             """
 
+            # Get global defaults.
+
+            default = bsf.standards.Default.get_global_default()
+
             # Get the BWA index.
 
-            # TODO: The BWA index directory needs to be configurable.
-            bwa_genome_db = os.path.join(Default.absolute_genome_resource(self.genome_version),
-                                         'forBWA_0.7.6a', self.genome_version)
+            bwa_genome_db = os.path.join(
+                bsf.standards.FilePath.get_resource_genome(genome_version=self.genome_version),
+                default.indices['bwa'],
+                self.genome_version)
 
             self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
@@ -1610,8 +1615,8 @@ class ChIPSeq(Analysis):
                                                         t_paired_reads_name + ' versus ' + c_paired_reads_name + '\n')
                                         str_list.append('bigDataUrl ')
                                         str_list.append('/'.join((
-                                                prefix + '_MACS_wiggle', state,
-                                                '_'.join((prefix, state, 'afterfiting', 'all.bw')))) + '\n')
+                                            prefix + '_MACS_wiggle', state,
+                                            '_'.join((prefix, state, 'afterfiting', 'all.bw')))) + '\n')
                                         # str_list.append('html ...\n'
                                         if treatment and not absolute:
                                             str_list.append('visibility full\n')
@@ -1619,9 +1624,9 @@ class ChIPSeq(Analysis):
                                             str_list.append('visibility hide\n')
 
                                         # Common optional settings
-                                        str_list.append('color ' + \
-                                                    defaults.web.get_chipseq_colour(
-                                                        factor=chipseq_comparison.factor) + '\n')
+                                        str_list.append('color ' +
+                                                        defaults.web.get_chipseq_colour(
+                                                            factor=chipseq_comparison.factor) + '\n')
 
                                         # bigWig - Signal graphing track settings
                                         str_list.append('graphTypeDefault bar\n')

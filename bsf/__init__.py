@@ -642,15 +642,15 @@ class Analysis(object):
 
         self.cache_directory = self.configuration.get_absolute_path(
             file_path=self.cache_directory,
-            default_path=bsf.standards.Default.absolute_cache())
+            default_path=bsf.standards.FilePath.get_cache())
 
         self.input_directory = self.configuration.get_absolute_path(
             file_path=self.input_directory,
-            default_path=bsf.standards.Default.absolute_samples())
+            default_path=bsf.standards.FilePath.get_samples(absolute=True))
 
         self.output_directory = self.configuration.get_absolute_path(
             file_path=self.output_directory,
-            default_path=bsf.standards.Default.absolute_projects())
+            default_path=bsf.standards.FilePath.get_projects(absolute=True))
 
         # As a safety measure, to prevent creation of rogue directory paths, the output_directory has to exist.
 
@@ -1106,12 +1106,10 @@ class Analysis(object):
         @rtype: str
         @raise Exception: Public HTML path does not exist
         """
-        default = bsf.standards.Default.get_global_default()
-
         if sub_directory is None:
             sub_directory = bsf.standards.URL.get_relative_projects()
 
-        html_path = os.path.join(default.absolute_public_html(), sub_directory)
+        html_path = os.path.join(bsf.standards.FilePath.get_public_html(absolute=True), sub_directory)
 
         # As a safety measure, to prevent creation of rogue directory paths, the html_path directory has to exist.
 
