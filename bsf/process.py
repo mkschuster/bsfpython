@@ -60,7 +60,7 @@ class Command(object):
     @ivar arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
     @type arguments: list[str | unicode]
     @ivar sub_command: Subordinate C{bsf.process.Command}
-    @type sub_command: bsf.process.Command
+    @type sub_command: bsf.process.Command | None
     """
 
     def __init__(
@@ -82,7 +82,7 @@ class Command(object):
         @param arguments: Python C{list} of Python C{str} (program argument) objects
         @type arguments: list[str]
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command
+        @type sub_command: bsf.process.Command | None
         @return:
         @rtype:
         """
@@ -109,7 +109,7 @@ class Command(object):
         else:
             self.arguments = arguments
 
-        self.sub_command = sub_command  # Can be None.
+        self.sub_command = sub_command
 
         return
 
@@ -148,7 +148,7 @@ class Command(object):
             str_list.append('{}    {:2d}: {!r}\n'.format(indent, i, argument))
             i += 1
 
-        if self.sub_command:
+        if self.sub_command is not None:
             str_list.extend(self.sub_command.trace(level=level + 1))
 
         return str_list
@@ -620,7 +620,7 @@ class Command(object):
 
         # Expand a subordinate command, if defined.
 
-        if self.sub_command:
+        if self.sub_command is not None:
             command_line.extend(self.sub_command.command_list())
 
         return command_line
@@ -651,7 +651,7 @@ class Command(object):
 
         # Expand a subordinate command, if defined.
 
-        if self.sub_command:
+        if self.sub_command is not None:
             command_line += ' '
             command_line += self.sub_command.command_str()
 
@@ -663,22 +663,22 @@ class Executable(Command):
 
     Attributes:
     @ivar stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
-    @type stdout_path: str | unicode
+    @type stdout_path: str | unicode | None
     @ivar stderr_path: Standard error (STDERR) redirection in Bash (2>word)
-    @type stderr_path: str | unicode
+    @type stderr_path: str | unicode | None
     @ivar dependencies: Python C{list} of C{bsf.process.Executable.name} properties in the
         context of C{bsf.Stage} dependencies
     @type dependencies: list[bsf.process.Executable.name]
     @ivar hold: Hold on job scheduling
-    @type hold: str
+    @type hold: str | None
     @ivar submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
     @type submit: bool
     @ivar maximum_attempts: Maximum number of attempts to run this C{bsf.process.Executable}
     @type maximum_attempts: int
     @ivar process_identifier: Process identifier
-    @type process_identifier: str
+    @type process_identifier: str | None
     @ivar process_name: Process name
-    @type process_name: str
+    @type process_name: str | None
     """
 
     @staticmethod
@@ -692,7 +692,7 @@ class Executable(Command):
         @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: threading.Lock
         @param file_path: I{STDOUT} file path
-        @type file_path: str | unicode
+        @type file_path: str | unicode | None
         @param debug: Debug level
         @type debug: int
         @return:
@@ -748,7 +748,7 @@ class Executable(Command):
         @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: threading.Lock
         @param stdout_path: I{STDOUT} file path
-        @type stdout_path: str | unicode
+        @type stdout_path: str | unicode | None
         @param debug: Debug level
         @type debug: int
         @return:
@@ -771,7 +771,7 @@ class Executable(Command):
         @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: threading.Lock
         @param stderr_path: I{STDERR} file path
-        @type stderr_path: str | unicode
+        @type stderr_path: str | unicode | None
         @param debug: Debug level
         @type debug: int
         @return:
@@ -812,24 +812,24 @@ class Executable(Command):
         @param arguments: Python C{list} of program arguments
         @type arguments: list[str | unicode]
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command
+        @type sub_command: bsf.process.Command | None
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode
+        @type stdout_path: str | unicode | None
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode
+        @type stderr_path: str | unicode | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
-        @type hold: str
+        @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param maximum_attempts: Maximum number of attempts to run this C{bsf.process.Executable}
         @type maximum_attempts: int
         @param process_identifier: Process identifier
-        @type process_identifier: str
+        @type process_identifier: str | None
         @param process_name: Process name
-        @type process_name: str
+        @type process_name: str | None
         @return:
         @rtype:
         """
@@ -848,25 +848,15 @@ class Executable(Command):
             arguments=arguments,
             sub_command=sub_command)
 
-        if stderr_path is None:
-            self.stderr_path = str()
-        else:
-            self.stderr_path = stderr_path
-
-        if stdout_path is None:
-            self.stdout_path = str()
-        else:
-            self.stdout_path = stdout_path
+        self.stderr_path = stderr_path
+        self.stdout_path = stdout_path
 
         if dependencies is None:
             self.dependencies = list()
         else:
             self.dependencies = dependencies
 
-        if hold is None:
-            self.hold = str()
-        else:
-            self.hold = hold
+        self.hold = hold
 
         if submit is None:
             self.submit = True
@@ -875,19 +865,12 @@ class Executable(Command):
             self.submit = submit
 
         if maximum_attempts is None:
-            self.maximum_attempts = int(x=1)
+            self.maximum_attempts = 1
         else:
             self.maximum_attempts = maximum_attempts
 
-        if process_identifier is None:
-            self.process_identifier = str()
-        else:
-            self.process_identifier = process_identifier
-
-        if process_name is None:
-            self.process_name = str()
-        else:
-            self.process_name = process_name
+        self.process_identifier = process_identifier
+        self.process_name = process_name
 
         return
 
@@ -1100,25 +1083,25 @@ class RunnableStep(Executable):
         @param arguments: Python C{list} of program arguments
         @type arguments: list[str | unicode]
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command
+        @type sub_command: bsf.process.Command | None
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode
+        @type stdout_path: str | unicode | None
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode
+        @type stderr_path: str | unicode | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
-        @type hold: str
+        @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
-        @type process_identifier: str
+        @type process_identifier: str | None
         @param process_name: Process name
-        @type process_name: str
+        @type process_name: str | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode]
+        @type obsolete_file_path_list: list[str | unicode] | None
         @return:
         @rtype:
         """
@@ -1186,11 +1169,11 @@ class RunnableStepChangeMode(RunnableStep):
 
     Attributes:
     @ivar file_path: File path
-    @type file_path: str | unicode
+    @type file_path: str | unicode | None
     @ivar mode_directory: Directory access mode according to C{stat}
-    @type mode_directory: str
+    @type mode_directory: str | None
     @ivar mode_file: File access mode for files according to C{stat}
-    @type mode_file: str
+    @type mode_file: str | None
     """
 
     def __init__(
@@ -1223,31 +1206,31 @@ class RunnableStepChangeMode(RunnableStep):
         @param arguments: Python C{list} of program arguments
         @type arguments: list[str | unicode]
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command
+        @type sub_command: bsf.process.Command | None
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode
+        @type stdout_path: str | unicode | None
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode
+        @type stderr_path: str | unicode | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
-        @type hold: str
+        @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
-        @type process_identifier: str
+        @type process_identifier: str | None
         @param process_name: Process name
-        @type process_name: str
+        @type process_name: str | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode]
+        @type obsolete_file_path_list: list[str | unicode] | None
         @param file_path: File path
-        @type file_path: str | unicode
+        @type file_path: str | unicode | None
         @param mode_directory: Directory access mode according to C{stat}
-        @type mode_directory: str
+        @type mode_directory: str | None
         @param mode_file: File access mode for files according to C{stat}
-        @type mode_file: str
+        @type mode_file: str | None
         @return:
         @rtype:
         """
@@ -1267,15 +1250,8 @@ class RunnableStepChangeMode(RunnableStep):
             process_name=process_name,
             obsolete_file_path_list=obsolete_file_path_list)
 
-        if file_path is None:
-            self.file_path = str()
-        else:
-            self.file_path = file_path
-
-        # Can be None.
+        self.file_path = file_path
         self.mode_directory = mode_directory
-
-        # Can Be None.
         self.mode_file = mode_file
 
         return
@@ -1293,6 +1269,29 @@ class RunnableStepChangeMode(RunnableStep):
             negative values indicate that the child received a signal
         @rtype: int
         """
+
+        def convert_mode(mode_str):
+            """Private function to convert the mode string into a mode integer.
+
+            @param mode_str: Mode string
+            @type mode_str: str
+            @return: Mode integer
+            @rtype: int
+            """
+            mode_int = 0
+            for permission_bit in filter(
+                    lambda x: x != '',
+                    map(
+                        lambda x: x.strip(),
+                        mode_str.split(','))):
+                if permission_bit.upper() in permission_dict:
+                    mode_int |= permission_dict[permission_bit.upper()]
+
+            return mode_int
+
+        # If the file path is not defined, all further efforts are futile.
+        if not self.file_path:
+            return 0
 
         # Use a dictionary to map string literals to integers defined in the stat module rather than
         # evaluating code directly, which can be rather dangerous.
@@ -1329,27 +1328,13 @@ class RunnableStepChangeMode(RunnableStep):
         if self.mode_directory is None:
             int_mode_directory = None
         else:
-            int_mode_directory = int(0)
-            for permission_bit in filter(
-                    lambda x: x != '',
-                    map(
-                        lambda x: x.strip(),
-                        self.mode_directory.split(','))):
-                if permission_bit.upper() in permission_dict:
-                    int_mode_directory |= permission_dict[permission_bit.upper()]
+            int_mode_directory = convert_mode(mode_str=self.mode_directory)
 
         # Convert comma-separated file permission constants to an integer.
         if self.mode_file is None:
             int_mode_file = None
         else:
-            int_mode_file = int(0)
-            for permission_bit in filter(
-                    lambda x: x != '',
-                    map(
-                        lambda x: x.strip(),
-                        self.mode_file.split(','))):
-                if permission_bit.upper() in permission_dict:
-                    int_mode_file |= permission_dict[permission_bit.upper()]
+            int_mode_file = convert_mode(mode_str=self.mode_file)
 
         # Change the mode of directories and files simultaneously, but only if the mode is not None.
 
@@ -1375,9 +1360,9 @@ class RunnableStepCopy(RunnableStep):
 
     Attributes:
     @ivar source_path: Source path
-    @type source_path: str | unicode
+    @type source_path: str | unicode | None
     @ivar target_path: Target path
-    @type target_path: str | unicode
+    @type target_path: str | unicode | None
     """
 
     def __init__(
@@ -1409,29 +1394,29 @@ class RunnableStepCopy(RunnableStep):
         @param arguments: Python C{list} of program arguments
         @type arguments: list[str | unicode]
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command
+        @type sub_command: bsf.process.Command | None
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode
+        @type stdout_path: str | unicode | None
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode
+        @type stderr_path: str | unicode | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
-        @type hold: str
+        @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
-        @type process_identifier: str
+        @type process_identifier: str | None
         @param process_name: Process name
-        @type process_name: str
+        @type process_name: str | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode]
+        @type obsolete_file_path_list: list[str | unicode] | None
         @param source_path: Source path
-        @type source_path: str | unicode
+        @type source_path: str | unicode | None
         @param target_path: Target path
-        @type target_path: str | unicode
+        @type target_path: str | unicode | None
         @return:
         @rtype:
         """
@@ -1451,15 +1436,8 @@ class RunnableStepCopy(RunnableStep):
             process_name=process_name,
             obsolete_file_path_list=obsolete_file_path_list)
 
-        if source_path is None:
-            self.source_path = str()
-        else:
-            self.source_path = source_path
-
-        if target_path is None:
-            self.target_path = str()
-        else:
-            self.target_path = target_path
+        self.source_path = source_path
+        self.target_path = target_path
 
         return
 
@@ -1521,25 +1499,25 @@ class RunnableStepJava(RunnableStep):
         @param arguments: Python C{list} of program arguments
         @type arguments: list[str | unicode]
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command
+        @type sub_command: bsf.process.Command | None
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode
+        @type stdout_path: str | unicode | None
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode
+        @type stderr_path: str | unicode | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
-        @type hold: str
+        @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
-        @type process_identifier: str
+        @type process_identifier: str | None
         @param process_name: Process name
-        @type process_name: str
+        @type process_name: str | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode]
+        @type obsolete_file_path_list: list[str | unicode] | None
         @param java_temporary_path: Temporary directory path for the Java Virtual Machine
         @type java_temporary_path: str | unicode
         @param java_heap_maximum: Java heap maximum size (-Xmx option)
@@ -1637,25 +1615,25 @@ class RunnableStepPicard(RunnableStepJava):
         @param arguments: Python C{list} of program arguments
         @type arguments: list[str | unicode]
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command
+        @type sub_command: bsf.process.Command | None
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode
+        @type stdout_path: str | unicode | None
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode
+        @type stderr_path: str | unicode | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
-        @type hold: str
+        @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
-        @type process_identifier: str
+        @type process_identifier: str | None
         @param process_name: Process name
-        @type process_name: str
+        @type process_name: str | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode]
+        @type obsolete_file_path_list: list[str | unicode] | None
         @param java_temporary_path: Temporary directory path for the Java Virtual Machine
         @type java_temporary_path: str | unicode
         @param java_heap_maximum: Java heap maximum size (-Xmx option)
@@ -1719,9 +1697,9 @@ class RunnableStepLink(RunnableStep):
 
     Attributes:
     @ivar source_path: Source path
-    @type source_path: str | unicode
+    @type source_path: str | unicode | None
     @ivar target_path: Target path
-    @type target_path: str | unicode
+    @type target_path: str | unicode | None
     """
 
     def __init__(
@@ -1753,29 +1731,29 @@ class RunnableStepLink(RunnableStep):
         @param arguments: Python C{list} of program arguments
         @type arguments: list[str | unicode]
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command
+        @type sub_command: bsf.process.Command | None
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode
+        @type stdout_path: str | unicode | None
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode
+        @type stderr_path: str | unicode | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
-        @type hold: str
+        @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
-        @type process_identifier: str
+        @type process_identifier: str | None
         @param process_name: Process name
-        @type process_name: str
+        @type process_name: str | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode]
+        @type obsolete_file_path_list: list[str | unicode] | None
         @param source_path: Source path
-        @type source_path: str | unicode
+        @type source_path: str | unicode | None
         @param target_path: Target path
-        @type target_path: str | unicode
+        @type target_path: str | unicode | None
         @return:
         @rtype:
         """
@@ -1795,15 +1773,8 @@ class RunnableStepLink(RunnableStep):
             process_name=process_name,
             obsolete_file_path_list=obsolete_file_path_list)
 
-        if source_path is None:
-            self.source_path = str()
-        else:
-            self.source_path = source_path
-
-        if target_path is None:
-            self.target_path = str()
-        else:
-            self.target_path = target_path
+        self.source_path = source_path
+        self.target_path = target_path
 
         return
 
@@ -1836,7 +1807,7 @@ class RunnableStepMakeDirectory(RunnableStep):
 
     Attributes:
     @ivar directory_path: Directory path
-    @type directory_path: str | unicode
+    @type directory_path: str | unicode | None
     """
 
     def __init__(
@@ -1867,27 +1838,27 @@ class RunnableStepMakeDirectory(RunnableStep):
         @param arguments: Python C{list} of program arguments
         @type arguments: list[str | unicode]
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command
+        @type sub_command: bsf.process.Command | None
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode
+        @type stdout_path: str | unicode | None
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode
+        @type stderr_path: str | unicode | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
-        @type hold: str
+        @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
-        @type process_identifier: str
+        @type process_identifier: str | None
         @param process_name: Process name
-        @type process_name: str
+        @type process_name: str | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode]
+        @type obsolete_file_path_list: list[str | unicode] | None
         @param directory_path: Directory path
-        @type directory_path: str | unicode
+        @type directory_path: str | unicode | None
         @return:
         @rtype:
         """
@@ -1907,10 +1878,7 @@ class RunnableStepMakeDirectory(RunnableStep):
             process_name=process_name,
             obsolete_file_path_list=obsolete_file_path_list)
 
-        if directory_path is None:
-            self.directory_path = str()
-        else:
-            self.directory_path = directory_path
+        self.directory_path = directory_path
 
         return
 
@@ -1943,9 +1911,9 @@ class RunnableStepMove(RunnableStep):
 
     Attributes:
     @ivar source_path: Source path
-    @type source_path: str | unicode
+    @type source_path: str | unicode | None
     @ivar target_path: Target path
-    @type target_path: str | unicode
+    @type target_path: str | unicode | None
     """
 
     def __init__(
@@ -1977,29 +1945,29 @@ class RunnableStepMove(RunnableStep):
         @param arguments: Python C{list} of program arguments
         @type arguments: list[str | unicode]
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command
+        @type sub_command: bsf.process.Command | None
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode
+        @type stdout_path: str | unicode | None
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode
+        @type stderr_path: str | unicode | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
-        @type hold: str
+        @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
-        @type process_identifier: str
+        @type process_identifier: str | None
         @param process_name: Process name
-        @type process_name: str
+        @type process_name: str | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode]
+        @type obsolete_file_path_list: list[str | unicode] | None
         @param source_path: Source path
-        @type source_path: str | unicode
+        @type source_path: str | unicode | None
         @param target_path: Target path
-        @type target_path: str | unicode
+        @type target_path: str | unicode | None
         @return:
         @rtype:
         """
@@ -2019,15 +1987,8 @@ class RunnableStepMove(RunnableStep):
             process_name=process_name,
             obsolete_file_path_list=obsolete_file_path_list)
 
-        if source_path is None:
-            self.source_path = str()
-        else:
-            self.source_path = source_path
-
-        if target_path is None:
-            self.target_path = str()
-        else:
-            self.target_path = target_path
+        self.source_path = source_path
+        self.target_path = target_path
 
         return
 
@@ -2056,7 +2017,7 @@ class RunnableStepSleep(RunnableStep):
 
     Attributes:
     @ivar sleep_time: Sleep time in seconds
-    @type sleep_time: float
+    @type sleep_time: float | None
     """
 
     def __init__(
@@ -2087,27 +2048,27 @@ class RunnableStepSleep(RunnableStep):
         @param arguments: Python C{list} of program arguments
         @type arguments: list[str | unicode]
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command
+        @type sub_command: bsf.process.Command | None
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode
+        @type stdout_path: str | unicode | None
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode
+        @type stderr_path: str | unicode | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name]
         @param hold: Hold on job scheduling
-        @type hold: str
+        @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
-        @type process_identifier: str
+        @type process_identifier: str | None
         @param process_name: Process name
-        @type process_name: str
+        @type process_name: str | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode]
+        @type obsolete_file_path_list: list[str | unicode] | None
         @param sleep_time: Sleep time in seconds
-        @type sleep_time: float
+        @type sleep_time: float | None
         @return:
         @rtype:
         """
@@ -2127,11 +2088,7 @@ class RunnableStepSleep(RunnableStep):
             process_name=process_name,
             obsolete_file_path_list=obsolete_file_path_list)
 
-        if sleep_time is None:
-            self.sleep_time = float()
-        else:
-            assert isinstance(sleep_time, float)
-            self.sleep_time = sleep_time
+        self.sleep_time = sleep_time
 
         return
 
@@ -2149,6 +2106,7 @@ class RunnableStepSleep(RunnableStep):
         @rtype: int
         """
 
-        time.sleep(self.sleep_time)
+        if self.sleep_time is not None:
+            time.sleep(self.sleep_time)
 
         return 0
