@@ -707,6 +707,28 @@ class EnsemblVEP(object):
         """
         return cls.get(option='sql_port', genome_version=genome_version)
 
+    @classmethod
+    def get_ofc_path(cls, genome_version=None):
+        """Get the output fields configuration (TSV) file path.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Output fields configuration (TSV) file path
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='ofc_path', genome_version=genome_version)
+
+    @classmethod
+    def get_soc_path(cls, genome_version=None):
+        """Get the Sequence Ontology configuration (TSV) file path.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Sequence Ontology configuration (TSV) file path
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='soc_path', genome_version=genome_version)
+
 
 class FilePath(InitialisationBase):
     """The C{bsf.standards.FilePath} class models file path defaults.
