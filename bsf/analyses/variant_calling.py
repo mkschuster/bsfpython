@@ -41,6 +41,7 @@ import pysam
 import bsf
 import bsf.annotation
 import bsf.executables
+import bsf.executables.vcf
 import bsf.process
 import bsf.standards
 
@@ -1012,6 +1013,10 @@ class VariantCallingGATK(bsf.Analysis):
     @type vep_sql_host: str | unicode | None
     @ivar vep_sql_port: Ensembl Variant Effect Predictor (VEP) SQL TCP/IP port
     @type vep_sql_port: str | unicode | None
+    @ivar vep_ofc_path: Ensembl Variant Effect Predictor (VEP) output fileds configuration (TSV) file path
+    @type vep_ofc_path: str | unicode | None
+    @ivar vep_soc_path: Ensembl Variant Effect Predictor (VEP) Sequence Ontology term (TSV) configuration file path
+    @type vep_soc_path: str | unicode | None
     @ivar classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
     @type classpath_gatk: str | unicode | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -1100,6 +1105,8 @@ class VariantCallingGATK(bsf.Analysis):
             vep_sql_pass=None,
             vep_sql_host=None,
             vep_sql_port=None,
+            vep_ofc_path=None,
+            vep_soc_path=None,
             classpath_gatk=None,
             classpath_picard=None,
             classpath_snpeff=None,
@@ -1225,6 +1232,10 @@ class VariantCallingGATK(bsf.Analysis):
         @type vep_sql_host: str | unicode | None
         @param vep_sql_port: Ensembl Variant Effect Predictor (VEP) SQL TCP/IP port
         @type vep_sql_port: str | unicode | None
+        @param vep_ofc_path: Ensembl Variant Effect Predictor (VEP) output fileds configuration (TSV) file path
+        @type vep_ofc_path: str | unicode | None
+        @param vep_soc_path: Ensembl Variant Effect Predictor (VEP) Sequence Ontology term (TSV) configuration file path
+        @type vep_soc_path: str | unicode | None
         @param classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
         @type classpath_gatk: str | unicode | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -1305,6 +1316,8 @@ class VariantCallingGATK(bsf.Analysis):
         self.vep_sql_pass = vep_sql_pass
         self.vep_sql_host = vep_sql_host
         self.vep_sql_port = vep_sql_port
+        self.vep_ofc_path = vep_ofc_path
+        self.vep_soc_path = vep_soc_path
 
         self.classpath_gatk = classpath_gatk
         self.classpath_picard = classpath_picard
@@ -1752,6 +1765,16 @@ class VariantCallingGATK(bsf.Analysis):
         if config_parser.has_option(section=section, option=option):
             self.vep_sql_port = config_parser.get(section=section, option=option)
 
+        # VEP CSQ to VEP_* converter configuration file paths
+
+        option = 'vep_ofc_path'
+        if config_parser.has_option(section=section, option=option):
+            self.vep_ofc_path = config_parser.get(section=section, option=option)
+
+        option = 'vep_soc_path'
+        if config_parser.has_option(section=section, option=option):
+            self.vep_soc_path = config_parser.get(section=section, option=option)
+
         # Get the Genome Analysis Tool Kit (GATK) Java Archive (JAR) class path directory.
 
         option = 'classpath_gatk'
@@ -1902,15 +1925,24 @@ class VariantCallingGATK(bsf.Analysis):
                 'VEP_EUR_AF',
                 'VEP_EXON_AFFECTED',
                 'VEP_EXON_TOTAL',
-                'VEP_ExAC_AF',
-                'VEP_ExAC_AFR_AF',
-                'VEP_ExAC_AMR_AF',
-                'VEP_ExAC_Adj_AF',
-                'VEP_ExAC_EAS_AF',
-                'VEP_ExAC_FIN_AF',
-                'VEP_ExAC_NFE_AF',
-                'VEP_ExAC_OTH_AF',
-                'VEP_ExAC_SAS_AF',
+                # 'VEP_ExAC_AF',
+                # 'VEP_ExAC_AFR_AF',
+                # 'VEP_ExAC_AMR_AF',
+                # 'VEP_ExAC_Adj_AF',
+                # 'VEP_ExAC_EAS_AF',
+                # 'VEP_ExAC_FIN_AF',
+                # 'VEP_ExAC_NFE_AF',
+                # 'VEP_ExAC_OTH_AF',
+                # 'VEP_ExAC_SAS_AF',
+                'VEP_gnomAD_AF',
+                'VEP_gnomAD_AFR_AF',
+                'VEP_gnomAD_AMR_AF',
+                'VEP_gnomAD_ASJ_AF',
+                'VEP_gnomAD_EAS_AF',
+                'VEP_gnomAD_FIN_AF',
+                'VEP_gnomAD_NFE_AF',
+                'VEP_gnomAD_OTH_AF',
+                'VEP_gnomAD_SAS_AF',
                 'VEP_Existing_variation',
                 'VEP_FLAGS',
                 'VEP_Feature',
@@ -1948,8 +1980,6 @@ class VariantCallingGATK(bsf.Analysis):
                 'VEP_VARIANT_CLASS',
                 'VEP_cDNA_position_end',
                 'VEP_cDNA_position_start',
-                'VQSLOD',
-                'culprit',
             ),
         }
 
@@ -2891,12 +2921,10 @@ class VariantCallingGATK(bsf.Analysis):
             _sub_command.add_option_long(key='stats_file', value=file_path_annotate.vep_statistics)
             # Cache options
             _sub_command.add_switch_long(key='cache')
-            # FIXME: For Ensembl VEP 91 'offline'.
-            # _sub_command.add_switch_long(key='offline')
+            _sub_command.add_switch_long(key='offline')  # VEP e91 option
             _sub_command.add_option_long(key='dir_cache', value=self.vep_cache)
             _sub_command.add_option_long(key='dir_plugins', value=self.vep_plugin)
-            # FIXME: For Ensembl VEP 91 'fasta_dir'.
-            # _sub_command.add_option_long(key='fasta_dir', value=self.vep_fasta)
+            _sub_command.add_option_long(key='fasta_dir', value=self.vep_fasta)  # VEP e91 option
             # Other annotation sources
             _sub_command.add_option_long(  # TODO: Has to be configurable
                 key='plugin',
@@ -2984,36 +3012,60 @@ class VariantCallingGATK(bsf.Analysis):
             # Run the VCF Filter on the complete VEP set to convert (re-model) the CSQ field into
             # a set of independent INFO fields.
 
-            _runnable_step = runnable_annotate.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepJava(
-                    name='vcf_filter_complete',
-                    sub_command=bsf.process.Command(program='at.ac.oeaw.cemm.bsf.vcffilter.vep.vep2vcf'),
-                    java_temporary_path=runnable_annotate.get_relative_temporary_directory_path,
-                    java_heap_maximum='Xmx2G'))
-            """ @type _runnable_step: bsf.process.RunnableStepJava """
-            _runnable_step.add_option_short(
-                key='classpath',
-                value=os.path.join(self.classpath_vcf_filter, 'VCFFilter.jar'))
-            _sub_command = _runnable_step.sub_command
-            _sub_command.add_option_pair(key='INPUT', value=file_path_annotate.vep_complete_raw_vcf_bgz)
-            _sub_command.add_option_pair(key='OUTPUT', value=file_path_annotate.vep_complete_vcf_bgz)
+            # Convert the CSQ INFO annotation into a set of INFO VEP_* annotation
+            # that is more accessible to down-stream tools.
+            # FIXME: At the moment, this needs switching the Python version.
+            # runnable_annotate.add_runnable_step(
+            #     runnable_step=bsf.executables.vcf.RunnableStepCsqToVep(
+            #         name='vcf_convert_csq_to_vep',
+            #         soc_path=self.vep_soc_path,
+            #         ofc_path=self.vep_ofc_path,
+            #         vcf_path_old=file_path_annotate.vep_complete_raw_vcf_bgz,
+            #         vcf_path_new=file_path_annotate.vep_complete_vcf_bgz))
+            # FIXME: At the moment, this needs switching the Python version.
+            # runnable_annotate.add_runnable_step(
+            #     runnable_step=bsf.executables.vcf.RunnableStepCsqToVep(
+            #         name='vcf_convert_csq_to_vep',
+            #         soc_path=self.vep_soc_path,
+            #         ofc_path=self.vep_ofc_path,
+            #         vcf_path_old=file_path_annotate.vep_filtered_raw_vcf_bgz,
+            #         vcf_path_new=file_path_annotate.vep_filtered_vcf_bgz))
 
-            # Run the VCF Filter on the filtered VEP set to convert (re-model) the CSQ field into
-            # a set of independent INFO fields.
+            _runnable_step = runnable_annotate.add_runnable_step(
+                runnable_step=bsf.process.RunnableStep(
+                    name='vcf_complete_csq_to_vep',
+                    program=os.path.join(self.vep_cache, 'bsf_run_csq_to_vep.bash')))
+            _runnable_step.arguments.append(self.vep_soc_path)  # 1
+            _runnable_step.arguments.append(self.vep_ofc_path)  # 2
+            _runnable_step.arguments.append(file_path_annotate.vep_complete_raw_vcf_bgz)  # 3
+            _runnable_step.arguments.append(file_path_annotate.vep_complete_vcf_bgz)  # 4
+            _runnable_step.arguments.append(str(self.debug))  # 5
 
             _runnable_step = runnable_annotate.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepJava(
-                    name='vcf_filter_filtered',
-                    sub_command=bsf.process.Command(program='at.ac.oeaw.cemm.bsf.vcffilter.vep.vep2vcf'),
-                    java_temporary_path=runnable_annotate.get_relative_temporary_directory_path,
-                    java_heap_maximum='Xmx2G'))
-            """ @type _runnable_step: bsf.process.RunnableStepJava """
-            _runnable_step.add_option_short(
-                key='classpath',
-                value=os.path.join(self.classpath_vcf_filter, 'VCFFilter.jar'))
-            _sub_command = _runnable_step.sub_command
-            _sub_command.add_option_pair(key='INPUT', value=file_path_annotate.vep_filtered_raw_vcf_bgz)
-            _sub_command.add_option_pair(key='OUTPUT', value=file_path_annotate.vep_filtered_vcf_bgz)
+                runnable_step=bsf.process.RunnableStep(
+                    name='ensembl_complete_csq_to_vep_tabix',
+                    program='tabix',
+                    arguments=[file_path_annotate.vep_complete_vcf_bgz]))
+            """ @type _runnable_step: bsf.process.RunnableStep """
+            _runnable_step.add_option_long(key='preset', value='vcf')
+
+            _runnable_step = runnable_annotate.add_runnable_step(
+                runnable_step=bsf.process.RunnableStep(
+                    name='vcf_filtered_csq_to_vep',
+                    program=os.path.join(self.vep_cache, 'bsf_run_csq_to_vep.bash')))
+            _runnable_step.arguments.append(self.vep_soc_path)  # 1
+            _runnable_step.arguments.append(self.vep_ofc_path)  # 2
+            _runnable_step.arguments.append(file_path_annotate.vep_filtered_raw_vcf_bgz)  # 3
+            _runnable_step.arguments.append(file_path_annotate.vep_filtered_vcf_bgz)  # 4
+            _runnable_step.arguments.append(str(self.debug))  # 5
+
+            _runnable_step = runnable_annotate.add_runnable_step(
+                runnable_step=bsf.process.RunnableStep(
+                    name='ensembl_filtered_csq_to_vep_tabix',
+                    program='tabix',
+                    arguments=[file_path_annotate.vep_filtered_vcf_bgz]))
+            """ @type _runnable_step: bsf.process.RunnableStep """
+            _runnable_step.add_option_long(key='preset', value='vcf')
 
             return runnable_annotate
 
@@ -3081,6 +3133,16 @@ class VariantCallingGATK(bsf.Analysis):
 
         if not self.vep_sql_port:
             self.vep_sql_port = bsf.standards.EnsemblVEP.get_sql_port(genome_version=self.genome_version)
+
+        if not self.vep_ofc_path:
+            self.vep_ofc_path = bsf.standards.EnsemblVEP.get_ofc_path(genome_version=self.genome_version)
+            if not self.vep_ofc_path:
+                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_ofc_path' configuration option.")
+
+        if not self.vep_soc_path:
+            self.vep_soc_path = bsf.standards.EnsemblVEP.get_soc_path(genome_version=self.genome_version)
+            if not self.vep_soc_path:
+                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_soc_path' configuration option.")
 
         if not self.classpath_gatk:
             self.classpath_gatk = bsf.standards.JavaClassPath.get_gatk()
