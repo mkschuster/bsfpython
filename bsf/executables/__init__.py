@@ -27,11 +27,11 @@ A package of classes and methods supporting executable programs and scripts.
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from bsf import Analysis
-from bsf.process import Command, Executable
+import bsf
+import bsf.process
 
 
-class Bowtie1(Executable):
+class Bowtie1(bsf.process.Executable):
     """Bowtie1 short read aligner class.
 
     Reference: http://bowtie-bio.sourceforge.net/manual.shtml
@@ -47,8 +47,6 @@ class Bowtie1(Executable):
         @return:
         @rtype:
         """
-        assert isinstance(analysis, Analysis)
-
         super(Bowtie1, self).__init__(name=name, program='bowtie')
 
         section = analysis.configuration.section_from_instance(self)
@@ -57,7 +55,7 @@ class Bowtie1(Executable):
         # Set default Bowtie1 options.
 
 
-class Bowtie2(Executable):
+class Bowtie2(bsf.process.Executable):
     """Bowtie2 short read aligner class."""
 
     def __init__(self, name, analysis):
@@ -70,8 +68,6 @@ class Bowtie2(Executable):
         @return:
         @rtype:
         """
-        assert isinstance(analysis, Analysis)
-
         super(Bowtie2, self).__init__(name=name, program='bsf_chipseq_run_bowtie2.bash')
 
         section = analysis.configuration.section_from_instance(self)
@@ -82,7 +78,7 @@ class Bowtie2(Executable):
         # None for the moment.
 
 
-class BWA(Executable):
+class BWA(bsf.process.Executable):
     """Burrows-Wheeler Aligner (C{bsf.executables.BWA}) class.
 
     Reference: http://bio-bwa.sourceforge.net/
@@ -99,9 +95,7 @@ class BWA(Executable):
         @return:
         @rtype:
         """
-        assert isinstance(analysis, Analysis)
-
-        super(BWA, self).__init__(name=name, program='bwa', sub_command=Command(program='mem'))
+        super(BWA, self).__init__(name=name, program='bwa', sub_command=bsf.process.Command(program='mem'))
 
         # The options have to be set for the 'mem' sub-command.
         section = analysis.configuration.section_from_instance(self)
@@ -112,7 +106,7 @@ class BWA(Executable):
         # None for the moment.
 
 
-class TopHat(Executable):
+class TopHat(bsf.process.Executable):
     """C{bsf.executables.TopHat} RNA-Seq aligner class.
 
     Reference: http://tophat.cbcb.umd.edu/manual.html
@@ -133,8 +127,6 @@ class TopHat(Executable):
         @return:
         @rtype:
         """
-        assert isinstance(analysis, Analysis)
-
         super(TopHat, self).__init__(name=name, program='tophat2')
 
         section = analysis.configuration.section_from_instance(self)
@@ -145,7 +137,7 @@ class TopHat(Executable):
         # None for the moment.
 
 
-class Macs14(Executable):
+class Macs14(bsf.process.Executable):
     """Model-based Analysis for ChIP-Seq (MACS) version 1.4 peak-caller class (C{bsf.executables.Macs14}).
 
     Reference: http://liulab.dfci.harvard.edu/MACS/
@@ -161,8 +153,6 @@ class Macs14(Executable):
         @return:
         @rtype:
         """
-        assert isinstance(analysis, Analysis)
-
         super(Macs14, self).__init__(name=name, program='macs14')
 
         section = analysis.configuration.section_from_instance(self)
@@ -175,7 +165,7 @@ class Macs14(Executable):
                 "A 'gsize' option is required in the {!r} configuration section.".format(section))
 
 
-class Macs2Bdgcmp(Executable):
+class Macs2Bdgcmp(bsf.process.Executable):
     """Model-based Analysis for ChIP-Seq (MACS) version 2 bedGraph comparison class (C{bsf.executables.Macs2Bdgcmp}).
 
     Reference: http://liulab.dfci.harvard.edu/MACS/
@@ -191,12 +181,10 @@ class Macs2Bdgcmp(Executable):
         @return:
         @rtype:
         """
-        assert isinstance(analysis, Analysis)
-
         super(Macs2Bdgcmp, self).__init__(
             name=name,
             program='bsf_chipseq_run_macs2.bash',
-            sub_command=Command(program='bdgcmp'))
+            sub_command=bsf.process.Command(program='bdgcmp'))
 
         # The options have to be set for the 'bdgcmp' sub-command.
         section = analysis.configuration.section_from_instance(self)
@@ -207,7 +195,7 @@ class Macs2Bdgcmp(Executable):
         # None for the moment.
 
 
-class Macs2Callpeak(Executable):
+class Macs2Callpeak(bsf.process.Executable):
     """Model-based Analysis for ChIP-Seq (MACS) version 2 peak-caller class (C{bsf.executables.Macs2Callpeak}).
 
     Reference: http://liulab.dfci.harvard.edu/MACS/
@@ -223,12 +211,10 @@ class Macs2Callpeak(Executable):
         @return:
         @rtype:
         """
-        assert isinstance(analysis, Analysis)
-
         super(Macs2Callpeak, self).__init__(
             name=name,
             program='bsf_chipseq_run_macs2.bash',
-            sub_command=Command(program='callpeak'))
+            sub_command=bsf.process.Command(program='callpeak'))
 
         # The options have to be set for the 'callpeak' sub-command.
         section = analysis.configuration.section_from_instance(self)
@@ -241,7 +227,7 @@ class Macs2Callpeak(Executable):
                 "A 'gsize' option is required in the {!r} configuration section.".format(section))
 
 
-class FastQC(Executable):
+class FastQC(bsf.process.Executable):
     """FastQC quality checker class (C{bsf.executables.FastQC}).
 
     Reference: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
@@ -257,8 +243,6 @@ class FastQC(Executable):
         @return:
         @rtype:
         """
-        assert isinstance(analysis, Analysis)
-
         super(FastQC, self).__init__(name=name, program='fastqc')
 
         section = analysis.configuration.section_from_instance(self)
