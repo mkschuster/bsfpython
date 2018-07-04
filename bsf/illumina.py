@@ -248,7 +248,7 @@ class RunInformation(object):
     @ivar date: Date in YYMMDD format e.g. 130724
     @type date: str | None
     @ivar flow_cell_layout: C{bsf.illumina.RunInformationFlowcellLayout}
-    @type flow_cell_layout: None | bsf.illumina.RunInformationFlowcellLayout
+    @type flow_cell_layout: bsf.illumina.RunInformationFlowcellLayout | None
     @ivar run_information_read_list: Python C{list} of C{bsf.illumina.RunInformationRead} objects
     @type run_information_read_list: list[bsf.illumina.RunInformationRead]
     """
@@ -459,7 +459,7 @@ class RunInformation(object):
         @param date: Date in YYMMDD format
         @type date: str | None
         @param flow_cell_layout: C{bsf.illumina.RunInformationFlowcellLayout}
-        @type flow_cell_layout: None | bsf.illumina.RunInformationFlowcellLayout
+        @type flow_cell_layout: bsf.illumina.RunInformationFlowcellLayout | None
         @param run_information_read_list: Python C{list} of C{bsf.illumina.RunInformationRead} objects
         @type run_information_read_list: list[bsf.illumina.RunInformationRead]
         @return:

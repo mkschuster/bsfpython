@@ -46,8 +46,10 @@ def run(runnable):
         """Get the value of the first C{bsf.argument.OptionLong} object registered under a key
         in the first C{bsf.process.RunnableStep} object of this C{bsf.Runnable} object.
 
-        @param key:
-        @return:
+        @param key: C{bsf.argument.OptionLong} key
+        @type key: str | unicode
+        @return: C{bsf.argument.OptionLong} value
+        @rtype: str | unicode
         """
         argument = runnable_step.options[key][0]
         """ @type argument: bsf.argument.OptionLong """
