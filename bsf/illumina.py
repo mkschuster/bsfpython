@@ -35,6 +35,7 @@ import os
 import warnings
 import xml.etree.ElementTree
 
+import Bio.Seq
 import dateutil.tz
 
 import bsf.annotation
@@ -58,7 +59,8 @@ class Adaptors(object):
     def __init__(self, adaptor_dict=None):
         """Initialise a C{bsf.illumina.Adaptors} object.
 
-        @param adaptor_dict: Adaptor Python C{dict}
+        @param adaptor_dict: Hierarchy of Python C{dict} objects for class, type (e.g. i7, i5),
+            name (e.g. D701, D503) and sequence
         @type adaptor_dict: dict[str, dict[str, dict[str, str]]]
         @return:
         @rtype:
@@ -83,7 +85,7 @@ class Adaptors(object):
         """
         annotation_sheet = bsf.annotation.AnnotationSheet.from_file_path(
             file_path=file_path,
-            file_type='excel_tab',
+            file_type='excel-tab',
             name='Illumina Adaptors')
 
         adaptors = cls()
@@ -120,10 +122,13 @@ class Adaptors(object):
         @type adaptor_type: str | None
         @param adaptor_name: Adaptor name
         @type adaptor_name: str | None
-        @return: Python C{tuple} of Python C{str} (adaptor class), Python C{str} (adaptor type) and
-            Python C{str} (adaptor name)
-        @rtype: (str, str, str)
+        @return: Python C{tuple} of Python C{str} (adaptor class), Python C{str} (adaptor type),
+            Python C{str} (adaptor name) and Python C{bool} (reverse complement)
+        @rtype: list[(str, str, str, bool)]
         """
+        result_list = list()
+        """ @type result_list: list[(str, str, str, bool)] """
+
         if adaptor_class:  # not None and not empty
             adaptor_class_list = [adaptor_class]
         else:
@@ -147,8 +152,17 @@ class Adaptors(object):
 
                 # Iterate over all adaptor names.
                 for adaptor_name_key in adaptor_name_list:
-                    if sequence == type_dict[adaptor_name_key]:
-                        return adaptor_class_key, adaptor_type_key, adaptor_name_key
+                    bio_seq = Bio.Seq.Seq(data=type_dict[adaptor_name_key])
+
+                    # Match in forward orientation
+                    if sequence == str(bio_seq):
+                        result_list.append((adaptor_class_key, adaptor_type_key, adaptor_name_key, False))
+
+                    # Match in reverse orientation
+                    if sequence == str(bio_seq.reverse_complement()):
+                        result_list.append((adaptor_class_key, adaptor_type_key, adaptor_name_key, True))
+
+        return result_list
 
 
 class RunInformationFlowcellLayout(object):
