@@ -480,8 +480,8 @@ class IlluminaToBam(bsf.Analysis):
     @type classpath_illumina2bam: str | unicode | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
     @type classpath_picard: str | unicode | None
-    @ivar vendor_quality_filter: Python C{dict} of flow cell chemistry type and Python bool value for filtering
-    @type vendor_quality_filter: dict[str, bool]
+    @ivar vendor_quality_filter: Vendor quality filter
+    @type vendor_quality_filter: bool
     @ivar force: Force processing of incomplete Illumina Run Folders
     @type force: bool | None
     """
@@ -596,8 +596,8 @@ class IlluminaToBam(bsf.Analysis):
         @type classpath_illumina2bam: str | unicode | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: str | unicode | None
-        @param vendor_quality_filter: Python C{dict} of flow cell chemistry type and Python bool value for filtering
-        @type vendor_quality_filter: dict[str, bool] | None
+        @param vendor_quality_filter: Vendor quality filter
+        @type vendor_quality_filter: bool | None
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool | None
         @return:
@@ -630,12 +630,7 @@ class IlluminaToBam(bsf.Analysis):
         self.mode_file = mode_file
         self.classpath_illumina2bam = classpath_illumina2bam
         self.classpath_picard = classpath_picard
-
-        if vendor_quality_filter is None:
-            self.vendor_quality_filter = dict()
-        else:
-            self.vendor_quality_filter = vendor_quality_filter
-
+        self.vendor_quality_filter = vendor_quality_filter
         self.force = force
 
         return
@@ -667,8 +662,6 @@ class IlluminaToBam(bsf.Analysis):
 
         # Sub-class specific ...
 
-        # Get Illumina Run Folder information.
-
         option = 'illumina_run_folder'
         if configuration.config_parser.has_option(section=section, option=option):
             self.run_directory = configuration.config_parser.get(section=section, option=option)
@@ -681,49 +674,33 @@ class IlluminaToBam(bsf.Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.basecalls_directory = configuration.config_parser.get(section=section, option=option)
 
-        # Get the experiment name.
-
         option = 'experiment_name'
         if configuration.config_parser.has_option(section=section, option=option):
             self.experiment_name = configuration.config_parser.get(section=section, option=option)
-
-        # Get sequencing centre information.
 
         option = 'sequencing_centre'
         if configuration.config_parser.has_option(section=section, option=option):
             self.sequencing_centre = configuration.config_parser.get(section=section, option=option)
 
-        # Get the sorting output option.
-
         option = 'sort_output'
         if configuration.config_parser.has_option(section=section, option=option):
             self.sort_output = configuration.config_parser.getboolean(section=section, option=option)
-
-        # Get the sequences directory information.
 
         option = 'sequences_directory'
         if configuration.config_parser.has_option(section=section, option=option):
             self.sequences_directory = configuration.config_parser.get(section=section, option=option)
 
-        # Get directory access mode permission bits.
-
         option = 'mode_directory'
         if configuration.config_parser.has_option(section=section, option=option):
             self.mode_directory = configuration.config_parser.get(section=section, option=option)
-
-        # Get file access mode permission bits.
 
         option = 'mode_file'
         if configuration.config_parser.has_option(section=section, option=option):
             self.mode_file = configuration.config_parser.get(section=section, option=option)
 
-        # Get the Illumina2Bam tools Java Archive (JAR) class path directory.
-
         option = 'classpath_illumina2bam'
         if configuration.config_parser.has_option(section=section, option=option):
             self.classpath_illumina2bam = configuration.config_parser.get(section=section, option=option)
-
-        # Get the Picard tools Java Archive (JAR) class path directory.
 
         option = 'classpath_picard'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -733,16 +710,9 @@ class IlluminaToBam(bsf.Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.force = configuration.config_parser.getboolean(section=section, option=option)
 
-        # Read the VendorQualityFilter section, which consists of flow cell chemistry type keys and boolean values
-        # to set filtering.
-
-        vqf_section = '.'.join((section, 'VendorQualityFilter'))
-
-        if configuration.config_parser.has_section(section=vqf_section):
-            for option_name in configuration.config_parser.options(section=vqf_section):
-                self.vendor_quality_filter[option_name] = configuration.config_parser.getboolean(
-                    section=vqf_section,
-                    option=option_name)
+        option = 'vendor_quality_filter'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.vendor_quality_filter = configuration.config_parser.getboolean(section=section, option=option)
 
         return
 
@@ -883,8 +853,9 @@ class IlluminaToBam(bsf.Analysis):
 
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
-        if irf.run_parameters.get_flow_cell_type not in self.vendor_quality_filter:
-            raise Exception('Flow cell chemistry type {!r} not defined.'.format(irf.run_parameters.get_flow_cell_type))
+        if self.vendor_quality_filter is None:
+            self.vendor_quality_filter = bsf.standards.VendorQualityFilter.get_vendor_quality_filter(
+                flow_cell_type=irf.run_parameters.get_flow_cell_type)
 
         # Call the run method of the super class after the project_name has been defined.
 
@@ -973,7 +944,7 @@ class IlluminaToBam(bsf.Analysis):
             runnable_step.add_itb_option(key='OUTPUT', value=file_path_lane.unsorted_bam)
             # GENERATE_SECONDARY_BASE_CALLS defaults to 'false'.
             # PF_FILTER defaults to 'true'.
-            if self.vendor_quality_filter[irf.run_parameters.get_flow_cell_type]:
+            if self.vendor_quality_filter:
                 runnable_step.add_itb_option(key='PF_FILTER', value='true')
             else:
                 runnable_step.add_itb_option(key='PF_FILTER', value='false')
@@ -1396,49 +1367,33 @@ class BamIndexDecoder(bsf.Analysis):
 
         # Sub-class specific ...
 
-        # Get the hash-based algorithm option.
-
         option = 'hash_algorithm'
         if configuration.config_parser.has_option(section=section, option=option):
             self.hash_algorithm = self.configuration.config_parser.getboolean(section=section, option=option)
-
-        # Get the library annotation file.
 
         option = 'library_path'
         if configuration.config_parser.has_option(section=section, option=option):
             self.library_path = configuration.config_parser.get(section=section, option=option)
 
-        # Get the general sequences directory.
-
         option = 'sequences_directory'
         if configuration.config_parser.has_option(section=section, option=option):
             self.sequences_directory = configuration.config_parser.get(section=section, option=option)
-
-        # Get the general samples directory.
 
         option = 'samples_directory'
         if configuration.config_parser.has_option(section=section, option=option):
             self.samples_directory = configuration.config_parser.get(section=section, option=option)
 
-        # Get directory access mode permission bits.
-
         option = 'mode_directory'
         if configuration.config_parser.has_option(section=section, option=option):
             self.mode_directory = configuration.config_parser.get(section=section, option=option)
-
-        # Get file access mode permission bits.
 
         option = 'mode_file'
         if configuration.config_parser.has_option(section=section, option=option):
             self.mode_file = configuration.config_parser.get(section=section, option=option)
 
-        # Get the Illumina2Bam tools Java Archive (JAR) class path directory.
-
         option = 'classpath_illumina2bam'
         if configuration.config_parser.has_option(section=section, option=option):
             self.classpath_illumina2bam = configuration.config_parser.get(section=section, option=option)
-
-        # Get the Picard tools Java Archive (JAR) class path directory.
 
         option = 'classpath_picard'
         if configuration.config_parser.has_option(section=section, option=option):
