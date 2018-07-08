@@ -465,13 +465,39 @@ class InitialisationBase(object):
         else:
             return
 
+    @classmethod
+    def getboolean(cls, option=None):
+        """Get the value for a configuration option in the section defined by the sub-class section class variable.
+
+        This method is a re-implementation of the C{SafeConfigParser.getboolean()} method that returns C{None}
+        upon non-existing sections or options.
+        @param option: Configuration option
+        @type option: None | str | unicode
+        @return: Configuration value
+        @rtype: None | bool
+        """
+        if not cls.section:
+            return
+
+        if not option:
+            return
+
+        if Configuration.get_global_configuration().config_parser.has_option(
+                section=cls.section,
+                option=option):
+            return Configuration.get_global_configuration().config_parser.getboolean(
+                section=cls.section,
+                option=option)
+        else:
+            return
+
 
 class JavaClassPath(InitialisationBase):
     """The C{bsf.standards.JavaClassPath} class models Java class path defaults.
 
     The defaults are read from the [classpath] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section for Java class path defaults
+    @cvar section: C{SafeConfigParser} section
     @type section: str | unicode
     """
     section = 'classpath'
@@ -534,9 +560,9 @@ class JavaClassPath(InitialisationBase):
 class EnsemblVEP(object):
     """The C{bsf.standards.EnsemblVEP} class models Ensembl Variant Effect Predictor (VEP) defaults.
 
-    The defaults are read form the [ensembl_vep_{genome_version}] section of the global configuration file.
+    The defaults are read from the [ensembl_vep_{genome_version}] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section for the Ensembl Variant Effect Predictor (VEP)
+    @cvar section: C{SafeConfigParser} section
     @type section: str | unicode
     """
     section = 'ensembl_vep'
@@ -733,9 +759,9 @@ class EnsemblVEP(object):
 class FilePath(InitialisationBase):
     """The C{bsf.standards.FilePath} class models file path defaults.
 
-    The defaults are read form the [directories] section of the global configuration file.
+    The defaults are read from the [directories] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section for the operator
+    @cvar section: C{SafeConfigParser} section
     @type section: str | unicode
     """
 
@@ -970,9 +996,9 @@ class FilePath(InitialisationBase):
 class Operator(InitialisationBase):
     """The C{bsf.standards.Operator} class models operator defaults.
 
-    The defaults are read form the [operator] section of the global configuration file.
+    The defaults are read from the [operator] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section for the operator
+    @cvar section: C{SafeConfigParser} section
     @type section: str | unicode
     """
     section = 'operator'
@@ -1017,9 +1043,9 @@ class Operator(InitialisationBase):
 class UCSC(InitialisationBase):
     """The C{bsf.standards.UCSC} class models UCSC Genome Browser uniform resource locator (URL) defaults.
 
-    The defaults are read form the [ucsc] section of the global configuration file.
+    The defaults are read from the [ucsc] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section for the operator
+    @cvar section: C{SafeConfigParser} section
     @type section: str | unicode
     """
 
@@ -1047,9 +1073,9 @@ class UCSC(InitialisationBase):
 class URL(InitialisationBase):
     """The C{bsf.standards.URL} class models web server uniform resource locator (URL) defaults.
 
-    The defaults are read form the [url] section of the global configuration file.
+    The defaults are read from the [url] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section for the operator
+    @cvar section: C{SafeConfigParser} section
     @type section: str | unicode
     """
 
@@ -1120,3 +1146,43 @@ class URL(InitialisationBase):
         @rtype: str
         """
         return '/'.join((cls.get_absolute_base(), cls.get_relative_projects()))
+
+
+class VendorQualityFilter(InitialisationBase):
+    """The C{bsf.standards.VendorQualityFilter} class models (SAM) Vendor Quality Filter defaults.
+
+    The defaults are read from the [VendorQualityFilter] section of the global configuration file.
+    For each flow cell type a boolean specifies whether vendor quality filtering should be applied or not.
+    Attributes:
+    @cvar section: C{SafeConfigParser} section
+    @type section: str | unicode
+    """
+
+    section = 'vendor_quality_filter'
+
+    @classmethod
+    def get_vendor_quality_filter(cls, flow_cell_type=None):
+        """Get the vendor quality filter setting for a particular flow cell type.
+
+        The flow cell type is accessible via property C{bsf.illumina.RunParameters.get_flow_cell_type},
+        practically directly via C{bsf.illumina.RunFolder.run_parameters.get_flow_cell_type}.
+        @param flow_cell_type: FLow cell (chemistry) type
+        @type flow_cell_type: str | unicode | None
+        @return: Vendor quality filer setting
+        @rtype: bool
+        """
+        if not flow_cell_type:
+            return
+
+        # To avoid emitting cryptic error messages, check for the presence of the flow cell type before
+        # and inform the user about an eventual problem with a hopefully more meaningful message.
+
+        if not Configuration.get_global_configuration().config_parser.has_option(
+                section=cls.section,
+                option=flow_cell_type):
+            raise Exception('Flow cell type ' + repr(flow_cell_type) +
+                            ' is not defined in the ' + repr(cls.section) +
+                            ' section of the standard configuration file ' +
+                            repr(Configuration.global_file_path) + '\n')
+
+        return cls.getboolean(option=flow_cell_type)
