@@ -1,1 +1,2 @@
-Sample ProcessedRunFolder Name,Sample Project Name,Sample Project Size,Sample Name,Sample Cohort Name,PairedReads Index 1,PairedReads Index 2,PairedReads ReadGroup,PairedReads Exclude,Reads1 Name,Reads1 File,Reads2 Name,Reads2 File,Sample Target Name,Sample Target Intervals,Sample Probe Intervals
+File Type,ProcessedRunFolder Name,Project Name,Project Size,Sample Cohort Name,Sample Name,Sample Probe Intervals,Sample Target Intervals,Sample Target Name,PairedReads BAM File,PairedReads Exclude,PairedReads Index 1,PairedReads Index 2,PairedReads ProcessedRunFolder Name,PairedReads Project Name,PairedReads Project Size,PairedReads ReadGroup,Reads1 File,Reads1 Name,Reads2 File,Reads2 Name
+,Default,Default,,,,,,,,,,,,,,,,,,

@@ -30,18 +30,16 @@ A package of classes and methods supporting variant calling analyses.
 from __future__ import print_function
 
 import errno
-import math
 import os
 import pickle
 import sys
 import warnings
 
-import pysam
-
 import bsf
 import bsf.annotation
 import bsf.executables
 import bsf.executables.vcf
+import bsf.intervals
 import bsf.process
 import bsf.standards
 
@@ -979,6 +977,8 @@ class VariantCallingGATK(bsf.Analysis):
     @type include_intervals_list: list[str] | None
     @ivar interval_padding: Interval padding
     @type interval_padding: int | None
+    @ivar scatter_intervals_path: Picard ScatterIntervalsByNs interval list file path
+    @type scatter_intervals_path: str | unicode | None
     @ivar number_of_tiles_cohort: Number of genomic tiles for scattering in stage variant_calling_process_cohort
     @type number_of_tiles_cohort: int | None
     @ivar number_of_chunks_cohort: Number of chunks for gathering in stage variant_calling_process_cohort
@@ -1088,6 +1088,7 @@ class VariantCallingGATK(bsf.Analysis):
             exclude_intervals_list=None,
             include_intervals_list=None,
             interval_padding=None,
+            scatter_intervals_path=None,
             number_of_tiles_cohort=None,
             number_of_chunks_cohort=None,
             number_of_tiles_somatic=None,
@@ -1198,6 +1199,8 @@ class VariantCallingGATK(bsf.Analysis):
         @type include_intervals_list: list[str] | None
         @param interval_padding: Interval padding
         @type interval_padding: int | None
+        @param scatter_intervals_path: Picard ScatterIntervalsByNs interval list file path
+        @type scatter_intervals_path: str | unicode | None
         @param number_of_tiles_cohort: Number of genomic tiles for scattering in stage variant_calling_process_cohort
         @type number_of_tiles_cohort: int | None
         @param number_of_chunks_cohort: Number of chunks for gathering in stage variant_calling_process_cohort
@@ -1298,6 +1301,7 @@ class VariantCallingGATK(bsf.Analysis):
         self.include_intervals_list = include_intervals_list
         self.interval_padding = interval_padding
 
+        self.scatter_intervals_path = scatter_intervals_path
         self.number_of_tiles_cohort = number_of_tiles_cohort
         self.number_of_chunks_cohort = number_of_chunks_cohort
         self.number_of_tiles_somatic = number_of_tiles_somatic
@@ -1332,11 +1336,11 @@ class VariantCallingGATK(bsf.Analysis):
 
         # Initialise the Python list of genome tile regions with an empty region to run a single process by default.
 
-        self._tile_region_cohort_list = [[('', 0, 0)]]
-        """ @type _tile_region_cohort_list: list[list[(str, int, int)]] """
+        self._tile_region_cohort_list = None
+        """ @type _tile_region_cohort_list: list[bsf.intervals.Container] | None """
 
-        self._tile_region_somatic_list = [[('', 0, 0)]]
-        """ @type _tile_region_somatic_list: list[list[(str, int, int)]] """
+        self._tile_region_somatic_list = None
+        """ @type _tile_region_somatic_list: list[bsf.intervals.Container] | None """
 
         return
 
@@ -1368,6 +1372,24 @@ class VariantCallingGATK(bsf.Analysis):
         @rtype:
         """
 
+        def set_comma_separated_list(_section, _option):
+            """Private function to get, process and set a comma separated configuration value.
+
+            Get the configuration C{str} from the C{SafeConfigParser}, split it on a comma,
+            strip white space characters and remove remaining empty strings.
+            @param _section: Configuration file section
+            @type _section: str
+            @param _option: Configuration file option
+            @type _option: str
+            @return: Python C{list} of Python C{str} or C{unicode} objects
+            @rtype: list[str | unicode]
+            """
+            return filter(
+                lambda x: x != '',
+                map(
+                    lambda x: x.strip(),
+                    config_parser.get(section=_section, option=_option).split(',')))
+
         def set_vqsr_configuration(vqsr_resources_dict, variation_type):
             """Private function to read variant quality score recalibration (VQSR) configuration information.
 
@@ -1392,11 +1414,7 @@ class VariantCallingGATK(bsf.Analysis):
                 if vqsr_resources_dict is None:
                     vqsr_resources_dict = dict()
                 # Split the resource list on a comma, split white space characters and remove remaining empty strings.
-                for resource_key in filter(
-                        lambda x: x != '',
-                        map(
-                            lambda x: x.strip(),
-                            config_parser.get(section=section, option=vqsr_option).split(','))):
+                for resource_key in set_comma_separated_list(_section=section, _option=vqsr_option):
                     # The VQSR resource section consists of section.vqsr_(indel|snp)_resource.
                     resource_section = '.'.join((section, '_'.join(('vqsr', variation_type, resource_key))))
                     if config_parser.has_section(section=resource_section):
@@ -1436,11 +1454,7 @@ class VariantCallingGATK(bsf.Analysis):
                 if annotation_resources_dict is None:
                     annotation_resources_dict = dict()
                 # Split the resource list on a comma, split white space characters and remove remaining empty strings.
-                for resource_name in filter(
-                        lambda x: x != '',
-                        map(
-                            lambda x: x.strip(),
-                            config_parser.get(section=section, option=annotation_option).split(','))):
+                for resource_name in set_comma_separated_list(_section=section, _option=annotation_option):
                     # The annotation resource section consists of section.annotation_resource.
                     resource_section = '.'.join((section, '_'.join(('annotation', resource_name))))
                     if config_parser.has_section(section=resource_section):
@@ -1455,12 +1469,9 @@ class VariantCallingGATK(bsf.Analysis):
                         if config_parser.has_option(section=resource_section, option=resource_option):
                             # Split the annotation list on a comma, split white space characters and
                             # remove remaining empty strings.
-                            annotation_list = filter(
-                                lambda x: x != '',
-                                map(
-                                    lambda x: x.strip(), config_parser.get(
-                                        section=resource_section,
-                                        option=resource_option).split(',')))
+                            annotation_list = set_comma_separated_list(
+                                _section=resource_section,
+                                _option=resource_option)
                         else:
                             raise Exception(
                                 'Missing configuration option ' + repr(resource_option) +
@@ -1485,110 +1496,65 @@ class VariantCallingGATK(bsf.Analysis):
         if config_parser.has_option(section=section, option=option):
             self.replicate_grouping = config_parser.getboolean(section=section, option=option)
 
-        # Get the genome database.
-
         option = 'bwa_genome_db'
         if config_parser.has_option(section=section, option=option):
             self.bwa_genome_db = config_parser.get(section=section, option=option)
-
-        # Read a comparison file.
 
         option = 'cmp_file'
         if config_parser.has_option(section=section, option=option):
             self.comparison_path = config_parser.get(section=section, option=option)
 
-        # Get the cohort name.
-
         option = 'cohort_name'
         if config_parser.has_option(section=section, option=option):
             self.cohort_name = config_parser.get(section=section, option=option)
 
-        # Comma-separated list of GVCF files from accessory cohorts
-        # that should be used in the recalibration procedure.
-
         option = 'accessory_cohort_gvcfs'
         if config_parser.has_option(section=section, option=option):
-            self.accessory_cohort_gvcfs = filter(
-                lambda x: x != '',
-                map(
-                    lambda x: x.strip(),
-                    config_parser.get(section=section, option=option).split(',')))
-
-        # Get the skip mark duplicates option.
+            self.accessory_cohort_gvcfs = set_comma_separated_list(_section=section, _option=option)
 
         option = 'skip_mark_duplicates'
         if config_parser.has_option(section=section, option=option):
             self.skip_mark_duplicates = config_parser.getboolean(section=section, option=option)
 
-        # Get the skip INDEL realignment option.
-
         option = 'skip_indel_realignment'
         if config_parser.has_option(section=section, option=option):
             self.skip_indel_realignment = config_parser.getboolean(section=section, option=option)
-
-        # Get the truth sensitivity filter level for INDELs.
 
         option = 'truth_sensitivity_filter_level_indel'
         if config_parser.has_option(section=section, option=option):
             self.truth_sensitivity_filter_level_indel = config_parser.get(section=section, option=option)
 
-        # Get the truth sensitivity filter level for SNPs.
-
         option = 'truth_sensitivity_filter_level_snp'
         if config_parser.has_option(section=section, option=option):
             self.truth_sensitivity_filter_level_snp = config_parser.get(section=section, option=option)
-
-        # Get the flag for skipping the Variant Quality Score Recalibration (VQSR) for INDELs.
 
         option = 'vqsr_skip_indel'
         if config_parser.has_option(section=section, option=option):
             self.vqsr_skip_indel = config_parser.getboolean(section=section, option=option)
 
-        # Get the flag for skipping the Variant Quality Score Recalibration (VQSR) for SNPs.
-
         option = 'vqsr_skip_snp'
         if config_parser.has_option(section=section, option=option):
             self.vqsr_skip_snp = config_parser.getboolean(section=section, option=option)
 
-        # Get the list of annotations for the Variant Quality Score Recalibration (VQSR) for INDELs.
-
         option = 'vqsr_annotations_indel'
         if config_parser.has_option(section=section, option=option):
-            self.vqsr_annotations_indel_list = filter(
-                lambda x: x != '',
-                map(
-                    lambda x: x.strip(),
-                    config_parser.get(section=section, option=option).split(',')))
-
-        # Get the list of annotations for the Variant Quality Score Recalibration (VQSR) for SNPs.
+            self.vqsr_annotations_indel_list = set_comma_separated_list(_section=section, _option=option)
 
         option = 'vqsr_annotations_snp'
         if config_parser.has_option(section=section, option=option):
-            self.vqsr_annotations_snp_list = filter(
-                lambda x: x != '',
-                map(
-                    lambda x: x.strip(),
-                    config_parser.get(section=section, option=option).split(',')))
-
-        # Get the bad LOD cutoff for the negative training set for INDELs.
+            self.vqsr_annotations_snp_list = set_comma_separated_list(_section=section, _option=option)
 
         option = 'vqsr_bad_lod_cutoff_indel'
         if config_parser.has_option(section=section, option=option):
             self.vqsr_bad_lod_cutoff_indel = config_parser.getfloat(section=section, option=option)
 
-        # Get the bad LOD cutoff for the negative training set for SNPs.
-
         option = 'vqsr_bad_lod_cutoff_snp'
         if config_parser.has_option(section=section, option=option):
             self.vqsr_bad_lod_cutoff_snp = config_parser.getfloat(section=section, option=option)
 
-        # Get the maximum number of Gaussians in the positive training for INDELs.
-
         option = 'vqsr_max_gaussians_pos_indel'
         if config_parser.has_option(section=section, option=option):
             self.vqsr_max_gaussians_pos_indel = config_parser.getint(section=section, option=option)
-
-        # Get the maximum number of Gaussians in the positive training for SNPs.
 
         option = 'vqsr_max_gaussians_pos_snp'
         if config_parser.has_option(section=section, option=option):
@@ -1611,115 +1577,65 @@ class VariantCallingGATK(bsf.Analysis):
         self.annotation_resources_dict = set_annotation_configuration(
             annotation_resources_dict=self.annotation_resources_dict)
 
-        # Single VCF file of known sites for the
-        # GATK HaplotypeCaller and GenotypeGVCFs steps.
-
         option = 'known_sites_discovery'
         if config_parser.has_option(section=section, option=option):
             self.known_sites_discovery = config_parser.get(section=section, option=option)
 
-        # Comma-separated list of VCF files with known variant sites for the
-        # GATK RealignerTargetCreator and IndelRealigner steps.
-
         option = 'known_sites_realignment'
         if config_parser.has_option(section=section, option=option):
-            self.known_sites_realignment = filter(
-                lambda x: x != '',
-                map(
-                    lambda x: x.strip(),
-                    config_parser.get(section=section, option=option).split(',')))
-
-        # Comma-separated list of VCF files with known variant sites for the
-        # GATK BaseRecalibrator and PrintReads steps.
+            self.known_sites_realignment = set_comma_separated_list(_section=section, _option=option)
 
         option = 'known_sites_recalibration'
         if config_parser.has_option(section=section, option=option):
-            self.known_sites_recalibration = filter(
-                lambda x: x != '',
-                map(
-                    lambda x: x.strip(),
-                    config_parser.get(section=section, option=option).split(',')))
-
-        # Comma-separated list of VCF files with known somatic variant sites for the
-        # GATK MuTect2 steps.
+            self.known_sites_recalibration = set_comma_separated_list(_section=section, _option=option)
 
         option = 'known_somatic_discovery'
         if config_parser.has_option(section=section, option=option):
-            self.known_somatic_discovery = filter(
-                lambda x: x != '',
-                map(
-                    lambda x: x.strip(),
-                    config_parser.get(section=section, option=option).split(',')))
-
-        # Get the list of intervals to exclude.
+            self.known_somatic_discovery = set_comma_separated_list(_section=section, _option=option)
 
         option = 'exclude_intervals'
         if config_parser.has_option(section=section, option=option):
-            self.exclude_intervals_list = filter(
-                lambda x: x != '',
-                map(
-                    lambda x: x.strip(),
-                    config_parser.get(section=section, option=option).split(',')))
-
-        # Get the list of intervals to include.
+            self.exclude_intervals_list = set_comma_separated_list(_section=section, _option=option)
 
         option = 'include_intervals'
         if config_parser.has_option(section=section, option=option):
-            self.include_intervals_list = filter(
-                lambda x: x != '',
-                map(
-                    lambda x: x.strip(),
-                    config_parser.get(section=section, option=option).split(',')))
-
-        # Get the interval padding.
+            self.include_intervals_list = set_comma_separated_list(_section=section, _option=option)
 
         option = 'interval_padding'
         if config_parser.has_option(section=section, option=option):
             self.interval_padding = config_parser.getint(section=section, option=option)
 
-        # Get the number of tiles for variant_calling_process_cohort.
+        option = 'scatter_intervals_path'
+        if config_parser.has_option(section=section, option=option):
+            self.scatter_intervals_path = config_parser.get(section=section, option=option)
 
         option = 'number_of_tiles_cohort'
         if config_parser.has_option(section=section, option=option):
             self.number_of_tiles_cohort = config_parser.getint(section=section, option=option)
 
-        # Get the number of chunks for variant_calling_process_cohort.
-
         option = 'number_of_chunks_cohort'
         if config_parser.has_option(section=section, option=option):
             self.number_of_chunks_cohort = config_parser.getint(section=section, option=option)
-
-        # Get the number of tiles for variant_calling_somatic.
 
         option = 'number_of_tiles_somatic'
         if config_parser.has_option(section=section, option=option):
             self.number_of_tiles_somatic = config_parser.getint(section=section, option=option)
 
-        # Get the number of chunks for variant_calling_somatic.
-
         option = 'number_of_chunks_somatic'
         if config_parser.has_option(section=section, option=option):
             self.number_of_chunks_somatic = config_parser.getint(section=section, option=option)
-
-        # Get the GATK bundle version.
 
         option = 'gatk_bundle_version'
         if config_parser.has_option(section=section, option=option):
             self.gatk_bundle_version = config_parser.get(section=section, option=option)
 
-        # Get the snpEff genome version.
-
         option = 'snpeff_genome_version'
         if config_parser.has_option(section=section, option=option):
             self.snpeff_genome_version = config_parser.get(section=section, option=option)
 
-        # Get the genome annotation Gene Transfer Format (GTF) file path.
-
         option = 'genome_annotation_gtf'
         if config_parser.has_option(section=section, option=option):
             self.genome_annotation_gtf = config_parser.get(section=section, option=option)
-
-        # VEP names
 
         option = 'vep_assembly'
         if config_parser.has_option(section=section, option=option):
@@ -1728,8 +1644,6 @@ class VariantCallingGATK(bsf.Analysis):
         option = 'vep_species'
         if config_parser.has_option(section=section, option=option):
             self.vep_species = config_parser.get(section=section, option=option)
-
-        # VEP directories
 
         option = 'vep_cache'
         if config_parser.has_option(section=section, option=option):
@@ -1747,8 +1661,6 @@ class VariantCallingGATK(bsf.Analysis):
         if config_parser.has_option(section=section, option=option):
             self.vep_source = config_parser.get(section=section, option=option)
 
-        # VEP SQL database
-
         option = 'vep_sql_user'
         if config_parser.has_option(section=section, option=option):
             self.vep_sql_user = config_parser.get(section=section, option=option)
@@ -1765,8 +1677,6 @@ class VariantCallingGATK(bsf.Analysis):
         if config_parser.has_option(section=section, option=option):
             self.vep_sql_port = config_parser.get(section=section, option=option)
 
-        # VEP CSQ to VEP_* converter configuration file paths
-
         option = 'vep_ofc_path'
         if config_parser.has_option(section=section, option=option):
             self.vep_ofc_path = config_parser.get(section=section, option=option)
@@ -1775,25 +1685,17 @@ class VariantCallingGATK(bsf.Analysis):
         if config_parser.has_option(section=section, option=option):
             self.vep_soc_path = config_parser.get(section=section, option=option)
 
-        # Get the Genome Analysis Tool Kit (GATK) Java Archive (JAR) class path directory.
-
         option = 'classpath_gatk'
         if config_parser.has_option(section=section, option=option):
             self.classpath_gatk = config_parser.get(section=section, option=option)
-
-        # Get the Picard tools Java Archive (JAR) class path directory.
 
         option = 'classpath_picard'
         if config_parser.has_option(section=section, option=option):
             self.classpath_picard = config_parser.get(section=section, option=option)
 
-        # Get the snpEff tool Java Archive (JAR) class path directory.
-
         option = 'classpath_snpeff'
         if config_parser.has_option(section=section, option=option):
             self.classpath_snpeff = config_parser.get(section=section, option=option)
-
-        # Get the VCF.Filter tool Java Archive (JAR) class path directory.
 
         option = 'classpath_vcf_filter'
         if config_parser.has_option(section=section, option=option):
@@ -1983,90 +1885,6 @@ class VariantCallingGATK(bsf.Analysis):
             ),
         }
 
-        def run_create_genome_tiles(tiles=None, width=None, sequences=None):
-            """Private function to create genomic tiles for scattering and a partitioned list of indices for gathering.
-
-            The tiles are created on the basis of a Picard sequence dictionary accompanying the genome FASTA file.
-            Sequence regions can serve as natural tiles, alternatively a number of tiles aor a tile width can be
-            requested. If both tiles and width are not defined or 0, no tiling is attempted.
-            @param tiles: Number of tiles for scattering
-            @type tiles: int | None
-            @param width: Tile width for scattering
-            @type width: int | None
-            @param sequences: Tile on sequence regions (i.e. SAM @SQ entries)
-            @type sequences: bool | None
-            @return: Python C{list} of Python C{list} (tiles) of Python C{tuple} (tile region) of
-                Python C{str} (sequence region), Python C{int} (start) and Python C{int} (end)
-            @rtype: list[list[(str, int, int)]]
-            """
-            tile_region_list = list()
-            """ @type tile_region_list: list[list[(str, int, int)]] """
-            total_length = 0
-            """ @type total_length: int """
-
-            dict_path = os.path.splitext(self.bwa_genome_db)[0] + '.dict'
-            if not os.path.exists(dict_path):
-                raise Exception('Picard sequence dictionary {!r} does not exist.'.format(dict_path))
-
-            alignment_file = pysam.AlignmentFile(dict_path, 'r')
-            # Summarise sequence lengths to get the total length.
-            for sq_entry in alignment_file.header['SQ']:
-                """ @type sq_entry: dict """
-                total_length += int(sq_entry['LN'])
-
-            if sequences:
-                # The intervals are just the natural sequence regions.
-                # Thus the start coordinate is always 1 and the end coordinate is the sequence length (@SQ SL).
-                # 1 2 3 ... 7 8 9
-                # start = 1
-                # end = 9
-                # length = end - start + 1 = 9 - 1 + 1 = 9
-                for sq_entry in alignment_file.header['SQ']:
-                    tile_region_list.append([(str(sq_entry['SN']), 1, int(sq_entry['LN']))])
-
-                return tile_region_list
-
-            if tiles is not None and tiles > 0:
-                tile_length = float(total_length) / float(tiles)
-            elif width is not None and width > 0:
-                tile_length = float(width)
-            else:
-                # Do not tile at all, if neither a number of tiles nor a tile width was provided.
-                # Return a list of a single tuple with an empty sequence region, start and end coordinates.
-                tile_region_list.append([('', 0, 0)])
-
-                return tile_region_list
-
-            current_length = 0.0
-            """ @type current_length: float """
-            sq_list = list()
-            """ @type sq_list: list[(str, int, int)] """
-            for sq_entry in alignment_file.header['SQ']:
-                sq_start = 0.0
-                """ @type sq_start: float """
-                sq_length = float(sq_entry['LN'])
-                """ @type sq_length: float """
-                while sq_start < sq_length:  # float
-                    # The sequence end is the minimum of the sequence start plus remaining tile length or
-                    # the sequence length.
-                    sq_end = min(sq_start + tile_length - current_length, sq_length)
-                    """ @type seq_end: float """
-                    sq_list.append((sq_entry['SN'], int(math.floor(sq_start + 1.0)), int(math.floor(sq_end))))
-                    current_length += sq_end - sq_start
-                    sq_start = sq_end
-
-                    if math.floor(current_length) >= math.floor(tile_length):
-                        # If a tile is complete, append the sequence list to the interval list and reset both
-                        # list and length.
-                        tile_region_list.append(sq_list)
-                        sq_list = []
-                        current_length = 0.0
-
-            if len(sq_list):
-                tile_region_list.append(sq_list)
-
-            return tile_region_list
-
         def run_merge_cohort_scatter_gather(analysis_stage, cohort_runnable_dict, cohort_name):
             """Private method to hierarchically merge samples into cohorts using a scatter gather approach.
 
@@ -2155,13 +1973,13 @@ class VariantCallingGATK(bsf.Analysis):
                 if self.exclude_intervals_list:  # not None and not empty
                     for _interval in self.exclude_intervals_list:
                         _runnable_step.add_gatk_option(key='excludeIntervals', value=_interval, override=True)
-                for region_tuple in self._tile_region_cohort_list[tile_index]:
+                for _interval in self._tile_region_cohort_list[tile_index].interval_list:
                     # The list of tiles is initialised to an empty tile to trigger at least one process.
                     # Do not assign an interval in such cases.
-                    if region_tuple[0]:
+                    if _interval.name:
                         _runnable_step.add_gatk_option(
                             key='intervals',
-                            value='{:s}:{:d}-{:d}'.format(region_tuple[0], region_tuple[1], region_tuple[2]),
+                            value=_interval.to_gatk_interval(),
                             override=True)
                 for cohort_component in cohort_object_list:
                     if isinstance(cohort_component, bsf.Runnable):
@@ -2372,13 +2190,13 @@ class VariantCallingGATK(bsf.Analysis):
                 if self.exclude_intervals_list:  # not None and not empty
                     for _interval in self.exclude_intervals_list:
                         _runnable_step.add_gatk_option(key='excludeIntervals', value=_interval, override=True)
-                for region_tuple in self._tile_region_cohort_list[tile_index]:
+                for _interval in self._tile_region_cohort_list[tile_index].interval_list:
                     # The list of tiles is initialised to an empty tile to trigger at least one process.
                     # Do not assign an interval in such cases.
-                    if region_tuple[0]:
+                    if _interval.name:
                         _runnable_step.add_gatk_option(
                             key='intervals',
-                            value='{:s}:{:d}-{:d}'.format(region_tuple[0], region_tuple[1], region_tuple[2]),
+                            value=_interval.to_gatk_interval(),
                             override=True)
                 if self.known_sites_discovery:
                     _runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
@@ -2587,13 +2405,13 @@ class VariantCallingGATK(bsf.Analysis):
                 if self.exclude_intervals_list:  # not None and not empty
                     for _interval in self.exclude_intervals_list:
                         _runnable_step.add_gatk_option(key='excludeIntervals', value=_interval, override=True)
-                for region_tuple in self._tile_region_somatic_list[tile_index]:
+                for _interval in self._tile_region_somatic_list[tile_index].interval_list:
                     # The list of tiles is initialised to an empty tile to trigger at least one process.
                     # Do not assign an interval in such cases.
-                    if region_tuple[0]:
+                    if _interval.name:
                         _runnable_step.add_gatk_option(
                             key='intervals',
-                            value='{:s}:{:d}-{:d}'.format(region_tuple[0], region_tuple[1], region_tuple[2]),
+                            value=_interval.to_gatk_interval(),
                             override=True)
                     elif _target_intervals.targets_path:
                         # If not running on genome tiles, the MuTect2 analysis is run on the target intervals, only.
@@ -3323,8 +3141,34 @@ class VariantCallingGATK(bsf.Analysis):
         run_read_comparisons()
 
         # Create genomic tiles for scatter gather approaches.
-        self._tile_region_cohort_list = run_create_genome_tiles(tiles=self.number_of_tiles_cohort)
-        self._tile_region_somatic_list = run_create_genome_tiles(tiles=self.number_of_tiles_somatic)
+        # In case the number of tiles is not defined or 0, a Python list with a single Container with an empty Interval
+        # gets returned by both functions.
+
+        if self.scatter_intervals_path:
+            if not os.path.exists(self.scatter_intervals_path):
+                raise Exception('Picard ScatterIntervalsByNs interval file ' + repr(self.scatter_intervals_path) +
+                                ' does not exist.')
+
+            self._tile_region_cohort_list = bsf.intervals.get_interval_tiles(
+                interval_path=self.scatter_intervals_path,
+                tile_number=self.number_of_tiles_cohort)
+
+            self._tile_region_somatic_list = bsf.intervals.get_interval_tiles(
+                interval_path=self.scatter_intervals_path,
+                tile_number=self.number_of_tiles_somatic)
+        else:
+            dictionary_path = os.path.splitext(self.bwa_genome_db)[0] + '.dict'
+
+            if not os.path.exists(dictionary_path):
+                raise Exception('Picard sequence dictionary ' + repr(dictionary_path) + ' does not exist.')
+
+            self._tile_region_cohort_list = bsf.intervals.get_genome_tiles(
+                dictionary_path=dictionary_path,
+                tile_number=self.number_of_tiles_cohort)
+
+            self._tile_region_somatic_list = bsf.intervals.get_genome_tiles(
+                dictionary_path=dictionary_path,
+                tile_number=self.number_of_tiles_somatic)
 
         stage_align_lane = self.get_stage(name=self.stage_name_align_lane)
         stage_process_lane = self.get_stage(name=self.stage_name_process_lane)
