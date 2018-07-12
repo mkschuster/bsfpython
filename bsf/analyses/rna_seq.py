@@ -3423,7 +3423,7 @@ class DESeq(bsf.Analysis):
                     str_list.append('<td>' +
                                     self.get_html_anchor(
                                         prefix=design_prefix,
-                                        suffix='_'.join(('lrt', lrt_row_dict['reduced_name'], '.tsv')),
+                                        suffix='_'.join(('lrt', lrt_row_dict['reduced_name'] + '.tsv')),
                                         text='<abbr title="Tab-Separated Value">TSV</abbr>') +
                                     '</td>\n')
                     # Significant genes
