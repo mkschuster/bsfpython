@@ -3505,8 +3505,8 @@ class DESeq(bsf.Analysis):
                     # Denominator
                     str_list.append('<td class="left">' + row_dict['Denominator'] + '</td>\n')
                     # TSV
-                    numerator = row_dict['Numerator']
-                    denominator = row_dict['Denominator']
+                    numerator = row_dict['Numerator'].replace(',', '_')
+                    denominator = row_dict['Denominator'].replace(',', '_')
                     if not denominator:
                         denominator = 'intercept'
                     # Differential Genes
@@ -3561,6 +3561,8 @@ class DESeq(bsf.Analysis):
             str_list.append('<th class="left">MDS Model</th>\n')
             str_list.append('<th class="left">PCA Blind</th>\n')
             str_list.append('<th class="left">PCA Model</th>\n')
+            str_list.append('<th class="left">Heatmap Blind</th>\n')
+            str_list.append('<th class="left">Heatmap Model</th>\n')
             # str_list.append('<th>Plot Aesthetics</th>\n')
             str_list.append('</tr>\n')
             str_list.append('</thead>\n')
@@ -3596,6 +3598,31 @@ class DESeq(bsf.Analysis):
                                     '</td>\n')
                             else:
                                 str_list.append('<td></td>\n')
+                    # Heatmap plots
+                    plot_path = '_'.join(map(lambda x: x.split('=')[1], ggplot_aes_list.split(',')))
+                    plot_type = 'heatmap'
+                    for model_type in ('blind', 'model'):
+                        plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
+                        plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
+                        if os.path.exists(
+                                os.path.join(
+                                    self.genome_directory,
+                                    relative_image_source(prefix=design_prefix, suffix=plot_path_png))):
+                            str_list.append(
+                                '<td>' +
+                                self.get_html_anchor(
+                                    prefix=design_prefix,
+                                    suffix=plot_path_pdf,
+                                    text=self.get_html_image(
+                                        prefix=design_prefix,
+                                        suffix=plot_path_png,
+                                        text=plot_type + ' plot',
+                                        height='80',
+                                        width='80')) +
+                                '</td>\n')
+                        else:
+                            str_list.append('<td></td>\n')
+
                     # Plot Aesthetics
                     # str_list.append('<td>' + plot_instance + '</td>\n')
                     str_list.append('</tr>\n')
