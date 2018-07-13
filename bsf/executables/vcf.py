@@ -237,6 +237,9 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         vh_new = vf_old.header.copy()
         """ @type vh_new: pysam.libcbcf.VariantHeader """
 
+        if 'CSQ' not in vf_old.header.info:
+            raise Exception("Cannot convert a VCF file without a 'CSQ' INFO field.")
+
         # Remove the CSQ info field from the new header.
 
         # NOTE: Apparently, pysam does not allow deleting an entry from the variant header at the moment.
@@ -350,6 +353,10 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
 
             # Total number of alleles including REF and ALT.
             allele_length = len(vr.alleles)
+
+            if 'CSQ' not in vri:
+                vf_new.write(vr)
+                continue
 
             # Iterate over all comma-separated allele-transcript blocks.
             for csq_component in vri['CSQ']:
