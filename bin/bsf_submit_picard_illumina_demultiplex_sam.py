@@ -95,8 +95,8 @@ name_space = argument_parser.parse_args()
 # of the --project-name.
 
 if name_space.configuration == bsf.standards.Configuration.global_file_path:
-    if name_space.project_name is None:
-        raise Exception("argument --project-name is required if --configuration is not set")
+    if name_space.project_name is None and name_space.irf is None:
+        raise Exception("argument --project-name or --irf are required if --configuration is not set")
 
 # Create a IlluminaDemultiplexSam analysis, run and submit it.
 
@@ -117,6 +117,9 @@ if name_space.project_name:
     assert isinstance(name_space.project_name, str)
     analysis.project_name = name_space.project_name
 
+# FIXME: Remove the mode option.
+# Since the script requires an IRF option, the lanes can be read from the bsf.illumina.RunFolder.
+# TODO: Synchronise to other de-multiplexing modules?
 if name_space.mode:
     assert isinstance(name_space.mode, str)
     if name_space.mode == 'high':

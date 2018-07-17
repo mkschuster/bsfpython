@@ -117,19 +117,42 @@ class LibraryAnnotationSheet(bsf.annotation.AnnotationSheet):
         ],
     }
 
-    def index_by_lane(self):
-        """Re-index by lanes.
+    def get_annotation_dict(self):
+        """Get a Python C{dict} of Python C{int} (lane) key and Python C{list} of Python C{dict} (row dict) values.
 
-        @return: Python C{dict} of Python C{str} (lane) key and Python C{list} of Python C{dict} (row dict) values
-        @rtype: dict[str, list[dict[str, str]]]
+        @return: Python C{dict} of Python C{int} (lane) key and Python C{list} of Python C{dict} (row dict) values
+        @rtype: dict[int, list[dict[str, str]]]
         """
         flow_cell_dict = dict()
-        """ @type flow_cell_dict: dict[str, list[dict[str, str]]] """
+        """ @type flow_cell_dict: dict[int, list[dict[str, str]]] """
 
         for row_dict in self.row_dicts:
-            if row_dict['lane'] not in flow_cell_dict:
-                flow_cell_dict[row_dict['lane']] = list()
-            flow_cell_dict[row_dict['lane']].append(row_dict)
+            lane_int = int(row_dict['lane'])
+            if lane_int not in flow_cell_dict:
+                flow_cell_dict[lane_int] = list()
+            flow_cell_dict[lane_int].append(row_dict)
+
+        return flow_cell_dict
+
+    def get_barcode_length_dict(self):
+        """Get a Python C{dict} of Python C(int} (lane) key and
+        Python C{tuple} of Python C{int} (barcode sequence length) values.
+
+        @return: Python C{dict} of Python C(int} (lane) and Python C{tuple} of Python C{int} barcode sequence lengths
+        @rtype: dict[int, (int, int)]
+        """
+        flow_cell_dict = dict()
+        """ @type flow_cell_dict: dict[int, (int, int)] """
+
+        for row_dict in self.row_dicts:
+            lane_int = int(row_dict['lane'])
+            if lane_int not in flow_cell_dict:
+                flow_cell_dict[lane_int] = (len(row_dict['barcode_sequence_1']), len(row_dict['barcode_sequence_2']))
+                continue
+            for index in range(0, 1 + 1):
+                if flow_cell_dict[lane_int][index] != len(row_dict['barcode_sequence_' + str(index + 1)]):
+                    warnings.warn("The length of 'barcode_sequence_" + str(index + 1) +
+                                  "' does not match previous records.\n" + repr(row_dict))
 
         return flow_cell_dict
 
@@ -142,7 +165,6 @@ class LibraryAnnotationSheet(bsf.annotation.AnnotationSheet):
         @return: Warning messages
         @rtype: str
         """
-
         messages = str()
 
         # Check the header line via the pre-defined field names.
@@ -1095,54 +1117,74 @@ class IlluminaToBam(bsf.Analysis):
 
 
 class FilePathBamIndexDecoderCell(bsf.FilePath):
-    """The C{bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderCell} models flow cell-specific files.
+    """The C{bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderCell} models flow cell-specific file paths.
 
     Attributes:
-    @ivar sample_annotation_sheet_csv: Sample Annotation Seet CSV file
+    @ivar prefix_cell: Non-standard, flow cell-specific (i.e. project_name) prefix
+    @type prefix_cell: str | unicode
+    @ivar sample_annotation_sheet_csv: Sample Annotation Sheet CSV file
     @type sample_annotation_sheet_csv: str | unicode
+    @see: FilePathIlluminaDemultiplexSamCell
+    @see: FilePathExtractIlluminaCell
     """
 
-    def __init__(self, project_name):
+    def __init__(self, prefix, project_name):
         """Initialise a C{FilePathBamIndexDecoderCell} object.
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
         @param project_name: Project name
         @type project_name: str
         @return:
         @rtype:
         """
-        prefix = BamIndexDecoder.get_prefix_cell(project_name=project_name)
-
         super(FilePathBamIndexDecoderCell, self).__init__(prefix=prefix)
 
         # All paths are non-standard in that they do not contain the regular Analysis Stage prefix.
-        # Re-define the prefix accordingly.
-        prefix = project_name
-        self.sample_annotation_sheet_csv = prefix + '_samples.csv'
+        # Re-define the flow cell-specific prefix accordingly.
+
+        self.prefix_cell = project_name
+
+        self.sample_annotation_sheet_csv = self.prefix_cell + '_samples.csv'
 
         return
 
 
 class FilePathBamIndexDecoderLane(bsf.FilePath):
-    """The C{bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane} models lane-specific files.
+    """The C{bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane} models lane-specific file paths.
 
     Attributes:
+    @ivar prefix_lane: Non-standard, lane-specific (i.e. project_name and lane) prefix
+    @type prefix_lane: str | unicode
     @ivar project_barcode: Project-specific barcode CSV file
     @type project_barcode: str | unicode
     @ivar barcode_tsv: Lane-specific barcode TSV file
     @type barcode_tsv: str | unicode
     @ivar metrics_tsv: Lane-specific metrics TSV file
     @type metrics_tsv: str | unicode
+    @ivar metrics_fraction_pdf: Lane-specific Illumina2bam I{BamIndexDecoder} fraction metrics PDF file
+    @type metrics_fraction_pdf: str | unicode
+    @ivar metrics_fraction_png: Lane-specific Illumina2bam I{BamIndexDecoder} fraction metrics PNG file
+    @type metrics_fraction_png: str | unicode
+    @ivar metrics_number_pdf: Lane-specific Illumina2bam I{BamIndexDecoder} number metrics PDF file
+    @type metrics_number_pdf: str | unicode
+    @ivar metrics_number_png: Lane-specific Illumina2bam I{BamIndexDecoder} number metrics PNG file
+    @type metrics_number_png: str | unicode
     @ivar samples_directory: Sample directory
     @type samples_directory: str | unicode
     @ivar archive_bam: Archive BAM file
     @type archive_bam: str | unicode
     @ivar archive_md5: Archive BAM MD5 check sum
     @type archive_md5: str | unicode
+    @see: FilePathExtractIlluminaLane
+    @see: FilePathIlluminaDemultiplexSamLane
     """
 
-    def __init__(self, project_name, lane, sequences_directory):
+    def __init__(self, prefix, project_name, lane, sequences_directory):
         """Initialise a C{bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane} object.
         
+        @param prefix: Prefix
+        @type prefix: str | unicode
         @param project_name: Project name
         @type project_name: str
         @param lane: Lane
@@ -1152,21 +1194,25 @@ class FilePathBamIndexDecoderLane(bsf.FilePath):
         @return:
         @rtype:
         """
-        prefix = BamIndexDecoder.get_prefix_lane(project_name=project_name, lane=lane)
-
         super(FilePathBamIndexDecoderLane, self).__init__(prefix=prefix)
 
         # All paths are non-standard in that they do not contain the regular Analysis Stage prefix.
-        # Re-define the prefix accordingly.
-        prefix = '_'.join((project_name, lane))
-        self.project_barcode = prefix + '_barcode.tsv'
-        self.barcode_tsv = prefix + '_barcode.tsv'
-        self.metrics_tsv = prefix + '_metrics.tsv'
-        self.samples_directory = prefix + '_samples'
+        # Re-define the lane-specific prefix accordingly.
+
+        self.prefix_lane = '_'.join((project_name, lane))
+
+        self.project_barcode = self.prefix_lane + '_barcode.tsv'
+        self.barcode_tsv = self.prefix_lane + '_barcode.tsv'
+        self.metrics_tsv = self.prefix_lane + '_metrics.tsv'
+        self.metrics_fraction_pdf = self.prefix_lane + '_metrics_fraction.pdf'
+        self.metrics_fraction_png = self.prefix_lane + '_metrics_fraction.png'
+        self.metrics_number_pdf = self.prefix_lane + '_metrics_number.pdf'
+        self.metrics_number_png = self.prefix_lane + '_metrics_number.png'
+        self.samples_directory = self.prefix_lane + '_samples'
         # The input (sequence archive) files are non-standard in that they do not contain a prefix and
         # reside in the sequences_directory.
-        self.archive_bam = os.path.join(sequences_directory, prefix + '.bam')
-        self.archive_md5 = os.path.join(sequences_directory, prefix + '.bam.md5')
+        self.archive_bam = os.path.join(sequences_directory, self.prefix_lane + '.bam')
+        self.archive_md5 = os.path.join(sequences_directory, self.prefix_lane + '.bam.md5')
 
         return
 
@@ -1235,6 +1281,39 @@ class BamIndexDecoder(bsf.Analysis):
         @rtype: str
         """
         return '_'.join((cls.stage_name_lane, project_name, lane))
+
+    @classmethod
+    def get_sample_annotation_sheet(cls, file_path):
+        """Get a C{bsf.ngs.SampleAnnotationSheet} object to annotate C{bsf.ngs.Sample} objects in a
+        flow cell-specific I{BSF samples} directory.
+
+        @param file_path: File path
+        @type file_path: str | unicode
+        @return: C{bsf.ngs.SampleAnnotationSheet}
+        @rtype: bsf.ngs.SampleAnnotationSheet
+        """
+        return bsf.ngs.SampleAnnotationSheet(
+            file_path=file_path,
+            header=True,
+            field_names=[
+                'File Type',
+                'ProcessedRunFolder Name',
+                'Project Name',
+                'Project Size',
+                'Sample Name',
+                'PairedReads Exclude',
+                'PairedReads Flow Cell',
+                'PairedReads Flow Cell Lane',
+                'PairedReads Index 1',
+                'PairedReads Index 2',
+                'PairedReads Lane',
+                'PairedReads ReadGroup',
+                'PairedReads Structure',
+                'Reads1 Name',
+                'Reads1 File',
+                'Reads2 Name',
+                'Reads2 File',
+            ])
 
     def __init__(
             self,
@@ -1415,6 +1494,17 @@ class BamIndexDecoder(bsf.Analysis):
         @return:
         @rtype:
         """
+
+        def run_get_sample_file_name(sample_name):
+            """Private function to format sample-specific BAM file names (i.e. project_lane#sample.bam).
+
+            @param sample_name:
+            @type sample_name: str | unicode
+            @return:
+            @rtype: str | unicode
+            """
+            return self.project_name + '_' + lane_str + '#' + sample_name + '.bam'
+
         # The standard BSF Python *comma-separated* value sample sheet needs to be transformed into
         # a Picard tools *tab-separated* value (TSV) sample sheet.
         # lane, barcode_sequence_1, barcode_sequence_2, sample_name, library_name
@@ -1461,7 +1551,7 @@ class BamIndexDecoder(bsf.Analysis):
         if not os.path.exists(path=self.library_path):
             raise Exception('Library annotation file {!r} does not exist.'.format(self.library_path))
 
-        # Load the library annotation sheet file and validate.
+        # Load the LibraryAnnotationSheet and validate.
 
         library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=self.library_path)
         """ @type library_annotation_sheet: LibraryAnnotationSheet """
@@ -1495,13 +1585,16 @@ class BamIndexDecoder(bsf.Analysis):
         stage_lane = self.get_stage(name=self.stage_name_lane)
         stage_cell = self.get_stage(name=self.stage_name_cell)
 
-        flow_cell_dict = library_annotation_sheet.index_by_lane()
+        library_annotation_dict = library_annotation_sheet.get_annotation_dict()
+        library_barcode_dict = library_annotation_sheet.get_barcode_length_dict()
 
-        file_path_cell = FilePathBamIndexDecoderCell(project_name=self.project_name)
+        file_path_cell = FilePathBamIndexDecoderCell(
+            prefix=self.get_prefix_cell(project_name=self.project_name),
+            project_name=self.project_name)
 
-        # Create a Sample Annotation Sheet in the project directory and
+        # Create a SampleAnnotationSheet in the project directory and
         # eventually transfer it into the experiment directory.
-        sample_annotation_sheet = bsf.ngs.SampleAnnotationSheet(
+        sample_annotation_sheet = self.get_sample_annotation_sheet(
             file_path=os.path.join(
                 self.project_directory,
                 file_path_cell.sample_annotation_sheet_csv))
@@ -1509,8 +1602,10 @@ class BamIndexDecoder(bsf.Analysis):
         cell_dependency_list = list()
         """ @type cell_dependency_list: list[str] """
 
-        for lane_str in sorted(flow_cell_dict):
+        for lane_int in sorted(library_annotation_dict):
+            lane_str = str(lane_int)
             file_path_lane = FilePathBamIndexDecoderLane(
+                prefix=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                 project_name=self.project_name,
                 lane=lane_str,
                 sequences_directory=self.sequences_directory)
@@ -1518,21 +1613,17 @@ class BamIndexDecoder(bsf.Analysis):
             # Do not check whether the sorted input BAM file exists, because at the time of
             # BamIndexDecoder submission the IlluminaToBam analysis may not have finished.
 
-            barcode_number = 0
+            if library_barcode_dict[lane_int][1] > 0:
+                barcode_number = 2
+            elif library_barcode_dict[lane_int][0] > 0:
+                barcode_number = 1
+            else:
+                barcode_number = 0
+
             bam_index_decoder_sheet = BamIndexDecoderSheet(
                 file_path=os.path.join(self.project_directory, file_path_lane.barcode_tsv))
 
-            for row_dict in flow_cell_dict[lane_str]:
-
-                # Determine the number of barcodes on the basis of the first line.
-                # All other lines of a lane have to use the same number and lengths of barcodes.
-
-                if not barcode_number:
-                    if len(row_dict['barcode_sequence_1']):
-                        barcode_number += 1
-                    if len(row_dict['barcode_sequence_2']):
-                        barcode_number += 1
-
+            for row_dict in library_annotation_dict[lane_int]:
                 # Add a row to the lane-specific tab-delimited IlluminaToBamTools BamIndexDecoder barcode file.
 
                 bam_index_decoder_sheet.row_dicts.append({
@@ -1545,26 +1636,32 @@ class BamIndexDecoder(bsf.Analysis):
 
                 # Add a row to the flow cell-specific sample annotation sheet.
 
-                sample_dict = {
-                    'File Type': 'Automatic',
+                sample_annotation_sheet.row_dicts.append({
+                    'File Type': '',
                     'ProcessedRunFolder Name': self.project_name,
                     'Project Name': row_dict['library_name'],
                     'Project Size': row_dict['library_size'],
                     'Sample Name': row_dict['sample_name'],
+                    'PairedReads Exclude': 'FALSE',
+                    'PairedReads Flow Cell': self.project_name,
+                    'PairedReads Flow Cell Lane': '_'.join((self.project_name, lane_str)),
                     'PairedReads Index 1': row_dict['barcode_sequence_1'],
                     'PairedReads Index 2': row_dict['barcode_sequence_2'],
+                    'PairedReads Lane': lane_str,
                     # TODO: It would be good to add a RunnableStep to populate the ReadGroup.
                     'PairedReads ReadGroup': '',
-                    'Reads1 Name': '_'.join((self.project_name, lane_str, row_dict['sample_name'])),
+                    # FIXME: For the moment there is no way to get the ReadStructure.
+                    # bsf.illumina.RunInformation.get_picard_read_structure() would require a
+                    # IlluminaRunFolder object.
+                    'PairedReads Structure': '',
                     'Reads1 File': os.path.join(
                         os.path.basename(experiment_directory),
                         file_path_lane.samples_directory,
-                        '{}_{}#{}.bam'.format(self.project_name, lane_str, row_dict['sample_name'])),
-                    'Reads2 Name': '',
+                        run_get_sample_file_name(sample_name=row_dict['sample_name'])),
+                    'Reads1 Name': '_'.join((self.project_name, lane_str, row_dict['sample_name'])),
                     'Reads2 File': '',
-                }
-
-                sample_annotation_sheet.row_dicts.append(sample_dict)
+                    'Reads2 Name': '',
+                })
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the Stage.
             runnable_lane = self.add_runnable(
@@ -1626,12 +1723,12 @@ class BamIndexDecoder(bsf.Analysis):
                 # METRICS_FILE is required.
                 runnable_step.add_itb_option(key='METRICS_FILE', value=file_path_lane.metrics_tsv)
                 # MAX_MISMATCHES defaults to '1'.
-                if 'barcode_mismatches' in flow_cell_dict[lane_str][0] and \
-                        len(flow_cell_dict[lane_str][0]['barcode_mismatches']):
-                    # If the barcode_mismatches field exists and its string length is greater than 0.
+                if 'barcode_mismatches' in library_annotation_dict[lane_int][0] and \
+                        library_annotation_dict[lane_int][0]['barcode_mismatches']:
+                    # If the barcode_mismatches field exists and has a meaningful value ...
                     runnable_step.add_itb_option(
                         key='MAX_MISMATCHES',
-                        value=flow_cell_dict[lane_str][0]['barcode_mismatches'])
+                        value=library_annotation_dict[lane_int][0]['barcode_mismatches'])
                 elif barcode_number == 2:
                     runnable_step.add_itb_option(key='MAX_MISMATCHES', value='2')
                 # MIN_MISMATCH_DELTA defaults to '1'.
@@ -1642,11 +1739,11 @@ class BamIndexDecoder(bsf.Analysis):
                 if self.hash_algorithm:
                     runnable_step.add_itb_option(key='USE_HASH_DEMULTIPLEXING', value='true')
                 # BARCODE_STARTBASE_INDEX defaults to 0.
-                if 'barcode_start' in flow_cell_dict[lane_str][0] and \
-                        len(flow_cell_dict[lane_str][0]['barcode_start']):
+                if 'barcode_start' in library_annotation_dict[lane_int][0] and \
+                        library_annotation_dict[lane_int][0]['barcode_start']:
                     runnable_step.add_itb_option(
                         key='BARCODE_STARTBASE_INDEX',
-                        value=flow_cell_dict[lane_str][0]['barcode_start'])
+                        value=library_annotation_dict[lane_int][0]['barcode_start'])
                 # TMP_DIR
                 runnable_step.add_itb_option(
                     key='TMP_DIR',
@@ -1662,6 +1759,14 @@ class BamIndexDecoder(bsf.Analysis):
                 # CREATE_MD5_FILE defaults to 'false'.
                 runnable_step.add_itb_option(key='CREATE_MD5_FILE', value='true')
                 # OPTIONS_FILE
+
+                # Plot the metrics file.
+
+                runnable_step = runnable_lane.add_runnable_step(
+                    runnable_step=bsf.process.RunnableStep(
+                        name='plot_metrics',
+                        program='bsf_illumina_demultiplex_sam.R'))
+                runnable_step.add_option_long(key='file-path', value=file_path_lane.metrics_tsv)
 
                 # Create the experiment directory if it does not exist already.
 
@@ -1684,6 +1789,18 @@ class BamIndexDecoder(bsf.Analysis):
                     runnable_step=bsf.process.RunnableStepMove(
                         name='move_metrics_tsv',
                         source_path=file_path_lane.metrics_tsv,
+                        target_path=experiment_directory))
+
+                runnable_lane.add_runnable_step(
+                    runnable_step=bsf.process.RunnableStepMove(
+                        name='move_metrics_pdf',
+                        source_path=file_path_lane.metrics_number_pdf,
+                        target_path=experiment_directory))
+
+                runnable_lane.add_runnable_step(
+                    runnable_step=bsf.process.RunnableStepMove(
+                        name='move_metrics_png',
+                        source_path=file_path_lane.metrics_number_png,
                         target_path=experiment_directory))
             else:
                 # Run Picard CollectAlignmentSummaryMetrics if there is no line containing a barcode sequence.
@@ -1756,7 +1873,7 @@ class BamIndexDecoder(bsf.Analysis):
                         target_path=os.path.join(
                             experiment_samples_directory,
                             '{}_{}#{}.bam'.format(self.project_name, lane_str,
-                                                  flow_cell_dict[lane_str][0]['sample_name']))))
+                                                  library_annotation_dict[lane_int][0]['sample_name']))))
 
                 runnable_lane.add_runnable_step(
                     runnable_step=bsf.process.RunnableStepLink(
@@ -1765,7 +1882,7 @@ class BamIndexDecoder(bsf.Analysis):
                         target_path=os.path.join(
                             experiment_samples_directory,
                             '{}_{}#{}.bam.md5'.format(self.project_name, lane_str,
-                                                      flow_cell_dict[lane_str][0]['sample_name']))))
+                                                      library_annotation_dict[lane_int][0]['sample_name']))))
 
                 # Move the metrics file into the experiment directory.
 
@@ -1793,7 +1910,7 @@ class BamIndexDecoder(bsf.Analysis):
             runnable=runnable_cell)
         executable_cell.dependencies.extend(cell_dependency_list)
 
-        # Move the Sample Annotation Sheet from the project_directory to the experiment_directory.
+        # Move the SampleAnnotationSheet from the project_directory to the experiment_directory.
 
         if os.path.exists(sample_annotation_sheet.file_path):
             runnable_cell.add_runnable_step(
