@@ -107,6 +107,14 @@ class Container(object):
 
         return
 
+    def __len__(self):
+        """Calculate the length of a C{Container}, which is the number of C{Interval} objects.
+
+        @return: Length
+        @rtype: int
+        """
+        return len(self.interval_list)
+
     def append(self, interval):
         """Append an C{bsf.intervals.Interval} object.
 
@@ -125,7 +133,7 @@ class Container(object):
         return 'Container(sum={:d}, interval_list={!r})'.format(self.sum, self.interval_list)
 
 
-def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, natural=None):
+def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, natural=None, packed=None):
     """Create interval tiles on the basis of a Picard ScatterIntervalsByNs interval list.
 
     Partition a list into sub-lists whose sums do not exceed a maximum using a First Fit Decreasing algorithm.
@@ -139,6 +147,8 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, na
     @type tile_width: int | None
     @param natural: Tile on (natural) sequence regions (i.e. SAM @SQ entries)
     @type natural: bool | None
+    @param packed: Pack C{Interval} objects into C{Container} objects
+    @type packed: bool | None
     @return: Python C{list} of C{bsf.intervals.Container} objects
     @rtype: list[bsf.intervals.Container]
     """
@@ -170,7 +180,7 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, na
         container_list.append(container)
 
         for interval in interval_list:
-            container.append(interval)
+            container.append(interval=interval)
 
         return container_list
 
@@ -182,23 +192,34 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, na
         # Do not tile at all, if neither a number of tiles nor a tile width was provided.
         # Return a list of a single Container with an empty Interval i.e. sequence region, start and end coordinates.
         container = Container()
-        container.append(Interval(name='', start=0, end=0))
+        container.append(interval=Interval(name='', start=0, end=0))
         container_list.append(container)
 
         return container_list
 
-    # Pack the interval list using a First Fit Decreasing algorithm.
-    # Sort interval tuples by length in descending order.
-    for interval in sorted(interval_list, cmp=lambda x, y: cmp(len(x), len(y)), reverse=True):
-        # Try to fit the item into a bin.
-        for container in container_list:
-            if container.sum + len(interval) <= tile_length:
-                container.append(interval)
-                break
-        else:
-            container = Container()
-            container_list.append(container)
-            container.append(interval)
+    if packed:
+        # Pack the interval list using a First Fit Decreasing algorithm.
+        # Sort interval tuples by length in descending order.
+        for interval in sorted(interval_list, cmp=lambda x, y: cmp(len(x), len(y)), reverse=True):
+            # Try to fit the item into a bin.
+            for container in container_list:
+                if container.sum + len(interval) <= tile_length:
+                    container.append(interval=interval)
+                    break
+            else:
+                container = Container()
+                container_list.append(container)
+                container.append(interval=interval)
+    else:
+        container = Container()
+        for interval in interval_list:
+            if len(container) > 0 and container.sum + len(interval) > tile_length:
+                container_list.append(container)
+                container = Container()
+
+            container.append(interval=interval)
+
+        container_list.append(container)
 
     return container_list
 
@@ -325,13 +346,19 @@ if __name__ == '__main__':
         required=False,
         type=int)
 
+    argument_parser.add_argument(
+        '--packed',
+        action='store_true',
+        help='Pack Interval objects into Container objects')
+
     name_space = argument_parser.parse_args()
 
     if name_space.interval_path:
         print('Interval tiles:')
         _container_list = get_interval_tiles(
             interval_path=name_space.interval_path,
-            tile_number=name_space.tile_number)
+            tile_number=name_space.tile_number,
+            packed=name_space.packed)
         for _container in _container_list:
             print('  Container(sum={:,})'.format(_container.sum))
             for _interval in _container.interval_list:
