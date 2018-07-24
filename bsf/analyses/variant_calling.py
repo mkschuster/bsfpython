@@ -3936,10 +3936,13 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step.add_gatk_option(key='analysis_type', value='HaplotypeCaller')
             runnable_step.add_gatk_option(key='reference_sequence', value=reference_process_sample)
             if target_intervals.targets_path:
-                # If target intervals are available, the Haplotype Caller analysis is run only on them.
+                # If target intervals are available, the Haplotype Caller analysis is preferentially run only on them.
                 runnable_step.add_gatk_option(key='intervals', value=target_intervals.targets_path)
                 if self.interval_padding is not None:
                     runnable_step.add_gatk_option(key='interval_padding', value=str(self.interval_padding))
+            elif self.scatter_intervals_path:
+                # If a scatter interval file path is available assign it without padding.
+                runnable_step.add_gatk_option(key='intervals', value=self.scatter_intervals_path)
             elif self.exclude_intervals_list:  # not None and not empty
                 # If target intervals are not available, decoy sequences etc. can be excluded
                 # from the genome-wide Haplotype Caller analysis.
