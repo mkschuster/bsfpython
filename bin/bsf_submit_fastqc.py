@@ -28,11 +28,12 @@
 from __future__ import print_function
 
 import argparse
+import sys
 
-import bsf.analyses
+import bsf.analyses.fastqc
 
 argument_parser = argparse.ArgumentParser(
-    description=bsf.analyses.RunFastQC.name + ' driver script.')
+    description=bsf.analyses.fastqc.FastQC.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -46,17 +47,49 @@ argument_parser.add_argument(
     required=False)
 
 argument_parser.add_argument(
-    'configuration',
-    help='Configuration file (*.ini)')
+    '--configuration',
+    default=bsf.standards.Configuration.global_file_path,
+    help='configuration (*.ini) file path',
+    required=False,
+    type=str)
+
+argument_parser.add_argument(
+    '--project-name',
+    dest='project_name',
+    help='project name',
+    required=False,
+    type=str)
+
+argument_parser.add_argument(
+    '--sas-file',
+    dest='sas_file',
+    help='sample annotation sheet (*.csv) file path',
+    required=False,
+    type=unicode)
 
 name_space = argument_parser.parse_args()
 
-analysis = bsf.analyses.RunFastQC.from_config_file_path(config_path=name_space.configuration)
+# This analysis requires either a non-default --configuration argument or a
+# --project-name and --sas-file argument.
+
+if name_space.configuration == bsf.standards.Configuration.global_file_path:
+    if name_space.project_name is None:
+        raise Exception("argument --project-name is required if --configuration is not set")
+    if name_space.sas_file is None:
+        raise Exception("argument --sas-file is required if --configuration is not set")
+
+analysis = bsf.analyses.fastqc.FastQC.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.debug:
     analysis.debug = name_space.debug
 
-# Do the work.
+if name_space.project_name:
+    assert isinstance(name_space.project_name, str)
+    analysis.project_name = name_space.project_name
+
+if name_space.sas_file:
+    assert isinstance(name_space.sas_file, (str, unicode))
+    analysis.sas_file = name_space.sas_file
 
 analysis.run()
 analysis.check_state()
@@ -67,3 +100,7 @@ print('Project name:      ', analysis.project_name)
 print('Input directory:   ', analysis.input_directory)
 print('Output directory:  ', analysis.output_directory)
 print('Project directory: ', analysis.project_directory)
+
+if analysis.debug >= 2:
+    print(repr(analysis), 'final trace:')
+    sys.stdout.writelines(analysis.trace(level=1))

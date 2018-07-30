@@ -31,30 +31,6 @@ import bsf
 import bsf.process
 
 
-class Bowtie1(bsf.process.Executable):
-    """Bowtie1 short read aligner class.
-
-    Reference: http://bowtie-bio.sourceforge.net/manual.shtml
-    """
-
-    def __init__(self, name, analysis):
-        """Initialise a C{bsf.executables.Bowtie1} object.
-
-        @param name: Name
-        @type name: str
-        @param analysis: C{bsf.Analysis}
-        @type analysis: bsf.Analysis
-        @return:
-        @rtype:
-        """
-        super(Bowtie1, self).__init__(name=name, program='bowtie')
-
-        section = analysis.configuration.section_from_instance(self)
-        self.set_configuration(configuration=analysis.configuration, section=section)
-
-        # Set default Bowtie1 options.
-
-
 class Bowtie2(bsf.process.Executable):
     """Bowtie2 short read aligner class."""
 
@@ -225,29 +201,3 @@ class Macs2Callpeak(bsf.process.Executable):
         if not ('gsize' in self.sub_command.options and self.sub_command.options['gsize']):
             raise Exception(
                 "A 'gsize' option is required in the {!r} configuration section.".format(section))
-
-
-class FastQC(bsf.process.Executable):
-    """FastQC quality checker class (C{bsf.executables.FastQC}).
-
-    Reference: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/
-    """
-
-    def __init__(self, name, analysis):
-        """Initialise a C{bsf.executables.FastQC} object.
-
-        @param name: Name
-        @type name: str
-        @param analysis: C{bsf.Analysis}
-        @type analysis: bsf.Analysis
-        @return:
-        @rtype:
-        """
-        super(FastQC, self).__init__(name=name, program='fastqc')
-
-        section = analysis.configuration.section_from_instance(self)
-        self.set_configuration(configuration=analysis.configuration, section=section)
-
-        # Set default Macs options.
-
-        self.add_switch_long(key='quiet')
