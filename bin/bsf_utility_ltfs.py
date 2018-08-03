@@ -32,7 +32,19 @@ import os
 import xml.etree.ElementTree
 
 cartridge_dict = {
-    'LTO5': int(1391601152 * 1024),
+    # IBM LTO Ultrium Cartridge Label Specification (Revision 6)
+    # Part Number 19P0034
+    # EC - M10321
+    # http://www-01.ibm.com/support/docview.wss?uid=ssg1S7000429
+    # 'L1': # Generation 1 Type A (100 GB)
+    # 'LA': # Generation 1 Type B (50 GB)
+    # 'LB': # Generation 1 Type C (30 GB)
+    # 'LC': # Generation 1 Type D (10 GB)
+    # 'L2': # Generation 2 Type A (200 GB)
+    # 'L3': # Generation 3 Type A (400 GB)
+    # 'L4': # Generation 4 Type A (600 GB)
+    'L5': 1391601152 * 1024,  # Generation 5 Type A (1500 GB)
+    'L6': 2351648768 * 1024,  # Generation 6 Type A (2500 GB)
 }
 
 si_prefix_dict = {
@@ -466,11 +478,10 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
-    '--type',
-    default='',
-    help='cartridge type i.e. LTO5 or LTO6 []',
-    required=False,
-    type=str)
+    '--mounted-cartridge',
+    action='store_true',
+    dest='mounted_cartridge',
+    help='calculate remaining space for a mounted cartridge')
 
 name_space = argument_parser.parse_args()
 
@@ -482,24 +493,31 @@ linear_tape_file_system_copy = LinearTapeFileSystemCopy(
     sparse=name_space.sparse,
     default_target_path=name_space.target_path)
 
-# Get information on the file system.
-# TODO: If LTFS is not mounted the os.stavfs call returns information about the underlying file system.
+cartridge_code = name_space.cartridge
+""" @type cartridge_code: str """
 
-if name_space.type:
-    # If a cartridge type was specified look up the standard size.
-    ltfs_free_bytes = cartridge_dict[name_space.type]
-    ltfs_total_bytes = cartridge_dict[name_space.type]
-else:
-    # Without a cartridge type stat the virtual file system.
+if cartridge_code.endswith('.txt'):
+    # In case shell completion is used, remove the trailing *.txt suffix.
+    cartridge_code = name_space.cartridge[:-4]
+
+if cartridge_code[-2:] not in cartridge_dict:
+    raise Exception('The cartridge barcode media characters ' + repr(cartridge_code[-2:]) +
+                    ' are currently not supported.')
+
+if name_space.mounted_cartridge:
+    # If a cartridge is mounted, stat the virtual file system.
     ltfs_statvfs_result = os.statvfs(linear_tape_file_system_copy.default_target_path)
     ltfs_free_bytes = ltfs_statvfs_result.f_bavail * ltfs_statvfs_result.f_bsize
     ltfs_total_bytes = ltfs_statvfs_result.f_blocks * ltfs_statvfs_result.f_bsize
+else:
+    ltfs_free_bytes = cartridge_dict[cartridge_code[-2:]]
+    ltfs_total_bytes = cartridge_dict[cartridge_code[-2:]]
 
 # Summarize the sizes of all source files.
 
 total_size = 0
 
-input_file = open(name_space.cartridge + '.txt', 'r')
+input_file = open(cartridge_code + '.txt', 'r')
 for main_file_path in input_file:
     main_file_path = main_file_path.strip()
     main_file_path = os.path.normpath(main_file_path)
@@ -518,4 +536,4 @@ else:
     print('LTFS total size {:,d} LTFS free size {:,d} Total file size {:,d} Remaining {:,d} ({:0.1f} {})'.format(
         ltfs_total_bytes, ltfs_free_bytes, total_size, difference_bytes, difference_readable, difference_unit))
 
-linear_tape_file_system_copy.write_batch_file(file_path=name_space.cartridge + '.xml')
+linear_tape_file_system_copy.write_batch_file(file_path=cartridge_code + '.xml')
