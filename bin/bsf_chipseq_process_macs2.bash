@@ -33,8 +33,10 @@ else
 fi
 
 if test "$#" -lt '2'; then
-    echo "Error: $(basename ${0}) Too few arguments." 1>&2 || exit 1
-    echo "Usage: $(basename ${0}) <prefix> <chromosome_sizes>" 1>&2 || exit 1
+    echo "Error: $(basename ${0}) Too few arguments." 1>&2 \
+    || exit 1
+    echo "Usage: $(basename ${0}) <prefix> <chromosome_sizes>" 1>&2 \
+    || exit 1
     exit 1
 fi
 

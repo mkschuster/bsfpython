@@ -33,9 +33,9 @@ else
 fi
 
 if test "$#" -lt '2'; then
-    echo "Error: bsf_chipseq_process_macs14.sh Too few arguments." 1>&2 \
+    echo "Error: $(basename ${0}) Too few arguments." 1>&2 \
     || exit 1
-    echo "Usage: bsf_chipseq_process_macs14.sh <prefix> <chromosome_sizes>" 1>&2 \
+    echo "Usage: $(basename ${0}) <prefix> <chromosome_sizes>" 1>&2 \
     || exit 1
     exit 1
 fi

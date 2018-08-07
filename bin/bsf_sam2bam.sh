@@ -34,9 +34,9 @@ else
 fi
 
 if test "$#" -lt '1'; then
-    echo "Error: bsf_sam2bam.sh Too few arguments." 1>&2 \
+    echo "Error: $(basename ${0}) Too few arguments." 1>&2 \
     || exit 1
-    echo "Usage: bsf_sam2bam.sh <prefix>" 1>&2 \
+    echo "Usage: $(basename ${0}) <prefix>" 1>&2 \
     || exit 1
     exit 1
 fi

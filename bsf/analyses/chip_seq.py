@@ -35,12 +35,12 @@ import pickle
 import sys
 import warnings
 
+import bsf
+import bsf.annotation
+import bsf.executables
+import bsf.ngs
 import bsf.process
-from bsf import Analysis, defaults, FilePath, Runnable
-from bsf.annotation import AnnotationSheet
-from bsf.executables import BWA, Macs14
-from bsf.ngs import Sample
-from bsf.standards import Default, JavaClassPath
+import bsf.standards
 
 
 class ChIPSeqComparison(object):
@@ -48,9 +48,9 @@ class ChIPSeqComparison(object):
 
     Attributes:
     @ivar c_name: Control name
-    @type c_name: str
+    @type c_name: str | None
     @ivar t_name: Treatment name
-    @type t_name: str
+    @type t_name: str | None
     @ivar c_samples: Python C{list} of control C{bsf.ngs.Sample} objects
     @type c_samples: list[bsf.ngs.Sample]
     @ivar t_samples: Python C{list} of treatment C{bsf.ngs.Sample} objects
@@ -84,25 +84,25 @@ class ChIPSeqComparison(object):
         """Initialise a C{bsf.analyses.chip_seq.ChIPSeqComparison}.
 
         @param c_name: Control name
-        @type c_name: str
+        @type c_name: str | None
         @param t_name: Treatment name
-        @type t_name: str
+        @type t_name: str | None
         @param c_samples: Python C{list} of control C{bsf.ngs.Sample} objects
-        @type c_samples: list[bsf.ngs.Sample]
+        @type c_samples: list[bsf.ngs.Sample] | None
         @param t_samples: Python C{list} of treatment C{bsf.ngs.Sample} objects
-        @type t_samples: list[bsf.ngs.Sample]
+        @type t_samples: list[bsf.ngs.Sample] | None
         @param factor: ChIP factor
-        @type factor: str
+        @type factor: str | None
         @param tissue: Tissue
-        @type tissue: str
+        @type tissue: str | None
         @param condition: Condition
-        @type condition: str
+        @type condition: str | None
         @param treatment: Treatment
-        @type treatment: str
+        @type treatment: str | None
         @param replicate: replicate number
-        @type replicate: int
+        @type replicate: int | None
         @param diff_bind: Run the DiffBind analysis
-        @type diff_bind: bool
+        @type diff_bind: bool | None
         @return:
         @rtype:
         """
@@ -112,15 +112,8 @@ class ChIPSeqComparison(object):
         # Condition', 'Treatment', 'Replicate',
         # 'bamReads', 'bamControl', 'ControlID', 'Peaks', 'PeakCaller', 'PeakFormat'
 
-        if c_name is None:
-            self.c_name = str()
-        else:
-            self.c_name = c_name
-
-        if t_name is None:
-            self.t_name = str()
-        else:
-            self.t_name = t_name
+        self.c_name = c_name
+        self.t_name = t_name
 
         if c_samples is None:
             self.c_samples = list()
@@ -165,7 +158,7 @@ class ChIPSeqComparison(object):
         return
 
 
-class FilePathAlignment(FilePath):
+class FilePathAlignment(bsf.FilePath):
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.chip_seq.FilePathAlignment} object
 
@@ -188,7 +181,7 @@ class FilePathAlignment(FilePath):
         return
 
 
-class FilePathPeakCalling(FilePath):
+class FilePathPeakCalling(bsf.FilePath):
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.chip_seq.FilePathPeakCalling} object
 
@@ -223,7 +216,7 @@ class FilePathPeakCalling(FilePath):
         return
 
 
-class FilePathDiffBind(FilePath):
+class FilePathDiffBind(bsf.FilePath):
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.chip_seq.FilePathDiffBind} object
 
@@ -244,7 +237,7 @@ class FilePathDiffBind(FilePath):
         return
 
 
-class FilePathDiffBindContrast(FilePath):
+class FilePathDiffBindContrast(bsf.FilePath):
     def __init__(self, prefix, group_1, group_2):
         """Initialise a C{bsf.analyses.chip_seq.FilePathDiffBind} object
 
@@ -270,7 +263,7 @@ class FilePathDiffBindContrast(FilePath):
         return
 
 
-class ChIPSeqDiffBindSheet(AnnotationSheet):
+class ChIPSeqDiffBindSheet(bsf.annotation.AnnotationSheet):
     """ChIP-Seq Bioconductor DiffBind annotation sheet class.
 
     Attributes:
@@ -297,31 +290,31 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
 
     _test_methods = {
         'SampleID': [
-            AnnotationSheet.check_alphanumeric,
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
         'Tissue': [
-            AnnotationSheet.check_alphanumeric,
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
         'Factor': [
-            AnnotationSheet.check_alphanumeric,
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
         'Condition': [
-            AnnotationSheet.check_alphanumeric,
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
         'Treatment': [
-            AnnotationSheet.check_alphanumeric,
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
         'Replicate': [
-            AnnotationSheet.check_numeric,
+            bsf.annotation.AnnotationSheet.check_numeric,
         ],
         'ControlID': [
-            AnnotationSheet.check_alphanumeric,
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
         'PeakCaller': [
-            AnnotationSheet.check_alphanumeric,
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
         'PeakFormat': [
-            AnnotationSheet.check_alphanumeric,
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
     }
 
@@ -358,7 +351,7 @@ class ChIPSeqDiffBindSheet(AnnotationSheet):
         return
 
 
-class ChIPSeq(Analysis):
+class ChIPSeq(bsf.Analysis):
     """The C{bsf.analyses.chip_seq.ChIPSeq} class represents the logic to run a ChIP-Seq-specific C{bsf.Analysis}.
 
     Attributes:
@@ -373,11 +366,17 @@ class ChIPSeq(Analysis):
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
     @ivar comparison_path: Comparison file path
-    @type comparison_path: str | unicode
+    @type comparison_path: str | unicode | None
+    @ivar colour_default: Default UCSC Genome Browser Track Hub RGB colour
+    @type colour_default: str | None
+    @ivar colour_dict: Python C{dict} of
+        Python C{str} factor name key and
+        Python C{str} RGB colour value data
+    @type colour_dict: dict[str, str] | None
     @ivar genome_fasta_path: Reference genome sequence FASTA file path
-    @type genome_fasta_path: str | unicode
+    @type genome_fasta_path: str | unicode | None
     @ivar genome_sizes_path: Reference genome (chromosome) sizes file path
-    @type genome_sizes_path: str | unicode
+    @type genome_sizes_path: str | unicode | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
     @type classpath_picard: None | str | unicode
     """
@@ -442,6 +441,9 @@ class ChIPSeq(Analysis):
             comparison_path=None,
             genome_fasta_path=None,
             genome_sizes_path=None,
+            colour_default=None,
+            colour_dict=None,
+            factor_default=None,
             classpath_picard=None):
         """Initialise a C{bsf.analyses.chip_seq.ChIPSeq}.
 
@@ -474,11 +476,17 @@ class ChIPSeq(Analysis):
         @param replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
         @type replicate_grouping: bool
         @param comparison_path: Comparison file path
-        @type comparison_path: str | unicode
+        @type comparison_path: str | unicode | None
+        @param colour_default: Default UCSC Genome Browser Track Hub RGB colour
+        @type colour_default: str | None
+        @param colour_dict: Python C{dict} of
+            Python C{str} factor name key and
+            Python C{str} RGB colour value data
+        @type colour_dict: dict[str, str] | None
         @param genome_fasta_path: Reference genome sequence FASTA file path
-        @type genome_fasta_path: str | unicode
+        @type genome_fasta_path: str | unicode | None
         @param genome_sizes_path: Reference genome (chromosome) sizes file path
-        @type genome_sizes_path: str | unicode
+        @type genome_sizes_path: str | unicode | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: None | str | unicode
         @return:
@@ -506,21 +514,12 @@ class ChIPSeq(Analysis):
             assert isinstance(replicate_grouping, bool)
             self.replicate_grouping = replicate_grouping
 
-        if comparison_path is None:
-            self.comparison_path = str()
-        else:
-            self.comparison_path = comparison_path
-
-        if genome_fasta_path is None:
-            self.genome_fasta_path = str()
-        else:
-            self.genome_fasta_path = genome_fasta_path
-
-        if genome_sizes_path is None:
-            self.genome_sizes_path = str()
-        else:
-            self.genome_sizes_path = genome_sizes_path
-
+        self.comparison_path = comparison_path
+        self.colour_default = colour_default
+        self.colour_dict = colour_dict
+        self.factor_default = factor_default
+        self.genome_fasta_path = genome_fasta_path
+        self.genome_sizes_path = genome_sizes_path
         self.classpath_picard = classpath_picard
 
         self._comparison_dict = dict()
@@ -545,8 +544,6 @@ class ChIPSeq(Analysis):
         """
         super(ChIPSeq, self).set_configuration(configuration=configuration, section=section)
 
-        # Read a comparison file.
-
         option = 'replicate_grouping'
         if configuration.config_parser.has_option(section=section, option=option):
             self.replicate_grouping = configuration.config_parser.getboolean(section=section, option=option)
@@ -563,13 +560,42 @@ class ChIPSeq(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.genome_sizes_path = configuration.config_parser.get(section=section, option=option)
 
-        # Get the Picard tools Java Archive (JAR) class path directory.
-
         option = 'classpath_picard'
         if configuration.config_parser.has_option(section=section, option=option):
             self.classpath_picard = configuration.config_parser.get(section=section, option=option)
 
+        option = 'colour_default'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.colour_default = configuration.config_parser.get(section=section, option=option)
+
+        track_hub_section = '.'.join((section, 'TrackHubColours'))
+        if configuration.config_parser.has_section(section=track_hub_section):
+            if self.colour_dict is None:
+                self.colour_dict = dict()
+
+            for option in configuration.config_parser.options(section=track_hub_section):
+                self.colour_dict[option] = configuration.config_parser.get(
+                    section=track_hub_section,
+                    option=option)
+
+        option = 'factor_default'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.factor_default = configuration.config_parser.get(section=section, option=option)
+
         return
+
+    def get_colour(self, factor):
+        """Get a UCSC Genome Browser Track Hub RGB colour by a factor name.
+
+        @param factor: ChIP-seq factor name
+        @type factor: str
+        @return: Track Hub RGB colour
+        @rtype: str
+        """
+        if factor in self.colour_dict:
+            return self.colour_dict[factor]
+        else:
+            return self.colour_default
 
     # Taken from ConfigParser.RawConfigParser.getboolean()
 
@@ -604,7 +630,7 @@ class ChIPSeq(Analysis):
             @return:
             @rtype:
             """
-            annotation_sheet = AnnotationSheet.from_file_path(file_path=self.comparison_path)
+            annotation_sheet = bsf.annotation.AnnotationSheet.from_file_path(file_path=self.comparison_path)
 
             # Unfortunately, two passes through the comparison sheet are required.
             # In the first one merge all Sample objects that share the name.
@@ -622,7 +648,9 @@ class ChIPSeq(Analysis):
                         if o_sample.name not in sample_dict:
                             sample_dict[o_sample.name] = o_sample
                         else:
-                            n_sample = Sample.from_samples(sample1=sample_dict[o_sample.name], sample2=o_sample)
+                            n_sample = bsf.ngs.Sample.from_samples(
+                                sample1=sample_dict[o_sample.name],
+                                sample2=o_sample)
                             sample_dict[n_sample.name] = n_sample
 
             # Second pass, add all Sample objects mentioned in a comparison.
@@ -677,7 +705,7 @@ class ChIPSeq(Analysis):
                 if 'Factor' in row_dict:
                     factor = row_dict['Factor']
                 else:
-                    factor = defaults.web.chipseq_default_factor
+                    factor = self.factor_default
 
                 if 'Condition' in row_dict:
                     condition = row_dict['Condition']
@@ -768,7 +796,7 @@ class ChIPSeq(Analysis):
                     file_path_read_group = FilePathAlignment(prefix=prefix_read_group)
 
                     self.add_runnable(
-                        runnable=Runnable(
+                        runnable=bsf.Runnable(
                             name=prefix_read_group,
                             code_module='bsf.runnables.generic',
                             working_directory=self.genome_directory,
@@ -777,7 +805,7 @@ class ChIPSeq(Analysis):
 
                     # Step 1: Process per lane.
 
-                    bwa = BWA(name='bwa_mem', analysis=self)
+                    bwa = bsf.executables.BWA(name='bwa_mem', analysis=self)
 
                     bwa_mem = bwa.sub_command
 
@@ -855,8 +883,9 @@ class ChIPSeq(Analysis):
                                 os.path.join(self.genome_directory, file_path_read_group.aligned_md5))):
                         run_bwa.submit = False
 
-                        # Set run_bwa options.
-
+                    # Set run_bwa options.
+                    # Read Command options from configuration sections:
+                    # [bsf.process.Executable.bsf_run_bwa.py]
                     self.set_command_configuration(command=run_bwa)
                     run_bwa.add_option_long(key='pickler_path', value=pickler_path)
                     run_bwa.add_option_long(key='debug', value=str(self.debug))
@@ -878,9 +907,9 @@ class ChIPSeq(Analysis):
                 bowtie2_index = self.genome_fasta_path[:-3]
             else:
                 raise Exception(
-                    "The genome_fasta option has to end with '.fa' or '.fasta'. " + self.genome_fasta_path)
+                    "The 'genome_fasta' option has to end with '.fa' or '.fasta'. " + self.genome_fasta_path)
 
-            # bowtie2_index = os.path.join(Default.absolute_genomes(self.genome_version),
+            # bowtie2_index = os.path.join(bsf.standards.Default.absolute_genomes(self.genome_version),
             #                              'forBowtie2', self.genome_version)
 
             self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
@@ -898,7 +927,7 @@ class ChIPSeq(Analysis):
                     file_path_read_group = FilePathAlignment(prefix=prefix_read_group)
 
                     runnable_alignment = self.add_runnable(
-                        runnable=Runnable(
+                        runnable=bsf.Runnable(
                             name=prefix_read_group,
                             code_module='bsf.runnables.generic',
                             # FIXME: The bsf.runnables.bowtie2 module requires a lot of work.
@@ -1046,7 +1075,7 @@ class ChIPSeq(Analysis):
                                 file_path_peak_calling = FilePathPeakCalling(prefix=prefix_peak_calling)
 
                                 runnable_peak_calling = self.add_runnable(
-                                    runnable=Runnable(
+                                    runnable=bsf.Runnable(
                                         name=prefix_peak_calling,
                                         code_module='bsf.runnables.generic',
                                         working_directory=self.genome_directory,
@@ -1072,6 +1101,9 @@ class ChIPSeq(Analysis):
                                         name='macs2_call_peak',
                                         program='macs2',
                                         sub_command=bsf.process.Command(program='callpeak')))
+                                # Read RunnableStep options from configuration sections:
+                                # [bsf.analyses.chip_seq.ChIPSeq.macs2_call_peak]
+                                # [bsf.analyses.chip_seq.ChIPSeq.macs2_call_peak.callpeak]
                                 self.set_runnable_step_configuration(runnable_step=runnable_step_macs2_call_peak)
 
                                 runnable_step_macs2_call_peak.sub_command.add_option_long(
@@ -1090,7 +1122,7 @@ class ChIPSeq(Analysis):
                                     key='name',
                                     value=file_path_peak_calling.name_prefix)
 
-                                # FIXME: The 'gsize' option has to be specified via the configuration.ini file.
+                                # FIXME: The 'gsize' option has to be specified via the configuration.ini file above.
                                 # runnable_step_macs2_call_peak.add_option_long(
                                 # key='gsize',
                                 # value=self.genome_sizes_path)
@@ -1132,7 +1164,7 @@ class ChIPSeq(Analysis):
                                 else:
                                     warnings.warn(
                                         'Unable to set MACS2 parameters for unknown factor ' + repr(factor) + '.\n' +
-                                        'Please use default factor ' + repr(defaults.web.chipseq_default_factor) +
+                                        'Please use default factor ' + repr(self.factor_default) +
                                         ' or adjust Python code if necessary.',
                                         UserWarning)
 
@@ -1143,6 +1175,9 @@ class ChIPSeq(Analysis):
                                         name='macs2_bdg_cmp',
                                         program='macs2',
                                         sub_command=bsf.process.Command(program='bdgcmp')))
+                                # Read RunnableStep options from configuration sections:
+                                # [bsf.analyses.chip_seq.ChIPSeq.macs2_bdg_cmp]
+                                # [bsf.analyses.chip_seq.ChIPSeq.macs2_bdg_cmp.bdgcmp]
                                 self.set_runnable_step_configuration(runnable_step=runnable_step_macs2_bdg_cmp)
 
                                 runnable_step_macs2_bdg_cmp.sub_command.add_option_long(
@@ -1170,11 +1205,10 @@ class ChIPSeq(Analysis):
 
                                 # Add a RunnableStep to process MACS2 output.
 
-                                # FIXME: Rename bsf_chipseq_process_macs2.sh into bsf_chipseq_process_macs2.bash
                                 process_macs2 = runnable_peak_calling.add_runnable_step(
                                     runnable_step=bsf.process.RunnableStep(
                                         name='process_macs2',
-                                        program='bsf_chipseq_process_macs2.sh'))
+                                        program='bsf_chipseq_process_macs2.bash'))
 
                                 process_macs2.arguments.append(prefix_peak_calling)
                                 process_macs2.arguments.append(self.genome_sizes_path)
@@ -1287,8 +1321,6 @@ class ChIPSeq(Analysis):
                         program='bsf_chipseq_diffbind.R'))
                 diff_bind.dependencies.extend(job_dependencies)
 
-                # Add DiffBind options.
-                self.set_command_configuration(command=diff_bind)
                 diff_bind.add_option_long(key='factor', value=factor_name)
                 diff_bind.add_option_long(key='sample-annotation', value=file_path_diff_bind.sample_annotation_sheet)
 
@@ -1299,22 +1331,28 @@ class ChIPSeq(Analysis):
 
         # Start of the run() method body.
 
-        # Get global defaults.
-
         super(ChIPSeq, self).run()
 
         # ChIPSeq requires a genome version.
 
         if not self.genome_version:
-            raise Exception('A ChIPSeq analysis requires a genome_version configuration option.')
+            raise Exception('A ' + self.name + " requires a 'genome_version' configuration option.")
 
+        if not self.comparison_path:
+            raise Exception('A ' + self.name + " requires a 'cmp_file' configuration option.")
         self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
+
+        if not self.colour_default:
+            self.colour_default = '0,0,0'
+
+        if not self.factor_default:
+            self.factor_default = 'OTHER'
 
         # Define the reference genome FASTA file path.
         # If it does not exist, construct it from defaults.
 
         if not self.genome_fasta_path:
-            self.genome_fasta_path = Default.absolute_genome_fasta(
+            self.genome_fasta_path = bsf.standards.Default.absolute_genome_fasta(
                 genome_version=self.genome_version,
                 genome_index='bowtie2')
 
@@ -1323,9 +1361,9 @@ class ChIPSeq(Analysis):
             self.genome_sizes_path = self.configuration.get_absolute_path(file_path=self.genome_sizes_path)
 
         if not self.classpath_picard:
-            self.classpath_picard = JavaClassPath.get_picard()
+            self.classpath_picard = bsf.standards.JavaClassPath.get_picard()
             if not self.classpath_picard:
-                raise Exception("A 'ChIPSeq' analysis requires a 'classpath_picard' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'classpath_picard' configuration option.")
 
         stage_alignment = self.get_stage(name=self.stage_name_alignment)
         stage_peak_calling = self.get_stage(name=self.stage_name_peak_calling)
@@ -1360,9 +1398,9 @@ class ChIPSeq(Analysis):
                         c_paired_reads_dict = c_sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping)
                         for c_paired_reads_name in sorted(c_paired_reads_dict):
                             macs14 = stage_macs14.add_executable(
-                                executable=Macs14(
+                                executable=bsf.process.Executable(
                                     name='chipseq_macs14_' + t_paired_reads_name + '__' + c_paired_reads_name,
-                                    analysis=self))
+                                    program='macs14'))
 
                             macs14.dependencies.append('chipseq_sam2bam_' + t_paired_reads_name)
                             macs14.dependencies.append('chipseq_sam2bam_' + c_paired_reads_name)
@@ -1370,12 +1408,14 @@ class ChIPSeq(Analysis):
                             process_macs14 = stage_process_macs14.add_executable(
                                 executable=bsf.process.Executable(
                                     name='chipseq_process_macs14_' + t_paired_reads_name + '__' + c_paired_reads_name,
-                                    program='bsf_chipseq_process_macs14.sh'))
+                                    program='bsf_chipseq_process_macs14.bash'))
                             process_macs14.dependencies.append(macs14.name)
-                            self.set_command_configuration(command=process_macs14)
+
+                            # Read Command options from configuration sections:
+                            # [bsf.process.Executable.macs14]
+                            self.set_command_configuration(command=macs14)
 
                             # Set macs14 options.
-
                             macs14.add_option_long(
                                 key='treatment',
                                 value=os.path.join(
@@ -1445,7 +1485,7 @@ class ChIPSeq(Analysis):
                             else:
                                 warnings.warn(
                                     'Unable to set MACS14 parameters for unknown factor ' + repr(factor) + '.\n' +
-                                    'Please use default factor ' + repr(defaults.web.chipseq_default_factor) +
+                                    'Please use default factor ' + repr(self.factor_default) +
                                     ' or adjust Python code if necessary.',
                                     UserWarning)
 
@@ -1526,7 +1566,7 @@ class ChIPSeq(Analysis):
                             c_paired_reads_dict = c_sample.get_all_paired_reads(
                                 replicate_grouping=self.replicate_grouping)
                             for c_paired_reads_name in sorted(c_paired_reads_dict):
-                                # prefix = 'chipseq_macs14_'  + t_paired_reads_name + '__' + c_paired_reads_name
+                                # prefix = 'chipseq_macs14_' + t_paired_reads_name + '__' + c_paired_reads_name
                                 str_list.append('<tr>\n')
                                 # if treatment and absolute:
                                 # str_list.append('<td><strong>' + t_paired_reads_name + '</strong></td>\n')
@@ -1624,9 +1664,8 @@ class ChIPSeq(Analysis):
                                             str_list.append('visibility hide\n')
 
                                         # Common optional settings
-                                        str_list.append('color ' +
-                                                        defaults.web.get_chipseq_colour(
-                                                            factor=chipseq_comparison.factor) + '\n')
+                                        str_list.append(
+                                            'color ' + self.get_colour(factor=chipseq_comparison.factor) + '\n')
 
                                         # bigWig - Signal graphing track settings
                                         str_list.append('graphTypeDefault bar\n')
@@ -1656,9 +1695,7 @@ class ChIPSeq(Analysis):
                                 str_list.append('visibility pack\n')
 
                                 # Common optional settings
-                                str_list.append('color ' +
-                                                defaults.web.get_chipseq_colour(factor=chipseq_comparison.factor) +
-                                                '\n')
+                                str_list.append('color ' + self.get_colour(factor=chipseq_comparison.factor) + '\n')
 
                                 str_list.append('\n')
 
@@ -1681,7 +1718,8 @@ class ChIPSeq(Analysis):
                     str_list.append('visibility hide\n')
 
                     # Common optional settings
-                    # str_list.append('color ' + Defaults.web.chipseq_colours[comparison[2].upper()] + '\n')
+                    # str_list.append('color ' +
+                    #                 bsf.standards.Defaults.web.chipseq_colours[comparison[2].upper()] + '\n')
 
                     # bam - Compressed Sequence Alignment track settings.
 
@@ -1872,7 +1910,9 @@ class ChIPSeq(Analysis):
                         UserWarning)
                     continue
 
-                annotation_sheet = AnnotationSheet.from_file_path(file_path=file_path, file_type='excel')
+                annotation_sheet = bsf.annotation.AnnotationSheet.from_file_path(
+                    file_path=file_path,
+                    file_type='excel')
 
                 for row_dict in annotation_sheet.row_dicts:
                     file_path_diff_bind_contrast = FilePathDiffBindContrast(
@@ -2010,6 +2050,7 @@ class ChIPSeq(Analysis):
 
             composite_groups = dict()
             """ @type composite_groups: dict[str, bool] """
+
             for comparison_name in sorted(self._comparison_dict):
                 chipseq_comparison = self._comparison_dict[comparison_name]
                 factor_name = chipseq_comparison.factor.upper()
@@ -2067,7 +2108,7 @@ class ChIPSeq(Analysis):
                                 str_list.append('visibility dense\n')
 
                                 # Common optional settings
-                                str_list.append('color ' + defaults.web.get_chipseq_colour(factor=factor_name) + '\n')
+                                str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
 
                                 # bigWig - Signal graphing track settings
                                 str_list.append('alwaysZero off\n')
@@ -2121,7 +2162,7 @@ class ChIPSeq(Analysis):
                                 str_list.append('visibility dense\n')
 
                                 # Common optional settings
-                                str_list.append('color ' + defaults.web.get_chipseq_colour(factor=factor_name) + '\n')
+                                str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
 
                                 # bigWig - Signal graphing track settings
                                 str_list.append('alwaysZero off\n')
@@ -2174,7 +2215,7 @@ class ChIPSeq(Analysis):
                                 str_list.append('visibility full\n')
 
                                 # Common optional settings
-                                str_list.append('color ' + defaults.web.get_chipseq_colour(factor=factor_name) + '\n')
+                                str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
 
                                 # bigWig - Signal graphing track settings
                                 str_list.append('alwaysZero off\n')
@@ -2209,7 +2250,7 @@ class ChIPSeq(Analysis):
                                 str_list.append('visibility pack\n')
 
                                 # Common optional settings
-                                str_list.append('color ' + defaults.web.get_chipseq_colour(factor=factor_name) + '\n')
+                                str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
 
                                 # bigBed - Item or region track settings.
 
@@ -2230,7 +2271,7 @@ class ChIPSeq(Analysis):
                                 str_list.append('visibility pack\n')
 
                                 # Common optional settings
-                                str_list.append('color ' + defaults.web.get_chipseq_colour(factor=factor_name) + '\n')
+                                str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
 
                                 # Supertrack settings
                                 str_list.append('parent Summits\n')
@@ -2258,7 +2299,8 @@ class ChIPSeq(Analysis):
                     str_list.append('visibility hide\n')
 
                     # Common optional settings
-                    # str_list.append('color ' + Defaults.web.chipseq_colours[comparison[2].upper()] + '\n')
+                    # str_list.append('color ' +
+                    #                 bsf.standards.Defaults.web.chipseq_colours[comparison[2].upper()] + '\n')
 
                     # bam - Compressed Sequence Alignment track settings
 

@@ -36,10 +36,8 @@ import shutil
 import sys
 
 import bsf
-from bsf import Analysis
 from bsf.analyses.chip_seq import FilePathAlignment
 from bsf.argument import OptionShort
-from bsf.executables import Bowtie2
 from bsf.process import Command, Executable
 from bsf.standards import JavaClassPath
 
@@ -246,7 +244,12 @@ def run_bowtie2(runnable):
     # FIXME: The bsf.executables.Bowtie2 object is also deprecated.
     # bowtie2 = runnable.executable_dict['bowtie2']
     # The following bowtie2 definition is only a placeholder.
-    bowtie2 = bsf.executables.Bowtie2(name='bowtie2', analysis=Analysis())
+    # bowtie2 = bsf.executables.Bowtie2(name='bowtie2', analysis=Analysis())
+
+    # FIXME: Run bowtie via a RunnableStep to avoid SLURM copying it into the spool directory.
+    # Bowtie2 is a Perl script, but requires bowtie2-align to be in the same directory.
+    # Since SLURM copies the submitted script into its spool directory, this is not the case.
+    bowtie2 = bsf.process.Executable(name='bowtie2', program='bowtie2')
 
     # aligned_sam = bowtie2.stdout_path
 
