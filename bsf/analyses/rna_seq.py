@@ -2735,10 +2735,10 @@ class Tuxedo(bsf.Analysis):
                         str_list.append('<td class="center">')
                         str_list.append(self.get_html_anchor(
                             prefix=path_prefix,
-                            suffix='_'.join((row_dict['V1'], row_dict['V2'], 'maplot.pdf')),
+                            suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_ma.pdf')),
                             text=self.get_html_image(
                                 prefix=path_prefix,
-                                suffix='_'.join((row_dict['V1'], row_dict['V2'], 'maplot.png')),
+                                suffix='_'.join((row_dict['V1'], row_dict['V2'], 'genes_ma.png')),
                                 text='M vs A Plot on genes ' + row_dict['V1'] + ' versus ' + row_dict['V2'],
                                 height='80',
                                 width='80')))
