@@ -916,6 +916,25 @@ class Tuxedo(bsf.Analysis):
 
         # Start of the run() method body.
 
+        # Get the sample annotation sheet before calling the run() method of the Analysis super-class.
+
+        if self.sas_file:
+            self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
+            if not os.path.exists(path=self.sas_file):
+                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
+        else:
+            self.sas_file = '_'.join((self.project_name, self.prefix, 'samples.csv'))
+            if not self.sas_file:
+                raise Exception('No suitable sample annotation file in the current working directory.')
+
+        # Get the comparison annotation sheet before calling the run() method of the Analysis super-class.
+
+        if not self.comparison_path:
+            # A comparison path was not provided, check if a standard file exists in this directory.
+            self.comparison_path = '_'.join((self.project_name, self.prefix, 'comparisons.csv'))
+            if not os.path.exists(self.comparison_path):
+                self.comparison_path = None
+
         super(Tuxedo, self).run()
 
         # Get global defaults.
@@ -3220,9 +3239,80 @@ class DESeq(bsf.Analysis):
 
     def run(self):
         """Run this C{bsf.analyses.rna_seq.DESeq} analysis.
+
         @return:
         @rtype:
         """
+
+        def run_get_annotation_file(_prefix_list, _suffix):
+            """Private function to get an annotation file.
+
+            Based on the project name, a list of file name prefixes and one file name suffix,
+            the file name that exists in the file system will be returned.
+            @param _prefix_list: Python C{list} of Python C{str} or C{unicode} (prefix) objects
+            @type _prefix_list: list[str | unicode]
+            @param _suffix: File name suffix
+            @type _suffix: str | unicode
+            @return: File name or None
+            @rtype: str | unicode | None
+            """
+            for _prefix in _prefix_list:
+                _file_name = '_'.join((self.project_name, _prefix, _suffix))
+                if os.path.exists(path=_file_name):
+                    return _file_name
+
+            return
+
+        # Start of the run() method body.
+
+        # Check for the project name already here,
+        # since the super class method has to be called later.
+        if not self.project_name:
+            raise Exception('An Analysis project_name has not been defined.')
+
+        # Get the annotation sheets before calling the run() method of the Analysis super-class.
+        # If file paths were not provided, try to find them in the current directory.
+        # The complication is that either the Tuxedo.prefix or the DESeq.prefix could be used.
+
+        # Get the sample annotation sheet.
+
+        if self.sas_file:
+            self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
+            if not os.path.exists(path=self.sas_file):
+                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
+        else:
+            self.sas_file = run_get_annotation_file(
+                _prefix_list=[DESeq.prefix, Tuxedo.prefix],
+                _suffix='samples.csv')
+            if not self.sas_file:
+                raise Exception('No suitable sample annotation file in the current working directory.')
+
+        # Get the design annotation sheet.
+
+        if self.comparison_path:
+            self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
+            if not os.path.exists(path=self.comparison_path):
+                raise Exception(
+                    'Comparison (design) annotation file ' + repr(self.comparison_path) + ' does not exist.')
+        else:
+            self.comparison_path = run_get_annotation_file(
+                _prefix_list=[DESeq.prefix, Tuxedo.prefix],
+                _suffix='designs.csv')
+            if not self.comparison_path:
+                raise Exception('No suitable comparison (design) annotation file in the current working directory.')
+
+        # Get the contrast annotation sheet.
+
+        if self.contrast_path:
+            self.contrast_path = self.configuration.get_absolute_path(file_path=self.contrast_path)
+            if not os.path.exists(path=self.contrast_path):
+                raise Exception('Contrast annotation file ' + repr(self.contrast_path) + ' does not exist.')
+        else:
+            self.contrast_path = run_get_annotation_file(
+                _prefix_list=[DESeq.prefix, Tuxedo.prefix],
+                _suffix='contrasts.csv')
+            if not self.contrast_path:
+                raise Exception('No suitable contrast annotation file in the current working directory.')
 
         super(DESeq, self).run()
 
@@ -3237,22 +3327,12 @@ class DESeq(bsf.Analysis):
 
         # Read the designs (comparison) file.
 
-        self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
-
-        if not self.comparison_path:
-            raise Exception('A ' + self.name + " requires a 'comparison_path' configuration option.")
-
         design_sheet = bsf.annotation.AnnotationSheet.from_file_path(
             file_path=self.comparison_path,
             file_type='excel',
             name='DESeq Design Table')
 
         # Read the contrasts file.
-
-        self.contrast_path = self.configuration.get_absolute_path(file_path=self.contrast_path)
-
-        if not self.contrast_path:
-            raise Exception('A ' + self.name + " requires a 'contrast_path' configuration option.")
 
         contrast_sheet = bsf.annotation.AnnotationSheet.from_file_path(
             file_path=self.contrast_path,
