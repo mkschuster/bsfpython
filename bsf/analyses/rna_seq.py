@@ -1,6 +1,6 @@
 """bsf.analyses.rna_seq
 
-A package of classes and methods supporting RNA-Seq analyses.
+A package of classes and methods supporting RNA-seq analyses.
 """
 
 #
@@ -821,7 +821,7 @@ class Tuxedo(bsf.Analysis):
                             # Get Sample objects for 'Point N' keys for as long as they are defined.
                             # The Collection.get_sample_from_row_dict method can return one or more Sample objects,
                             # depending on 'Group' or 'Sample' column entries.
-                            # In RNA-Seq experiments, entire pools of Sample objects (replicates) are compared
+                            # In RNA-seq experiments, entire pools of Sample objects (replicates) are compared
                             # with each other.
                             _group_name, _sample_list_old = self.collection.get_samples_from_row_dict(
                                 row_dict=row_dict,
@@ -1995,7 +1995,19 @@ class Tuxedo(bsf.Analysis):
             str_list = list()
             """ @type str_list: list[str | unicode] """
 
-            str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+            str_list.append('<h1 id="' + self.prefix + '_analysis">')
+            str_list.append(self.project_name + ' ' + self.name)
+            str_list.append('</h1>\n')
+            str_list.append('\n')
+
+            str_list.append('<p><strong>Genome:</strong> ')
+            str_list.append(bsf.standards.Genome.get_description(genome_version=self.genome_version))
+            str_list.append('</p>\n')
+
+            str_list.append('<p><strong>Transcriptome:</strong> ')
+            str_list.append(bsf.standards.Transcriptome.get_description(
+                transcriptome_version=self.transcriptome_version))
+            str_list.append('</p>\n')
             str_list.append('\n')
 
             # TopHat and Cufflinks table.
@@ -2009,7 +2021,7 @@ class Tuxedo(bsf.Analysis):
             str_list.append('<p id ="tophat">')
             # http://tophat.cbcb.umd.edu/manual.html
             str_list.append('<a href="http://ccb.jhu.edu/software/tophat/index.shtml"><strong>TopHat</strong></a> ')
-            str_list.append('aligns RNA-Seq reads to a genome in order to identify ')
+            str_list.append('aligns RNA-seq reads to a genome in order to identify ')
             str_list.append('exon-exon splice junctions. It is built on the ultra fast ')
             str_list.append('short read mapping program ')
             str_list.append('<a href="http://bowtie-bio.sourceforge.net/bowtie2/index.shtml">')
@@ -2043,7 +2055,7 @@ class Tuxedo(bsf.Analysis):
             str_list.append('\n')
 
             str_list.append('<p>')
-            str_list.append('TopHat reports <strong>splice junctions</strong> on the basis of RNA-Seq\n')
+            str_list.append('TopHat reports <strong>splice junctions</strong> on the basis of RNA-seq\n')
             str_list.append('read alignments in UCSC BED track format.\n')
             str_list.append('Each junction consists of two connected BED blocks,\n')
             str_list.append('where each block is as long as the maximal overhang\n')
@@ -2068,16 +2080,16 @@ class Tuxedo(bsf.Analysis):
             # str_list.append('the UCSC site, subsequent pages will take some time to load.')
             # str_list.append('</p>\n')
 
-            str_list.append('<h2 id="gene_expression_profiles">Gene Expression Profiles</h2>\n')
+            str_list.append('<h2 id="raw_gene_expression_profiles">Raw Gene Expression Profiles</h2>\n')
             str_list.append('\n')
 
             str_list.append('<p id="cufflinks">')
             # http://cufflinks.cbcb.umd.edu/howitworks.html
             str_list.append('<a href="http://cole-trapnell-lab.github.io/cufflinks/"><strong>Cufflinks</strong></a>\n')
-            str_list.append('assembles aligned RNA-Seq reads into transcripts,\n')
+            str_list.append('assembles aligned RNA-seq reads into transcripts,\n')
             str_list.append('estimates their abundances, and tests for differential\n')
             str_list.append('expression and regulation transcriptome-wide.\n')
-            str_list.append('It accepts aligned RNA-Seq reads and assembles the alignments into a parsimonious set\n')
+            str_list.append('It accepts aligned RNA-seq reads and assembles the alignments into a parsimonious set\n')
             str_list.append('of transcripts. Cufflinks then estimates the relative abundances of these transcripts\n')
             str_list.append('based on how many reads support each one, taking into account biases in library\n')
             str_list.append('preparation protocols.')
@@ -2085,7 +2097,7 @@ class Tuxedo(bsf.Analysis):
 
             str_list.append('<p>')
             str_list.append('The Cufflinks <strong>assembled transcripts</strong> can be attached to the \n')
-            str_list.append('UCSC Genome Browser, by following the "Transcript Assembly" links\n')
+            str_list.append('UCSC Genome Browser, by following the &laquo;Transcript Assembly&raquo; links\n')
             str_list.append('below.\n')
             str_list.append('The isoforms.fpkm_tracking and genes.fpkm_tracking files\n')
             str_list.append('contain the estimated isoform or gene expression values in the generic\n')
@@ -2095,14 +2107,21 @@ class Tuxedo(bsf.Analysis):
             str_list.append('The isoforms.count_tracking and genes.count_tracking files\n')
             str_list.append('contain the scaled isoform or gene count values in the generic\n')
             str_list.append('<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' +
-                            'count-tracking-format">Count Tracking format</a>.')
-            str_list.append('</p>\n')
-
-            str_list.append('<p>')
+                            'count-tracking-format">Count Tracking format</a>. ')
             str_list.append('Please see a more detailed description of\n')
             # http://cufflinks.cbcb.umd.edu/manual.html#cufflinks_output
             str_list.append('<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' +
                             'output-formats-used-in-the-cufflinks-suite">Cufflinks output</a>.')
+            str_list.append('</p>\n')
+
+            str_list.append('<p>')
+            str_list.append('<strong>Please note:</strong>\n')
+            str_list.append('Since Cufflinks estimates transcriptome expression profiles on a per sample ')
+            str_list.append('(or replicate) basis, the resulting raw FPKM values cannot directly be compared ')
+            str_list.append('between samples.\n')
+            str_list.append('Please see the <a href="#differential_expression_table">Differential Expression</a> ')
+            str_list.append('section below for tables of normalised FPKM values that allow for direct ')
+            str_list.append('sample comparisons.')
             str_list.append('</p>\n')
 
             str_list.append('<table id="gene_expression_table">\n')
@@ -2211,7 +2230,44 @@ class Tuxedo(bsf.Analysis):
             str_list.append('</p>\n')
             str_list.append('\n')
 
+            str_list.append('<p>')
+            str_list.append('A comparison involves one or more sample groups with one or more replicates each.\n')
+            str_list.append('Cuffdiff normalises all replicates and performs an all-against-all sample groups ')
+            str_list.append('comparison.\nTypically, a single comparison including all sample groups is set up, ')
+            str_list.append('but sometimes, technical constraints (i.e. memory requirements) require setting up ')
+            str_list.append('several comparisons, each with fewer sample groups, in parallel.\n')
+            str_list.append('Since Cuffdiff normalises all samples within a comparison, FPKM values of all samples ')
+            str_list.append('in a particular comparison can be directly compared.')
+            str_list.append('</p>\n')
+
             str_list.append('<h3 id="all_genes">All Genes</h3>\n')
+
+            str_list.append('<p>')
+            str_list.append('The links in the &laquo;Genes&raquo; column provide pairwise slices of the ')
+            str_list.append('all-against-all comparisons in tab-separated value (TSV) format, ')
+            str_list.append('which could be imported into spreadsheet software for post-filtering.\n')
+            str_list.append('Each table contains information about a pair of sample groups annotated in ')
+            str_list.append('&laquo;sample_1&raquo; and &laquo;sample_2&raquo;, their corresponding FPKM values in ')
+            str_list.append('&laquo;value_1&raquo; and &laquo;value_2&raquo;, log2-fold changes of sample_2 over ')
+            str_list.append('sample_1, as well as p-value and multiple testing-corrected (Benjamini-Hochberg) ')
+            str_list.append('q-values.\nBy default, the false discovery rate (FDR) threshold is set at 0.05, ')
+            str_list.append('which is also the basis for the assignment of &laquo;yes&raquo; or &laquo;no&raquo; ')
+            str_list.append('in the &laquo;significant&raquo; column.\n')
+            str_list.append('Depending on the biological system, the threshold could be dynamically raised or ')
+            str_list.append('lowered in a post-filtering approach.</p>\n')
+            str_list.append('\n')
+            str_list.append('<p>Since some spreadsheet programmes have no concept of positive or negative infinity ')
+            str_list.append('values (+Inf, -Inf), the &laquo;Genes&raquo; and &laquo;Isoforms&raquo; tables contain ')
+            str_list.append('three additional ranking columns for ')
+            str_list.append('(1) the effect size (rank_log2_fold_change), ')
+            str_list.append('(2) the absolute level (rank_value) and ')
+            str_list.append('(3) the statistical significance (rank_q_value).\n')
+            str_list.append('Ranking in these columns is correct and could be combined to down-vote huge ')
+            str_list.append('log2-fold changes that are the result of tiny absolute values and therefore ')
+            str_list.append('biologically meaningless.\n')
+            str_list.append('A maximum rank of combinations of columns could work.')
+            str_list.append('</p>\n')
+            str_list.append('\n')
 
             str_list.append('<table id="differential_expression_table">\n')
             str_list.append('<thead>\n')
@@ -2805,7 +2861,7 @@ class Tuxedo(bsf.Analysis):
 
             str_list.append('track Alignments\n')
             str_list.append('shortLabel Alignments\n')
-            str_list.append('longLabel TopHat RNA-Seq read alignments\n')
+            str_list.append('longLabel TopHat RNA-seq read alignments\n')
             str_list.append('visibility hide\n')
             str_list.append('superTrack on\n')
             str_list.append('group alignments\n')
@@ -2821,7 +2877,7 @@ class Tuxedo(bsf.Analysis):
 
             str_list.append('track Coverage\n')
             str_list.append('shortLabel Coverage\n')
-            str_list.append('longLabel TopHat RNA-Seq alignment coverage\n')
+            str_list.append('longLabel TopHat RNA-seq alignment coverage\n')
             str_list.append('visibility full\n')
             str_list.append('superTrack on\n')
             str_list.append('group coverage\n')
@@ -2829,7 +2885,7 @@ class Tuxedo(bsf.Analysis):
 
             str_list.append('track Deletions\n')
             str_list.append('shortLabel Deletions\n')
-            str_list.append('longLabel TopHat RNA-Seq deletions\n')
+            str_list.append('longLabel TopHat RNA-seq deletions\n')
             str_list.append('visibility hide\n')
             str_list.append('superTrack on\n')
             str_list.append('group alignments\n')
@@ -2837,7 +2893,7 @@ class Tuxedo(bsf.Analysis):
 
             str_list.append('track Insertions\n')
             str_list.append('shortLabel Insertions\n')
-            str_list.append('longLabel TopHat RNA-Seq insertions\n')
+            str_list.append('longLabel TopHat RNA-seq insertions\n')
             str_list.append('visibility hide\n')
             str_list.append('superTrack on\n')
             str_list.append('group alignments\n')
@@ -2845,7 +2901,7 @@ class Tuxedo(bsf.Analysis):
 
             str_list.append('track Junctions\n')
             str_list.append('shortLabel Junctions\n')
-            str_list.append('longLabel TopHat RNA-Seq splice junctions\n')
+            str_list.append('longLabel TopHat RNA-seq splice junctions\n')
             str_list.append('visibility show\n')
             str_list.append('superTrack on\n')
             str_list.append('group alignments\n')
@@ -2878,7 +2934,7 @@ class Tuxedo(bsf.Analysis):
                     str_list.append('track ' + paired_reads_name + '_alignments\n')
                     str_list.append('type bam\n')
                     str_list.append('shortLabel ' + paired_reads_name + '_alignments\n')
-                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-Seq read alignments\n')
+                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-seq read alignments\n')
                     str_list.append('bigDataUrl rnaseq_tophat_' + paired_reads_name + '/accepted_hits.bam\n')
                     # str_list.append('html ...\n')
                     str_list.append('visibility dense\n')
@@ -2902,7 +2958,7 @@ class Tuxedo(bsf.Analysis):
                     # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
                     str_list.append('type bigWig\n')
                     str_list.append('shortLabel ' + paired_reads_name + '_coverage\n')
-                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-Seq alignment coverage\n')
+                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-seq alignment coverage\n')
                     str_list.append('bigDataUrl rnaseq_tophat_' + paired_reads_name + '/accepted_hits.bw\n')
                     # str_list.append('html ...\n')
                     str_list.append('visibility full\n')
@@ -2937,7 +2993,7 @@ class Tuxedo(bsf.Analysis):
                     str_list.append('track ' + paired_reads_name + '_deletions\n')
                     str_list.append('type bigBed\n')
                     str_list.append('shortLabel ' + paired_reads_name + '_deletions\n')
-                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-Seq deletions\n')
+                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-seq deletions\n')
                     str_list.append('bigDataUrl rnaseq_tophat_' + paired_reads_name + '/deletions.bb\n')
                     # str_list.append('html ...\n')
                     str_list.append('visibility hide\n')
@@ -2959,7 +3015,7 @@ class Tuxedo(bsf.Analysis):
                     str_list.append('track insertions_' + paired_reads_name + '\n')
                     str_list.append('type bigBed\n')
                     str_list.append('shortLabel ' + paired_reads_name + '_insertions\n')
-                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-Seq insertions\n')
+                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-seq insertions\n')
                     str_list.append('bigDataUrl rnaseq_tophat_' + paired_reads_name + '/insertions.bb\n')
                     # str_list.append('html ...\n')
                     str_list.append('visibility hide\n')
@@ -2981,7 +3037,7 @@ class Tuxedo(bsf.Analysis):
                     str_list.append('track ' + paired_reads_name + '_junctions\n')
                     str_list.append('type bigBed\n')
                     str_list.append('shortLabel ' + paired_reads_name + '_junctions\n')
-                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-Seq splice junctions\n')
+                    str_list.append('longLabel ' + paired_reads_name + ' TopHat RNA-seq splice junctions\n')
                     str_list.append('bigDataUrl rnaseq_tophat_' + paired_reads_name + '/junctions.bb\n')
                     # str_list.append('html ...\n')
                     str_list.append('visibility pack\n')
@@ -3096,6 +3152,8 @@ class DESeq(bsf.Analysis):
     @type transcriptome_gtf_path: str | unicode | None
     @ivar transcriptome_index_path: Tophat transcriptome index path
     @type transcriptome_index_path: str | unicode | None
+    @ivar transcriptome_version: Transcriptome version
+    @type transcriptome_version: str | None
     """
 
     name = 'DESeq RNA-seq Analysis'
@@ -3124,7 +3182,8 @@ class DESeq(bsf.Analysis):
             contrast_path=None,
             genome_fasta_path=None,
             transcriptome_gtf_path=None,
-            transcriptome_index_path=None):
+            transcriptome_index_path=None,
+            transcriptome_version=None):
         """Initialise a C{bsf.analyses.rna_seq.DESeq} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -3161,6 +3220,8 @@ class DESeq(bsf.Analysis):
         @type contrast_path: str | unicode | None
         @param genome_fasta_path: Reference genome sequence FASTA file path
         @type genome_fasta_path: str | unicode | None
+        @param transcriptome_version: Transcriptome version
+        @type transcriptome_version: str | None
         @param transcriptome_gtf_path: Reference transcriptome GTF file path
         @type transcriptome_gtf_path: str | unicode | None
         @param transcriptome_index_path: Tophat transcriptome index path
@@ -3191,6 +3252,7 @@ class DESeq(bsf.Analysis):
         self.genome_fasta_path = genome_fasta_path
         self.transcriptome_gtf_path = transcriptome_gtf_path
         self.transcriptome_index_path = transcriptome_index_path
+        self.transcriptome_version = transcriptome_version
 
         return
 
@@ -3235,6 +3297,10 @@ class DESeq(bsf.Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.transcriptome_index_path = configuration.config_parser.get(section=section, option=option)
 
+        option = 'transcriptome_version'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.transcriptome_version = configuration.config_parser.get(section=section, option=option)
+
         return
 
     def run(self):
@@ -3258,6 +3324,8 @@ class DESeq(bsf.Analysis):
             """
             for _prefix in _prefix_list:
                 _file_name = '_'.join((self.project_name, _prefix, _suffix))
+                if self.debug > 0:
+                    print('Checking annotation sheet: ', repr(_file_name))
                 if os.path.exists(path=_file_name):
                     return _file_name
 
@@ -3320,6 +3388,9 @@ class DESeq(bsf.Analysis):
 
         if not self.genome_version:
             raise Exception('A ' + self.name + " requires a 'genome_version' configuration option.")
+
+        if not self.transcriptome_version:
+            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
 
         # For DESeq, all samples need adding to the Analysis regardless.
         for sample in self.collection.get_all_samples():
@@ -3439,6 +3510,16 @@ class DESeq(bsf.Analysis):
             """ @type str_list: list[str | unicode] """
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+            str_list.append('\n')
+
+            str_list.append('<p><strong>Genome:</strong> ')
+            str_list.append(bsf.standards.Genome.get_description(genome_version=self.genome_version))
+            str_list.append('</p>\n')
+
+            str_list.append('<p><strong>Transcriptome:</strong> ')
+            str_list.append(bsf.standards.Transcriptome.get_description(
+                transcriptome_version=self.transcriptome_version))
+            str_list.append('</p>\n')
             str_list.append('\n')
 
             # Likelihood Ratio Testing (LRT) Table
