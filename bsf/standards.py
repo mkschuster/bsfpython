@@ -429,10 +429,10 @@ class Default(object):
             return genome_version
 
 
-class InitialisationBase(object):
-    """The C{bsf.standards.InitialisationBase} class is the base class for global configuration defaults.
+class BaseSection(object):
+    """The C{bsf.standards.BaseSection} class is the base class for a global configuration section.
 
-    The defaults are read from the a particular section of the global configuration file.
+    The defaults are read from the [{section}] section of the global configuration file.
     Attributes:
     @cvar section: C{SafeConfigParser} section
     @type section: str | unicode
@@ -492,7 +492,77 @@ class InitialisationBase(object):
             return
 
 
-class JavaClassPath(InitialisationBase):
+class BaseSectionVersion(object):
+    """The C{bsf.standards.BaseSectionVersion} class is the base class for a global configuration section and version.
+
+    The defaults are read from the [{section}_{version}] section of the global configuration file.
+    Attributes:
+    @cvar section: C{SafeConfigParser} section
+    @type section: str | unicode
+    """
+    section = None
+
+    @classmethod
+    def get_section(cls, version=None):
+        """Get the the section defined by the sub-class section class variable and a version.
+
+        @param version: Version
+        @type version: None | str
+        @return: Configuration section
+        @rtype: str
+        """
+        if version:
+            return '_'.join((cls.section, version))
+        else:
+            return cls.section
+
+    @classmethod
+    def get(cls, option=None, version=None):
+        """Get the value for a configuration option in the section defined by the sub-class section class variable.
+
+        @param option: Configuration option
+        @type option: None | str | unicode
+        @param version: Version
+        @type version: None | str | unicode
+        @return: Configuration value
+        @rtype: None | str | unicode
+        """
+        if not cls.section:
+            return
+
+        if not option:
+            return
+
+        section = cls.get_section(version=version)
+        if Configuration.get_global_configuration().config_parser.has_option(section=section, option=option):
+            return Configuration.get_global_configuration().config_parser.get(section=section, option=option)
+        else:
+            return
+
+    @classmethod
+    def get_expanded_directory(cls, option=None, version=None):
+        """Get configuration information for a directory and expand it.
+
+        The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
+        any environment variables i.e. on UNIX ${NAME} or $NAME.
+        @param option: Configuration option
+        @type option: None | str | unicode
+        @param version: Version
+        @type version: None | str
+        @return: Expanded directory
+        @rtype: None | str | unicode
+        """
+        if not option:
+            return
+
+        section = cls.get_section(version=version)
+        if Configuration.get_global_configuration().config_parser.has_option(section=section, option=option):
+            return Configuration.get_global_configuration().get_expanded_directory(section=section, option=option)
+        else:
+            return
+
+
+class JavaClassPath(BaseSection):
     """The C{bsf.standards.JavaClassPath} class models Java class path defaults.
 
     The defaults are read from the [classpath] section of the global configuration file.
@@ -557,7 +627,7 @@ class JavaClassPath(InitialisationBase):
         return cls.get(option='vcf_filter')
 
 
-class EnsemblVEP(object):
+class EnsemblVEP(BaseSectionVersion):
     """The C{bsf.standards.EnsemblVEP} class models Ensembl Variant Effect Predictor (VEP) defaults.
 
     The defaults are read from the [ensembl_vep_{genome_version}] section of the global configuration file.
@@ -568,62 +638,6 @@ class EnsemblVEP(object):
     section = 'ensembl_vep'
 
     @classmethod
-    def get_section(cls, genome_version=None):
-        """Get the Configuration section from a genome assembly version.
-
-        @param genome_version: Genome assembly version
-        @type genome_version: None | str
-        @return: Configuration section
-        @rtype: str
-        """
-        if genome_version:
-            return '_'.join((cls.section, genome_version))
-        else:
-            return cls.section
-
-    @classmethod
-    def get(cls, option=None, genome_version=None):
-        """Get the value for a configuration option.
-
-        @param option: Configuration option
-        @type option: None | str | unicode
-        @param genome_version: Genome assembly version
-        @type genome_version: None | str | unicode
-        @return: Configuration value
-        @rtype: None | str | unicode
-        """
-        if not option:
-            return
-
-        section = cls.get_section(genome_version=genome_version)
-        if Configuration.get_global_configuration().config_parser.has_option(section=section, option=option):
-            return Configuration.get_global_configuration().config_parser.get(section=section, option=option)
-        else:
-            return
-
-    @classmethod
-    def get_expanded_directory(cls, option=None, genome_version=None):
-        """Get configuration information for a directory and expand it.
-
-        The expansion includes an eventual user part i.e. on UNIX ~ or ~user and
-        any environment variables i.e. on UNIX ${NAME} or $NAME.
-        @param option: Configuration option
-        @type option: None | str | unicode
-        @param genome_version: Genome assembly version
-        @type genome_version: None | str
-        @return: Expanded directory
-        @rtype: None | str | unicode
-        """
-        if not option:
-            return
-
-        section = cls.get_section(genome_version=genome_version)
-        if Configuration.get_global_configuration().config_parser.has_option(section=section, option=option):
-            return Configuration.get_global_configuration().get_expanded_directory(section=section, option=option)
-        else:
-            return
-
-    @classmethod
     def get_directory_cache(cls, genome_version=None):
         """Get the cache directory path.
 
@@ -632,7 +646,7 @@ class EnsemblVEP(object):
         @return: Cache directory path
         @rtype: None | str | unicode
         """
-        return cls.get_expanded_directory(option='directory_cache', genome_version=genome_version)
+        return cls.get_expanded_directory(option='directory_cache', version=genome_version)
 
     @classmethod
     def get_directory_fasta(cls, genome_version=None):
@@ -643,7 +657,7 @@ class EnsemblVEP(object):
         @return: FASTA directory path
         @rtype: None | str | unicode
         """
-        return cls.get_expanded_directory(option='directory_fasta', genome_version=genome_version)
+        return cls.get_expanded_directory(option='directory_fasta', version=genome_version)
 
     @classmethod
     def get_directory_plugin(cls, genome_version=None):
@@ -654,7 +668,7 @@ class EnsemblVEP(object):
         @return: Plug-ins directory path
         @rtype: None | str | unicode
         """
-        return cls.get_expanded_directory(option='directory_plugin', genome_version=genome_version)
+        return cls.get_expanded_directory(option='directory_plugin', version=genome_version)
 
     @classmethod
     def get_directory_source(cls, genome_version=None):
@@ -665,7 +679,7 @@ class EnsemblVEP(object):
         @return: Source directory path
         @rtype: None | str | unicode
         """
-        return cls.get_expanded_directory(option='directory_source', genome_version=genome_version)
+        return cls.get_expanded_directory(option='directory_source', version=genome_version)
 
     @classmethod
     def get_name_assembly(cls, genome_version=None):
@@ -676,7 +690,7 @@ class EnsemblVEP(object):
         @return: Genome assembly name
         @rtype: None | str | unicode
         """
-        return cls.get(option='name_assembly', genome_version=genome_version)
+        return cls.get(option='name_assembly', version=genome_version)
 
     @classmethod
     def get_name_species(cls, genome_version=None):
@@ -687,7 +701,7 @@ class EnsemblVEP(object):
         @return: Scientific species name
         @rtype: None | str | unicode
         """
-        return cls.get(option='name_species', genome_version=genome_version)
+        return cls.get(option='name_species', version=genome_version)
 
     @classmethod
     def get_sql_user(cls, genome_version=None):
@@ -698,7 +712,7 @@ class EnsemblVEP(object):
         @return: SQL database user name
         @rtype: None | str | unicode
         """
-        return cls.get(option='sql_user', genome_version=genome_version)
+        return cls.get(option='sql_user', version=genome_version)
 
     @classmethod
     def get_sql_pass(cls, genome_version=None):
@@ -709,7 +723,7 @@ class EnsemblVEP(object):
         @return: SQL database password
         @rtype: None | str | unicode
         """
-        return cls.get(option='sql_pass', genome_version=genome_version)
+        return cls.get(option='sql_pass', version=genome_version)
 
     @classmethod
     def get_sql_host(cls, genome_version=None):
@@ -720,7 +734,7 @@ class EnsemblVEP(object):
         @return: SQL database host name
         @rtype: None | str | unicode
         """
-        return cls.get(option='sql_host', genome_version=genome_version)
+        return cls.get(option='sql_host', version=genome_version)
 
     @classmethod
     def get_sql_port(cls, genome_version=None):
@@ -731,7 +745,7 @@ class EnsemblVEP(object):
         @return: SQL database TCP/IP port number
         @rtype: None | str | unicode
         """
-        return cls.get(option='sql_port', genome_version=genome_version)
+        return cls.get(option='sql_port', version=genome_version)
 
     @classmethod
     def get_ofc_path(cls, genome_version=None):
@@ -742,7 +756,7 @@ class EnsemblVEP(object):
         @return: Output fields configuration (TSV) file path
         @rtype: None | str | unicode
         """
-        return cls.get(option='ofc_path', genome_version=genome_version)
+        return cls.get(option='ofc_path', version=genome_version)
 
     @classmethod
     def get_soc_path(cls, genome_version=None):
@@ -753,10 +767,54 @@ class EnsemblVEP(object):
         @return: Sequence Ontology configuration (TSV) file path
         @rtype: None | str | unicode
         """
-        return cls.get(option='soc_path', genome_version=genome_version)
+        return cls.get(option='soc_path', version=genome_version)
 
 
-class FilePath(InitialisationBase):
+class Genome(BaseSectionVersion):
+    """The C{bsf.standards.Genome} class models Genome defaults.
+
+    The defaults are read from the [genome_{genome_version}] section of the global configuration file.
+    Attributes:
+    @cvar section: C{SafeConfigParser} section
+    @type section: str | unicode
+    """
+    section = 'genome'
+
+    @classmethod
+    def get_description(cls, genome_version=None):
+        """Get the Description.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Description
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='description', version=genome_version)
+
+
+class Transcriptome(BaseSectionVersion):
+    """The C{bsf.standards.Transcriptome} class models Transcriptome defaults.
+
+    The defaults are read from the [transcriptome_{transcriptome_version}] section of the global configuration file.
+    Attributes:
+    @cvar section: C{SafeConfigParser} section
+    @type section: str | unicode
+    """
+    section = 'transcriptome'
+
+    @classmethod
+    def get_description(cls, transcriptome_version=None):
+        """Get the Description.
+
+        @param transcriptome_version: Transcriptome version
+        @type transcriptome_version: None | str
+        @return: Description
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='description', version=transcriptome_version)
+
+
+class FilePath(BaseSection):
     """The C{bsf.standards.FilePath} class models file path defaults.
 
     The defaults are read from the [directories] section of the global configuration file.
@@ -993,7 +1051,7 @@ class FilePath(InitialisationBase):
         return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='snpeff_data'))
 
 
-class Operator(InitialisationBase):
+class Operator(BaseSection):
     """The C{bsf.standards.Operator} class models operator defaults.
 
     The defaults are read from the [operator] section of the global configuration file.
@@ -1040,7 +1098,7 @@ class Operator(InitialisationBase):
         return cls.get(option='sequencing_centre')
 
 
-class UCSC(InitialisationBase):
+class UCSC(BaseSection):
     """The C{bsf.standards.UCSC} class models UCSC Genome Browser uniform resource locator (URL) defaults.
 
     The defaults are read from the [ucsc] section of the global configuration file.
@@ -1070,7 +1128,7 @@ class UCSC(InitialisationBase):
         return cls.get(option='host_name')
 
 
-class URL(InitialisationBase):
+class URL(BaseSection):
     """The C{bsf.standards.URL} class models web server uniform resource locator (URL) defaults.
 
     The defaults are read from the [url] section of the global configuration file.
@@ -1148,7 +1206,7 @@ class URL(InitialisationBase):
         return '/'.join((cls.get_absolute_base(), cls.get_relative_projects()))
 
 
-class VendorQualityFilter(InitialisationBase):
+class VendorQualityFilter(BaseSection):
     """The C{bsf.standards.VendorQualityFilter} class models (SAM) Vendor Quality Filter defaults.
 
     The defaults are read from the [VendorQualityFilter] section of the global configuration file.
