@@ -37,13 +37,13 @@ import sys
 
 import pysam
 
-from bsf import Analysis, FilePath, Runnable
-from bsf.annotation import AnnotationSheet
-from bsf.process import RunnableStep, RunnableStepLink, RunnableStepMove, RunnableStepPicard
-from bsf.standards import JavaClassPath
+import bsf
+import bsf.annotation
+import bsf.process
+import bsf.standards
 
 
-class FilePathStarAlign(FilePath):
+class FilePathStarAlign(bsf.FilePath):
     def __init__(self, prefix):
         super(FilePathStarAlign, self).__init__(prefix=prefix)
 
@@ -53,7 +53,7 @@ class FilePathStarAlign(FilePath):
         return
 
 
-class FilePathStarIndex(FilePath):
+class FilePathStarIndex(bsf.FilePath):
     def __init__(self, prefix):
         super(FilePathStarIndex, self).__init__(prefix=prefix)
 
@@ -65,7 +65,7 @@ class FilePathStarIndex(FilePath):
         return
 
 
-class FilePathStarMerge(FilePath):
+class FilePathStarMerge(bsf.FilePath):
     def __init__(self, prefix):
         super(FilePathStarMerge, self).__init__(prefix=prefix)
 
@@ -79,7 +79,7 @@ class FilePathStarMerge(FilePath):
         return
 
 
-class FilePathStarSummary(FilePath):
+class FilePathStarSummary(bsf.FilePath):
     def __init__(self, prefix):
         super(FilePathStarSummary, self).__init__(prefix=prefix)
 
@@ -110,7 +110,7 @@ class FilePathStarSummary(FilePath):
         return
 
 
-class StarAligner(Analysis):
+class StarAligner(bsf.Analysis):
     """STAR Aligner C{bsf.Analysis} sub-class.
 
     Attributes:
@@ -127,15 +127,15 @@ class StarAligner(Analysis):
     @cvar stage_name_summary: C{bsf.Stage.name} for the summary stage
     @type stage_name_summary: str
     @ivar replicate_grouping: Group all replicates into a single STAR process
-    @type replicate_grouping: bool
+    @type replicate_grouping: bool | None
     @ivar index_directory: Genome directory with STAR indices
-    @type index_directory: str | unicode
-    @ivar stranded: Stranded RNA-seq protocol 'yes', 'no' 'reverse'
-    @type stranded: str
+    @type index_directory: str | unicode | None
+    @ivar transcriptome_version: Transcriptome version
+    @type transcriptome_version: str | None
     @ivar transcriptome_gtf: GTF file path of transcriptome annotation
-    @type transcriptome_gtf: str | unicode
+    @type transcriptome_gtf: str | unicode | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: str | unicode
+    @type classpath_picard: str | unicode | None
     """
 
     name = 'STAR Aligner Analysis'
@@ -204,9 +204,9 @@ class StarAligner(Analysis):
             stage_list=None,
             collection=None,
             sample_list=None,
-            replicate_grouping=False,
+            replicate_grouping=None,
             index_directory=None,
-            stranded=None,
+            transcriptome_version=None,
             transcriptome_gtf=None,
             classpath_picard=None):
         """Initialise a C{bsf.analyses.rna_seq.StarAligner} object.
@@ -237,15 +237,15 @@ class StarAligner(Analysis):
         @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @param replicate_grouping: Group all replicates into a single STAR process
-        @type replicate_grouping: bool
+        @type replicate_grouping: bool | None
         @param index_directory: Genome directory with STAR indices
         @type index_directory: str | unicode
-        @param stranded: Stranded RNA-seq protocol 'yes', 'no' 'reverse'
-        @type stranded: str
+        @param transcriptome_version: Transcriptome version
+        @type transcriptome_version: str | None
         @param transcriptome_gtf: GTF file path of transcriptome annotation
-        @type transcriptome_gtf: str | unicode
+        @type transcriptome_gtf: str | unicode | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: str | unicode
+        @type classpath_picard: str | unicode | None
         """
 
         super(StarAligner, self).__init__(
@@ -264,31 +264,11 @@ class StarAligner(Analysis):
 
         # Sub-class specific ...
 
-        if replicate_grouping is None:
-            self.replicate_grouping = False
-        else:
-            assert isinstance(replicate_grouping, bool)
-            self.replicate_grouping = replicate_grouping
-
-        if index_directory is None:
-            self.index_directory = str()
-        else:
-            self.index_directory = index_directory
-
-        if stranded is None:
-            self.stranded = str()
-        else:
-            self.stranded = stranded
-
-        if transcriptome_gtf is None:
-            self.transcriptome_gtf = str()
-        else:
-            self.transcriptome_gtf = transcriptome_gtf
-
-        if classpath_picard is None:
-            self.classpath_picard = str()
-        else:
-            self.classpath_picard = classpath_picard
+        self.replicate_grouping = replicate_grouping
+        self.index_directory = index_directory
+        self.transcriptome_version = transcriptome_version
+        self.transcriptome_gtf = transcriptome_gtf
+        self.classpath_picard = classpath_picard
 
         return
 
@@ -317,9 +297,9 @@ class StarAligner(Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.index_directory = configuration.config_parser.get(section=section, option=option)
 
-        option = 'stranded'
+        option = 'transcriptome_version'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.transcriptome_gtf = configuration.config_parser.get(section=section, option=option)
+            self.transcriptome_version = configuration.config_parser.get(section=section, option=option)
 
         option = 'transcriptome_gtf'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -358,6 +338,17 @@ class StarAligner(Analysis):
 
         # Start of the run() method body.
 
+        # Get the sample annotation sheet before calling the run() method of the bsf.Analysis super-class.
+
+        if self.sas_file:
+            self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
+            if not os.path.exists(path=self.sas_file):
+                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
+        else:
+            self.sas_file = '_'.join((self.project_name, self.prefix, 'samples.csv'))
+            if not self.sas_file:
+                raise Exception('No suitable sample annotation file in the current working directory.')
+
         super(StarAligner, self).run()
 
         # Get global defaults.
@@ -365,27 +356,22 @@ class StarAligner(Analysis):
         # The STAR Aligner requires a genome version.
 
         if not self.genome_version:
-            raise Exception('A STAR Aligner analysis requires a genome_version configuration option.')
+            raise Exception('A ' + self.name + " requires a 'genome_version' configuration option.")
 
         if not self.index_directory:
-            raise Exception('A STAR Aligner analysis requires an index_directory configuration option.')
+            raise Exception('A ' + self.name + " requires an 'index_directory' configuration option.")
 
-        if self.stranded:
-            if self.stranded not in ('yes', 'no', 'reverse'):
-                raise Exception(
-                    'The STAR Aligner configuration option "stranded" can only be '
-                    '"yes", "no" or "reverse", not "' + self.stranded + '".')
-        else:
-            self.stranded = 'yes'
+        if not self.transcriptome_version:
+            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
 
         if not self.transcriptome_gtf:
-            raise Exception('A STAR Aligner analysis requires a transcriptome_gtf configuration option.')
+            # FIXME: The transcriptome_gtf is currently not used.
+            raise Exception('A ' + self.name + " requires a 'transcriptome_gtf' configuration option.")
 
         if not self.classpath_picard:
-            self.classpath_picard = JavaClassPath.get_picard()
+            self.classpath_picard = bsf.standards.JavaClassPath.get_picard()
             if not self.classpath_picard:
-                raise Exception("An 'StarAligner' analysis requires a "
-                                "'classpath_picard' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'classpath_picard' configuration option.")
 
         run_read_comparisons()
 
@@ -401,7 +387,7 @@ class StarAligner(Analysis):
         # Create an annotation sheet linking sample name and read group name, which is required for the
         # summary script.
 
-        annotation_sheet = AnnotationSheet(
+        annotation_sheet = bsf.annotation.AnnotationSheet(
             file_path=os.path.join(self.genome_directory, file_path_summary.read_group_to_sample_tsv),
             file_type='excel-tab',
             name='star_aligner_read_group',
@@ -442,7 +428,7 @@ class StarAligner(Analysis):
                     # Create a Runnable and Executable for the STAR aligner.
 
                     runnable_align = self.add_runnable(
-                        runnable=Runnable(
+                        runnable=bsf.Runnable(
                             name=prefix_align,
                             code_module='bsf.runnables.generic',
                             working_directory=self.genome_directory,
@@ -454,7 +440,7 @@ class StarAligner(Analysis):
                         runnable=runnable_align)
 
                     runnable_step = runnable_align.add_runnable_step(
-                        runnable_step=RunnableStep(
+                        runnable_step=bsf.process.RunnableStep(
                             name='STAR',
                             program='STAR'))
                     """ @type runnable_step: bsf.process.RunnableStep """
@@ -517,7 +503,7 @@ class StarAligner(Analysis):
                     file_path_index = FilePathStarIndex(prefix=prefix_index)
 
                     runnable_index = self.add_runnable(
-                        runnable=Runnable(
+                        runnable=bsf.Runnable(
                             name=prefix_index,
                             code_module='bsf.runnables.generic',
                             working_directory=self.genome_directory,
@@ -532,7 +518,7 @@ class StarAligner(Analysis):
                     runnable_index_list.append(runnable_index)
 
                     runnable_step = runnable_index.add_runnable_step(
-                        runnable_step=RunnableStepPicard(
+                        runnable_step=bsf.process.RunnableStepPicard(
                             name='picard_clean_sam',
                             obsolete_file_path_list=[file_path_align.aligned_sam],
                             java_temporary_path=runnable_index.get_relative_temporary_directory_path,
@@ -550,7 +536,7 @@ class StarAligner(Analysis):
                     runnable_step.add_picard_option(key='VALIDATION_STRINGENCY', value='STRICT')
 
                     runnable_step = runnable_index.add_runnable_step(
-                        runnable_step=RunnableStepPicard(
+                        runnable_step=bsf.process.RunnableStepPicard(
                             name='picard_sort_sam',
                             obsolete_file_path_list=[file_path_index.cleaned_sam],
                             java_temporary_path=runnable_index.get_relative_temporary_directory_path,
@@ -575,7 +561,7 @@ class StarAligner(Analysis):
                     # Run GNU Zip over the rather large splice junction table.
 
                     runnable_step = runnable_index.add_runnable_step(
-                        runnable_step=RunnableStep(
+                        runnable_step=bsf.process.RunnableStep(
                             name='gzip',
                             program='gzip'))
                     """ @type runnable_step: bsf.process.RunnableStep """
@@ -593,7 +579,7 @@ class StarAligner(Analysis):
             file_path_merge = FilePathStarMerge(prefix=prefix_merge)
 
             runnable_merge = self.add_runnable(
-                runnable=Runnable(
+                runnable=bsf.Runnable(
                     name=prefix_merge,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
@@ -616,24 +602,24 @@ class StarAligner(Analysis):
                 """ @type file_path_index: FilePathStarIndex """
                 # For a single ReadPair, just rename the files.
                 runnable_merge.add_runnable_step(
-                    runnable_step=RunnableStepMove(
+                    runnable_step=bsf.process.RunnableStepMove(
                         name='move_bam',
                         source_path=file_path_index.aligned_bam,
                         target_path=file_path_merge.merged_bam))
                 runnable_merge.add_runnable_step(
-                    runnable_step=RunnableStepMove(
+                    runnable_step=bsf.process.RunnableStepMove(
                         name='move_bai',
                         source_path=file_path_index.aligned_bai,
                         target_path=file_path_merge.merged_bai))
                 runnable_merge.add_runnable_step(
-                    runnable_step=RunnableStepMove(
+                    runnable_step=bsf.process.RunnableStepMove(
                         name='move_md5',
                         source_path=file_path_index.aligned_md5,
                         target_path=file_path_merge.merged_md5))
             else:
                 # Run Picard MergeSamFiles on each BAM file.
                 runnable_step = runnable_merge.add_runnable_step(
-                    runnable_step=RunnableStepPicard(
+                    runnable_step=bsf.process.RunnableStepPicard(
                         name='picard_merge_sam_files',
                         java_temporary_path=runnable_merge.get_relative_temporary_directory_path,
                         java_heap_maximum='Xmx2G',
@@ -664,7 +650,7 @@ class StarAligner(Analysis):
             # Create a symbolic link from the Picard-style *.bai file to a samtools-style *.bam.bai file.
 
             runnable_merge.add_runnable_step(
-                runnable_step=RunnableStepLink(
+                runnable_step=bsf.process.RunnableStepLink(
                     name='link',
                     source_path=file_path_merge.merged_bai,
                     target_path=file_path_merge.merged_lnk))
@@ -676,7 +662,7 @@ class StarAligner(Analysis):
         # Create a Runnable and Executable for the STAR summary.
 
         runnable_summary = self.add_runnable(
-            runnable=Runnable(
+            runnable=bsf.Runnable(
                 name=prefix_summary,
                 code_module='bsf.runnables.generic',
                 working_directory=self.genome_directory,
@@ -692,7 +678,7 @@ class StarAligner(Analysis):
             executable_summary.dependencies.append(runnable_merge.name)
 
         runnable_summary.add_runnable_step(
-            runnable_step=RunnableStep(
+            runnable_step=bsf.process.RunnableStep(
                 name='summary',
                 program='bsf_star_aligner_summary.R'))
         """ @type runnable_step: bsf.process.RunnableStep """
@@ -723,6 +709,16 @@ class StarAligner(Analysis):
             """ @type str_list: list[str | unicode] """
 
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+            str_list.append('\n')
+
+            str_list.append('<p><strong>Genome:</strong> ')
+            str_list.append(bsf.standards.Genome.get_description(genome_version=self.genome_version))
+            str_list.append('</p>\n')
+
+            str_list.append('<p><strong>Transcriptome:</strong> ')
+            str_list.append(bsf.standards.Transcriptome.get_description(
+                transcriptome_version=self.transcriptome_version))
+            str_list.append('</p>\n')
             str_list.append('\n')
 
             str_list.append('<p id="ucsc_track_hub">')
