@@ -134,6 +134,8 @@ class StarAligner(bsf.Analysis):
     @type transcriptome_version: str | None
     @ivar transcriptome_gtf: GTF file path of transcriptome annotation
     @type transcriptome_gtf: str | unicode | None
+    @ivar two_pass_mapping: Basic two-pass mapping
+    @type two_pass_mapping: bool | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
     @type classpath_picard: str | unicode | None
     """
@@ -208,6 +210,7 @@ class StarAligner(bsf.Analysis):
             index_directory=None,
             transcriptome_version=None,
             transcriptome_gtf=None,
+            two_pass_mapping=None,
             classpath_picard=None):
         """Initialise a C{bsf.analyses.rna_seq.StarAligner} object.
 
@@ -244,6 +247,8 @@ class StarAligner(bsf.Analysis):
         @type transcriptome_version: str | None
         @param transcriptome_gtf: GTF file path of transcriptome annotation
         @type transcriptome_gtf: str | unicode | None
+        @param two_pass_mapping: Basic two-pass mapping
+        @type two_pass_mapping: str | unicode | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: str | unicode | None
         """
@@ -268,6 +273,7 @@ class StarAligner(bsf.Analysis):
         self.index_directory = index_directory
         self.transcriptome_version = transcriptome_version
         self.transcriptome_gtf = transcriptome_gtf
+        self.two_pass_mapping = two_pass_mapping
         self.classpath_picard = classpath_picard
 
         return
@@ -305,7 +311,9 @@ class StarAligner(bsf.Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.transcriptome_gtf = configuration.config_parser.get(section=section, option=option)
 
-        # Get the Picard tools Java Archive (JAR) class path directory.
+        option = 'two_pass_mapping'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.two_pass_mapping = configuration.config_parser.get(section=section, option=option)
 
         option = 'classpath_picard'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -367,6 +375,14 @@ class StarAligner(bsf.Analysis):
         if not self.transcriptome_gtf:
             # FIXME: The transcriptome_gtf is currently not used.
             raise Exception('A ' + self.name + " requires a 'transcriptome_gtf' configuration option.")
+
+        if not self.two_pass_mapping:
+            self.two_pass_mapping = 'none'
+
+        two_pass_mapping_tuple = ('none', 'basic', 'full')
+        if self.two_pass_mapping not in two_pass_mapping_tuple:
+            raise ('The ' + self.name + " 'two_pass_mapping' option can only take values " +
+                   repr(two_pass_mapping_tuple) + ' not ' + repr(self.two_pass_mapping) + '.')
 
         if not self.classpath_picard:
             self.classpath_picard = bsf.standards.JavaClassPath.get_picard()
@@ -448,6 +464,8 @@ class StarAligner(bsf.Analysis):
                     runnable_step.add_option_long(key='runThreadN', value=str(stage_align.threads))
                     runnable_step.add_option_long(key='genomeDir', value=self.index_directory)
                     runnable_step.add_option_long(key='outFileNamePrefix', value=prefix_align + '_')
+                    if self.two_pass_mapping == 'basic':
+                        runnable_step.add_option_long(key='twopassMode', value='Basic')
                     # NOTE: The STAR aligner command line interface is seriously broken,
                     # as the readFilesIn option requires two values.
                     # Hence, use class bsf.argument.OptionMultiLong via wrapper Command.add_option_multi_long().
