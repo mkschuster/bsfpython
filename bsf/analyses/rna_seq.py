@@ -934,6 +934,11 @@ class Tuxedo(bsf.Analysis):
             self.comparison_path = '_'.join((self.project_name, self.prefix, 'comparisons.csv'))
             if not os.path.exists(self.comparison_path):
                 self.comparison_path = None
+                if self.debug > 0:
+                    print('Standard comparison file not in current working directory:', self.comparison_path)
+            else:
+                if self.debug > 0:
+                    print('Standard comparison file in current working directory:', self.comparison_path)
 
         super(Tuxedo, self).run()
 
@@ -2096,6 +2101,16 @@ class Tuxedo(bsf.Analysis):
             str_list.append('</p>\n')
 
             str_list.append('<p>')
+            str_list.append('<strong>Please note:</strong>\n')
+            str_list.append('Since Cufflinks estimates transcriptome expression profiles on a per sample ')
+            str_list.append('(or replicate) basis, the resulting raw FPKM values cannot directly be compared ')
+            str_list.append('between samples.\n')
+            str_list.append('Please see the <a href="#differential_expression_table">Differential Expression</a> ')
+            str_list.append('section below for tables of normalised FPKM values that allow for direct ')
+            str_list.append('sample comparisons.')
+            str_list.append('</p>\n')
+
+            str_list.append('<p>')
             str_list.append('The Cufflinks <strong>assembled transcripts</strong> can be attached to the \n')
             str_list.append('UCSC Genome Browser, by following the &laquo;Transcript Assembly&raquo; links\n')
             str_list.append('below.\n')
@@ -2111,17 +2126,7 @@ class Tuxedo(bsf.Analysis):
             str_list.append('Please see a more detailed description of\n')
             # http://cufflinks.cbcb.umd.edu/manual.html#cufflinks_output
             str_list.append('<a href="http://cole-trapnell-lab.github.io/cufflinks/file_formats/index.html#' +
-                            'output-formats-used-in-the-cufflinks-suite">Cufflinks output</a>.')
-            str_list.append('</p>\n')
-
-            str_list.append('<p>')
-            str_list.append('<strong>Please note:</strong>\n')
-            str_list.append('Since Cufflinks estimates transcriptome expression profiles on a per sample ')
-            str_list.append('(or replicate) basis, the resulting raw FPKM values cannot directly be compared ')
-            str_list.append('between samples.\n')
-            str_list.append('Please see the <a href="#differential_expression_table">Differential Expression</a> ')
-            str_list.append('section below for tables of normalised FPKM values that allow for direct ')
-            str_list.append('sample comparisons.')
+                            'output-formats-used-in-the-cufflinks-suite">Cufflinks output</a> format.')
             str_list.append('</p>\n')
 
             str_list.append('<table id="gene_expression_table">\n')
@@ -2224,7 +2229,9 @@ class Tuxedo(bsf.Analysis):
 
             str_list.append('<p id="cuffdiff">')
             # http://cufflinks.cbcb.umd.edu/howitworks.html#diff
-            str_list.append('<a href="http://cole-trapnell-lab.github.io/cufflinks/"><strong>Cufflinks</strong></a>\n')
+            str_list.append('<a href="http://cole-trapnell-lab.github.io/cufflinks/cuffdiff/index.html">')
+            str_list.append('<strong>Cuffdiff</strong>')
+            str_list.append('</a>\n')
             str_list.append('finds significant changes in transcript\n')
             str_list.append('expression, splicing, and promoter use.')
             str_list.append('</p>\n')
@@ -2248,13 +2255,17 @@ class Tuxedo(bsf.Analysis):
             str_list.append('which could be imported into spreadsheet software for post-filtering.\n')
             str_list.append('Each table contains information about a pair of sample groups annotated in ')
             str_list.append('&laquo;sample_1&raquo; and &laquo;sample_2&raquo;, their corresponding FPKM values in ')
-            str_list.append('&laquo;value_1&raquo; and &laquo;value_2&raquo;, log2-fold changes of sample_2 over ')
-            str_list.append('sample_1, as well as p-value and multiple testing-corrected (Benjamini-Hochberg) ')
-            str_list.append('q-values.\nBy default, the false discovery rate (FDR) threshold is set at 0.05, ')
+            str_list.append('&laquo;value_1&raquo; and &laquo;value_2&raquo;, log2-fold changes of ')
+            str_list.append('&laquo;sample_2&raquo; over &laquo;sample_1&raquo;, as well as p-value and ')
+            str_list.append('multiple testing-corrected (Benjamini-Hochberg) q-values.\n')
+            str_list.append('By default, the false discovery rate (FDR) threshold is set at 0.05, ')
             str_list.append('which is also the basis for the assignment of &laquo;yes&raquo; or &laquo;no&raquo; ')
             str_list.append('in the &laquo;significant&raquo; column.\n')
             str_list.append('Depending on the biological system, the threshold could be dynamically raised or ')
-            str_list.append('lowered in a post-filtering approach.</p>\n')
+            str_list.append('lowered in a post-filtering approach.\n')
+            str_list.append('Please see a more detailed description of the ')
+            str_list.append('<a href="http://cole-trapnell-lab.github.io/cufflinks/cuffdiff/index.html' +
+                            '#differential-expression-tests">Cuffdiff differential expression tests</a> format.</p>\n')
             str_list.append('\n')
             str_list.append('<p>Since some spreadsheet programmes have no concept of positive or negative infinity ')
             str_list.append('values (+Inf, -Inf), the &laquo;Genes&raquo; and &laquo;Isoforms&raquo; tables contain ')
@@ -3787,6 +3798,34 @@ class DESeq(bsf.Analysis):
                     # Plot Aesthetics
                     # str_list.append('<td>' + plot_instance + '</td>\n')
                     str_list.append('</tr>\n')
+
+                # Add a line with the variance per principal component plots.
+                str_list.append('<tr>\n')
+                str_list.append('<td>' + design_row_dict['design'] + '</td>\n')
+                str_list.append('<td></td>\n')  # MDS Blind
+                str_list.append('<td></td>\n')  # MDS Model
+
+                # PCA Variance per component for Blind and Model.
+                plot_type = 'pca'
+                plot_path = 'variance'
+                for model_type in ('blind', 'model'):
+                    plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
+                    plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
+                    str_list.append('<td>' +
+                                    self.get_html_anchor(
+                                        prefix=design_prefix,
+                                        suffix=plot_path_pdf,
+                                        text=self.get_html_image(
+                                            prefix=design_prefix,
+                                            suffix=plot_path_png,
+                                            text=plot_type + ' plot',
+                                            height='80',
+                                            width='80')) +
+                                    '</td>\n')
+
+                str_list.append('<td></td>\n')  # Heatmap Blind
+                str_list.append('<td></td>\n')  # Heatmap Model
+                str_list.append('</tr>\n')
 
             str_list.append('</tbody>\n')
             str_list.append('</table>\n')
