@@ -112,6 +112,12 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
+    '--compression',
+    help='Picard (Zlib) compression level [9]',
+    required=False,
+    type=int)
+
+argument_parser.add_argument(
     '--no-validation',
     action='store_true',
     dest='no_validation',
@@ -302,6 +308,9 @@ else:
         assert isinstance(name_space.irf, (str, unicode))
         analysis_ims.run_directory = name_space.irf
 
+    if name_space.compression is not None:
+        analysis_ims.compression_level = name_space.compression
+
     # Do the work.
 
     if name_space.loop:
@@ -352,6 +361,9 @@ else:
     if name_space.debug:
         assert isinstance(name_space.debug, int)
         analysis_ids.debug = name_space.debug
+
+    if name_space.compression is not None:
+        analysis_ids.compression_level = name_space.compression
 
     if name_space.mode:
         assert isinstance(name_space.mode, str)

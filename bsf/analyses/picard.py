@@ -1257,6 +1257,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
     @type eamss_filter: bool | None
     @ivar vendor_quality_filter: Vendor quality filter
     @type vendor_quality_filter: bool
+    @ivar compression_level: (Zlib) Compression level
+    @type compression_level: int | None
     """
 
     name = 'Picard IlluminaMultiplexSam Analysis'
@@ -1290,7 +1292,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             mode_directory=None,
             mode_file=None,
             eamss_filter=None,
-            vendor_quality_filter=None):
+            vendor_quality_filter=None,
+            compression_level=None):
         """Initialise a C{bsf.analyses.picard.IlluminaMultiplexSam} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -1346,6 +1349,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         @type eamss_filter: bool | None
         @param vendor_quality_filter: Vendor quality filter
         @type vendor_quality_filter: bool | None
+        @param compression_level: (Zlib) Compression level
+        @type compression_level: int | None
         """
         super(IlluminaMultiplexSam, self).__init__(
             configuration=configuration,
@@ -1373,6 +1378,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         self.mode_file = mode_file
         self.eamss_filter = eamss_filter
         self.vendor_quality_filter = vendor_quality_filter
+        self.compression_level = compression_level
 
         return
 
@@ -1426,6 +1432,10 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         option = 'vendor_quality_filter'
         if configuration.config_parser.has_option(section=section, option=option):
             self.vendor_quality_filter = configuration.config_parser.getboolean(section=section, option=option)
+
+        option = 'compression_level'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.compression_level = configuration.config_parser.getint(section=section, option=option)
 
         return
 
@@ -1605,7 +1615,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             # QUIET defaults to 'false'.
             # VALIDATION_STRINGENCY defaults to 'STRICT'.
             # COMPRESSION_LEVEL defaults to '5'.
-            runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+            if self.compression_level is not None:
+                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value=str(self.compression_level))
             # MAX_RECORDS_IN_RAM  defaults to '500000'.
             # CREATE_INDEX defaults to 'false'.
             # CREATE_MD5_FILE defaults to 'false'.
@@ -1839,6 +1850,8 @@ class IlluminaDemultiplexSam(bsf.Analysis):
     @type mode_file: str | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
     @type classpath_picard: str | unicode | None
+    @ivar compression_level: (Zlib) Compression level
+    @type compression_level: int | None
     @ivar lanes: Number of lanes on the flow cell
     @type lanes: int | None
     @ivar force: Force de-multiplexing with a Library Annotation sheet failing validation
@@ -1896,6 +1909,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
             mode_directory=None,
             mode_file=None,
             classpath_picard=None,
+            compression_level=None,
             lanes=None,
             force=None):
         """Initialise a C{bsf.analyses.picard.IlluminaDemultiplexSam} object.
@@ -1940,6 +1954,8 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         @type mode_file: str | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: str | unicode | None
+        @param compression_level: (Zlib) Compression level
+        @type compression_level: int | None
         @param lanes: Number of lanes on the flow cell
         @type lanes: int | None
         @param force: Force de-multiplexing with a Library Annotation sheet failing validation
@@ -1972,6 +1988,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         self.mode_directory = mode_directory
         self.mode_file = mode_file
         self.classpath_picard = classpath_picard
+        self.compression_level = compression_level
         self.lanes = lanes
         self.force = force
 
@@ -2031,6 +2048,10 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         option = 'classpath_picard'
         if configuration.config_parser.has_option(section=section, option=option):
             self.classpath_picard = configuration.config_parser.get(section=section, option=option)
+
+        option = 'compression_level'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.compression_level = configuration.config_parser.getint(section=section, option=option)
 
         option = 'lanes'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -2381,7 +2402,8 @@ class IlluminaDemultiplexSam(bsf.Analysis):
             # QUIET defaults to 'false'.
             # VALIDATION_STRINGENCY defaults to 'STRICT'.
             # COMPRESSION_LEVEL defaults to '5'.
-            runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+            if self.compression_level is not None:
+                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value=str(self.compression_level))
             # MAX_RECORDS_IN_RAM  defaults to '500000'.
             # CREATE_INDEX defaults to 'false'.
             # CREATE_MD5_FILE defaults to 'false'.
