@@ -85,6 +85,7 @@ class LibraryAnnotationSheet(bsf.annotation.AnnotationSheet):
         'sample_name',  # Sample name (alphanumeric including '_' characters)
         'library_name',  # Library name (alphanumeric including '_' characters)
         'library_size',  # Library size (numeric)
+        'read_structure',  # Picard tools Read Structure
     ]
 
     _test_methods = {
@@ -114,6 +115,9 @@ class LibraryAnnotationSheet(bsf.annotation.AnnotationSheet):
             bsf.annotation.AnnotationSheet.check_underscore_leading,
             bsf.annotation.AnnotationSheet.check_underscore_trailing,
             bsf.annotation.AnnotationSheet.check_underscore_multiple,
+        ],
+        'read_structure': [
+            bsf.annotation.AnnotationSheet.check_alphanumeric,
         ],
     }
 
@@ -260,6 +264,14 @@ class LibraryAnnotationSheet(bsf.annotation.AnnotationSheet):
                         format(row_dict['barcode_start'],
                                row_number,
                                flow_cell_dict[row_dict['lane']]['barcode_start'])
+
+            # Check for identical read structure values.
+            if 'read_structure' in row_dict:
+                if flow_cell_dict[row_dict['lane']]['read_structure'] != row_dict['read_structure']:
+                    messages += 'Read structure {!r} in row {} does not match previous read structure {!r}.\n'. \
+                        format(row_dict['read_structure'],
+                               row_number,
+                               flow_cell_dict[row_dict['lane']]['read_structure'])
 
         for lane_int in range(0 + 1, lanes + 1):
             lane_str = str(lane_int)

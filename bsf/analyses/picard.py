@@ -2367,7 +2367,15 @@ class IlluminaDemultiplexSam(bsf.Analysis):
             # MAX_NO_CALLS defaults to '2'
             # MINIMUM_BASE_QUALITY defaults to '2'
             # READ_STRUCTURE
-            runnable_step.add_picard_option(key='READ_STRUCTURE', value=irf.run_information.get_picard_read_structure)
+            if 'read_structure' in library_annotation_dict[lane_int][0] and \
+                    library_annotation_dict[lane_int][0]['read_structure']:
+                runnable_step.add_picard_option(
+                    key='READ_STRUCTURE',
+                    value=library_annotation_dict[lane_int][0]['read_structure'])
+            else:
+                runnable_step.add_picard_option(
+                    key='READ_STRUCTURE',
+                    value=irf.run_information.get_picard_read_structure)
             runnable_step.add_picard_option(key='TMP_DIR', value=runnable_lane.get_relative_temporary_directory_path)
             # VERBOSITY defaults to 'INFO'.
             # QUIET defaults to 'false'.
