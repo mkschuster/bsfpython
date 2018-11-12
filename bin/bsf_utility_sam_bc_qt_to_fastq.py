@@ -74,14 +74,14 @@ argument_parser.add_argument(
 argument_parser.add_argument(
     '--input-path',
     dest='input_path',
-    help='BED file path',
+    help='BAM file path',
     required=True)
 
 argument_parser.add_argument(
     '--output-path',
     default='.',
     dest='output_path',
-    help='Picard-style intervals file path',
+    help='Output directory path',
     required=False)
 
 argument_parser.add_argument(
