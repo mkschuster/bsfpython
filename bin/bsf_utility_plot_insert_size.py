@@ -28,7 +28,8 @@ from __future__ import print_function
 
 import argparse
 import os
-
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 import pysam
