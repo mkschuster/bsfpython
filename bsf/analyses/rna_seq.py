@@ -436,6 +436,8 @@ class Tuxedo(bsf.Analysis):
     @type library_type: str | None
     @ivar novel_transcripts: Assemble novel transcripts
     @type novel_transcripts: bool | None
+    @ivar false_discovery_rate: False discovery rate (FDR) threshold
+    @type false_discovery_rate: float | None
     @ivar no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
     @type no_length_correction: bool | None
     """
@@ -559,6 +561,7 @@ class Tuxedo(bsf.Analysis):
             multi_read_correction=None,
             library_type=None,
             novel_transcripts=None,
+            false_discovery_rate=None,
             no_length_correction=None):
         """Initialise a C{bsf.analyses.rna_seq.Tuxedo} object.
 
@@ -611,6 +614,8 @@ class Tuxedo(bsf.Analysis):
         @type library_type: str | None
         @param novel_transcripts: Assemble novel transcripts
         @type novel_transcripts: bool | None
+        @param false_discovery_rate: False discovery rate (FDR) threshold
+        @type false_discovery_rate: float | None
         @param no_length_correction: Do not correct for transcript lengths as in 3-prime sequencing
         @type no_length_correction: bool | None
         @return:
@@ -644,6 +649,7 @@ class Tuxedo(bsf.Analysis):
         self.multi_read_correction = multi_read_correction
         self.library_type = library_type
         self.novel_transcripts = novel_transcripts
+        self.false_discovery_rate = false_discovery_rate
         self.no_length_correction = no_length_correction
 
         self._comparison_dict = dict()
@@ -711,6 +717,10 @@ class Tuxedo(bsf.Analysis):
         option = 'novel_transcripts'
         if configuration.config_parser.has_option(section=section, option=option):
             self.novel_transcripts = configuration.config_parser.getboolean(section=section, option=option)
+
+        option = 'false_discovery_rate'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.false_discovery_rate = configuration.config_parser.getfloat(section=section, option=option)
 
         option = 'no_length_correction'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -1310,54 +1320,76 @@ class Tuxedo(bsf.Analysis):
                         program='cufflinks'))
                 """ @type runnable_step: bsf.process.RunnableStep """
 
+                # General Options:
+                # --output-dir write all output files to this directory [.]
+                runnable_step.add_option_long(
+                    key='output-dir',
+                    value=file_path_cufflinks.output_directory)
+                # --num-threads number of threads used during analysis [1]
+                runnable_step.add_option_long(
+                    key='num-threads',
+                    value=str(stage_run_cufflinks.threads))
+                # --seed value of random number generator seed [0]
                 # Cufflinks has a GTF option, in which case it will not assemble
                 # novel transcripts and a GTF-guide option in which case it will
                 # assemble novel transcripts.
-
                 if self.novel_transcripts:
+                    # --GTF-guide use reference transcript annotation to guide assembly [NULL]
                     runnable_step.add_option_long(
                         key='GTF-guide',
                         value=self.transcriptome_gtf_path)
                 else:
+                    # --GTF quantitate against reference transcript annotations [NULL]
                     runnable_step.add_option_long(
                         key='GTF',
                         value=self.transcriptome_gtf_path)
-
+                # --mask-file ignore all alignments within transcripts in this file
                 if self.mask_gtf_path:
                     runnable_step.add_option_long(
                         key='mask-file',
                         value=self.mask_gtf_path)
-
+                # --frag-bias-correct use bias correction - reference fasta required [NULL]
                 runnable_step.add_option_long(
                     key='frag-bias-correct',
                     value=self.genome_fasta_path)
-
+                # --multi-read-correct use 'rescue method' for multi-reads (more accurate) [FALSE]
                 if self.multi_read_correction:
                     runnable_step.add_switch_long(
                         key='multi-read-correct')
-
+                # --library-type library prep used for input reads [fr-unstranded]
                 if self.library_type:
                     runnable_step.add_option_long(
                         key='library-type',
                         value=self.library_type)
+                # --library-norm-method Method used to normalize library sizes [classic-fpkm]
 
-                # Cufflinks has a --library-norm-method option, but only one option (classic-fpkm) seems supported.
-
+                # Advanced Abundance Estimation Options:
+                # --frag-len-mean average fragment length (unpaired reads only) [200]
+                # --frag-len-std-dev fragment length std deviation (unpaired reads only) [80]
+                # --max-mle-iterations maximum iterations allowed for MLE calculation [5000]
+                # --compatible-hits-norm count hits compatible with reference RNAs only [FALSE]
+                # --total-hits-norm count all hits for normalization [TRUE]
+                # --num-frag-count-draws Number of fragment generation samples [100]
+                # --num-frag-assign-draws Number of fragment assignment samples per generation [50]
+                # --max-frag-multihits Maximum number of alignments allowed per fragment [unlim]
+                # --no-effective-length-correction No effective length correction [FALSE]
+                # --no-length-correction No length correction [FALSE]
                 if self.no_length_correction:
                     runnable_step.add_switch_long(
                         key='no-length-correction')
 
-                runnable_step.add_option_long(
-                    key='output-dir',
-                    value=file_path_cufflinks.output_directory)
+                # Advanced Assembly Options:
+                # ...
 
-                runnable_step.add_option_long(
-                    key='num-threads',
-                    value=str(stage_run_cufflinks.threads))
+                # Advanced Reference Annotation Guided Assembly Options:
+                # ...
 
+                # Advanced Program Behavior Options:
+                # --verbose log-friendly verbose processing (no progress bar) [FALSE]
+                # --quiet log-friendly quiet processing (no progress bar) [FALSE]
                 runnable_step.add_switch_long(
                     key='quiet')
-
+                # --no-update-check do not contact server to check for update availability [FALSE]
                 runnable_step.add_switch_long(
                     key='no-update-check')
 
@@ -1518,18 +1550,24 @@ class Tuxedo(bsf.Analysis):
 
                 # Set rnaseq_cuffmerge options.
 
+                # --output-dir Directory where merged assembly will be written [./merged_asm]
                 runnable_step_cuffmerge.add_option_long(
                     key='output-dir',
                     value=file_path_cuffmerge.output_directory)
-                runnable_step_cuffmerge.add_option_long(
-                    key='num-threads',
-                    value=str(stage_run_cuffmerge.threads))
+                # --ref-gtf An optional "reference" annotation GTF [NULL]
                 runnable_step_cuffmerge.add_option_long(
                     key='ref-gtf',
                     value=self.transcriptome_gtf_path)
+                # --ref-sequence <seq_dir>/<seq_fasta> Genomic DNA sequences for the reference
                 runnable_step_cuffmerge.add_option_long(
                     key='ref-sequence',
                     value=self.genome_fasta_path)
+                # --min-isoform-fraction <0-1.0> Discard isoforms with abundance below this [0.05]
+                # --num-threads Use this many threads to merge assemblies [1]
+                runnable_step_cuffmerge.add_option_long(
+                    key='num-threads',
+                    value=str(stage_run_cuffmerge.threads))
+                # --keep-tmp Keep all intermediate files during merge [FALSE]
 
                 # Set rnaseq_cuffmerge arguments.
 
@@ -1721,33 +1759,54 @@ class Tuxedo(bsf.Analysis):
 
                         # Set Cuffquant options.
 
+                        # General Options:
+                        # --output-dir write all output files to this directory [.]
                         runnable_step_cuffquant.add_option_long(
                             key='output-dir',
                             value=file_path_cuffquant.output_directory)
-                        runnable_step_cuffquant.add_option_long(
-                            key='num-threads',
-                            value=str(stage_run_cuffquant.threads))
+                        # --mask-file ignore all alignment within transcripts in this file [NULL]
                         if self.mask_gtf_path:
                             runnable_step_cuffquant.add_option_long(
                                 key='mask-file',
                                 value=self.mask_gtf_path)
+                        # --frag-bias-correct use bias correction - reference fasta required [NULL]
                         runnable_step_cuffquant.add_option_long(
                             key='frag-bias-correct',
                             value=self.genome_fasta_path)
+                        # --multi-read-correct use 'rescue method' for multi-reads [FALSE]
                         if self.multi_read_correction:
                             runnable_step_cuffquant.add_switch_long(
                                 key='multi-read-correct')
+                        # --num-threads number of threads used during quantification [1]
+                        runnable_step_cuffquant.add_option_long(
+                            key='num-threads',
+                            value=str(stage_run_cuffquant.threads))
+                        # --library-type Library prep used for input reads [fr-unstranded]
                         if self.library_type:
                             runnable_step_cuffquant.add_option_long(
                                 key='library-type',
                                 value=self.library_type)
+
+                        # Advanced Options:
+                        # --frag-len-mean average fragment length (unpaired reads only) [200]
+                        # --frag-len-std-dev fragment length std deviation (unpaired reads only) [80]
+                        # --min-alignment-count minimum number of alignments in a locus for testing [10]
+                        # --max-mle-iterations maximum iterations allowed for MLE calculation [5000]
+                        # --verbose log-friendly verbose processing (no progress bar) [FALSE]
+                        # --quiet log-friendly quiet processing (no progress bar) [FALSE]
+                        runnable_step_cuffquant.add_switch_long(
+                            key='quiet')
+                        # --seed value of random number generator seed [0]
+                        # --no-update-check do not contact server to check for update availability [FALSE]
+                        runnable_step_cuffquant.add_switch_long(
+                            key='no-update-check')
+                        # --max-bundle-frags maximum fragments allowed in a bundle before skipping [500000]
+                        # --max-frag-multihits Maximum number of alignments allowed per fragment [unlim]
+                        # --no-effective-length-correction No effective length correction [FALSE]
+                        # --no-length-correction No length correction [FALSE]
                         if self.no_length_correction:
                             runnable_step_cuffquant.add_switch_long(
                                 key='no-length-correction')
-                        runnable_step_cuffquant.add_switch_long(
-                            key='quiet')
-                        runnable_step_cuffquant.add_switch_long(
-                            key='no-update-check')
 
                         # Set Cuffquant arguments.
                         # Add the Cuffmerge GTF file and the TopHat BAM file as Cuffquant arguments.
@@ -1825,22 +1884,37 @@ class Tuxedo(bsf.Analysis):
 
             # Set Cuffnorm options.
 
+            # General Options:
+            # --output-dir write all output files to this directory [.]
             runnable_step_cuffnorm.add_option_long(
                 key='output-dir',
                 value=file_path_run_cuffnorm.output_directory)
+            # --labels comma-separated list of condition labels []
+            # --norm-standards-file Housekeeping/spike genes to normalize libraries [NULL]
+            # --num-threads number of threads used during quantification [1]
             runnable_step_cuffnorm.add_option_long(
                 key='num-threads',
                 value=str(stage_run_cuffnorm.threads))
+            # --library-type Library prep used for input reads [fr-unstranded]
             if self.library_type:
                 runnable_step_cuffnorm.add_option_long(
                     key='library-type',
                     value=self.library_type)
-            runnable_step_cuffnorm.add_switch_long(
-                key='quiet')
-            runnable_step_cuffnorm.add_switch_long(
-                key='no-update-check')
-            runnable_step_cuffnorm.add_switch_long(
-                key='use-sample-sheet')
+            # --library-norm-method Method used to normalize library sizes [geometric]
+            # --output-format Format for output tables [simple-table]
+
+            # Advanced Options:
+            # --compatible-hits-norm count hits compatible with reference RNAs only [TRUE]
+            # --total-hits-norm count all hits for normalization [FALSE]
+            # --quiet log-friendly quiet processing (no progress bar) [FALSE]
+            runnable_step_cuffnorm.add_switch_long(key='quiet')
+            # --seed value of random number generator seed [0]
+            # --no-update-check do not contact server to check for update availability [FALSE]
+            runnable_step_cuffnorm.add_switch_long(key='no-update-check')
+
+            # Undocumented Options:
+            # --use-sample-sheet
+            runnable_step_cuffnorm.add_switch_long(key='use-sample-sheet')
 
             # Add the Cuffmerge GTF file as first Cuffnorm argument.
             runnable_step_cuffnorm.arguments.append(file_path_cuffmerge.merged_gtf)
@@ -1891,35 +1965,74 @@ class Tuxedo(bsf.Analysis):
 
                 # Set Cuffdiff options.
 
+                # General Options:
+
+                # --output-dir write all output files to this directory [.]
                 runnable_step_cuffdiff.add_option_long(
                     key='output-dir',
                     value=file_path_run_cuffdiff.output_directory)
-                runnable_step_cuffdiff.add_option_long(
-                    key='num-threads',
-                    value=str(stage_run_cuffdiff.threads))
+                # --labels comma-separated list of condition labels []
+                # --FDR False discovery rate used in testing [0.05]
+                if self.false_discovery_rate is not None:
+                    runnable_step_cuffdiff.add_option_long(
+                        key='FDR',
+                        value=str(self.false_discovery_rate))
+                # --mask-file ignore all alignment within transcripts in this file [NULL]
                 if self.mask_gtf_path:
                     runnable_step_cuffdiff.add_option_long(
                         key='mask-file',
                         value=self.mask_gtf_path)
+                # --contrast-file Perform the contrasts specified in this file [NULL]
+                # --frag-bias-correct use bias correction - reference fasta required [NULL]
                 runnable_step_cuffdiff.add_option_long(
                     key='frag-bias-correct',
                     value=self.genome_fasta_path)
+                # --multi-read-correct use 'rescue method' for multi-reads [FALSE]
                 if self.multi_read_correction:
                     runnable_step_cuffdiff.add_switch_long(
                         key='multi-read-correct')
+                # --num-threads number of threads used during quantification [1]
+                runnable_step_cuffdiff.add_option_long(
+                    key='num-threads',
+                    value=str(stage_run_cuffdiff.threads))
+                # --no-diff Don't generate differential analysis files [FALSE]
+                # --no-js-tests Don't perform isoform switching tests [FALSE]
+                # --time-series treat samples as a time-series [FALSE]
+                # --library-type Library prep used for input reads [fr-unstranded]
                 if self.library_type:
                     runnable_step_cuffdiff.add_option_long(
                         key='library-type',
                         value=self.library_type)
+                # --dispersion-method Method used to estimate dispersion models [pooled]
+                # --library-norm-method Method used to normalize library sizes [geometric]
+
+                # Advanced Options:
+                # --frag-len-mean average fragment length (unpaired reads only) [200]
+                # --frag-len-std-dev fragment length std deviation (unpaired reads only) [80]
+                # --min-alignment-count minimum number of alignments in a locus for testing [10]
+                # --max-mle-iterations maximum iterations allowed for MLE calculation [5000]
+                # --compatible-hits-norm count hits compatible with reference RNAs only [TRUE]
+                # --total-hits-norm count all hits for normalization [FALSE]
+                # --verbose log-friendly verbose processing (no progress bar) [FALSE]
+                # --quiet log-friendly quiet processing (no progress bar) [FALSE]
+                runnable_step_cuffdiff.add_switch_long(key='quiet')
+                # --seed value of random number generator seed [0]
+                # --no-update-check do not contact server to check for update availability [FALSE]
+                # --max-bundle-frags maximum fragments allowed in a bundle before skipping [500000]
+                # --num-frag-count-draws Number of fragment generation samples [100]
+                # --num-frag-assign-draws Number of fragment assignment samples per generation [50]
+                # --max-frag-multihits Maximum number of alignments allowed per fragment [unlim]
+                # --min-reps-for-js-test Replicates needed for relative isoform shift testing [3]
+                # --no-effective-length-correction No effective length correction [FALSE]
+                # --no-length-correction No length correction [FALSE]
                 if self.no_length_correction:
-                    runnable_step_cuffdiff.add_switch_long(
-                        key='no-length-correction')
-                runnable_step_cuffdiff.add_switch_long(
-                    key='quiet')
-                runnable_step_cuffdiff.add_switch_long(
-                    key='no-update-check')
-                runnable_step_cuffdiff.add_switch_long(
-                    key='use-sample-sheet')
+                    runnable_step_cuffdiff.add_switch_long(key='no-length-correction')
+                # --no-update-check do not contact server to check for update availability [FALSE]
+                runnable_step_cuffdiff.add_switch_long(key='no-update-check')
+
+                # Undocumented Options:
+                # --use-sample-sheet
+                runnable_step_cuffdiff.add_switch_long(key='use-sample-sheet')
 
                 # Add the Cuffmerge GTF file as first Cuffdiff argument.
                 runnable_step_cuffdiff.arguments.append(file_path_cuffmerge.merged_gtf)
@@ -2005,14 +2118,21 @@ class Tuxedo(bsf.Analysis):
             str_list.append('</h1>\n')
             str_list.append('\n')
 
-            str_list.append('<p><strong>Genome:</strong> ')
-            str_list.append(bsf.standards.Genome.get_description(genome_version=self.genome_version))
-            str_list.append('</p>\n')
+            genome_description = bsf.standards.Genome.get_description(
+                genome_version=self.genome_version)
+            if genome_description is None:
+                warnings.warn("Could not get genome description for version '" + self.genome_version + "'.")
+            else:
+                str_list.append('<p><strong>Genome:</strong> ' + genome_description + '</p>\n')
 
-            str_list.append('<p><strong>Transcriptome:</strong> ')
-            str_list.append(bsf.standards.Transcriptome.get_description(
-                transcriptome_version=self.transcriptome_version))
-            str_list.append('</p>\n')
+            transcriptome_description = bsf.standards.Transcriptome.get_description(
+                transcriptome_version=self.transcriptome_version)
+            if transcriptome_description is None:
+                warnings.warn("Could not gene transcriptome description for version '" +
+                              self.transcriptome_version + "'")
+            else:
+                str_list.append('<p><strong>Transcriptome:</strong> ' + transcriptome_description + '</p>\n')
+
             str_list.append('\n')
 
             # TopHat and Cufflinks table.
@@ -3523,14 +3643,21 @@ class DESeq(bsf.Analysis):
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
 
-            str_list.append('<p><strong>Genome:</strong> ')
-            str_list.append(bsf.standards.Genome.get_description(genome_version=self.genome_version))
-            str_list.append('</p>\n')
+            genome_description = bsf.standards.Genome.get_description(
+                genome_version=self.genome_version)
+            if genome_description is None:
+                warnings.warn("Could not get genome description for version '" + self.genome_version + "'.")
+            else:
+                str_list.append('<p><strong>Genome:</strong> ' + genome_description + '</p>\n')
 
-            str_list.append('<p><strong>Transcriptome:</strong> ')
-            str_list.append(bsf.standards.Transcriptome.get_description(
-                transcriptome_version=self.transcriptome_version))
-            str_list.append('</p>\n')
+            transcriptome_description = bsf.standards.Transcriptome.get_description(
+                transcriptome_version=self.transcriptome_version)
+            if transcriptome_description is None:
+                warnings.warn("Could not gene transcriptome description for version '" +
+                              self.transcriptome_version + "'")
+            else:
+                str_list.append('<p><strong>Transcriptome:</strong> ' + transcriptome_description + '</p>\n')
+
             str_list.append('\n')
 
             # Likelihood Ratio Testing (LRT) Table
