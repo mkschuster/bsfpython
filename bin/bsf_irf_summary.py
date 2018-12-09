@@ -59,6 +59,9 @@ if file_path is None:
 
 irf = RunFolder.from_file_path(file_path=file_path)
 
+if not irf.run_parameters.get_experiment_name:
+    raise Exception("No experiment name set in the Illumina Run Folder configuration.")
+
 print('Flow Cell Identifier: ', '_'.join((irf.run_parameters.get_experiment_name,
                                           irf.run_parameters.get_flow_cell_barcode)))
 print('Read Structure:       ', ' + '.join(irf.run_information.get_read_structure_list))
