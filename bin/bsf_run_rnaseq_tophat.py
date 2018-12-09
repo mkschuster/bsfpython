@@ -36,7 +36,7 @@ import shutil
 import sys
 
 from bsf.process import Command, Executable
-from bsf.standards import Default, JavaClassPath
+from bsf.standards import JavaClassPath
 
 
 def run_picard_sam_to_fastq(input_path, temporary_path):
@@ -140,10 +140,6 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
 # Set the environment consistently.
 
 os.environ['LANG'] = 'C'
-
-# Get global defaults.
-
-default = Default.get_global_default()
 
 # Parse the arguments.
 

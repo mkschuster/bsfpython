@@ -32,15 +32,11 @@ import pickle
 import shutil
 
 from bsf.process import Command, Executable
-from bsf.standards import Default, JavaClassPath
+from bsf.standards import JavaClassPath
 
 # Set the environment consistently.
 
 os.environ['LANG'] = 'C'
-
-# Get global defaults.
-
-default = Default.get_global_default()
 
 # Parse the arguments.
 

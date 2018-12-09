@@ -173,10 +173,6 @@ class Bowtie1(Analysis):
         @rtype:
         """
 
-        # Get global defaults.
-
-        # default = Default.get_global_default()
-
         super(Bowtie1, self).run()
 
         stage_bowtie1 = self.get_stage(name=self.stage_name_bowtie1)

@@ -1026,8 +1026,8 @@ class RunFolder(object):
     def absolute_file_path(name):
         """Return the absolute file path for an Illumina Run Folder (IRF) name.
 
-        This method first checks for existence in C{bsf.standards.Default.absolute_illumina_run()}, before
-        checking in C{bsf.standards.Default.absolute_illumina_sav()}.
+        This method first checks for existence in C{bsf.standards.FilePath.get_illumina_run()}, before
+        checking in C{bsf.standards.FilePath.get_illumina_sav()}.
         @param name: Illumina Run Folder (IRF) name
         @type name: str | unicode
         @return: Absolute file path
