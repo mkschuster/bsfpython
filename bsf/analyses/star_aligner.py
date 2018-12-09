@@ -357,24 +357,29 @@ class StarAligner(bsf.Analysis):
             if not self.sas_file:
                 raise Exception('No suitable sample annotation file in the current working directory.')
 
-        super(StarAligner, self).run()
-
-        # Get global defaults.
-
-        # The STAR Aligner requires a genome version.
-
-        if not self.genome_version:
-            raise Exception('A ' + self.name + " requires a 'genome_version' configuration option.")
-
-        if not self.index_directory:
-            raise Exception('A ' + self.name + " requires an 'index_directory' configuration option.")
+        # The STAR Aligner requires a transcriptome version.
 
         if not self.transcriptome_version:
             raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
 
+        # Get the genome version before calling the run() method of the bsf.Analysis super-class.
+
+        if not self.genome_version:
+            self.genome_version = bsf.standards.Transcriptome.get_genome(
+                transcriptome_version=self.transcriptome_version)
+
+        super(StarAligner, self).run()
+
+        if not self.index_directory:
+            self.index_directory = bsf.standards.FilePath.get_resource_transcriptome_index(
+                transcriptome_version=self.transcriptome_version,
+                transcriptome_index='star')
+
         if not self.transcriptome_gtf:
             # FIXME: The transcriptome_gtf is currently not used.
-            raise Exception('A ' + self.name + " requires a 'transcriptome_gtf' configuration option.")
+            self.transcriptome_gtf = bsf.standards.FilePath.get_resource_transcriptome_gtf(
+                transcriptome_version=self.transcriptome_version,
+                transcriptome_index='star')
 
         if not self.two_pass_mapping:
             self.two_pass_mapping = 'none'
@@ -729,14 +734,8 @@ class StarAligner(bsf.Analysis):
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
 
-            str_list.append('<p><strong>Genome:</strong> ')
-            str_list.append(bsf.standards.Genome.get_description(genome_version=self.genome_version))
-            str_list.append('</p>\n')
-
-            str_list.append('<p><strong>Transcriptome:</strong> ')
-            str_list.append(bsf.standards.Transcriptome.get_description(
-                transcriptome_version=self.transcriptome_version))
-            str_list.append('</p>\n')
+            str_list.extend(self.get_html_genome(genome_version=self.genome_version))
+            str_list.extend(self.get_html_transcriptome(transcriptome_version=self.transcriptome_version))
             str_list.append('\n')
 
             str_list.append('<p id="ucsc_track_hub">')

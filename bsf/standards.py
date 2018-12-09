@@ -58,7 +58,6 @@ class Configuration(object):
         @return: C{bsf.standards.Configuration}
         @rtype: bsf.standards.Configuration
         """
-
         if Configuration.global_configuration is None:
             Configuration.global_configuration = Configuration.from_file_path_list(
                 file_path_list=[Configuration.global_file_path])
@@ -110,7 +109,6 @@ class Configuration(object):
         @return: Configuration file section string
         @rtype: str
         """
-
         # For Python "type" instances the "__name__" instance variable provides the name of the type, while for
         # Python "object" instances the "__class__" variable provides the Python "type" object.
 
@@ -173,7 +171,6 @@ class Configuration(object):
         @return:
         @rtype:
         """
-
         super(Configuration, self).__init__()
 
         if file_path_list is None:
@@ -225,208 +222,6 @@ class Configuration(object):
         @rtype: None | str | unicode
         """
         return self.get_absolute_path(file_path=self.config_parser.get(section=section, option=option))
-
-
-class Default(object):
-    """The C{bsf.standards.Default} class represents the application or library default configuration.
-
-    Attributes:
-    @cvar global_default: Global C{bsf.standards.Default}
-    @type global_default: bsf.standards.Default
-    @ivar indices: Python C{dict} of program name key and index directory name value data
-    @type indices: dict[str, str]
-    @ivar genome_aliases_ucsc_dict: Alias of genome assembly names for the UCSC Genome Browser
-    @type genome_aliases_ucsc_dict: dict[str, str]
-    """
-
-    global_default = None
-
-    @staticmethod
-    def get_global_default():
-        """Get the global C{bsf.standards.Default} configuration and initialise it, if not already done so.
-
-        @return: C{bsf.standards.Default}
-        @rtype: bsf.standards.Default
-        """
-
-        if Default.global_default is None:
-            Default.global_default = Default.from_configuration(
-                configuration=Configuration.get_global_configuration())
-
-        return Default.global_default
-
-    @classmethod
-    def from_configuration(cls, configuration):
-        """Create a new C{bsf.standards.Default} object from a C{bsf.standards.Configuration} object.
-
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
-        @return: C{bsf.standards.Default}
-        @rtype: bsf.standards.Default
-        """
-        assert isinstance(configuration, Configuration)
-
-        default = cls()
-        default.set_configuration(configuration=configuration)
-
-        return default
-
-    def __init__(
-            self,
-            indices=None,
-            genome_aliases_ucsc_dict=None):
-        """Initialise a C{bsf.standards.Default} object.
-
-        @param indices: Python C{dict} of program name key and index directory name value data
-        @type indices: dict[str, str]
-        @param genome_aliases_ucsc_dict: Alias of genome assembly names for the UCSC Genome Browser
-        @type genome_aliases_ucsc_dict: dict[str, str]
-        @return:
-        @rtype:
-        """
-
-        super(Default, self).__init__()
-
-        # Set index information.
-
-        if indices is None:
-            self.indices = dict()
-        else:
-            self.indices = indices
-
-        # Set Genome Aliases for the UCSC Genome Browser.
-
-        if genome_aliases_ucsc_dict is None:
-            self.genome_aliases_ucsc_dict = dict()
-        else:
-            self.genome_aliases_ucsc_dict = genome_aliases_ucsc_dict
-
-        return
-
-    def set_configuration(self, configuration):
-        """Set instance variables of a C{bsf.standards.Default} object via a C{bsf.standards.Configuration} section.
-
-        For each instance variable a configuration option has to be present.
-
-        @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
-        @return:
-        @rtype:
-        """
-        assert isinstance(configuration, Configuration)
-
-        cp = configuration.config_parser
-
-        # Reading configuration cannot be done via a single Python dict,
-        # because each option really needs defining.
-
-        section = 'indices'
-
-        for option in cp.options(section=section):
-            self.indices[option] = cp.get(section=section, option=option)
-
-        section = 'genome_aliases_ucsc'
-
-        if cp.has_section(section=section):
-            for option in cp.options(section=section):
-                self.genome_aliases_ucsc_dict[option] = cp.get(section=section, option=option)
-
-        return
-
-    @staticmethod
-    def absolute_genome_index(genome_version, genome_index):
-        """Get the absolute file path to a genome index.
-
-        @param genome_version: Genome version (e.g. mm10, ...)
-        @type genome_version: str
-        @param genome_index: Genome index (e.g. bowtie2, ...)
-        @type genome_index: str
-        @return: Absolute path to the genome index
-        @rtype: str | unicode
-        @raise Exception: Unknown genome index name
-        """
-
-        default = Default.get_global_default()
-
-        if genome_index not in default.indices:
-            raise Exception('Unknown genome index name ' + repr(genome_index) + '.')
-
-        return os.path.join(
-            FilePath.get_resource_genome(genome_version=genome_version, absolute=True),
-            default.indices[genome_index],
-            genome_version)
-
-    @staticmethod
-    def absolute_genome_fasta(genome_version, genome_index):
-        """Get the absolute file path to a genome in FASTA format.
-
-        @param genome_version: Genome version (e.g. mm10, ...)
-        @type genome_version: str
-        @param genome_index: Genome index (e.g. bowtie2, ...)
-        @type genome_index: str
-        @return: Absolute path to the genome FASTA file
-        @rtype: str | unicode
-        @raise Exception: Unknown genome index name
-        """
-
-        return Default.absolute_genome_index(genome_version=genome_version, genome_index=genome_index) + '.fa'
-
-    @staticmethod
-    def absolute_transcriptome_index(transcriptome_version, transcriptome_index):
-        """Get the absolute file path to a transcriptome index.
-
-        @param transcriptome_version: Transcriptome version (e.g. mm10_e87, ...)
-        @type transcriptome_version: str
-        @param transcriptome_index: Transcriptome index (e.g. tophat, ...)
-        @type transcriptome_index: str
-        @return: Absolute path to the transcriptome index
-        @rtype: str | unicode
-        @raise Exception: Unknown transcriptome index name
-        """
-
-        default = Default.get_global_default()
-
-        if transcriptome_index not in default.indices:
-            raise Exception('Unknown transcriptome index name ' + repr(transcriptome_index) + '.')
-
-        return os.path.join(
-            FilePath.get_resource_transcriptome(transcriptome_version=transcriptome_version, absolute=True),
-            default.indices[transcriptome_index],
-            transcriptome_version)
-
-    @staticmethod
-    def absolute_transcriptome_gtf(transcriptome_version, transcriptome_index):
-        """Get the absolute file path to a transcriptome in GTF format.
-        
-        @param transcriptome_version: Transcriptome version (e.g. mm10_e87, ...)
-        @type transcriptome_version: str
-        @param transcriptome_index: Transcriptome index (e.g. tophat, ...)
-        @type transcriptome_index: str
-        @return: Absolute path to the transcriptome GTF file
-        @rtype: str | unicode
-        @raise Exception: Unknown transcriptome index name
-        """
-
-        return Default.absolute_transcriptome_index(
-            transcriptome_version=transcriptome_version,
-            transcriptome_index=transcriptome_index) + '.gtf'
-
-    @staticmethod
-    def genome_alias_ucsc(genome_version):
-        """Resolve a genome version to an eventual, UCSC-specific alias.
-
-        If an alias has not been defined the original genome version will be returned.
-        @param genome_version: Genome version
-        @type genome_version: str
-        @return: UCSC genome version
-        @rtype: str
-        """
-        default = Default.get_global_default()
-
-        if default.genome_aliases_ucsc_dict is not None and genome_version in default.genome_aliases_ucsc_dict:
-            return default.genome_aliases_ucsc_dict[genome_version]
-        else:
-            return genome_version
 
 
 class BaseSection(object):
@@ -781,8 +576,32 @@ class Genome(BaseSectionVersion):
     section = 'genome'
 
     @classmethod
+    def get_date(cls, genome_version=None):
+        """Get the release date.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Release date
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='date', version=genome_version)
+
+    @classmethod
+    def get_fasta_suffix(cls, genome_version=None):
+        """Get the FASTA suffix.
+
+        The suffix could be 'fa' or 'fasta' as in "*.fa" or "*.fasta".
+        THe NCBI uses fna for nucleotide FASTA files.
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Description
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='fasta_suffix', version=genome_version)
+
+    @classmethod
     def get_description(cls, genome_version=None):
-        """Get the Description.
+        """Get the description.
 
         @param genome_version: Genome assembly version
         @type genome_version: None | str
@@ -790,6 +609,67 @@ class Genome(BaseSectionVersion):
         @rtype: None | str | unicode
         """
         return cls.get(option='description', version=genome_version)
+
+    @classmethod
+    def get_provider(cls, genome_version=None):
+        """Get the provider.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Provider
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='provider', version=genome_version)
+
+    @classmethod
+    def get_species(cls, genome_version=None):
+        """Get the species.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Species
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='species', version=genome_version)
+
+    @classmethod
+    def get_ucsc(cls, genome_version=None):
+        """Get the UCSC Genome Browser alias.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: UCSC Genome Browser alias
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='ucsc', version=genome_version)
+
+    @classmethod
+    def get_uri(cls, genome_version=None):
+        """Get the uniform resource identifier (URI).
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Uniform resource identifier (URI)
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='uri', version=genome_version)
+
+    @classmethod
+    def resolve_ucsc_alias(cls, genome_version):
+        """Resolve a genome version to an eventual UCSC Genome Browser-specific alias.
+
+        If an alias has not been defined, the original genome version will be returned.
+        @param genome_version: Genome version
+        @type genome_version: str
+        @return: UCSC Genome Browser assembly version
+        @rtype: str
+        """
+        ucsc_version = cls.get_ucsc(genome_version=genome_version)
+
+        if ucsc_version is None:
+            return genome_version
+        else:
+            return ucsc_version
 
 
 class Transcriptome(BaseSectionVersion):
@@ -803,8 +683,19 @@ class Transcriptome(BaseSectionVersion):
     section = 'transcriptome'
 
     @classmethod
+    def get_date(cls, transcriptome_version=None):
+        """Get the release date.
+
+        @param transcriptome_version: Transcriptome version
+        @type transcriptome_version: None | str
+        @return: Release date
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='date', version=transcriptome_version)
+
+    @classmethod
     def get_description(cls, transcriptome_version=None):
-        """Get the Description.
+        """Get the description.
 
         @param transcriptome_version: Transcriptome version
         @type transcriptome_version: None | str
@@ -812,6 +703,50 @@ class Transcriptome(BaseSectionVersion):
         @rtype: None | str | unicode
         """
         return cls.get(option='description', version=transcriptome_version)
+
+    @classmethod
+    def get_genome(cls, transcriptome_version=None):
+        """Get the genome version.
+
+        @param transcriptome_version: Transcriptome version
+        @type transcriptome_version: None | str
+        @return: Genome version
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='genome', version=transcriptome_version)
+
+    @classmethod
+    def get_provider(cls, transcriptome_version=None):
+        """Get the provider.
+
+        @param transcriptome_version: Transcriptome version
+        @type transcriptome_version: None | str
+        @return: Provider
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='provider', version=transcriptome_version)
+
+    @classmethod
+    def get_species(cls, transcriptome_version=None):
+        """Get the species.
+
+        @param transcriptome_version: Transcriptome version
+        @type transcriptome_version: None | str
+        @return: Species
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='species', version=transcriptome_version)
+
+    @classmethod
+    def get_uri(cls, transcriptome_version=None):
+        """Get the uniform resource identifier (URI).
+
+        @param transcriptome_version: Transcriptome version
+        @type transcriptome_version: None | str
+        @return: Uniform resource identifier (URI)
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='uri', version=transcriptome_version)
 
 
 class FilePath(BaseSection):
@@ -977,8 +912,74 @@ class FilePath(BaseSection):
         return cls._prepend_resource(absolute=absolute, file_path=file_path)
 
     @classmethod
+    def get_resource_genome_index(cls, genome_version, genome_index, absolute=True):
+        """Get a genome index resource directory path.
+
+        @param genome_version: Genome version (e.g. mm10, ...)
+        @type genome_version: str
+        @param genome_index: Genome index (e.g. bowtie2, ...)
+        @type genome_index: str
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Genome index resource directory path
+        @rtype: None | str | unicode
+        @raise Exception: Unknown genome index name
+        """
+        index_directory = Index.get(option=genome_index)
+
+        if index_directory is None:
+            raise Exception("Unknown genome index name '" + repr(genome_index) + "'.")
+        else:
+            return os.path.join(
+                cls.get_resource_genome(genome_version=genome_version, absolute=absolute),
+                index_directory)
+
+    @classmethod
+    def get_resource_genome_fasta(cls, genome_version, genome_index, absolute=True):
+        """Get a genome FASTA resource file path.
+
+        @param genome_version: Genome version (e.g. mm10, ...)
+        @type genome_version: str
+        @param genome_index: Genome index (e.g. bowtie2, ...)
+        @type genome_index: str
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Genome FASTA resource file path
+        @rtype: str | unicode
+        @raise Exception: Unknown genome index name
+        """
+        fasta_suffix = Genome.get_fasta_suffix(genome_version=genome_version)
+        if not fasta_suffix:
+            fasta_suffix = 'fa'
+
+        return os.path.join(
+            cls.get_resource_genome_index(
+                genome_version=genome_version,
+                genome_index=genome_index,
+                absolute=absolute),
+            '.'.join((genome_version, fasta_suffix)))
+
+    @classmethod
+    def get_resource_genome_fasta_index(cls, genome_version, genome_index, absolute=True):
+        """Get a genome FASTA index (*.fai) resource file path.
+
+        @param genome_version: Genome version (e.g. mm10, ...)
+        @type genome_version: str
+        @param genome_index: Genome index (e.g. bowtie2, ...)
+        @type genome_index: str
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Genome FASTA resource file path
+        @rtype: str | unicode
+        """
+        return cls.get_resource_genome_fasta(
+            genome_version=genome_version,
+            genome_index=genome_index,
+            absolute=absolute) + '.fai'
+
+    @classmethod
     def get_resource_transcriptome(cls, transcriptome_version=None, absolute=True):
-        """Get the Transcriptome resource directory path.
+        """Get the transcriptome resource directory path.
 
         @param transcriptome_version: The transcriptome version (e.g. mm10_e87, ...)
         @type transcriptome_version: None | str
@@ -993,6 +994,52 @@ class FilePath(BaseSection):
             file_path = os.path.join(file_path, transcriptome_version)
 
         return cls._prepend_resource(absolute=absolute, file_path=file_path)
+
+    @classmethod
+    def get_resource_transcriptome_index(cls, transcriptome_version, transcriptome_index, absolute=True):
+        """Get a transcriptome index resource directory path.
+
+        @param transcriptome_version: Transcriptome version (e.g. mm10_e87, ...)
+        @type transcriptome_version: str
+        @param transcriptome_index: Transcriptome index (e.g. star, tophat, ...)
+        @type transcriptome_index: str
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Transcriptome index resource directory path
+        @rtype: None | str | unicode
+        @raise Exception: Unknown transcriptome index name
+        """
+        index_directory = Index.get(option=transcriptome_index)
+
+        if index_directory is None:
+            raise Exception("Unknown transcriptome index name '" + repr(transcriptome_index) + "'.")
+        else:
+            return os.path.join(
+                cls.get_resource_transcriptome(transcriptome_version=transcriptome_version, absolute=absolute),
+                index_directory)
+
+    @classmethod
+    def get_resource_transcriptome_gtf(cls, transcriptome_version, transcriptome_index, absolute=True):
+        """Get a transcriptome GTF resource file path.
+
+        @param transcriptome_version: Transcriptome version (e.g. mm10_e87, ...)
+        @type transcriptome_version: str
+        @param transcriptome_index: Transcriptome index (e.g. star, tophat, ...)
+        @type transcriptome_index: str
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Transcriptome GTF resource file path
+        @rtype: None | str | unicode
+        @return: Absolute path to the transcriptome GTF file
+        @rtype: str | unicode
+        @raise Exception: Unknown transcriptome index name
+        """
+        return os.path.join(
+            cls.get_resource_transcriptome_index(
+                transcriptome_version=transcriptome_version,
+                transcriptome_index=transcriptome_index,
+                absolute=absolute),
+            transcriptome_version + '.gtf')
 
     @classmethod
     def get_resource_gatk_bundle(cls, gatk_bundle_version=None, genome_version=None, absolute=True):
@@ -1049,6 +1096,17 @@ class FilePath(BaseSection):
         @rtype: None | str | unicode
         """
         return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='snpeff_data'))
+
+
+class Index(BaseSection):
+    """The C{bsf.standards.Index} class models genome or transcriptome index directory defaults.
+
+    The defaults are read from the [indices] section of the global configuration file.
+    Attributes:
+    @cvar section: C{SafeConfigParser} section
+    @type section: str | unicode
+    """
+    section = 'indices'
 
 
 class Operator(BaseSection):

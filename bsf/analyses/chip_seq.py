@@ -770,16 +770,12 @@ class ChIPSeq(bsf.Analysis):
             @return:
             @rtype:
             """
-
-            # Get global defaults.
-
-            default = bsf.standards.Default.get_global_default()
-
             # Get the BWA index.
 
             bwa_genome_db = os.path.join(
-                bsf.standards.FilePath.get_resource_genome(genome_version=self.genome_version),
-                default.indices['bwa'],
+                bsf.standards.FilePath.get_resource_genome_index(
+                    genome_version=self.genome_version,
+                    genome_index='bwa'),
                 self.genome_version)
 
             self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
@@ -1356,7 +1352,7 @@ class ChIPSeq(bsf.Analysis):
         # If it does not exist, construct it from defaults.
 
         if not self.genome_fasta_path:
-            self.genome_fasta_path = bsf.standards.Default.absolute_genome_fasta(
+            self.genome_fasta_path = bsf.standards.FilePath.get_resource_genome_fasta(
                 genome_version=self.genome_version,
                 genome_index='bowtie2')
 

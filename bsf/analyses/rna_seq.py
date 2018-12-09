@@ -950,24 +950,21 @@ class Tuxedo(bsf.Analysis):
                 if self.debug > 0:
                     print('Standard comparison file in current working directory:', self.comparison_path)
 
-        super(Tuxedo, self).run()
-
-        # Get global defaults.
-
-        default = bsf.standards.Default.get_global_default()
-
-        # Method configuration with regards to Cuffquant and Cuffdiff.
-        run_cuffquant_before_cuffdiff = False
-
-        # Tuxedo requires a genome version.
-
-        if not self.genome_version:
-            raise Exception('A ' + self.name + " requires a 'genome_version' configuration option.")
-
         # Tuxedo requires a transcriptome version.
 
         if not self.transcriptome_version:
             raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
+
+        # Get the genome version before calling the run() method of the bsf.Analysis super-class.
+
+        if not self.genome_version:
+            self.genome_version = bsf.standards.Transcriptome.get_genome(
+                transcriptome_version=self.transcriptome_version)
+
+        super(Tuxedo, self).run()
+
+        # Method configuration with regards to Cuffquant and Cuffdiff.
+        run_cuffquant_before_cuffdiff = False
 
         run_read_comparisons()
 
@@ -978,18 +975,23 @@ class Tuxedo(bsf.Analysis):
 
         if not self.genome_index_path:
             self.genome_index_path = os.path.join(
-                bsf.standards.FilePath.get_resource_genome(genome_version=self.genome_version, absolute=True),
-                default.indices['bowtie2'],
+                bsf.standards.FilePath.get_resource_genome_index(
+                    genome_version=self.genome_version,
+                    genome_index='bowtie2'),
                 self.genome_version)
 
         if not self.genome_fasta_path:
-            self.genome_fasta_path = self.genome_index_path + '.fa'
+            self.genome_fasta_path = bsf.standards.FilePath.get_resource_genome_fasta(
+                genome_version=self.genome_version,
+                genome_index='bowtie2')
 
         if not os.path.exists(self.genome_fasta_path):
             raise Exception('Genome FASTA file path {!r} does not exists.'.format(self.genome_fasta_path))
 
         # TODO: Make this configurable via a genome configuration option?
-        genome_sizes_path = self.genome_fasta_path + '.fai'
+        genome_sizes_path = bsf.standards.FilePath.get_resource_genome_fasta_index(
+            genome_version=self.genome_version,
+            genome_index='bowtie2')
 
         # Define a reference transcriptome index directory or a GTF file path.
 
@@ -1009,7 +1011,9 @@ class Tuxedo(bsf.Analysis):
             transcriptome_index = os.path.basename(self.transcriptome_index_path)
 
             # Does an indices_for_TopHat directory exist?
-            transcriptome_index_path = os.path.join(self.transcriptome_index_path, default.indices['tophat'])
+            transcriptome_index_path = os.path.join(
+                self.transcriptome_index_path,
+                bsf.standards.Index.get(option='tophat2'))
             if os.path.isdir(transcriptome_index_path):
                 self.transcriptome_index_path = transcriptome_index_path
 
@@ -1041,19 +1045,16 @@ class Tuxedo(bsf.Analysis):
         else:
             # Neither was provided, automatically discover on the basis of the transcriptome version.
             self.transcriptome_index_path = os.path.join(
-                bsf.standards.FilePath.get_resource_transcriptome(
+                bsf.standards.FilePath.get_resource_transcriptome_index(
                     transcriptome_version=self.transcriptome_version,
-                    absolute=True),
-                default.indices['tophat'],
+                    transcriptome_index='tophat2'),
                 self.transcriptome_version,  # TopHat puts the transcriptome index into a sub directory.
                 self.transcriptome_version)
 
-            self.transcriptome_gtf_path = os.path.join(
-                bsf.standards.FilePath.get_resource_transcriptome(
-                    transcriptome_version=self.transcriptome_version,
-                    absolute=True),
-                default.indices['tophat'],
-                self.transcriptome_version) + '.gtf'
+            self.transcriptome_gtf_path = bsf.standards.FilePath.get_resource_transcriptome_gtf(
+                transcriptome_version=self.transcriptome_version,
+                transcriptome_index='tophat2')
+
             if not os.path.exists(self.transcriptome_gtf_path):
                 raise Exception('Reference transcriptome GTF file path {!r} does not exist.'.
                                 format(self.transcriptome_gtf_path))
@@ -2118,21 +2119,8 @@ class Tuxedo(bsf.Analysis):
             str_list.append('</h1>\n')
             str_list.append('\n')
 
-            genome_description = bsf.standards.Genome.get_description(
-                genome_version=self.genome_version)
-            if genome_description is None:
-                warnings.warn("Could not get genome description for version '" + self.genome_version + "'.")
-            else:
-                str_list.append('<p><strong>Genome:</strong> ' + genome_description + '</p>\n')
-
-            transcriptome_description = bsf.standards.Transcriptome.get_description(
-                transcriptome_version=self.transcriptome_version)
-            if transcriptome_description is None:
-                warnings.warn("Could not gene transcriptome description for version '" +
-                              self.transcriptome_version + "'")
-            else:
-                str_list.append('<p><strong>Transcriptome:</strong> ' + transcriptome_description + '</p>\n')
-
+            str_list.extend(self.get_html_genome(genome_version=self.genome_version))
+            str_list.extend(self.get_html_transcriptome(transcriptome_version=self.transcriptome_version))
             str_list.append('\n')
 
             # TopHat and Cufflinks table.
@@ -3513,15 +3501,16 @@ class DESeq(bsf.Analysis):
             if not self.contrast_path:
                 raise Exception('No suitable contrast annotation file in the current working directory.')
 
-        super(DESeq, self).run()
-
-        # DESeq requires a genome version.
-
-        if not self.genome_version:
-            raise Exception('A ' + self.name + " requires a 'genome_version' configuration option.")
+        # DESeq requires a transcriptome version.
 
         if not self.transcriptome_version:
             raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
+
+        if not self.genome_version:
+            self.genome_version = bsf.standards.Transcriptome.get_genome(
+                transcriptome_version=self.transcriptome_version)
+
+        super(DESeq, self).run()
 
         # For DESeq, all samples need adding to the Analysis regardless.
         for sample in self.collection.get_all_samples():
@@ -3643,21 +3632,8 @@ class DESeq(bsf.Analysis):
             str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
 
-            genome_description = bsf.standards.Genome.get_description(
-                genome_version=self.genome_version)
-            if genome_description is None:
-                warnings.warn("Could not get genome description for version '" + self.genome_version + "'.")
-            else:
-                str_list.append('<p><strong>Genome:</strong> ' + genome_description + '</p>\n')
-
-            transcriptome_description = bsf.standards.Transcriptome.get_description(
-                transcriptome_version=self.transcriptome_version)
-            if transcriptome_description is None:
-                warnings.warn("Could not gene transcriptome description for version '" +
-                              self.transcriptome_version + "'")
-            else:
-                str_list.append('<p><strong>Transcriptome:</strong> ' + transcriptome_description + '</p>\n')
-
+            str_list.extend(self.get_html_genome(genome_version=self.genome_version))
+            str_list.extend(self.get_html_transcriptome(transcriptome_version=self.transcriptome_version))
             str_list.append('\n')
 
             # Likelihood Ratio Testing (LRT) Table
