@@ -31,7 +31,7 @@ import argparse
 import datetime
 import os
 
-from bsf.illumina import RunFolder
+import bsf.illumina
 
 parser = argparse.ArgumentParser(description='Summarise an Illumina Run Folder.')
 
@@ -53,11 +53,11 @@ parser.add_argument(
 
 name_space = parser.parse_args()
 
-file_path = RunFolder.absolute_file_path(name=name_space.file_path)
+file_path = bsf.illumina.RunFolder.absolute_file_path(name=name_space.file_path)
 if file_path is None:
     raise Exception("Could not resolve the --file-name value to a valid Illumina Run Folder location.")
 
-irf = RunFolder.from_file_path(file_path=file_path)
+irf = bsf.illumina.RunFolder.from_file_path(file_path=file_path)
 
 if not irf.run_parameters.get_experiment_name:
     raise Exception("No experiment name set in the Illumina Run Folder configuration.")

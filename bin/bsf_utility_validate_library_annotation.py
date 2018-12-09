@@ -29,7 +29,7 @@
 import argparse
 import warnings
 
-from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
+import bsf.analyses.illumina_to_bam_tools
 
 argument_parser = argparse.ArgumentParser(
     description='BSF Python utility script to validate Library Annotation Sheet files.')
@@ -53,7 +53,8 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-library_annotation_sheet = LibraryAnnotationSheet.from_file_path(file_path=name_space.library_path)
+library_annotation_sheet = bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet.from_file_path(
+    file_path=name_space.library_path)
 """ @type library_annotation_sheet: bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet """
 
 if name_space.mode == 'high':

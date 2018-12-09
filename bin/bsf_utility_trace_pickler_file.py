@@ -32,7 +32,7 @@ from __future__ import print_function
 import argparse
 import sys
 
-from bsf import Runnable
+import bsf
 
 argument_parser = argparse.ArgumentParser(
     description='Trace a pickled Runnable.')
@@ -50,7 +50,7 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-runnable = Runnable.from_pickler_path(file_path=name_space.pickler_path)
+runnable = bsf.Runnable.from_pickler_path(file_path=name_space.pickler_path)
 
 sys.stdout.writelines(runnable.trace(level=1))
 

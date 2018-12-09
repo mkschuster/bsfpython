@@ -29,9 +29,9 @@ from __future__ import print_function
 
 import re
 
+import Bio.SeqIO
+import Bio.SeqRecord
 import numpy
-from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
 
 import bsf.exonerate
 
@@ -41,7 +41,7 @@ identifier_pattern = re.compile(pattern='^\w+\|(\w+)\|([^ ]+)')
 # sample_name = 'Plasmid'
 sample_name = 'cDNA'
 
-record_dict = SeqIO.index_db(
+record_dict = Bio.SeqIO.index_db(
     index_filename='sequences_{}_pass_hq_2d.idx'.format(sample_name),
     filenames=['sequences_{}_pass_hq_2d.fasta'.format(sample_name)],
     format='fasta')
@@ -79,13 +79,16 @@ print('Profile Array shape:', profile_array.shape)
 for vulgar in vulgar_list:
     # Fetch the corresponding SeqRecord object.
     q_record = record_dict[vulgar.q_name]
-    assert isinstance(q_record, SeqRecord)
+    assert isinstance(q_record, Bio.SeqRecord.SeqRecord)
 
     # Check if the sequence was in forward or reverse orientation and reverse complement if necessary.
     orientation = int(vulgar.q_strand + '1') * int(vulgar.t_strand + '1')
     if orientation < 0:
+        # BioPython type ambiguity.
+        # In method Bio.SeqRecord.SeqRecord.reverse_complement(), the id parameter can be of type basestring or bool
+        # at the same time.
         q_reverse_complement = q_record.reverse_complement(
-            id=q_record.id + "_rc",
+            id=q_record.id + '_rc',
             name=q_record.name + '_rc',
             description=True)
         q_record = q_reverse_complement
@@ -102,7 +105,7 @@ for vulgar in vulgar_list:
         seq_io = open("test_aligned_{}_to_{}.fasta".format(sample_name, identifier), 'w')
         seq_io_dict[identifier] = seq_io
 
-    SeqIO.write(sequences=q_record, handle=seq_io, format='fasta')
+    Bio.SeqIO.write(sequences=q_record, handle=seq_io, format='fasta')
 
     # TODO: Populate the matrix at this stage.
 
@@ -110,7 +113,7 @@ for vulgar in vulgar_list:
     for exonerate_tuple in vulgar.triplet_list:
         print('Operation:', ' '.join(exonerate_tuple))
 
-# Clean up stage: close all SeqIO file handles.
+# Clean up stage: close all Bio.SeqIO file handles.
 
 for seq_io in seq_io_dict.itervalues():
     seq_io.close()

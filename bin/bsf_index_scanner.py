@@ -39,7 +39,7 @@ import threading
 
 import pysam
 
-from bsf.process import Command, Executable
+import bsf.process
 
 # Set the environment consistently.
 
@@ -233,7 +233,10 @@ elif file_type == '.sam':
     parse_sam_format(sam_file_handle=file_handle)
     file_handle.close()
 elif file_type == '.bam':
-    executable = Executable(name='samtools_view', program='samtools', sub_command=Command(program='view'))
+    executable = bsf.process.Executable(
+        name='samtools_view',
+        program='samtools',
+        sub_command=bsf.process.Command(program='view'))
     sub_command = executable.sub_command
     sub_command.add_option_short(key='f', value='64')  # Select only the first read of a pair.
     sub_command.add_option_short(key='F', value='512')  # Suppress all reads that fail vendor quality filtering.
@@ -262,7 +265,7 @@ elif file_type == '.bam':
     thread_out.start()
 
     thread_err = threading.Thread(
-        target=Executable.process_stderr,
+        target=bsf.process.Executable.process_stderr,
         kwargs={
             'stderr_handle': child_process.stderr,
             'thread_lock': thread_lock,

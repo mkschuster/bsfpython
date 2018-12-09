@@ -32,13 +32,13 @@ from __future__ import print_function
 import os
 import sys
 
-from bsf import Analysis, FilePath, Runnable
-from bsf.ngs import Reads, PairedReads
-from bsf.process import Command, RunnableStep, RunnableStepJava, RunnableStepMakeDirectory
-from bsf.standards import JavaClassPath
+import bsf
+import bsf.ngs
+import bsf.process
+import bsf.standards
 
 
-class FilePathTrimmomaticReadGroup(FilePath):
+class FilePathTrimmomaticReadGroup(bsf.FilePath):
     """The C{bsf.analyses.trimmomatic.FilePathTrimmomaticReadGroup} models read group-specific Trimmomatic files.
 
     Attributes:
@@ -89,7 +89,7 @@ class FilePathTrimmomaticReadGroup(FilePath):
         return
 
 
-class FilePathTrimmomaticProject(FilePath):
+class FilePathTrimmomaticProject(bsf.FilePath):
     """The C{bsf.analyses.trimmomatic.FilePathTrimmomaticProject} class models project-specific Trimmomatic files.
 
     Attributes:
@@ -122,7 +122,7 @@ class FilePathTrimmomaticProject(FilePath):
         return
 
 
-class Trimmomatic(Analysis):
+class Trimmomatic(bsf.Analysis):
     """The C{bsf.analyses.trimmomatic.Trimmomatic} class represents the logic to run the Trimmomatic analysis.
 
     Attributes:
@@ -327,7 +327,7 @@ class Trimmomatic(Analysis):
         # Get the Trimmomatic tool Java Archive (JAR) class path directory.
 
         if not self.classpath_trimmomatic:
-            self.classpath_trimmomatic = JavaClassPath.get_trimmomatic()
+            self.classpath_trimmomatic = bsf.standards.JavaClassPath.get_trimmomatic()
             if not self.classpath_trimmomatic:
                 raise Exception("A 'Trimmomatic' analysis requires a 'classpath_trimmomatic' configuration option.")
 
@@ -400,7 +400,7 @@ class Trimmomatic(Analysis):
                     # Create a Runnable and an Executable for running the Trimmomatic analysis.
 
                     runnable_read_group = self.add_runnable(
-                        runnable=Runnable(
+                        runnable=bsf.Runnable(
                             name=prefix_read_group,
                             code_module='bsf.runnables.generic',
                             working_directory=self.project_directory,
@@ -414,14 +414,14 @@ class Trimmomatic(Analysis):
                     # Create a new RunnableStepMakeDirectory in preparation of the Trimmomatic program.
 
                     runnable_read_group.add_runnable_step(
-                        runnable_step=RunnableStepMakeDirectory(
+                        runnable_step=bsf.process.RunnableStepMakeDirectory(
                             name='mkdir',
                             directory_path=file_path_read_group.output_directory))
 
                     # Create a RunnableStep for the Trimmomatic program.
 
                     runnable_step_read_group = runnable_read_group.add_runnable_step(
-                        runnable_step=RunnableStepJava(
+                        runnable_step=bsf.process.RunnableStepJava(
                             name='trimmomatic',
                             java_temporary_path=runnable_read_group.get_relative_temporary_directory_path,
                             java_heap_maximum='Xmx4G',
@@ -429,9 +429,9 @@ class Trimmomatic(Analysis):
                     """ @type runnable_step_read_group: bsf.process.RunnableStepJava """
 
                     if paired_reads.reads_2 is None:
-                        runnable_step_read_group.sub_command.sub_command = Command(program='SE')
+                        runnable_step_read_group.sub_command.sub_command = bsf.process.Command(program='SE')
                     else:
-                        runnable_step_read_group.sub_command.sub_command = Command(program='PE')
+                        runnable_step_read_group.sub_command.sub_command = bsf.process.Command(program='PE')
 
                     # Add options to the sub command.
                     sub_command = runnable_step_read_group.sub_command.sub_command
@@ -486,9 +486,9 @@ class Trimmomatic(Analysis):
                         # Add unpaired Reads 1 and 2 as separate PairedReads objects to this sample.
 
                         sample.add_paired_reads(
-                            paired_reads=PairedReads(
+                            paired_reads=bsf.ngs.PairedReads(
                                 annotation_dict=paired_reads.annotation_dict,
-                                reads_1=Reads(
+                                reads_1=bsf.ngs.Reads(
                                     name=paired_reads.reads_1.name[:-1] + 'U',
                                     file_path=os.path.join(
                                         self.genome_directory,
@@ -499,9 +499,9 @@ class Trimmomatic(Analysis):
                                 read_group=paired_reads.read_group))
 
                         sample.add_paired_reads(
-                            paired_reads=PairedReads(
+                            paired_reads=bsf.ngs.PairedReads(
                                 annotation_dict=paired_reads.annotation_dict,
-                                reads_1=Reads(
+                                reads_1=bsf.ngs.Reads(
                                     name=paired_reads.reads_2.name[:-1] + 'U',
                                     file_path=os.path.join(
                                         self.genome_directory,
@@ -528,7 +528,7 @@ class Trimmomatic(Analysis):
                     prefix_summary = '_'.join((stage_summary.name, paired_reads_name))
 
                     runnable_summary = self.add_runnable(
-                        runnable=Runnable(
+                        runnable=bsf.Runnable(
                             name=prefix_summary,
                             code_module='bsf.runnables.generic',
                             working_directory=self.project_directory,
@@ -539,7 +539,7 @@ class Trimmomatic(Analysis):
                     # Create a new RunnableStep to aggregate the trim log file.
 
                     runnable_step_summary = runnable_summary.add_runnable_step(
-                        runnable_step=RunnableStep(
+                        runnable_step=bsf.process.RunnableStep(
                             name='trimmomatic_summary',
                             program='bsf_trimmomatic_summary.R',
                             obsolete_file_path_list=[
@@ -566,7 +566,7 @@ class Trimmomatic(Analysis):
         annotation_sheet.to_file_path()
 
         runnable_project = self.add_runnable(
-            runnable=Runnable(
+            runnable=bsf.Runnable(
                 name=prefix_project,
                 code_module='bsf.runnables.picard_sam_to_fastq_sample_sheet',
                 working_directory=self.project_directory,
@@ -579,7 +579,7 @@ class Trimmomatic(Analysis):
         # Create a new RunnableStep.
 
         runnable_step_project = runnable_project.add_runnable_step(
-            runnable_step=RunnableStep(
+            runnable_step=bsf.process.RunnableStep(
                 name='prune_sample_annotation_sheet'))
 
         runnable_step_project.add_option_long(key='sas_path_old', value=file_path_project.sas_path_old)

@@ -30,7 +30,7 @@ from __future__ import print_function
 import argparse
 import os
 
-from bsf.analyses.illumina_to_bam_tools import LibraryAnnotationSheet
+import bsf.analyses.illumina_to_bam_tools
 
 argument_parser = argparse.ArgumentParser(
     description='Count samples per lane based on BamIndexDecoder library annotation files.')
@@ -64,7 +64,8 @@ if not name_space.ascending:
 
 for file_name in file_name_list:
     if file_name[-14:] == '_libraries.csv':
-        sas = LibraryAnnotationSheet.from_file_path(file_path=os.path.join(name_space.directory, file_name))
+        sas = bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet.from_file_path(
+            file_path=os.path.join(name_space.directory, file_name))
 
         lane_dict = dict()
         for row_dict in sas.row_dicts:

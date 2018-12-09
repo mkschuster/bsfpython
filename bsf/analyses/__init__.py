@@ -33,246 +33,13 @@ import os
 import re
 import sys
 
-from bsf import Analysis, FilePath
-from bsf.annotation import AnnotationSheet
-from bsf.ngs import Collection
-from bsf.process import Executable
-from bsf.standards import JavaClassPath
+import bsf
+import bsf.ngs
+import bsf.process
+import bsf.standards
 
 
-class ChIPSeqComparison(object):
-    """ChIP-Seq comparison annotation sheet.
-
-    Attributes:
-    @ivar c_name: Control name
-    @type c_name: str
-    @ivar t_name: Treatment name
-    @type t_name: str
-    @ivar c_samples: Python C{list} of control C{bsf.ngs.Sample} objects
-    @type c_samples: list[bsf.ngs.Sample]
-    @ivar t_samples: Python C{list} of treatment C{bsf.ngs.Sample} objects
-    @type t_samples: list[bsf.ngs.Sample]
-    @ivar factor: ChIP factor
-    @type factor: str
-    @ivar tissue: Tissue
-    @type tissue: str
-    @ivar condition: Condition
-    @type condition: str
-    @ivar treatment: Treatment
-    @type treatment: str
-    @ivar replicate: replicate number
-    @type replicate: int
-    @ivar diff_bind: Run the DiffBind analysis
-    @type diff_bind: bool
-    """
-
-    def __init__(
-            self,
-            c_name,
-            t_name,
-            c_samples,
-            t_samples,
-            factor,
-            tissue=None,
-            condition=None,
-            treatment=None,
-            replicate=None,
-            diff_bind=None):
-        """Initialise a C{bsf.analyses.ChIPSeqComparison}.
-
-        @param c_name: Control name
-        @type c_name: str
-        @param t_name: Treatment name
-        @type t_name: str
-        @param c_samples: Python C{list} of control C{bsf.ngs.Sample} objects
-        @type c_samples: list[bsf.ngs.Sample]
-        @param t_samples: Python C{list} of treatment C{bsf.ngs.Sample} objects
-        @type t_samples: list[bsf.ngs.Sample]
-        @param factor: ChIP factor
-        @type factor: str
-        @param tissue: Tissue
-        @type tissue: str
-        @param condition: Condition
-        @type condition: str
-        @param treatment: Treatment
-        @type treatment: str
-        @param replicate: replicate number
-        @type replicate: int
-        @param diff_bind: Run the DiffBind analysis
-        @type diff_bind: bool
-        @return:
-        @rtype:
-        """
-
-        super(ChIPSeqComparison, self).__init__()
-
-        # Condition', 'Treatment', 'Replicate',
-        # 'bamReads', 'bamControl', 'ControlID', 'Peaks', 'PeakCaller', 'PeakFormat'
-
-        if c_name is None:
-            self.c_name = str()
-        else:
-            self.c_name = c_name
-
-        if t_name is None:
-            self.t_name = str()
-        else:
-            self.t_name = t_name
-
-        if c_samples is None:
-            self.c_samples = list()
-        else:
-            self.c_samples = c_samples
-
-        if t_samples is None:
-            self.t_samples = list()
-        else:
-            self.t_samples = t_samples
-
-        if factor is None:
-            self.factor = str()
-        else:
-            self.factor = factor
-
-        if tissue is None:
-            self.tissue = str()
-        else:
-            self.tissue = tissue
-
-        if condition is None:
-            self.condition = str()
-        else:
-            self.condition = condition
-
-        if treatment is None:
-            self.treatment = str()
-        else:
-            self.treatment = treatment
-
-        if replicate is None:
-            self.replicate = 0
-        else:
-            self.replicate = replicate
-
-        if diff_bind is None:
-            self.diff_bind = True
-        else:
-            self.diff_bind = diff_bind
-
-        return
-
-
-class FilePathChIPSeq(FilePath):
-    def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.FilePathChIPSeq} object
-
-        @param prefix: Prefix
-        @type prefix: str | unicode
-        @return:
-        @rtype
-        """
-        super(FilePathChIPSeq, self).__init__(prefix=prefix)
-
-        self.replicate_directory = prefix
-        self.aligned_sam = os.path.join(prefix, '_'.join((prefix, 'aligned.sam')))
-        self.cleaned_sam = os.path.join(prefix, '_'.join((prefix, 'cleaned.sam')))
-        self.sorted_bam = os.path.join(prefix, '_'.join((prefix, 'sorted.bam')))
-        self.aligned_bam = os.path.join(prefix, '_'.join((prefix, '.bam')))
-        self.aligned_bai = os.path.join(prefix, '_'.join((prefix, '.bai')))
-        self.aligned_md5 = os.path.join(prefix, '_'.join((prefix, '.bam.md5')))
-
-        return
-
-
-class ChIPSeqDiffBindSheet(AnnotationSheet):
-    """ChIP-Seq Bioconductor DiffBind annotation sheet class.
-
-    Attributes:
-    """
-
-    _file_type = 'excel'
-
-    _header_line = True
-
-    _field_names = [
-        'SampleID',
-        'Tissue',
-        'Factor',
-        'Condition',
-        'Treatment',
-        'Replicate',
-        'bamReads',
-        'bamControl',
-        'ControlID',
-        'Peaks',
-        'PeakCaller',
-        'PeakFormat',
-    ]
-
-    _test_methods = {
-        'SampleID': [
-            AnnotationSheet.check_alphanumeric,
-        ],
-        'Tissue': [
-            AnnotationSheet.check_alphanumeric,
-        ],
-        'Factor': [
-            AnnotationSheet.check_alphanumeric,
-        ],
-        'Condition': [
-            AnnotationSheet.check_alphanumeric,
-        ],
-        'Treatment': [
-            AnnotationSheet.check_alphanumeric,
-        ],
-        'Replicate': [
-            AnnotationSheet.check_numeric,
-        ],
-        'ControlID': [
-            AnnotationSheet.check_alphanumeric,
-        ],
-        'PeakCaller': [
-            AnnotationSheet.check_alphanumeric,
-        ],
-        'PeakFormat': [
-            AnnotationSheet.check_alphanumeric,
-        ],
-    }
-
-    def sort(self):
-        """Sort by columns I{Tissue}, I{Factor}, I{Condition}, I{Treatment} and I{Replicate}.
-
-        @return:
-        @rtype:
-        """
-        self.row_dicts.sort(
-            cmp=lambda x, y:
-            cmp(x['Tissue'], y['Tissue']) or
-            cmp(x['Factor'], y['Factor']) or
-            cmp(x['Condition'], y['Condition']) or
-            cmp(x['Treatment'], y['Treatment']) or
-            cmp(int(x['Replicate']), int(y['Replicate'])))
-
-        return
-
-    def to_file_path(self, adjust_field_names=None):
-        """Write a C{bsf.analyses.ChIPSeqDiffBindSheet} to a file.
-
-        @param adjust_field_names: Clear and adjust the Python C{list} of Python C{str} field name objects
-        @type adjust_field_names: bool
-        @return:
-        @rtype:
-        """
-
-        # Override the method from the super-class to automatically sort before writing to a file.
-
-        self.sort()
-        super(ChIPSeqDiffBindSheet, self).to_file_path(adjust_field_names=adjust_field_names)
-
-        return
-
-
-class RunBamToFastq(Analysis):
+class RunBamToFastq(bsf.Analysis):
     """BAM or SAM to FASTQ converter sub-class.
 
     Attributes:
@@ -324,7 +91,7 @@ class RunBamToFastq(Analysis):
         @param stage_list: Python C{list} of C{bsf.Stage} objects
         @type stage_list: list[bsf.Stage]
         @param collection: BSF Collection
-        @type collection: Collection
+        @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
         @type sample_list: list[bsf.ngs.Sample]
         @return:
@@ -420,12 +187,13 @@ class RunBamToFastq(Analysis):
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
                             sam_to_fastq = stage_sam_to_fastq.add_executable(
-                                executable=Executable(
+                                executable=bsf.process.Executable(
                                     name='picard_sam_to_fastq_{}_1'.format(paired_reads_name),
                                     program='bsf_bam2fastq.sh'))
                             self.set_command_configuration(command=sam_to_fastq)
                             sam_to_fastq.arguments.append(paired_reads.reads_1.file_path)
-                            sam_to_fastq.arguments.append(os.path.join(JavaClassPath.get_picard(), 'picard.jar'))
+                            sam_to_fastq.arguments.append(
+                                os.path.join(bsf.standards.JavaClassPath.get_picard(), 'picard.jar'))
                             sam_to_fastq.arguments.append(os.path.join(self.genome_directory, match.group(1)))
 
                     if paired_reads.reads_2 is not None:
@@ -436,12 +204,13 @@ class RunBamToFastq(Analysis):
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
                             sam_to_fastq = stage_sam_to_fastq.add_executable(
-                                executable=Executable(
+                                executable=bsf.process.Executable(
                                     name='picard_sam_to_fastq_{}_2'.format(paired_reads_name),
                                     program='bsf_bam2fastq.sh'))
                             self.set_command_configuration(command=sam_to_fastq)
                             sam_to_fastq.arguments.append(paired_reads.reads_2.file_path)
-                            sam_to_fastq.arguments.append(os.path.join(JavaClassPath.get_picard(), 'picard.jar'))
+                            sam_to_fastq.arguments.append(
+                                os.path.join(bsf.standards.JavaClassPath.get_picard(), 'picard.jar'))
                             sam_to_fastq.arguments.append(os.path.join(self.genome_directory, match.group(1)))
 
         return

@@ -35,7 +35,7 @@ import subprocess
 import sys
 import threading
 
-from bsf.process import Command, Executable
+import bsf.process
 
 on_posix = 'posix' in sys.builtin_module_names
 max_thread_joins = 10
@@ -170,7 +170,7 @@ reference_file.close()
 
 # Now the complicated part, the sub process for reading via bgzip.
 
-stdin_command = Command(program='bgzip')
+stdin_command = bsf.process.Command(program='bgzip')
 stdin_command.add_switch_long(key='decompress')
 stdin_command.add_switch_long(key='stdout')
 stdin_command.arguments.append(name_space.input_path)
@@ -201,7 +201,7 @@ input_thread_out.daemon = True  # Thread dies with the program.
 input_thread_out.start()
 
 input_thread_err = threading.Thread(
-    target=Executable.process_stderr,
+    target=bsf.process.Executable.process_stderr,
     kwargs={
         'stderr_handle': input_process.stderr,
         'thread_lock': input_thread_lock,

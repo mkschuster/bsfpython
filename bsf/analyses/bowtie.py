@@ -30,11 +30,11 @@ from __future__ import print_function
 
 import sys
 
-from bsf import Analysis, Runnable
-from bsf.process import RunnableStep
+import bsf
+import bsf.process
 
 
-class Bowtie1(Analysis):
+class Bowtie1(bsf.Analysis):
     """The C{bsf.analyses.bowtie.Bowtie1} class represents the logic to run the Bowtie1 short read aligner.
 
     Attributes:
@@ -194,7 +194,7 @@ class Bowtie1(Analysis):
                 # Create a Runnable and Executable for processing each Bowtie1 alignment.
 
                 runnable_bowtie1 = self.add_runnable(
-                    runnable=Runnable(
+                    runnable=bsf.Runnable(
                         name=prefix_bowtie1,
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
@@ -205,11 +205,11 @@ class Bowtie1(Analysis):
                     runnable=runnable_bowtie1)
 
                 runnable_step = runnable_bowtie1.add_runnable_step(
-                    runnable_step=RunnableStep(
+                    runnable_step=bsf.process.RunnableStep(
                         name='bowtie1',
                         obsolete_file_path_list=[
                         ]))
-                """ @type runnable_step: RunnableStep """
+                """ @type runnable_step: bsf.process.RunnableStep """
                 runnable_step.arguments.append(self.bwa_genome_db)
 
                 reads_list_1 = list()

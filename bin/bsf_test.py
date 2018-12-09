@@ -36,7 +36,7 @@ import sys
 import threading
 
 import bsf.argument
-from bsf.process import Executable
+import bsf.process
 
 
 def bsf_test_argument():
@@ -98,14 +98,14 @@ def bsf_test_argument():
 
 
 def bsf_test_thread(file_handle, thread_lock, debug, executable):
-    """Thread callable to parse the SLURM process identifier and set it in the C{Executable}.
+    """Thread callable to parse the SLURM process identifier and set it in the C{bsf.process.Executable}.
 
     @param file_handle: File handle (i.e. pipe)
     @type file_handle: file
     @param thread_lock: Thread lock
     @type thread_lock: threading.lock
     @param debug:
-    @param executable: C{Executable}
+    @param executable: C{bsf.process.Executable}
     @type executable: bsf.process.Executable
     @return:
     """
@@ -143,7 +143,7 @@ def bsf_test_subprocess(
     @return: Child return code
     @rtype: int
     """
-    executable = Executable(name='bsf_test', program='ls')
+    executable = bsf.process.Executable(name='bsf_test', program='ls')
     executable.add_switch_short(key='a')
     executable.add_switch_short(key='l')
     # Conclusion:
@@ -172,7 +172,7 @@ def bsf_test_subprocess(
         thread_lock = threading.Lock()
 
         # thread_out = Thread(
-        #     target=Executable.process_stdout,
+        #     target=bsf.process.Executable.process_stdout,
         #     kwargs={
         #         'stdout_handle': child_process.stdout,
         #         'thread_lock': thread_lock,
@@ -191,7 +191,7 @@ def bsf_test_subprocess(
         thread_out.start()
 
         thread_err = threading.Thread(
-            target=Executable.process_stderr,
+            target=bsf.process.Executable.process_stderr,
             kwargs={
                 'stderr_handle': child_process.stderr,
                 'thread_lock': thread_lock,
@@ -253,7 +253,7 @@ def bsf_test_subprocess(
     return child_return_code
 
 
-class ExecutableTest(Executable):
+class ExecutableTest(bsf.process.Executable):
 
     def __init__(
             self,
@@ -342,7 +342,7 @@ class ExecutableTest(Executable):
 
             if self.stdout_callable is None:
                 thread_out = threading.Thread(
-                    target=Executable.process_stdout,
+                    target=bsf.process.Executable.process_stdout,
                     kwargs={
                         'stdout_handle': child_process.stdout,
                         'thread_lock': thread_lock,
@@ -360,7 +360,7 @@ class ExecutableTest(Executable):
 
             if self.stderr_callable is None:
                 thread_err = threading.Thread(
-                    target=Executable.process_stderr,
+                    target=bsf.process.Executable.process_stderr,
                     kwargs={
                         'stderr_handle': child_process.stderr,
                         'thread_lock': thread_lock,

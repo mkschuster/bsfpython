@@ -32,8 +32,8 @@ import os
 import re
 import xml
 
-from bsf.annotation import AnnotationSheet
-from bsf.illumina import RunFolder
+import bsf.annotation
+import bsf.illumina
 
 argument_parser = argparse.ArgumentParser(
     description='List software version of Illumina Run Folders.')
@@ -71,7 +71,10 @@ if not name_space.ascending:
     file_name_list.reverse()
 
 field_names = ['run_identifier', 'application_name', 'application_version', 'rta_version']
-annotation_sheet = AnnotationSheet(file_path=name_space.output_file, header=True, field_names=field_names)
+annotation_sheet = bsf.annotation.AnnotationSheet(
+    file_path=name_space.output_file,
+    header=True,
+    field_names=field_names)
 
 # Illumina Run Folders obey a pattern and additionally directories with just Sequence Analysis Viewer (SAV)
 # information should also be allowed.
@@ -94,7 +97,7 @@ for file_name in file_name_list:
     # Temporarily catch IOError and xml.etree.ElementTree.ParseError exceptions
     # that result from a broken FhGFS file system.
     try:
-        irf = RunFolder.from_file_path(file_path=file_path)
+        irf = bsf.illumina.RunFolder.from_file_path(file_path=file_path)
     except IOError as exception:
         if name_space.debug:
             print('\t'.join((file_name, '?', '?', '?')))

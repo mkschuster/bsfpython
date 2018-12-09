@@ -36,10 +36,10 @@ import shutil
 import sys
 
 import bsf
-from bsf.analyses.chip_seq import FilePathAlignment
-from bsf.argument import OptionShort
-from bsf.process import Command, Executable
-from bsf.standards import JavaClassPath
+import bsf.analyses.chip_seq
+import bsf.argument
+import bsf.process
+import bsf.standards
 
 
 class ReadGroupContainer(object):
@@ -132,10 +132,10 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     bam_file_name = os.path.basename(bam_file_path)
     sam_file_path = os.path.join(runnable.get_relative_temporary_directory_path, bam_file_name[:-4] + '.sam')
 
-    samtools = Executable(
+    samtools = bsf.process.Executable(
         name='samtools_view',
         program='samtools',
-        sub_command=Command(program='view'),
+        sub_command=bsf.process.Command(program='view'),
         stdout_path=sam_file_path)
 
     samtools_view = samtools.sub_command
@@ -164,15 +164,16 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     # At this stage, the SAM @PG and @RG lines are stored internally.
     # Now run Picard SamToFastq to convert.
 
-    java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command())
+    java_process = bsf.process.Executable(name='sam_to_fastq', program='java', sub_command=bsf.process.Command())
     java_process.add_switch_short(key='d64')
     java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx2G')
     java_process.add_option_pair(key='-Djava.io.tmpdir', value=runnable.get_relative_temporary_directory_path)
 
     picard_process = java_process.sub_command
-    picard_process.add_option_short(key='jar', value=os.path.join(JavaClassPath.get_picard(), 'picard.jar'))
-    picard_process.sub_command = Command(program='SamToFastq')
+    picard_process.add_option_short(key='jar', value=os.path.join(
+        bsf.standards.JavaClassPath.get_picard(), 'picard.jar'))
+    picard_process.sub_command = bsf.process.Command(program='SamToFastq')
 
     sam_to_fastq = picard_process.sub_command
     sam_to_fastq.add_option_pair(key='INPUT', value=bam_file_path)
@@ -227,7 +228,7 @@ def run_bowtie2(runnable):
 
     file_path_read_group = runnable.file_path_object
     """ @type file_path_read_group: bsf.analyses.chip_seq.FilePathChIPSeq """
-    assert isinstance(file_path_read_group, FilePathAlignment)
+    assert isinstance(file_path_read_group, bsf.analyses.chip_seq.FilePathAlignment)
 
     if not os.path.isdir(file_path_read_group.output_directory):
         try:
@@ -279,7 +280,7 @@ def run_bowtie2(runnable):
 
     for option in option_list_u:
         """ @type option: bsf.argument.OptionShort """
-        assert isinstance(option, OptionShort)
+        assert isinstance(option, bsf.argument.OptionShort)
         for file_path in option.value.split(','):
             if file_path.endswith('.bam'):
                 rgc_list.extend(run_picard_sam_to_fastq(runnable=runnable, bam_file_path=file_path))
@@ -378,15 +379,16 @@ def run_bowtie2(runnable):
     if len(sam_file_path_list) > 1:
         # SAM files need merging.
 
-        java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command())
+        java_process = bsf.process.Executable(name='sam_to_fastq', program='java', sub_command=bsf.process.Command())
         java_process.add_switch_short(key='d64')
         java_process.add_switch_short(key='server')
         java_process.add_switch_short(key='Xmx2G')
         java_process.add_option_pair(key='-Djava.io.tmpdir', value=runnable.get_relative_temporary_directory_path)
 
         picard_process = java_process.sub_command
-        picard_process.add_option_short(key='jar', value=os.path.join(JavaClassPath.get_picard(), 'picard.jar'))
-        picard_process.sub_command = Command(program='SamToFastq')
+        picard_process.add_option_short(key='jar', value=os.path.join(
+            bsf.standards.JavaClassPath.get_picard(), 'picard.jar'))
+        picard_process.sub_command = bsf.process.Command(program='SamToFastq')
 
         sam_to_fastq = picard_process.sub_command
         # sam_to_fastq.add_option_pair(key='INPUT', value=bam_file_path)  # TODO:
@@ -416,7 +418,7 @@ def run(runnable):
                 raise
 
     file_path_read_group = runnable.file_path_object
-    """ @type file_path_read_group: FilePathAlignment """
+    """ @type file_path_read_group: bsf.analyses.chip_seq.FilePathAlignment """
 
     if not os.path.isdir(file_path_read_group.output_directory):
         try:

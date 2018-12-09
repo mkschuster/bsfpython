@@ -35,8 +35,8 @@ import re
 import shutil
 import sys
 
-from bsf.process import Command, Executable
-from bsf.standards import JavaClassPath
+import bsf.process
+import bsf.standards
 
 
 def run_picard_sam_to_fastq(input_path, temporary_path):
@@ -58,10 +58,10 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     path_temporary_sam = os.path.basename(input_path)
     path_temporary_sam = path_temporary_sam.replace('.bam', '.sam')
 
-    samtools = Executable(
+    samtools = bsf.process.Executable(
         name='samtools_view',
         program='samtools',
-        sub_command=Command(program='view'),
+        sub_command=bsf.process.Command(program='view'),
         stdout_path=path_temporary_sam)
 
     samtools_view = samtools.sub_command
@@ -91,14 +91,14 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     # At this stage, the SAM @PG and @RG lines are stored internally.
     # Now run Picard SamToFastq to convert.
 
-    java_process = Executable(name='sam_to_fastq', program='java', sub_command=Command())
+    java_process = bsf.process.Executable(name='sam_to_fastq', program='java', sub_command=bsf.process.Command())
     java_process.add_switch_short(key='d64')
     java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx4G')
 
     picard_process = java_process.sub_command
     picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
-    picard_process.sub_command = Command(program='SamToFastq')
+    picard_process.sub_command = bsf.process.Command(program='SamToFastq')
 
     sam_to_fastq = picard_process.sub_command
     sam_to_fastq.add_option_pair(key='INPUT', value=input_path)
@@ -182,7 +182,7 @@ key = 'classpath_picard'
 if key in pickler_dict and pickler_dict[key]:
     classpath_picard = pickler_dict[key]
 else:
-    classpath_picard = JavaClassPath.get_picard()
+    classpath_picard = bsf.standards.JavaClassPath.get_picard()
 
 # Create a temporary directory.
 
@@ -196,7 +196,7 @@ if not os.path.isdir(path_temporary):
             raise
 
 run_tophat = pickler_dict['tophat_executable']
-assert isinstance(run_tophat, Executable)
+assert isinstance(run_tophat, bsf.process.Executable)
 
 if args.debug > 1:
     print('Executable before conversion')
