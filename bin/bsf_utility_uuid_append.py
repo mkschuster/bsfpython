@@ -47,6 +47,4 @@ name_space = argument_parser.parse_args()
 
 # By passing in '' as an empty string, a leading '_' needs stripping.
 
-uuid_string = '_'.join((name_space.input, uuid.uuid4().hex)).lstrip('_')
-
-print('UUID:', repr(uuid_string))
+print('_'.join((name_space.input, uuid.uuid4().hex)).lstrip('_'))
