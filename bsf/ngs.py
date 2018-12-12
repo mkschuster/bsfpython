@@ -2374,7 +2374,8 @@ class Collection(NextGenerationBase):
                 default_path=current_collection.file_path)
 
             if len(key_list):
-                warnings.warn('Unexpected keys in sample annotation sheet: ' + repr(key_list), UserWarning)
+                warnings.warn('Unexpected keys in sample annotation sheet: ' + repr(key_list) +
+                              '\nRow: ' + repr(row_dict), UserWarning)
 
         # Quench empty default objects that are a consequence of empty lines in the sample annotation sheet.
 
