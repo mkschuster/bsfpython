@@ -56,8 +56,6 @@ sys.stdout.writelines(runnable.trace(level=1))
 
 for runnable_step in runnable.runnable_step_list:
     if name_space.format == 'list':
-        print('RunnableStep command list:', runnable_step.command_list())
-        print()
+        print('\n' + 'RunnableStep command list:', runnable_step.command_list())
     elif name_space.format == 'str':
-        print('RunnableStep command str:', runnable_step.command_str())
-        print()
+        print('\n' + 'RunnableStep command str:', runnable_step.command_str())
