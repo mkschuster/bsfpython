@@ -912,19 +912,23 @@ class FilePath(BaseSection):
         return cls._prepend_resource(absolute=absolute, file_path=file_path)
 
     @classmethod
-    def get_resource_genome_index(cls, genome_version, genome_index, absolute=True):
+    def get_resource_genome_index(cls, genome_version, genome_index=None, absolute=True):
         """Get a genome index resource directory path.
 
+        In case the genome_index is not specified, the resource genome directory will be returned.
         @param genome_version: Genome version (e.g. mm10, ...)
         @type genome_version: str
         @param genome_index: Genome index (e.g. bowtie2, ...)
-        @type genome_index: str
+        @type genome_index: str | None
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Genome index resource directory path
         @rtype: None | str | unicode
         @raise Exception: Unknown genome index name
         """
+        if genome_index is None:
+            return cls.get_resource_genome(genome_version=genome_version, absolute=absolute)
+
         index_directory = Index.get(option=genome_index)
 
         if index_directory is None:
@@ -935,13 +939,13 @@ class FilePath(BaseSection):
                 index_directory)
 
     @classmethod
-    def get_resource_genome_fasta(cls, genome_version, genome_index, absolute=True):
+    def get_resource_genome_fasta(cls, genome_version, genome_index=None, absolute=True):
         """Get a genome FASTA resource file path.
 
         @param genome_version: Genome version (e.g. mm10, ...)
         @type genome_version: str
         @param genome_index: Genome index (e.g. bowtie2, ...)
-        @type genome_index: str
+        @type genome_index: str | None
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Genome FASTA resource file path
@@ -960,13 +964,13 @@ class FilePath(BaseSection):
             '.'.join((genome_version, fasta_suffix)))
 
     @classmethod
-    def get_resource_genome_fasta_index(cls, genome_version, genome_index, absolute=True):
+    def get_resource_genome_fasta_index(cls, genome_version, genome_index=None, absolute=True):
         """Get a genome FASTA index (*.fai) resource file path.
 
         @param genome_version: Genome version (e.g. mm10, ...)
         @type genome_version: str
         @param genome_index: Genome index (e.g. bowtie2, ...)
-        @type genome_index: str
+        @type genome_index: str | None
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Genome FASTA resource file path
