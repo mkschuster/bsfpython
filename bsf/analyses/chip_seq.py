@@ -106,7 +106,6 @@ class ChIPSeqComparison(object):
         @return:
         @rtype:
         """
-
         super(ChIPSeqComparison, self).__init__()
 
         # Condition', 'Treatment', 'Replicate',
@@ -181,6 +180,22 @@ class FilePathAlignment(bsf.FilePath):
         return
 
 
+class FilePathAlignmentProject(bsf.FilePath):
+    def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.chip_seq.FilePathAlignmentProject} object
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
+        super(FilePathAlignmentProject, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
+
+        return
+
+
 class FilePathPeakCalling(bsf.FilePath):
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.chip_seq.FilePathPeakCalling} object
@@ -190,7 +205,6 @@ class FilePathPeakCalling(bsf.FilePath):
         @return:
         @rtype
         """
-
         super(FilePathPeakCalling, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
@@ -343,7 +357,6 @@ class ChIPSeqDiffBindSheet(bsf.annotation.AnnotationSheet):
         @return:
         @rtype:
         """
-
         # Override the method from the super-class to automatically sort before writing to a file.
 
         self.sort()
@@ -362,6 +375,8 @@ class ChIPSeq(bsf.Analysis):
     @type prefix: str
     @cvar stage_name_alignment: C{bsf.Stage.name} for the alignment stage
     @type stage_name_alignment: str
+    @cvar stage_name_alignment_project: C{bsf.Stage.name} for the alignment project stage
+    @type stage_name_alignment_project: str
     @cvar stage_name_peak_calling: C{bsf.Stage.name} for the peak calling stage
     @type stage_name_peak_calling: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
@@ -386,6 +401,7 @@ class ChIPSeq(bsf.Analysis):
     prefix = 'chipseq'
 
     stage_name_alignment = '_'.join((prefix, 'alignment'))
+    stage_name_alignment_project = '_'.join((prefix, 'alignment_project'))
     stage_name_peak_calling = '_'.join((prefix, 'peak_calling'))
     stage_name_diff_bind = '_'.join((prefix, 'diff_bind'))
 
@@ -399,6 +415,17 @@ class ChIPSeq(bsf.Analysis):
         @rtype: str
         """
         return '_'.join((cls.stage_name_alignment, paired_reads_name))
+
+    @classmethod
+    def get_prefix_chipseq_alignment_project(cls, project_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param project_name: Project name
+        @type project_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.stage_name_alignment_project, project_name))
 
     @classmethod
     def get_prefix_chipseq_peak_calling(cls, t_paired_reads_name, c_paired_reads_name):
@@ -610,7 +637,6 @@ class ChIPSeq(bsf.Analysis):
         @return:
         @rtype:
         """
-
         def run_read_comparisons():
             """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file from disk.
 
@@ -895,7 +921,6 @@ class ChIPSeq(bsf.Analysis):
             @return:
             @rtype:
             """
-
             # Get the Bowtie2 index.
 
             if self.genome_fasta_path.endswith('.fasta'):
@@ -1039,6 +1064,21 @@ class ChIPSeq(bsf.Analysis):
                             source_path=file_path_read_group.aligned_bai_link_source,
                             target_path=file_path_read_group.aligned_bai_link_target))
 
+            prefix_alignment_project = self.get_prefix_chipseq_alignment_project(project_name=self.project_name)
+
+            file_path_alignment_project = FilePathAlignmentProject(prefix=prefix_alignment_project)
+
+            runnable_alignment_project = self.add_runnable(
+                runnable=bsf.Runnable(
+                    name=prefix_alignment_project,
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.genome_directory,
+                    file_path_object=file_path_alignment_project,
+                    debug=self.debug))
+            self.set_stage_runnable(
+                stage=stage_alignment_project,
+                runnable=runnable_alignment_project)
+
             return
 
         def run_create_macs2_jobs():
@@ -1047,7 +1087,6 @@ class ChIPSeq(bsf.Analysis):
             @return:
             @rtype:
             """
-
             for comparison_name in sorted(self._comparison_dict):
                 chipseq_comparison = self._comparison_dict[comparison_name]
                 factor = chipseq_comparison.factor.upper()
@@ -1366,6 +1405,7 @@ class ChIPSeq(bsf.Analysis):
                 raise Exception('A ' + self.name + " requires a 'classpath_picard' configuration option.")
 
         stage_alignment = self.get_stage(name=self.stage_name_alignment)
+        stage_alignment_project = self.get_stage(name=self.stage_name_alignment_project)
         stage_peak_calling = self.get_stage(name=self.stage_name_peak_calling)
         stage_diff_bind = self.get_stage(name=self.stage_name_diff_bind)
 
@@ -1384,7 +1424,6 @@ class ChIPSeq(bsf.Analysis):
         @return:
         @rtype:
         """
-
         stage_macs14 = self.get_stage(name='macs14')
         stage_process_macs14 = self.get_stage(name='process_macs14')
 
@@ -1506,7 +1545,6 @@ class ChIPSeq(bsf.Analysis):
         @return:
         @rtype:
         """
-
         def report_html():
             """Private function to create a HTML report.
 
@@ -1740,7 +1778,6 @@ class ChIPSeq(bsf.Analysis):
         @return:
         @rtype:
         """
-
         # contrast_field_names = ['', 'Group1', 'Members1', 'Group2', 'Members2', 'DB.edgeR']
 
         def report_html():
