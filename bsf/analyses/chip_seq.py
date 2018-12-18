@@ -504,6 +504,9 @@ class ChIPSeq(bsf.Analysis):
         self._factor_dict = dict()
         """ @type _factor_dict: dict[str, list[ChIPSeqComparison]] """
 
+        self._macs_version = 2
+        """ @type _macs_version: int """
+
         return
 
     def set_configuration(self, configuration, section):
@@ -732,6 +735,130 @@ class ChIPSeq(bsf.Analysis):
                     level_2_dict[key_2] = i
                     self._comparison_dict[key_2].replicate = i
                     i += 1
+
+            return
+
+        def run_create_macs1_jobs():
+            """Create MACS1 peak caller jobs.
+
+            @return:
+            @rtype:
+            """
+            for comparison_name in sorted(self._comparison_dict):
+                chipseq_comparison = self._comparison_dict[comparison_name]
+                factor = chipseq_comparison.factor.upper()
+                for t_sample in chipseq_comparison.t_samples:
+                    t_file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
+                        prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=t_sample.name))
+                    for c_sample in chipseq_comparison.c_samples:
+                        c_file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
+                            prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=c_sample.name))
+                        prefix_peak_calling = self.get_prefix_chipseq_peak_calling(
+                            t_sample_name=t_sample.name,
+                            c_sample_name=c_sample.name)
+
+                        file_path_peak_calling = FilePathMacs14(prefix=prefix_peak_calling)
+
+                        runnable_peak_calling = self.add_runnable(
+                            runnable=bsf.Runnable(
+                                name=prefix_peak_calling,
+                                code_module='bsf.runnables.generic',
+                                working_directory=self.genome_directory,
+                                file_path_object=file_path_peak_calling,
+                                debug=self.debug))
+                        executable_peak_calling = self.set_stage_runnable(
+                            stage=stage_peak_calling,
+                            runnable=runnable_peak_calling)
+
+                        # Add a RunnableStep to create the output directory.
+
+                        runnable_peak_calling.add_runnable_step(
+                            runnable_step=bsf.process.RunnableStepMakeDirectory(
+                                name='make_directory',
+                                directory_path=file_path_peak_calling.output_directory))
+
+                        # Add a RunnableStep for MACS14 call peak.
+
+                        runnable_step_macs14_call_peak = runnable_peak_calling.add_runnable_step(
+                            runnable_step=bsf.process.RunnableStep(
+                                name='macs14_call_peak',
+                                program='macs14',
+                                sub_command=bsf.process.Command(program='callpeak')))
+                        # Read RunnableStep options from configuration sections:
+                        # [bsf.analyses.chip_seq.ChIPSeq.macs14_call_peak]
+                        # [bsf.analyses.chip_seq.ChIPSeq.macs14_call_peak.callpeak]
+                        self.set_runnable_step_configuration(runnable_step=runnable_step_macs14_call_peak)
+
+                        runnable_step_macs14_call_peak.add_option_long(
+                            key='treatment',
+                            value=t_file_path_alignment.merged_bam)
+
+                        runnable_step_macs14_call_peak.add_option_long(
+                            key='control',
+                            value=c_file_path_alignment.merged_bam)
+
+                        # MACS14 can hopefully also cope with directories specified in the --name option, but
+                        # the resulting R script has them set too. Hence the R script has to be started
+                        # from the genome_directory. However, the R script needs re-writing anyway, because
+                        # it would be better to use the PNG rather than the PDF device for plotting.
+                        runnable_step_macs14_call_peak.sub_command.add_option_long(
+                            key='name',
+                            value=file_path_peak_calling.name_prefix)
+
+                        # The 'gsize' option has to be specified via the configuration.ini file in section
+                        # [bsf.analyses.chip_seq.ChIPSeq.macs14_call_peak.callpeak].
+                        runnable_step_macs14_call_peak.add_switch_long(key='single-profile')
+                        runnable_step_macs14_call_peak.add_switch_long(key='call-subpeaks')
+                        runnable_step_macs14_call_peak.add_switch_long(key='wig')
+
+                        if factor == 'H3K4ME1':
+                            pass
+                        elif factor == 'H3K4ME2':
+                            pass
+                        elif factor == 'H3K4ME3':
+                            pass  # Default settings from above.
+                        elif factor == 'H3K9ME3':
+                            pass
+                        elif factor == 'H3K27AC':
+                            pass
+                        elif factor == 'H3K27ME1':
+                            pass
+                        elif factor == 'H3K27ME2':
+                            pass
+                        elif factor == 'H3K27ME3':
+                            pass
+                        elif factor == 'H3K36ME3':
+                            # Parameter setting for H3K36me3 according to Nature Protocols (2012)
+                            # Vol.7 No.9 1728-1740 doi:10.1038/nprot.2012.101 Protocol (D)
+                            runnable_step_macs14_call_peak.add_switch_long(key='nomodel')
+                            runnable_step_macs14_call_peak.add_option_long(key='shiftsize', value='73')
+                            runnable_step_macs14_call_peak.add_option_long(key='pvalue', value='1e-3')
+                        elif factor == 'H3K56AC':
+                            pass
+                        elif factor == 'H4K16AC':
+                            pass
+                        elif factor == 'OTHER':
+                            pass
+                        else:
+                            warnings.warn(
+                                'Unable to set MACS14 parameters for unknown factor ' + repr(factor) + '.\n' +
+                                'Please use default factor ' + repr(self.factor_default) +
+                                ' or adjust Python code if necessary.',
+                                UserWarning)
+
+                        # Add a RunnableStep to process MACS14 output.
+
+                        process_macs14 = runnable_peak_calling.add_runnable_step(
+                            runnable_step=bsf.process.RunnableStep(
+                                name='process_macs14',
+                                program='bsf_chipseq_process_macs14.bash'))
+
+                        # Specify the output path as in the macs14 --name option.
+                        process_macs14.arguments.append(prefix_peak_calling)
+                        process_macs14.arguments.append(self.genome_sizes_path)
+
+                        if os.path.exists(file_path_peak_calling.summits_bb):
+                            executable_peak_calling.submit = False
 
             return
 
@@ -1026,148 +1153,27 @@ class ChIPSeq(bsf.Analysis):
         stage_diff_bind = self.get_stage(name=self.stage_name_diff_bind)
 
         run_read_comparisons()
-        # self._create_macs14_jobs()
-        run_create_macs2_jobs()
+
+        if self._macs_version == 1:
+            run_create_macs1_jobs()
+        elif self._macs_version == 2:
+            run_create_macs2_jobs()
+
         run_create_diff_bind_jobs()
 
         return
 
-    def _create_macs14_jobs(self):
-        """Create MACS14 peak caller jobs.
-
-        @return:
-        @rtype:
-        """
-        # TODO: Create the analysis Stage just for the transition to a private function in the run() method.
-        stage_peak_calling = self.get_stage(self.stage_name_peak_calling)
-
-        for comparison_name in sorted(self._comparison_dict):
-            chipseq_comparison = self._comparison_dict[comparison_name]
-            factor = chipseq_comparison.factor.upper()
-            for t_sample in chipseq_comparison.t_samples:
-                t_file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
-                    prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=t_sample.name))
-                for c_sample in chipseq_comparison.c_samples:
-                    c_file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
-                        prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=c_sample.name))
-                    prefix_peak_calling = self.get_prefix_chipseq_peak_calling(
-                        t_sample_name=t_sample.name,
-                        c_sample_name=c_sample.name)
-
-                    file_path_peak_calling = FilePathMacs14(prefix=prefix_peak_calling)
-
-                    runnable_peak_calling = self.add_runnable(
-                        runnable=bsf.Runnable(
-                            name=prefix_peak_calling,
-                            code_module='bsf.runnables.generic',
-                            working_directory=self.genome_directory,
-                            file_path_object=file_path_peak_calling,
-                            debug=self.debug))
-                    executable_peak_calling = self.set_stage_runnable(
-                        stage=stage_peak_calling,
-                        runnable=runnable_peak_calling)
-
-                    # Add a RunnableStep to create the output directory.
-
-                    runnable_peak_calling.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMakeDirectory(
-                            name='make_directory',
-                            directory_path=file_path_peak_calling.output_directory))
-
-                    # Add a RunnableStep for MACS14 call peak.
-
-                    runnable_step_macs14_call_peak = runnable_peak_calling.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStep(
-                            name='macs14_call_peak',
-                            program='macs14',
-                            sub_command=bsf.process.Command(program='callpeak')))
-                    # Read RunnableStep options from configuration sections:
-                    # [bsf.analyses.chip_seq.ChIPSeq.macs14_call_peak]
-                    # [bsf.analyses.chip_seq.ChIPSeq.macs14_call_peak.callpeak]
-                    self.set_runnable_step_configuration(runnable_step=runnable_step_macs14_call_peak)
-
-                    runnable_step_macs14_call_peak.add_option_long(
-                        key='treatment',
-                        value=t_file_path_alignment.merged_bam)
-
-                    runnable_step_macs14_call_peak.add_option_long(
-                        key='control',
-                        value=c_file_path_alignment.merged_bam)
-
-                    # MACS14 can hopefully also cope with directories specified in the --name option, but
-                    # the resulting R script has them set too. Hence the R script has to be started
-                    # from the genome_directory. However, the R script needs re-writing anyway, because
-                    # it would be better to use the PNG rather than the PDF device for plotting.
-                    runnable_step_macs14_call_peak.sub_command.add_option_long(
-                        key='name',
-                        value=file_path_peak_calling.name_prefix)
-
-                    # The 'gsize' option has to be specified via the configuration.ini file in section
-                    # [bsf.analyses.chip_seq.ChIPSeq.macs14_call_peak.callpeak].
-                    runnable_step_macs14_call_peak.add_switch_long(key='single-profile')
-                    runnable_step_macs14_call_peak.add_switch_long(key='call-subpeaks')
-                    runnable_step_macs14_call_peak.add_switch_long(key='wig')
-
-                    if factor == 'H3K4ME1':
-                        pass
-                    elif factor == 'H3K4ME2':
-                        pass
-                    elif factor == 'H3K4ME3':
-                        pass  # Default settings from above.
-                    elif factor == 'H3K9ME3':
-                        pass
-                    elif factor == 'H3K27AC':
-                        pass
-                    elif factor == 'H3K27ME1':
-                        pass
-                    elif factor == 'H3K27ME2':
-                        pass
-                    elif factor == 'H3K27ME3':
-                        pass
-                    elif factor == 'H3K36ME3':
-                        # Parameter setting for H3K36me3 according to Nature Protocols (2012)
-                        # Vol.7 No.9 1728-1740 doi:10.1038/nprot.2012.101 Protocol (D)
-                        runnable_step_macs14_call_peak.add_switch_long(key='nomodel')
-                        runnable_step_macs14_call_peak.add_option_long(key='shiftsize', value='73')
-                        runnable_step_macs14_call_peak.add_option_long(key='pvalue', value='1e-3')
-                    elif factor == 'H3K56AC':
-                        pass
-                    elif factor == 'H4K16AC':
-                        pass
-                    elif factor == 'OTHER':
-                        pass
-                    else:
-                        warnings.warn(
-                            'Unable to set MACS14 parameters for unknown factor ' + repr(factor) + '.\n' +
-                            'Please use default factor ' + repr(self.factor_default) +
-                            ' or adjust Python code if necessary.',
-                            UserWarning)
-
-                    # Add a RunnableStep to process MACS14 output.
-
-                    process_macs14 = runnable_peak_calling.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStep(
-                            name='process_macs14',
-                            program='bsf_chipseq_process_macs14.bash'))
-
-                    # Specify the output path as in the macs14 --name option.
-                    process_macs14.arguments.append(prefix_peak_calling)
-                    process_macs14.arguments.append(self.genome_sizes_path)
-
-                    if os.path.exists(file_path_peak_calling.summits_bb):
-                        executable_peak_calling.submit = False
-
-        return
-
-    def _report_macs14(self):
+    def report(self):
         """Create a C{bsf.analyses.chip_seq.ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
 
         @return:
         @rtype:
         """
 
-        def report_html():
-            """Private function to create a HTML report.
+        # contrast_field_names = ['', 'Group1', 'Members1', 'Group2', 'Members2', 'DB.edgeR']
+
+        def report_html_1():
+            """Private function to create a HTML report for MACS1.
 
             @return:
             @rtype:
@@ -1266,137 +1272,8 @@ class ChIPSeq(bsf.Analysis):
 
             return
 
-        def report_hub():
-            """Private function to create a UCSC Track Hub.
-
-            @return:
-            @rtype:
-            """
-
-            str_list = list()
-            """ @type str_list: list[str | unicode] """
-
-            for comparison_name in sorted(self._comparison_dict):
-                chipseq_comparison = self._comparison_dict[comparison_name]
-                for t_sample in chipseq_comparison.t_samples:
-                    for c_sample in chipseq_comparison.c_samples:
-                        prefix = self.get_prefix_chipseq_peak_calling(
-                            t_sample_name=t_sample.name,
-                            c_sample_name=c_sample.name)
-
-                        # Add UCSC trackDB entries for each treatment/control and absolute/normalised pair.
-
-                        for treatment in (True, False):
-                            if treatment:
-                                state = 'treat'
-                            else:
-                                state = 'control'
-
-                            for absolute in (True, False):
-                                if absolute:
-                                    scaling = 'absolute'
-                                else:
-                                    scaling = 'normalised'
-
-                                #
-                                # Add a UCSC trackDB entry for each bigWig file
-                                #
-                                # Common settings
-                                str_list.append('track ChIP_' + '_'.join((prefix, state, scaling)) + '\n')
-                                str_list.append('type bigWig\n')
-                                str_list.append('shortLabel ChIP_' + '_'.join((prefix, state, scaling)) + '\n')
-                                str_list.append('longLabel ' + scaling.capitalize() +
-                                                ' ChIP-Seq read counts for ' + state + ' of ' +
-                                                t_sample.name + ' versus ' + c_sample.name + '\n')
-                                str_list.append('bigDataUrl ')
-                                str_list.append('/'.join((
-                                    prefix + '_MACS_wiggle', state,
-                                    '_'.join((prefix, state, 'afterfiting', 'all.bw')))) + '\n')
-                                # str_list.append('html ...\n'
-                                if treatment and not absolute:
-                                    str_list.append('visibility full\n')
-                                else:
-                                    str_list.append('visibility hide\n')
-
-                                # Common optional settings
-                                str_list.append('color ' + self.get_colour(factor=chipseq_comparison.factor) + '\n')
-
-                                # bigWig - Signal graphing track settings
-                                str_list.append('graphTypeDefault bar\n')
-                                str_list.append('maxHeightPixels 100:60:20\n')
-                                str_list.append('smoothingWindow off\n')
-                                if absolute:
-                                    # Track with absolute scaling.
-                                    str_list.append('autoScale on\n')
-                                else:
-                                    # Track with relative scaling.
-                                    str_list.append('autoScale off\n')
-                                    str_list.append('viewLimits 0:40\n')
-
-                                str_list.append('\n')
-
-                        #
-                        # Add a UCSC trackDB entry for each bigBed peaks file
-                        #
-                        # Common settings
-                        str_list.append('track Peaks_' + prefix + '\n')
-                        str_list.append('type bigBed\n')
-                        str_list.append('shortLabel Peaks_' + prefix + '\n')
-                        str_list.append('longLabel ChIP-Seq peaks for ' +
-                                        t_sample.name + ' versus ' + c_sample.name + '\n')
-                        str_list.append('bigDataUrl ' + prefix + '_peaks.bb\n')
-                        # str_list.append('html ...\n')
-                        str_list.append('visibility pack\n')
-
-                        # Common optional settings
-                        str_list.append('color ' + self.get_colour(factor=chipseq_comparison.factor) + '\n')
-
-                        str_list.append('\n')
-
-            # Add UCSC trackDB entries for each Bowtie2 BAM file.
-
-            for sample in self.sample_list:
-                file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
-                    prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=sample.name))
-                #
-                # Add a UCSC trackDB entry.
-                #
-                # Common settings
-                str_list.append('track Alignment_' + sample.name + '\n')
-                str_list.append('type bam\n')
-                str_list.append('shortLabel Alignment_' + sample.name + '\n')
-                str_list.append('longLabel Bowtie2 alignment of ' + sample.name + '\n')
-                str_list.append('bigDataUrl ' + file_path_alignment.merged_bam + '\n')
-                # str_list.append('html ...\n')
-                str_list.append('visibility hide\n')
-
-                # Common optional settings
-                # str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
-
-                # bam - Compressed Sequence Alignment track settings.
-
-                str_list.append('\n')
-
-            self.ucsc_hub_to_file(content=str_list)
-
-            return
-
-        report_html()
-        report_hub()
-
-        return
-
-    def report(self):
-        """Create a C{bsf.analyses.chip_seq.ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
-
-        @return:
-        @rtype:
-        """
-
-        # contrast_field_names = ['', 'Group1', 'Members1', 'Group2', 'Members2', 'DB.edgeR']
-
-        def report_html():
-            """Private function to create a HTML report.
+        def report_html_2():
+            """Private function to create a HTML report for MACS2.
 
             @return:
             @rtype:
@@ -1491,7 +1368,7 @@ class ChIPSeq(bsf.Analysis):
             str_list.append('<th>Scatter Plot</th>\n')
             str_list.append('<th>PCA Plot</th>\n')
             str_list.append('<th>Box Plot</th>\n')
-            str_list.append('<th>Differntially Bound Sites</th>\n')
+            str_list.append('<th>Differentially Bound Sites</th>\n')
             str_list.append('</tr>\n')
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
@@ -1644,8 +1521,123 @@ class ChIPSeq(bsf.Analysis):
 
             return
 
-        def report_hub():
-            """Private function to create a UCSC Track Hub.
+        def report_hub_1():
+            """Private function to create a UCSC Track Hub for MACS1.
+
+            @return:
+            @rtype:
+            """
+
+            str_list = list()
+            """ @type str_list: list[str | unicode] """
+
+            for comparison_name in sorted(self._comparison_dict):
+                chipseq_comparison = self._comparison_dict[comparison_name]
+                for t_sample in chipseq_comparison.t_samples:
+                    for c_sample in chipseq_comparison.c_samples:
+                        prefix = self.get_prefix_chipseq_peak_calling(
+                            t_sample_name=t_sample.name,
+                            c_sample_name=c_sample.name)
+
+                        # Add UCSC trackDB entries for each treatment/control and absolute/normalised pair.
+
+                        for treatment in (True, False):
+                            if treatment:
+                                state = 'treat'
+                            else:
+                                state = 'control'
+
+                            for absolute in (True, False):
+                                if absolute:
+                                    scaling = 'absolute'
+                                else:
+                                    scaling = 'normalised'
+
+                                #
+                                # Add a UCSC trackDB entry for each bigWig file
+                                #
+                                # Common settings
+                                str_list.append('track ChIP_' + '_'.join((prefix, state, scaling)) + '\n')
+                                str_list.append('type bigWig\n')
+                                str_list.append('shortLabel ChIP_' + '_'.join((prefix, state, scaling)) + '\n')
+                                str_list.append('longLabel ' + scaling.capitalize() +
+                                                ' ChIP-Seq read counts for ' + state + ' of ' +
+                                                t_sample.name + ' versus ' + c_sample.name + '\n')
+                                str_list.append('bigDataUrl ')
+                                str_list.append('/'.join((
+                                    prefix + '_MACS_wiggle', state,
+                                    '_'.join((prefix, state, 'afterfiting', 'all.bw')))) + '\n')
+                                # str_list.append('html ...\n'
+                                if treatment and not absolute:
+                                    str_list.append('visibility full\n')
+                                else:
+                                    str_list.append('visibility hide\n')
+
+                                # Common optional settings
+                                str_list.append('color ' + self.get_colour(factor=chipseq_comparison.factor) + '\n')
+
+                                # bigWig - Signal graphing track settings
+                                str_list.append('graphTypeDefault bar\n')
+                                str_list.append('maxHeightPixels 100:60:20\n')
+                                str_list.append('smoothingWindow off\n')
+                                if absolute:
+                                    # Track with absolute scaling.
+                                    str_list.append('autoScale on\n')
+                                else:
+                                    # Track with relative scaling.
+                                    str_list.append('autoScale off\n')
+                                    str_list.append('viewLimits 0:40\n')
+
+                                str_list.append('\n')
+
+                        #
+                        # Add a UCSC trackDB entry for each bigBed peaks file
+                        #
+                        # Common settings
+                        str_list.append('track Peaks_' + prefix + '\n')
+                        str_list.append('type bigBed\n')
+                        str_list.append('shortLabel Peaks_' + prefix + '\n')
+                        str_list.append('longLabel ChIP-Seq peaks for ' +
+                                        t_sample.name + ' versus ' + c_sample.name + '\n')
+                        str_list.append('bigDataUrl ' + prefix + '_peaks.bb\n')
+                        # str_list.append('html ...\n')
+                        str_list.append('visibility pack\n')
+
+                        # Common optional settings
+                        str_list.append('color ' + self.get_colour(factor=chipseq_comparison.factor) + '\n')
+
+                        str_list.append('\n')
+
+            # Add UCSC trackDB entries for each Bowtie2 BAM file.
+
+            for sample in self.sample_list:
+                file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
+                    prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=sample.name))
+                #
+                # Add a UCSC trackDB entry.
+                #
+                # Common settings
+                str_list.append('track Alignment_' + sample.name + '\n')
+                str_list.append('type bam\n')
+                str_list.append('shortLabel Alignment_' + sample.name + '\n')
+                str_list.append('longLabel Bowtie2 alignment of ' + sample.name + '\n')
+                str_list.append('bigDataUrl ' + file_path_alignment.merged_bam + '\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility hide\n')
+
+                # Common optional settings
+                # str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
+
+                # bam - Compressed Sequence Alignment track settings.
+
+                str_list.append('\n')
+
+            self.ucsc_hub_to_file(content=str_list)
+
+            return
+
+        def report_hub_2():
+            """Private function to create a UCSC Track Hub for MACS2.
 
             @return:
             @rtype:
@@ -1959,7 +1951,11 @@ class ChIPSeq(bsf.Analysis):
 
             return
 
-        report_html()
-        report_hub()
+        if self._macs_version == 1:
+            report_html_1()
+            report_hub_1()
+        elif self._macs_version == 2:
+            report_html_2()
+            report_hub_2()
 
         return
