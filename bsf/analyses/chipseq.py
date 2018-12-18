@@ -1,4 +1,4 @@
-"""bsf.analyses.chip_seq
+"""bsf.analyses.chipseq
 
 A package of classes and methods supporting ChIP-Seq analyses.
 """
@@ -80,7 +80,7 @@ class ChIPSeqComparison(object):
             treatment=None,
             replicate=None,
             diff_bind=None):
-        """Initialise a C{bsf.analyses.chip_seq.ChIPSeqComparison}.
+        """Initialise a C{bsf.analyses.chipseq.ChIPSeqComparison}.
 
         @param c_name: Control name
         @type c_name: str | None
@@ -158,7 +158,7 @@ class ChIPSeqComparison(object):
 
 class FilePathMacs14(bsf.FilePath):
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.chip_seq.FilePathMacs14} object
+        """Initialise a C{bsf.analyses.chipseq.FilePathMacs14} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -178,7 +178,7 @@ class FilePathMacs14(bsf.FilePath):
 
 class FilePathPeakCalling(bsf.FilePath):
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.chip_seq.FilePathPeakCalling} object
+        """Initialise a C{bsf.analyses.chipseq.FilePathPeakCalling} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -212,7 +212,7 @@ class FilePathPeakCalling(bsf.FilePath):
 
 class FilePathDiffBind(bsf.FilePath):
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.chip_seq.FilePathDiffBind} object
+        """Initialise a C{bsf.analyses.chipseq.FilePathDiffBind} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -234,7 +234,7 @@ class FilePathDiffBind(bsf.FilePath):
 
 class FilePathDiffBindContrast(bsf.FilePath):
     def __init__(self, prefix, group_1, group_2):
-        """Initialise a C{bsf.analyses.chip_seq.FilePathDiffBind} object
+        """Initialise a C{bsf.analyses.chipseq.FilePathDiffBind} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -346,7 +346,7 @@ class ChIPSeqDiffBindSheet(bsf.annotation.AnnotationSheet):
 
 
 class ChIPSeq(bsf.Analysis):
-    """The C{bsf.analyses.chip_seq.ChIPSeq} class represents the logic to run a ChIP-Seq-specific C{bsf.Analysis}.
+    """The C{bsf.analyses.chipseq.ChIPSeq} class represents the logic to run a ChIP-Seq-specific C{bsf.Analysis}.
 
     Attributes:
     @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
@@ -424,7 +424,7 @@ class ChIPSeq(bsf.Analysis):
             colour_default=None,
             colour_dict=None,
             factor_default=None):
-        """Initialise a C{bsf.analyses.chip_seq.ChIPSeq}.
+        """Initialise a C{bsf.analyses.chipseq.ChIPSeq}.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -510,7 +510,7 @@ class ChIPSeq(bsf.Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.chip_seq.ChIPSeq} via a C{bsf.standards.Configuration} section.
+        """Set instance variables of a C{bsf.analyses.chipseq.ChIPSeq} via a C{bsf.standards.Configuration} section.
 
         Instance variables without a configuration option remain unchanged.
 
@@ -579,7 +579,7 @@ class ChIPSeq(bsf.Analysis):
         '0': False, 'no': False, 'false': False, 'off': False}
 
     def run(self):
-        """Run a C{bsf.analyses.chip_seq.ChIPSeq} C{bsf.Analysis}.
+        """Run a C{bsf.analyses.chipseq.ChIPSeq} C{bsf.Analysis}.
 
         @return:
         @rtype:
@@ -785,8 +785,8 @@ class ChIPSeq(bsf.Analysis):
                                 program='macs14',
                                 sub_command=bsf.process.Command(program='callpeak')))
                         # Read RunnableStep options from configuration sections:
-                        # [bsf.analyses.chip_seq.ChIPSeq.macs14_call_peak]
-                        # [bsf.analyses.chip_seq.ChIPSeq.macs14_call_peak.callpeak]
+                        # [bsf.analyses.chipseq.ChIPSeq.macs14_call_peak]
+                        # [bsf.analyses.chipseq.ChIPSeq.macs14_call_peak.callpeak]
                         self.set_runnable_step_configuration(runnable_step=runnable_step_macs14_call_peak)
 
                         runnable_step_macs14_call_peak.add_option_long(
@@ -806,7 +806,7 @@ class ChIPSeq(bsf.Analysis):
                             value=file_path_peak_calling.name_prefix)
 
                         # The 'gsize' option has to be specified via the configuration.ini file in section
-                        # [bsf.analyses.chip_seq.ChIPSeq.macs14_call_peak.callpeak].
+                        # [bsf.analyses.chipseq.ChIPSeq.macs14_call_peak.callpeak].
                         runnable_step_macs14_call_peak.add_switch_long(key='single-profile')
                         runnable_step_macs14_call_peak.add_switch_long(key='call-subpeaks')
                         runnable_step_macs14_call_peak.add_switch_long(key='wig')
@@ -909,8 +909,8 @@ class ChIPSeq(bsf.Analysis):
                                 program='macs2',
                                 sub_command=bsf.process.Command(program='callpeak')))
                         # Read RunnableStep options from configuration sections:
-                        # [bsf.analyses.chip_seq.ChIPSeq.macs2_call_peak]
-                        # [bsf.analyses.chip_seq.ChIPSeq.macs2_call_peak.callpeak]
+                        # [bsf.analyses.chipseq.ChIPSeq.macs2_call_peak]
+                        # [bsf.analyses.chipseq.ChIPSeq.macs2_call_peak.callpeak]
                         self.set_runnable_step_configuration(runnable_step=runnable_step_macs2_call_peak)
 
                         runnable_step_macs2_call_peak.sub_command.add_option_long(
@@ -930,7 +930,7 @@ class ChIPSeq(bsf.Analysis):
                             value=file_path_peak_calling.name_prefix)
 
                         # The 'gsize' option has to be specified via the configuration.ini file in section
-                        # [bsf.analyses.chip_seq.ChIPSeq.macs2_call_peak.callpeak].
+                        # [bsf.analyses.chipseq.ChIPSeq.macs2_call_peak.callpeak].
                         runnable_step_macs2_call_peak.sub_command.add_switch_long(key='bdg')
                         runnable_step_macs2_call_peak.sub_command.add_switch_long(key='SPMR')
 
@@ -980,8 +980,8 @@ class ChIPSeq(bsf.Analysis):
                                 program='macs2',
                                 sub_command=bsf.process.Command(program='bdgcmp')))
                         # Read RunnableStep options from configuration sections:
-                        # [bsf.analyses.chip_seq.ChIPSeq.macs2_bdg_cmp]
-                        # [bsf.analyses.chip_seq.ChIPSeq.macs2_bdg_cmp.bdgcmp]
+                        # [bsf.analyses.chipseq.ChIPSeq.macs2_bdg_cmp]
+                        # [bsf.analyses.chipseq.ChIPSeq.macs2_bdg_cmp.bdgcmp]
                         self.set_runnable_step_configuration(runnable_step=runnable_step_macs2_bdg_cmp)
 
                         runnable_step_macs2_bdg_cmp.sub_command.add_option_long(
@@ -1164,7 +1164,7 @@ class ChIPSeq(bsf.Analysis):
         return
 
     def report(self):
-        """Create a C{bsf.analyses.chip_seq.ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
+        """Create a C{bsf.analyses.chipseq.ChIPSeq} report in HTML format and a UCSC Genome Browser Track Hub.
 
         @return:
         @rtype:
@@ -1186,7 +1186,7 @@ class ChIPSeq(bsf.Analysis):
             str_list = list()
             """ @type str_list: list[str | unicode] """
 
-            str_list.append('<h1 id="chip_seq_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+            str_list.append('<h1 id="chipseq_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
 
             str_list.append('<p>\n')
@@ -1286,7 +1286,7 @@ class ChIPSeq(bsf.Analysis):
             str_list = list()
             """ @type str_list: list[str | unicode] """
 
-            str_list.append('<h1 id="chip_seq_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+            str_list.append('<h1 id="chipseq_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
             str_list.append('\n')
 
             str_list.append('<p>\n')

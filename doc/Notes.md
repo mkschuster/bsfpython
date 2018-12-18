@@ -154,7 +154,7 @@ bsf.ngs.Pool
 
 Would a new bsf.ngs.Pool object make sense for bsf.ngs.Sample objects that have run
 on more than one lane and represent sequencing replicates. For the moment, a solution to
-merge two samples is implemented in the bsf.analyses.chip_seq.ChIPSeq class.
+merge two samples is implemented in the bsf.analyses.chipseq.ChIPSeq class.
 
 
 ## RNA-Seq Pipeline:
