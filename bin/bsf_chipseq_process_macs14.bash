@@ -26,7 +26,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-if [ -z "${LANG}" ]; then
+if [[ -z "${LANG}" ]]; then
     declare -x LANG='C'
 else
     LANG='C'

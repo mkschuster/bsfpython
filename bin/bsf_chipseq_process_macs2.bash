@@ -26,7 +26,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 
-if [ -z "${LANG}" ]; then
+if [[ -z "${LANG}" ]]; then
     declare -x LANG='C'
 else
     LANG='C'
@@ -45,7 +45,7 @@ declare chromosome_sizes="${2}"
 
 # Create a temporary directory for sorting as the default one may not be big enough.
 
-if [ -d "${prefix}_temporary" ]; then
+if [[ -d "${prefix}_temporary" ]]; then
     # Rely on the temporary directory created by the bsf.process.Runnable.
     declare -x TMPDIR="${prefix}_temporary";
 else
@@ -70,7 +70,7 @@ fi
 declare -a suffixes=('control_lambda' 'treat_pileup' 'bdgcmp' 'treat_pvalue');
 
 for suffix in "${suffixes[@]}"; do
-    if [ -f "${prefix}/${prefix}_${suffix}.bdg" ] && [ ! -s "${prefix}/${prefix}_${suffix}.bw" ]; then
+    if [[ -f "${prefix}/${prefix}_${suffix}.bdg" ]] && [[ ! -s "${prefix}/${prefix}_${suffix}.bw" ]]; then
         echo "$(date) bedGraphToBigWig: ${prefix}_${suffix}.bdg" || exit 1;
         # echo "$(date) bedGraphToBigWig: ${prefix}_${suffix}.bdg" 1>&2 || exit 1;
 
@@ -98,7 +98,7 @@ done
 # prefix_summits.bed
 # prefix_peaks.narrowPeak  Linked to prefix_narrow_peaks.bed symbolically.
 
-if [ -f "${prefix}/${prefix}_peaks.narrowPeak" ] && [ ! -h "${prefix}/${prefix}_narrow_peaks.bed" ]; then
+if [[-f "${prefix}/${prefix}_peaks.narrowPeak" ]] && [[ ! -h "${prefix}/${prefix}_narrow_peaks.bed" ]]; then
     cd "${prefix}" || exit 1;
     ln -s \
         "${prefix}_peaks.narrowPeak" \
@@ -123,7 +123,7 @@ fi
 declare -a suffixes=('peaks' 'summits' 'narrow_peaks');
 
 for suffix in "${suffixes[@]}"; do
-    if [ -f "${prefix}/${prefix}_${suffix}.bed" ] && [ ! -s "${prefix}/${prefix}_${suffix}.bb" ]; then
+    if [[ -f "${prefix}/${prefix}_${suffix}.bed" ]] && [[ ! -s "${prefix}/${prefix}_${suffix}.bb" ]]; then
         echo "$(date) bedToBigBed: ${prefix}_${suffix}.bed" || exit 1;
         # echo "$(date) bedToBigBed: ${prefix}_${suffix}.bed" 1>&2 || exit 1;
 
@@ -136,7 +136,7 @@ for suffix in "${suffixes[@]}"; do
 
         declare cl='';
         cl+='bedToBigBed';
-        if [ "${suffix}" == 'narrow_peaks' ]; then
+        if [[ "${suffix}" == 'narrow_peaks' ]]; then
             cl+=' -type=bed6+4';
         fi
         cl+=" ${prefix}/${prefix}_${suffix}_clipped.bed";
@@ -148,6 +148,6 @@ for suffix in "${suffixes[@]}"; do
     fi
 done
 
-if [ -d "${temporary_directory}" ]; then
+if [[ -d "${temporary_directory}" ]]; then
     rm -R "${temporary_directory}" || exit 1;
 fi
