@@ -353,10 +353,6 @@ class ChIPSeq(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_peak_calling: C{bsf.Stage.name} for the peak calling stage
-    @type stage_name_peak_calling: str
-    @cvar stage_name_diff_bind: C{bsf.Stage.name} for the peak calling stage
-    @type stage_name_diff_bind: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
     @ivar comparison_path: Comparison file path
@@ -376,8 +372,23 @@ class ChIPSeq(bsf.Analysis):
     name = 'ChIP-seq Analysis'
     prefix = 'chipseq'
 
-    stage_name_peak_calling = '_'.join((prefix, 'peak_calling'))
-    stage_name_diff_bind = '_'.join((prefix, 'diff_bind'))
+    @classmethod
+    def get_stage_name_peak_calling(cls):
+        """Get a Python C{str} for a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'peak_calling'))
+
+    @classmethod
+    def get_stage_name_diff_bind(cls):
+        """Get a Python C{str} for a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'diff_bind'))
 
     @classmethod
     def get_prefix_chipseq_peak_calling(cls, t_sample_name, c_sample_name):
@@ -390,7 +401,7 @@ class ChIPSeq(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return cls.stage_name_peak_calling + '_' + t_sample_name + '__' + c_sample_name
+        return cls.get_stage_name_peak_calling() + '_' + t_sample_name + '__' + c_sample_name
 
     @classmethod
     def get_prefix_diff_bind(cls, factor_name):
@@ -401,7 +412,7 @@ class ChIPSeq(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_diff_bind, factor_name))
+        return '_'.join((cls.get_stage_name_diff_bind(), factor_name))
 
     def __init__(
             self,
@@ -748,11 +759,11 @@ class ChIPSeq(bsf.Analysis):
                 chipseq_comparison = self._comparison_dict[comparison_name]
                 factor = chipseq_comparison.factor.upper()
                 for t_sample in chipseq_comparison.t_samples:
-                    t_file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
-                        prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=t_sample.name))
+                    t_file_path_alignment = bsf.analyses.bowtie.FilePathSample(
+                        prefix=bsf.analyses.bowtie.Aligner.get_prefix_sample(sample_name=t_sample.name))
                     for c_sample in chipseq_comparison.c_samples:
-                        c_file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
-                            prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=c_sample.name))
+                        c_file_path_alignment = bsf.analyses.bowtie.FilePathSample(
+                            prefix=bsf.analyses.bowtie.Aligner.get_prefix_sample(sample_name=c_sample.name))
                         prefix_peak_calling = self.get_prefix_chipseq_peak_calling(
                             t_sample_name=t_sample.name,
                             c_sample_name=c_sample.name)
@@ -872,11 +883,11 @@ class ChIPSeq(bsf.Analysis):
                 chipseq_comparison = self._comparison_dict[comparison_name]
                 factor = chipseq_comparison.factor.upper()
                 for t_sample in chipseq_comparison.t_samples:
-                    t_file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
-                        prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=t_sample.name))
+                    t_file_path_alignment = bsf.analyses.bowtie.FilePathSample(
+                        prefix=bsf.analyses.bowtie.Aligner.get_prefix_sample(sample_name=t_sample.name))
                     for c_sample in chipseq_comparison.c_samples:
-                        c_file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
-                            prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=c_sample.name))
+                        c_file_path_alignment = bsf.analyses.bowtie.FilePathSample(
+                            prefix=bsf.analyses.bowtie.Aligner.get_prefix_sample(sample_name=c_sample.name))
                         prefix_peak_calling = self.get_prefix_chipseq_peak_calling(
                             t_sample_name=t_sample.name,
                             c_sample_name=c_sample.name)
@@ -1068,11 +1079,11 @@ class ChIPSeq(bsf.Analysis):
                     if not chipseq_comparison.diff_bind:
                         continue
                     for t_sample in chipseq_comparison.t_samples:
-                        t_file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
-                            prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=t_sample.name))
+                        t_file_path_alignment = bsf.analyses.bowtie.FilePathSample(
+                            prefix=bsf.analyses.bowtie.Aligner.get_prefix_sample(sample_name=t_sample.name))
                         for c_sample in chipseq_comparison.c_samples:
-                            c_file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
-                                prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=c_sample.name))
+                            c_file_path_alignment = bsf.analyses.bowtie.FilePathSample(
+                                prefix=bsf.analyses.bowtie.Aligner.get_prefix_sample(sample_name=c_sample.name))
 
                             # Get prefix and FilePath object for the peak calls.
                             prefix_peak_calling = self.get_prefix_chipseq_peak_calling(
@@ -1149,8 +1160,8 @@ class ChIPSeq(bsf.Analysis):
             self.genome_sizes_path = bsf.standards.FilePath.get_resource_genome_fasta_index(
                 genome_version=self.genome_version)
 
-        stage_peak_calling = self.get_stage(name=self.stage_name_peak_calling)
-        stage_diff_bind = self.get_stage(name=self.stage_name_diff_bind)
+        stage_peak_calling = self.get_stage(name=self.get_stage_name_peak_calling())
+        stage_diff_bind = self.get_stage(name=self.get_stage_name_diff_bind())
 
         run_read_comparisons()
 
@@ -1611,8 +1622,8 @@ class ChIPSeq(bsf.Analysis):
             # Add UCSC trackDB entries for each Bowtie2 BAM file.
 
             for sample in self.sample_list:
-                file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
-                    prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=sample.name))
+                file_path_alignment = bsf.analyses.bowtie.FilePathSample(
+                    prefix=bsf.analyses.bowtie.Aligner.get_prefix_sample(sample_name=sample.name))
                 #
                 # Add a UCSC trackDB entry.
                 #
@@ -1924,8 +1935,8 @@ class ChIPSeq(bsf.Analysis):
             # Add UCSC trackDB entries for each Bowtie2 BAM file.
 
             for sample in self.sample_list:
-                file_path_alignment = bsf.analyses.bowtie.FilePathMerge(
-                    prefix=bsf.analyses.bowtie.Aligner.get_prefix_merge(sample_name=sample.name))
+                file_path_alignment = bsf.analyses.bowtie.FilePathSample(
+                    prefix=bsf.analyses.bowtie.Aligner.get_prefix_sample(sample_name=sample.name))
                 #
                 # Add a UCSC trackDB entry for each NAME.bam file.
                 #
