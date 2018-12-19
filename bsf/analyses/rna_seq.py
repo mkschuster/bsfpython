@@ -393,26 +393,6 @@ class Tuxedo(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_run_tophat: C{bsf.Stage.name} for the run Tophat stage
-    @type stage_name_run_tophat: str
-    @cvar stage_name_process_tophat: C{bsf.Stage.name} for the process Tophat stage
-    @type stage_name_process_tophat: str
-    @cvar stage_name_run_cufflinks: C{bsf.Stage.name} for the run Cufflinks stage
-    @type stage_name_run_cufflinks: str
-    @cvar stage_name_process_cufflinks: C{bsf.Stage.name} for the process Cufflinks stage
-    @type stage_name_process_cufflinks: str
-    @cvar stage_name_run_cuffmerge: C{bsf.Stage.name} for the Cuffmerge stage
-    @type stage_name_run_cuffmerge: str
-    @cvar stage_name_run_cuffquant: C{bsf.Stage.name} for the Cuffquant stage
-    @type stage_name_run_cuffquant: str
-    @cvar stage_name_run_cuffnorm: C{bsf.Stage.name} for the Cuffnorm stage
-    @type stage_name_run_cuffnorm: str
-    @cvar stage_name_run_cuffdiff: C{bsf.Stage.name} for the Cuffdiff stage
-    @type stage_name_run_cuffdiff: str
-    @cvar stage_name_process_cuffdiff: C{bsf.Stage.name} for the process Cuffdiff stage
-    @type stage_name_process_cuffdiff: str
-    @cvar stage_name_monocle: C{bsf.Stage.name} for the Monocle stage
-    @type stage_name_monocle: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool | None
     @ivar comparison_path: Comparison file path
@@ -446,18 +426,98 @@ class Tuxedo(bsf.Analysis):
     prefix = 'rnaseq'
 
     # Replicate stage
-    stage_name_run_tophat = '_'.join((prefix, 'run_tophat'))
-    stage_name_process_tophat = '_'.join((prefix, 'process_tophat'))
-    stage_name_run_cufflinks = '_'.join((prefix, 'run_cufflinks'))
-    stage_name_process_cufflinks = '_'.join((prefix, 'process_cufflinks'))
+
+    @classmethod
+    def get_stage_name_run_tophat(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'run_tophat'))
+
+    @classmethod
+    def get_stage_name_process_tophat(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'process_tophat'))
+
+    @classmethod
+    def get_stage_name_run_cufflinks(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'run_cufflinks'))
+
+    @classmethod
+    def get_stage_name_process_cufflinks(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'process_cufflinks'))
 
     # Comparison stage
-    stage_name_run_cuffmerge = '_'.join((prefix, 'cuffmerge'))
-    stage_name_run_cuffquant = '_'.join((prefix, 'cuffquant'))
-    stage_name_run_cuffnorm = '_'.join((prefix, 'cuffnorm'))
-    stage_name_run_cuffdiff = '_'.join((prefix, 'cuffdiff'))
-    stage_name_process_cuffdiff = '_'.join((prefix, 'process_cuffdiff'))
-    stage_name_monocle = '_'.join((prefix, 'monocle'))
+
+    @classmethod
+    def get_stage_name_run_cuffmerge(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'cuffmerge'))
+
+    @classmethod
+    def get_stage_name_run_cuffquant(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'cuffquant'))
+
+    @classmethod
+    def get_stage_name_run_cuffnorm(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'cuffnorm'))
+
+    @classmethod
+    def get_stage_name_run_cuffdiff(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'cuffdiff'))
+
+    @classmethod
+    def get_stage_name_process_cuffdiff(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'process_cuffdiff'))
+
+    @classmethod
+    def get_stage_name_monocle(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'monocle'))
 
     @classmethod
     def get_prefix_rnaseq_run_tophat(cls, paired_reads_name):
@@ -468,7 +528,40 @@ class Tuxedo(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_run_tophat, paired_reads_name))
+        return '_'.join((cls.get_stage_name_run_tophat(), paired_reads_name))
+
+    @classmethod
+    def get_prefix_rnaseq_process_tophat(cls, paired_reads_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param paired_reads_name: PairedReads name
+        @type paired_reads_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_process_tophat(), paired_reads_name))
+
+    @classmethod
+    def get_prefix_rnaseq_run_cufflinks(cls, paired_reads_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param paired_reads_name: PairedReads name
+        @type paired_reads_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_run_cufflinks(), paired_reads_name))
+
+    @classmethod
+    def get_prefix_rnaseq_process_cufflinks(cls, paired_reads_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param paired_reads_name: PairedReads name
+        @type paired_reads_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_process_cufflinks(), paired_reads_name))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffmerge(cls, comparison_name):
@@ -479,7 +572,7 @@ class Tuxedo(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_run_cuffmerge, comparison_name))
+        return '_'.join((cls.get_stage_name_run_cuffmerge(), comparison_name))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffquant(cls, comparison_name):
@@ -490,7 +583,7 @@ class Tuxedo(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_run_cuffquant, comparison_name))
+        return '_'.join((cls.get_stage_name_run_cuffquant(), comparison_name))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffnorm(cls, comparison_name):
@@ -501,7 +594,7 @@ class Tuxedo(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_run_cuffnorm, comparison_name))
+        return '_'.join((cls.get_stage_name_run_cuffnorm(), comparison_name))
 
     @classmethod
     def get_prefix_rnaseq_run_cuffdiff(cls, comparison_name):
@@ -512,7 +605,7 @@ class Tuxedo(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_run_cuffdiff, comparison_name))
+        return '_'.join((cls.get_stage_name_run_cuffdiff(), comparison_name))
 
     @classmethod
     def get_prefix_rnaseq_process_cuffdiff(cls, comparison_name):
@@ -523,7 +616,7 @@ class Tuxedo(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_process_cuffdiff, comparison_name))
+        return '_'.join((cls.get_stage_name_process_cuffdiff(), comparison_name))
 
     @classmethod
     def get_prefix_rnaseq_monocle(cls, comparison_name):
@@ -534,7 +627,7 @@ class Tuxedo(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_monocle, comparison_name))
+        return '_'.join((cls.get_stage_name_monocle(), comparison_name))
 
     def __init__(
             self,
@@ -1078,16 +1171,16 @@ class Tuxedo(bsf.Analysis):
         config_parser = self.configuration.config_parser
         config_section = self.configuration.section_from_instance(self)
 
-        stage_run_tophat = self.get_stage(name=self.stage_name_run_tophat)
-        stage_process_tophat = self.get_stage(name=self.stage_name_process_tophat)
-        stage_run_cufflinks = self.get_stage(name=self.stage_name_run_cufflinks)
-        stage_process_cufflinks = self.get_stage(name=self.stage_name_process_cufflinks)
-        stage_run_cuffmerge = self.get_stage(name=self.stage_name_run_cuffmerge)
-        stage_run_cuffquant = self.get_stage(name=self.stage_name_run_cuffquant)
-        stage_run_cuffnorm = self.get_stage(name=self.stage_name_run_cuffnorm)
-        stage_run_cuffdiff = self.get_stage(name=self.stage_name_run_cuffdiff)
-        stage_process_cuffdiff = self.get_stage(name=self.stage_name_process_cuffdiff)
-        # stage_monocle = self.get_stage(name=self.stage_name_monocle)
+        stage_run_tophat = self.get_stage(name=self.get_stage_name_run_tophat())
+        stage_process_tophat = self.get_stage(name=self.get_stage_name_process_tophat())
+        stage_run_cufflinks = self.get_stage(name=self.get_stage_name_run_cufflinks())
+        stage_process_cufflinks = self.get_stage(name=self.get_stage_name_process_cufflinks())
+        stage_run_cuffmerge = self.get_stage(name=self.get_stage_name_run_cuffmerge())
+        stage_run_cuffquant = self.get_stage(name=self.get_stage_name_run_cuffquant())
+        stage_run_cuffnorm = self.get_stage(name=self.get_stage_name_run_cuffnorm())
+        stage_run_cuffdiff = self.get_stage(name=self.get_stage_name_run_cuffdiff())
+        stage_process_cuffdiff = self.get_stage(name=self.get_stage_name_process_cuffdiff())
+        # stage_monocle = self.get_stage(name=self.get_stage_name_monocle())
 
         runnable_run_cufflinks_list = list()
         """ @type runnable_run_cufflinks_list: list[Runnable] """
@@ -1722,8 +1815,8 @@ class Tuxedo(bsf.Analysis):
 
                         # Wait for each Cufflinks PairedReads to finish, before Cuffmerge can run.
 
-                        executable_run_cuffmerge.dependencies.append(
-                            '_'.join((self.stage_name_run_cufflinks, paired_reads_name)))
+                        executable_run_cuffmerge.dependencies.append(self.get_prefix_rnaseq_run_cufflinks(
+                            paired_reads_name=paired_reads_name))
 
                         # Create a Cuffquant Runnable per comparison (comparison_name) and
                         # PairedReads (paired_reads_name) on the basis of the Cuffmerge GTF file.
@@ -3255,10 +3348,6 @@ class DESeq(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_analysis: C{bsf.Stage.name} for the DESeq analysis stage
-    @type stage_name_analysis: str
-    @cvar stage_name_results: C{bsf.Stage.name} for the DESeq results stage
-    @type stage_name_results: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
     @ivar comparison_path: Comparison file path
@@ -3278,9 +3367,23 @@ class DESeq(bsf.Analysis):
     name = 'DESeq RNA-seq Analysis'
     prefix = '_'.join(('rnaseq', 'deseq'))
 
-    # DESeq analysis stage
-    stage_name_analysis = '_'.join((prefix, 'analysis'))
-    stage_name_results = '_'.join((prefix, 'results'))
+    @classmethod
+    def get_stage_name_analysis(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'analysis'))
+
+    @classmethod
+    def get_stage_name_results(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'results'))
 
     def __init__(
             self,
@@ -3567,9 +3670,9 @@ class DESeq(bsf.Analysis):
 
                 row_dict = {
                     'sample': sample.name,
-                    'bam_path': bsf.analyses.star_aligner.StarAligner.get_prefix_star_aligner_merge(
+                    'bam_path': bsf.analyses.star_aligner.StarAligner.get_prefix_merge(
                         sample_name=sample.name) + '.bam',
-                    'bai_path': bsf.analyses.star_aligner.StarAligner.get_prefix_star_aligner_merge(
+                    'bai_path': bsf.analyses.star_aligner.StarAligner.get_prefix_merge(
                         sample_name=sample.name) + '.bai',
                 }
                 """ @type row_dict: dict[str, str | unicode] """

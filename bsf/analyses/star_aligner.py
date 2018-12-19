@@ -44,43 +44,113 @@ import bsf.standards
 
 
 class FilePathStarAlign(bsf.FilePath):
+    """The C{bsf.analyses.star_aligner.FilePathStarAlign} class models file paths at the alignment stage.
+
+    Attributes:
+    @ivar aligned_sam: Aligned sequence alignment map (SAM) file path
+    @type aligned_sam: str | unicode
+    @ivar splice_junctions_tsv: Splice junctions tab-separated value (TSV) file path
+    @type splice_junctions_tsv: str | unicode
+    """
+
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.star_aligner.FilePathStarAlign} object
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathStarAlign, self).__init__(prefix=prefix)
 
         self.aligned_sam = prefix + '_Aligned.out.sam'
+
         self.splice_junctions_tsv = prefix + '_SJ.out.tab'
 
         return
 
 
 class FilePathStarIndex(bsf.FilePath):
+    """The C{bsf.analyses.star_aligner.FilePathStarIndex} class models file paths at the indexing stage.
+
+    Attributes:
+    @ivar cleaned_sam: Cleaned sequence alignment map (SAM) file path
+    @type cleaned_sam: str | unicode
+    @ivar aligned_bai: Aligned binary alignment map index (BAI) file path
+    @type aligned_bai: str | unicode
+    @ivar aligned_bam: Aligned binary alignment map (BAM) file path
+    @type aligned_bam: str | unicode
+    @ivar aligned_md5: Aligned binary alignment map (BAM) file path
+    @type aligned_md5: str | unicode
+    """
+
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.star_aligner.FilePathStarIndex} object
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathStarIndex, self).__init__(prefix=prefix)
 
-        self.aligned_bam = prefix + '_Aligned.bam'
-        self.aligned_bai = prefix + '_Aligned.bai'
-        self.aligned_md5 = prefix + '_Aligned.bam.md5'
         self.cleaned_sam = prefix + '_Cleaned.sam'
+
+        self.aligned_bai = prefix + '_Aligned.bai'
+        self.aligned_bam = prefix + '_Aligned.bam'
+        self.aligned_md5 = prefix + '_Aligned.bam.md5'
 
         return
 
 
 class FilePathStarMerge(bsf.FilePath):
+    """The C{bsf.analyses.star_aligner.FilePathStarMerge} class models file paths at the merging stage.
+
+    Attributes:
+    @ivar merged_bai: Merged binary alignment map index (BAI) file path
+    @type merged_bai: str | unicode
+    @ivar merged_bam: Merged binary alignment map (BAM) file path
+    @type merged_bam: str | unicode
+    @ivar merged_lnk: Symbolic link for the merged binary alignment map (BAM) file path
+    @type merged_lnk: str | unicode
+    @ivar merged_md5: Merged binary alignment map (BAM) file path
+    @type merged_md5: str | unicode
+    """
+
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.star_aligner.FilePathStarMerge} object
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathStarMerge, self).__init__(prefix=prefix)
 
-        self.merged_bam = prefix + '.bam'
         self.merged_bai = prefix + '.bai'
+        self.merged_bam = prefix + '.bam'
         self.merged_lnk = prefix + '.bam.bai'
         self.merged_md5 = prefix + '.bam.md5'
-        self.merged_tsv = prefix + '.tsv'
-        self.merged_pdf = prefix + '.pdf'
+        # self.merged_tsv = prefix + '.tsv'
+        # self.merged_pdf = prefix + '.pdf'
 
         return
 
 
 class FilePathStarSummary(bsf.FilePath):
+    """The C{bsf.analyses.star_aligner.FilePathStarSummary} class models file paths at the summary stage.
+
+    Attributes:
+    """
+
     def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.star_aligner.FilePathStarSummary} object
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype
+        """
         super(FilePathStarSummary, self).__init__(prefix=prefix)
 
         self.read_group_to_sample_tsv = prefix + '_read_group_to_sample.tsv'
@@ -118,14 +188,6 @@ class StarAligner(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_align: C{bsf.Stage.name} for the alignment stage
-    @type stage_name_align: str
-    @cvar stage_name_index: C{bsf.Stage.name} for the indexing stage
-    @type stage_name_index: str
-    @cvar stage_name_merge: C{bsf.Stage.name} for the merging stage
-    @type stage_name_merge: str
-    @cvar stage_name_summary: C{bsf.Stage.name} for the summary stage
-    @type stage_name_summary: str
     @ivar replicate_grouping: Group all replicates into a single STAR process
     @type replicate_grouping: bool | None
     @ivar index_directory: Genome directory with STAR indices
@@ -143,13 +205,44 @@ class StarAligner(bsf.Analysis):
     name = 'STAR Aligner Analysis'
     prefix = 'star_aligner'
 
-    stage_name_align = '_'.join((prefix, 'align'))
-    stage_name_index = '_'.join((prefix, 'index'))
-    stage_name_merge = '_'.join((prefix, 'merge'))
-    stage_name_summary = '_'.join((prefix, 'summary'))
+    @classmethod
+    def get_stage_name_align(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'align'))
 
     @classmethod
-    def get_prefix_star_aligner_align(cls, paired_reads_name):
+    def get_stage_name_index(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'index'))
+
+    @classmethod
+    def get_stage_name_merge(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'merge'))
+
+    @classmethod
+    def get_stage_name_summary(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'summary'))
+
+    @classmethod
+    def get_prefix_align(cls, paired_reads_name):
         """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
         @param paired_reads_name: Replicate key
@@ -157,10 +250,10 @@ class StarAligner(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_align, paired_reads_name))
+        return '_'.join((cls.get_stage_name_align(), paired_reads_name))
 
     @classmethod
-    def get_prefix_star_aligner_index(cls, paired_reads_name):
+    def get_prefix_index(cls, paired_reads_name):
         """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
         @param paired_reads_name: Replicate key
@@ -168,10 +261,10 @@ class StarAligner(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_index, paired_reads_name))
+        return '_'.join((cls.get_stage_name_index(), paired_reads_name))
 
     @classmethod
-    def get_prefix_star_aligner_merge(cls, sample_name):
+    def get_prefix_merge(cls, sample_name):
         """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
         @param sample_name: Sample name
@@ -179,18 +272,16 @@ class StarAligner(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_merge, sample_name))
+        return '_'.join((cls.get_stage_name_merge(), sample_name))
 
     @classmethod
-    def get_prefix_star_aligner_summary(cls, sample_name):
+    def get_prefix_summary(cls):
         """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
 
-        @param sample_name: Sample name
-        @type sample_name: str
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_summary, sample_name))
+        return cls.get_stage_name_summary()
 
     def __init__(
             self,
@@ -396,10 +487,10 @@ class StarAligner(bsf.Analysis):
 
         run_read_comparisons()
 
-        stage_align = self.get_stage(name=self.stage_name_align)
-        stage_index = self.get_stage(name=self.stage_name_index)
-        stage_merge = self.get_stage(name=self.stage_name_merge)
-        stage_summary = self.get_stage(name=self.stage_name_summary)
+        stage_align = self.get_stage(name=self.get_stage_name_align())
+        stage_index = self.get_stage(name=self.get_stage_name_index())
+        stage_merge = self.get_stage(name=self.get_stage_name_merge())
+        stage_summary = self.get_stage(name=self.get_stage_name_summary())
 
         prefix_summary = stage_summary.name
 
@@ -549,14 +640,26 @@ class StarAligner(bsf.Analysis):
                             picard_classpath=self.classpath_picard,
                             picard_command='CleanSam'))
                     """ @type runnable_step: bsf.process.RunnableStepPicard """
+                    # INPUT []
                     runnable_step.add_picard_option(key='INPUT', value=file_path_align.aligned_sam)
+                    # OUTPUT []
                     runnable_step.add_picard_option(key='OUTPUT', value=file_path_index.cleaned_sam)
+                    # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
                         value=runnable_index.get_relative_temporary_directory_path)
+                    # VERBOSITY [INFO]
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                    runnable_step.add_picard_option(key='QUIET', value='false')
-                    runnable_step.add_picard_option(key='VALIDATION_STRINGENCY', value='STRICT')
+                    # QUIET [false]
+                    # VALIDATION_STRINGENCY [STRICT]
+                    # COMPRESSION_LEVEL [5]
+                    # MAX_RECORDS_IN_RAM [500000]
+                    # CREATE_INDEX [false]
+                    # CREATE_MD5_FILE [false]
+                    # REFERENCE_SEQUENCE [null]
+                    # GA4GH_CLIENT_SECRETS [client_secrets.json]
+                    # USE_JDK_DEFLATER [false]
+                    # USE_JDK_INFLATER [false]
 
                     runnable_step = runnable_index.add_runnable_step(
                         runnable_step=bsf.process.RunnableStepPicard(
@@ -567,19 +670,32 @@ class StarAligner(bsf.Analysis):
                             picard_classpath=self.classpath_picard,
                             picard_command='SortSam'))
                     """ @type runnable_step: bsf.process.RunnableStepPicard """
+                    # INPUT []
                     runnable_step.add_picard_option(key='INPUT', value=file_path_index.cleaned_sam)
+                    # OUTPUT []
                     runnable_step.add_picard_option(key='OUTPUT', value=file_path_index.aligned_bam)
+                    # SORT_ORDER []
                     runnable_step.add_picard_option(key='SORT_ORDER', value='coordinate')
+                    # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
                         value=runnable_index.get_relative_temporary_directory_path)
+                    # VERBOSITY [INFO]
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                    runnable_step.add_picard_option(key='QUIET', value='false')
-                    runnable_step.add_picard_option(key='VALIDATION_STRINGENCY', value='STRICT')
+                    # QUIET [false]
+                    # VALIDATION_STRINGENCY [STRICT]
+                    # COMPRESSION_LEVEL [5]
                     runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+                    # MAX_RECORDS_IN_RAM [500000]
                     runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+                    # CREATE_INDEX [false]
                     runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
+                    # CREATE_MD5_FILE [false]
                     runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+                    # REFERENCE_SEQUENCE [null]
+                    # GA4GH_CLIENT_SECRETS [client_secrets.json]
+                    # USE_JDK_DEFLATER [false]
+                    # USE_JDK_INFLATER [false]
 
                     # Run GNU Zip over the rather large splice junction table.
 
@@ -649,6 +765,7 @@ class StarAligner(bsf.Analysis):
                         picard_classpath=self.classpath_picard,
                         picard_command='MergeSamFiles'))
                 """ @type runnable_step: bsf.process.RunnableStepPicard """
+                # INPUT []
                 for runnable_index in runnable_index_list:
                     file_path_index = runnable_index.file_path_object
                     """ @type file_path_index: FilePathStarIndex """
@@ -656,19 +773,35 @@ class StarAligner(bsf.Analysis):
                     runnable_step.obsolete_file_path_list.append(file_path_index.aligned_bai)
                     runnable_step.obsolete_file_path_list.append(file_path_index.aligned_md5)
                     runnable_step.add_picard_option(key='INPUT', value=file_path_index.aligned_bam, override=True)
-
+                    # OUTPUT []
                 runnable_step.add_picard_option(key='OUTPUT', value=file_path_merge.merged_bam)
-                runnable_step.add_picard_option(key='SORT_ORDER', value='coordinate')
+                # SORT_ORDER [coordinate]
+                # ASSUME_SORTED [false]
+                # MERGE_SEQUENCE_DICTIONARIES [false]
+                # USE_THREADING [false]
+                runnable_step.add_picard_option(key='USE_THREADING', value='true')
+                # COMMENT [null]
+                # INTERVALS [null]
+                # TMP_DIR [null]
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
                     value=runnable_merge.get_relative_temporary_directory_path)
+                # VERBOSITY [INFO]
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                runnable_step.add_picard_option(key='QUIET', value='false')
-                runnable_step.add_picard_option(key='VALIDATION_STRINGENCY', value='STRICT')
+                # QUIET [false]
+                # VALIDATION_STRINGENCY [STRICT]
+                # COMPRESSION_LEVEL [5]
                 runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+                # MAX_RECORDS_IN_RAM [500000]
                 runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+                # CREATE_INDEX [false]
                 runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
+                # CREATE_MD5_FILE [false]
                 runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+                # REFERENCE_SEQUENCE [null]
+                # GA4GH_CLIENT_SECRETS [client_secrets.json]
+                # USE_JDK_DEFLATER [false]
+                # USE_JDK_INFLATER [false]
 
             # Create a symbolic link from the Picard-style *.bai file to a samtools-style *.bam.bai file.
 
@@ -764,8 +897,7 @@ class StarAligner(bsf.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                runnable_merge = self.runnable_dict[
-                    '_'.join((self.stage_name_merge, sample.name))]
+                runnable_merge = self.runnable_dict[self.get_prefix_merge(sample_name=sample.name)]
                 file_path_merge = runnable_merge.file_path_object
                 """ @type file_path_merge: FilePathStarMerge """
 
@@ -808,7 +940,7 @@ class StarAligner(bsf.Analysis):
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
 
-            runnable_summary = self.runnable_dict[self.stage_name_summary]
+            runnable_summary = self.runnable_dict[self.get_prefix_summary()]
             file_path_summary = runnable_summary.file_path_object
             """ @type file_path_summary: FilePathStarSummary """
 
@@ -961,8 +1093,7 @@ class StarAligner(bsf.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                runnable_merge = self.runnable_dict[
-                    '_'.join((self.stage_name_merge, sample.name))]
+                runnable_merge = self.runnable_dict[self.get_prefix_merge(sample_name=sample.name)]
                 file_path_merge = runnable_merge.file_path_object
                 """ @type file_path_merge: FilePathStarMerge """
 
