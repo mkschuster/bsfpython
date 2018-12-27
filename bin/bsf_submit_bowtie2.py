@@ -57,7 +57,6 @@ name_space = argument_parser.parse_args()
 # Create a Bowtie2 Analysis and run it.
 
 analysis = bsf.analyses.bowtie.Bowtie2.from_config_file_path(config_path=name_space.configuration)
-""" @type analysis: bsf.analyses.bowtie.Bowtie2 """
 
 if name_space.debug:
     assert isinstance(name_space.debug, int)

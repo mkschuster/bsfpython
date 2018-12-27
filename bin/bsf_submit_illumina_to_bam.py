@@ -71,7 +71,6 @@ name_space = argument_parser.parse_args()
 # Create a BSF IlluminaToBam analysis, run and submit it.
 
 analysis = bsf.analyses.illumina_to_bam_tools.IlluminaToBam.from_config_file_path(config_path=name_space.configuration)
-""" @type analysis: bsf.analyses.illumina_to_bam_tools.IlluminaToBam """
 
 # Set arguments that override the configuration file.
 

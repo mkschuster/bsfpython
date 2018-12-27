@@ -57,7 +57,6 @@ name_space = argument_parser.parse_args()
 # Create a DESeq Analysis and run it.
 
 analysis = bsf.analyses.rna_seq.DESeq.from_config_file_path(config_path=name_space.configuration)
-""" @type analysis: bsf.analyses.rna_seq.DESeq """
 
 if name_space.debug:
     assert isinstance(name_space.debug, int)

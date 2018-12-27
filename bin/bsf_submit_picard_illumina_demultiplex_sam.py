@@ -101,7 +101,6 @@ if name_space.configuration == bsf.standards.Configuration.global_file_path:
 # Create a IlluminaDemultiplexSam analysis, run and submit it.
 
 analysis = bsf.analyses.picard.IlluminaDemultiplexSam.from_config_file_path(config_path=name_space.configuration)
-""" @type analysis: bsf.analyses.picard.IlluminaDemultiplexSam """
 
 # Set arguments that override the configuration file.
 

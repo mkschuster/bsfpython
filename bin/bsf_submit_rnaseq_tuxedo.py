@@ -57,7 +57,6 @@ name_space = argument_parser.parse_args()
 # Create a Tuxedo analysis and run it.
 
 analysis = bsf.analyses.rna_seq.Tuxedo.from_config_file_path(config_path=name_space.configuration)
-""" @type analysis: bsf.analyses.rna_seq.Tuxedo """
 
 if name_space.debug:
     assert isinstance(name_space.debug, int)

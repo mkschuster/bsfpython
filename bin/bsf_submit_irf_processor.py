@@ -174,7 +174,6 @@ if name_space.illumina2bam:
 
     analysis_itb = bsf.analyses.illumina_to_bam_tools.IlluminaToBam.from_config_file_path(
         config_path=name_space.configuration)
-    """ @type analysis_itb: bsf.analyses.illumina_to_bam_tools.IlluminaToBam """
 
     # Set arguments that override the configuration file.
 
@@ -228,7 +227,6 @@ if name_space.illumina2bam:
 
     analysis_bid = bsf.analyses.illumina_to_bam_tools.BamIndexDecoder.from_config_file_path(
         config_path=name_space.configuration)
-    """ @type analysis_bid: bsf.analyses.illumina_to_bam_tools.BamIndexDecoder """
 
     # Transfer the project name from the IlluminaToBam to the BamIndexDecoder analysis.
 
@@ -296,7 +294,6 @@ else:
     # Create an IlluminaMultiplexSam analysis, run and submit it.
 
     analysis_ims = bsf.analyses.picard.IlluminaMultiplexSam.from_config_file_path(config_path=name_space.configuration)
-    """ @type analysis_ims: bsf.analyses.picard.IlluminaMultiplexSam """
 
     # Set arguments that override the configuration file.
 
@@ -348,7 +345,6 @@ else:
 
     analysis_ids = bsf.analyses.picard.IlluminaDemultiplexSam.from_config_file_path(
         config_path=name_space.configuration)
-    """ @type analysis_ids: bsf.analyses.picard.IlluminaDemultiplexSam """
 
     # Transfer the project_name and run_directory from the IlluminaMultiplexSam to the
     # IlluminaDemultiplexSam analysis.

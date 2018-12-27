@@ -88,7 +88,6 @@ name_space = argument_parser.parse_args()
 
 analysis = bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore.from_config_file_path(
     config_path=name_space.configuration)
-""" @type analysis: bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore """
 
 # Set arguments that override the configuration file.
 

@@ -95,7 +95,6 @@ if name_space.configuration == bsf.standards.Configuration.global_file_path:
 
 analysis = bsf.analyses.illumina_to_bam_tools.BamIndexDecoder.from_config_file_path(
     config_path=name_space.configuration)
-""" @type analysis: bsf.analyses.illumina_to_bam_tools.BamIndexDecoder """
 
 # Set arguments that override the configuration file.
 

@@ -78,7 +78,6 @@ if name_space.configuration == bsf.standards.Configuration.global_file_path:
 # Create a CollectHiSeqXPfFailMetrics analysis, run and submit it.
 
 analysis = bsf.analyses.picard.CollectHiSeqXPfFailMetrics.from_config_file_path(config_path=name_space.configuration)
-""" @type analysis: bsf.analyses.picard.CollectHiSeqXPfFailMetrics """
 
 # Set arguments that override the configuration file.
 

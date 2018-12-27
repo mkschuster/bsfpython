@@ -77,7 +77,6 @@ name_space = argument_parser.parse_args()
 # Create a ExtractIlluminaRunFolder analysis, run and submit it.
 
 analysis = bsf.analyses.picard.ExtractIlluminaRunFolder.from_config_file_path(config_path=name_space.configuration)
-""" @type analysis: bsf.analyses.picard.ExtractIlluminaRunFolder """
 
 # Set arguments that override the configuration file.
 

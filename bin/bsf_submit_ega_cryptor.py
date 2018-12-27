@@ -83,7 +83,6 @@ if name_space.configuration == bsf.standards.Configuration.global_file_path:
 # Create an EGACryptor Analysis and run it.
 
 analysis = bsf.analyses.ega.EGACryptor.from_config_file_path(config_path=name_space.configuration)
-""" @type analysis: bsf.analyses.ega.EGACryptor """
 
 if name_space.debug:
     assert isinstance(name_space.debug, int)
@@ -103,7 +102,6 @@ analysis.submit(name=name_space.stage)
 
 print(analysis.name)
 print('Project name:      ', analysis.project_name)
-print('Genome version:    ', analysis.genome_version)
 print('Input directory:   ', analysis.input_directory)
 print('Output directory:  ', analysis.output_directory)
 print('Project directory: ', analysis.project_directory)
