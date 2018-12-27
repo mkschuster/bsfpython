@@ -889,36 +889,6 @@ class VariantCallingGATK(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_align_lane: C{bsf.Stage.name} for the lane alignment stage
-    @type stage_name_align_lane: str
-    @cvar stage_name_process_lane: C{bsf.Stage.name} for the lane processing stage
-    @type stage_name_process_lane: str
-    @cvar stage_name_process_sample: C{bsf.Stage.name} for the sample processing stage
-    @type stage_name_process_sample: str
-    @cvar stage_name_diagnose_sample: C{bsf.Stage.name} for the sample diagnosis stage
-    @type stage_name_diagnose_sample: str
-    @cvar stage_name_process_cohort: C{bsf.Stage.name} for the cohort processing stage
-    @type stage_name_process_cohort: str
-    @cvar stage_name_annotate_cohort_snpeff: C{bsf.Stage.name} for the snpEff cohort annotation stage
-    @type stage_name_annotate_cohort_snpeff: str
-    @cvar stage_name_annotate_cohort_vep: C{bsf.Stage.name} for the Ensembl VEP cohort annotation stage
-    @type stage_name_annotate_cohort_vep: str
-    @cvar stage_name_split_cohort_snpeff: C{bsf.Stage.name} for the snpEff cohort splitting stage
-    @type stage_name_split_cohort_snpeff: str
-    @cvar stage_name_split_cohort_vep: C{bsf.Stage.name} for the Ensembl VEP cohort splitting stage
-    @type stage_name_split_cohort_vep: str
-    @cvar stage_name_summary: C{bsf.Stage.name} for the summary stage
-    @type stage_name_summary: str
-    @cvar stage_name_somatic: C{bsf.Stage.name} for the somatic stage
-    @type stage_name_somatic: str
-    @cvar stage_name_annotate_somatic_snpeff: C{bsf.Stage.name} for the snpEff somatic annotation stage
-    @type stage_name_annotate_somatic_snpeff: str
-    @cvar stage_name_annotate_somatic_vep: C{bsf.Stage.name} for the Ensembl VEP somatic annotation stage
-    @type stage_name_annotate_somatic_vep: str
-    @cvar stage_name_split_somatic_snpeff: C{bsf.Stage.name} for the snpEff somatic splitting stage
-    @type stage_name_split_somatic_snpeff: str
-    @cvar stage_name_split_somatic_vep: C{bsf.Stage.name} for the Ensembl VEP somatic splitting stage
-    @type stage_name_split_somatic_vep: str
     @ivar replicate_grouping: Group individual C{bsf.ngs.PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool | None
     @ivar bwa_genome_db: Genome sequence file path with BWA index
@@ -1030,22 +1000,325 @@ class VariantCallingGATK(bsf.Analysis):
     name = 'Variant Calling Analysis'
     prefix = 'variant_calling'
 
-    stage_name_align_lane = '_'.join((prefix, 'align_lane'))
-    stage_name_process_lane = '_'.join((prefix, 'process_lane'))
-    stage_name_process_sample = '_'.join((prefix, 'process_sample'))
-    stage_name_diagnose_sample = '_'.join((prefix, 'diagnose_sample'))
-    stage_name_merge_cohort = '_'.join((prefix, 'merge_cohort'))
-    stage_name_process_cohort = '_'.join((prefix, 'process_cohort'))
-    stage_name_annotate_cohort_snpeff = '_'.join((prefix, 'annotate_cohort_snpeff'))
-    stage_name_annotate_cohort_vep = '_'.join((prefix, 'annotate_cohort_vep'))
-    stage_name_split_cohort_snpeff = '_'.join((prefix, 'split_cohort_snpeff'))
-    stage_name_split_cohort_vep = '_'.join((prefix, 'split_cohort_vep'))
-    stage_name_summary = '_'.join((prefix, 'summary'))
-    stage_name_somatic = '_'.join((prefix, 'somatic'))
-    stage_name_annotate_somatic_snpeff = '_'.join((prefix, 'annotate_somatic_snpeff'))
-    stage_name_annotate_somatic_vep = '_'.join((prefix, 'annotate_somatic_vep'))
-    stage_name_split_somatic_snpeff = '_'.join((prefix, 'split_somatic_snpeff'))
-    stage_name_split_somatic_vep = '_'.join((prefix, 'split_somatic_vep'))
+    @classmethod
+    def get_stage_name_align_lane(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'align_lane'))
+
+    @classmethod
+    def get_stage_name_process_lane(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'process_lane'))
+
+    @classmethod
+    def get_stage_name_process_sample(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'process_sample'))
+
+    @classmethod
+    def get_stage_name_diagnose_sample(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'diagnose_sample'))
+
+    @classmethod
+    def get_stage_name_merge_cohort(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'merge_cohort'))
+
+    @classmethod
+    def get_stage_name_process_cohort(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'process_cohort'))
+
+    @classmethod
+    def get_stage_name_annotate_cohort_snpeff(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'annotate_cohort_snpeff'))
+
+    @classmethod
+    def get_stage_name_annotate_cohort_vep(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'annotate_cohort_vep'))
+
+    @classmethod
+    def get_stage_name_split_cohort_snpeff(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'split_cohort_snpeff'))
+
+    @classmethod
+    def get_stage_name_split_cohort_vep(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'split_cohort_vep'))
+
+    @classmethod
+    def get_stage_name_summary(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'summary'))
+
+    @classmethod
+    def get_stage_name_somatic(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'somatic'))
+
+    @classmethod
+    def get_stage_name_annotate_somatic_snpeff(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'annotate_somatic_snpeff'))
+
+    @classmethod
+    def get_stage_name_annotate_somatic_vep(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'annotate_somatic_vep'))
+
+    @classmethod
+    def get_stage_name_split_somatic_snpeff(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'split_somatic_snpeff'))
+
+    @classmethod
+    def get_stage_name_split_somatic_vep(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'split_somatic_vep'))
+
+    @classmethod
+    def get_prefix_align_lane(cls, paired_reads_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param paired_reads_name: C{bsf.ngs.PairedReads.name}
+        @type paired_reads_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_align_lane(), paired_reads_name))
+
+    @classmethod
+    def get_prefix_process_lane(cls, paired_reads_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param paired_reads_name: C{bsf.ngs.PairedReads.name}
+        @type paired_reads_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_process_lane(), paired_reads_name))
+
+    @classmethod
+    def get_prefix_process_sample(cls, sample_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param sample_name: C{bsf.ngs.Sample.name}
+        @type sample_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_process_sample(), sample_name))
+
+    @classmethod
+    def get_prefix_diagnose_sample(cls, sample_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param sample_name: C{bsf.ngs.Sample.name}
+        @type sample_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_diagnose_sample(), sample_name))
+
+    @classmethod
+    def get_prefix_merge_cohort(cls, cohort_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param cohort_name: Cohort name
+        @type cohort_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_merge_cohort(), cohort_name))
+
+    @classmethod
+    def get_prefix_process_cohort(cls, cohort_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param cohort_name: Cohort name
+        @type cohort_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_process_cohort(), cohort_name))
+
+    @classmethod
+    def get_prefix_annotate_cohort_snpeff(cls, cohort_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param cohort_name: Cohort name
+        @type cohort_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_annotate_cohort_snpeff(), cohort_name))
+
+    @classmethod
+    def get_prefix_annotate_cohort_vep(cls, cohort_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param cohort_name: Cohort name
+        @type cohort_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_annotate_cohort_vep(), cohort_name))
+
+    @classmethod
+    def get_prefix_split_cohort_snpeff(cls, sample_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param sample_name: C{bsf.ngs.Sample.name}
+        @type sample_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_split_cohort_snpeff(), sample_name))
+
+    @classmethod
+    def get_prefix_split_cohort_vep(cls, sample_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param sample_name: C{bsf.ngs.Sample.name}
+        @type sample_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_split_cohort_vep(), sample_name))
+
+    @classmethod
+    def get_prefix_summary(cls, cohort_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param cohort_name: Cohort name
+        @type cohort_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_summary(), cohort_name))
+
+    @classmethod
+    def get_prefix_somatic(cls, comparison_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param comparison_name: Comparison name
+        @type comparison_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_somatic(), comparison_name))
+
+    @classmethod
+    def get_prefix_annotate_somatic_snpeff(cls, comparison_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param comparison_name: Comparison name
+        @type comparison_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_annotate_somatic_snpeff(), comparison_name))
+
+    @classmethod
+    def get_prefix_annotate_somatic_vep(cls, comparison_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param comparison_name: Comparison name
+        @type comparison_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_annotate_somatic_vep(), comparison_name))
+
+    @classmethod
+    def get_prefix_split_somatic_snpeff(cls, comparison_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param comparison_name: Comparison name
+        @type comparison_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_split_somatic_snpeff(), comparison_name))
+
+    @classmethod
+    def get_prefix_split_somatic_vep(cls, comparison_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param comparison_name: Comparison name
+        @type comparison_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_split_somatic_vep(), comparison_name))
 
     def __init__(
             self,
@@ -1346,7 +1619,7 @@ class VariantCallingGATK(bsf.Analysis):
 
     @property
     def get_gatk_bundle_path(self):
-        """Get the absolute GATK bundle directory C{bsf.standards.Default.absolute_gatk_bundle} for the set
+        """Get the absolute GATK bundle directory C{bsf.standards.FilePath.get_resource_gatk_bundle()} for the set
         C{bsf.analyses.variant_calling.VariantCallingGATK.gatk_bundle_version} and
         C{bsf.analyses.variant_calling.VariantCallingGATK.genome_version}.
 
@@ -2724,6 +2997,10 @@ class VariantCallingGATK(bsf.Analysis):
                     program='perl',
                     sub_command=bsf.process.Command()))
             """ @type _runnable_step: bsf.process.RunnableStep """
+            # FIXME: Distinguish between cohort and somatic annotation.
+            # (section annotate_cohort_ensembl_vep vs annotate_somatic_ensembl_vep)
+            # Read RunnableStep options from configuration sections:
+            # [bsf.analyses.variant_calling.VariantCallingGATK.ensembl_vep]
             # self.set_runnable_step_configuration(runnable_step=_runnable_step)
             _runnable_step.arguments.append(os.path.join(self.vep_source, 'vep'))
             _sub_command = _runnable_step.sub_command
@@ -2799,6 +3076,10 @@ class VariantCallingGATK(bsf.Analysis):
                     program='perl',
                     sub_command=bsf.process.Command()))
             """ @type _runnable_step: bsf.process.RunnableStep """
+            # FIXME: Distinguish between cohort and somatic annotation.
+            # (section annotate_cohort_ensembl_filter vs annotate_somatic_ensembl_filter)
+            # Read RunnableStep options from configuration sections:
+            # [bsf.analyses.variant_calling.VariantCallingGATK.ensembl_filter]
             # self.set_runnable_step_configuration(runnable_step=_runnable_step)
             _runnable_step.arguments.append(os.path.join(self.vep_source, 'filter_vep'))
             _sub_command = _runnable_step.sub_command
@@ -3170,22 +3451,22 @@ class VariantCallingGATK(bsf.Analysis):
                 dictionary_path=dictionary_path,
                 tile_number=self.number_of_tiles_somatic)
 
-        stage_align_lane = self.get_stage(name=self.stage_name_align_lane)
-        stage_process_lane = self.get_stage(name=self.stage_name_process_lane)
-        stage_process_sample = self.get_stage(name=self.stage_name_process_sample)
-        stage_diagnose_sample = self.get_stage(name=self.stage_name_diagnose_sample)
-        stage_merge_cohort = self.get_stage(name=self.stage_name_merge_cohort)
-        stage_process_cohort = self.get_stage(name=self.stage_name_process_cohort)
-        stage_annotate_cohort_snpeff = self.get_stage(name=self.stage_name_annotate_cohort_snpeff)
-        stage_annotate_cohort_vep = self.get_stage(name=self.stage_name_annotate_cohort_vep)
-        stage_split_cohort_snpeff = self.get_stage(name=self.stage_name_split_cohort_snpeff)
-        stage_split_cohort_vep = self.get_stage(name=self.stage_name_split_cohort_vep)
-        stage_summary = self.get_stage(name=self.stage_name_summary)
-        stage_somatic = self.get_stage(name=self.stage_name_somatic)
-        stage_annotate_somatic_snpeff = self.get_stage(name=self.stage_name_annotate_somatic_snpeff)
-        stage_annotate_somatic_vep = self.get_stage(name=self.stage_name_annotate_somatic_vep)
-        stage_split_somatic_snpeff = self.get_stage(name=self.stage_name_split_somatic_snpeff)
-        stage_split_somatic_vep = self.get_stage(name=self.stage_name_split_somatic_vep)
+        stage_align_lane = self.get_stage(name=self.get_stage_name_align_lane())
+        stage_process_lane = self.get_stage(name=self.get_stage_name_process_lane())
+        stage_process_sample = self.get_stage(name=self.get_stage_name_process_sample())
+        stage_diagnose_sample = self.get_stage(name=self.get_stage_name_diagnose_sample())
+        stage_merge_cohort = self.get_stage(name=self.get_stage_name_merge_cohort())
+        stage_process_cohort = self.get_stage(name=self.get_stage_name_process_cohort())
+        stage_annotate_cohort_snpeff = self.get_stage(name=self.get_stage_name_annotate_cohort_snpeff())
+        stage_annotate_cohort_vep = self.get_stage(name=self.get_stage_name_annotate_cohort_vep())
+        stage_split_cohort_snpeff = self.get_stage(name=self.get_stage_name_split_cohort_snpeff())
+        stage_split_cohort_vep = self.get_stage(name=self.get_stage_name_split_cohort_vep())
+        stage_summary = self.get_stage(name=self.get_stage_name_summary())
+        stage_somatic = self.get_stage(name=self.get_stage_name_somatic())
+        stage_annotate_somatic_snpeff = self.get_stage(name=self.get_stage_name_annotate_somatic_snpeff())
+        stage_annotate_somatic_vep = self.get_stage(name=self.get_stage_name_annotate_somatic_vep())
+        stage_split_somatic_snpeff = self.get_stage(name=self.get_stage_name_split_somatic_snpeff())
+        stage_split_somatic_vep = self.get_stage(name=self.get_stage_name_split_somatic_vep())
 
         # Create a Python dict of Python str (cohort name) key and Python list of process_sample bsf.Runnable object
         # value data. This dictionary is required by the merge_cohort stage to hierarchically merge cohorts.
@@ -4018,6 +4299,10 @@ class VariantCallingGATK(bsf.Analysis):
                     java_heap_maximum='Xmx6G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
+            # Read RunnableStep options from configuration sections:
+            # [bsf.analyses.variant_calling.VariantCallingGATK.diagnose_sample_gatk_callable_loci]
+            # [bsf.analyses.variant_calling.VariantCallingGATK.diagnose_sample_gatk_callable_loci.]
+            # [bsf.analyses.variant_calling.VariantCallingGATK.diagnose_sample_gatk_callable_loci..]
             self.set_runnable_step_configuration(runnable_step=runnable_step)
             # CommandLineGATK
             # Required Parameters
@@ -4070,6 +4355,8 @@ class VariantCallingGATK(bsf.Analysis):
                     name='diagnose_sample_coverage',
                     program='bsf_variant_calling_coverage.R'))
             """ @type runnable_step: bsf.process.RunnableStep """
+            # Read RunnableStep options from configuration sections:
+            # [bsf.analyses.variant_calling.VariantCallingGATK.diagnose_sample_coverage]
             self.set_runnable_step_configuration(runnable_step=runnable_step)
             runnable_step.add_option_long(key='exons', value=self.genome_annotation_gtf)
             runnable_step.add_option_long(key='callable-loci', value=file_path_diagnose_sample.callable_bed)
@@ -4102,6 +4389,10 @@ class VariantCallingGATK(bsf.Analysis):
                         java_heap_maximum='Xmx8G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type runnable_step: RunnableStepGATK """
+                # Read RunnableStep options from configuration sections:
+                # [bsf.analyses.variant_calling.VariantCallingGATK.diagnose_sample_gatk_diagnose_target]
+                # [bsf.analyses.variant_calling.VariantCallingGATK.diagnose_sample_gatk_diagnose_target.]
+                # [bsf.analyses.variant_calling.VariantCallingGATK.diagnose_sample_gatk_diagnose_target..]
                 self.set_runnable_step_configuration(runnable_step=runnable_step)
                 # CommandLineGATK
                 # Required Parameters
@@ -4129,6 +4420,10 @@ class VariantCallingGATK(bsf.Analysis):
                         java_heap_maximum='Xmx8G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type runnable_step: RunnableStepGATK """
+                # Read RunnableStep options from configuration sections:
+                # [bsf.analyses.variant_calling.VariantCallingGATK.diagnose_sample_gatk_qualify_missing_intervals]
+                # [bsf.analyses.variant_calling.VariantCallingGATK.diagnose_sample_gatk_qualify_missing_intervals.]
+                # [bsf.analyses.variant_calling.VariantCallingGATK.diagnose_sample_gatk_qualify_missing_intervals..]
                 self.set_runnable_step_configuration(runnable_step=runnable_step)
                 # CommandLineGATK
                 # Required Parameters
@@ -4967,8 +5262,8 @@ class VariantCallingGATK(bsf.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                runnable_process_sample = self.runnable_dict[
-                    '_'.join((self.stage_name_process_sample, sample.name))]
+                runnable_process_sample = self.runnable_dict[self.get_prefix_process_sample(
+                    sample_name=sample.name)]
                 file_path_process_sample = runnable_process_sample.file_path_object
                 """ @type file_path_process_sample: FilePathProcessSample """
 
@@ -4977,23 +5272,23 @@ class VariantCallingGATK(bsf.Analysis):
                 # file_path_diagnose_sample = runnable_diagnose_sample.file_path_object
                 """ @type file_path_diagnose_sample: FilePathDiagnoseSample """
 
-                runnable_annotate_cohort_snpeff = self.runnable_dict[
-                    '_'.join((self.stage_name_annotate_cohort_snpeff, self.cohort_name))]
+                runnable_annotate_cohort_snpeff = self.runnable_dict[self.get_prefix_annotate_cohort_snpeff(
+                    cohort_name=self.cohort_name)]
                 file_path_annotate_cohort_snpeff = runnable_annotate_cohort_snpeff.file_path_object
                 """ @type file_path_annotate_cohort_snpeff: FilePathAnnotateSnpEff """
 
-                runnable_annotate_cohort_vep = self.runnable_dict[
-                    '_'.join((self.stage_name_annotate_cohort_vep, self.cohort_name))]
+                runnable_annotate_cohort_vep = self.runnable_dict[self.get_prefix_annotate_cohort_vep(
+                    cohort_name=self.cohort_name)]
                 file_path_annotate_cohort_vep = runnable_annotate_cohort_vep.file_path_object
                 """ @type file_path_annotate_cohort_vep: FilePathAnnotateVep """
 
-                runnable_split_cohort_snpeff = self.runnable_dict[
-                    '_'.join((self.stage_name_split_cohort_snpeff, sample.name))]
+                runnable_split_cohort_snpeff = self.runnable_dict[self.get_prefix_split_cohort_snpeff(
+                    sample_name=sample.name)]
                 file_path_split_cohort_snpeff = runnable_split_cohort_snpeff.file_path_object
                 """ @type file_path_split_cohort_snpeff: FilePathSplitCohort """
 
-                runnable_split_cohort_vep = self.runnable_dict[
-                    '_'.join((self.stage_name_split_cohort_vep, sample.name))]
+                runnable_split_cohort_vep = self.runnable_dict[self.get_prefix_split_cohort_vep(
+                    sample_name=sample.name)]
                 file_path_split_cohort_vep = runnable_split_cohort_vep.file_path_object
                 """ @type file_path_split_cohort_vep: FilePathSplitCohort """
 
@@ -5102,8 +5397,8 @@ class VariantCallingGATK(bsf.Analysis):
             # Process per (somatic) comparison
 
             for comparison_name in self._comparison_dict.iterkeys():
-                runnable_somatic = self.runnable_dict[
-                    '_'.join((self.stage_name_somatic, comparison_name))]
+                runnable_somatic = self.runnable_dict[self.get_prefix_somatic(
+                    comparison_name=comparison_name)]
                 file_path_somatic = runnable_somatic.file_path_object
                 """ @type file_path_somatic: FilePathSomatic """
 
@@ -5116,8 +5411,8 @@ class VariantCallingGATK(bsf.Analysis):
                             directory_results_by_pair),
                         target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
 
-                runnable_annotate_somatic_snpeff = self.runnable_dict[
-                    '_'.join((self.stage_name_annotate_somatic_snpeff, comparison_name))]
+                runnable_annotate_somatic_snpeff = self.runnable_dict[self.get_prefix_annotate_somatic_snpeff(
+                    comparison_name=comparison_name)]
                 file_path_annotate_somatic_snpeff = runnable_annotate_somatic_snpeff.file_path_object
                 """ @type file_path_annotate_somatic_snpeff: FilePathAnnotateSnpEff """
 
@@ -5134,8 +5429,8 @@ class VariantCallingGATK(bsf.Analysis):
                             directory_results_by_pair),
                         target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
 
-                runnable_split_somatic_snpeff = self.runnable_dict[
-                    '_'.join((self.stage_name_split_somatic_snpeff, comparison_name))]
+                runnable_split_somatic_snpeff = self.runnable_dict[self.get_prefix_split_somatic_snpeff(
+                    comparison_name=comparison_name)]
                 file_path_split_somatic_snpeff = runnable_split_somatic_snpeff.file_path_object
                 """ @type file_path_split_somatic_snpeff: FilePathSplitSomatic """
 
@@ -5147,8 +5442,8 @@ class VariantCallingGATK(bsf.Analysis):
                             directory_results_by_pair),
                         target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
 
-                runnable_annotate_somatic_vep = self.runnable_dict[
-                    '_'.join((self.stage_name_annotate_somatic_vep, comparison_name))]
+                runnable_annotate_somatic_vep = self.runnable_dict[self.get_prefix_annotate_somatic_vep(
+                    comparison_name=comparison_name)]
                 file_path_annotate_somatic_vep = runnable_annotate_somatic_vep.file_path_object
                 """ @type file_path_annotate_somatic_vep: FilePathAnnotateVEP """
 
@@ -5161,8 +5456,8 @@ class VariantCallingGATK(bsf.Analysis):
                             directory_results_by_pair),
                         target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
 
-                runnable_split_somatic_vep = self.runnable_dict[
-                    '_'.join((self.stage_name_split_somatic_vep, comparison_name))]
+                runnable_split_somatic_vep = self.runnable_dict[self.get_prefix_split_somatic_vep(
+                    comparison_name=comparison_name)]
                 file_path_split_somatic_vep = runnable_split_somatic_vep.file_path_object
                 """ @type file_path_split_somatic_vep: FilePathSplitSomatic """
 
@@ -5235,23 +5530,23 @@ class VariantCallingGATK(bsf.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                runnable_process_sample = self.runnable_dict[
-                    '_'.join((self.stage_name_process_sample, sample.name))]
+                runnable_process_sample = self.runnable_dict[self.get_prefix_process_sample(
+                    sample_name=sample.name)]
                 file_path_process_sample = runnable_process_sample.file_path_object
                 """ @type file_path_process_sample: FilePathProcessSample """
 
-                runnable_diagnose_sample = self.runnable_dict[
-                    '_'.join((self.stage_name_diagnose_sample, sample.name))]
+                runnable_diagnose_sample = self.runnable_dict[self.get_prefix_diagnose_sample(
+                    sample_name=sample.name)]
                 file_path_diagnosis = runnable_diagnose_sample.file_path_object
                 """ @type file_path_diagnosis: FilePathDiagnoseSample """
 
-                runnable_split_cohort_snpeff = self.runnable_dict[
-                    '_'.join((self.stage_name_split_cohort_snpeff, sample.name))]
+                runnable_split_cohort_snpeff = self.runnable_dict[self.get_prefix_split_cohort_snpeff(
+                    sample_name=sample.name)]
                 file_path_split_cohort_snpeff = runnable_split_cohort_snpeff.file_path_object
                 """ @type file_path_split_cohort_snpeff: FilePathSplitCohort """
 
-                runnable_split_cohort_vep = self.runnable_dict[
-                    '_'.join((self.stage_name_split_cohort_vep, sample.name))]
+                runnable_split_cohort_vep = self.runnable_dict[self.get_prefix_split_cohort_vep(
+                    sample_name=sample.name)]
                 file_path_split_cohort_vep = runnable_split_cohort_vep.file_path_object
                 """ @type file_path_split_cohort_vep: FilePathSplitCohort """
 
@@ -5363,8 +5658,8 @@ class VariantCallingGATK(bsf.Analysis):
                 str_list.append('</tr>\n')
 
                 for paired_reads_name in sorted(paired_reads_dict):
-                    runnable_process_lane = self.runnable_dict[
-                        '_'.join((self.stage_name_process_lane, paired_reads_name))]
+                    runnable_process_lane = self.runnable_dict[self.get_prefix_process_lane(
+                        paired_reads_name=paired_reads_name)]
                     file_path_process_read_group = runnable_process_lane.file_path_object
                     """ @type file_path_process_read_group: FilePathProcessReadGroup """
 
@@ -5419,8 +5714,8 @@ class VariantCallingGATK(bsf.Analysis):
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
 
-            runnable_annotate_cohort_snpeff = self.runnable_dict[
-                '_'.join((self.stage_name_annotate_cohort_snpeff, self.cohort_name))]
+            runnable_annotate_cohort_snpeff = self.runnable_dict[self.get_prefix_annotate_cohort_snpeff(
+                cohort_name=self.cohort_name)]
             file_path_annotate_cohort_snpeff = runnable_annotate_cohort_snpeff.file_path_object
             """ @type file_path_annotate_cohort_snpeff: FilePathAnnotateSnpEff """
 
@@ -5468,8 +5763,8 @@ class VariantCallingGATK(bsf.Analysis):
             str_list.append('</td>\n')
             str_list.append('</tr>\n')
 
-            runnable_annotate_cohort_vep = self.runnable_dict[
-                '_'.join((self.stage_name_annotate_cohort_vep, self.cohort_name))]
+            runnable_annotate_cohort_vep = self.runnable_dict[self.get_prefix_annotate_cohort_vep(
+                cohort_name=self.cohort_name)]
             file_path_annotate_cohort_vep = runnable_annotate_cohort_vep.file_path_object
             """ @type file_path_annotate_cohort_vep: FilePathAnnotateVEP """
 
@@ -5525,25 +5820,25 @@ class VariantCallingGATK(bsf.Analysis):
 
                     # Add snpEff annotation
 
-                    runnable_annotate_somatic_snpeff = self.runnable_dict[
-                        '_'.join((self.stage_name_annotate_somatic_snpeff, comparison_name))]
+                    runnable_annotate_somatic_snpeff = self.runnable_dict[self.get_prefix_annotate_somatic_snpeff(
+                        comparison_name=comparison_name)]
                     file_path_annotate_somatic_snpeff = runnable_annotate_somatic_snpeff.file_path_object
                     """ @type file_path_annotate_somatic_snpeff: FilePathAnnotateSnpEff """
 
-                    runnable_split_somatic_snpeff = self.runnable_dict[
-                        '_'.join((self.stage_name_split_somatic_snpeff, comparison_name))]
+                    runnable_split_somatic_snpeff = self.runnable_dict[self.get_prefix_split_somatic_snpeff(
+                        comparison_name=comparison_name)]
                     file_path_split_somatic_snpeff = runnable_split_somatic_snpeff.file_path_object
                     """ @type file_path_split_somatic_snpeff: FilePathSplitSomatic """
 
                     # Add VEP annotation
 
-                    runnable_annotate_somatic_vep = self.runnable_dict[
-                        '_'.join((self.stage_name_annotate_somatic_vep, comparison_name))]
+                    runnable_annotate_somatic_vep = self.runnable_dict[self.get_prefix_annotate_somatic_vep(
+                        comparison_name=comparison_name)]
                     file_path_annotate_somatic_vep = runnable_annotate_somatic_vep.file_path_object
                     """ @type file_path_annotate_somatic_vep: FilePathAnnotateVEP """
 
-                    runnable_split_somatic_vep = self.runnable_dict[
-                        '_'.join((self.stage_name_split_somatic_vep, comparison_name))]
+                    runnable_split_somatic_vep = self.runnable_dict[self.get_prefix_split_somatic_vep(
+                        comparison_name=comparison_name)]
                     file_path_split_somatic_vep = runnable_split_somatic_vep.file_path_object
                     """ @type file_path_split_somatic_vep: FilePathSplitSomatic """
 
@@ -5605,7 +5900,7 @@ class VariantCallingGATK(bsf.Analysis):
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
 
-            runnable_summary = self.runnable_dict['_'.join((self.stage_name_summary, self.cohort_name))]
+            runnable_summary = self.runnable_dict[self.get_prefix_summary(cohort_name=self.cohort_name)]
             file_path_summary = runnable_summary.file_path_object
             """ @type file_path_summary: FilePathSummary """
 
@@ -5920,23 +6215,23 @@ class VariantCallingGATK(bsf.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                runnable_process_sample = self.runnable_dict[
-                    '_'.join((self.stage_name_process_sample, sample.name))]
+                runnable_process_sample = self.runnable_dict[self.get_prefix_process_sample(
+                    sample_name=sample.name)]
                 file_path_process_sample = runnable_process_sample.file_path_object
                 """ @type file_path_process_sample: FilePathProcessSample """
 
-                runnable_diagnose_sample = self.runnable_dict[
-                    '_'.join((self.stage_name_diagnose_sample, sample.name))]
+                runnable_diagnose_sample = self.runnable_dict[self.get_prefix_diagnose_sample(
+                    sample_name=sample.name)]
                 file_path_diagnose_sample = runnable_diagnose_sample.file_path_object
                 """ @type file_path_diagnose_sample: FilePathDiagnoseSample """
 
-                runnable_split_cohort_snpeff = self.runnable_dict[
-                    '_'.join((self.stage_name_split_cohort_snpeff, sample.name))]
+                runnable_split_cohort_snpeff = self.runnable_dict[self.get_prefix_split_cohort_snpeff(
+                    sample_name=sample.name)]
                 file_path_split_cohort_snpeff = runnable_split_cohort_snpeff.file_path_object
                 """ @type file_path_split_cohort_snpeff: FilePathSplitCohort """
 
-                runnable_split_cohort_vep = self.runnable_dict[
-                    '_'.join((self.stage_name_split_cohort_vep, sample.name))]
+                runnable_split_cohort_vep = self.runnable_dict[self.get_prefix_split_cohort_vep(
+                    sample_name=sample.name)]
                 file_path_split_cohort_vep = runnable_split_cohort_vep.file_path_object
                 """ @type file_path_split_cohort_vep: FilePathSplitCohort """
 

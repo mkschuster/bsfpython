@@ -485,10 +485,6 @@ class IlluminaToBam(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
-    @type stage_name_lane: str
-    @cvar stage_name_cell: C{bsf.Stage.name} for the flow cell-specific stage
-    @type stage_name_cell: str
     @ivar run_directory: File path to an I{Illumina Run Folder}
     @type run_directory: str | unicode | None
     @ivar intensity_directory: File path to the I{Intensities} directory,
@@ -523,8 +519,23 @@ class IlluminaToBam(bsf.Analysis):
     name = 'Illumina To Bam Analysis'
     prefix = 'illumina_to_bam'
 
-    stage_name_lane = '_'.join((prefix, 'lane'))
-    stage_name_cell = '_'.join((prefix, 'cell'))
+    @classmethod
+    def get_stage_name_cell(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'cell'))
+
+    @classmethod
+    def get_stage_name_lane(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'lane'))
 
     @classmethod
     def get_prefix_cell(cls, project_name):
@@ -535,7 +546,7 @@ class IlluminaToBam(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_cell, project_name))
+        return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
     def get_prefix_lane(cls, project_name, lane):
@@ -548,7 +559,7 @@ class IlluminaToBam(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_lane, project_name, lane))
+        return '_'.join((cls.get_stage_name_lane(), project_name, lane))
 
     def __init__(
             self,
@@ -901,8 +912,8 @@ class IlluminaToBam(bsf.Analysis):
         cell_dependency_list = list()
         """ @type cell_dependency_list: list[str] """
 
-        stage_lane = self.get_stage(name=self.stage_name_lane)
-        stage_cell = self.get_stage(name=self.stage_name_cell)
+        stage_lane = self.get_stage(name=self.get_stage_name_lane())
+        stage_cell = self.get_stage(name=self.get_stage_name_cell())
 
         for lane_int in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
             lane_str = str(lane_int)
@@ -1238,10 +1249,6 @@ class BamIndexDecoder(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
-    @type stage_name_lane: str
-    @cvar stage_name_cell: C{bsf.Stage.name} for the flow cell-specific stage
-    @type stage_name_cell: str
     @ivar hash_algorithm: Use a BSF-specific hashing algorithm for demultiplexing
     @type hash_algorithm: bool | None
     @ivar library_path: Library annotation file path
@@ -1267,8 +1274,23 @@ class BamIndexDecoder(bsf.Analysis):
     name = 'Bam Index Decoder Analysis'
     prefix = 'bam_index_decoder'
 
-    stage_name_lane = '_'.join((prefix, 'lane'))
-    stage_name_cell = '_'.join((prefix, 'cell'))
+    @classmethod
+    def get_stage_name_cell(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'cell'))
+
+    @classmethod
+    def get_stage_name_lane(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'lane'))
 
     @classmethod
     def get_prefix_cell(cls, project_name):
@@ -1279,7 +1301,7 @@ class BamIndexDecoder(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_cell, project_name))
+        return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
     def get_prefix_lane(cls, project_name, lane):
@@ -1292,7 +1314,7 @@ class BamIndexDecoder(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_lane, project_name, lane))
+        return '_'.join((cls.get_stage_name_lane(), project_name, lane))
 
     @classmethod
     def get_sample_annotation_sheet(cls, file_path):
@@ -1594,8 +1616,8 @@ class BamIndexDecoder(bsf.Analysis):
                 raise Exception("An 'BamIndexDecoder' analysis requires a "
                                 "'classpath_picard' configuration option.")
 
-        stage_lane = self.get_stage(name=self.stage_name_lane)
-        stage_cell = self.get_stage(name=self.stage_name_cell)
+        stage_lane = self.get_stage(name=self.get_stage_name_lane())
+        stage_cell = self.get_stage(name=self.get_stage_name_cell())
 
         library_annotation_dict = library_annotation_sheet.get_annotation_dict()
         library_barcode_dict = library_annotation_sheet.get_barcode_length_dict()

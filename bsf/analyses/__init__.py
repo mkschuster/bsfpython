@@ -52,6 +52,26 @@ class RunBamToFastq(bsf.Analysis):
     name = 'BAM To FastQ'
     prefix = 'bam_to_fastq'
 
+    @classmethod
+    def get_stage_name_read_group(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'read_group'))
+
+    @classmethod
+    def get_prefix_read_group(cls, read_group_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param read_group_name: Read group name
+        @type read_group_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_read_group(), read_group_name))
+
     def __init__(
             self,
             configuration=None,
@@ -144,25 +164,11 @@ class RunBamToFastq(bsf.Analysis):
 
         super(RunBamToFastq, self).run()
 
-        self._convert_bam_to_fastq()
-
-        return
-
-    def _convert_bam_to_fastq(self):
-        """Private method to convert all Reads objects in BAM or SAM format into FASTQ format.
-
-        @return:
-        @rtype:
-        """
-
-        # config_parser = self.configuration.config_parser
-        # config_section = self.configuration.section_from_instance(self)
-
         # Replicates have to be un-grouped, always!
         # replicate_grouping = config_parser.getboolean(section=config_section, option='replicate_grouping')
         replicate_grouping = False
 
-        stage_sam_to_fastq = self.get_stage(name='sam_to_fastq')
+        stage_read_group = self.get_stage(name=self.get_stage_name_read_group())
 
         for sample in self.collection.get_all_samples():
             if self.debug > 0:
@@ -186,15 +192,15 @@ class RunBamToFastq(bsf.Analysis):
                         # TODO: The matching part to remove the .bam could be achieved with Bash parameter expansion.
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
-                            sam_to_fastq = stage_sam_to_fastq.add_executable(
+                            executable_read_group = stage_read_group.add_executable(
                                 executable=bsf.process.Executable(
                                     name='picard_sam_to_fastq_{}_1'.format(paired_reads_name),
                                     program='bsf_bam2fastq.sh'))
-                            self.set_command_configuration(command=sam_to_fastq)
-                            sam_to_fastq.arguments.append(paired_reads.reads_1.file_path)
-                            sam_to_fastq.arguments.append(
+                            self.set_command_configuration(command=executable_read_group)
+                            executable_read_group.arguments.append(paired_reads.reads_1.file_path)
+                            executable_read_group.arguments.append(
                                 os.path.join(bsf.standards.JavaClassPath.get_picard(), 'picard.jar'))
-                            sam_to_fastq.arguments.append(os.path.join(self.genome_directory, match.group(1)))
+                            executable_read_group.arguments.append(os.path.join(self.genome_directory, match.group(1)))
 
                     if paired_reads.reads_2 is not None:
                         file_name = paired_reads.reads_2.file_path
@@ -203,14 +209,14 @@ class RunBamToFastq(bsf.Analysis):
 
                         match = re.search(pattern=r'(.*)\.bam$', string=file_name)
                         if match:
-                            sam_to_fastq = stage_sam_to_fastq.add_executable(
+                            executable_read_group = stage_read_group.add_executable(
                                 executable=bsf.process.Executable(
                                     name='picard_sam_to_fastq_{}_2'.format(paired_reads_name),
                                     program='bsf_bam2fastq.sh'))
-                            self.set_command_configuration(command=sam_to_fastq)
-                            sam_to_fastq.arguments.append(paired_reads.reads_2.file_path)
-                            sam_to_fastq.arguments.append(
+                            self.set_command_configuration(command=executable_read_group)
+                            executable_read_group.arguments.append(paired_reads.reads_2.file_path)
+                            executable_read_group.arguments.append(
                                 os.path.join(bsf.standards.JavaClassPath.get_picard(), 'picard.jar'))
-                            sam_to_fastq.arguments.append(os.path.join(self.genome_directory, match.group(1)))
+                            executable_read_group.arguments.append(os.path.join(self.genome_directory, match.group(1)))
 
         return

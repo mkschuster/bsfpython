@@ -44,14 +44,6 @@ class IlluminaRunFolderArchive(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_pre_process: C{bsf.Stage.name} for the pre-process stage
-    @type stage_name_pre_process: str
-    @cvar stage_name_base_calls: C{bsf.Stage.name} for the base calls stage
-    @type stage_name_base_calls: str
-    @cvar stage_name_intensities: C{bsf.Stage.name} for the intensities stage
-    @type stage_name_intensities: str
-    @cvar stage_name_archive_folder: C{bsf.Stage.name} for the archive folder stage
-    @type stage_name_archive_folder: str
     @cvar compress_archive_files: Compress archive files with GNU Zip
     @type compress_archive_files: bool
     @ivar archive_directory: Archive directory
@@ -68,12 +60,43 @@ class IlluminaRunFolderArchive(bsf.Analysis):
     name = 'Illumina Run Folder Archive Analysis'
     prefix = 'irf_archive'
 
-    stage_name_pre_process = '_'.join((prefix, 'pre_process'))
-    stage_name_base_calls = '_'.join((prefix, 'base_calls'))
-    stage_name_intensities = '_'.join((prefix, 'intensities'))
-    stage_name_archive_folder = '_'.join((prefix, 'folder'))
-
     compress_archive_files = True
+
+    @classmethod
+    def get_stage_name_pre_process(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'pre_process'))
+
+    @classmethod
+    def get_stage_name_base_calls(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'base_calls'))
+
+    @classmethod
+    def get_stage_name_intensities(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'intensities'))
+
+    @classmethod
+    def get_stage_name_archive_folder(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'folder'))
 
     @classmethod
     def get_prefix_pre_process(cls, project_name):
@@ -85,7 +108,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
             C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_pre_process, project_name))
+        return '_'.join((cls.get_stage_name_pre_process(), project_name))
 
     @classmethod
     def get_prefix_base_calls(cls, project_name, lane):
@@ -99,7 +122,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
             C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_base_calls, project_name, lane))
+        return '_'.join((cls.get_stage_name_base_calls(), project_name, lane))
 
     @classmethod
     def get_prefix_intensities(cls, project_name, lane):
@@ -113,7 +136,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
             C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_intensities, project_name, lane))
+        return '_'.join((cls.get_stage_name_intensities(), project_name, lane))
 
     @classmethod
     def get_prefix_archive_folder(cls, project_name):
@@ -125,7 +148,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
             C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_archive_folder, project_name))
+        return '_'.join((cls.get_stage_name_archive_folder(), project_name))
 
     def __init__(
             self,
@@ -360,10 +383,10 @@ class IlluminaRunFolderArchive(bsf.Analysis):
 
         super(IlluminaRunFolderArchive, self).run()
 
-        stage_pre_process_folder = self.get_stage(name=self.stage_name_pre_process)
-        stage_compress_base_calls = self.get_stage(name=self.stage_name_base_calls)
-        stage_archive_intensities = self.get_stage(name=self.stage_name_intensities)
-        stage_archive_folder = self.get_stage(name=self.stage_name_archive_folder)
+        stage_pre_process_folder = self.get_stage(name=self.get_stage_name_pre_process())
+        stage_compress_base_calls = self.get_stage(name=self.get_stage_name_base_calls())
+        stage_archive_intensities = self.get_stage(name=self.get_stage_name_intensities())
+        stage_archive_folder = self.get_stage(name=self.get_stage_name_archive_folder())
 
         # Pre-process on folder level.
 
@@ -692,12 +715,6 @@ class IlluminaRunFolderRestore(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_extract_archive: C{bsf.Stage.name} for the extract archive stage
-    @type stage_name_extract_archive: str
-    @cvar stage_name_compress_base_calls: C{bsf.Stage.name} for the compress base calls stage
-    @type stage_name_compress_base_calls: str
-    @cvar stage_name_compress_logs: C{bsf.Stage.name} for the compress logs stage
-    @type stage_name_compress_logs: str
     @cvar maximum_lane_number: Maximum number of lanes
     @type maximum_lane_number: int
     @ivar archive_directory: File path to an archive directory
@@ -713,11 +730,34 @@ class IlluminaRunFolderRestore(bsf.Analysis):
     name = 'Illumina Run Folder Restore Analysis'
     prefix = 'irf_restore'
 
-    stage_name_extract_archive = '_'.join((prefix, 'extract_archive'))
-    stage_name_compress_base_calls = '_'.join((prefix, 'compress_base_calls'))
-    stage_name_compress_logs = '_'.join((prefix, 'compress_logs'))
-
     maximum_lane_number = 8
+
+    @classmethod
+    def get_stage_name_extract_archive(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'extract_archive'))
+
+    @classmethod
+    def get_stage_name_compress_base_calls(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'compress_base_calls'))
+
+    @classmethod
+    def get_stage_name_compress_logs(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'compress_logs'))
 
     @classmethod
     def get_prefix_extract_archive(cls, project_name, lane):
@@ -732,7 +772,7 @@ class IlluminaRunFolderRestore(bsf.Analysis):
             C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_extract_archive, project_name, lane))
+        return '_'.join((cls.get_stage_name_extract_archive(), project_name, lane))
 
     @classmethod
     def get_prefix_compress_base_calls(cls, project_name, lane):
@@ -746,7 +786,7 @@ class IlluminaRunFolderRestore(bsf.Analysis):
             C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_compress_base_calls, project_name, lane))
+        return '_'.join((cls.get_stage_name_compress_base_calls(), project_name, lane))
 
     @classmethod
     def get_prefix_compress_logs(cls, project_name):
@@ -758,7 +798,7 @@ class IlluminaRunFolderRestore(bsf.Analysis):
             C{bsfAnalysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_compress_logs, project_name))
+        return '_'.join((cls.get_stage_name_compress_logs(), project_name))
 
     def __init__(
             self,
@@ -938,9 +978,9 @@ class IlluminaRunFolderRestore(bsf.Analysis):
 
         super(IlluminaRunFolderRestore, self).run()
 
-        stage_extract_archive = self.get_stage(name=self.stage_name_extract_archive)
-        stage_compress_base_calls = self.get_stage(name=self.stage_name_compress_base_calls)
-        stage_compress_logs = self.get_stage(name=self.stage_name_compress_logs)
+        stage_extract_archive = self.get_stage(name=self.get_stage_name_extract_archive())
+        stage_compress_base_calls = self.get_stage(name=self.get_stage_name_compress_base_calls())
+        stage_compress_logs = self.get_stage(name=self.get_stage_name_compress_logs())
 
         # Extract the IRF_Folder.tar file.
 

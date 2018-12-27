@@ -75,14 +75,30 @@ class FastQC(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_read_group: C{bsf.Stage.name} for read group-specific FastQC C{bsf.Runnable} objects
-    @type stage_name_read_group: str
     """
 
     name = 'FastQC Analysis'
     prefix = 'fastqc'
 
-    stage_name_read_group = '_'.join((prefix, 'read_group'))
+    @classmethod
+    def get_stage_name_read_group(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'read_group'))
+
+    @classmethod
+    def get_prefix_read_group(cls, read_group_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param read_group_name: Read group name
+        @type read_group_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
     def __init__(
             self,
@@ -210,7 +226,7 @@ class FastQC(bsf.Analysis):
 
         run_read_comparisons()
 
-        stage_read_group = self.get_stage(name=self.stage_name_read_group)
+        stage_read_group = self.get_stage(name=self.get_stage_name_read_group())
 
         self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
 
@@ -323,7 +339,7 @@ class FastQC(bsf.Analysis):
 
             for paired_reads_name in sorted(paired_reads_dict):
                 # for paired_reads in paired_reads_dict[paired_reads_name]:
-                runnable_read_group = self.runnable_dict['_'.join((self.stage_name_read_group, paired_reads_name))]
+                runnable_read_group = self.runnable_dict[self.get_prefix_read_group(read_group_name=paired_reads_name)]
                 file_path_read_group = runnable_read_group.file_path_object
                 """ @type file_path_read_group: FilePathFastQCReadGroup """
 

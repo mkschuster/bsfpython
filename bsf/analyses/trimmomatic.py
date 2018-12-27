@@ -131,12 +131,6 @@ class Trimmomatic(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_read_group: C{bsf.Stage.name} for read group-specific trimmomatic C{bsf.Runnable} objects
-    @type stage_name_read_group: str
-    @cvar stage_name_summary: C{bsf.Stage.name} for read group-specific summary C{bsf.Runnable} objects
-    @type stage_name_summary: str
-    @cvar stage_name_project: C{bsf.Stage.name} for project-specific C{bsf.Runnable} objects
-    @type stage_name_project: str
     @ivar adapter_path: Adapter file path
     @type adapter_path: None | str | unicode
     @ivar trimming_step_pe_list: Colon-separated Trimmomatic steps for paired-end data
@@ -150,9 +144,61 @@ class Trimmomatic(bsf.Analysis):
     name = 'Trimmomatic Analysis'
     prefix = 'trimmomatic'
 
-    stage_name_read_group = '_'.join((prefix, 'read_group'))
-    stage_name_summary = '_'.join((prefix, 'summary'))
-    stage_name_project = '_'.join((prefix, 'project'))
+    @classmethod
+    def get_stage_name_read_group(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'read_group'))
+
+    @classmethod
+    def get_stage_name_summary(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'summary'))
+
+    @classmethod
+    def get_stage_name_project(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'project'))
+
+    @classmethod
+    def get_prefix_read_group(cls, read_group_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param read_group_name: Read group name
+        @type read_group_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_read_group(), read_group_name))
+
+    @classmethod
+    def get_prefix_summary(cls):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return cls.get_stage_name_summary()
+
+    @classmethod
+    def get_prefix_project(cls):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return cls.get_stage_name_project()
 
     def __init__(
             self,
@@ -347,9 +393,9 @@ class Trimmomatic(bsf.Analysis):
 
         # Trimmomatic
 
-        stage_read_group = self.get_stage(name=self.stage_name_read_group)
-        stage_summary = self.get_stage(name=self.stage_name_summary)
-        stage_project = self.get_stage(name=self.stage_name_project)
+        stage_read_group = self.get_stage(name=self.get_stage_name_read_group())
+        stage_summary = self.get_stage(name=self.get_stage_name_summary())
+        stage_project = self.get_stage(name=self.get_stage_name_project())
 
         project_dependency_list = list()
         """ @type project_dependency_list: list[str] """
@@ -643,7 +689,7 @@ class Trimmomatic(bsf.Analysis):
             # Transiently create a Python dict without the suffix and sort its keys (bsf.ngs.PairedReads.name).
 
             for paired_reads_name in sorted(dict(map(lambda x: (x[:-1], True), paired_reads_dict.iterkeys()))):
-                prefix_read_group = '_'.join((self.stage_name_read_group, paired_reads_name))
+                prefix_read_group = self.get_prefix_read_group(read_group_name=paired_reads_name)
 
                 # The second read may still not be there.
                 if prefix_read_group not in self.runnable_dict:
