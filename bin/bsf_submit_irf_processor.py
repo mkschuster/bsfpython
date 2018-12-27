@@ -195,10 +195,10 @@ if name_space.illumina2bam:
     if name_space.loop:
         assert isinstance(name_space.loop, bool)
         # If the --loop option has been set, wait until RTAComplete.txt has been copied.
-        loop_counter = int(1)
+        loop_counter = 1
         while True:
             print('[{}] Loop {}:'.format(datetime.datetime.now().isoformat(), loop_counter))
-            loop_counter += int(1)
+            loop_counter += 1
             try:
                 analysis_itb.run()
             except bsf.illumina.RunFolderNotComplete as exception:
@@ -313,10 +313,10 @@ else:
     if name_space.loop:
         assert isinstance(name_space.loop, bool)
         # If the --loop option has been set, wait until RTAComplete.txt has been copied.
-        loop_counter = int(1)
+        loop_counter = 1
         while True:
             print('[{}] Loop {}:'.format(datetime.datetime.now().isoformat(), loop_counter))
-            loop_counter += int(1)
+            loop_counter += 1
             try:
                 analysis_ims.run()
             except bsf.illumina.RunFolderNotComplete as exception:
