@@ -36,7 +36,7 @@ import shutil
 import sys
 
 import bsf
-import bsf.analyses.chip_seq
+import bsf.analyses.aligner
 import bsf.argument
 import bsf.process
 import bsf.standards
@@ -227,8 +227,7 @@ def run_bowtie2(runnable):
     # Put all sample-specific information into a sub-directory.
 
     file_path_read_group = runnable.file_path_object
-    """ @type file_path_read_group: bsf.analyses.chip_seq.FilePathChIPSeq """
-    assert isinstance(file_path_read_group, bsf.analyses.chip_seq.FilePathAlignment)
+    """ @type file_path_read_group: bsf.analyses.aligner.FilePathAlign """
 
     if not os.path.isdir(file_path_read_group.output_directory):
         try:
@@ -418,7 +417,7 @@ def run(runnable):
                 raise
 
     file_path_read_group = runnable.file_path_object
-    """ @type file_path_read_group: bsf.analyses.chip_seq.FilePathAlignment """
+    """ @type file_path_read_group: bsf.analyses.aligner.FilePathAlign """
 
     if not os.path.isdir(file_path_read_group.output_directory):
         try:
