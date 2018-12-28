@@ -501,8 +501,9 @@ def submit(stage, debug=0):
             resource_list.append('s_vmem=' + stage.memory_limit_soft)
 
         # Set the host names ...
-        for node_name in stage.node_list_include:
-            resource_list.append('hostname=' + node_name)
+        if stage.node_list_include:
+            for node_name in stage.node_list_include:
+                resource_list.append('hostname=' + node_name)
 
         if len(resource_list):
             executable_drms.add_option_short(key='l', value=','.join(resource_list))

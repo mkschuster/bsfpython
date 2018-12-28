@@ -775,10 +775,10 @@ def submit(stage, debug=0):
         elif stage.memory_limit_soft:
             executable_drms.add_option_pair_long(key='mem', value=_recalculate_memory(stage.memory_limit_soft))
 
-        if len(stage.node_list_exclude):
+        if stage.node_list_exclude:
             executable_drms.add_option_pair_long(key='exclude', value=','.join(stage.node_list_exclude))
 
-        if len(stage.node_list_include):
+        if stage.node_list_include:
             executable_drms.add_option_pair_long(key='nodelist', value=','.join(stage.node_list_include))
 
         if stage.time_limit:
