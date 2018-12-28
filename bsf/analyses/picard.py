@@ -54,10 +54,6 @@ class PicardIlluminaRunFolder(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
-    @type stage_name_lane: str
-    @cvar stage_name_cell: C{bsf.Stage.name} for the flow cell-specific stage
-    @type stage_name_cell: str
     @ivar run_directory: File path to an I{Illumina Run Folder}
     @type run_directory: str | unicode | None
     @ivar intensity_directory: File path to the I{Intensities} directory,
@@ -78,8 +74,23 @@ class PicardIlluminaRunFolder(bsf.Analysis):
     name = 'Picard PicardIlluminaRunFolder Analysis'
     prefix = 'picard_illumina_run_folder'
 
-    stage_name_lane = '_'.join((prefix, 'lane'))
-    stage_name_cell = '_'.join((prefix, 'cell'))
+    @classmethod
+    def get_stage_name_cell(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'cell'))
+
+    @classmethod
+    def get_stage_name_lane(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'lane'))
 
     @classmethod
     def get_prefix_cell(cls, project_name):
@@ -90,7 +101,7 @@ class PicardIlluminaRunFolder(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_cell, project_name))
+        return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
     def get_prefix_lane(cls, project_name, lane):
@@ -103,7 +114,7 @@ class PicardIlluminaRunFolder(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_lane, project_name, lane))
+        return '_'.join((cls.get_stage_name_lane(), project_name, lane))
 
     def __init__(
             self,
@@ -526,10 +537,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
-    @type stage_name_lane: str
-    @cvar stage_name_cell: C{bsf.Stage.name} for the flow cell-specific stage
-    @type stage_name_cell: str
     @ivar samples_directory: BSF samples directory
     @type samples_directory: str | unicode | None
     @ivar library_path: Library annotation file path
@@ -552,9 +559,6 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
     name = 'Picard Extract Illumina Run Folder Analysis'
     prefix = 'extract_illumina_run_folder'
-
-    stage_name_lane = '_'.join((prefix, 'lane'))
-    stage_name_cell = '_'.join((prefix, 'cell'))
 
     def __init__(
             self,
@@ -829,8 +833,8 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         library_annotation_dict = library_annotation_sheet.get_annotation_dict()
         library_barcode_dict = library_annotation_sheet.get_barcode_length_dict()
 
-        stage_lane = self.get_stage(name=self.stage_name_lane)
-        stage_cell = self.get_stage(name=self.stage_name_cell)
+        stage_lane = self.get_stage(name=self.get_stage_name_lane())
+        stage_cell = self.get_stage(name=self.get_stage_name_cell())
 
         file_path_cell = FilePathExtractIlluminaCell(
             prefix=self.get_prefix_cell(project_name=self.project_name),
@@ -1241,10 +1245,6 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
-    @type stage_name_lane: str
-    @cvar stage_name_cell: C{bsf.Stage.name} for the flow cell-specific stage
-    @type stage_name_cell: str
     @ivar sequencing_centre: Sequencing centre
     @type sequencing_centre: str | None
     @ivar sequences_directory: Sequences directory to store archive BAM files
@@ -1263,9 +1263,6 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
     name = 'Picard IlluminaMultiplexSam Analysis'
     prefix = 'illumina_multiplex_sam'
-
-    stage_name_lane = '_'.join((prefix, 'lane'))
-    stage_name_cell = '_'.join((prefix, 'cell'))
 
     def __init__(
             self,
@@ -1534,8 +1531,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
         cell_dependency_list = list()
 
-        stage_lane = self.get_stage(name=self.stage_name_lane)
-        stage_cell = self.get_stage(name=self.stage_name_cell)
+        stage_lane = self.get_stage(name=self.get_stage_name_lane())
+        stage_cell = self.get_stage(name=self.get_stage_name_cell())
 
         for lane_int in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
             lane_str = str(lane_int)
@@ -1832,10 +1829,6 @@ class IlluminaDemultiplexSam(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
-    @type stage_name_lane: str
-    @cvar stage_name_cell: C{bsf.Stage.name} for the flow cell-specific stage
-    @type stage_name_cell: str
     @ivar library_path: Library annotation file path
     @type library_path: str | unicode | None
     @ivar run_directory: File path to an I{Illumina Run Folder}
@@ -1861,8 +1854,23 @@ class IlluminaDemultiplexSam(bsf.Analysis):
     name = 'Picard IlluminaDemultiplexSam Analysis'
     prefix = 'illumina_demultiplex_sam'
 
-    stage_name_lane = '_'.join((prefix, 'lane'))
-    stage_name_cell = '_'.join((prefix, 'cell'))
+    @classmethod
+    def get_stage_name_cell(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'cell'))
+
+    @classmethod
+    def get_stage_name_lane(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'lane'))
 
     @classmethod
     def get_prefix_cell(cls, project_name):
@@ -1873,7 +1881,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_cell, project_name))
+        return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
     def get_prefix_lane(cls, project_name, lane):
@@ -1886,7 +1894,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
         @rtype: str
         """
-        return '_'.join((cls.stage_name_lane, project_name, lane))
+        return '_'.join((cls.get_stage_name_lane(), project_name, lane))
 
     def __init__(
             self,
@@ -2189,8 +2197,8 @@ class IlluminaDemultiplexSam(bsf.Analysis):
             if not self.classpath_picard:
                 raise Exception('The ' + self.name + " requires a 'classpath_picard' configuration option.")
 
-        stage_lane = self.get_stage(name=self.stage_name_lane)
-        stage_cell = self.get_stage(name=self.stage_name_cell)
+        stage_lane = self.get_stage(name=self.get_stage_name_lane())
+        stage_cell = self.get_stage(name=self.get_stage_name_cell())
 
         file_path_cell = FilePathIlluminaDemultiplexSamCell(
             prefix=self.get_prefix_cell(project_name=self.project_name),
@@ -2539,14 +2547,10 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_lane: C{bsf.Stage.name} for the lane-specific stage
-    @type stage_name_lane: str
     """
 
     name = 'Picard CollectHiSeqXPfFailMetrics Analysis'
     prefix = 'picard_hiseq_x_pf_fail'
-
-    stage_name_lane = '_'.join((prefix, 'lane'))
 
     def run(self):
         """Run the C{bsf.analyses.picard.CollectHiSeqXPfFailMetrics} C{bsf.Analysis}.
@@ -2558,7 +2562,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
 
         # Picard CollectHiSeqXPfFailMetrics
 
-        stage_lane = self.get_stage(name=self.stage_name_lane)
+        stage_lane = self.get_stage(name=self.get_stage_name_lane())
 
         cell_dependency_list = list()
 
@@ -2571,7 +2575,6 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
 
             file_path_lane = FilePathCollectHiSeqXPfFailMetricsLane(prefix=prefix_lane)
 
-            # NOTE: The bsf.Runnable.name has to match the Executable.name that gets submitted via the Stage.
             runnable_lane = self.add_runnable(
                 runnable=bsf.Runnable(
                     name=self.get_prefix_lane(
@@ -2580,7 +2583,6 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory,
                     file_path_object=file_path_lane))
-
             executable_lane = self.set_stage_runnable(
                 stage=stage_lane,
                 runnable=runnable_lane)
@@ -2651,6 +2653,26 @@ class DownsampleSam(bsf.Analysis):
 
     name = 'Picard DownsampleSam Analysis'
     prefix = 'picard_downsample_sam'
+
+    @classmethod
+    def get_stage_name_read_group(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'read_group'))
+
+    @classmethod
+    def get_prefix_read_group(cls, read_group_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param read_group_name: Read group name
+        @type read_group_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
     def __init__(
             self,
@@ -2778,7 +2800,7 @@ class DownsampleSam(bsf.Analysis):
 
         # Picard DownsampleSam
 
-        stage_picard_dss = self.get_stage(name='picard_downsample_sam')
+        stage_read_group = self.get_stage(name=self.get_stage_name_read_group())
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -2802,7 +2824,7 @@ class DownsampleSam(bsf.Analysis):
                         raise Exception(
                             'Picard DownsampleSam can only work on BAM or SAM files. ' + reads.file_path)
 
-                    prefix_read_group = '_'.join((stage_picard_dss.name, paired_reads_name))
+                    prefix_read_group = self.get_prefix_read_group(read_group_name=paired_reads_name)
 
                     file_path_read_group = FilePathDownsampleSam(prefix=prefix_read_group)
 
@@ -2823,7 +2845,7 @@ class DownsampleSam(bsf.Analysis):
 
                     # Create an Executable for running the Picard SamToFastq Runnable.
 
-                    self.set_stage_runnable(stage=stage_picard_dss, runnable=runnable_picard_dss)
+                    self.set_stage_runnable(stage=stage_read_group, runnable=runnable_picard_dss)
 
                     # Create a new RunnableStepMakeDirectory in preparation of the Picard program.
 
@@ -2960,6 +2982,46 @@ class SamToFastq(bsf.Analysis):
     stage_name_read_group = '_'.join((prefix, 'read_group'))
     stage_name_project = '_'.join((prefix, 'project'))
 
+    @classmethod
+    def get_stage_name_read_group(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'read_group'))
+
+    @classmethod
+    def get_stage_name_project(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'project'))
+
+    @classmethod
+    def get_prefix_read_group(cls, read_group_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param read_group_name: Read group name
+        @type read_group_name: str
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_read_group(), read_group_name))
+
+    @classmethod
+    def get_prefix_project(cls, project_name):
+        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+
+        @param project_name: Project name
+        @type project_name: str | unicode
+        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_project(), project_name))
+
     def __init__(
             self,
             configuration=None,
@@ -3095,8 +3157,8 @@ class SamToFastq(bsf.Analysis):
 
         # Picard SamToFastq
 
-        stage_read_group = self.get_stage(name=self.stage_name_read_group)
-        stage_project = self.get_stage(name=self.stage_name_project)
+        stage_read_group = self.get_stage(name=self.get_stage_name_read_group())
+        stage_project = self.get_stage(name=self.get_stage_name_project())
 
         project_dependency_list = list()
         """ @type project_dependency_list: list[str] """
@@ -3121,7 +3183,7 @@ class SamToFastq(bsf.Analysis):
                     reads = paired_reads.reads_1
                     if reads.file_path.endswith('.bam'):
                         bam_file_path = reads.file_path
-                        prefix_read_group = '_'.join((stage_read_group.name, paired_reads_name))
+                        prefix_read_group = self.get_prefix_read_group(read_group_name=paired_reads_name)
 
                         file_path_read_group = FilePathSamToFastqReadGroup(prefix=prefix_read_group)
 
@@ -3278,7 +3340,7 @@ class SamToFastq(bsf.Analysis):
 
         # Create a Runnable for pruning the sample annotation sheet.
 
-        prefix_project = '_'.join((stage_project.name, self.project_name))
+        prefix_project = self.get_prefix_project(project_name=self.project_name)
 
         file_path_project = FilePathSamToFastqProject(
             prefix=prefix_project,
