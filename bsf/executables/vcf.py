@@ -76,14 +76,14 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         """Initialise a C{bsf.executables.vcf.RunnableStepCsqToVep}.
 
         @param name: Name
-        @type name: str
+        @type name: str | None
         @param program: Program
-        @type program: str
-        @param options:  Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
+        @type program: str | None
+        @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
-        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]]
-        @param arguments: Python C{list} of program arguments
-        @type arguments: list[str | unicode]
+        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
+        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
+        @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
@@ -92,7 +92,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         @type stderr_path: str | unicode | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
-        @type dependencies: list[bsf.process.Executable.name]
+        @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
@@ -115,7 +115,6 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         @return:
         @rtype:
         """
-
         super(RunnableStepCsqToVep, self).__init__(
             name=name,
             program=program,

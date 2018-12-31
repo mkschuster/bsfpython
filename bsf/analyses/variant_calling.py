@@ -37,6 +37,7 @@ import warnings
 
 import bsf
 import bsf.annotation
+import bsf.argument
 import bsf.executables
 import bsf.executables.vcf
 import bsf.intervals
@@ -72,44 +73,43 @@ class RunnableStepGATK(bsf.process.RunnableStepJava):
         """Initialise a C{bsf.analyses.variant_calling.RunnableStepGATK}.
 
         @param name: Name
-        @type name: str
+        @type name: str | None
         @param program: Program
-        @type program: str
-        @param options:  Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
+        @type program: str | None
+        @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
             Python C{list} value objects of C{bsf.argument.Argument} objects
-        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]]
-        @param arguments: Python C{list} of program arguments
-        @type arguments: list[str | unicode]
+        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
+        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
+        @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command
+        @type sub_command: bsf.process.Command | None
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode
+        @type stdout_path: str | unicode | None
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode
+        @type stderr_path: str | unicode | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
-        @type dependencies: list[bsf.process.Executable.name]
+        @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
-        @type hold: str
+        @type hold: str | None
         @param submit: Submit the C{bsf.process.Executable} into the C{bsf.Stage}
         @type submit: bool
         @param process_identifier: Process identifier
-        @type process_identifier: str
+        @type process_identifier: str | None
         @param process_name: Process name
-        @type process_name: str
+        @type process_name: str | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
-        @type obsolete_file_path_list: list[str | unicode]
+        @type obsolete_file_path_list: list[str | unicode] | None
         @param java_temporary_path: Temporary directory path for the Java Virtual Machine
-        @type java_temporary_path: str | unicode
+        @type java_temporary_path: str | unicode | None
         @param java_heap_maximum: Java heap maximum size (-Xmx option)
-        @type java_heap_maximum: str
+        @type java_heap_maximum: str | None
         @param java_jar_path: Java archive file path
-        @type java_jar_path: str | unicode
+        @type java_jar_path: str | unicode | None
         @return:
         @rtype:
         """
-
         super(RunnableStepGATK, self).__init__(
             name=name,
             program=program,

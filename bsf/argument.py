@@ -10,7 +10,6 @@ C{bsf.argument.OptionPairLong} (--key=value) and
 C{bsf.argument.OptionPairShort} (-key=value).
 """
 
-
 #
 # Copyright 2013 - 2018 Michael K. Schuster
 #
@@ -107,7 +106,7 @@ class Argument(object):
         @param level: Indentation level
         @type level: int
         @return: Trace information
-        @rtype: list[str |unicode]
+        @rtype: list[str | unicode]
         """
         indent = '  ' * level
 
