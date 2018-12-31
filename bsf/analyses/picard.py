@@ -263,7 +263,8 @@ class PicardIlluminaRunFolder(bsf.Analysis):
         # automatically prepend standard BSF directory paths.
 
         if not self.run_directory:
-            raise Exception('An Illumina run directory or file path has not been defined.')
+            raise Exception(
+                'The ' + self.name + " requires a 'run_directory' configuration option.")
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
@@ -272,13 +273,14 @@ class PicardIlluminaRunFolder(bsf.Analysis):
         # Check that the Illumina Run Folder exists.
 
         if not os.path.isdir(self.run_directory):
-            raise Exception('The Illumina run directory ' + repr(self.run_directory) + ' does not exist.')
+            raise Exception(
+                'The ' + self.name + " 'run_directory' " + repr(self.run_directory) + ' is not a valid directory.')
 
         # Check that the Illumina Run Folder is complete.
 
         if not (os.path.exists(path=os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
-            raise bsf.illumina.RunFolderNotComplete('The Illumina run directory ' + repr(self.run_directory) +
-                                                    ' is not complete.')
+            raise bsf.illumina.RunFolderNotComplete(
+                'The Illumina Run Folder ' + repr(self.run_directory) + ' is not complete.')
 
         # Define an 'Intensities' directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
@@ -296,7 +298,9 @@ class PicardIlluminaRunFolder(bsf.Analysis):
         # Check that the Intensities directory exists.
 
         if not os.path.isdir(self.intensity_directory):
-            raise Exception('The Intensity directory ' + repr(self.intensity_directory) + ' does not exist.')
+            raise Exception(
+                'The ' + self.name + " 'intensity_directory' " + repr(self.intensity_directory) +
+                ' is not a valid directory.')
 
         # Define a 'BaseCalls' directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
@@ -314,7 +318,9 @@ class PicardIlluminaRunFolder(bsf.Analysis):
         # Check that the BaseCalls directory exists.
 
         if not os.path.isdir(self.basecalls_directory):
-            raise Exception('The BaseCalls directory ' + repr(self.basecalls_directory) + ' does not exist.')
+            raise Exception(
+                'The ' + self.name + " 'basecalls_directory' " + repr(self.basecalls_directory) +
+                ' is not a valid directory.')
 
         self._irf = bsf.illumina.RunFolder.from_file_path(file_path=self.run_directory)
 
@@ -325,7 +331,9 @@ class PicardIlluminaRunFolder(bsf.Analysis):
         if not self.experiment_name:
             self.experiment_name = self._irf.run_parameters.get_experiment_name
             if not self.experiment_name:
-                raise Exception('Could not get an experiment_name from the Illumina Run Folder.')
+                raise Exception(
+                    'The ' + self.name + " 'experiment_name' was not provided " +
+                    'and could not be read from the Illumina Run Folder configuration.')
 
         # The project name is a concatenation of the experiment name and the Illumina flow cell identifier.
         # In case it has not been specified in the configuration file, read it from the
@@ -339,8 +347,8 @@ class PicardIlluminaRunFolder(bsf.Analysis):
         if not self.classpath_picard:
             self.classpath_picard = bsf.standards.JavaClassPath.get_picard()
             if not self.classpath_picard:
-                raise Exception("A 'PicardIlluminaRunFolder' analysis requires a "
-                                "'classpath_picard' configuration option.")
+                raise Exception(
+                    'The ' + self.name + " requires a 'classpath_picard' configuration option.")
 
         # Call the run method of the super class after the project_name has been defined.
 
@@ -779,7 +787,8 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         if not os.path.isdir(self.samples_directory):
             raise Exception(
-                'The ' + self.name + " 'samples_directory' " + repr(self.samples_directory) + ' does not exist.')
+                'The ' + self.name + " 'samples_directory' " + repr(self.samples_directory) +
+                ' is not a valid directory.')
 
         # Get the experiment_directory once.
 
@@ -791,7 +800,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             self.sequencing_centre = bsf.standards.Operator.get_sequencing_centre()
             if not self.sequencing_centre:
                 raise Exception(
-                    'An ' + self.name + ' analysis requires a ' + "'sequencing_centre' configuration option.")
+                    'The ' + self.name + " requires a 'sequencing_centre' configuration option.")
 
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
@@ -807,7 +816,8 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         self.library_path = self.configuration.get_absolute_path(file_path=self.library_path)
 
         if not os.path.exists(path=self.library_path):
-            raise Exception('Library annotation file ' + repr(self.library_path) + ' does not exist.')
+            raise Exception(
+                'The ' + self.name + " 'library_path' " + repr(self.library_path) + ' is not a valid file.')
 
         # Load the LibraryAnnotationSheet and validate.
 
@@ -1449,7 +1459,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         # automatically prepend standard BSF directory paths.
 
         if not self.run_directory:
-            raise Exception('An Illumina run directory or file path has not been defined.')
+            raise Exception(
+                'The ' + self.name + "requires a 'run_directory' configuration option.")
 
         self.run_directory = self.configuration.get_absolute_path(
             file_path=self.run_directory,
@@ -1458,13 +1469,14 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         # Check that the Illumina Run Folder exists.
 
         if not os.path.isdir(self.run_directory):
-            raise Exception('The Illumina run directory ' + repr(self.run_directory) + ' does not exist.')
+            raise Exception(
+                'The ' + self.name + " 'run_directory' " + repr(self.run_directory) + ' is not a valid directory.')
 
         # Check that the Illumina Run Folder is complete.
 
         if not (os.path.exists(path=os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
             raise bsf.illumina.RunFolderNotComplete(
-                'The Illumina run directory ' + repr(self.run_directory) + ' is not complete.')
+                'The Illumina Run Folder ' + repr(self.run_directory) + ' is not complete.')
 
         irf = bsf.illumina.RunFolder.from_file_path(file_path=self.run_directory)
 
@@ -1487,8 +1499,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         if not self.sequencing_centre:
             self.sequencing_centre = bsf.standards.Operator.get_sequencing_centre()
             if not self.sequencing_centre:
-                raise Exception("An 'IlluminaToBam' analysis requires a "
-                                "'sequencing_centre' configuration option.")
+                raise Exception('The ' + self.name + "requires a 'sequencing_centre' configuration option.")
 
         # Define the sequences directory in which to create the experiment directory.
         # Expand an eventual user part i.e. on UNIX ~ or ~user and
@@ -1504,8 +1515,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         # As a safety measure, to prevent creation of rogue directory paths, the sequences_directory has to exist.
 
         if not os.path.isdir(self.sequences_directory):
-            raise Exception(
-                'The IlluminaToBam sequences_directory ' + repr(self.sequences_directory) + ' does not exist.')
+            raise Exception('The ' + self.name + " 'sequences_directory' " + repr(self.sequences_directory) +
+                            ' does not provide a valid directory.')
 
         # Get the experiment_directory once.
 
@@ -1516,8 +1527,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         if not self.classpath_picard:
             self.classpath_picard = bsf.standards.JavaClassPath.get_picard()
             if not self.classpath_picard:
-                raise Exception("An 'IlluminaToBam' analysis requires a "
-                                "'classpath_picard' configuration option.")
+                raise Exception('The ' + self.name + " requires a 'classpath_picard' configuration option.")
 
         # Check that the flow cell chemistry type is defined in the vendor quality filter.
 
@@ -2108,7 +2118,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         # automatically prepend standard BSF directory paths.
 
         if not self.run_directory:
-            raise Exception('An Illumina run directory or file path has not been defined.')
+            raise Exception('The ' + self.name + " requires a 'run_directory' configuration option.")
 
         # Illumina Run Folders are kept either in the 'active' or the 'archive' location.
         # Upon re-running of the de-multiplexing stage, the IRF may have been archived already.
@@ -2118,7 +2128,8 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         # Check that the Illumina Run Folder exists.
 
         if not os.path.isdir(self.run_directory):
-            raise Exception('The Illumina run directory ' + repr(self.run_directory) + ' does not exist.')
+            raise Exception('The ' + self.name + " 'run_directory' " + repr(self.run_directory) +
+                            ' is not a valid directory.')
 
         irf = bsf.illumina.RunFolder.from_file_path(file_path=self.run_directory)
 
@@ -2149,8 +2160,8 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         # As a safety measure, to prevent creation of rogue directory paths, the samples_directory has to exist.
 
         if not os.path.isdir(self.samples_directory):
-            raise Exception(
-                'The ' + self.name + ' samples_directory ' + repr(self.samples_directory) + ' does not exist.')
+            raise Exception('The ' + self.name + " 'samples_directory' " + repr(self.samples_directory) +
+                            ' is not a valid directory.')
 
         # Get the experiment_directory once.
 
@@ -2164,13 +2175,13 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         self.library_path = self.configuration.get_absolute_path(file_path=self.library_path)
 
         if not os.path.exists(path=self.library_path):
-            raise Exception('Library annotation file ' + repr(self.library_path) + ' does not exist.')
+            raise Exception('The ' + self.name + " 'library_path' " + repr(self.library_path) +
+                            ' is not a valid file.')
 
         # Load the LibraryAnnotationSheet and validate.
 
         library_annotation_sheet = bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet.from_file_path(
             file_path=self.library_path)
-        """ @type library_annotation_sheet: bsf.analyses.illumina_to_bam_tools.LibraryAnnotationSheet """
 
         if self.lanes is None:
             validation_messages = library_annotation_sheet.validate(
@@ -3150,8 +3161,7 @@ class SamToFastq(bsf.Analysis):
         if not self.classpath_picard:
             self.classpath_picard = bsf.standards.JavaClassPath.get_picard()
             if not self.classpath_picard:
-                raise Exception("A 'SamToFastq' analysis requires a "
-                                "'classpath_picard' configuration option.")
+                raise Exception('The ' + self.name + " requires a 'classpath_picard' configuration option.")
 
         run_read_comparisons()
 

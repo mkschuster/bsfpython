@@ -375,16 +375,16 @@ class Trimmomatic(bsf.Analysis):
         if not self.classpath_trimmomatic:
             self.classpath_trimmomatic = bsf.standards.JavaClassPath.get_trimmomatic()
             if not self.classpath_trimmomatic:
-                raise Exception("A 'Trimmomatic' analysis requires a 'classpath_trimmomatic' configuration option.")
+                raise Exception('A ' + self.name + "requires a 'classpath_trimmomatic' configuration option.")
 
         if not (self.adapter_path and os.path.isabs(self.adapter_path)):
             self.adapter_path = os.path.join(os.path.dirname(self.classpath_trimmomatic), 'adapters')
 
         if self.trimming_step_pe_list is None:
-            raise Exception("A 'Trimmomatic' analysis requires a 'trimming_steps_pe' configuration option.")
+            raise Exception('A ' + self.name + " requires a 'trimming_steps_pe' configuration option.")
 
         if self.trimming_step_se_list is None:
-            raise Exception("A 'Trimmomatic' analysis requires a 'trimming_steps_se' configuration option.")
+            raise Exception('A ' + self.name + " requires a 'trimming_steps_se' configuration option.")
 
         run_adjust_illumina_clip_path(trimming_step_list=self.trimming_step_pe_list)
         run_adjust_illumina_clip_path(trimming_step_list=self.trimming_step_se_list)
