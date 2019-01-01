@@ -58,7 +58,7 @@ def run(runnable):
     # If the Runnable status file exists, there is nothing to do and
     # this Runnable should not have been submitted in the first place.
 
-    if os.path.exists(runnable.runnable_status_file_path(success=True)):
+    if os.path.exists(runnable.runnable_status_file_path(success=True, absolute=False)):
         return
 
     # Do the work.
@@ -106,7 +106,7 @@ def run(runnable):
                         new_paired_reads_list.append(paired_reads)
                 sample.paired_reads_list = new_paired_reads_list
                 # The Sample object could have lost all its PairedReads objects.
-                # The PairedReads objects may no longer have the correct weakref to their Sample.
+                # The PairedReads objects may no longer have the correct weak reference to their Sample.
 
     collection.to_sas_path(name='picard_sam_to_fastq', file_path=file_path_new)
 

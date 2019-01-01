@@ -635,7 +635,7 @@ class StarAligner(bsf.Analysis):
                         runnable_step=bsf.process.RunnableStepPicard(
                             name='picard_clean_sam',
                             obsolete_file_path_list=[file_path_align.aligned_sam],
-                            java_temporary_path=runnable_index.get_relative_temporary_directory_path,
+                            java_temporary_path=runnable_index.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx2G',
                             picard_classpath=self.classpath_picard,
                             picard_command='CleanSam'))
@@ -647,7 +647,7 @@ class StarAligner(bsf.Analysis):
                     # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
-                        value=runnable_index.get_relative_temporary_directory_path)
+                        value=runnable_index.temporary_directory_path(absolute=False))
                     # VERBOSITY [INFO]
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                     # QUIET [false]
@@ -665,7 +665,7 @@ class StarAligner(bsf.Analysis):
                         runnable_step=bsf.process.RunnableStepPicard(
                             name='picard_sort_sam',
                             obsolete_file_path_list=[file_path_index.cleaned_sam],
-                            java_temporary_path=runnable_index.get_relative_temporary_directory_path,
+                            java_temporary_path=runnable_index.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx6G',
                             picard_classpath=self.classpath_picard,
                             picard_command='SortSam'))
@@ -679,7 +679,7 @@ class StarAligner(bsf.Analysis):
                     # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
-                        value=runnable_index.get_relative_temporary_directory_path)
+                        value=runnable_index.temporary_directory_path(absolute=False))
                     # VERBOSITY [INFO]
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                     # QUIET [false]
@@ -760,7 +760,7 @@ class StarAligner(bsf.Analysis):
                 runnable_step = runnable_merge.add_runnable_step(
                     runnable_step=bsf.process.RunnableStepPicard(
                         name='picard_merge_sam_files',
-                        java_temporary_path=runnable_merge.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_merge.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx2G',
                         picard_classpath=self.classpath_picard,
                         picard_command='MergeSamFiles'))
@@ -785,7 +785,7 @@ class StarAligner(bsf.Analysis):
                 # TMP_DIR [null]
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
-                    value=runnable_merge.get_relative_temporary_directory_path)
+                    value=runnable_merge.temporary_directory_path(absolute=False))
                 # VERBOSITY [INFO]
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                 # QUIET [false]

@@ -49,12 +49,12 @@ def run(runnable):
     # If the Runnable status file exists, there is nothing to do and
     # this Runnable should not have been submitted in the first place.
 
-    if os.path.exists(runnable.runnable_status_file_path(success=True)):
+    if os.path.exists(runnable.runnable_status_file_path(success=True, absolute=False)):
         return
 
     # Create a Runnable-specific cache directory if it does not exist already.
 
-    cache_directory_path = runnable.get_absolute_cache_directory_path
+    cache_directory_path = runnable.cache_directory_path(absolute=True)
     if not os.path.isdir(cache_directory_path):
         try:
             os.makedirs(cache_directory_path)
@@ -66,7 +66,7 @@ def run(runnable):
 
     for key in runnable.cache_path_dict:
         source_path = runnable.cache_path_dict[key]
-        target_path = os.path.join(runnable.get_absolute_cache_directory_path, os.path.basename(source_path))
+        target_path = os.path.join(cache_directory_path, os.path.basename(source_path))
 
         runnable_step = bsf.process.RunnableStep(name='_'.join((runnable.name, 'cache', key)), program='cp')
         runnable_step.add_switch_short(key='p')
@@ -95,7 +95,7 @@ def run(runnable):
 
     # Create a Runnable-specific temporary directory if it does not exist already.
 
-    temporary_directory_path = runnable.get_relative_temporary_directory_path
+    temporary_directory_path = runnable.temporary_directory_path(absolute=False)
     if not os.path.isdir(temporary_directory_path):
         try:
             os.makedirs(temporary_directory_path)

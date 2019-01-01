@@ -74,17 +74,26 @@ class Analysis(object):
     @ivar debug: Debug level
     @type debug: int
     @ivar project_name: Project name (arbitrary)
-    @type project_name: str
+    @type project_name: str | None
     @ivar genome_version: Genome version (e.g. hg19, mm10, GRCh37, GRCm38, ...)
-    @type genome_version: str
+    @type genome_version: str | None
+    @ivar cache_directory: C{bsf.Analysis}-wide cache directory
+    @type cache_directory: str | unicode | None
     @ivar input_directory: Input directory
-    @type input_directory: str | unicode
+    @type input_directory: str | unicode | None
     @ivar output_directory: Output directory, user-specified including a genome version sub-directory
-    @type output_directory: str | unicode
+    @type output_directory: str | unicode | None
     @ivar project_directory: Project-specific directory
-    @type project_directory: str | unicode
+    @type project_directory: str | unicode | None
     @ivar genome_directory: Genome-specific directory
-    @type genome_directory: str | unicode
+    @type genome_directory: str | unicode | None
+    @ivar sas_file: Sample Annotation Sheet (SAS) file path
+    @type sas_file: str | unicode | None
+    @ivar sas_prefix: A prefix to columns in a Sample Annotation Sheet
+        (e.g. Control Sample, Treatment Sample, ...)
+    @type sas_prefix: str | None
+    @ivar e_mail: e-Mail address for a UCSC Genome Browser Track Hub
+    @type e_mail: str | None
     @ivar stage_list: Python C{list} of C{bsf.Stage} objects
     @type stage_list: list[bsf.Stage]
     @ivar runnable_dict: Python C{dict} of Python C{str} (C{bsf.Runnable.name}) key data and C{bsf.Runnable} value data
@@ -114,7 +123,6 @@ class Analysis(object):
         @return: C{bsf.Analysis}
         @rtype: bsf.Analysis
         """
-
         return cls.from_configuration(
             configuration=bsf.standards.Configuration.from_file_path_list(
                 file_path_list=[bsf.standards.Configuration.global_file_path, config_path]))
@@ -128,7 +136,6 @@ class Analysis(object):
         @return: C{bsf.Analysis}
         @rtype: bsf.Analysis
         """
-
         assert isinstance(configuration, bsf.standards.Configuration)
 
         analysis = cls(configuration=configuration)
@@ -163,44 +170,43 @@ class Analysis(object):
         """Initialise a C{bsf.Analysis}.
 
         @param configuration: C{bsf.standards.Configuration}
-        @type configuration: bsf.standards.Configuration
+        @type configuration: bsf.standards.Configuration | None
         @param project_name: Project name
-        @type project_name: str
+        @type project_name: str | None
         @param genome_version: Genome version
-        @type genome_version: str
+        @type genome_version: str | None
         @param cache_directory: C{bsf.Analysis}-wide cache directory
-        @type cache_directory: str
+        @type cache_directory: str | unicode | None
         @param input_directory: C{bsf.Analysis}-wide input directory
-        @type input_directory: str
+        @type input_directory: str | unicode | None
         @param output_directory: C{bsf.Analysis}-wide output directory
-        @type output_directory: str
+        @type output_directory: str | unicode | None
         @param project_directory: C{bsf.Analysis}-wide project directory,
             normally under the C{bsf.Analysis}-wide output directory
-        @type project_directory: str
+        @type project_directory: str | unicode | None
         @param genome_directory: C{bsf.Analysis}-wide genome directory,
             normally under the C{bsf.Analysis}-wide project directory
-        @type genome_directory: str
+        @type genome_directory: str | unicode | None
         @param sas_file: Sample Annotation Sheet (SAS) file path
-        @type sas_file: str | unicode
+        @type sas_file: str | unicode | None
         @param sas_prefix: A prefix to columns in a Sample Annotation Sheet
             (e.g. Control Sample, Treatment Sample, ...)
-        @type sas_prefix: str
+        @type sas_prefix: str | None
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
-        @type e_mail: str
+        @type e_mail: str | None
         @param debug: Integer debugging level
-        @type debug: int
+        @type debug: int | None
         @param stage_list: Python C{list} of C{bsf.Stage} objects
-        @type stage_list: list[bsf.Stage]
+        @type stage_list: list[bsf.Stage] | None
         @param runnable_dict: Python C{dict} of Python C{str} (C{bsf.Runnable.name}) and C{bsf.Runnable} value data
-        @type runnable_dict: dict[bsf.Runnable.name, bsf.Runnable]
+        @type runnable_dict: dict[bsf.Runnable.name, bsf.Runnable] | None
         @param collection: C{bsf.ngs.Collection}
-        @type collection: bsf.ngs.Collection
+        @type collection: bsf.ngs.Collection | None
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @type sample_list: list[bsf.ngs.Sample]
+        @type sample_list: list[bsf.ngs.Sample] | None
         @return:
         @rtype:
         """
-
         super(Analysis, self).__init__()
 
         if configuration is None:
@@ -209,61 +215,17 @@ class Analysis(object):
             assert isinstance(configuration, bsf.standards.Configuration)
             self.configuration = configuration
 
-        if project_name is None:
-            self.project_name = str()
-        else:
-            self.project_name = project_name
-
-        if genome_version is None:
-            self.genome_version = str()
-        else:
-            self.genome_version = genome_version
-
-        if cache_directory is None:
-            self.cache_directory = str()
-        else:
-            self.cache_directory = cache_directory
-
-        if input_directory is None:
-            self.input_directory = str()
-        else:
-            self.input_directory = input_directory
-
-        if output_directory is None:
-            self.output_directory = str()
-        else:
-            self.output_directory = output_directory
-
-        if project_directory is None:
-            self.project_directory = str()
-        else:
-            self.project_directory = project_directory
-
-        if genome_directory is None:
-            self.genome_directory = str()
-        else:
-            self.genome_directory = genome_directory
-
-        if sas_file is None:
-            self.sas_file = str()
-        else:
-            self.sas_file = sas_file
-
-        if sas_prefix is None:
-            self.sas_prefix = str()
-        else:
-            self.sas_prefix = sas_prefix
-
-        if e_mail is None:
-            self.e_mail = str()
-        else:
-            self.e_mail = e_mail
-
-        if debug is None:
-            self.debug = int(x=0)
-        else:
-            assert isinstance(debug, int)
-            self.debug = debug
+        self.project_name = project_name
+        self.genome_version = genome_version
+        self.cache_directory = cache_directory
+        self.input_directory = input_directory
+        self.output_directory = output_directory
+        self.project_directory = project_directory
+        self.genome_directory = genome_directory
+        self.sas_file = sas_file
+        self.sas_prefix = sas_prefix
+        self.e_mail = e_mail
+        self.debug = debug
 
         if stage_list is None:
             self.stage_list = list()
@@ -542,7 +504,6 @@ class Analysis(object):
         @return:
         @rtype:
         """
-
         def _set_configuration(command, section):
             """Recursively set default C{bsf.argument.Argument} objects for a C{bsf.process.RunnableStep}.
 
@@ -613,7 +574,7 @@ class Analysis(object):
         executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
 
         # Only submit the bsf.process.Executable if the status file does not exist already.
-        if os.path.exists(runnable.absolute_runnable_status_file_path(success=True)):
+        if os.path.exists(runnable.runnable_status_file_path(success=True, absolute=True)):
             executable.submit = False
 
         stage.add_executable(executable=executable)
@@ -627,9 +588,11 @@ class Analysis(object):
         @return:
         @rtype:
         """
+        if self.debug is None:
+            self.debug = 0
 
         if not self.project_name:
-            raise Exception('An Analysis project_name has not been defined.')
+            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
 
         # Some analyses such as FastQC do not require a genome_version,
         # nor a genome_version-specific output directory.
@@ -663,8 +626,14 @@ class Analysis(object):
         # This allows analyses run against more than one directory and
         # simplifies UCSC Genome Browser track hub creation.
 
+        # FIXME: The Analysis(project_directory) option is ignored.
+        # Change the project_directory instance variable into a private (i.e. _project_directory) instance variable.
+        # Then, access via @property get_project_directory.
         self.project_directory = os.path.join(self.output_directory, self.project_name)
 
+        # FIXME: The Analysis(genome_directory) option is ignored.
+        # Change the genome_directory instance variable into a private (i.e. _genome_directory) instance variable.
+        # Then, access via @property get_genome_directory.
         if self.genome_version:
             self.genome_directory = os.path.join(self.project_directory, self.genome_version)
         else:
@@ -680,7 +649,7 @@ class Analysis(object):
         if not self.e_mail:
             self.e_mail = bsf.standards.Operator.get_e_mail()
             if not self.e_mail:
-                raise Exception("An 'Analysis' requires an 'e_mail' configuration option.")
+                raise Exception('A ' + self.name + " requires an 'e_mail' configuration option.")
 
         if self.sas_file:
             # Populate a bsf.ngs.Collection from a SampleAnnotationSheet.
@@ -714,7 +683,6 @@ class Analysis(object):
         @return:
         @rtype:
         """
-
         warnings.warn(
             "The 'report' method must be implemented in the sub-class.",
             UserWarning)
@@ -883,7 +851,6 @@ class Analysis(object):
         @return: XHTML 1.0 header section as Python C{list} of Python C{str} or C{unicode} objects
         @rtype: list[str | unicode]
         """
-
         if creator is None or not creator:
             creator = getpass.getuser()
             # The getpass.getuser method just relies on environment variables,
@@ -953,7 +920,6 @@ class Analysis(object):
         @return: XHTML 1.0 footer section as Python C{list} of Python C{str} or C{unicode} objects
         @rtype: list[str | unicode]
         """
-
         if not contact:
             contact = bsf.standards.Operator.get_contact()
 
@@ -1113,7 +1079,6 @@ class Analysis(object):
         @return:
         @rtype:
         """
-
         if prefix is None or not prefix:
             prefix = self.prefix
 
@@ -1140,7 +1105,6 @@ class Analysis(object):
         @rtype:
         @raise Exception: Output (genome) directory does not exist
         """
-
         if not os.path.isdir(self.genome_directory):
             answer = raw_input(
                 'Output (genome) directory ' + repr(self.genome_directory) + ' does not exist.\n' +
@@ -1277,7 +1241,6 @@ class Analysis(object):
         @return: A URL to attach a track to the UCSC Genome Browser
         @rtype: str
         """
-
         if options_dict is None:
             options_dict = dict()
 
@@ -1364,7 +1327,6 @@ class Analysis(object):
         @return:
         @rtype:
         """
-
         if prefix is None or not prefix:
             prefix = self.prefix
 
@@ -1457,7 +1419,6 @@ class Analysis(object):
         @return:
         @rtype:
         """
-
         if prefix is None or not prefix:
             prefix = self.prefix
 
@@ -1512,7 +1473,6 @@ class Analysis(object):
         @return:
         @rtype:
         """
-
         # Pickle all Runnable objects.
 
         for runnable in self.runnable_dict.values():
@@ -1559,29 +1519,29 @@ class Stage(object):
     @ivar implementation: Implementation (e.g. I{sge}, I{slurm}, ...)
     @type implementation: str
     @ivar memory_free_mem: Memory limit (free physical)
-    @type memory_free_mem: str
+    @type memory_free_mem: str | None
     @ivar memory_free_swap: Memory limit (free swap)
-    @type memory_free_swap: str
+    @type memory_free_swap: str | None
     @ivar memory_free_virtual: Memory limit (free virtual)
-    @type memory_free_virtual: str
+    @type memory_free_virtual: str | None
     @ivar memory_limit_hard: Memory limit (hard)
-    @type memory_limit_hard: str
+    @type memory_limit_hard: str | None
     @ivar memory_limit_soft: Memory limit (soft)
-    @type memory_limit_soft: str
+    @type memory_limit_soft: str | None
     @ivar node_list_exclude: List of nodes to exclude
-    @type node_list_exclude: list[str]
+    @type node_list_exclude: list[str] | None
     @ivar node_list_include: List of nodes to include
-    @type node_list_include: list[str]
+    @type node_list_include: list[str] | None
     @ivar time_limit: Time limit
-    @type time_limit: str
+    @type time_limit: str | None
     @ivar parallel_environment: Parallel environment
-    @type parallel_environment: str
+    @type parallel_environment: str | None
     @ivar queue: Queue
-    @type queue: str
+    @type queue: str | None
     @ivar threads: Number of threads
     @type threads: int
     @ivar hold: Hold on job scheduling
-    @type hold: str
+    @type hold: str | None
     @ivar is_script: C{bsf.process.Executable} objects represent shell scripts,
         or alternatively binary programs
     @type is_script: bool
@@ -1617,29 +1577,29 @@ class Stage(object):
         @param implementation: Implementation (e.g. I{sge}, I{slurm}, ...)
         @type implementation: str
         @param memory_free_mem: Memory limit (free physical)
-        @type memory_free_mem: str
+        @type memory_free_mem: str | None
         @param memory_free_swap: Memory limit (free swap)
-        @type memory_free_swap: str
+        @type memory_free_swap: str | None
         @param memory_free_virtual: Memory limit (free virtual)
-        @type memory_free_virtual: str
+        @type memory_free_virtual: str | None
         @param memory_limit_hard: Memory limit (hard)
-        @type memory_limit_hard: str
+        @type memory_limit_hard: str | None
         @param memory_limit_soft: Memory limit (soft)
-        @type memory_limit_soft: str
+        @type memory_limit_soft: str | None
         @param node_list_exclude: List of nodes to exclude
-        @type node_list_exclude: list[str]
+        @type node_list_exclude: list[str] | None
         @param node_list_include: List of nodes to include
-        @type node_list_include: list[str]
+        @type node_list_include: list[str] | None
         @param time_limit: Time limit
-        @type time_limit: str
+        @type time_limit: str | None
         @param parallel_environment: Parallel environment
-        @type parallel_environment: str
+        @type parallel_environment: str | None
         @param queue: Queue
-        @type queue: str
+        @type queue: str | None
         @param threads: Number of threads
         @type threads: int
         @param hold: Hold on job scheduling
-        @type hold: str
+        @type hold: str | None
         @param is_script: C{bsf.process.Executable} objects represent shell scripts,
             or alternatively binary programs
         @type is_script: bool
@@ -1648,7 +1608,6 @@ class Stage(object):
         @return:
         @rtype:
         """
-
         super(Stage, self).__init__()
 
         if name is None:
@@ -1666,66 +1625,25 @@ class Stage(object):
         else:
             self.implementation = implementation
 
-        if memory_free_mem is None:
-            self.memory_free_mem = str()
-        else:
-            self.memory_free_mem = memory_free_mem
-
-        if memory_free_swap is None:
-            self.memory_free_swap = str()
-        else:
-            self.memory_free_swap = memory_free_swap
-
-        if memory_free_virtual is None:
-            self.memory_free_virtual = str()
-        else:
-            self.memory_free_virtual = memory_free_virtual
-
-        if memory_limit_hard is None:
-            self.memory_limit_hard = str()
-        else:
-            self.memory_limit_hard = memory_limit_hard
-
-        if memory_limit_soft is None:
-            self.memory_limit_soft = str()
-        else:
-            self.memory_limit_soft = memory_limit_soft
-
-        if node_list_exclude is None:
-            self.node_list_exclude = list()
-        else:
-            self.node_list_exclude = node_list_exclude
-
-        if node_list_include is None:
-            self.node_list_include = list()
-        else:
-            self.node_list_include = node_list_include
-
-        if time_limit is None:
-            self.time_limit = str()
-        else:
-            self.time_limit = time_limit
-
-        if parallel_environment is None:
-            self.parallel_environment = str()
-        else:
-            self.parallel_environment = parallel_environment
-
-        if queue is None:
-            self.queue = str()
-        else:
-            self.queue = queue
+        self.memory_free_mem = memory_free_mem
+        self.memory_free_swap = memory_free_swap
+        self.memory_free_virtual = memory_free_virtual
+        self.memory_limit_hard = memory_limit_hard
+        self.memory_limit_soft = memory_limit_soft
+        self.node_list_exclude = node_list_exclude
+        self.node_list_include = node_list_include
+        self.time_limit = time_limit
+        self.parallel_environment = parallel_environment
+        self.queue = queue
 
         if threads is None:
-            self.threads = int(x=1)
+            self.threads = 1
         else:
             assert isinstance(threads, int)
             self.threads = threads
 
-        if hold is None:
-            self.hold = str()
-        else:
-            self.hold = hold
+        self.hold = hold
+        # FIXME: Does not seem to be used. Remove!
 
         if is_script is None:
             self.is_script = False
@@ -1790,7 +1708,6 @@ class Stage(object):
         @return:
         @rtype:
         """
-
         assert isinstance(configuration, bsf.standards.Configuration)
         assert isinstance(section, str)
 
@@ -1875,7 +1792,6 @@ class Stage(object):
         @return: C{bsf.process.Executable}
         @rtype: bsf.process.Executable
         """
-
         assert isinstance(executable, bsf.process.Executable)
 
         self.executable_list.append(executable)
@@ -1890,7 +1806,6 @@ class Stage(object):
         @return:
         @rtype:
         """
-
         # Dynamically import the module specific for the configured DRMS implementation.
 
         python_module = importlib.import_module(name='.'.join((__name__, 'drms', self.implementation)))
@@ -1906,7 +1821,6 @@ class Stage(object):
         @return:
         @rtype:
         """
-
         # Dynamically import the module specific for the configured DRMS implementation.
 
         python_module = importlib.import_module(name='.'.join((__name__, 'drms', self.implementation)))
@@ -1934,9 +1848,7 @@ class FilePath(object):
         @return:
         @rtype:
         """
-
         self.prefix = prefix
-        # self.temporary_directory = prefix + '_temporary'
 
         return
 
@@ -1957,7 +1869,7 @@ class Runnable(object):
         C{bsf.process.Executable} objects via the C{bsf.Runnable.runner_script}.
     @type code_module: str
     @ivar cache_directory: Cache directory
-    @type cache_directory: str | unicode
+    @type cache_directory: str | unicode | None
     @ivar cache_path_dict: Python C{dict} of Python C{str} (name) key and
         Python C{str} (file_path) value data of files that will be copied into the C{bsf.Runnable.cache_directory}
     @type cache_path_dict: dict[str, str | unicode]
@@ -1966,7 +1878,7 @@ class Runnable(object):
     @ivar runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
     @type runnable_step_list: list[bsf.process.RunnableStep]
     @ivar working_directory: Working directory to write C{pickle.Pickler} files
-    @type working_directory: str | unicode
+    @type working_directory: str | unicode | None
     @ivar debug: Debug level
     @type debug: int
     """
@@ -1993,7 +1905,7 @@ class Runnable(object):
         @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
         @type working_directory: str | unicode
         @param cache_directory: Cache directory
-        @type cache_directory: str | unicode
+        @type cache_directory: str | unicode | None
         @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
             Python C{str} (file_path) value data of files that will be copied into the C{bsf.Runnable.cache_directory}
         @type cache_path_dict: dict[str, str | unicode]
@@ -2011,12 +1923,8 @@ class Runnable(object):
 
         self.name = name  # Can be None.
         self.code_module = code_module  # Can be None.
-        self.working_directory = working_directory  # Can be None.
-
-        if cache_directory is None:
-            self.cache_directory = str()
-        else:
-            self.cache_directory = cache_directory
+        self.working_directory = working_directory
+        self.cache_directory = cache_directory
 
         if cache_path_dict is None:
             self.cache_path_dict = dict()
@@ -2034,7 +1942,7 @@ class Runnable(object):
             self.runnable_step_list = runnable_step_list
 
         if debug is None:
-            self.debug = int(x=0)
+            self.debug = 0
         else:
             assert isinstance(debug, int)
             self.debug = debug
@@ -2078,11 +1986,10 @@ class Runnable(object):
         """Convenience method to facilitate initialising, adding and returning a C{bsf.process.RunnableStep}.
 
         @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep
+        @type runnable_step: bsf.process.RunnableStep | None
         @return: C{bsf.process.RunnableStep}
         @rtype: bsf.process.RunnableStep
         """
-
         if runnable_step is None:
             return
 
@@ -2099,7 +2006,6 @@ class Runnable(object):
         @return: Python C{pickle.Pickler} file path
         @rtype: str | unicode
         """
-
         return os.path.join(self.working_directory, '.'.join((self.name, 'pkl')))
 
     def to_pickler_path(self):
@@ -2108,7 +2014,6 @@ class Runnable(object):
         @return:
         @rtype:
         """
-
         pickler_file = open(self.pickler_path, 'wb')
         pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
         pickler.dump(obj=self)
@@ -2125,7 +2030,6 @@ class Runnable(object):
         @return: C{bsf.Runnable}
         @rtype: bsf.Runnable
         """
-
         pickler_file = open(file_path, 'rb')
         unpickler = pickle.Unpickler(file=pickler_file)
         runnable = unpickler.load()
@@ -2137,29 +2041,8 @@ class Runnable(object):
 
         return runnable
 
-    @property
-    def get_relative_cache_directory_path(self):
-        """Get the relative cache directory path of a C{bsf.Runnable}.
-
-        @return: Relative cache directory path (i.e. C{bsf.Runnable.name}_cache)
-        @rtype: str
-        """
-
-        return '_'.join((self.name, 'cache'))
-
-    @property
-    def get_relative_temporary_directory_path(self):
-        """Get the relative temporary directory path of a C{bsf.Runnable}.
-
-        @return: Relative temporary directory path (i.e. C{bsf.Runnable.name}_temporary)
-        @rtype: str
-        """
-
-        return '_'.join((self.name, 'temporary'))
-
-    @property
-    def get_absolute_cache_directory_path(self):
-        """Get the absolute cache directory path including the C{bsf.Runnable.cache_directory}.
+    def cache_directory_path(self, absolute=False):
+        """Get the absolute or relative cache directory path of a C{bsf.Runnable}.
 
         If C{bsf.Runnable.cache_directory} is not defined, C{bsf.Runnable.working_directory} will be prepended.
         Since the relative cache directory path includes the C{bsf.Runnable.name},
@@ -2167,56 +2050,75 @@ class Runnable(object):
         (i.e. C{bsf.Runnable.cache_directory}/C{bsf.Runnable.name}_cache or
         C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_cache)
 
-        @return: Absolute cache directory path
-        @rtype: str
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Absolute or relative cache directory path
+        @rtype: str | unicode
         """
+        directory_name = '_'.join((self.name, 'cache'))
 
-        if self.cache_directory:
+        if absolute:
+            if self.cache_directory:
+                default_path = self.cache_directory
+            else:
+                default_path = self.working_directory
             return bsf.standards.Configuration.get_absolute_path(
-                file_path=self.get_relative_cache_directory_path,
-                default_path=self.cache_directory)
+                file_path=directory_name,
+                default_path=default_path)
         else:
-            return bsf.standards.Configuration.get_absolute_path(
-                file_path=self.get_relative_cache_directory_path,
-                default_path=self.working_directory)
+            return directory_name
 
-    def get_absolute_cache_file_path(self, file_path):
-        """Get the absolute cache file path for a file path.
+    def get_cache_file_path(self, file_path, absolute=False):
+        """Get the absolute or relative cache file path for a file path.
 
         @param file_path: Default file path
         @type file_path: str | unicode
-        @return: Absolute cache file path
-        @rtype: str
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Absolute or relative cache file path
+        @rtype: str | unicode
         """
-
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
-        return os.path.join(self.get_absolute_cache_directory_path, file_name)
+        return os.path.join(self.cache_directory_path(absolute=absolute), file_name)
 
-    @property
-    def get_absolute_temporary_directory_path(self):
-        """Get the absolute temporary directory path including the C{bsf.Runnable.working_directory}.
+    def temporary_directory_path(self, absolute=False):
+        """Get the absolute or relative temporary directory path of a C{bsf.Runnable}.
 
-        @return: Absolute temporary directory path
-            (i.e. C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_temporary)
-        @rtype: str
+        The absolute path prepends the C{bsf.Runnable.working_directory},
+        the relative just C{bsf.Runnable.name}_temporary.
+        @param absolute: Absolute or relative file path
+        @type absolute: bool
+        @return: Absolute or relative temporary directory path
+        @rtype: str | unicode
         """
+        directory_name = '_'.join((self.name, 'temporary'))
 
-        return os.path.join(self.working_directory, self.get_relative_temporary_directory_path)
+        if absolute:
+            return os.path.join(self.working_directory, directory_name)
+        else:
+            return directory_name
 
-    def runnable_status_file_path(self, success=True):
+    def runnable_status_file_path(self, success=True, absolute=False):
         """Get the status file path for a C{bsf.Runnable}.
 
         @param success: Successful completion
         @type success: bool
+        @param absolute: Absolute file path
+        @type absolute: bool
         @return: Status file path
-        @rtype: str
+        @rtype: str | unicode
         """
         if success:
-            return '_'.join((self.name, 'completed.txt'))
+            file_name = '_'.join((self.name, 'completed.txt'))
         else:
-            return '_'.join((self.name, 'failed.txt'))
+            file_name = '_'.join((self.name, 'failed.txt'))
+
+        if absolute:
+            return os.path.join(self.working_directory, file_name)
+        else:
+            return file_name
 
     def runnable_status_file_create(self, success=True):
         """Create an empty status file for a C{bsf.Runnable}.
@@ -2259,36 +2161,38 @@ class Runnable(object):
 
         return
 
-    def runnable_step_status_file_path(self, runnable_step, success=True):
+    def runnable_step_status_file_path(self, runnable_step=None, success=True):
         """Get the status file path for a C{bsf.process.RunnableStep} of a C{bsf.Runnable}.
 
         @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep
+        @type runnable_step: bsf.process.RunnableStep | None
         @param success: Successful completion
         @type success: bool
         @return: Status file path
-        @rtype: str
+        @rtype: str | None
         """
-        assert isinstance(runnable_step, bsf.process.RunnableStep)
+        if runnable_step is None:
+            return
 
         if success:
             return '_'.join((self.name, runnable_step.name, 'completed.txt'))
         else:
             return '_'.join((self.name, runnable_step.name, 'failed.txt'))
 
-    def runnable_step_status_file_create(self, runnable_step, success=True):
+    def runnable_step_status_file_create(self, runnable_step=None, success=True):
         """Create an empty status file for a C{bsf.process.RunnableStep} of a C{bsf.Runnable}.
 
         This method is mainly used by C{bsf.runnable.generic} and related modules.
 
-        @param runnable_step: C{bsf.process.RunnableStep}
+        @param runnable_step: C{bsf.process.RunnableStep} | None
         @type runnable_step: bsf.process.RunnableStep
         @param success: Successful completion
         @type success: bool
         @return:
         @rtype:
         """
-        assert isinstance(runnable_step, bsf.process.RunnableStep)
+        if runnable_step is None:
+            return
 
         status_path = self.runnable_step_status_file_path(runnable_step=runnable_step, success=success)
         open(status_path, 'w').close()
@@ -2301,12 +2205,10 @@ class Runnable(object):
         This method is mainly used by C{bsf.runnable.generic} and related modules.
 
         @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep
+        @type runnable_step: bsf.process.RunnableStep | None
         @return:
         @rtype:
         """
-        assert isinstance(runnable_step, bsf.process.RunnableStep)
-
         if runnable_step is None:
             return
 
@@ -2327,13 +2229,3 @@ class Runnable(object):
                 raise
 
         return
-
-    def absolute_runnable_status_file_path(self, success=True):
-        """Get the absolute status file path including the C{bsf.Runnable.working_directory}.
-
-        @return: Absolute status file path
-            C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_completed.txt or
-            C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_failed.txt
-        @rtype: str
-        """
-        return os.path.join(self.working_directory, self.runnable_status_file_path(success=success))

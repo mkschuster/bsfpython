@@ -661,7 +661,7 @@ class Aligner(bsf.Analysis):
                         obsolete_file_path_list=[
                             file_path_align.aligned_sam,
                         ],
-                        java_temporary_path=runnable_index.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_index.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
                         java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
                         picard_command='CleanSam'))
@@ -673,7 +673,7 @@ class Aligner(bsf.Analysis):
                 # TMP_DIR [null]
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
-                    value=runnable_index.get_relative_temporary_directory_path)
+                    value=runnable_index.temporary_directory_path(absolute=False))
                 # VERBOSITY [INFO]
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                 # QUIET [false]
@@ -695,7 +695,7 @@ class Aligner(bsf.Analysis):
                         obsolete_file_path_list=[
                             file_path_align.cleaned_sam,
                         ],
-                        java_temporary_path=runnable_index.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_index.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
                         java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
                         picard_command='SortSam'))
@@ -709,7 +709,7 @@ class Aligner(bsf.Analysis):
                 # TMP_DIR [null]
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
-                    value=runnable_index.get_relative_temporary_directory_path)
+                    value=runnable_index.temporary_directory_path(absolute=False))
                 # VERBOSITY [INFO]
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                 # QUIET [false]
@@ -786,7 +786,7 @@ class Aligner(bsf.Analysis):
                     runnable_step = runnable_read_group.add_runnable_step(
                         runnable_step=bsf.process.RunnableStepPicard(
                             name='picard_merge_sam_files',
-                            java_temporary_path=runnable_read_group.get_relative_temporary_directory_path,
+                            java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx4G',
                             picard_classpath=self.classpath_picard,
                             picard_command='MergeSamFiles'))
@@ -814,7 +814,7 @@ class Aligner(bsf.Analysis):
                     # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
-                        value=runnable_read_group.get_relative_temporary_directory_path)
+                        value=runnable_read_group.temporary_directory_path(absolute=False))
                     # VERBOSITY [INFO]
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                     # QUIET [false]
@@ -860,7 +860,7 @@ class Aligner(bsf.Analysis):
                                 file_path_read_group.merged_bam,
                                 file_path_read_group.merged_md5,
                             ],
-                            java_temporary_path=runnable_read_group.get_relative_temporary_directory_path,
+                            java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx8G',
                             java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
                             picard_command='MergeBamAlignment'))
@@ -902,7 +902,7 @@ class Aligner(bsf.Analysis):
                     # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
-                        value=runnable_read_group.get_relative_temporary_directory_path)
+                        value=runnable_read_group.temporary_directory_path(absolute=False))
                     # VERBOSITY [INFO]
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                     # QUIET [false]
@@ -980,7 +980,7 @@ class Aligner(bsf.Analysis):
                 runnable_step = runnable_sample.add_runnable_step(
                     runnable_step=bsf.process.RunnableStepPicard(
                         name='picard_merge_sam_files',
-                        java_temporary_path=runnable_sample.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
                         picard_classpath=self.classpath_picard,
                         picard_command='MergeSamFiles'))
@@ -1006,7 +1006,7 @@ class Aligner(bsf.Analysis):
                 # TMP_DIR [null]
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
-                    value=runnable_sample.get_relative_temporary_directory_path)
+                    value=runnable_sample.temporary_directory_path(absolute=False))
                 # VERBOSITY [INFO]
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                 # QUIET [false]
@@ -1037,7 +1037,7 @@ class Aligner(bsf.Analysis):
             runnable_step = runnable_sample.add_runnable_step(
                 runnable_step=bsf.process.RunnableStepPicard(
                     name='picard_collect_alignment_summary_metrics',
-                    java_temporary_path=runnable_sample.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
                     picard_classpath=self.classpath_picard,
                     picard_command='CollectAlignmentSummaryMetrics'))
@@ -1067,7 +1067,7 @@ class Aligner(bsf.Analysis):
             # TMP_DIR [null]
             runnable_step.add_picard_option(
                 key='TMP_DIR',
-                value=runnable_sample.get_relative_temporary_directory_path)
+                value=runnable_sample.temporary_directory_path(absolute=False))
             # VERBOSITY [INFO]
             runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
             # QUIET [false]

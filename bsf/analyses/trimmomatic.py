@@ -469,7 +469,7 @@ class Trimmomatic(bsf.Analysis):
                     runnable_step_read_group = runnable_read_group.add_runnable_step(
                         runnable_step=bsf.process.RunnableStepJava(
                             name='trimmomatic',
-                            java_temporary_path=runnable_read_group.get_relative_temporary_directory_path,
+                            java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx4G',
                             java_jar_path=self.classpath_trimmomatic))
                     """ @type runnable_step_read_group: bsf.process.RunnableStepJava """

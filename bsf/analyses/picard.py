@@ -994,7 +994,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 runnable_step = runnable_lane.add_runnable_step(
                     runnable_step=bsf.process.RunnableStepPicard(
                         name='picard_extract_illumina_barcodes',
-                        java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx2G',
                         picard_classpath=self.classpath_picard,
                         picard_command='ExtractIlluminaBarcodes'))
@@ -1026,7 +1026,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
-                    value=runnable_lane.get_relative_temporary_directory_path)
+                    value=runnable_lane.temporary_directory_path(absolute=False))
                 # VERBOSITY defaults to 'INFO'.
                 # QUIET defaults to 'false'.
                 # VALIDATION_STRINGENCY defaults to 'STRICT'.
@@ -1055,7 +1055,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             runnable_step = runnable_lane.add_runnable_step(
                 runnable_step=bsf.process.RunnableStepPicard(
                     name='picard_illumina_basecalls_to_sam',
-                    java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx2G',
                     picard_classpath=self.classpath_picard,
                     picard_command='IlluminaBasecallsToSam'))
@@ -1109,7 +1109,9 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             # MOLECULAR_INDEX_TAG defaults to 'RX'.
             # MOLECULAR_INDEX_BASE_QUALITY_TAG defaults to 'QX'.
             # TAG_PER_MOLECULAR_INDEX The list of tags to store each molecular index.
-            runnable_step.add_picard_option(key='TMP_DIR', value=runnable_lane.get_relative_temporary_directory_path)
+            runnable_step.add_picard_option(
+                key='TMP_DIR',
+                value=runnable_lane.temporary_directory_path(absolute=False))
             # VERBOSITY defaults to 'INFO'.
             # QUIET defaults to 'false'.
             # VALIDATION_STRINGENCY defaults to 'STRICT'.
@@ -1579,7 +1581,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             runnable_step = runnable_lane.add_runnable_step(
                 runnable_step=bsf.process.RunnableStepPicard(
                     name='picard_illumina_basecalls_to_multiplex_sam',
-                    java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx16G',
                     picard_classpath=self.classpath_picard,
                     picard_command='IlluminaBasecallsToMultiplexSam'))
@@ -1617,7 +1619,9 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             # MOLECULAR_INDEX_BASE_QUALITY_TAG
             # TAG_PER_MOLECULAR_INDEX
             # TMP_DIR
-            runnable_step.add_picard_option(key='TMP_DIR', value=runnable_lane.get_relative_temporary_directory_path)
+            runnable_step.add_picard_option(
+                key='TMP_DIR',
+                value=runnable_lane.temporary_directory_path(absolute=False))
             # VERBOSITY defaults to 'INFO'.
             # QUIET defaults to 'false'.
             # VALIDATION_STRINGENCY defaults to 'STRICT'.
@@ -2375,7 +2379,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
             runnable_step = runnable_lane.add_runnable_step(
                 runnable_step=bsf.process.RunnableStepPicard(
                     name='picard_illumina_demultiplex_sam',
-                    java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx2G',
                     picard_classpath=self.classpath_picard,
                     picard_command='IlluminaSamDemux'))
@@ -2416,7 +2420,9 @@ class IlluminaDemultiplexSam(bsf.Analysis):
                 runnable_step.add_picard_option(
                     key='READ_STRUCTURE',
                     value=irf.run_information.get_picard_read_structure)
-            runnable_step.add_picard_option(key='TMP_DIR', value=runnable_lane.get_relative_temporary_directory_path)
+            runnable_step.add_picard_option(
+                key='TMP_DIR',
+                value=runnable_lane.temporary_directory_path(absolute=False))
             # VERBOSITY defaults to 'INFO'.
             # QUIET defaults to 'false'.
             # VALIDATION_STRINGENCY defaults to 'STRICT'.
@@ -2605,7 +2611,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
             runnable_step = runnable_lane.add_runnable_step(
                 runnable_step=bsf.process.RunnableStepPicard(
                     name='collect_hiseq_x_fail_metrics',
-                    java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
                     picard_classpath=self.classpath_picard,
                     picard_command='CollectHiSeqXPfFailMetrics'))
@@ -2619,6 +2625,9 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
             # NUM_PROCESSORS defaults to '1'.
             runnable_step.add_picard_option(key='NUM_PROCESSORS', value=str(stage_lane.threads))
             # N_CYCLES defaults to '24'. Should match Illumina RTA software.
+            runnable_step.add_picard_option(
+                key='TMP_DIR',
+                value=runnable_lane.temporary_directory_path(absolute=False))
 
         return
 
@@ -2870,7 +2879,7 @@ class DownsampleSam(bsf.Analysis):
                     runnable_step = runnable_picard_dss.add_runnable_step(
                         runnable_step=bsf.process.RunnableStepPicard(
                             name='picard_downsample_sam',
-                            java_temporary_path=runnable_picard_dss.get_relative_temporary_directory_path,
+                            java_temporary_path=runnable_picard_dss.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx2G',
                             picard_classpath=self.classpath_picard,
                             picard_command='DownsampleSam'))
@@ -2886,7 +2895,7 @@ class DownsampleSam(bsf.Analysis):
                             value=paired_reads.annotation_dict['DownsampleSam Probability'][0])
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
-                        value=runnable_picard_dss.get_relative_temporary_directory_path)
+                        value=runnable_picard_dss.temporary_directory_path(absolute=False))
                     # VERBOSITY defaults to 'INFO'.
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                     # QUIET defaults to 'false'.
@@ -3297,7 +3306,7 @@ class SamToFastq(bsf.Analysis):
                         runnable_step = runnable_read_group.add_runnable_step(
                             runnable_step=bsf.process.RunnableStepPicard(
                                 name='picard_sam_to_fastq',
-                                java_temporary_path=runnable_read_group.get_relative_temporary_directory_path,
+                                java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                                 java_heap_maximum='Xmx2G',
                                 picard_classpath=self.classpath_picard,
                                 picard_command='SamToFastq'))
@@ -3329,7 +3338,7 @@ class SamToFastq(bsf.Analysis):
                         # INCLUDE_NON_PRIMARY_ALIGNMENTS
                         runnable_step.add_picard_option(
                             key='TMP_DIR',
-                            value=runnable_read_group.get_relative_temporary_directory_path)
+                            value=runnable_read_group.temporary_directory_path(absolute=False))
                         # VERBOSITY defaults to 'INFO'.
                         runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                         # QUIET defaults to 'false'.

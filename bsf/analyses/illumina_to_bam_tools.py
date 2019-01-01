@@ -966,7 +966,7 @@ class IlluminaToBam(bsf.Analysis):
             runnable_step = runnable_lane.add_runnable_step(
                 runnable_step=RunnableStepIlluminaToBam(
                     name='illumina_to_bam',
-                    java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum=java_heap_maximum,
                     itb_classpath=self.classpath_illumina2bam,
                     itb_command='Illumina2bam'))
@@ -1030,7 +1030,7 @@ class IlluminaToBam(bsf.Analysis):
             # TMP_DIR
             runnable_step.add_itb_option(
                 key='TMP_DIR',
-                value=runnable_lane.get_relative_temporary_directory_path)
+                value=runnable_lane.temporary_directory_path(absolute=False))
             # VERBOSITY defaults to 'INFO'.
             runnable_step.add_itb_option(key='VERBOSITY', value='WARNING')
             # QUIET defaults to 'false'.
@@ -1065,7 +1065,7 @@ class IlluminaToBam(bsf.Analysis):
                             file_path_lane.unsorted_bam,
                             file_path_lane.unsorted_md5,
                         ],
-                        java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx18G',
                         picard_classpath=self.classpath_picard,
                         picard_command='SortSam'))
@@ -1079,7 +1079,7 @@ class IlluminaToBam(bsf.Analysis):
                 # TMP_DIR
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
-                    value=runnable_lane.get_relative_temporary_directory_path)
+                    value=runnable_lane.temporary_directory_path(absolute=False))
                 # VERBOSITY defaults to 'INFO'.
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                 # QUIET defaults to 'false'.
@@ -1735,7 +1735,7 @@ class BamIndexDecoder(bsf.Analysis):
                 runnable_step = runnable_lane.add_runnable_step(
                     runnable_step=RunnableStepIlluminaToBam(
                         name='bam_index_decoder',
-                        java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
                         itb_classpath=self.classpath_illumina2bam,
                         itb_command='BamIndexDecoder'))
@@ -1781,7 +1781,7 @@ class BamIndexDecoder(bsf.Analysis):
                 # TMP_DIR
                 runnable_step.add_itb_option(
                     key='TMP_DIR',
-                    value=runnable_lane.get_relative_temporary_directory_path)
+                    value=runnable_lane.temporary_directory_path(absolute=False))
                 # VERBOSITY defaults to 'INFO'.
                 runnable_step.add_itb_option(key='VERBOSITY', value='WARNING')
                 # QUIET defaults to 'false'.
@@ -1844,7 +1844,7 @@ class BamIndexDecoder(bsf.Analysis):
                         obsolete_file_path_list=[
                             file_path_lane.barcode_tsv,
                         ],
-                        java_temporary_path=runnable_lane.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
                         picard_classpath=self.classpath_picard,
                         picard_command='CollectAlignmentSummaryMetrics'))
@@ -1864,7 +1864,7 @@ class BamIndexDecoder(bsf.Analysis):
                 # TMP_DIR
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
-                    value=runnable_lane.get_relative_temporary_directory_path)
+                    value=runnable_lane.temporary_directory_path(absolute=False))
                 # VERBOSITY defaults to 'INFO'.
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                 # QUIET defaults to 'false'.

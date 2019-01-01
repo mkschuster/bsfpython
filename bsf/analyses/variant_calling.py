@@ -2230,14 +2230,16 @@ class VariantCallingGATK(bsf.Analysis):
 
                 runnable_scatter_list.append(runnable_scatter)
 
-                reference_scatter = runnable_scatter.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
+                reference_scatter = runnable_scatter.get_cache_file_path(
+                    file_path=self.bwa_genome_db,
+                    absolute=True)
 
                 # Run GATK CombineGVCFs
 
                 _runnable_step = runnable_scatter.add_runnable_step(
                     runnable_step=RunnableStepGATK(
                         name='merge_cohort_gatk_combine_gvcfs',
-                        java_temporary_path=runnable_scatter.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_scatter.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type _runnable_step: RunnableStepGATK """
@@ -2328,7 +2330,9 @@ class VariantCallingGATK(bsf.Analysis):
                         temporary_runnable_gather_list.append(runnable_gather)
                         temporary_tile_index_list.append(partition_index)
 
-                        reference_gather = runnable_gather.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
+                        reference_gather = runnable_gather.get_cache_file_path(
+                            file_path=self.bwa_genome_db,
+                            absolute=True)
 
                         # GATK CatVariants bypasses the GATK engine and thus requires a completely different
                         # command line.
@@ -2336,7 +2340,7 @@ class VariantCallingGATK(bsf.Analysis):
                             runnable_step=bsf.process.RunnableStepJava(
                                 name='merge_cohort_gatk_cat_variants',
                                 sub_command=bsf.process.Command(program='org.broadinstitute.gatk.tools.CatVariants'),
-                                java_temporary_path=runnable_gather.get_relative_temporary_directory_path,
+                                java_temporary_path=runnable_gather.temporary_directory_path(absolute=False),
                                 java_heap_maximum='Xmx4G'))
                         """ @type _runnable_step: bsf.process.RunnableStepJava """
                         _runnable_step.add_option_short(
@@ -2447,14 +2451,16 @@ class VariantCallingGATK(bsf.Analysis):
 
                 runnable_scatter_list.append(runnable_scatter)
 
-                reference_scatter = runnable_scatter.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
+                reference_scatter = runnable_scatter.get_cache_file_path(
+                    file_path=self.bwa_genome_db,
+                    absolute=True)
 
                 # Run the GATK GenotypeGVCFs analysis.
 
                 _runnable_step = runnable_scatter.add_runnable_step(
                     runnable_step=RunnableStepGATK(
                         name='process_cohort_gatk_genotype_gvcfs_scatter',
-                        java_temporary_path=runnable_scatter.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_scatter.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx12G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type _runnable_step: RunnableStepGATK """
@@ -2530,7 +2536,9 @@ class VariantCallingGATK(bsf.Analysis):
                         temporary_runnable_gather_list.append(runnable_gather)
                         temporary_tile_index_list.append(partition_index)
 
-                        reference_gather = runnable_gather.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
+                        reference_gather = runnable_gather.get_cache_file_path(
+                            file_path=self.bwa_genome_db,
+                            absolute=True)
 
                         # GATK CatVariants by-passes the GATK engine and thus requires a completely different
                         # command line.
@@ -2538,7 +2546,7 @@ class VariantCallingGATK(bsf.Analysis):
                             runnable_step=bsf.process.RunnableStepJava(
                                 name='merge_cohort_gatk_cat_variants',
                                 sub_command=bsf.process.Command(program='org.broadinstitute.gatk.tools.CatVariants'),
-                                java_temporary_path=runnable_gather.get_relative_temporary_directory_path,
+                                java_temporary_path=runnable_gather.temporary_directory_path(absolute=False),
                                 java_heap_maximum='Xmx4G'))
                         """ @type _runnable_step: bsf.process.RunnableStepJava """
                         _runnable_step.add_option_short(
@@ -2662,14 +2670,16 @@ class VariantCallingGATK(bsf.Analysis):
 
                 runnable_scatter_list.append(runnable_scatter)
 
-                reference_scatter = runnable_scatter.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
+                reference_scatter = runnable_scatter.get_cache_file_path(
+                    file_path=self.bwa_genome_db,
+                    absolute=True)
 
                 # Run GATK MuTect2
 
                 _runnable_step = runnable_scatter.add_runnable_step(
                     runnable_step=RunnableStepGATK(
                         name='somatic_gatk_mutect2_scatter',
-                        java_temporary_path=runnable_scatter.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_scatter.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type _runnable_step: RunnableStepGATK """
@@ -2771,7 +2781,9 @@ class VariantCallingGATK(bsf.Analysis):
                         temporary_runnable_gather_list.append(runnable_gather)
                         temporary_tile_index_list.append(partition_index)
 
-                        reference_gather = runnable_gather.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
+                        reference_gather = runnable_gather.get_cache_file_path(
+                            file_path=self.bwa_genome_db,
+                            absolute=True)
 
                         # GATK CatVariants by-passes the GATK engine and thus requires a completely different
                         # command line.
@@ -2779,7 +2791,7 @@ class VariantCallingGATK(bsf.Analysis):
                             runnable_step=bsf.process.RunnableStepJava(
                                 name='somatic_gatk_cat_variants',
                                 sub_command=bsf.process.Command(program='org.broadinstitute.gatk.tools.CatVariants'),
-                                java_temporary_path=runnable_gather.get_relative_temporary_directory_path,
+                                java_temporary_path=runnable_gather.temporary_directory_path(absolute=False),
                                 java_heap_maximum='Xmx4G'))
                         """ @type _runnable_step: bsf.process.RunnableStepJava """
                         _runnable_step.add_option_short(
@@ -2867,7 +2879,9 @@ class VariantCallingGATK(bsf.Analysis):
                     file_path_object=file_path_annotate,
                     debug=self.debug))
 
-            reference_annotate = runnable_annotate.get_absolute_cache_file_path(file_path=self.bwa_genome_db)
+            reference_annotate = runnable_annotate.get_cache_file_path(
+                file_path=self.bwa_genome_db,
+                absolute=True)
 
             # Run the snpEff tool for functional variant annotation.
 
@@ -2887,7 +2901,7 @@ class VariantCallingGATK(bsf.Analysis):
                 key='Xmx6G')
             _runnable_step.add_option_pair(
                 key='-Djava.io.tmpdir',
-                value=runnable_annotate.get_relative_temporary_directory_path)
+                value=runnable_annotate.temporary_directory_path(absolute=False))
             _runnable_step.stdout_path = file_path_annotate.snpeff_vcf
 
             _sub_command = _runnable_step.sub_command
@@ -2920,7 +2934,7 @@ class VariantCallingGATK(bsf.Analysis):
             _runnable_step = runnable_annotate.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='gatk_variant_annotator',
-                    java_temporary_path=runnable_annotate.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_annotate.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
                     gatk_classpath=self.classpath_gatk))
             """ @type _runnable_step: RunnableStepGATK """
@@ -3051,7 +3065,7 @@ class VariantCallingGATK(bsf.Analysis):
             _sub_command.add_switch_long(key='no_progress')
             _sub_command.add_option_long(
                 key='tmpdir',
-                value=runnable_annotate.get_relative_temporary_directory_path)
+                value=runnable_annotate.temporary_directory_path(absolute=False))
 
             runnable_annotate.add_runnable_step(
                 runnable_step=bsf.process.RunnableStep(
@@ -3651,8 +3665,9 @@ class VariantCallingGATK(bsf.Analysis):
                 # Set dependencies for succeeding bsf.Runnable or bsf.process.Executable objects.
                 runnable_process_read_group_list.append(runnable_process_lane)
 
-                reference_process_lane = runnable_process_lane.get_absolute_cache_file_path(
-                    file_path=self.bwa_genome_db)
+                reference_process_lane = runnable_process_lane.get_cache_file_path(
+                    file_path=self.bwa_genome_db,
+                    absolute=True)
 
                 # Run the Picard MarkDuplicates analysis, unless configured to skip it.
 
@@ -3671,7 +3686,7 @@ class VariantCallingGATK(bsf.Analysis):
                                 file_path_alignment.aligned_bai,
                                 file_path_alignment.aligned_md5,
                             ],
-                            java_temporary_path=runnable_process_lane.get_relative_temporary_directory_path,
+                            java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx4G',
                             picard_classpath=self.classpath_picard,
                             picard_command='MarkDuplicates'))
@@ -3698,7 +3713,7 @@ class VariantCallingGATK(bsf.Analysis):
                         value='5000')
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
-                        value=runnable_process_lane.get_relative_temporary_directory_path)
+                        value=runnable_process_lane.temporary_directory_path(absolute=False))
                     # VERBOSITY defaults to 'INFO'.
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                     # QUIET defaults to 'false'.
@@ -3726,7 +3741,7 @@ class VariantCallingGATK(bsf.Analysis):
                     runnable_step = runnable_process_lane.add_runnable_step(
                         runnable_step=RunnableStepGATK(
                             name='process_lane_gatk_realigner_target_creator',
-                            java_temporary_path=runnable_process_lane.get_relative_temporary_directory_path,
+                            java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx6G',
                             gatk_classpath=self.classpath_gatk))
                     """ @type runnable_step: RunnableStepGATK """
@@ -3753,7 +3768,7 @@ class VariantCallingGATK(bsf.Analysis):
                                 file_path_process_read_group.duplicates_marked_bai,
                                 file_path_process_read_group.duplicates_marked_md5,
                             ],
-                            java_temporary_path=runnable_process_lane.get_relative_temporary_directory_path,
+                            java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx6G',
                             gatk_classpath=self.classpath_gatk))
                     """ @type runnable_step: RunnableStepGATK """
@@ -3781,7 +3796,7 @@ class VariantCallingGATK(bsf.Analysis):
                 runnable_step = runnable_process_lane.add_runnable_step(
                     runnable_step=RunnableStepGATK(
                         name='process_lane_gatk_base_recalibrator_pre',
-                        java_temporary_path=runnable_process_lane.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx6G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type runnable_step: RunnableStepGATK """
@@ -3798,7 +3813,7 @@ class VariantCallingGATK(bsf.Analysis):
                 runnable_step = runnable_process_lane.add_runnable_step(
                     runnable_step=RunnableStepGATK(
                         name='process_lane_gatk_base_recalibrator_post',
-                        java_temporary_path=runnable_process_lane.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx6G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type runnable_step: RunnableStepGATK """
@@ -3816,7 +3831,7 @@ class VariantCallingGATK(bsf.Analysis):
                 runnable_step = runnable_process_lane.add_runnable_step(
                     runnable_step=RunnableStepGATK(
                         name='process_lane_gatk_analyze_covariates',
-                        java_temporary_path=runnable_process_lane.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx6G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type runnable_step: RunnableStepGATK """
@@ -3843,7 +3858,7 @@ class VariantCallingGATK(bsf.Analysis):
                             file_path_process_read_group.realigned_bai,
                             file_path_process_read_group.realigned_md5,
                         ],
-                        java_temporary_path=runnable_process_lane.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx6G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type runnable_step: RunnableStepGATK """
@@ -3861,7 +3876,7 @@ class VariantCallingGATK(bsf.Analysis):
                 runnable_step = runnable_process_lane.add_runnable_step(
                     runnable_step=bsf.process.RunnableStepPicard(
                         name='process_lane_picard_collect_alignment_summary_metrics',
-                        java_temporary_path=runnable_process_lane.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_process_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx6G',
                         picard_classpath=self.classpath_picard,
                         picard_command='CollectAlignmentSummaryMetrics'))
@@ -3879,7 +3894,7 @@ class VariantCallingGATK(bsf.Analysis):
                 runnable_step.add_picard_option(key='REFERENCE_SEQUENCE', value=self.bwa_genome_db)
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
-                    value=runnable_process_lane.get_relative_temporary_directory_path)
+                    value=runnable_process_lane.temporary_directory_path(absolute=False))
                 # VERBOSITY defaults to 'INFO'.
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                 # QUIET defaults to 'false'.
@@ -3926,8 +3941,9 @@ class VariantCallingGATK(bsf.Analysis):
             for runnable_process_lane in runnable_process_read_group_list:
                 executable_process_sample.dependencies.append(runnable_process_lane.name)
 
-            reference_process_sample = runnable_process_sample.get_absolute_cache_file_path(
-                file_path=self.bwa_genome_db)
+            reference_process_sample = runnable_process_sample.get_cache_file_path(
+                file_path=self.bwa_genome_db,
+                absolute=True)
 
             if len(runnable_process_read_group_list) == 1:
                 # If there is only one read group, sample-level read processing can be skipped.
@@ -3977,7 +3993,7 @@ class VariantCallingGATK(bsf.Analysis):
                 runnable_step = runnable_process_sample.add_runnable_step(
                     runnable_step=bsf.process.RunnableStepPicard(
                         name='process_sample_picard_merge_sam_files',
-                        java_temporary_path=runnable_process_sample.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_process_sample.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx6G',
                         picard_classpath=self.classpath_picard,
                         picard_command='MergeSamFiles'))
@@ -4001,7 +4017,7 @@ class VariantCallingGATK(bsf.Analysis):
                 runnable_step.add_picard_option(key='USE_THREADING', value='true')
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
-                    value=runnable_process_sample.get_relative_temporary_directory_path)
+                    value=runnable_process_sample.temporary_directory_path(absolute=False))
                 # VERBOSITY defaults to 'INFO'.
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                 # QUIET defaults to 'false'.
@@ -4047,7 +4063,7 @@ class VariantCallingGATK(bsf.Analysis):
                                 file_path_process_sample.merged_bai,
                                 file_path_process_sample.merged_md5,
                             ],
-                            java_temporary_path=runnable_process_sample.get_relative_temporary_directory_path,
+                            java_temporary_path=runnable_process_sample.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx6G',
                             picard_classpath=self.classpath_picard,
                             picard_command='MarkDuplicates'))
@@ -4076,7 +4092,7 @@ class VariantCallingGATK(bsf.Analysis):
                         value='5000')
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
-                        value=runnable_process_sample.get_relative_temporary_directory_path)
+                        value=runnable_process_sample.temporary_directory_path(absolute=False))
                     # VERBOSITY defaults to 'INFO'.
                     runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                     # QUIET defaults to 'false'.
@@ -4117,7 +4133,7 @@ class VariantCallingGATK(bsf.Analysis):
                     runnable_step = runnable_process_sample.add_runnable_step(
                         runnable_step=RunnableStepGATK(
                             name='process_sample_gatk_realigner_target_creator',
-                            java_temporary_path=runnable_process_sample.get_relative_temporary_directory_path,
+                            java_temporary_path=runnable_process_sample.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx6G',
                             gatk_classpath=self.classpath_gatk))
                     """ @type runnable_step: RunnableStepGATK """
@@ -4142,7 +4158,7 @@ class VariantCallingGATK(bsf.Analysis):
                                 file_path_process_sample.duplicates_marked_bai,
                                 file_path_process_sample.duplicates_marked_md5,
                             ],
-                            java_temporary_path=runnable_process_sample.get_relative_temporary_directory_path,
+                            java_temporary_path=runnable_process_sample.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx6G',
                             gatk_classpath=self.classpath_gatk))
                     """ @type runnable_step: RunnableStepGATK """
@@ -4180,7 +4196,7 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step = runnable_process_sample.add_runnable_step(
                 runnable_step=bsf.process.RunnableStepPicard(
                     name='process_sample_picard_collect_alignment_summary_metrics',
-                    java_temporary_path=runnable_process_sample.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_process_sample.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx6G',
                     picard_classpath=self.classpath_picard,
                     picard_command='CollectAlignmentSummaryMetrics'))
@@ -4194,7 +4210,7 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step.add_picard_option(key='REFERENCE_SEQUENCE', value=self.bwa_genome_db)
             runnable_step.add_picard_option(
                 key='TMP_DIR',
-                value=runnable_process_sample.get_relative_temporary_directory_path)
+                value=runnable_process_sample.temporary_directory_path(absolute=False))
             # VERBOSITY defaults to 'INFO'.
             runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
             # QUIET defaults to 'false'.
@@ -4210,7 +4226,7 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step = runnable_process_sample.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='process_sample_gatk_haplotype_caller',
-                    java_temporary_path=runnable_process_sample.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_process_sample.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx8G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
@@ -4287,15 +4303,16 @@ class VariantCallingGATK(bsf.Analysis):
             # Set dependencies for succeeding bsf.Runnable or bsf.process.Executable objects.
             runnable_diagnose_sample_list.append(runnable_diagnose_sample)
 
-            reference_diagnose_sample = runnable_diagnose_sample.get_absolute_cache_file_path(
-                file_path=self.bwa_genome_db)
+            reference_diagnose_sample = runnable_diagnose_sample.get_cache_file_path(
+                file_path=self.bwa_genome_db,
+                absolute=True)
 
             # Run the GATK CallableLoci analysis per sample.
 
             runnable_step = runnable_diagnose_sample.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='diagnose_sample_gatk_callable_loci',
-                    java_temporary_path=runnable_diagnose_sample.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_diagnose_sample.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx6G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
@@ -4385,7 +4402,7 @@ class VariantCallingGATK(bsf.Analysis):
                 runnable_step = runnable_diagnose_sample.add_runnable_step(
                     runnable_step=RunnableStepGATK(
                         name='diagnose_sample_gatk_diagnose_target',
-                        java_temporary_path=runnable_diagnose_sample.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_diagnose_sample.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx8G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type runnable_step: RunnableStepGATK """
@@ -4416,7 +4433,7 @@ class VariantCallingGATK(bsf.Analysis):
                 runnable_step = runnable_diagnose_sample.add_runnable_step(
                     runnable_step=RunnableStepGATK(
                         name='diagnose_sample_gatk_qualify_missing_intervals',
-                        java_temporary_path=runnable_diagnose_sample.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_diagnose_sample.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx8G',
                         gatk_classpath=self.classpath_gatk))
                 """ @type runnable_step: RunnableStepGATK """
@@ -4449,7 +4466,7 @@ class VariantCallingGATK(bsf.Analysis):
                 runnable_step = runnable_diagnose_sample.add_runnable_step(
                     runnable_step=bsf.process.RunnableStepPicard(
                         name='diagnose_sample_picard_collect_hybrid_selection_metrics',
-                        java_temporary_path=runnable_diagnose_sample.get_relative_temporary_directory_path,
+                        java_temporary_path=runnable_diagnose_sample.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx12G',
                         picard_classpath=self.classpath_picard,
                         picard_command='CollectHsMetrics'))
@@ -4474,7 +4491,7 @@ class VariantCallingGATK(bsf.Analysis):
                 # TMP_DIR
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
-                    value=runnable_diagnose_sample.get_relative_temporary_directory_path)
+                    value=runnable_diagnose_sample.temporary_directory_path(absolute=False))
                 # VERBOSITY defaults to 'INFO'.
                 runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
                 # QUIET defaults to 'false'.
@@ -4586,8 +4603,9 @@ class VariantCallingGATK(bsf.Analysis):
         # Set dependencies on preceding bsf.Runnable.name or bsf.process.Executable.name objects.
         executable_process_cohort.dependencies.append(runnable_process_cohort_gather.name)
 
-        reference_process_cohort = runnable_process_cohort.get_absolute_cache_file_path(
-            file_path=self.bwa_genome_db)
+        reference_process_cohort = runnable_process_cohort.get_cache_file_path(
+            file_path=self.bwa_genome_db,
+            absolute=True)
 
         # Run the VQSR procedure on SNPs.
 
@@ -4601,7 +4619,7 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step = runnable_process_cohort.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='process_cohort_gatk_variant_recalibrator_snp',
-                    java_temporary_path=runnable_process_cohort.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_process_cohort.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx8G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
@@ -4636,7 +4654,7 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step = runnable_process_cohort.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='process_cohort_gatk_apply_recalibration_snp',
-                    java_temporary_path=runnable_process_cohort.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_process_cohort.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
@@ -4665,7 +4683,7 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step = runnable_process_cohort.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='process_cohort_gatk_variant_recalibrator_indel',
-                    java_temporary_path=runnable_process_cohort.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_process_cohort.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx8G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
@@ -4700,7 +4718,7 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step = runnable_process_cohort.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='process_cohort_gatk_apply_recalibration_indel',
-                    java_temporary_path=runnable_process_cohort.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_process_cohort.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
@@ -4724,7 +4742,7 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step = runnable_process_cohort.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='process_cohort_gatk_select_variants_cohort',
-                    java_temporary_path=runnable_process_cohort.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_process_cohort.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
@@ -4816,15 +4834,16 @@ class VariantCallingGATK(bsf.Analysis):
             # Set dependencies on preceding bsf.Runnable.name or bsf.process.Executable.name objects.
             executable_split_cohort_snpeff.dependencies.append(runnable_annotate_cohort_snpeff.name)
 
-            reference_split_cohort_snpeff = runnable_split_cohort_snpeff.get_absolute_cache_file_path(
-                file_path=self.bwa_genome_db)
+            reference_split_cohort_snpeff = runnable_split_cohort_snpeff.get_cache_file_path(
+                file_path=self.bwa_genome_db,
+                absolute=True)
 
             # Run the GATK SelectVariants analysis to split multi-sample VCF files into one per sample.
 
             runnable_step = runnable_split_cohort_snpeff.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='split_cohort_snpeff_gatk_select_variants_snpeff',
-                    java_temporary_path=runnable_split_cohort_snpeff.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_split_cohort_snpeff.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx2G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
@@ -4840,7 +4859,7 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step = runnable_split_cohort_snpeff.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='split_cohort_snpeff_gatk_variants_to_table_snpeff',
-                    java_temporary_path=runnable_split_cohort_snpeff.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_split_cohort_snpeff.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx2G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
@@ -4893,15 +4912,16 @@ class VariantCallingGATK(bsf.Analysis):
             # Set dependencies on preceding bsf.Runnable.name or bsf.process.Executable.name objects.
             executable_split_cohort_vep.dependencies.append(runnable_annotate_cohort_vep.name)
 
-            reference_split_cohort_vep = runnable_split_cohort_vep.get_absolute_cache_file_path(
-                file_path=self.bwa_genome_db)
+            reference_split_cohort_vep = runnable_split_cohort_vep.get_cache_file_path(
+                file_path=self.bwa_genome_db,
+                absolute=True)
 
             # Run the GATK SelectVariants analysis to split multi-sample VCF files into one per sample.
 
             runnable_step = runnable_split_cohort_vep.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='split_cohort_vep_gatk_select_variants_vep',
-                    java_temporary_path=runnable_split_cohort_vep.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_split_cohort_vep.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx2G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
@@ -4917,7 +4937,7 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step = runnable_split_cohort_vep.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='split_cohort_vep_gatk_variants_to_table_vep',
-                    java_temporary_path=runnable_split_cohort_vep.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_split_cohort_vep.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx2G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
@@ -5080,15 +5100,16 @@ class VariantCallingGATK(bsf.Analysis):
             # Set dependencies on preceding bsf.Runnable.name or bsf.process.Executable.name objects.
             executable_split_somatic_snpeff.dependencies.append(runnable_annotate_somatic_snpeff.name)
 
-            reference_split_somatic_snpeff = runnable_split_somatic_snpeff.get_absolute_cache_file_path(
-                file_path=self.bwa_genome_db)
+            reference_split_somatic_snpeff = runnable_split_somatic_snpeff.get_cache_file_path(
+                file_path=self.bwa_genome_db,
+                absolute=True)
 
             # Run the GATK VariantsToTable analysis.
 
             runnable_step = runnable_split_somatic_snpeff.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='somatic_gatk_variants_to_table',
-                    java_temporary_path=runnable_split_somatic_snpeff.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_split_somatic_snpeff.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx2G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """
@@ -5141,15 +5162,16 @@ class VariantCallingGATK(bsf.Analysis):
             # Set dependencies on preceding bsf.Runnable.name or bsf.process.Executable.name objects.
             executable_split_somatic_vep.dependencies.append(runnable_annotate_somatic_vep.name)
 
-            reference_split_somatic_vep = runnable_split_somatic_vep.get_absolute_cache_file_path(
-                file_path=self.bwa_genome_db)
+            reference_split_somatic_vep = runnable_split_somatic_vep.get_cache_file_path(
+                file_path=self.bwa_genome_db,
+                absolute=True)
 
             # Run the GATK VariantsToTable analysis.
 
             runnable_step = runnable_split_somatic_vep.add_runnable_step(
                 runnable_step=RunnableStepGATK(
                     name='somatic_gatk_variants_to_table',
-                    java_temporary_path=runnable_split_somatic_vep.get_relative_temporary_directory_path,
+                    java_temporary_path=runnable_split_somatic_vep.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx2G',
                     gatk_classpath=self.classpath_gatk))
             """ @type runnable_step: RunnableStepGATK """

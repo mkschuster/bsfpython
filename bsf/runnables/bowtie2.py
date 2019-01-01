@@ -130,7 +130,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     # Propagate SAM header lines @PG and @RG around FASTQ files into the final BAM file. Sigh!
 
     bam_file_name = os.path.basename(bam_file_path)
-    sam_file_path = os.path.join(runnable.get_relative_temporary_directory_path, bam_file_name[:-4] + '.sam')
+    sam_file_path = os.path.join(runnable.temporary_directory_path(absolute=False), bam_file_name[:-4] + '.sam')
 
     samtools = bsf.process.Executable(
         name='samtools_view',
@@ -168,7 +168,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     java_process.add_switch_short(key='d64')
     java_process.add_switch_short(key='server')
     java_process.add_switch_short(key='Xmx2G')
-    java_process.add_option_pair(key='-Djava.io.tmpdir', value=runnable.get_relative_temporary_directory_path)
+    java_process.add_option_pair(key='-Djava.io.tmpdir', value=runnable.temporary_directory_path(absolute=False))
 
     picard_process = java_process.sub_command
     picard_process.add_option_short(key='jar', value=os.path.join(
@@ -178,9 +178,9 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     sam_to_fastq = picard_process.sub_command
     sam_to_fastq.add_option_pair(key='INPUT', value=bam_file_path)
     sam_to_fastq.add_option_pair(key='OUTPUT_PER_RG', value='true')
-    sam_to_fastq.add_option_pair(key='OUTPUT_DIR', value=runnable.get_relative_temporary_directory_path)
+    sam_to_fastq.add_option_pair(key='OUTPUT_DIR', value=runnable.temporary_directory_path(absolute=False))
     sam_to_fastq.add_option_pair(key='INCLUDE_NON_PF_READS', value='false')  # TODO: Make this configurable.
-    sam_to_fastq.add_option_pair(key='TMP_DIR', value=runnable.get_relative_temporary_directory_path)
+    sam_to_fastq.add_option_pair(key='TMP_DIR', value=runnable.temporary_directory_path(absolute=False))
     sam_to_fastq.add_option_pair(key='VERBOSITY', value='WARNING')
     sam_to_fastq.add_option_pair(key='QUIET', value='false')
     sam_to_fastq.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
@@ -200,8 +200,8 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
             if element[:3] == 'PU:':
                 # Picard builds file names from the PU string, but replaces all non-alphanumeric characters.
                 sam_pu = re.sub(pattern=regular_expression, repl='_', string=element[3:])
-                sam_pu_r1_path = os.path.join(runnable.get_relative_temporary_directory_path, sam_pu + '_1.fastq')
-                sam_pu_r2_path = os.path.join(runnable.get_relative_temporary_directory_path, sam_pu + '_2.fastq')
+                sam_pu_r1_path = os.path.join(runnable.temporary_directory_path(absolute=False), sam_pu + '_1.fastq')
+                sam_pu_r2_path = os.path.join(runnable.temporary_directory_path(absolute=False), sam_pu + '_2.fastq')
 
                 if os.path.exists(sam_pu_r1_path) and os.path.getsize(sam_pu_r1_path):
                     rgc.fastq_1_path = sam_pu_r1_path
@@ -336,7 +336,7 @@ def run_bowtie2(runnable):
         bowtie2.add_option_short(key='U', value=','.join(fastq_list))
 
         sam_file_path = os.path.join(
-            runnable.get_relative_temporary_directory_path,
+            runnable.temporary_directory_path(absolute=False),
             'unpaired_fastq_files.sam')
         bowtie2.stdout_path = sam_file_path
         sam_file_path_list.append(sam_file_path)
@@ -361,7 +361,7 @@ def run_bowtie2(runnable):
             bowtie2.add_option_short(key='2', value=','.join(option_list_2))
 
         sam_file_path = os.path.join(
-            runnable.get_relative_temporary_directory_path,
+            runnable.temporary_directory_path(absolute=False),
             'paired_fastq_files.sam')
         bowtie2.stdout_path = sam_file_path
         sam_file_path_list.append(sam_file_path)
@@ -382,7 +382,8 @@ def run_bowtie2(runnable):
         java_process.add_switch_short(key='d64')
         java_process.add_switch_short(key='server')
         java_process.add_switch_short(key='Xmx2G')
-        java_process.add_option_pair(key='-Djava.io.tmpdir', value=runnable.get_relative_temporary_directory_path)
+        java_process.add_option_pair(key='-Djava.io.tmpdir',
+                                     value=runnable.temporary_directory_path(absolute=False))
 
         picard_process = java_process.sub_command
         picard_process.add_option_short(key='jar', value=os.path.join(
@@ -392,9 +393,9 @@ def run_bowtie2(runnable):
         sam_to_fastq = picard_process.sub_command
         # sam_to_fastq.add_option_pair(key='INPUT', value=bam_file_path)  # TODO:
         sam_to_fastq.add_option_pair(key='OUTPUT_PER_RG', value='true')
-        sam_to_fastq.add_option_pair(key='OUTPUT_DIR', value=runnable.get_relative_temporary_directory_path)
+        sam_to_fastq.add_option_pair(key='OUTPUT_DIR', value=runnable.temporary_directory_path(absolute=False))
         sam_to_fastq.add_option_pair(key='INCLUDE_NON_PF_READS', value='false')  # TODO: Make this configurable.
-        sam_to_fastq.add_option_pair(key='TMP_DIR', value=runnable.get_relative_temporary_directory_path)
+        sam_to_fastq.add_option_pair(key='TMP_DIR', value=runnable.temporary_directory_path(absolute=False))
         sam_to_fastq.add_option_pair(key='VERBOSITY', value='WARNING')
         sam_to_fastq.add_option_pair(key='QUIET', value='false')
         sam_to_fastq.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
@@ -409,9 +410,9 @@ def run(runnable):
     @rtype:
     """
 
-    if not os.path.isdir(runnable.get_relative_temporary_directory_path):
+    if not os.path.isdir(runnable.temporary_directory_path(absolute=False)):
         try:
-            os.makedirs(runnable.get_relative_temporary_directory_path)
+            os.makedirs(runnable.temporary_directory_path(absolute=False))
         except OSError as exception:
             if exception.errno != errno.EEXIST:
                 raise
@@ -432,6 +433,6 @@ def run(runnable):
 
     # Remove the temporary directory and everything within it.
 
-    shutil.rmtree(path=runnable.get_relative_temporary_directory_path, ignore_errors=False)
+    shutil.rmtree(path=runnable.temporary_directory_path(absolute=False), ignore_errors=False)
 
     # Job done.
