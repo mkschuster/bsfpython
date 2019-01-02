@@ -190,7 +190,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
 
     rgc_list = list()
     """ @type rgc_list: list[ReadGroupContainer] """
-    regular_expression = re.compile(pattern='\W')
+    regular_expression = re.compile(pattern='\\W')
     # Expect a FASTQ file pair for each read group.
     for sam_rg in sam_rg_list:
         rgc = ReadGroupContainer(rg_string=sam_rg)

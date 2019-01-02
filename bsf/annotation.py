@@ -57,11 +57,11 @@ class AnnotationSheet(object):
     """
 
     # Regular expression for non-alphanumeric characters
-    _regular_expression_non_alpha = re.compile(pattern='\W')
+    _regular_expression_non_alpha = re.compile(pattern='\\W')
     """ @type _regular_expression_non_alpha: re.RegexObject """
 
     # Regular expression for non-numeric characters
-    _regular_expression_non_numeric = re.compile(pattern='\D')
+    _regular_expression_non_numeric = re.compile(pattern='\\D')
     """ @type _regular_expression_non_numeric: re.RegexObject """
 
     # Regular expression for non-sequence characters

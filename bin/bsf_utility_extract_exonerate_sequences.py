@@ -38,7 +38,7 @@ import numpy
 import bsf.exonerate
 
 vulgar_pattern = re.compile(pattern='^vulgar: (.*)')
-identifier_pattern = re.compile(pattern='^\w+\|(\w+)\|([^ ]+)')
+identifier_pattern = re.compile(pattern='^\\w+\\|(\\w+)\\|([^ ]+)')
 
 # sample_name = 'Plasmid'
 sample_name = 'cDNA'

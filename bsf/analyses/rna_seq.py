@@ -895,7 +895,7 @@ class Tuxedo(bsf.Analysis):
                     # Read and process the comparison file, which includes adding only those Sample objects,
                     # which are referenced in a comparison.
                     annotation_sheet = bsf.annotation.AnnotationSheet.from_file_path(file_path=self.comparison_path)
-                    regular_expression = re.compile(pattern='\W')
+                    regular_expression = re.compile(pattern='\\W')
 
                     for row_dict in annotation_sheet.row_dicts:
                         _sample_group_list = list()
