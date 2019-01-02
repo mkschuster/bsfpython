@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.7
+# -*- coding: utf-8 -*-
 #
 # BSF Python script to convert a Picard sequence dictionary based on a
 # SAM header file into a UCSC chromosome sizes file.
@@ -9,7 +10,7 @@
 # and length separated by tabs.
 #
 #
-# Copyright 2013 - 2018 Michael K. Schuster
+# Copyright 2013 - 2019 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -30,6 +31,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 import argparse
 import os

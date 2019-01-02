@@ -1,11 +1,12 @@
-#! /bin/bash
+#! /usr/bin/env bash
+# -*- coding: utf-8 -*-
 #
 # BSF GNU Bourne-Again (Bash) script to convert an aligned SAM file
 # into an aligned sorted and indexed BAM file.
 # The samtools application has to be in the PATH.
 #
 #
-# Copyright 2013 - 2018 Michael K. Schuster
+# Copyright 2013 - 2019 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -26,6 +27,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 if [ -z "${LANG}" ]; then
     declare -x LANG='C'

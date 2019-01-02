@@ -1,10 +1,11 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.7
+# -*- coding: utf-8 -*-
 #
 # BSF Python script to process an Illumina Run Folder (IRF) after sequencing and
 # drive the IlluminaToBamTools IlluminaToBam and BamIndexDecoder analyses.
 #
 #
-# Copyright 2013 - 2018 Michael K. Schuster
+# Copyright 2013 - 2019 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -25,6 +26,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 from __future__ import print_function
 

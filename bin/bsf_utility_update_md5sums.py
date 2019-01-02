@@ -1,4 +1,5 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.7
+# -*- coding: utf-8 -*-
 #
 # BSF Python script to collect and update MD5 sums.
 #
@@ -7,7 +8,7 @@
 # Picard-style MD5 file that only contain the MD5 digest are reformatted to obey the md5sum format.
 #
 #
-# Copyright 2013 - 2018 Michael K. Schuster
+# Copyright 2013 - 2019 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -28,6 +29,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 from __future__ import print_function
 

@@ -1,31 +1,35 @@
-"""bsf.runnables.picard_sam_to_fastq_sample_sheet
+# -*- coding: utf-8 -*-
+"""Sample Annotation Sheet Runnables module
 
-A package of classes and methods to clean a sample sheet for the Picard SamToFastq analysis.
+A package of classes and methods to prune a sample annotation sheet.
+
+Reads objects not associated with (FASTQ or BAM) files get deleted from their corresponding PairedReads objects.
+A Reads object is retained, if a file with a size equal to or larger than the configured minimum file size or
+an (empty) status file (*.status) exists in the file system. Files smaller then the configured minimum file size
+are automatically deleted.
 """
-
+#  Copyright 2013 - 2019 Michael K. Schuster
 #
-# Copyright 2013 - 2018 Michael K. Schuster
-#
-# Biomedical Sequencing Facility (BSF), part of the genomics core facility
-# of the Research Center for Molecular Medicine (CeMM) of the
-# Austrian Academy of Sciences and the Medical University of Vienna (MUW).
+#  Biomedical Sequencing Facility (BSF), part of the genomics core facility
+#  of the Research Center for Molecular Medicine (CeMM) of the
+#  Austrian Academy of Sciences and the Medical University of Vienna (MUW).
 #
 #
-# This file is part of BSF Python.
+#  This file is part of BSF Python.
 #
-# BSF Python is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+#  BSF Python is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
 #
-# BSF Python is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Lesser General Public License for more details.
+#  BSF Python is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU Lesser General Public License
-# along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
-
+#  You should have received a copy of the GNU Lesser General Public License
+#  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 import os
 

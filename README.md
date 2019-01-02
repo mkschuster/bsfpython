@@ -92,7 +92,7 @@ the merged assemblies on the basis of the BAM alignments produced by Tophat2.
 
 ## Licence
 
-Copyright 2013 - 2018 Michael K. Schuster
+Copyright 2013 - 2019 Michael K. Schuster
 
 [Biomedical Sequencing Facility](http://www.biomedical-sequencing.at/) (BSF),
 part of the joint

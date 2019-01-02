@@ -1,4 +1,5 @@
-#! /bin/bash
+#! /usr/bin/env bash
+# -*- coding: utf-8 -*-
 #
 # BSF GNU Bourne-Again (Bash) script to convert an (unmapped) BAM or SAM file
 # into FASTQ files via Picard SamToFastq before compressing with GNU Gzip.
@@ -10,7 +11,7 @@
 #                      Defaults to the directory name of the input_file parameter.
 #
 #
-# Copyright 2013 - 2018 Michael K. Schuster
+# Copyright 2013 - 2019 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -31,6 +32,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 function bsf_error () {
 

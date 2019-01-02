@@ -1,8 +1,9 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.7
+# -*- coding: utf-8 -*-
 #
 # BSF Python script to create boxplots of insert sizes of given bam files.
 #
-# Copyright 2017 - 2018 Bekir Erguner
+# Copyright 2017 - 2019 Bekir Erguner
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -23,6 +24,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 from __future__ import print_function
 

@@ -1,11 +1,12 @@
-#! /usr/bin/env python
+#! /usr/bin/env python2.7
+# -*- coding: utf-8 -*-
 #
 # BSF Python utility script to find and fix broken symbolic links pointing from the BSF samples to the
 # BSF sequences directory. These symbolic links are set by the bsf.analyses.illumina_to_bam_tools.BamIndexDecoder
 # analysis in case a flow-cell lane does not need de-multiplexing.
 #
 #
-# Copyright 2013 - 2018 Michael K. Schuster
+# Copyright 2013 - 2019 Michael K. Schuster
 #
 # Biomedical Sequencing Facility (BSF), part of the genomics core facility
 # of the Research Center for Molecular Medicine (CeMM) of the
@@ -26,6 +27,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
+#
 
 from __future__ import print_function
 
