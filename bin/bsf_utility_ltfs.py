@@ -386,7 +386,7 @@ class LinearTapeFileSystemCopy(object):
                 ltfs_file_source_specification.text = ltfs_directory.source_specification
                 ltfs_file.append(element=ltfs_file_source_specification)
 
-            ltfs_directory.source_file_path_list.sort(lambda x, y: cmp(x, y))
+            ltfs_directory.source_file_path_list.sort()
 
             for source_file_path in ltfs_directory.source_file_path_list:
                 ltfs_source_file = xml.etree.ElementTree.Element(tag='sf')

@@ -507,6 +507,10 @@ class StarAligner(bsf.Analysis):
         runnable_merge_list = list()
         """ @type runnable_merge_list: list[bsf.Runnable] """
 
+        # Sort the Python list of Sample objects by Sample.name.
+
+        self.sample_list.sort(key=lambda item: item.name)
+
         for sample in self.sample_list:
             if self.debug > 0:
                 print(self, 'Sample name:', sample.name)

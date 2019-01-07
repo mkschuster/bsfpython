@@ -320,12 +320,12 @@ class ChIPSeqDiffBindSheet(bsf.annotation.AnnotationSheet):
         @rtype:
         """
         self.row_dicts.sort(
-            cmp=lambda x, y:
-            cmp(x['Tissue'], y['Tissue']) or
-            cmp(x['Factor'], y['Factor']) or
-            cmp(x['Condition'], y['Condition']) or
-            cmp(x['Treatment'], y['Treatment']) or
-            cmp(int(x['Replicate']), int(y['Replicate'])))
+            key=lambda item: '_'.join((
+                item['Tissue'],
+                item['Factor'],
+                item['Condition'],
+                item['Treatment'],
+                '{:06d}'.format(int(item['Replicate'])))))
 
         return
 
@@ -1075,7 +1075,7 @@ class ChIPSeq(bsf.Analysis):
                 if self.debug > 0:
                     print('ChIPSeqDiffBindSheet file_path:', dbs.file_path)
 
-                for chipseq_comparison in sorted(self._factor_dict[factor_name]):
+                for chipseq_comparison in sorted(self._factor_dict[factor_name]):  # NOTE: Sorting by address.
                     if not chipseq_comparison.diff_bind:
                         continue
                     for t_sample in chipseq_comparison.t_samples:

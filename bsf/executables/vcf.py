@@ -196,18 +196,6 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
                 if consequence == _so_string:
                     return _so_index
 
-        def compare_consequences(csq_1, csq_2):
-            """Compare Python tuple objects of Python int and Python str objects.
-
-            @param csq_1: First Python tuple of consequence index and consequence SO term
-            @type csq_1: (int, str)
-            @param csq_2: Second Python tuple of consequence index and consequence SO term
-            @type csq_2: (int, str)
-            @return: -1 if csq_1 < csq_2, 0 if csq_1 == csq_2 and +1 if csq_1 > csq_2
-            @rtype: int
-            """
-            return cmp(get_consequence_index(csq_1[1]), get_consequence_index(csq_2[1]))
-
         # Read the Sequence Ontology (TSV) configuration file.
         # This file provides consequence prioritisation.
         sequence_ontology_list = list()
@@ -257,15 +245,10 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
 
         csq_key_list = csq.description.split()[-1].split('|')
         """ @type csq_key_list: list[str] """
-        csq_index_pick = None
-        """ @type csq_index_pick: int """
         csq_index_allele_num = None
         """ @type csq_index_allele_num: int """
 
         for index, csq_key in enumerate(csq_key_list):
-            if csq_key == 'PICK':
-                csq_index_pick = index
-
             if csq_key == 'ALLELE_NUM':
                 csq_index_allele_num = index
 
@@ -435,7 +418,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
                 if debug > 1:
                     print('Consequence list old:', repr(consequence_tuple_list))
 
-                consequence_tuple_list.sort(cmp=compare_consequences)
+                consequence_tuple_list.sort(key=lambda item: get_consequence_index(item[1]))
 
                 if debug > 1:
                     print('Consequence list new:', repr(consequence_tuple_list))

@@ -148,7 +148,7 @@ for sequence_name in sequence_name_list:
     assert isinstance(interval_list, list)
     print('Sequence name: {} lines: {}'.format(sequence_name, len(interval_list)))
     # Sort numerically on the sequence region start field.
-    interval_list.sort(cmp=lambda x, y: cmp(int(x[1]), int(y[1])))
+    interval_list.sort(key=lambda item: int(item[1]))
 
     for interval_fields in interval_list:
         output_file.write('\t'.join(interval_fields) + "\n")

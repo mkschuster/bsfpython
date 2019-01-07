@@ -199,7 +199,7 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, na
     if packed:
         # Pack the interval list using a First Fit Decreasing algorithm.
         # Sort interval tuples by length in descending order.
-        for interval in sorted(interval_list, cmp=lambda x, y: cmp(len(x), len(y)), reverse=True):
+        for interval in sorted(interval_list, key=lambda item: len(item), reverse=True):
             # Try to fit the item into a bin.
             for container in container_list:
                 if container.sum + len(interval) <= tile_length:

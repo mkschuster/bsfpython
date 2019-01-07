@@ -894,7 +894,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             # Sort each lane by sample name.
             flow_cell_dict_list = library_annotation_dict[lane_int]
-            flow_cell_dict_list.sort(cmp=lambda x, y: cmp(x['sample_name'], y['sample_name']))
+            flow_cell_dict_list.sort(key=lambda item: item['sample_name'])
 
             for row_dict in flow_cell_dict_list:
                 # Add a row to the lane-specific Picard ExtractIlluminaBarcodesSheet.

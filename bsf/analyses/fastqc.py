@@ -227,7 +227,9 @@ class FastQC(bsf.Analysis):
 
         stage_read_group = self.get_stage(name=self.get_stage_name_read_group())
 
-        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        # Sort the Python list of Sample objects by Sample.name.
+
+        self.sample_list.sort(key=lambda item: item.name)
 
         for sample in self.sample_list:
             if self.debug > 0:

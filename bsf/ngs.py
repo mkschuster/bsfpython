@@ -2746,7 +2746,7 @@ class Collection(NextGenerationBase):
         # At this stage all annotation keys should be added. Partition and sort the list of field names.
 
         field_names = list(sas.field_names)
-        field_names.sort(cmp=lambda x, y: cmp(x, y))
+        field_names.sort()
 
         sas.field_names = list()
         sas.field_names.extend(filter(lambda x: x.startswith('File Type'), field_names))

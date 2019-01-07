@@ -399,6 +399,10 @@ class Trimmomatic(bsf.Analysis):
         project_dependency_list = list()
         """ @type project_dependency_list: list[str] """
 
+        # Sort the Python list of Sample objects by Sample.name.
+
+        self.sample_list.sort(key=lambda item: item.name)
+
         for sample in self.sample_list:
             if self.debug > 0:
                 print(self, 'Sample name:', sample.name)
@@ -687,7 +691,7 @@ class Trimmomatic(bsf.Analysis):
             # read groups after trimming that do no longer correspond to the initial Runnable objects. Sigh.
             # Transiently create a Python dict without the suffix and sort its keys (bsf.ngs.PairedReads.name).
 
-            for paired_reads_name in sorted(dict(map(lambda x: (x[:-1], True), paired_reads_dict.iterkeys()))):
+            for paired_reads_name in sorted(dict(map(lambda item: (item[:-1], True), paired_reads_dict.iterkeys()))):
                 prefix_read_group = self.get_prefix_read_group(read_group_name=paired_reads_name)
 
                 # The second read may still not be there.

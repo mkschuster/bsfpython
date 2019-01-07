@@ -67,7 +67,7 @@ argument_parser.add_argument(
 name_space = argument_parser.parse_args()
 
 file_name_list = os.listdir(name_space.directory)
-file_name_list.sort(cmp=lambda x, y: cmp(x, y))
+file_name_list.sort()
 
 if not name_space.ascending:
     file_name_list.reverse()

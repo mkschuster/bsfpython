@@ -321,7 +321,7 @@ else:
 # write report
 # outfile = open('unmatched_barcode_report.csv', 'w')
 # Write dict sorted by highest number of occurrence
-for barcode in collections.OrderedDict(sorted(barcode_dict.items(), reverse=True, key=lambda t: t[1])):
+for barcode in collections.OrderedDict(sorted(barcode_dict.items(), reverse=True, key=lambda item: item[1])):
     message = barcode + ';' + str(barcode_dict[barcode])
 
     # outfile.write(message + '\n')
@@ -336,7 +336,7 @@ illumina_adapters = [
     'ATCACG', 'CGATGT', 'TTAGGC', 'TGACCA', 'ACAGTG', 'GCCAAT',
     'CAGATC', 'ACTTGA', 'GATCAG', 'TAGCTT', 'GGCTAC', 'CTTGTA',
     'AGTCAA', 'AGTTCC', 'ATGTCA', 'CCGTCC', 'GTCCGC', 'GTGAAA',
-    'GTGGCC', 'GTTTCG', 'CGTACG', 'GAGTGG', 'ACTGAT', 'ATTCCT'
+    'GTGGCC', 'GTTTCG', 'CGTACG', 'GAGTGG', 'ACTGAT', 'ATTCCT',
 ]
 
 # outfile = open('unmatched_barcode_report.illumina.csv', 'w')

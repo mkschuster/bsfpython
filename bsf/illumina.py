@@ -406,11 +406,13 @@ class RunInformation(object):
 
                 number += 1
 
-        run_information_read_list.sort(key=lambda run_information_read: run_information_read.number)
+        # Sort by the RunInformationRead.number.
 
-        # Warn if there is not at least one non-index read.
+        run_information_read_list.sort(key=lambda item: item.number)
 
-        non_index_reads = filter(lambda run_information_read: not run_information_read.index, run_information_read_list)
+        # Warn if there is not at least one non-index read (i.e. RunInformationRead.index).
+
+        non_index_reads = filter(lambda item: not item.index, run_information_read_list)
         if len(non_index_reads) == 0:
             warnings.warn(
                 'No non-index read in Illumina RunInformation: ' + repr(file_path),

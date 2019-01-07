@@ -866,8 +866,8 @@ class Tuxedo(bsf.Analysis):
                         if not _sample_group.is_excluded():
                             _sample_group_list.append(_sample_group)
 
-                    # Sort the list of comparison groups by group name.
-                    _sample_group_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+                    # Sort the list of comparison groups by SampleGroup.name.
+                    _sample_group_list.sort(key=lambda item: item.name)
                     # Set the comparison name to 'global'.
                     self._comparison_dict['global'] = _sample_group_list
                 elif self.comparison_path == '*samples*':
@@ -885,8 +885,8 @@ class Tuxedo(bsf.Analysis):
                         if not _sample.is_excluded():
                             _sample_group_list.append(bsf.ngs.SampleGroup(name=_sample.name, sample_list=[_sample]))
 
-                    # Sort the list of comparison groups by group name.
-                    _sample_group_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+                    # Sort the list of comparison groups by SampleGroup.name.
+                    _sample_group_list.sort(key=lambda item: item.name)
                     # Set the comparison name to 'global'.
                     self._comparison_dict['global'] = _sample_group_list
                 else:
@@ -966,8 +966,8 @@ class Tuxedo(bsf.Analysis):
                         else:
                             _comparison_name = '__'.join(_comparison_name_list)
 
-                        # Sort the list of comparison groups by group name.
-                        _sample_group_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+                        # Sort the list of comparison groups by SampleGroup.name.
+                        _sample_group_list.sort(key=lambda item: item.name)
                         # Set the comparison name.
                         self._comparison_dict[_comparison_name] = _sample_group_list
             else:
@@ -1184,9 +1184,9 @@ class Tuxedo(bsf.Analysis):
         runnable_run_cufflinks_list = list()
         """ @type runnable_run_cufflinks_list: list[Runnable] """
 
-        # Sort the Python list of Sample objects by the Sample.name.
+        # Sort the Python list of Sample objects by Sample.name.
 
-        self.sample_list.sort(cmp=lambda x, y: cmp(x.name, y.name))
+        self.sample_list.sort(key=lambda item: item.name)
 
         for sample in self.sample_list:
             if self.debug > 0:
@@ -2502,7 +2502,7 @@ class Tuxedo(bsf.Analysis):
 
             # Since the sorted list of comparison names is used several times below, sort it only once.
             comparison_name_list = self._comparison_dict.keys()
-            comparison_name_list.sort(cmp=lambda x, y: cmp(x, y))
+            comparison_name_list.sort()
 
             for comparison_name in comparison_name_list:
                 path_prefix = 'rnaseq_process_cuffdiff_' + comparison_name
@@ -3653,6 +3653,10 @@ class DESeq(bsf.Analysis):
                 # file_type='excel',
                 name='DESeq Sample Annotation',
                 header=True)
+
+            # Sort the Python list of Sample objects by Sample.name.
+
+            self.sample_list.sort(key=lambda item: item.name)
 
             for sample in self.sample_list:
                 if self.debug > 0:

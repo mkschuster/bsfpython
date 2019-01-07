@@ -534,6 +534,10 @@ class Aligner(bsf.Analysis):
         runnable_sample_list = list()
         """ @type runnable_sample_list: list[bsf.Runnable] """
 
+        # Sort the Python list of Sample objects by Sample.name.
+
+        self.sample_list.sort(key=lambda item: item.name)
+
         for sample in self.sample_list:
             if self.debug > 0:
                 print(self, 'Sample name:', repr(sample.name))
