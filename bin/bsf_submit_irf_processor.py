@@ -180,11 +180,9 @@ if name_space.illumina2bam:
     # Set arguments that override the configuration file.
 
     if name_space.debug:
-        assert isinstance(name_space.debug, int)
         analysis_itb.debug = name_space.debug
 
     if name_space.irf:
-        assert isinstance(name_space.irf, (str, unicode))
         analysis_itb.run_directory = name_space.irf
 
     # if irf_restore is not None:
@@ -195,7 +193,6 @@ if name_space.illumina2bam:
     # Do the work.
 
     if name_space.loop:
-        assert isinstance(name_space.loop, bool)
         # If the --loop option has been set, wait until RTAComplete.txt has been copied.
         loop_counter = 1
         while True:
@@ -237,11 +234,9 @@ if name_space.illumina2bam:
     # Set arguments that override the configuration file.
 
     if name_space.debug:
-        assert isinstance(name_space.debug, int)
         analysis_bid.debug = name_space.debug
 
     if name_space.mode:
-        assert isinstance(name_space.mode, str)
         if name_space.mode == 'high':
             analysis_bid.lanes = 8
         elif name_space.mode == 'rapid':
@@ -260,11 +255,9 @@ if name_space.illumina2bam:
                 file_path=analysis_itb.run_directory).run_information.flow_cell_layout.lane_count
 
     if name_space.no_validation:
-        assert isinstance(name_space.no_validation, bool)
         analysis_bid.force = name_space.no_validation
 
     if name_space.library_path:
-        assert isinstance(name_space.library_path, (str, unicode))
         analysis_bid.library_path = name_space.library_path
 
     # If a library file has not been defined so far, check,
@@ -300,11 +293,9 @@ else:
     # Set arguments that override the configuration file.
 
     if name_space.debug:
-        assert isinstance(name_space.debug, int)
         analysis_ims.debug = name_space.debug
 
     if name_space.irf:
-        assert isinstance(name_space.irf, (str, unicode))
         analysis_ims.run_directory = name_space.irf
 
     if name_space.compression is not None:
@@ -313,7 +304,6 @@ else:
     # Do the work.
 
     if name_space.loop:
-        assert isinstance(name_space.loop, bool)
         # If the --loop option has been set, wait until RTAComplete.txt has been copied.
         loop_counter = 1
         while True:
@@ -357,14 +347,12 @@ else:
     # Set arguments that override the configuration file.
 
     if name_space.debug:
-        assert isinstance(name_space.debug, int)
         analysis_ids.debug = name_space.debug
 
     if name_space.compression is not None:
         analysis_ids.compression_level = name_space.compression
 
     if name_space.mode:
-        assert isinstance(name_space.mode, str)
         if name_space.mode == 'high':
             analysis_ids.lanes = 8
         elif name_space.mode == 'rapid':
@@ -383,11 +371,9 @@ else:
                 file_path=analysis_ims.run_directory).run_information.flow_cell_layout.lane_count
 
     if name_space.no_validation:
-        assert isinstance(name_space.no_validation, bool)
         analysis_ids.force = name_space.no_validation
 
     if name_space.library_path:
-        assert isinstance(name_space.library_path, (str, unicode))
         analysis_ids.library_path = name_space.library_path
 
     # If a library file has not been defined so far, check,

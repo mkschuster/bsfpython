@@ -61,7 +61,6 @@ name_space = argument_parser.parse_args()
 analysis = bsf.analyses.variant_calling.VariantCallingGATK.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.debug:
-    assert isinstance(name_space.debug, int)
     analysis.debug = name_space.debug
 
 analysis.run()

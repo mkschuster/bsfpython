@@ -63,7 +63,6 @@ analysis = bsf.analyses.chipseq.ChIPSeq.from_config_file_path(config_path=name_s
 # Set arguments that override the configuration file.
 
 if name_space.debug:
-    assert isinstance(name_space.debug, int)
     analysis.debug = name_space.debug
 
 # Do the work.

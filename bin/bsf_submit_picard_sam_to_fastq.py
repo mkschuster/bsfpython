@@ -85,18 +85,14 @@ if name_space.configuration == bsf.standards.Configuration.global_file_path:
 # Create a Picard SamToFastq analysis and run it.
 
 analysis = bsf.analyses.picard.SamToFastq.from_config_file_path(config_path=name_space.configuration)
-""" @type analysis: bsf.analyses.picard.SamToFastq """
 
 if name_space.debug:
-    assert isinstance(name_space.debug, int)
     analysis.debug = name_space.debug
 
 if name_space.project_name:
-    assert isinstance(name_space.project_name, str)
     analysis.project_name = name_space.project_name
 
 if name_space.sas_file:
-    assert isinstance(name_space.sas_file, (str, unicode))
     analysis.sas_file = name_space.sas_file
 
 analysis.run()

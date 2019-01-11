@@ -67,7 +67,7 @@ argument_parser.add_argument(
     dest='sas_file',
     help='sample annotation sheet (*.csv) file path',
     required=False,
-    type=unicode)
+    type=str)
 
 name_space = argument_parser.parse_args()
 
@@ -86,11 +86,9 @@ if name_space.debug:
     analysis.debug = name_space.debug
 
 if name_space.project_name:
-    assert isinstance(name_space.project_name, str)
     analysis.project_name = name_space.project_name
 
 if name_space.sas_file:
-    assert isinstance(name_space.sas_file, (str, unicode))
     analysis.sas_file = name_space.sas_file
 
 analysis.run()

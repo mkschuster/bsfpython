@@ -442,7 +442,6 @@ class DatabaseAdaptor(object):
         """
         assert isinstance(database_connection, DatabaseConnection)
         assert isinstance(object_type, type)
-        assert isinstance(table_name, (str, unicode))
 
         super(DatabaseAdaptor, self).__init__()
 

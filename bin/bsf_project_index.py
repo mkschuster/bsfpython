@@ -82,6 +82,8 @@ def scan_projects(project_name_local):
 
     @param project_name_local: Project name or prefix
     @type project_name_local: str | unicode
+    @return:
+    @rtype: str | unicode | None
     """
 
     directory_path = os.path.join(bsf.standards.FilePath.get_public_html(absolute=True), 'projects')
@@ -99,9 +101,9 @@ argument_parser.add_argument('--project', required=True, help='Project identifie
 name_space = argument_parser.parse_args()
 
 project_name = name_space.project
-assert isinstance(project_name, (str, unicode))
+""" @type project_name: str | unicode | None """
 project_directory = name_space.project
-assert isinstance(project_directory, (str, unicode))
+""" @type project_directory: str | unicode """
 
 if not os.path.isabs(project_directory):
 

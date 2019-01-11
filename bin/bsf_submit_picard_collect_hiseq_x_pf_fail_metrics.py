@@ -84,15 +84,12 @@ analysis = bsf.analyses.picard.CollectHiSeqXPfFailMetrics.from_config_file_path(
 # Set arguments that override the configuration file.
 
 if name_space.debug:
-    assert isinstance(name_space.debug, int)
     analysis.debug = name_space.debug
 
 if name_space.irf:
-    assert isinstance(name_space.irf, (str, unicode))
     analysis.run_directory = name_space.irf
 
 if name_space.force:
-    assert isinstance(name_space.force, bool)
     analysis.force = name_space.force
 
 # Do the work.

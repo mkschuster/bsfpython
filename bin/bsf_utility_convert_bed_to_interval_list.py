@@ -75,7 +75,6 @@ name_space = argument_parser.parse_args()
 if name_space.output_path is None or not name_space.output_path:
     # If the output-path option is missing, construct the output path from the BED input path.
     output_path = name_space.input_path
-    assert isinstance(output_path, (str, unicode))
     if output_path.endswith('.bed'):
         output_path = output_path[:-3] + 'interval_list'
     else:
@@ -94,7 +93,9 @@ input_file = open(name_space.dictionary, 'rb')
 # and Python list of Python list (interval) objects.
 
 sequence_name_dict = dict()
+""" @type sequence_name_dict: dict[str, list[list[str]]] """
 sequence_name_list = list()
+""" @type sequence_name_list: list[str] """
 
 for line in input_file:
     output_file.write(line)
@@ -143,9 +144,7 @@ input_file.close()
 # Write interval lines in the order of sequence region names in the sequence dictionary (i.e. SAM header) file.
 
 for sequence_name in sequence_name_list:
-    assert isinstance(sequence_name, str)
     interval_list = sequence_name_dict[sequence_name]
-    assert isinstance(interval_list, list)
     print('Sequence name: {} lines: {}'.format(sequence_name, len(interval_list)))
     # Sort numerically on the sequence region start field.
     interval_list.sort(key=lambda item: int(item[1]))

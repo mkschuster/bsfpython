@@ -101,15 +101,12 @@ analysis = bsf.analyses.illumina_to_bam_tools.BamIndexDecoder.from_config_file_p
 # Set arguments that override the configuration file.
 
 if name_space.debug:
-    assert isinstance(name_space.debug, int)
     analysis.debug = name_space.debug
 
 if name_space.project_name:
-    assert isinstance(name_space.project_name, str)
     analysis.project_name = name_space.project_name
 
 if name_space.mode:
-    assert isinstance(name_space.mode, str)
     if name_space.mode == 'high':
         analysis.lanes = 8
     elif name_space.mode == 'rapid':
@@ -122,11 +119,9 @@ if name_space.mode:
         raise Exception("Unknown output mode " + name_space.mode)
 
 if name_space.force:
-    assert isinstance(name_space.force, bool)
     analysis.force = name_space.force
 
 if name_space.library_path:
-    assert isinstance(name_space.library_path, (str, unicode))
     analysis.library_path = name_space.library_path
 
 # If a library file has not been defined so far, check,

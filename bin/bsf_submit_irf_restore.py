@@ -94,23 +94,18 @@ analysis = bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore.from_config
 # Set arguments that override the configuration file.
 
 if name_space.debug:
-    assert isinstance(name_space.debug, int)
     analysis.debug = name_space.debug
 
 if name_space.project_name:
-    assert isinstance(name_space.project_name, str)
     analysis.project_name = name_space.project_name
 
 if name_space.archive_directory:
-    assert isinstance(name_space.archive_directory, (str, unicode))
     analysis.archive_directory = name_space.archive_directory
 
 if name_space.extract_intensities:
-    assert isinstance(name_space.extract_intensities, (str, unicode))
     analysis.extract_intensities = name_space.extract_intensities
 
 if name_space.force:
-    assert isinstance(name_space.force, bool)
     analysis.force = name_space.force
 
 analysis.run()

@@ -91,8 +91,6 @@ class Argument(object):
         """
         super(Argument, self).__init__()
 
-        assert isinstance(key, (str, unicode))
-
         if not key:
             raise Exception('The key argument has to be defined.')
 
@@ -194,8 +192,6 @@ class Option(Switch):
         @rtype:
         """
         super(Option, self).__init__(key=key)
-
-        assert isinstance(value, (str, unicode))
 
         if not value:
             raise Exception('The value argument has to be defined.')

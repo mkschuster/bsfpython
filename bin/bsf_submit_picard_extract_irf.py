@@ -83,15 +83,12 @@ analysis = bsf.analyses.picard.ExtractIlluminaRunFolder.from_config_file_path(co
 # Set arguments that override the configuration file.
 
 if name_space.debug:
-    assert isinstance(name_space.debug, int)
     analysis.debug = name_space.debug
 
 if name_space.irf:
-    assert isinstance(name_space.irf, (str, unicode))
     analysis.run_directory = name_space.irf
 
 if name_space.mode:
-    assert isinstance(name_space.mode, str)
     if name_space.mode == 'high':
         analysis.lanes = 8
     elif name_space.mode == 'rapid':
@@ -106,7 +103,6 @@ if name_space.mode:
         raise Exception("Unknown output mode " + name_space.mode)
 
 if name_space.force:
-    assert isinstance(name_space.force, bool)
     analysis.force = name_space.force
 
 # Do the work.

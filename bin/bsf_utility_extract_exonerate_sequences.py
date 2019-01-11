@@ -81,7 +81,7 @@ print('Profile Array shape:', profile_array.shape)
 for vulgar in vulgar_list:
     # Fetch the corresponding SeqRecord object.
     q_record = record_dict[vulgar.q_name]
-    assert isinstance(q_record, Bio.SeqRecord.SeqRecord)
+    """ @type q_record: Bio.SeqRecord.SeqRecord """
 
     # Check if the sequence was in forward or reverse orientation and reverse complement if necessary.
     orientation = int(vulgar.q_strand + '1') * int(vulgar.t_strand + '1')

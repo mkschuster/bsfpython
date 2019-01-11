@@ -115,7 +115,6 @@ def parse_sam_format(sam_file_handle):
     """
 
     for line in sam_file_handle:
-        assert isinstance(line, str)
         if line.startswith('@'):
             continue
         columns = line.rstrip().split('\t')
@@ -338,11 +337,11 @@ illumina_adapters = [
     'AGTCAA', 'AGTTCC', 'ATGTCA', 'CCGTCC', 'GTCCGC', 'GTGAAA',
     'GTGGCC', 'GTTTCG', 'CGTACG', 'GAGTGG', 'ACTGAT', 'ATTCCT',
 ]
+""" @type illumina_adapters: list[str] """
 
 # outfile = open('unmatched_barcode_report.illumina.csv', 'w')
 
 for adapter in illumina_adapters:
-    assert isinstance(adapter, str)
     count = 0
     if adapter in barcode_dict:
         count = barcode_dict[adapter]

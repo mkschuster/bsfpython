@@ -87,15 +87,12 @@ if name_space.configuration == bsf.standards.Configuration.global_file_path:
 analysis = bsf.analyses.picard.DownsampleSam.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.debug:
-    assert isinstance(name_space.debug, int)
     analysis.debug = name_space.debug
 
 if name_space.project_name:
-    assert isinstance(name_space.project_name, str)
     analysis.project_name = name_space.project_name
 
 if name_space.sas_file:
-    assert isinstance(name_space.sas_file, (str, unicode))
     analysis.sas_file = name_space.sas_file
 
 annotation_sheet = analysis.run()
