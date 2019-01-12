@@ -160,15 +160,14 @@ name_space = argument_parser.parse_args()
 
 contig_list = list()
 
-reference_file = open(name_space.reference_vcf, 'r')
-for reference_line in reference_file:
-    if reference_line.startswith('##contig'):
-        contig_list.append(reference_line)
-    if reference_line.startswith('##reference'):
-        contig_list.append(reference_line)
-    if reference_line.startswith('#CHROM'):
-        break
-reference_file.close()
+with open(name_space.reference_vcf, 'rt') as input_file:
+    for line_str in input_file:
+        if line_str.startswith('##contig'):
+            contig_list.append(line_str)
+        if line_str.startswith('##reference'):
+            contig_list.append(line_str)
+        if line_str.startswith('#CHROM'):
+            break
 
 # Now the complicated part, the sub process for reading via bgzip.
 

@@ -773,6 +773,8 @@ class AnnotationSheet(object):
         else:
             csv_file_type = None
 
+        # For Python2.7, the open() function has to use the binary 'b' flag.
+        # For Python3, the open() function has to use newline=''.
         self._csv_reader_file = open(self.file_path, 'rb')
         self._csv_reader_object = csv.DictReader(
             f=self._csv_reader_file,
@@ -825,6 +827,8 @@ class AnnotationSheet(object):
         else:
             csv_file_type = None
 
+        # For Python2.7, the open() function has to use the binary 'b' flag.
+        # For Python3, the open() function has to use newline=''.
         self._csv_writer_file = open(self.file_path, 'wb')
         self._csv_writer_object = csv.DictWriter(
             f=self._csv_writer_file,

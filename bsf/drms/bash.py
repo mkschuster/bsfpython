@@ -44,29 +44,30 @@ def submit(stage, debug=0):
     @rtype:
     """
 
-    output = str()
-    output += '#! /usr/bin/env bash\n'
-    output += '\n'
+    output_list = str()
+    """ @type output_list: list[str | unicode] """
+
+    output_list.append('#! /usr/bin/env bash\n')
+    output_list.append('\n')
 
     if debug > 0:
-        output += '# BSF-Python debug mode: ' + repr(debug) + '\n'
-        output += '\n'
+        output_list.append('# BSF-Python debug mode: ' + repr(debug) + '\n')
+        output_list.append('\n')
 
     for executable in stage.executable_list:
         if not executable.submit:
-            output += '# '
-        output += executable.command_str()
+            output_list.append('# ')
+        output_list.append(executable.command_str())
         if executable.stdout_path:
-            output += ' 1>' + executable.stdout_path
+            output_list.append(' 1>' + executable.stdout_path)
         if executable.stderr_path:
-            output += ' 2>' + executable.stderr_path
-        output += '\n'
-        output += '\n'
+            output_list.append(' 2>' + executable.stderr_path)
+        output_list.append('\n')
+        output_list.append('\n')
 
     script_path = os.path.join(stage.working_directory, 'bsfpython_bash_' + repr(stage.name) + '.bash')
-    script_file = open(script_path, 'w')
-    script_file.write(output)
-    script_file.close()
+    with open(script_path, 'wt') as script_file:
+        script_file.writelines(output_list)
 
     return
 

@@ -439,13 +439,15 @@ def submit(stage, debug=0):
     @return:
     @rtype:
     """
-    output = str()
-    output += '#! /usr/bin/env bash\n'
-    output += '\n'
+    output_list = list()
+    """ @type output_list: list[str | unicode] """
+
+    output_list.append('#! /usr/bin/env bash\n')
+    output_list.append('\n')
 
     if debug > 0:
-        output += '# BSF-Python debug mode: ' + repr(debug) + '\n'
-        output += '\n'
+        output_list.append('# BSF-Python debug mode: ' + repr(debug) + '\n')
+        output_list.append('\n')
 
     for executable in stage.executable_list:
         executable_drms = bsf.process.Executable(name=executable.name, program='qsub', sub_command=executable)
@@ -607,13 +609,12 @@ def submit(stage, debug=0):
 
         # Copy the SGE command line to the Bash script.
 
-        output += executable_drms.command_str() + '\n'
-        output += '\n'
+        output_list.append(executable_drms.command_str() + '\n')
+        output_list.append('\n')
 
     script_path = os.path.join(stage.working_directory, 'bsfpython_sge_' + stage.name + '.bash')
-    script_file = open(script_path, 'w')
-    script_file.write(output)
-    script_file.close()
+    with open(script_path, 'wt') as script_file:
+        script_file.writelines(output_list)
 
     return
 

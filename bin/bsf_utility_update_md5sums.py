@@ -125,8 +125,8 @@ name_space = argument_parser.parse_args()
 # Read the initial MD5 sum file that needs updating.
 
 if os.path.exists(name_space.file_path):
-    with open(name_space.file_path, 'r') as file_handle:
-        for line_str in file_handle:
+    with open(name_space.file_path, 'rt') as input_file:
+        for line_str in input_file:
             md5_check_sum, md5_check_mode, md5_file_name = split_md5sum_line(md5sum_str=line_str)
 
             if name_space.debug > 0:
@@ -143,7 +143,6 @@ if os.path.exists(name_space.file_path):
                 raise Exception('The md5sum file ' + repr(name_space.file_path) +
                                 " does not obey the standard 'MD5SUM *file_path' format.")
 
-
 # Iterate through the directory path to find new MD5 sum files.
 
 for file_path, directory_name_list, file_name_list in os.walk(top=name_space.directory_path, topdown=True):
@@ -157,8 +156,8 @@ for file_path, directory_name_list, file_name_list in os.walk(top=name_space.dir
         if not fnmatch.fnmatch(file_name, name_space.pattern):
             continue
 
-        with open(os.path.join(file_path, file_name), 'r') as file_handle:
-            for line_str in file_handle:
+        with open(os.path.join(file_path, file_name), 'rt') as input_file:
+            for line_str in input_file:
                 md5_check_sum, md5_check_mode, md5_file_name = split_md5sum_line(md5sum_str=line_str)
 
                 if not md5_file_name:
@@ -176,7 +175,7 @@ for file_path, directory_name_list, file_name_list in os.walk(top=name_space.dir
                     entry_file_name=md5_file_name,
                     entry_check_mode=md5_check_mode)
 
-with open(name_space.file_path, 'w') as file_handle:
+with open(name_space.file_path, 'wt') as output_file:
     for md5_file_name in sorted(md5_dict):
         md5_check_sum = md5_dict[md5_file_name][0]
         md5_check_mode = md5_dict[md5_file_name][1]
@@ -185,7 +184,7 @@ with open(name_space.file_path, 'w') as file_handle:
             if md5_file_name.endswith(suffix):
                 md5_check_mode = '*'
 
-        line = ''.join((md5_check_sum, ' ', md5_check_mode, md5_file_name))
+        line_str = ''.join((md5_check_sum, ' ', md5_check_mode, md5_file_name))
         if name_space.debug > 0:
-            print(line)
-        file_handle.write(line + '\n')
+            print(line_str)
+        output_file.write(line_str + '\n')

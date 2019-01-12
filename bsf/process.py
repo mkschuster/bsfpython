@@ -706,19 +706,19 @@ class Executable(Command):
                   'Started Runner ' + repr(file_type) + ' processor in module ' + repr(__name__) + '.')
         output_file = None
         if file_path:
-            output_file = open(file_path, 'w')
+            output_file = open(file_path, 'wt')
             if debug > 0:
                 print('[' + datetime.datetime.now().isoformat() + ']',
                       'Opened ' + repr(file_type) + ' file ' + repr(file_path) + '.')
         thread_lock.release()
 
-        for line in file_handle:
+        for line_str in file_handle:
             thread_lock.acquire(True)
             if output_file is None:
                 print('[' + datetime.datetime.now().isoformat() + ']',
-                      file_type + ': ' + line.rstrip())
+                      file_type + ': ' + line_str.rstrip())
             else:
-                output_file.write(line)
+                output_file.write(line_str)
             thread_lock.release()
 
         thread_lock.acquire(True)

@@ -744,6 +744,7 @@ class Analysis(object):
         @rtype: str | unicode
         """
         str_list = list()
+        """ @type str_list: list[str | unicode] """
 
         str_list.append('<img')
         str_list.append('alt="' + text + '"')
@@ -769,6 +770,8 @@ class Analysis(object):
         @rtype: list[str | unicode]
         """
         str_list = list()
+        """ @type str_list: list[str | unicode] """
+
         if genome_version is None:
             return str_list
 
@@ -803,6 +806,8 @@ class Analysis(object):
         @rtype: list[str | unicode]
         """
         str_list = list()
+        """ @type str_list: list[str | unicode] """
+
         if transcriptome_version is None:
             return str_list
 
@@ -1081,19 +1086,18 @@ class Analysis(object):
         if prefix is None or not prefix:
             prefix = self.prefix
 
-        file_handle = open(os.path.join(self.genome_directory, '_'.join((prefix, 'report.html'))), 'w')
-        file_handle.writelines(
-            self.get_html_report(
-                content=content,
-                strict=strict,
-                title=title,
-                creator=creator,
-                source=source,
-                contact=contact,
-                institution=institution,
-                url_protocol=url_protocol,
-                url_host_name=url_host_name))
-        file_handle.close()
+        with open(os.path.join(self.genome_directory, '_'.join((prefix, 'report.html'))), 'wt') as output_file:
+            output_file.writelines(
+                self.get_html_report(
+                    content=content,
+                    strict=strict,
+                    title=title,
+                    creator=creator,
+                    source=source,
+                    contact=contact,
+                    institution=institution,
+                    url_protocol=url_protocol,
+                    url_host_name=url_host_name))
 
         return
 
@@ -1338,9 +1342,8 @@ class Analysis(object):
         str_list.append('genomesFile ' + '_'.join((prefix, self.ucsc_name_genomes)) + '\n')
         str_list.append('email ' + self.e_mail + '\n')
 
-        file_handle = open(os.path.join(self.project_directory, '_'.join((prefix, self.ucsc_name_hub))), 'w')
-        file_handle.writelines(str_list)
-        file_handle.close()
+        with open(os.path.join(self.project_directory, '_'.join((prefix, self.ucsc_name_hub))), 'wt') as output_file:
+            output_file.writelines(str_list)
 
         return
 
@@ -1357,38 +1360,38 @@ class Analysis(object):
         if prefix is None or not prefix:
             prefix = self.prefix
 
-        file_path = os.path.join(self.project_directory, '_'.join((prefix, self.ucsc_name_genomes)))
-
         # If the file exists, read it first to retain any other genome assembly entries.
         genome_version_dict = dict()
         """ @type genome_version_dict: dict[str, str] """
+
+        file_path = os.path.join(self.project_directory, '_'.join((prefix, self.ucsc_name_genomes)))
+
         if os.path.exists(file_path):
             genome_version = None
-            file_handle = open(file_path, 'r')
-            for line in file_handle:
-                line = line.strip()
-                if not line:
-                    continue
-                line_list = line.split()
-                if len(line_list) != 2:
-                    warnings.warn('Malformed line ' + repr(line) + ' in UCSC genomes file ' +
-                                  repr(file_path) + '.\n' +
-                                  'Expected exactly two components after line splitting.')
-                if line_list[0] == 'genome':
-                    if genome_version is not None:
-                        warnings.warn('Malformed line ' + repr(line) + ' in UCSC genomes file ' +
+            with open(file_path, 'rt') as input_file:
+                for line_str in input_file:
+                    line_str = line_str.strip()
+                    if not line_str:
+                        continue
+                    field_list = line_str.split()
+                    if len(field_list) != 2:
+                        warnings.warn('Malformed line ' + repr(line_str) + ' in UCSC genomes file ' +
                                       repr(file_path) + '.\n' +
-                                      "Got more than one 'genomes' lines in succession.")
-                    genome_version = line_list[1]
-                if line_list[0] == 'trackDb':
-                    if genome_version is None:
-                        warnings.warn('Malformed line ' + repr(line) + ' in UCSC genomes file ' +
-                                      repr(file_path) + '.\n' +
-                                      "Got a 'trackDb' line without a preceding genomes line.")
-                    else:
-                        genome_version_dict[genome_version] = line_list[1]
-                        genome_version = None
-            file_handle.close()
+                                      'Expected exactly two components after line splitting.')
+                    if field_list[0] == 'genome':
+                        if genome_version is not None:
+                            warnings.warn('Malformed line ' + repr(line_str) + ' in UCSC genomes file ' +
+                                          repr(file_path) + '.\n' +
+                                          "Got more than one 'genomes' lines in succession.")
+                        genome_version = field_list[1]
+                    if field_list[0] == 'trackDb':
+                        if genome_version is None:
+                            warnings.warn('Malformed line ' + repr(line_str) + ' in UCSC genomes file ' +
+                                          repr(file_path) + '.\n' +
+                                          "Got a 'trackDb' line without a preceding genomes line.")
+                        else:
+                            genome_version_dict[genome_version] = field_list[1]
+                            genome_version = None
 
         # Resolve an eventual alias for the UCSC genome assembly name in "genome_version/prefix_tracks.txt".
         genome_version_dict[bsf.standards.Genome.resolve_ucsc_alias(genome_version=self.genome_version)] = \
@@ -1402,9 +1405,8 @@ class Analysis(object):
             str_list.append('trackDb ' + genome_version_dict[genome_version] + '\n')
             str_list.append('\n')
 
-        file_handle = open(file_path, 'w')
-        file_handle.writelines(str_list)
-        file_handle.close()
+        with open(file_path, 'wt') as output_file:
+            output_file.writelines(str_list)
 
         return
 
@@ -1421,9 +1423,8 @@ class Analysis(object):
         if prefix is None or not prefix:
             prefix = self.prefix
 
-        file_handle = open(os.path.join(self.genome_directory, '_'.join((prefix, self.ucsc_name_tracks))), 'w')
-        file_handle.writelines(content)
-        file_handle.close()
+        with open(os.path.join(self.genome_directory, '_'.join((prefix, self.ucsc_name_tracks))), 'wt') as output_file:
+            output_file.writelines(content)
 
         return
 
@@ -2013,10 +2014,9 @@ class Runnable(object):
         @return:
         @rtype:
         """
-        pickler_file = open(self.pickler_path, 'wb')
-        pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
-        pickler.dump(obj=self)
-        pickler_file.close()
+        with open(self.pickler_path, 'wb') as output_file:
+            pickler = pickle.Pickler(file=output_file, protocol=pickle.HIGHEST_PROTOCOL)
+            pickler.dump(obj=self)
 
         return
 
@@ -2029,11 +2029,9 @@ class Runnable(object):
         @return: C{bsf.Runnable}
         @rtype: bsf.Runnable
         """
-        pickler_file = open(file_path, 'rb')
-        unpickler = pickle.Unpickler(file=pickler_file)
-        runnable = unpickler.load()
-        """ @type runnable: bsf.Runnable """
-        pickler_file.close()
+        with open(file_path, 'rb') as input_file:
+            runnable = pickle.Unpickler(file=input_file).load()
+            """ @type runnable: bsf.Runnable """
 
         # Did the Unpickler really return a Runnable object?
         assert isinstance(runnable, Runnable)
@@ -2130,7 +2128,7 @@ class Runnable(object):
         @rtype:
         """
         status_path = self.runnable_status_file_path(success=success)
-        open(status_path, 'w').close()
+        open(status_path, 'wt').close()
 
         return
 
@@ -2194,7 +2192,7 @@ class Runnable(object):
             return
 
         status_path = self.runnable_step_status_file_path(runnable_step=runnable_step, success=success)
-        open(status_path, 'w').close()
+        open(status_path, 'wt').close()
 
         return
 

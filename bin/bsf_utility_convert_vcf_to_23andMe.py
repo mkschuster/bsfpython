@@ -55,45 +55,40 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-input_fh = open(name_space.input, 'r')
-output_fh = open(name_space.output, 'w')
+with open(name_space.output, 'wt') as output_file:
+    with open(name_space.input, 'rt') as input_file:
+        for line_str in input_file:
+            # Ignore comment lines.
+            if line_str.startswith('#'):
+                continue
 
-for line in input_fh:
+            # Split VCF lines on tabs into VCF fields.
+            vcf_field_list = line_str.rstrip().split('\t')
+            alleles = '..'
 
-    # Ignore comment lines.
-    if line.startswith('#'):
-        continue
+            # The genotype (GT) is in field 10, the REF in field 4 and ALT in field 5.
 
-    # Split VCF lines on tabs into VCF fields.
-    vcf_fields = line.rstrip().split('\t')
-    alleles = '..'
+            genotype_index = 0
 
-    # The genotype (GT) is in field 10, the REF in field 4 and ALT in field 5.
+            info_field_list = vcf_field_list[8].split(':')
 
-    genotype_index = 0
+            for i in range(0, len(info_field_list)):
+                if info_field_list[i] == 'GT':
+                    genotype_index = i
+                    break
 
-    info_fields = vcf_fields[8].split(':')
+            sample_field_list = vcf_field_list[9].split(':')
 
-    for i in range(0, len(info_fields)):
-        if info_fields[i] == 'GT':
-            genotype_index = i
-            break
+            if sample_field_list[genotype_index] == '0/0':
+                alleles = vcf_field_list[3] + vcf_field_list[3]
+            elif sample_field_list[genotype_index] == '0/1':
+                alleles = vcf_field_list[3] + vcf_field_list[4]
+            elif sample_field_list[genotype_index] == '1/1':
+                alleles = vcf_field_list[4] + vcf_field_list[4]
+            elif sample_field_list[genotype_index] == './.':
+                continue
+            else:
+                print('Unexpected genotype {!r} in line: {}'.format(vcf_field_list[9], line_str))
 
-    sample_fields = vcf_fields[9].split(':')
-
-    if sample_fields[genotype_index] == '0/0':
-        alleles = vcf_fields[3] + vcf_fields[3]
-    elif sample_fields[genotype_index] == '0/1':
-        alleles = vcf_fields[3] + vcf_fields[4]
-    elif sample_fields[genotype_index] == '1/1':
-        alleles = vcf_fields[4] + vcf_fields[4]
-    elif sample_fields[genotype_index] == './.':
-        continue
-    else:
-        print('Unexpected genotype {!r} in line: {}'.format(vcf_fields[9], line))
-
-    # The identifier (ID) is in field 2,  the chromosome (CHROM) in field 0 and the position (POS) in field 1.
-    output_fh.write('\t'.join((vcf_fields[2], vcf_fields[0], vcf_fields[1], alleles)) + '\n')
-
-input_fh.close()
-output_fh.close()
+            # The identifier (ID) is in field 2,  the chromosome (CHROM) in field 0 and the position (POS) in field 1.
+            output_file.write('\t'.join((vcf_field_list[2], vcf_field_list[0], vcf_field_list[1], alleles)) + '\n')

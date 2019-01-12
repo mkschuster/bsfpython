@@ -163,13 +163,13 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, na
     total_length = 0
     """ @type total_length: int """
 
-    with open(interval_path, 'r') as interval_file:
-        for row in interval_file:
-            if row.startswith('@'):
+    with open(interval_path, 'rt') as input_file:
+        for line_str in input_file:
+            if line_str.startswith('@'):
                 continue
-            row_list = row.strip().split('\t')
-            if row_list[4] == 'ACGTmer':
-                interval = Interval(name=row_list[0], start=int(row_list[1]), end=int(row_list[2]))
+            field_list = line_str.strip().split('\t')
+            if field_list[4] == 'ACGTmer':
+                interval = Interval(name=field_list[0], start=int(field_list[1]), end=int(field_list[2]))
                 interval_list.append(interval)
                 total_length += len(interval)
 
@@ -241,7 +241,6 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
     @return: Python C{list} of C{bsf.intervals.Container} objects
     @rtype: list[bsf.intervals.Container]
     """
-
     if not os.path.exists(dictionary_path):
         raise Exception('Picard sequence dictionary ' + repr(dictionary_path) + ' does not exist.')
 
@@ -251,7 +250,7 @@ def get_genome_tiles(dictionary_path, tile_number=None, tile_width=None, natural
     total_length = 0
     """ @type total_length: int """
 
-    alignment_file = pysam.AlignmentFile(dictionary_path, 'r')
+    alignment_file = pysam.AlignmentFile(dictionary_path, 'rt')
 
     # Summarise sequence lengths to get the total length.
     for sq_entry in alignment_file.header['SQ']:

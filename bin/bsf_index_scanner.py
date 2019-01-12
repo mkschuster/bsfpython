@@ -73,61 +73,58 @@ log_after_x_processed_reads = 100000
 # Global variable
 
 barcode_dict = dict()
+""" @type barcode_dict: dict[str , int] """
 
-alignment_file = pysam.AlignmentFile(name_space.input_file, 'rb', check_sq=False)
-alignment_iterator = alignment_file.fetch(until_eof=True)
-""" @type alignment_iterator: pysam.IteratorRowAll """
-alignment_counter = 0
-for aligned_segment in alignment_iterator:
-    """ @type aligned_segment: pysam.AlignedSegment """
-    barcode = aligned_segment.get_tag(tag='BC')
-    if barcode not in barcode_dict:
-        barcode_dict[barcode] = 1
-    else:
-        barcode_dict[barcode] += 1
+with pysam.AlignmentFile(name_space.input_file, 'rb', check_sq=False) as alignment_file:
+    alignment_iterator = alignment_file.fetch(until_eof=True)
+    """ @type alignment_iterator: pysam.IteratorRowAll """
+    alignment_counter = 0
+    for aligned_segment in alignment_iterator:
+        """ @type aligned_segment: pysam.AlignedSegment """
+        barcode = aligned_segment.get_tag(tag='BC')
+        if barcode not in barcode_dict:
+            barcode_dict[barcode] = 1
+        else:
+            barcode_dict[barcode] += 1
 
-    alignment_counter += 1
-    if not alignment_counter % log_after_x_processed_reads:
-        print('Processed {} reads'.format(alignment_counter))
+        alignment_counter += 1
+        if not alignment_counter % log_after_x_processed_reads:
+            print('Processed {} reads'.format(alignment_counter))
 
-alignment_file.close()
+with open(name_space.output_file, 'wt') as output_file:
+    output_file.write('Barcode\tCount\n')
 
-alignment_file = open(name_space.output_file, 'w')
-alignment_file.write('Barcode\tCount\n')
-
-for barcode in sorted(barcode_dict):
-    alignment_file.write(barcode + '\t' + str(barcode_dict[barcode]) + '\n')
-
-alignment_file.close()
+    for barcode in sorted(barcode_dict):
+        output_file.write(barcode + '\t' + str(barcode_dict[barcode]) + '\n')
 
 exit()
 
 
-def parse_sam_format(sam_file_handle):
+def parse_sam_format(file_path):
     """Parses SAM format columns.
     This function identifies the column with the barcode based on its suffix BC:Z:
     and increments the respective count in a Python C{dict}.
 
-    @param sam_file_handle: File handle
-    @type sam_file_handle: FileIO
-    @return: Python C{dict} of barcode key and count value data
-    @rtype: dict
+    @param file_path: File path
+    @type file_path: str | unicode
+    @return:
+    @rtype:
     """
-
-    for line in sam_file_handle:
-        if line.startswith('@'):
-            continue
-        columns = line.rstrip().split('\t')
-        # Find the column with the BC:Z: tag.
-        # The first 11 columns are fixed.
-        for i in range(10, len(columns)):
-            if columns[i].startswith('BC:Z:'):
-                barcode_str = columns[i][5:]
-                if barcode_str in barcode_dict:
-                    barcode_dict[barcode_str] += 1
-                else:
-                    barcode_dict[barcode_str] = 1
-                break
+    with open(file_path, 'rt') as input_file:
+        for line_str in input_file:
+            if line_str.startswith('@'):
+                continue
+            columns = line_str.rstrip().split('\t')
+            # Find the column with the BC:Z: tag.
+            # The first 11 columns are fixed.
+            for i in range(10, len(columns)):
+                if columns[i].startswith('BC:Z:'):
+                    barcode_str = columns[i][5:]
+                    if barcode_str in barcode_dict:
+                        barcode_dict[barcode_str] += 1
+                    else:
+                        barcode_dict[barcode_str] = 1
+                    break
 
 
 def parse_sam_file(input_filename):
@@ -139,42 +136,38 @@ def parse_sam_file(input_filename):
     @return: Python C{dict} of barcode key and count value data
     @rtype: dict
     """
-
     # TODO: breaks if barcode not in 12th column or tag has different name (expecting BC:Z:....)
 
     print('Processing SAM file (expecting barcode in the 12th column of the SAM file as a tag, '
           'like BC:Z:GGAACC (Picard - IlluminaToSam creates these unmapped BAM files)')
 
-    input_file = open(input_filename)
     barcodes = dict()
+    with open(input_filename, 'rt') as input_file:
+        i = 0
+        for line in input_file:
+            # ignore SAM header (starts with @)
+            if not line.startswith('@'):
+                # split each line at tabs, extract 12 column, split barcode tag
+                bc = line.split('\t')[11].split(':')[2]
 
-    i = 0
-    for line in input_file:
-        # ignore SAM header (starts with @)
-        if not line.startswith('@'):
-            # split each line at tabs, extract 12 column, split barcode tag
-            bc = line.split('\t')[11].split(':')[2]
+                # store barcode in a dict
+                if bc not in barcodes:
+                    barcodes[bc] = 0
 
-            # store barcode in a dict
-            if bc not in barcodes:
-                barcodes[bc] = 0
+                barcodes[bc] += 1
 
-            barcodes[bc] += 1
-
-        # log message
-        i += 1
-        if i % log_after_x_processed_reads == 0:
-            print('Read ' + str(i) + ' lines.')
-
-    input_file.close()
+            # log message
+            i += 1
+            if i % log_after_x_processed_reads == 0:
+                print('Read ' + str(i) + ' lines.')
 
     return barcodes
 
 
 # converts a BAM file to SAM, runs parse_sam_file on the temporary SAM file
 def parse_bam_file(input_filename):
-    """
-    Parse a BAM file.
+    """Parse a BAM file.
+
     Internally converts a BAM file to a SAM file and subsequently runs parse_sam_file over it.
 
     @param input_filename: File path
@@ -204,35 +197,28 @@ def parse_bam_file(input_filename):
 
 # parses a FASTQ file, processes barcode in header line of each FASTQ entry
 # TODO: breaks if barcode has /1 or /2 at the end (I think FASTQ files created by Picard from PE BAM files have these)
-def parse_fastq_file(input_filename):
+def parse_fastq_file(file_path):
     print('Processing FASTQ file (expecting barcode in the header)')
 
-    input_file = open(input_filename)
-    barcodes = dict()
+    with open(file_path, 'rt') as input_file:
+        i = 0
+        for line_str in input_file:
+            if i % 4 == 0:
+                bc = line_str.rstrip().split(':').pop()
+                if bc not in barcode_dict:
+                    barcode_dict[bc] = 0
 
-    i = 0
-    for line in input_file:
-        if i % 4 == 0:
-            bc = line.rstrip().split(':').pop()
-            if bc not in barcodes:
-                barcodes[bc] = 0
+                barcode_dict[bc] += 1
 
-            barcodes[bc] += 1
-
-        i += 1
-        if i % log_after_x_processed_reads == 0:
-            print('Read ' + str(i) + ' lines.')
-
-    input_file.close()
-    return barcodes
+            i += 1
+            if i % log_after_x_processed_reads == 0:
+                print('Read ' + str(i) + ' lines.')
 
 
 if file_type == '.fastq':
-    barcodes_dict = parse_fastq_file(name_space.input_file)
+    parse_fastq_file(file_path=name_space.input_file)
 elif file_type == '.sam':
-    file_handle = open(name_space.input_file, 'r')
-    parse_sam_format(sam_file_handle=file_handle)
-    file_handle.close()
+    parse_sam_format(file_path=name_space.input_file)
 elif file_type == '.bam':
     executable = bsf.process.Executable(
         name='samtools_view',
@@ -246,13 +232,14 @@ elif file_type == '.bam':
 
     on_posix = 'posix' in sys.builtin_module_names
 
-    child_process = subprocess.Popen(args=executable.command_list(),
-                                     bufsize=-1,
-                                     stdin=subprocess.PIPE,
-                                     stdout=subprocess.PIPE,
-                                     stderr=subprocess.PIPE,
-                                     shell=False,
-                                     close_fds=on_posix)
+    child_process = subprocess.Popen(
+        args=executable.command_list(),
+        bufsize=-1,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        shell=False,
+        close_fds=on_posix)
 
     # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
     # should make sure that buffers are not filling up.
@@ -318,16 +305,15 @@ else:
     raise Exception('Unsupported file format.')
 
 # write report
-# outfile = open('unmatched_barcode_report.csv', 'w')
+# with open('unmatched_barcode_report.csv', 'wt') as output_file:
 # Write dict sorted by highest number of occurrence
 for barcode in collections.OrderedDict(sorted(barcode_dict.items(), reverse=True, key=lambda item: item[1])):
     message = barcode + ';' + str(barcode_dict[barcode])
 
-    # outfile.write(message + '\n')
+    # output_file.write(message + '\n')
     print(message)
 
 # Check again for Illumina Barcodes:
-# outfile.close()
 
 print('--------')
 
@@ -339,7 +325,7 @@ illumina_adapters = [
 ]
 """ @type illumina_adapters: list[str] """
 
-# outfile = open('unmatched_barcode_report.illumina.csv', 'w')
+# with open('unmatched_barcode_report.illumina.csv', 'wt') as output_file:
 
 for adapter in illumina_adapters:
     count = 0
@@ -348,7 +334,5 @@ for adapter in illumina_adapters:
 
     message = adapter + ';' + str(count)
 
-    # outfile.write(message + '\n')
+    # output_file.write(message + '\n')
     print(message)
-
-# outfile.close()

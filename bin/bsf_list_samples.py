@@ -52,6 +52,8 @@ args = parser.parse_args()
 
 # Open the output file, create a csv.DictWriter and write a header line.
 
+# For Python2.7, the open() function has to use the binary 'b' flag.
+# For Python3, the open() function has to use newline=''.
 csv_file = open(args.output_file, 'wb')
 
 csv_fields = ['ProcessedRunFolder', 'Project', 'Sample']

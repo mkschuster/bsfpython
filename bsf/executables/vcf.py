@@ -201,7 +201,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         sequence_ontology_list = list()
         """ @type sequence_ontology_list: list[str] """
 
-        with open(self.soc_path, 'r') as input_file:
+        with open(self.soc_path, 'rt') as input_file:
             for row_dict in csv.DictReader(input_file, dialect='excel-tab'):
                 """ @type row_dict: dict[str, str] """
                 sequence_ontology_list.append(row_dict['SO term'])
@@ -210,7 +210,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         vep_header_dict = dict()
         """ @type vep_header_dict: dict[str, dict[str, str]] """
 
-        with open(self.ofc_path, 'r') as input_file:
+        with open(self.ofc_path, 'rt') as input_file:
             for row_dict in csv.DictReader(input_file, dialect='excel-tab'):
                 """ @type row_dict: dict[str, str] """
                 # NOTE: Override all types with 'String' to allow multiple values joined by '&' characters.

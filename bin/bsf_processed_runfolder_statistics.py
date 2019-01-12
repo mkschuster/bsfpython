@@ -39,8 +39,9 @@ import bsf.standards
 parser = argparse.ArgumentParser(
     description='Collect statistics from a processed run folder after de-multiplexing.')
 
-parser.add_argument('input',
-                    help='Processed run folder directory')
+parser.add_argument(
+    'input',
+    help='Processed run folder directory')
 
 args = parser.parse_args()
 
@@ -64,17 +65,14 @@ for file_name in os.listdir(prf_path):
             mode = os.stat(file_path_2).st_mode
             match = re.search(pattern=r'([^.]+).([^.]+).output.metrics.txt', string=file_name_2)
             if stat.S_ISREG(mode) and match:
-                metrics_file = open(file_path_2, 'r')
-                for line in metrics_file:
+                with open(file_path_2, 'rt') as metrics_file:
+                    for line_str in metrics_file:
+                        if not line_str:
+                            continue
 
-                    if not line:
-                        continue
+                        if line_str.startswith('#'):
+                            continue
 
-                    match = re.search(pattern='^#', string=line)
+                        values = line_str.split()
 
-                    if match:
-                        continue
-
-                    values = line.split()
-
-                    print('Line:', ' '.join(values))
+                        print('Line:', ' '.join(values))

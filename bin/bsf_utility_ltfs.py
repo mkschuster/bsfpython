@@ -519,13 +519,13 @@ else:
 
 total_size = 0
 
-input_file = open(cartridge_code + '.txt', 'r')
-for main_file_path in input_file:
-    main_file_path = main_file_path.strip()
-    main_file_path = os.path.normpath(main_file_path)
-    ltfs_stat_result = os.stat(main_file_path)
-    total_size += ltfs_stat_result.st_size
-    linear_tape_file_system_copy.add_source_file_path(source_path=main_file_path)
+with open(cartridge_code + '.txt', 'rt') as input_file:
+    for main_file_path in input_file:
+        main_file_path = main_file_path.strip()
+        main_file_path = os.path.normpath(main_file_path)
+        ltfs_stat_result = os.stat(main_file_path)
+        total_size += ltfs_stat_result.st_size
+        linear_tape_file_system_copy.add_source_file_path(source_path=main_file_path)
 
 if ltfs_free_bytes <= total_size:
     difference_bytes = total_size - ltfs_free_bytes

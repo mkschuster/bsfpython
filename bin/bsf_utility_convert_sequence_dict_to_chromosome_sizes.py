@@ -64,29 +64,25 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-input_file = open(name_space.input_path, 'r')
-output_file = open(name_space.output_path, 'w')
+with open(name_space.output_path, 'wt') as output_file:
+    with open(name_space.input_path, 'rt') as input_file:
+        for line_str in input_file:
+            if not line_str.startswith('@SQ'):
+                continue
+            column_list = line_str.rstrip().split("\t")
+            sequence_name = str()
+            sequence_length = str()
 
-for line in input_file:
-    if not line.startswith('@SQ'):
-        continue
-    columns = line.rstrip().split("\t")
-    sequence_name = str()
-    sequence_length = str()
+            # Find the column with the SN: tag.
+            for column_str in column_list:
+                if column_str.startswith('SN:'):
+                    sequence_name = column_str[3:]
+                    break
 
-    # Find the column with the SN: tag.
-    for column in columns:
-        if column.startswith('SN:'):
-            sequence_name = column[3:]
-            break
+            # Find the column with the LN: tag.
+            for column_str in column_list:
+                if column_str.startswith('LN:'):
+                    sequence_length = column_str[3:]
+                    break
 
-    # Find the column with the LN: tag.
-    for column in columns:
-        if column.startswith('LN:'):
-            sequence_length = column[3:]
-            break
-
-    output_file.write('\t'.join((sequence_name, sequence_length)) + '\n')
-
-input_file.close()
-output_file.close()
+            output_file.write('\t'.join((sequence_name, sequence_length)) + '\n')

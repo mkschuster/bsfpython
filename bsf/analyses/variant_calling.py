@@ -3599,10 +3599,9 @@ class VariantCallingGATK(bsf.Analysis):
                 pickler_path = os.path.join(
                     self.genome_directory,
                     stage_align_lane.name + '_' + paired_reads_name + '.pkl')
-                pickler_file = open(pickler_path, 'wb')
-                pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
-                pickler.dump(obj=pickler_dict_align_lane)
-                pickler_file.close()
+                with open(pickler_path, 'wb') as pickler_file:
+                    pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
+                    pickler.dump(obj=pickler_dict_align_lane)
 
                 # Create a bsf_run_bwa.py job to run the pickled object.
 

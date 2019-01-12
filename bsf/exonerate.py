@@ -170,14 +170,11 @@ def parse_alignment_file(file_path):
     vulgar_list = list()
     """ @type vulgar_list: list[bsf.exonerate.VULGAR] """
 
-    alignment_file = open(file_path, mode='rb')
-
-    for line in alignment_file:
-        vulgar_match = re.search(pattern=vulgar_pattern, string=line)
-        if vulgar_match:
-            vulgar = VULGAR.from_vulgar_str(vulgar_str=vulgar_match.group(1))
-            vulgar_list.append(vulgar)
-
-    alignment_file.close()
+    with open(file_path, mode='rt') as input_file:
+        for line_str in input_file:
+            vulgar_match = re.search(pattern=vulgar_pattern, string=line_str)
+            if vulgar_match:
+                vulgar = VULGAR.from_vulgar_str(vulgar_str=vulgar_match.group(1))
+                vulgar_list.append(vulgar)
 
     return vulgar_list

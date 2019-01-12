@@ -72,21 +72,15 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-if name_space.output_path is None or not name_space.output_path:
+if name_space.output_path:
+    output_path = name_space.output_path
+else:
     # If the output-path option is missing, construct the output path from the BED input path.
     output_path = name_space.input_path
     if output_path.endswith('.bed'):
         output_path = output_path[:-3] + 'interval_list'
     else:
         raise Exception('The input-path option does not specify a *.bed file and the output-path option is missing.')
-else:
-    output_path = name_space.output_path
-
-output_file = open(output_path, 'wb')
-
-# Read the SAM header dictionary and copy it to the output file.
-
-input_file = open(name_space.dictionary, 'rb')
 
 # To retain the order of sequence regions as defined in the sequence dictionary (i.e. SAM header),
 # build a Python list of sequence region names and a Python dict of Python str (sequence region name) key
@@ -97,59 +91,52 @@ sequence_name_dict = dict()
 sequence_name_list = list()
 """ @type sequence_name_list: list[str] """
 
-for line in input_file:
-    output_file.write(line)
-    if line.startswith('@SQ'):
-        for sam_field in line.split('\t'):
-            if sam_field[:3] == 'SN:':
-                sequence_name_dict[sam_field[3:]] = list()
-                sequence_name_list.append(sam_field[3:])
+with open(output_path, 'wt') as output_file:
+    # Read the SAM header dictionary and copy it to the output file.
+    with open(name_space.dictionary, 'rt') as input_file:
+        for line_str in input_file:
+            output_file.write(line_str)
+            if line_str.startswith('@SQ'):
+                for sam_field in line_str.split('\t'):
+                    if sam_field.startswith('SN:'):
+                        sequence_name_dict[sam_field[3:]] = list()
+                        sequence_name_list.append(sam_field[3:])
 
-input_file.close()
+    # Read the BED file.
+    with open(name_space.input_path, 'rt') as input_file:
+        for line_str in input_file:
+            bed_fields = line_str.strip().split()
 
-# Read the BED file.
+            if bed_fields[0] == 'browser':
+                continue
+            if bed_fields[0] == 'track':
+                continue
 
-input_file = open(name_space.input_path, 'rb')
+            interval_fields = list()
 
-for line in input_file:
+            if name_space.ucsc_to_grc:
+                if bed_fields[0] == 'chrM':  # The 'chrM' needs converting into 'MT'.
+                    interval_fields.append('MT')
+                elif bed_fields[0].startswith('chr'):  # Sequence with or without 'chr'.
+                    interval_fields.append(bed_fields[0][3:])
+                else:
+                    interval_fields.append(bed_fields[0])
+            else:
+                interval_fields.append(bed_fields[0])
 
-    bed_fields = line.strip().split()
+            interval_fields.append(str(int(bed_fields[1]) + 1))  # Start: the BED format is half-open, zero-based.
+            interval_fields.append(bed_fields[2])  # End
+            interval_fields.append('+')  # Strand
+            interval_fields.append(bed_fields[3])  # Name
 
-    if bed_fields[0] == 'browser':
-        continue
-    if bed_fields[0] == 'track':
-        continue
+            sequence_name_dict[interval_fields[0]].append(interval_fields)
 
-    interval_fields = list()
+    # Write interval lines in the order of sequence region names in the sequence dictionary (i.e. SAM header) file.
+    for sequence_name in sequence_name_list:
+        interval_list = sequence_name_dict[sequence_name]
+        print('Sequence name: {} lines: {}'.format(sequence_name, len(interval_list)))
+        # Sort numerically on the sequence region start field.
+        interval_list.sort(key=lambda item: int(item[1]))
 
-    if name_space.ucsc_to_grc:
-        if bed_fields[0] == 'chrM':  # The 'chrM' needs converting into 'MT'.
-            interval_fields.append('MT')
-        elif bed_fields[0][:3] == 'chr':  # Sequence with or without 'chr'.
-            interval_fields.append(bed_fields[0][3:])
-        else:
-            interval_fields.append(bed_fields[0])
-    else:
-        interval_fields.append(bed_fields[0])
-
-    interval_fields.append(str(int(bed_fields[1]) + 1))  # Start: the BED format is half-open, zero-based.
-    interval_fields.append(bed_fields[2])  # End
-    interval_fields.append('+')  # Strand
-    interval_fields.append(bed_fields[3])  # Name
-
-    sequence_name_dict[interval_fields[0]].append(interval_fields)
-
-input_file.close()
-
-# Write interval lines in the order of sequence region names in the sequence dictionary (i.e. SAM header) file.
-
-for sequence_name in sequence_name_list:
-    interval_list = sequence_name_dict[sequence_name]
-    print('Sequence name: {} lines: {}'.format(sequence_name, len(interval_list)))
-    # Sort numerically on the sequence region start field.
-    interval_list.sort(key=lambda item: int(item[1]))
-
-    for interval_fields in interval_list:
-        output_file.write('\t'.join(interval_fields) + "\n")
-
-output_file.close()
+        for interval_fields in interval_list:
+            output_file.write('\t'.join(interval_fields) + "\n")

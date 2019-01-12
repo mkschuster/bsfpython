@@ -151,13 +151,13 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     sam_rg_list = list()
     """ @type sam_rg_list: list[str] """
 
-    sam_temporary_handle = open(sam_file_path, 'r')
-    for line in sam_temporary_handle:
-        if line[:3] == '@PG':
-            sam_pg_list.append(line.rstrip())
-        if line[:3] == '@RG':
-            sam_rg_list.append(line.rstrip())
-    sam_temporary_handle.close()
+    with open(sam_file_path, 'rt') as output_file:
+        for line_str in output_file:
+            if line_str.startswith('@PG'):
+                sam_pg_list.append(line_str.rstrip())
+            if line_str.startswith('@RG'):
+                sam_rg_list.append(line_str.rstrip())
+
     os.remove(sam_file_path)
 
     # At this stage, the SAM @PG and @RG lines are stored internally.

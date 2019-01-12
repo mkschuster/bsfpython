@@ -751,13 +751,15 @@ def submit(stage, debug=0):
     job_submission_adaptor = bsf.database.JobSubmissionAdaptor(database_connection=database_connection)
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
 
-    output = str()
-    output += '#! /usr/bin/env bash\n'
-    output += '\n'
+    output_list = list()
+    """ @type output_list: list[str | unicode] """
+
+    output_list.append('#! /usr/bin/env bash\n')
+    output_list.append('\n')
 
     if debug > 0:
-        output += '# BSF-Python debug mode: ' + repr(debug) + '\n'
-        output += '\n'
+        output_list.append('# BSF-Python debug mode: ' + repr(debug) + '\n')
+        output_list.append('\n')
 
     for executable in stage.executable_list:
         executable_drms = bsf.process.Executable(name=executable.name, program='sbatch', sub_command=executable)
@@ -915,8 +917,8 @@ def submit(stage, debug=0):
 
         # Copy the SLURM command line to the Bash script.
 
-        output += executable_drms.command_str() + '\n'
-        output += '\n'
+        output_list.append(executable_drms.command_str() + '\n')
+        output_list.append('\n')
 
         # Regardless of an actual bsf.process.Executable submission, UPDATE it in or INSERT it into the SQLite database.
 
@@ -943,9 +945,8 @@ def submit(stage, debug=0):
         database_connection.commit()
 
     script_path = os.path.join(stage.working_directory, 'bsfpython_slurm_' + stage.name + '.bash')
-    script_file = open(script_path, 'w')
-    script_file.write(output)
-    script_file.close()
+    with open(script_path, 'wt') as script_file:
+        script_file.writelines(output_list)
 
     return
 
@@ -972,7 +973,7 @@ def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout
               "Started Runner 'STDOUT' processor in module " + repr(__name__) + '.')
     output_file = None
     if stdout_path:
-        output_file = open(stdout_path, 'w')
+        output_file = open(stdout_path, 'wt')
         if debug > 0:
             print('[' + datetime.datetime.now().isoformat() + ']',
                   "Opened 'STDOUT' file " + repr(stdout_path) + '.')

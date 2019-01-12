@@ -81,13 +81,13 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     sam_header_rg = list()
     """ @type sam_header_rg: list[str | unicode] """
 
-    sam_temporary_handle = open(path_temporary_sam, 'r')
-    for line in sam_temporary_handle:
-        if line[:3] == '@PG':
-            sam_header_pg.append(line.rstrip())
-        if line[:3] == '@RG':
-            sam_header_rg.append(line.rstrip())
-    sam_temporary_handle.close()
+    with open(path_temporary_sam, 'rt') as _input_file:
+        for line_str in _input_file:
+            if line_str.startswith('@PG'):
+                sam_header_pg.append(line_str.rstrip())
+            if line_str.startswith('@RG'):
+                sam_header_rg.append(line_str.rstrip())
+
     os.remove(path_temporary_sam)
 
     # At this stage, the SAM @PG and @RG lines are stored internally.
@@ -118,8 +118,8 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
         raise Exception('Could not complete the Picard SamToFastq step.')
 
     platform_unit = str()
-    for line in sam_header_rg:
-        for field in line.rstrip().split():
+    for line_str in sam_header_rg:
+        for field in line_str.rstrip().split():
             if field.startswith('PU:'):
                 platform_unit = field[3:]
 
@@ -148,23 +148,23 @@ os.environ['LANG'] = 'C'
 parser = argparse.ArgumentParser(
     description='BSF Runner for running the Tuxedo Tophat application.')
 
-parser.add_argument('--debug', required=False, type=int,
-                    help='debug level')
+parser.add_argument(
+    '--debug',
+    help='debug level',
+    required=False,
+    type=int)
 
-parser.add_argument('--pickler_path', required=True,
-                    help='file path to a Python Pickler file.')
+parser.add_argument(
+    '--pickler_path',
+    help='file path to a Python Pickler file',
+    required=True)
 
 args = parser.parse_args()
 
 # Unpickle the file into a Python dict object.
 
-pickler_file = open(args.pickler_path, 'rb')
-
-unpickler = pickle.Unpickler(file=pickler_file)
-
-pickler_dict = unpickler.load()
-
-pickler_file.close()
+with open(args.pickler_path, 'rb') as input_file:
+    pickler_dict = pickle.Unpickler(file=input_file).load()
 
 key = 'prefix'
 if key in pickler_dict and pickler_dict[key]:

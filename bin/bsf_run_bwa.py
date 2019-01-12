@@ -43,23 +43,23 @@ os.environ['LANG'] = 'C'
 
 parser = argparse.ArgumentParser(description='BSF Runner for the Burrows Wheeler Aligner (BWA).')
 
-parser.add_argument('--debug', required=False, type=int,
-                    help='debug level')
+parser.add_argument(
+    '--debug',
+    help='debug level',
+    required=False,
+    type=int)
 
-parser.add_argument('--pickler_path', required=True,
-                    help='file path to a Python Pickler file.')
+parser.add_argument(
+    '--pickler_path',
+    help='file path to a Python Pickler file',
+    required=True)
 
 args = parser.parse_args()
 
 # Unpickle the file into a Python dict object.
 
-pickler_file = open(args.pickler_path, 'rb')
-
-unpickler = pickle.Unpickler(file=pickler_file)
-
-pickler_dict = unpickler.load()
-
-pickler_file.close()
+with open(args.pickler_path, 'rb') as input_file:
+    pickler_dict = pickle.Unpickler(file=input_file).load()
 
 key = 'prefix'
 if key in pickler_dict and pickler_dict[key]:
@@ -144,13 +144,13 @@ if run_bwa.sub_command.program == 'mem' and run_bwa.sub_command.arguments[1][-4:
     if child_return_code:
         raise Exception('Could not complete the {!r} step on the BAM file for the replicate.'.format(samtools.name))
 
-    sam_temporary_handle = open(path_temporary_sam, 'r')
-    for line in sam_temporary_handle:
-        if line[:3] == '@PG':
-            sam_header_pg.append(line.rstrip())
-        if line[:3] == '@RG':
-            sam_header_rg.append(line.rstrip())
-    sam_temporary_handle.close()
+    with open(path_temporary_sam, 'rt') as input_file:
+        for line_str in input_file:
+            if line_str.startswith('@PG'):
+                sam_header_pg.append(line_str.rstrip())
+            if line_str.startswith('@RG'):
+                sam_header_rg.append(line_str.rstrip())
+
     os.remove(path_temporary_sam)
 
     # At this stage, the SAM @PG and @RG lines are stored internally.
@@ -255,26 +255,24 @@ if len(sam_header_pg) or len(sam_header_rg):
     if child_return_code:
         raise Exception('Could not complete the {!r} step on the SAM file after CleanSam.'.format(samtools.name))
 
-    sam_temporary_handle = open(path_temporary_sam, 'r')
-    sam_header_handle = open(path_header_sam, 'w')
-    for line in sam_temporary_handle:
-        if line[:3] == '@PG':
-            # Insert all @PG lines before this one, then clear the list so that no further insertion is possible.
+    with open(path_temporary_sam, 'rt') as input_file:
+        with open(path_header_sam, 'wt') as output_file:
+            for line_str in input_file:
+                if line_str.startswith('@PG'):
+                    # Insert all @PG lines before this one,
+                    # then clear the list so that no further insertion is possible.
+                    for line_pg in sam_header_pg:
+                        output_file.write(line_pg + "\n")
+                    sam_header_pg = list()
+                    """ @type sam_header_pg: list[str | unicode] """
+                output_file.write(line_str)
+
+            # Add remaining @PG lines it they were not present in the cleaned SAM file.
+
             for line_pg in sam_header_pg:
-                sam_header_handle.write(line_pg + "\n")
+                output_file.write(line_pg + "\n")
             sam_header_pg = list()
             """ @type sam_header_pg: list[str | unicode] """
-        sam_header_handle.write(line)
-
-    # Add remaining @PG lines it they were not present in the cleaned SAM file.
-
-    for line_pg in sam_header_pg:
-        sam_header_handle.write(line_pg + "\n")
-    sam_header_pg = list()
-    """ @type sam_header_pg: list[str | unicode] """
-
-    sam_header_handle.close()
-    sam_temporary_handle.close()
 
     os.remove(path_temporary_sam)
 
@@ -358,6 +356,6 @@ shutil.rmtree(path=path_temporary, ignore_errors=False)
 # Write a status file.
 
 status_path = "{}{}_completed.txt".format(prefix, replicate_key)
-open(status_path, 'w').close()
+open(status_path, 'wt').close()
 
 # Job done.

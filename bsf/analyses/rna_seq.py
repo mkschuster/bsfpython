@@ -1007,12 +1007,11 @@ class Tuxedo(bsf.Analysis):
             @param annotation_dict: Annotation dict
             @type annotation_dict: dict[str, list[str | unicode]]
             """
-            _annotation_file = open(annotation_path, 'w')
-            _annotation_file.write('sample_id\tgroup_label\n')
-            for _group_name, per_group_list in annotation_dict.iteritems():
-                for _file_path in per_group_list:
-                    _annotation_file.write(_file_path + '\t' + _group_name + '\n')
-            _annotation_file.close()
+            with open(annotation_path, 'wt') as _annotation_file:
+                _annotation_file.write('sample_id\tgroup_label\n')
+                for _group_name, per_group_list in annotation_dict.iteritems():
+                    for _file_path in per_group_list:
+                        _annotation_file.write(_file_path + '\t' + _group_name + '\n')
 
             return
 
@@ -1316,10 +1315,9 @@ class Tuxedo(bsf.Analysis):
                 pickler_path = os.path.join(
                     self.genome_directory,
                     stage_run_tophat.name + '_' + paired_reads_name + '.pkl')
-                pickler_file = open(pickler_path, 'wb')
-                pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
-                pickler.dump(obj=pickler_dict_run_tophat)
-                pickler_file.close()
+                with open(pickler_path, 'wb') as pickler_file:
+                    pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
+                    pickler.dump(obj=pickler_dict_run_tophat)
 
                 executable_run_tophat = stage_run_tophat.add_executable(
                     executable=bsf.process.Executable(
@@ -1943,9 +1941,8 @@ class Tuxedo(bsf.Analysis):
                 # Write a Cuffmerge assembly manifest file to merge all transcriptome GTF files of each Sample object.
                 # This requires an absolute path, because the working directory is not set at the stage of
                 # job submission.
-                assembly_file = open(os.path.join(self.genome_directory, file_path_cuffmerge.assembly_txt), 'w')
-                assembly_file.writelines(cuffmerge_transcript_gtf_list)
-                assembly_file.close()
+                with open(os.path.join(self.genome_directory, file_path_cuffmerge.assembly_txt), 'wt') as assembly_file:
+                    assembly_file.writelines(cuffmerge_transcript_gtf_list)
 
             # Create a Cuffnorm Runnable per comparison.
 

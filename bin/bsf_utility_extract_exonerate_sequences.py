@@ -104,7 +104,7 @@ for vulgar in vulgar_list:
     if identifier in seq_io_dict:
         seq_io = seq_io_dict[identifier]
     else:
-        seq_io = open("test_aligned_{}_to_{}.fasta".format(sample_name, identifier), 'w')
+        seq_io = open("test_aligned_{}_to_{}.fasta".format(sample_name, identifier), 'wt')
         seq_io_dict[identifier] = seq_io
 
     Bio.SeqIO.write(sequences=q_record, handle=seq_io, format='fasta')
