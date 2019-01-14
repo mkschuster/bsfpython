@@ -4752,6 +4752,13 @@ class VariantCallingGATK(bsf.Analysis):
                 value=file_path_process_cohort.recalibrated_snp_recalibrated_indel_vcf)
             runnable_step.add_gatk_option(key='out', value=file_path_process_cohort.multi_sample_vcf)
             for sample in self.sample_list:
+                # Get all PairedReads objects solely to exclude samples without any.
+                paired_reads_dict = sample.get_all_paired_reads(
+                    replicate_grouping=self.replicate_grouping,
+                    exclude=True)
+                if not paired_reads_dict:
+                    # Skip Sample objects, which PairedReads objects have all been excluded.
+                    continue
                 runnable_step.add_gatk_option(key='sample_name', value=sample.name, override=True)
             runnable_step.add_gatk_switch(key='excludeNonVariants')
         else:
