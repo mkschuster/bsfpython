@@ -3739,6 +3739,15 @@ class DESeq(bsf.Analysis):
             str_list.extend(self.get_html_transcriptome(transcriptome_version=self.transcriptome_version))
             str_list.append('\n')
 
+            str_list.append('<p>')
+            str_list.append('The <a href="https://bioconductor.org/">Bioconductor</a> ')
+            str_list.append('<a href="https://bioconductor.org/packages/release/bioc/html/DESeq2.html">DESeq2</a> ')
+            str_list.append('package estimates variance-mean dependence in count data from ')
+            str_list.append('high-throughput sequencing assays and tests for differential expression ')
+            str_list.append('based on a model using the negative binomial distribution.')
+            str_list.append('</p>\n')
+            str_list.append('\n')
+
             # Likelihood Ratio Testing (LRT) Table
 
             # Read the designs table as a backup, in case the design-specific LRT summary table is not available.
@@ -3749,6 +3758,22 @@ class DESeq(bsf.Analysis):
                 name='DESeq Design Table')
 
             str_list.append('<h2 id="lrt">Likelihood Ratio Testing (LRT)</h2>\n')
+            str_list.append('\n')
+
+            str_list.append('<p>')
+            str_list.append('A ')
+            str_list.append('<a href="https://en.wikipedia.org/wiki/Likelihood-ratio_test">Likelihood-ratio test</a> ')
+            str_list.append('compares the goodness of fit of two models, a null (i.e. full) model and an alternative ')
+            str_list.append('(i.e. reduced) model. The likelihood ratio expresses how many times more likely ')
+            str_list.append('the data fits one model than the other. ')
+            str_list.append('Since each gene is modelled, the LRT allows identifying those genes that benefit ')
+            str_list.append('from a variable or factor dropped in the reduced model.')
+            str_list.append('</p>\n')
+            str_list.append('<p>')
+            str_list.append('Please see also the DESeq2 manual section on ')
+            str_list.append('<a href="https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/')
+            str_list.append('inst/doc/DESeq2.html#likelihood-ratio-test">Likelihood-ratio testing</a>.')
+            str_list.append('</p>\n')
             str_list.append('\n')
 
             str_list.append('<table id="lrt_table">\n')
@@ -3929,6 +3954,15 @@ class DESeq(bsf.Analysis):
             # Link MDS and PCA plots.
 
             str_list.append('<h2 id="plots">Plots</h2>\n')
+            str_list.append('\n')
+
+            str_list.append('<p>')
+            str_list.append('For each design, multi-dimensional scaling (MDS), principal component analysis (PCA) ')
+            str_list.append('and heatmap plots are provided for combinations of variables or factors. ')
+            str_list.append('Variance by principal component plots show the distribution of the variance for ')
+            str_list.append('a maximum of the first hundred components. ')
+            str_list.append('Two sets of plots are available, based on data in model-aware or blind mode. ')
+            str_list.append('</p>\n')
             str_list.append('\n')
 
             str_list.append('<table id="plot_table">\n')
