@@ -3992,12 +3992,12 @@ class DESeq(bsf.Analysis):
                         for model_type in ('blind', 'model'):
                             plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
                             plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
+                            str_list.append('<td>')
                             if os.path.exists(
                                     os.path.join(
                                         self.genome_directory,
                                         relative_image_source(prefix=design_prefix, suffix=plot_path_png))):
                                 str_list.append(
-                                    '<td>' +
                                     self.get_html_anchor(
                                         prefix=design_prefix,
                                         suffix=plot_path_pdf,
@@ -4006,22 +4006,20 @@ class DESeq(bsf.Analysis):
                                             suffix=plot_path_png,
                                             text=plot_type + ' plot',
                                             height='80',
-                                            width='80')) +
-                                    '</td>\n')
-                            else:
-                                str_list.append('<td></td>\n')
+                                            width='80')))
+                            str_list.append('</td>\n')
                     # Heatmap plots
                     plot_path = '_'.join(map(lambda x: x.split('=')[1], ggplot_aes_list.split(',')))
                     plot_type = 'heatmap'
                     for model_type in ('blind', 'model'):
                         plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
                         plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
+                        str_list.append('<td>')
                         if os.path.exists(
                                 os.path.join(
                                     self.genome_directory,
                                     relative_image_source(prefix=design_prefix, suffix=plot_path_png))):
                             str_list.append(
-                                '<td>' +
                                 self.get_html_anchor(
                                     prefix=design_prefix,
                                     suffix=plot_path_pdf,
@@ -4030,10 +4028,8 @@ class DESeq(bsf.Analysis):
                                         suffix=plot_path_png,
                                         text=plot_type + ' plot',
                                         height='80',
-                                        width='80')) +
-                                '</td>\n')
-                        else:
-                            str_list.append('<td></td>\n')
+                                        width='80')))
+                        str_list.append('</td>\n')
 
                     # Plot Aesthetics
                     # str_list.append('<td>' + plot_instance + '</td>\n')
@@ -4051,17 +4047,22 @@ class DESeq(bsf.Analysis):
                 for model_type in ('blind', 'model'):
                     plot_path_pdf = '_'.join((plot_type, plot_path, model_type + '.pdf'))
                     plot_path_png = '_'.join((plot_type, plot_path, model_type + '.png'))
-                    str_list.append('<td>' +
-                                    self.get_html_anchor(
-                                        prefix=design_prefix,
-                                        suffix=plot_path_pdf,
-                                        text=self.get_html_image(
-                                            prefix=design_prefix,
-                                            suffix=plot_path_png,
-                                            text=plot_type + ' plot',
-                                            height='80',
-                                            width='80')) +
-                                    '</td>\n')
+                    str_list.append('<td>')
+                    if os.path.exists(
+                            os.path.join(
+                                self.genome_directory,
+                                relative_image_source(prefix=design_prefix, suffix=plot_path_png))):
+                        str_list.append(
+                            self.get_html_anchor(
+                                prefix=design_prefix,
+                                suffix=plot_path_pdf,
+                                text=self.get_html_image(
+                                    prefix=design_prefix,
+                                    suffix=plot_path_png,
+                                    text=plot_type + ' plot',
+                                    height='80',
+                                    width='80')))
+                    str_list.append('</td>\n')
 
                 str_list.append('<td></td>\n')  # Heatmap Blind
                 str_list.append('<td></td>\n')  # Heatmap Model
