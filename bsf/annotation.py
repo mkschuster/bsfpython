@@ -95,6 +95,12 @@ class AnnotationSheet(object):
 
     # dict[str, list[classmethod[int, dict[str, str | unicode], str]]]
 
+    # Python dict of (boolean state) Python str objects and Python bool value objects.
+    _boolean_states = {
+        '1': True, 'yes': True, 'true': True, 'on': True,
+        '0': False, 'no': False, 'false': False, 'off': False
+    }
+
     @classmethod
     def check_column_value(cls, row_number, row_dict, column_name, require_column=False, require_value=False):
         """Check for a column name and return its associated value, if any.
@@ -863,6 +869,24 @@ class AnnotationSheet(object):
         self._csv_writer_file = None
 
         return
+
+    def get_boolean(self, row_dict, key):
+        """Get the Boolean state of a cell of an Annotation Sheet
+
+        @param row_dict: A Python C{dict} of row entries of a Python C{csv} object
+        @type row_dict: dict[str, str | unicode]
+        @param key: Key
+        @param key: str
+        @return: Boolean
+        @rtype: bool | None
+        """
+        if key in row_dict:
+            value = row_dict[key].lower()
+            if value in self._boolean_states:
+                return self._boolean_states[value]
+            else:
+                raise ValueError('Value ' + repr(row_dict[key]) + ' in field ' + repr(key) +
+                                 ' of AnnotationSheet ' + repr(self.name) + ' is not a boolean.')
 
     def sort(self):
         """Sort a C{bsf.annotation.AnnotationSheet}.

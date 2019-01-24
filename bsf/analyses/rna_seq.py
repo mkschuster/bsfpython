@@ -3878,6 +3878,10 @@ class DESeq(bsf.Analysis):
             """ @type contrast_dict: dict[str, list] """
 
             for contrast_row_dict in contrast_sheet.row_dicts:
+                # Exclude contrasts if requested.
+                if contrast_sheet.get_boolean(row_dict=contrast_row_dict, key='Exclude'):
+                    continue
+
                 if contrast_row_dict['Design'] not in contrast_dict:
                     contrast_dict[contrast_row_dict['Design']] = list()
                 contrast_dict[contrast_row_dict['Design']].append(contrast_row_dict)

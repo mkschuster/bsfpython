@@ -583,12 +583,6 @@ class ChIPSeq(bsf.Analysis):
         else:
             return self.colour_default
 
-    # Taken from ConfigParser.RawConfigParser.getboolean()
-
-    _boolean_states = {
-        '1': True, 'yes': True, 'true': True, 'on': True,
-        '0': False, 'no': False, 'false': False, 'off': False}
-
     def run(self):
         """Run a C{bsf.analyses.chipseq.ChIPSeq} C{bsf.Analysis}.
 
@@ -704,9 +698,7 @@ class ChIPSeq(bsf.Analysis):
                     treatment = str()
 
                 if 'DiffBind' in row_dict:
-                    if row_dict['DiffBind'].lower() not in ChIPSeq._boolean_states:
-                        raise ValueError("Value in field 'DiffBind' is not a boolean: " + repr(row_dict['DiffBind']))
-                    diff_bind = ChIPSeq._boolean_states[row_dict['DiffBind'].lower()]
+                    diff_bind = annotation_sheet.get_boolean(row_dict=row_dict, key='DiffBind')
                 else:
                     diff_bind = True
 

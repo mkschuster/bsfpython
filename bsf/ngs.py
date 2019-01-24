@@ -2313,10 +2313,7 @@ class Collection(NextGenerationBase):
                 key_list.remove(_key)
                 _value = row_dict[_key].lower()  # Set to lower case for matching.
                 if _value:
-                    if _value in Collection._boolean_states:
-                        paired_reads.exclude = Collection._boolean_states[_value]
-                    else:
-                        raise ValueError('Value in field ' + repr(_key) + ' is not a boolean: ' + repr(_value))
+                    paired_reads.exclude = sas.get_boolean(row_dict=row_dict, key=_key)
                 else:
                     paired_reads.exclude = False
 
@@ -2590,12 +2587,6 @@ class Collection(NextGenerationBase):
             sample_list.extend(project.get_all_samples(exclude=exclude))
 
         return sample_list
-
-    # Taken from ConfigParser.RawConfigParser.getboolean()
-
-    _boolean_states = {
-        '1': True, 'yes': True, 'true': True, 'on': True,
-        '0': False, 'no': False, 'false': False, 'off': False}
 
     def get_sample_from_row_dict(self, row_dict, prefix=None):
         """Get a Sample from a C{bsf.ngs.SampleAnnotationSheet} row Python C{dict}.
