@@ -853,6 +853,34 @@ class Tuxedo(bsf.Analysis):
         @rtype:
         """
 
+        def run_get_annotation_file(_prefix_list, _suffix):
+            """Private function to get an annotation file.
+
+            Based on the project name, a list of file name prefixes and one file name suffix,
+            the file name that exists in the file system will be returned.
+            @param _prefix_list: Python C{list} of Python C{str} or C{unicode} (prefix) objects
+            @type _prefix_list: list[str | unicode]
+            @param _suffix: File name suffix
+            @type _suffix: str | unicode
+            @return: File name or None
+            @rtype: str | unicode | None
+            """
+            for _prefix in _prefix_list:
+                # Test without the genome version.
+                _file_name = '_'.join((self.project_name, _prefix, _suffix))
+                if self.debug > 0:
+                    print('Checking annotation sheet: ', repr(_file_name))
+                if os.path.exists(path=_file_name):
+                    return _file_name
+                # Test with teh genome version.
+                _file_name = '_'.join((self.project_name, self.genome_version, _prefix, _suffix))
+                if self.debug > 0:
+                    print('Checking annotation sheet: ', repr(_file_name))
+                if os.path.exists(path=_file_name):
+                    return _file_name
+
+            return
+
         def run_read_comparisons():
             """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
 
@@ -1051,22 +1079,24 @@ class Tuxedo(bsf.Analysis):
             if not os.path.exists(path=self.sas_file):
                 raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
         else:
-            self.sas_file = '_'.join((self.project_name, self.prefix, 'samples.csv'))
+            self.sas_file = run_get_annotation_file(_prefix_list=[self.prefix], _suffix='samples.csv')
             if not self.sas_file:
                 raise Exception('No suitable sample annotation file in the current working directory.')
 
         # Get the comparison annotation sheet before calling the run() method of the Analysis super-class.
 
         if not self.comparison_path:
+            print('Comparison path:', repr(self.comparison_path))
             # A comparison path was not provided, check if a standard file exists in this directory.
-            self.comparison_path = '_'.join((self.project_name, self.prefix, 'comparisons.csv'))
-            if not os.path.exists(self.comparison_path):
-                self.comparison_path = None
-                if self.debug > 0:
-                    print('Standard comparison file not in current working directory:', self.comparison_path)
-            else:
-                if self.debug > 0:
-                    print('Standard comparison file in current working directory:', self.comparison_path)
+            self.comparison_path = run_get_annotation_file(_prefix_list=[self.prefix], _suffix='comparisons.csv')
+            if self.comparison_path:
+                if not os.path.exists(self.comparison_path):
+                    self.comparison_path = None
+                    if self.debug > 0:
+                        print('Standard comparison file not in current working directory:', self.comparison_path)
+                else:
+                    if self.debug > 0:
+                        print('Standard comparison file in current working directory:', self.comparison_path)
 
         # Tuxedo requires a transcriptome version.
 
@@ -3593,7 +3623,14 @@ class DESeq(bsf.Analysis):
             @rtype: str | unicode | None
             """
             for _prefix in _prefix_list:
+                # Test without the genome version.
                 _file_name = '_'.join((self.project_name, _prefix, _suffix))
+                if self.debug > 0:
+                    print('Checking annotation sheet: ', repr(_file_name))
+                if os.path.exists(path=_file_name):
+                    return _file_name
+                # Test with the genome version.
+                _file_name = '_'.join((self.project_name, self.genome_version, _prefix, _suffix))
                 if self.debug > 0:
                     print('Checking annotation sheet: ', repr(_file_name))
                 if os.path.exists(path=_file_name):
