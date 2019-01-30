@@ -1044,6 +1044,22 @@ class Tuxedo(bsf.Analysis):
 
         # Start of the run() method body.
 
+        # Check for the project name already here,
+        # since the super class method has to be called later.
+        if not self.project_name:
+            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
+
+        # Tuxedo requires a transcriptome version.
+
+        if not self.transcriptome_version:
+            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
+
+        # Get the genome version before calling the run() method of the bsf.Analysis super-class.
+
+        if not self.genome_version:
+            self.genome_version = bsf.standards.Transcriptome.get_genome(
+                transcriptome_version=self.transcriptome_version)
+
         # Get the sample annotation sheet before calling the run() method of the Analysis super-class.
 
         if self.sas_file:
@@ -1069,17 +1085,6 @@ class Tuxedo(bsf.Analysis):
                 else:
                     if self.debug > 0:
                         print('Standard comparison file in current working directory:', self.comparison_path)
-
-        # Tuxedo requires a transcriptome version.
-
-        if not self.transcriptome_version:
-            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
-
-        # Get the genome version before calling the run() method of the bsf.Analysis super-class.
-
-        if not self.genome_version:
-            self.genome_version = bsf.standards.Transcriptome.get_genome(
-                transcriptome_version=self.transcriptome_version)
 
         super(Tuxedo, self).run()
 
@@ -3587,7 +3592,16 @@ class DESeq(bsf.Analysis):
         # Check for the project name already here,
         # since the super class method has to be called later.
         if not self.project_name:
-            raise Exception('An Analysis project_name has not been defined.')
+            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
+
+        # DESeq requires a transcriptome version.
+
+        if not self.transcriptome_version:
+            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
+
+        if not self.genome_version:
+            self.genome_version = bsf.standards.Transcriptome.get_genome(
+                transcriptome_version=self.transcriptome_version)
 
         # Get the annotation sheets before calling the run() method of the Analysis super-class.
         # If file paths were not provided, try to find them in the current directory.
@@ -3632,15 +3646,6 @@ class DESeq(bsf.Analysis):
                 suffix='contrasts.csv')
             if not self.contrast_path:
                 raise Exception('No suitable contrast annotation file in the current working directory.')
-
-        # DESeq requires a transcriptome version.
-
-        if not self.transcriptome_version:
-            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
-
-        if not self.genome_version:
-            self.genome_version = bsf.standards.Transcriptome.get_genome(
-                transcriptome_version=self.transcriptome_version)
 
         super(DESeq, self).run()
 

@@ -436,16 +436,10 @@ class StarAligner(bsf.Analysis):
 
         # Start of the run() method body.
 
-        # Get the sample annotation sheet before calling the run() method of the bsf.Analysis super-class.
-
-        if self.sas_file:
-            self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
-            if not os.path.exists(path=self.sas_file):
-                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
-        else:
-            self.sas_file = self.get_annotation_file(prefix_list=[self.prefix], suffix='samples.csv')
-            if not self.sas_file:
-                raise Exception('No suitable sample annotation file in the current working directory.')
+        # Check for the project name already here,
+        # since the super class method has to be called later.
+        if not self.project_name:
+            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
 
         # The STAR Aligner requires a transcriptome version.
 
@@ -457,6 +451,17 @@ class StarAligner(bsf.Analysis):
         if not self.genome_version:
             self.genome_version = bsf.standards.Transcriptome.get_genome(
                 transcriptome_version=self.transcriptome_version)
+
+        # Get the sample annotation sheet before calling the run() method of the bsf.Analysis super-class.
+
+        if self.sas_file:
+            self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
+            if not os.path.exists(path=self.sas_file):
+                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
+        else:
+            self.sas_file = self.get_annotation_file(prefix_list=[self.prefix], suffix='samples.csv')
+            if not self.sas_file:
+                raise Exception('No suitable sample annotation file in the current working directory.')
 
         super(StarAligner, self).run()
 
