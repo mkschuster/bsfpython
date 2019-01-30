@@ -350,6 +350,38 @@ class Analysis(object):
 
         return
 
+    def get_annotation_file(self, prefix_list, suffix):
+        """Get a project and genome-specific annotation file.
+
+        Based on the project name, a list of file name prefixes and one file name suffix,
+        the file name that exists in the file system will be returned.
+        @param prefix_list: Python C{list} of Python C{str} or C{unicode} (prefix) objects
+        @type prefix_list: list[str | unicode] | None
+        @param suffix: File name suffix
+        @type suffix: str | unicode
+        @return: File name or None
+        @rtype: str | unicode | None
+        """
+        if prefix_list is None:
+            prefix_list = [self.prefix]
+
+        for prefix in prefix_list:
+            # Preferentially test with the genome version.
+            file_name = '_'.join((self.project_name, self.genome_version, prefix, suffix))
+            if self.debug > 0:
+                print('Checking annotation sheet: ', repr(file_name))
+            if os.path.exists(path=file_name):
+                return file_name
+
+            # Fall-back test without the genome version.
+            file_name = '_'.join((self.project_name, prefix, suffix))
+            if self.debug > 0:
+                print('Checking annotation sheet: ', repr(file_name))
+            if os.path.exists(path=file_name):
+                return file_name
+
+        return
+
     def get_stage(self, name):
         """Get a C{bsf.Stage} from a C{bsf.Analysis}.
 

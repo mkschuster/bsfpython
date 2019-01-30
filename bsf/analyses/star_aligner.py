@@ -443,7 +443,7 @@ class StarAligner(bsf.Analysis):
             if not os.path.exists(path=self.sas_file):
                 raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
         else:
-            self.sas_file = '_'.join((self.project_name, self.prefix, 'samples.csv'))
+            self.sas_file = self.get_annotation_file(prefix_list=[self.prefix], suffix='samples.csv')
             if not self.sas_file:
                 raise Exception('No suitable sample annotation file in the current working directory.')
 
