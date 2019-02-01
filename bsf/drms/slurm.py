@@ -746,10 +746,18 @@ def submit(stage, debug=0):
     @rtype:
     """
     # Open or create a database.
-    database_connection = bsf.database.DatabaseConnection(
-        file_path=os.path.join(stage.working_directory, database_file_name))
+    file_path = os.path.join(stage.working_directory, database_file_name)
+    database_connection = bsf.database.DatabaseConnection(file_path=file_path)
     job_submission_adaptor = bsf.database.JobSubmissionAdaptor(database_connection=database_connection)
     process_slurm_adaptor = ProcessSLURMAdaptor(database_connection=database_connection)
+
+    # Abort submission if the database file is not writable.
+    # While this test is still prone to a race condition, an eventual database write error can only be caught
+    # after a SLURM process has already been submitted. This would lead to an inconsistent state since the first
+    # SLURM process would have been submitted and its identifier could no longer be updated. Hence, the test here.
+
+    if not os.access(file_path, os.W_OK):
+        raise Exception('Cannot write to SQLite database file path:', repr(file_path))
 
     output_list = list()
     """ @type output_list: list[str | unicode] """
