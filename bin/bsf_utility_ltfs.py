@@ -82,11 +82,11 @@ class LinearTapeFileSystemDirectory(object):
 
     Attributes:
     @ivar source_path: Source directory path
-    @type source_path: str | unicode
+    @type source_path: str | unicode | None
     @ivar target_path: Target directory path
-    @type target_path: str | unicode
+    @type target_path: str | unicode | None
     @ivar source_specification: Source specification pattern including wildcard characters
-    @type source_specification: str
+    @type source_specification: str | unicode | None
     @ivar source_file_path_list: Python C{list} of source file paths in the directory
     @type source_file_path_list: list[str | unicode]
     """
@@ -100,33 +100,21 @@ class LinearTapeFileSystemDirectory(object):
         """Initialise a C{LinearTapeFileSystemDirectory} object.
 
         @param source_path: Source directory path
-        @type source_path: str | unicode
+        @type source_path: str | unicode | None
         @param target_path: Target directory path
-        @type target_path: str |unicode
+        @type target_path: str | unicode | None
         @param source_specification: Source specification pattern including wildcard characters
-        @type source_specification: str
+        @type source_specification: str | unicode | None
         @param source_file_path_list: Python C{list} of source file paths in the directory
-        @type source_file_path_list: list[str | unicode]
+        @type source_file_path_list: list[str | unicode] | None
         @return:
         @rtype:
         """
-
         super(LinearTapeFileSystemDirectory, self).__init__()
 
-        if source_path is None:
-            self.source_path = str
-        else:
-            self.source_path = source_path
-
-        if target_path is None:
-            self.target_path = str()
-        else:
-            self.target_path = target_path
-
-        if source_specification is None:
-            self.source_specification = str()
-        else:
-            self.source_specification = source_specification
+        self.source_path = source_path
+        self.target_path = target_path
+        self.source_specification = source_specification
 
         if source_file_path_list is None:
             self.source_file_path_list = list()
@@ -157,17 +145,17 @@ class LinearTapeFileSystemCopy(object):
 
     Attributes:
     @ivar total_buffer_size: Total buffer size
-    @type total_buffer_size: str
+    @type total_buffer_size: str | None
     @ivar buffer_size: Buffer size per thread
-    @type buffer_size: str
+    @type buffer_size: str | None
     @ivar log_level: Log level
-    @type log_level: str
+    @type log_level: str | None
     @ivar recursive: Recursive processing
-    @type recursive: bool
+    @type recursive: bool | None
     @ivar sparse: Support sparse files
-    @type sparse: bool
+    @type sparse: bool | None
     @ivar default_target_path: Default target path for all C{LinearTapeFileSystemDirectory} objects
-    @type default_target_path: str | unicode
+    @type default_target_path: str | unicode | None
     @ivar ltfs_directory_dict: Python C{dict} of Python C{str} directory path and
         C{LinearTapeFileSystemDirectory} objects
     @type ltfs_directory_dict: dict[str | unicode, LinearTapeFileSystemDirectory]
@@ -207,55 +195,31 @@ class LinearTapeFileSystemCopy(object):
         """Initialise a C{LinearTapeFileSystemCopy} object.
 
         @param total_buffer_size: Total buffer size
-        @type total_buffer_size: str
+        @type total_buffer_size: str | None
         @param buffer_size: Buffer size per thread
-        @type buffer_size: str
+        @type buffer_size: str | None
         @param log_level: Log level
-        @type log_level: str
+        @type log_level: str | None
         @param recursive: Recursive processing
-        @type recursive: bool
+        @type recursive: bool | None
         @param sparse: Support sparse files
-        @type sparse: bool
+        @type sparse: bool | None
         @param default_target_path: Default target path for all C{LinearTapeFileSystemDirectory} objects
-        @type default_target_path: str | unicode
+        @type default_target_path: str | unicode | None
         @param ltfs_directory_dict: Python C{dict} of Python C{str} or C{unicode} directory path and
             C{LinearTapeFileSystemDirectory} objects
-        @type ltfs_directory_dict: dict[str | unicode, LinearTapeFileSystemDirectory]
+        @type ltfs_directory_dict: dict[str | unicode, LinearTapeFileSystemDirectory] | None
         @return:
         @rtype:
         """
-
         super(LinearTapeFileSystemCopy, self).__init__()
 
-        if total_buffer_size is None:
-            self.total_buffer_size = str()
-        else:
-            self.total_buffer_size = total_buffer_size
-
-        if buffer_size is None:
-            self.buffer_size = str()
-        else:
-            self.buffer_size = buffer_size
-
-        if log_level is None:
-            self.log_level = str()
-        else:
-            self.log_level = log_level
-
-        if recursive is None:
-            self.recursive = True
-        else:
-            self.recursive = recursive
-
-        if sparse is None:
-            self.sparse = True
-        else:
-            self.sparse = sparse
-
-        if default_target_path is None:
-            self.default_target_path = str()
-        else:
-            self.default_target_path = default_target_path
+        self.total_buffer_size = total_buffer_size
+        self.buffer_size = buffer_size
+        self.log_level = log_level
+        self.recursive = recursive
+        self.sparse = sparse
+        self.default_target_path = default_target_path
 
         if ltfs_directory_dict is None:
             self.ltfs_directory_dict = dict()
@@ -273,7 +237,6 @@ class LinearTapeFileSystemCopy(object):
         @return: C{LinearTapeFileSystemDirectory}
         @rtype: LinearTapeFileSystemDirectory
         """
-
         if ltfs_directory is None:
             return
 
@@ -290,11 +253,10 @@ class LinearTapeFileSystemCopy(object):
         @param source_path: Source directory path
         @type source_path: str | unicode
         @param source_specification: Source specification
-        @type source_specification: str | unicode
+        @type source_specification: str | unicode | None
         @return: C{LinearTapeFileSystemDirectory}
         @rtype: LinearTapeFileSystemDirectory
         """
-
         if source_path in self.ltfs_directory_dict:
             return self.ltfs_directory_dict[source_path]
         else:
@@ -312,7 +274,6 @@ class LinearTapeFileSystemCopy(object):
         @return:
         @rtype:
         """
-
         source_path = os.path.normpath(source_path)
         source_directory = os.path.dirname(source_path)
         source_file_path = os.path.basename(source_path)
@@ -328,7 +289,6 @@ class LinearTapeFileSystemCopy(object):
         @return: XML Element Tree
         @rtype: xml.etree.ElementTree.ElementTree
         """
-
         ltfs_specification = xml.etree.ElementTree.Element(tag='ltfscpspec', attrib={'version': '1.0'})
 
         ltfs_element_tree = xml.etree.ElementTree.ElementTree(element=ltfs_specification)
@@ -403,7 +363,6 @@ class LinearTapeFileSystemCopy(object):
         @return:
         @rtype:
         """
-
         ltfs_element_tree = self.get_element_tree()
         ltfs_element_tree.write(file_or_filename=file_path)
 
@@ -423,13 +382,6 @@ argument_parser.add_argument(
     type=int)
 
 argument_parser.add_argument(
-    '--input-file',
-    dest='input_file',
-    help='Input file',
-    required=False,
-    type=str)
-
-argument_parser.add_argument(
     '--total-buffer-size',
     default='4G',
     dest='total_buffer_size',
@@ -446,17 +398,20 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
-    '--sparse',
-    action='store_true',
-    help='support sparse files')
+    '--no-sparse',
+    action='store_false',
+    dest='sparse',
+    help='do not support sparse files')
 
 argument_parser.add_argument(
     '--recursive',
     action='store_true',
+    dest='recursive',
     help='process recursively')
 
 argument_parser.add_argument(
     '--log-level',
+    choices=['URGENT', 'WARNING', 'INFO', 'DEBUG'],
     default='INFO',
     dest='log_level',
     help='log level [INFO]',
