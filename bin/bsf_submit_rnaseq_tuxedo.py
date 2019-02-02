@@ -32,10 +32,10 @@ from __future__ import print_function
 import argparse
 import sys
 
-import bsf.analyses.rna_seq
+import bsf.analyses.rnaseq
 
 argument_parser = argparse.ArgumentParser(
-    description=bsf.analyses.rna_seq.Tuxedo.name + ' driver script.')
+    description=bsf.analyses.rnaseq.Tuxedo.name + ' driver script.')
 
 argument_parser.add_argument(
     '--debug',
@@ -58,7 +58,7 @@ name_space = argument_parser.parse_args()
 
 # Create a Tuxedo analysis and run it.
 
-analysis = bsf.analyses.rna_seq.Tuxedo.from_config_file_path(config_path=name_space.configuration)
+analysis = bsf.analyses.rnaseq.Tuxedo.from_config_file_path(config_path=name_space.configuration)
 
 if name_space.debug:
     analysis.debug = name_space.debug

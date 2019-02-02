@@ -45,7 +45,7 @@ import bsf.standards
 
 
 class FilePathTophat(bsf.FilePath):
-    """The C{bsf.analyses.rna_seq.FilePathTophat} models files in a sample-specific TopHat directory.
+    """The C{bsf.analyses.rnaseq.FilePathTophat} models files in a sample-specific TopHat directory.
 
     Attributes:
     @ivar output_directory: Output directory
@@ -89,7 +89,7 @@ class FilePathTophat(bsf.FilePath):
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rna_seq.FilePathTophat} object
+        """Initialise a C{bsf.analyses.rnaseq.FilePathTophat} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -122,7 +122,7 @@ class FilePathTophat(bsf.FilePath):
 
 
 class FilePathProcessTophat(bsf.FilePath):
-    """The C{bsf.analyses.rna_seq.FilePathProcessTophat} models files in a sample-specific Tophat directory.
+    """The C{bsf.analyses.rnaseq.FilePathProcessTophat} models files in a sample-specific Tophat directory.
 
     Attributes:
     """
@@ -131,7 +131,7 @@ class FilePathProcessTophat(bsf.FilePath):
 
 
 class FilePathCufflinks(bsf.FilePath):
-    """The C{bsf.analyses.rna_seq.FilePathCufflinks} models files in a sample-specific Cufflinks directory.
+    """The C{bsf.analyses.rnaseq.FilePathCufflinks} models files in a sample-specific Cufflinks directory.
 
     Attributes:
     @ivar output_directory: Output directory
@@ -167,7 +167,7 @@ class FilePathCufflinks(bsf.FilePath):
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rna_seq.FilePathCufflinks} object
+        """Initialise a C{bsf.analyses.rnaseq.FilePathCufflinks} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -196,7 +196,7 @@ class FilePathCufflinks(bsf.FilePath):
 
 
 class FilePathProcessCufflinks(bsf.FilePath):
-    """The C{bsf.analyses.rna_seq.FilePathProcessCufflinks} models files in a sample-specific Cufflinks directory.
+    """The C{bsf.analyses.rnaseq.FilePathProcessCufflinks} models files in a sample-specific Cufflinks directory.
 
     Attributes:
     """
@@ -205,7 +205,7 @@ class FilePathProcessCufflinks(bsf.FilePath):
 
 
 class FilePathCuffmerge(bsf.FilePath):
-    """The C{bsf.analyses.rna_seq.FilePathCuffmerge} models files in a comparison-specific Cuffmerge directory.
+    """The C{bsf.analyses.rnaseq.FilePathCuffmerge} models files in a comparison-specific Cuffmerge directory.
 
     Attributes:
     @ivar output_directory: Output directory
@@ -247,7 +247,7 @@ class FilePathCuffmerge(bsf.FilePath):
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rna_seq.FilePathCuffmerge} object
+        """Initialise a C{bsf.analyses.rnaseq.FilePathCuffmerge} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -279,7 +279,7 @@ class FilePathCuffmerge(bsf.FilePath):
 
 
 class FilePathCuffquant(bsf.FilePath):
-    """The C{bsf.analyses.rna_seq.FilePathCuffquant} models files in a sample-specific Cuffquant directory.
+    """The C{bsf.analyses.rnaseq.FilePathCuffquant} models files in a sample-specific Cuffquant directory.
 
     Attributes:
     @ivar output_directory: Output directory
@@ -289,7 +289,7 @@ class FilePathCuffquant(bsf.FilePath):
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rna_seq.FilePathCuffquant} object
+        """Initialise a C{bsf.analyses.rnaseq.FilePathCuffquant} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -308,7 +308,7 @@ class FilePathCuffquant(bsf.FilePath):
 
 
 class FilePathCuffnorm(bsf.FilePath):
-    """The C{bsf.analyses.rna_seq.FilePathCuffnorm} models files in a comparison-specific Cuffnorm directory.
+    """The C{bsf.analyses.rnaseq.FilePathCuffnorm} models files in a comparison-specific Cuffnorm directory.
 
     Attributes:
     @ivar output_directory: Output directory
@@ -318,7 +318,7 @@ class FilePathCuffnorm(bsf.FilePath):
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rna_seq.FilePathCuffnorm} object
+        """Initialise a C{bsf.analyses.rnaseq.FilePathCuffnorm} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -334,7 +334,7 @@ class FilePathCuffnorm(bsf.FilePath):
 
 
 class FilePathCuffdiff(bsf.FilePath):
-    """The C{bsf.analyses.rna_seq.FilePathCuffdiff} models files in a comparison-specific Cuffdiff directory.
+    """The C{bsf.analyses.rnaseq.FilePathCuffdiff} models files in a comparison-specific Cuffdiff directory.
 
     Attributes:
     @ivar output_directory: Output directory
@@ -342,7 +342,7 @@ class FilePathCuffdiff(bsf.FilePath):
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rna_seq.FilePathCuffdiff} object
+        """Initialise a C{bsf.analyses.rnaseq.FilePathCuffdiff} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -359,7 +359,7 @@ class FilePathCuffdiff(bsf.FilePath):
 
 
 class FilePathProcessCuffdiff(bsf.FilePath):
-    """The C{bsf.analyses.rna_seq.FilePathProcessCuffdiff} models files in a comparison-specific Cuffdiff directory.
+    """The C{bsf.analyses.rnaseq.FilePathProcessCuffdiff} models files in a comparison-specific Cuffdiff directory.
 
     Attributes:
     """
@@ -368,7 +368,7 @@ class FilePathProcessCuffdiff(bsf.FilePath):
 
 
 class FilePathMonocle(bsf.FilePath):
-    """The C{bsf.analyses.rna_seq.FilePathMonocle} models files in a comparison-specific Monocle directory.
+    """The C{bsf.analyses.rnaseq.FilePathMonocle} models files in a comparison-specific Monocle directory.
 
     Attributes:
     @ivar output_directory: Output directory
@@ -378,7 +378,7 @@ class FilePathMonocle(bsf.FilePath):
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rna_seq.FilePathMonocle} object
+        """Initialise a C{bsf.analyses.rnaseq.FilePathMonocle} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -394,7 +394,7 @@ class FilePathMonocle(bsf.FilePath):
 
 
 class TuxedoSamplePairSheet(bsf.annotation.AnnotationSheet):
-    """The C{bsf.analyses.rna_seq.TuxedoSamplePairSheet} class represents C{bsf.ngs.Sample} pairs.
+    """The C{bsf.analyses.rnaseq.TuxedoSamplePairSheet} class represents C{bsf.ngs.Sample} pairs.
 
     The C{bsf.ngs.Sample} pairs are defined by the C{bsf_rnaseq_process_cuffdiff.R} script.
 
@@ -682,7 +682,7 @@ class Tuxedo(bsf.Analysis):
             novel_transcripts=None,
             false_discovery_rate=None,
             no_length_correction=None):
-        """Initialise a C{bsf.analyses.rna_seq.Tuxedo} object.
+        """Initialise a C{bsf.analyses.rnaseq.Tuxedo} object.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -777,7 +777,7 @@ class Tuxedo(bsf.Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.rna_seq.Tuxedo} object via a section of a
+        """Set instance variables of a C{bsf.analyses.rnaseq.Tuxedo} object via a section of a
         C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
@@ -848,7 +848,7 @@ class Tuxedo(bsf.Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.rna_seq.Tuxedo} analysis.
+        """Run this C{bsf.analyses.rnaseq.Tuxedo} analysis.
         @return:
         @rtype:
         """
@@ -2241,7 +2241,7 @@ class Tuxedo(bsf.Analysis):
         return
 
     def report(self):
-        """Create a C{bsf.analyses.rna_seq.Tuxedo} report in HTML format and a UCSC Genome Browser Track Hub.
+        """Create a C{bsf.analyses.rnaseq.Tuxedo} report in HTML format and a UCSC Genome Browser Track Hub.
         @return:
         @rtype:
         """
@@ -3377,11 +3377,11 @@ class Tuxedo(bsf.Analysis):
 
 
 class FilePathDESeq(bsf.FilePath):
-    """The C{bsf.analyses.rna_seq.FilePathDESeq} models files in a comparison-specific DESeq directory.
+    """The C{bsf.analyses.rnaseq.FilePathDESeq} models files in a comparison-specific DESeq directory.
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.rna_seq.FilePathDESeq} object
+        """Initialise a C{bsf.analyses.rnaseq.FilePathDESeq} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
@@ -3461,7 +3461,7 @@ class DESeq(bsf.Analysis):
             transcriptome_gtf_path=None,
             transcriptome_index_path=None,
             transcriptome_version=None):
-        """Initialise a C{bsf.analyses.rna_seq.DESeq} object.
+        """Initialise a C{bsf.analyses.rnaseq.DESeq} object.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -3534,7 +3534,7 @@ class DESeq(bsf.Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.rna_seq.Tuxedo} object via a section of a
+        """Set instance variables of a C{bsf.analyses.rnaseq.Tuxedo} object via a section of a
         C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
@@ -3581,7 +3581,7 @@ class DESeq(bsf.Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.rna_seq.DESeq} analysis.
+        """Run this C{bsf.analyses.rnaseq.DESeq} analysis.
 
         @return:
         @rtype:
@@ -3736,7 +3736,7 @@ class DESeq(bsf.Analysis):
         return
 
     def report(self):
-        """Create a C{bsf.analyses.rna_seq.DESeq} report in HTML format.
+        """Create a C{bsf.analyses.rnaseq.DESeq} report in HTML format.
         @return:
         @rtype:
         """
