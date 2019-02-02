@@ -302,7 +302,7 @@ class StarAligner(bsf.Analysis):
             transcriptome_gtf=None,
             two_pass_mapping=None,
             classpath_picard=None):
-        """Initialise a C{bsf.analyses.rna_seq.StarAligner} object.
+        """Initialise a C{bsf.analyses.star_aligner.StarAligner} object.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -369,7 +369,7 @@ class StarAligner(bsf.Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.rna_seq.StarAligner} object via a section of a
+        """Set instance variables of a C{bsf.analyses.star_aligner.StarAligner} object via a section of a
         C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
@@ -412,7 +412,7 @@ class StarAligner(bsf.Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.rna_seq.StarAligner} analysis.
+        """Run this C{bsf.analyses.star_aligner.StarAligner} analysis.
 
         Although the STAR aligner can directly count reads according to its splice junction database,
         more than one read group may need aligning so that the count tables had to be combined.
