@@ -34,14 +34,14 @@ import inspect
 import os
 import re
 import stat
+import sys
 
 import bsf
 import bsf.standards
 
 
 def scan_directory(report_dict_local, directory_root, directory_path=None):
-    """
-    Scan a directory recursively for *_report.html files and add them to a Python C{dict} of
+    """Scan a directory recursively for *_report.html files and add them to a Python C{dict} of
     directory_path key data and Python C{list} of report_type value data.
 
     @param report_dict_local: Python C{dict} of directory_path key data and Python C{list} of report_type value data
@@ -53,7 +53,6 @@ def scan_directory(report_dict_local, directory_root, directory_path=None):
     @return:
     @rtype:
     """
-
     if not directory_path:
         directory_path = '.'
 
@@ -63,9 +62,10 @@ def scan_directory(report_dict_local, directory_root, directory_path=None):
         file_path = os.path.join(directory_absolute, file_name)
         mode = os.stat(file_path).st_mode
         if stat.S_ISDIR(mode):
-            scan_directory(report_dict_local=report_dict_local,
-                           directory_root=directory_root,
-                           directory_path=os.path.join(directory_path, file_name))
+            scan_directory(
+                report_dict_local=report_dict_local,
+                directory_root=directory_root,
+                directory_path=os.path.join(directory_path, file_name))
         elif stat.S_ISREG(mode):
             match = re.search(pattern=r'^(.*)_report.html$', string=file_name)
             if match:
@@ -94,11 +94,18 @@ def scan_projects(project_name_local):
             return file_name
 
 
-argument_parser = argparse.ArgumentParser(description='Create index.html documents in BSF public_html/project folders.')
+argument_parser = argparse.ArgumentParser(
+    description='Create index.html documents in BSF public_html/project folders.')
 
-argument_parser.add_argument('--project', required=True, help='Project identifier')
+argument_parser.add_argument(
+    '--project',
+    help='Project identifier',
+    required=True)
 
 name_space = argument_parser.parse_args()
+
+analysis = bsf.Analysis(project_name=name_space.project)
+analysis.run()
 
 project_name = name_space.project
 """ @type project_name: str | unicode | None """
@@ -147,29 +154,30 @@ if re.search(pattern=r'^[0-9a-f]{32,32}$', string=components[-1]):
 # TODO: Open an index.html file in the project-specific directory.
 # TODO: Check if it already exists and eventually ask for confirmation to over-write ...
 
-output = str()
+output_list = list()
 
-# TODO: Functionality of this script needs integrating into the Analysis class.
-output += bsf.Analysis.get_html_header(
-    title='Project {} Overview'.format(project_name),
-    source=inspect.getfile(inspect.currentframe()))
+output_list.extend(
+    analysis.get_html_header(
+        title='Project ' + project_name + ' Overview',
+        source=inspect.getfile(inspect.currentframe())))
+
+output_list.append('<ul>\n')
 
 for key in sorted(report_dict):
-
     # TODO: Unfortunately, fastqc_report.html documents exist both in the top-level directory,
     # as well as directly from FastQC in sample-specific sub-directories.
 
-    report_list = report_dict[key]
+    output_list.append('<li>' + key + '</li>\n')
+    output_list.append('<ul>\n')
 
-    output += '<p>{}</p>\n'.format(key)
-    output += '<ul>\n'
+    for report in report_dict[key]:
+        output_list.append('<li>' + report + '</li>\n')
 
-    for report in report_list:
-        output += '<li>{}</li>\n'.format(report)
+    output_list.append('</ul>\n')
 
-    output += '</ul>\n'
+output_list.append('</ul>\n')
+output_list.append('\n')
 
-# TODO: Functionality of this script needs integrating into the Analysis class.
-output += bsf.Analysis.get_html_footer()
+output_list.extend(analysis.get_html_footer())
 
-print(output)
+sys.stdout.writelines(output_list)
