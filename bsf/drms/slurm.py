@@ -35,8 +35,6 @@ import errno
 import math
 import os
 import re
-import subprocess
-import sys
 import threading
 import warnings
 
@@ -737,7 +735,6 @@ def submit(stage, debug=0):
     Submits each C{bsf.process.Executable} into the
     Simple Linux Utility for Resource Management (SLURM)
     Distributed Resource Management System (DRMS).
-
     @param stage: C{bsf.Stage}
     @type stage: bsf.Stage
     @param debug: Debug level
@@ -745,6 +742,42 @@ def submit(stage, debug=0):
     @return:
     @rtype:
     """
+
+    def submit_sbatch_stdout(_file_handle, _thread_lock, _debug, _executable):
+        """Thread callable to process the SLURM I{sbatch} I{STDOUT} stream.
+
+        Parses the process identifier returned by SLURM sbatch and sets it as
+        C{bsf.process.Executable.process_identifier}.
+        The response to the SLURM sbatch command looks like:
+        Submitted batch job 1234567
+        @param _file_handle: File handle (i.e. pipe)
+        @type _file_handle: file
+        @param _thread_lock: Thread lock
+        @type _thread_lock: threading.lock
+        @param _debug: Debug level
+        @type _debug: int
+        @param _executable: C{bsf.process.Executable}
+        @type _executable: bsf.process.Executable
+        @return:
+        @rtype:
+        """
+        for _line in _file_handle:
+            if _debug > 0:
+                _thread_lock.acquire(True)
+                print('Line:', _line)
+                _thread_lock.release()
+
+            _match = re.search(pattern=r'Submitted batch job (\d+)', string=_line)
+
+            if _match:
+                _executable.process_identifier = _match.group(1)
+            else:
+                _thread_lock.acquire(True)
+                print('Could not parse the process identifier from the SLURM sbatch response line', _line)
+                _thread_lock.release()
+
+        return
+
     # Open or create a database.
     file_path = os.path.join(stage.working_directory, database_file_name)
     database_connection = bsf.database.DatabaseConnection(file_path=file_path)
@@ -770,7 +803,12 @@ def submit(stage, debug=0):
         output_list.append('\n')
 
     for executable in stage.executable_list:
-        executable_drms = bsf.process.Executable(name=executable.name, program='sbatch', sub_command=executable)
+        executable_drms = bsf.process.Executable(
+            name=executable.name,
+            program='sbatch',
+            sub_command=executable,
+            stdout_callable=submit_sbatch_stdout,
+            stdout_kwargs={'_executable': executable})
 
         # Add Stage-specific options.
 
@@ -887,41 +925,12 @@ def submit(stage, debug=0):
         # Finally, submit this command if requested and not in debug mode.
 
         if executable.submit and debug == 0:
-            child_process = subprocess.Popen(
-                args=executable_drms.command_list(),
-                bufsize=4096,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                shell=False,
-                close_fds='posix' in sys.builtin_module_names)
-
-            # Although subprocess.communicate() may block when memory buffers
-            # have been filled up, not much STDOUT and STDERR is expected from
-            # SLURM sbatch.
-
-            (child_stdout, child_stderr) = child_process.communicate(input=None)
-
-            child_return_code = child_process.returncode
+            child_return_code = executable_drms.run(debug=debug)
 
             if child_return_code:
                 raise Exception(
                     'SLURM sbatch returned exit code ' + repr(child_return_code) + '\n' +
-                    'STDOUT: ' + repr(child_stdout) + '\n' +
-                    'STDERR: ' + repr(child_stderr) + '\n' +
                     'Command list representation: ' + repr(executable_drms.command_list()))
-
-            # Parse the multi-line STDOUT string to get the SLURM process identifier and name.
-            # The response to the SLURM sbatch command looks like:
-            # Submitted batch job 137657
-            # Set the result in the bsf.process.Executable.process_identifier instance variable.
-
-            for line in child_stdout.splitlines(False):
-                match = re.search(pattern=r'Submitted batch job (\d+)', string=line)
-                if match:
-                    executable.process_identifier = match.group(1)
-                else:
-                    print('Could not parse the process identifier from the SLURM sbatch response line ', repr(line))
 
         # Copy the SLURM command line to the Bash script.
 
@@ -959,113 +968,6 @@ def submit(stage, debug=0):
     return
 
 
-def check_state_stdout(stdout_handle, thread_lock, process_slurm_adaptor, stdout_path=None, debug=0):
-    """Process the standard output (I{STDOUT}) stream from the C{Popen} child process as a separate thread.
-
-    @param stdout_handle: The I{STDOUT} or I{STDERR} file handle
-    @type stdout_handle: file
-    @param thread_lock: Python C{threading.Lock}
-    @type thread_lock: threading.Lock
-    @param process_slurm_adaptor: C{bsf.drms.slurm.ProcessSLURMAdaptor}
-    @type process_slurm_adaptor: bsf.drms.slurm.ProcessSLURMAdaptor
-    @param stdout_path: I{STDOUT} file path
-    @type stdout_path: str | unicode
-    @param debug: Debug level
-    @type debug: int
-    @return:
-    @rtype:
-    """
-    thread_lock.acquire(True)
-    if debug > 0:
-        print('[' + datetime.datetime.now().isoformat() + ']',
-              "Started Runner 'STDOUT' processor in module " + repr(__name__) + '.')
-    output_file = None
-    if stdout_path:
-        output_file = open(stdout_path, 'wt')
-        if debug > 0:
-            print('[' + datetime.datetime.now().isoformat() + ']',
-                  "Opened 'STDOUT' file " + repr(stdout_path) + '.')
-    thread_lock.release()
-
-    dict_reader = csv.DictReader(f=stdout_handle, delimiter='|')
-
-    for row_dict in dict_reader:
-        new_process_slurm = ProcessSLURM(
-            job_id=row_dict['JobID'],
-            job_id_raw=row_dict['JobIDRaw'],
-            job_name=row_dict['JobName'],
-            partition=row_dict['Partition'],
-            max_vm_size=row_dict['MaxVMSize'],
-            max_vm_size_node=row_dict['MaxVMSizeNode'],
-            max_vm_size_task=row_dict['MaxVMSizeTask'],
-            average_vm_size=row_dict['AveVMSize'],
-            max_rss=row_dict['MaxRSS'],
-            max_rss_node=row_dict['MaxRSSNode'],
-            max_rss_task=row_dict['MaxRSSTask'],
-            average_rss=row_dict['AveRSS'],
-            max_pages=row_dict['MaxPages'],
-            max_pages_node=row_dict['MaxPagesNode'],
-            max_pages_task=row_dict['MaxPagesTask'],
-            average_pages=row_dict['AvePages'],
-            min_cpu=row_dict['MinCPU'],
-            min_cpu_node=row_dict['MinCPUNode'],
-            min_cpu_task=row_dict['MinCPUTask'],
-            average_cpu=row_dict['AveCPU'],
-            number_tasks=row_dict['NTasks'],
-            allocated_cpus=row_dict['AllocCPUS'],
-            elapsed=row_dict['Elapsed'],
-            state=row_dict['State'],
-            exit_code=row_dict['ExitCode'],
-            average_cpu_frequency=row_dict['AveCPUFreq'],
-            requested_cpu_frequency_min=row_dict['ReqCPUFreqMin'],
-            requested_cpu_frequency_max=row_dict['ReqCPUFreqMax'],
-            requested_memory=row_dict['ReqMem'],
-            consumed_energy=row_dict['ConsumedEnergy'],
-            max_disk_read=row_dict['MaxDiskRead'],
-            max_disk_read_node=row_dict['MaxDiskReadNode'],
-            max_disk_read_task=row_dict['MaxDiskReadTask'],
-            average_disk_read=row_dict['AveDiskRead'],
-            max_disk_write=row_dict['MaxDiskWrite'],
-            max_disk_write_node=row_dict['MaxDiskWriteNode'],
-            max_disk_write_task=row_dict['MaxDiskWriteTask'],
-            average_disk_write=row_dict['AveDiskWrite'],
-            allocated_gres=row_dict['AllocGRES'],
-            requested_gres=row_dict['ReqGRES'],
-            allocated_tres=row_dict['AllocTRES'],
-            requested_tres=row_dict['ReqTRES'])
-
-        # Check if the ProcessSLURM already exists.
-        old_process_slurm = process_slurm_adaptor.select_by_job_id(job_id=new_process_slurm.job_id)
-        if old_process_slurm is None:
-            # The JobID is not in the database, which is caused by job_id.batch entries.
-            # Insert them afterwards.
-            thread_lock.acquire(True)
-            process_slurm_adaptor.insert(object_instance=new_process_slurm)
-            thread_lock.release()
-        else:
-            new_process_slurm.process_slurm_id = old_process_slurm.process_slurm_id
-            thread_lock.acquire(True)
-            process_slurm_adaptor.update(object_instance=new_process_slurm)
-            thread_lock.release()
-
-    thread_lock.acquire(True)
-    if debug > 0:
-        print('[' + datetime.datetime.now().isoformat() + ']',
-              "Received EOF on 'STDOUT' pipe.")
-    if output_file:
-        output_file.close()
-        if debug > 0:
-            print('[' + datetime.datetime.now().isoformat() + ']',
-                  "Closed 'STDOUT' file " + repr(stdout_path) + '.')
-    thread_lock.release()
-
-    # Commit changes to the database and explicitly disconnect so that other threads have access.
-    process_slurm_adaptor.commit()
-    process_slurm_adaptor.disconnect()
-
-    return
-
-
 def check_state(stage, debug=0):
     """Check the state of each C{bsf.process.Executable} of a C{bsf.Stage}.
 
@@ -1076,6 +978,122 @@ def check_state(stage, debug=0):
     @return:
     @rtype:
     """
+
+    def check_state_stdout(_stdout_handle, _thread_lock, _debug, _process_slurm_adaptor, _stdout_path=None):
+        """Thread callable to process the SLURM I{sacct} I{STDOUT} stream.
+
+        @param _stdout_handle: The I{STDOUT} or I{STDERR} file handle
+        @type _stdout_handle: file
+        @param _thread_lock: Python C{threading.Lock}
+        @type _thread_lock: threading.Lock
+        @param _debug: Debug level
+        @type _debug: int
+        @param _process_slurm_adaptor: C{bsf.drms.slurm.ProcessSLURMAdaptor}
+        @type _process_slurm_adaptor: bsf.drms.slurm.ProcessSLURMAdaptor
+        @param _stdout_path: I{STDOUT} file path
+        @type _stdout_path: str | unicode | None
+        @return:
+        @rtype:
+        """
+        if _debug > 0:
+            _thread_lock.acquire(True)
+            print('[' + datetime.datetime.now().isoformat() + ']',
+                  "Started Runner 'STDOUT' processor in module " + repr(__name__) + '.')
+            _thread_lock.release()
+
+        if _stdout_path:
+            output_file = open(_stdout_path, 'wt')
+            if _debug > 0:
+                _thread_lock.acquire(True)
+                print('[' + datetime.datetime.now().isoformat() + ']',
+                      "Opened 'STDOUT' file " + repr(_stdout_path) + '.')
+                _thread_lock.release()
+        else:
+            output_file = None
+
+        dict_reader = csv.DictReader(f=_stdout_handle, delimiter='|')
+
+        for row_dict in dict_reader:
+            new_process_slurm = ProcessSLURM(
+                job_id=row_dict['JobID'],
+                job_id_raw=row_dict['JobIDRaw'],
+                job_name=row_dict['JobName'],
+                partition=row_dict['Partition'],
+                max_vm_size=row_dict['MaxVMSize'],
+                max_vm_size_node=row_dict['MaxVMSizeNode'],
+                max_vm_size_task=row_dict['MaxVMSizeTask'],
+                average_vm_size=row_dict['AveVMSize'],
+                max_rss=row_dict['MaxRSS'],
+                max_rss_node=row_dict['MaxRSSNode'],
+                max_rss_task=row_dict['MaxRSSTask'],
+                average_rss=row_dict['AveRSS'],
+                max_pages=row_dict['MaxPages'],
+                max_pages_node=row_dict['MaxPagesNode'],
+                max_pages_task=row_dict['MaxPagesTask'],
+                average_pages=row_dict['AvePages'],
+                min_cpu=row_dict['MinCPU'],
+                min_cpu_node=row_dict['MinCPUNode'],
+                min_cpu_task=row_dict['MinCPUTask'],
+                average_cpu=row_dict['AveCPU'],
+                number_tasks=row_dict['NTasks'],
+                allocated_cpus=row_dict['AllocCPUS'],
+                elapsed=row_dict['Elapsed'],
+                state=row_dict['State'],
+                exit_code=row_dict['ExitCode'],
+                average_cpu_frequency=row_dict['AveCPUFreq'],
+                requested_cpu_frequency_min=row_dict['ReqCPUFreqMin'],
+                requested_cpu_frequency_max=row_dict['ReqCPUFreqMax'],
+                requested_memory=row_dict['ReqMem'],
+                consumed_energy=row_dict['ConsumedEnergy'],
+                max_disk_read=row_dict['MaxDiskRead'],
+                max_disk_read_node=row_dict['MaxDiskReadNode'],
+                max_disk_read_task=row_dict['MaxDiskReadTask'],
+                average_disk_read=row_dict['AveDiskRead'],
+                max_disk_write=row_dict['MaxDiskWrite'],
+                max_disk_write_node=row_dict['MaxDiskWriteNode'],
+                max_disk_write_task=row_dict['MaxDiskWriteTask'],
+                average_disk_write=row_dict['AveDiskWrite'],
+                allocated_gres=row_dict['AllocGRES'],
+                requested_gres=row_dict['ReqGRES'],
+                allocated_tres=row_dict['AllocTRES'],
+                requested_tres=row_dict['ReqTRES'])
+
+            # Check if the ProcessSLURM already exists.
+            old_process_slurm = _process_slurm_adaptor.select_by_job_id(job_id=new_process_slurm.job_id)
+
+            if old_process_slurm is None:
+                # The JobID is not in the database, which is caused by job_id.batch entries.
+                # Insert them afterwards.
+                _thread_lock.acquire(True)
+                _process_slurm_adaptor.insert(object_instance=new_process_slurm)
+                _thread_lock.release()
+            else:
+                new_process_slurm.process_slurm_id = old_process_slurm.process_slurm_id
+                _thread_lock.acquire(True)
+                _process_slurm_adaptor.update(object_instance=new_process_slurm)
+                _thread_lock.release()
+
+        if _debug > 0:
+            _thread_lock.acquire(True)
+            print('[' + datetime.datetime.now().isoformat() + ']',
+                  "Received EOF on 'STDOUT' pipe.")
+            _thread_lock.release()
+
+        if output_file:
+            output_file.close()
+
+            if _debug > 0:
+                _thread_lock.acquire(True)
+                print('[' + datetime.datetime.now().isoformat() + ']',
+                      "Closed 'STDOUT' file " + repr(_stdout_path) + '.')
+                _thread_lock.release()
+
+        # Commit changes to the database and explicitly disconnect so that other threads have access.
+        _process_slurm_adaptor.commit()
+        _process_slurm_adaptor.disconnect()
+
+        return
+
     # Open or create a database.
     database_connection = bsf.database.DatabaseConnection(
         file_path=os.path.join(stage.working_directory, database_file_name))
@@ -1099,104 +1117,20 @@ def check_state(stage, debug=0):
     if debug > 0:
         print('Number of ProcessSLURM objects to check:', len(process_slurm_list))
 
-    # TODO: The Executable class, so far, does not allow setting specific STDOUT and STDERR handlers ...
-    executable_drms = bsf.process.Executable(name='sacct', program='sacct')
+    executable_drms = bsf.process.Executable(
+        name='sacct',
+        program='sacct',
+        stdout_callable=check_state_stdout,
+        stdout_kwargs={'_process_slurm_adaptor': process_slurm_adaptor})
     executable_drms.add_option_long(key='jobs', value=','.join(map(lambda x: x.job_id, process_slurm_list)))
     executable_drms.add_switch_long(key='long')
     executable_drms.add_switch_long(key='parsable')
 
-    # bsf.process.Executable.run() parameters.
-    max_thread_joins = 10
-    thread_join_timeout = 10
+    child_return_code = executable_drms.run(debug=debug)
 
-    attempt_counter = 0
-
-    # TODO: ... therefore, the following block is a complete duplication of code in method bsf.process.Executable.run().
-    # TODO: Requires re-engineering of the bsf.process.Executable class.
-
-    while attempt_counter < executable_drms.maximum_attempts:
-
-        child_process = subprocess.Popen(
-            args=executable_drms.command_list(),
-            bufsize=4096,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            shell=False,
-            close_fds='posix' in sys.builtin_module_names)
-
-        # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
-        # should make sure that buffers are not filling up.
-
-        thread_lock = threading.Lock()
-
-        thread_out = threading.Thread(
-            target=check_state_stdout,
-            kwargs={
-                'stdout_handle': child_process.stdout,
-                'thread_lock': thread_lock,
-                'process_slurm_adaptor': process_slurm_adaptor,
-                'stdout_path': executable_drms.stdout_path,
-                'debug': debug,
-            })
-        thread_out.daemon = True  # Thread dies with the program.
-        thread_out.start()
-
-        thread_err = threading.Thread(
-            target=bsf.process.Executable.process_stderr,
-            kwargs={
-                'stderr_handle': child_process.stderr,
-                'thread_lock': thread_lock,
-                'stderr_path': executable_drms.stderr_path,
-                'debug': debug,
-            })
-        thread_err.daemon = True  # Thread dies with the program.
-        thread_err.start()
-
-        # Wait for the child process to finish.
-
-        child_return_code = child_process.wait()
-
-        thread_join_counter = 0
-
-        while thread_out.is_alive() and thread_join_counter < max_thread_joins:
-            thread_lock.acquire(True)
-            if debug > 0:
-                print('[' + datetime.datetime.now().isoformat() + ']',
-                      "Waiting for 'STDOUT' processor to finish.")
-            thread_lock.release()
-
-            thread_out.join(timeout=thread_join_timeout)
-            thread_join_counter += 1
-
-        thread_join_counter = 0
-
-        while thread_err.is_alive() and thread_join_counter < max_thread_joins:
-            thread_lock.acquire(True)
-            if debug > 0:
-                print('[' + datetime.datetime.now().isoformat() + ']',
-                      "Waiting for 'STDERR' processor to finish.")
-            thread_lock.release()
-
-            thread_err.join(timeout=thread_join_timeout)
-            thread_join_counter += 1
-
-        if child_return_code > 0:
-            if debug > 0:
-                print('[' + datetime.datetime.now().isoformat() + ']',
-                      'Child process ' + repr(executable_drms.name) + ' failed with exit code ' +
-                      repr(+child_return_code))
-            attempt_counter += 1
-        elif child_return_code < 0:
-            if debug > 0:
-                print('[' + datetime.datetime.now().isoformat() + ']',
-                      'Child process ' + repr(executable_drms.name) + ' received signal ' +
-                      repr(-child_return_code))
-        else:
-            if debug > 0:
-                print('[' + datetime.datetime.now().isoformat() + ']',
-                      'Child process ' + repr(executable_drms.name) + ' completed successfully ' +
-                      repr(+child_return_code))
-            break
+    if child_return_code:
+        raise Exception(
+            'SLURM sacct returned exit code ' + repr(child_return_code) + '\n' +
+            'Command list representation: ' + repr(executable_drms.command_list()))
 
     return

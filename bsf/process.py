@@ -659,8 +659,20 @@ class Executable(Command):
     """The C{bsf.process.Executable} class represents one C{bsf.process.Command} as UNIX process.
 
     Attributes:
+    @ivar stdin_callable: Standard input I{STDIN} callable
+    @type stdin_callable: object | None
+    @ivar stdin_kwargs: Standard input I{STDIN} keyword arguments
+    @type stdin_kwargs: dict[str, object]
+    @ivar stdout_callable: Standard output I{STDOUT} callable
+    @type stdout_callable: object | None
+    @ivar stdout_kwargs: Standard output I{STDOUT} keyword arguments
+    @type stdout_kwargs: dict[str, object]
     @ivar stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
     @type stdout_path: str | unicode | None
+    @ivar stderr_callable: Standard error I{STDERR} callable
+    @type stderr_callable: object | None
+    @ivar stderr_kwargs: Standard error I{STDERR} keyword arguments
+    @type stderr_kwargs: dict[str, object]
     @ivar stderr_path: Standard error (STDERR) redirection in Bash (2>word)
     @type stderr_path: str | unicode | None
     @ivar dependencies: Python C{list} of C{bsf.process.Executable.name} properties in the
@@ -679,24 +691,23 @@ class Executable(Command):
     """
 
     @staticmethod
-    def process_stream(file_type, file_handle, thread_lock, file_path=None, debug=0):
+    def process_stream(file_handle, thread_lock, debug, file_type, file_path=None):
         """Process I{STDOUT} or I{STDERR} from the child process as a thread.
 
-        @param file_type: File handle type I{STDOUT} or I{STDERR}
-        @type file_type: str
         @param file_handle: The I{STDOUT} or I{STDERR} file handle
         @type file_handle: file
         @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: threading.Lock
-        @param file_path: I{STDOUT} file path
-        @type file_path: str | unicode | None
         @param debug: Debug level
         @type debug: int
+        @param file_type: File handle type I{STDOUT} or I{STDERR}
+        @type file_type: str
+        @param file_path: I{STDOUT} file path
+        @type file_path: str | unicode | None
         @return:
         @rtype:
         @raise Exception: The file_type has to be either I{STDOUT} or I{STDERR}
         """
-
         if file_type not in ('STDOUT', 'STDERR'):
             raise Exception('The file_type has to be either STDOUT or STDERR.')
 
@@ -737,50 +748,48 @@ class Executable(Command):
         return
 
     @staticmethod
-    def process_stdout(stdout_handle, thread_lock, stdout_path=None, debug=0):
+    def process_stdout(stdout_handle, thread_lock, debug, stdout_path=None):
         """Process I{STDOUT} from the child process as a thread.
 
         @param stdout_handle: The I{STDOUT} file handle
         @type stdout_handle: file
         @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: threading.Lock
-        @param stdout_path: I{STDOUT} file path
-        @type stdout_path: str | unicode | None
         @param debug: Debug level
         @type debug: int
+        @param stdout_path: I{STDOUT} file path
+        @type stdout_path: str | unicode | None
         @return:
         @rtype:
         """
-
         return Executable.process_stream(
-            file_type='STDOUT',
             file_handle=stdout_handle,
             thread_lock=thread_lock,
-            file_path=stdout_path,
-            debug=debug)
+            debug=debug,
+            file_type='STDOUT',
+            file_path=stdout_path)
 
     @staticmethod
-    def process_stderr(stderr_handle, thread_lock, stderr_path=None, debug=0):
+    def process_stderr(stderr_handle, thread_lock, debug, stderr_path=None):
         """Process I{STDERR} from the child process as a thread.
 
         @param stderr_handle: The I{STDERR} file handle
         @type stderr_handle: file
         @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: threading.Lock
-        @param stderr_path: I{STDERR} file path
-        @type stderr_path: str | unicode | None
         @param debug: Debug level
         @type debug: int
+        @param stderr_path: I{STDERR} file path
+        @type stderr_path: str | unicode | None
         @return:
         @rtype:
         """
-
         return Executable.process_stream(
-            file_type='STDERR',
             file_handle=stderr_handle,
             thread_lock=thread_lock,
-            file_path=stderr_path,
-            debug=debug)
+            debug=debug,
+            file_type='STDERR',
+            file_path=stderr_path)
 
     def __init__(
             self,
@@ -789,7 +798,13 @@ class Executable(Command):
             options=None,
             arguments=None,
             sub_command=None,
+            stdin_callable=None,
+            stdin_kwargs=None,
+            stdout_callable=None,
+            stdout_kwargs=None,
             stdout_path=None,
+            stderr_callable=None,
+            stderr_kwargs=None,
             stderr_path=None,
             dependencies=None,
             hold=None,
@@ -810,8 +825,20 @@ class Executable(Command):
         @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
+        @param stdin_callable: Standard input I{STDIN} callable
+        @type stdin_callable: object | None
+        @param stdin_kwargs: Standard input I{STDIN} keyword arguments
+        @type stdin_kwargs: dict[str, object] | None
+        @param stdout_callable: Standard output I{STDOUT} callable
+        @type stdout_callable: object | None
+        @param stdout_kwargs: Standard output I{STDOUT} keyword arguments
+        @type stdout_kwargs: dict[str, object] | None
         @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
         @type stdout_path: str | unicode | None
+        @param stderr_callable: Standard error I{STDERR} callable
+        @type stderr_callable: object | None
+        @param stderr_kwargs: Standard error I{STDERR} keyword arguments
+        @type stderr_kwargs: dict[str, object] | None
         @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
         @type stderr_path: str | unicode | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
@@ -830,7 +857,6 @@ class Executable(Command):
         @return:
         @rtype:
         """
-
         # Further constrain the name instance variable in the Executable class.
 
         if not name:
@@ -845,8 +871,16 @@ class Executable(Command):
             arguments=arguments,
             sub_command=sub_command)
 
-        self.stderr_path = stderr_path
+        self.stdin_callable = stdin_callable
+        self.stdin_kwargs = stdin_kwargs
+
+        self.stdout_callable = stdout_callable
+        self.stdout_kwargs = stdout_kwargs
         self.stdout_path = stdout_path
+
+        self.stderr_callable = stderr_callable
+        self.stderr_kwargs = stderr_kwargs
+        self.stderr_path = stderr_path
 
         if dependencies is None:
             self.dependencies = list()
@@ -885,7 +919,10 @@ class Executable(Command):
         """ @type str_list: list[str | unicode] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  stdin_callable:     {!r}\n'.format(indent, self.stdin_callable))
+        str_list.append('{}  stdout_callable:    {!r}\n'.format(indent, self.stdout_callable))
         str_list.append('{}  stdout_path:        {!r}\n'.format(indent, self.stdout_path))
+        str_list.append('{}  stderr_callable:    {!r}\n'.format(indent, self.stderr_callable))
         str_list.append('{}  stderr_path:        {!r}\n'.format(indent, self.stderr_path))
         str_list.append('{}  hold:               {!r}\n'.format(indent, self.hold))
         str_list.append('{}  submit:             {!r}\n'.format(indent, self.submit))
@@ -927,6 +964,7 @@ class Executable(Command):
         attempt_counter = 0
 
         while attempt_counter < self.maximum_attempts:
+            attempt_counter += 1
 
             child_process = subprocess.Popen(
                 args=self.command_list(),
@@ -939,30 +977,54 @@ class Executable(Command):
             # TODO: It would be wonderful to catch Exceptions here.
             # OSError: [Errno 2] No such file or directory
 
-            # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
+            # Up to three threads, writing to STDIN, as well as reading from STDOUT and STDERR,
             # should make sure that buffers are not filling up.
 
             thread_lock = threading.Lock()
 
-            thread_out = threading.Thread(
-                target=Executable.process_stdout,
-                kwargs={
-                    'stdout_handle': child_process.stdout,
-                    'thread_lock': thread_lock,
-                    'stdout_path': self.stdout_path,
-                    'debug': debug,
-                })
+            # Start a STDIN thread.
+
+            if self.stdin_callable is None:
+                thread_in = None
+            else:
+                thread_in = threading.Thread(
+                    target=self.stdin_callable,
+                    args=[child_process.stdin, thread_lock, debug],
+                    kwargs=self.stdin_kwargs)
+                thread_in.daemon = True  # Thread dies with the program.
+                thread_in.start()
+
+            # Start a STDOUT thread.
+
+            if self.stdout_callable is None:
+                # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
+                thread_out = threading.Thread(
+                    target=bsf.process.Executable.process_stdout,
+                    args=[child_process.stdout, thread_lock, debug],
+                    kwargs={'stdout_path': self.stdout_path})
+            else:
+                thread_out = threading.Thread(
+                    target=self.stdout_callable,
+                    args=[child_process.stdout, thread_lock, debug],
+                    kwargs=self.stdout_kwargs)
+
             thread_out.daemon = True  # Thread dies with the program.
             thread_out.start()
 
-            thread_err = threading.Thread(
-                target=Executable.process_stderr,
-                kwargs={
-                    'stderr_handle': child_process.stderr,
-                    'thread_lock': thread_lock,
-                    'stderr_path': self.stderr_path,
-                    'debug': debug,
-                })
+            # Start a STDERR thread.
+
+            if self.stderr_callable is None:
+                # If a specific STDERR callable is not defined, run bsf.process.Executable.process_stderr().
+                thread_err = threading.Thread(
+                    target=bsf.process.Executable.process_stderr,
+                    args=[child_process.stderr, thread_lock, debug],
+                    kwargs={'stderr_path': self.stderr_path})
+            else:
+                thread_err = threading.Thread(
+                    target=self.stderr_callable,
+                    args=[child_process.stderr, thread_lock, debug],
+                    kwargs=self.stderr_kwargs)
+
             thread_err.daemon = True  # Thread dies with the program.
             thread_err.start()
 
@@ -972,12 +1034,25 @@ class Executable(Command):
 
             thread_join_counter = 0
 
+            if thread_in is not None:
+                while thread_in.is_alive() and thread_join_counter < max_thread_joins:
+                    if debug > 0:
+                        thread_lock.acquire(True)
+                        print('[' + datetime.datetime.now().isoformat() + ']',
+                              'Waiting for STDIN processor to finish.')
+                        thread_lock.release()
+
+                    thread_in.join(timeout=thread_join_timeout)
+                    thread_join_counter += 1
+
+            thread_join_counter = 0
+
             while thread_out.is_alive() and thread_join_counter < max_thread_joins:
-                thread_lock.acquire(True)
                 if debug > 0:
+                    thread_lock.acquire(True)
                     print('[' + datetime.datetime.now().isoformat() + ']',
                           'Waiting for STDOUT processor to finish.')
-                thread_lock.release()
+                    thread_lock.release()
 
                 thread_out.join(timeout=thread_join_timeout)
                 thread_join_counter += 1
@@ -985,11 +1060,11 @@ class Executable(Command):
             thread_join_counter = 0
 
             while thread_err.is_alive() and thread_join_counter < max_thread_joins:
-                thread_lock.acquire(True)
                 if debug > 0:
+                    thread_lock.acquire(True)
                     print('[' + datetime.datetime.now().isoformat() + ']',
                           'Waiting for STDERR processor to finish.')
-                thread_lock.release()
+                    thread_lock.release()
 
                 thread_err.join(timeout=thread_join_timeout)
                 thread_join_counter += 1
@@ -999,7 +1074,6 @@ class Executable(Command):
                     print('[' + datetime.datetime.now().isoformat() + ']',
                           'Child process ' + repr(self.name) +
                           ' failed with exit code ' + repr(+child_return_code) + '.')
-                attempt_counter += 1
             elif child_return_code < 0:
                 if debug > 0:
                     print('[' + datetime.datetime.now().isoformat() + ']',
@@ -1011,7 +1085,6 @@ class Executable(Command):
                           'Child process ' + repr(self.name) +
                           ' completed successfully ' + repr(+child_return_code) + '.')
                 break
-
         else:
             if debug > 0:
                 print('[' + datetime.datetime.now().isoformat() + ']',

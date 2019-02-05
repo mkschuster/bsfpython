@@ -31,20 +31,14 @@
 from __future__ import print_function
 
 import argparse
-import datetime
 import os
 import subprocess
 import sys
-import threading
 
 import bsf.process
 
-on_posix = 'posix' in sys.builtin_module_names
-max_thread_joins = 10
-thread_join_timeout = 10
 
-
-def process_stdout(input_file_handle, thread_lock, output_file_path, debug=0):
+def process_stdout(input_file_handle, thread_lock, debug, output_file_path):
     thread_lock.acquire(True)
     output_file = open(output_file_path, 'wb')
     output_process = subprocess.Popen(
@@ -54,7 +48,7 @@ def process_stdout(input_file_handle, thread_lock, output_file_path, debug=0):
         stdout=output_file,
         stderr=None,
         shell=False,
-        close_fds=on_posix)
+        close_fds='posix' in sys.builtin_module_names)
     thread_lock.release()
 
     if debug > 0:
@@ -171,71 +165,19 @@ with open(name_space.reference_vcf, 'rt') as input_file:
 
 # Now the complicated part, the sub process for reading via bgzip.
 
-stdin_command = bsf.process.Command(program='bgzip')
-stdin_command.add_switch_long(key='decompress')
-stdin_command.add_switch_long(key='stdout')
-stdin_command.arguments.append(name_space.input_path)
+stdin_executable = bsf.process.Executable(
+    program='bgzip',
+    stdout_callable=process_stdout,
+    stdout_kwargs={'output_file_path': name_space.output_path})
+stdin_executable.add_switch_long(key='decompress')
+stdin_executable.add_switch_long(key='stdout')
+stdin_executable.arguments.append(name_space.input_path)
 
-input_process = subprocess.Popen(
-    args=stdin_command.command_list(),
-    bufsize=-1,
-    stdin=None,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-    shell=False,
-    close_fds=on_posix)
+child_return_code = stdin_executable.run(debug=name_space.debug)
 
-# Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
-# should make sure that buffers are not filling up.
-
-input_thread_lock = threading.Lock()
-
-input_thread_out = threading.Thread(
-    target=process_stdout,
-    kwargs={
-        'input_file_handle': input_process.stdout,
-        'thread_lock': input_thread_lock,
-        'output_file_path': name_space.output_path,
-        'debug': name_space.debug,
-    })
-input_thread_out.daemon = True  # Thread dies with the program.
-input_thread_out.start()
-
-input_thread_err = threading.Thread(
-    target=bsf.process.Executable.process_stderr,
-    kwargs={
-        'stderr_handle': input_process.stderr,
-        'thread_lock': input_thread_lock,
-        'stderr_path': None,
-        'debug': name_space.debug,
-    })
-input_thread_err.daemon = True  # Thread dies with the program.
-input_thread_err.start()
-
-# Wait for the child process to finish.
-
-input_return_code = input_process.wait()
-
-thread_join_counter = 0
-
-while input_thread_out.is_alive() and thread_join_counter < max_thread_joins:
-    input_thread_lock.acquire(True)
-    if name_space.debug > 0:
-        print('[{}] Waiting for STDOUT processor to finish.'.format(datetime.datetime.now().isoformat()))
-    input_thread_lock.release()
-
-    input_thread_out.join(timeout=thread_join_timeout)
-    thread_join_counter += 1
-
-thread_join_counter = 0
-
-while input_thread_err.is_alive() and thread_join_counter < max_thread_joins:
-    input_thread_lock.acquire(True)
-    if name_space.debug > 0:
-        print('[{}] Waiting for STDERR processor to finish.'.format(datetime.datetime.now().isoformat()))
-    input_thread_lock.release()
-
-    input_thread_err.join(timeout=thread_join_timeout)
-    thread_join_counter += 1
+if child_return_code:
+    raise Exception(
+        'Executable.run() returned exit code ' + repr(child_return_code) + '\n' +
+        'Command list representation: ' + repr(stdin_executable.command_list()))
 
 print('All done.')

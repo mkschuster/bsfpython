@@ -32,8 +32,6 @@ from __future__ import print_function
 import errno
 import os
 import re
-import subprocess
-import sys
 
 import bsf.database
 import bsf.process
@@ -439,6 +437,43 @@ def submit(stage, debug=0):
     @return:
     @rtype:
     """
+
+    def submit_qsub_stdout(_file_handle, _thread_lock, _debug, _executable):
+        """Thread callable to process the SGE qsub STDOUT stream.
+
+        Parses the process identifier returned by SGE qsub and sets it as
+        C{bsf.process.Executable.process_identifier}.
+        The response to the SGE qsub command looks like:
+        Your job 137657 ("ls") has been submitted
+        @param _file_handle: File handle (i.e. pipe)
+        @type _file_handle: file
+        @param _thread_lock: Thread lock
+        @type _thread_lock: threading.lock
+        @param _debug: Debug level
+        @type _debug: int
+        @param _executable: C{bsf.process.Executable}
+        @type _executable: bsf.process.Executable
+        @return:
+        @rtype:
+        """
+        for _line in _file_handle:
+            if _debug > 0:
+                _thread_lock.acquire(True)
+                print('Line:', _line)
+                _thread_lock.release()
+
+            _match = re.search(pattern=r'Your job (\d+) \("([^"]+)"\) has been submitted', string=_line)
+
+            if _match:
+                _executable.process_identifier = _match.group(1)
+                # _executable.process_name = _match.group(2)
+            else:
+                _thread_lock.acquire(True)
+                print('Could not parse SGE qsub response line:', repr(_line))
+                _thread_lock.release()
+
+        return
+
     output_list = list()
     """ @type output_list: list[str | unicode] """
 
@@ -450,7 +485,12 @@ def submit(stage, debug=0):
         output_list.append('\n')
 
     for executable in stage.executable_list:
-        executable_drms = bsf.process.Executable(name=executable.name, program='qsub', sub_command=executable)
+        executable_drms = bsf.process.Executable(
+            name=executable.name,
+            program='qsub',
+            sub_command=executable,
+            stdout_callable=submit_qsub_stdout,
+            stdout_kwargs={'_executable': executable})
 
         # Add Stage-specific options.
 
@@ -568,44 +608,12 @@ def submit(stage, debug=0):
         # Finally, submit this command if requested and not in debug mode.
 
         if executable.submit and debug == 0:
-
-            child_process = subprocess.Popen(
-                args=executable_drms.command_list(),
-                bufsize=4096,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                shell=False,
-                close_fds='posix' in sys.builtin_module_names)
-
-            # Although subprocess.communicate() may block when memory buffers
-            # have been filled up, not much STDOUT and STDERR is expected from
-            # SGE qsub.
-
-            (child_stdout, child_stderr) = child_process.communicate(input=None)
-
-            child_return_code = child_process.returncode
+            child_return_code = executable_drms.run(debug=debug)
 
             if child_return_code:
                 raise Exception(
                     'SGE qsub returned exit code ' + repr(child_return_code) + '\n' +
-                    'STDOUT: ' + child_stdout + '\n' +
-                    'STDERR: ' + child_stderr + '\n' +
                     'Command list representation: ' + repr(executable_drms.command_list()))
-
-            # Parse the multi-line STDOUT string to get the SGE process identifier and name.
-            # The response to the SGE qsub command looks like:
-            # Your job 137657 ("ls") has been submitted
-
-            for line in child_stdout.splitlines(False):
-                match = re.search(pattern=r'Your job (\d+) \("([^"]+)"\) has been submitted',
-                                  string=line)
-
-                if match:
-                    executable.process_identifier = match.group(1)
-                    executable.process_name = match.group(2)
-                else:
-                    print('Could not parse SGE qsub response line:', repr(line))
 
         # Copy the SGE command line to the Bash script.
 
