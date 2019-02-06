@@ -563,6 +563,17 @@ class EnsemblVEP(BaseSectionVersion):
         """
         return cls.get(option='soc_path', version=genome_version)
 
+    @classmethod
+    def get_refseq_alignments_path(cls, genome_version=None):
+        """Get the NCBI RefSeq alignments (BAM) file path.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: NCBI RefSeq alignments (BAM) file path
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='refseq_alignments_path', version=genome_version)
+
 
 class Genome(BaseSectionVersion):
     """The C{bsf.standards.Genome} class models Genome defaults.
