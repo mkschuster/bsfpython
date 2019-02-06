@@ -987,6 +987,8 @@ class VariantCallingGATK(bsf.Analysis):
     @type vep_ofc_path: str | unicode | None
     @ivar vep_soc_path: Ensembl Variant Effect Predictor (VEP) Sequence Ontology term (TSV) configuration file path
     @type vep_soc_path: str | unicode | None
+    @ivar vep_refseq_alignments_path: Ensembl Variant Effect Predictor (VEP) RefSeq alignments (BAM) file path
+    @type vep_refseq_alignments_path: str | unicode | None
     @ivar classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
     @type classpath_gatk: str | unicode | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -1381,6 +1383,7 @@ class VariantCallingGATK(bsf.Analysis):
             vep_sql_port=None,
             vep_ofc_path=None,
             vep_soc_path=None,
+            vep_refseq_alignments_path=None,
             classpath_gatk=None,
             classpath_picard=None,
             classpath_snpeff=None,
@@ -1512,6 +1515,8 @@ class VariantCallingGATK(bsf.Analysis):
         @type vep_ofc_path: str | unicode | None
         @param vep_soc_path: Ensembl Variant Effect Predictor (VEP) Sequence Ontology term (TSV) configuration file path
         @type vep_soc_path: str | unicode | None
+        @param vep_refseq_alignments_path: Ensembl Variant Effect Predictor (VEP) RefSeq alignments (BAM) file path
+        @type vep_refseq_alignments_path: str | unicode | None
         @param classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
         @type classpath_gatk: str | unicode | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -1595,6 +1600,7 @@ class VariantCallingGATK(bsf.Analysis):
         self.vep_sql_port = vep_sql_port
         self.vep_ofc_path = vep_ofc_path
         self.vep_soc_path = vep_soc_path
+        self.vep_refseq_alignments_path = vep_refseq_alignments_path
 
         self.classpath_gatk = classpath_gatk
         self.classpath_picard = classpath_picard
@@ -1957,6 +1963,10 @@ class VariantCallingGATK(bsf.Analysis):
         option = 'vep_soc_path'
         if config_parser.has_option(section=section, option=option):
             self.vep_soc_path = config_parser.get(section=section, option=option)
+
+        option = 'vep_refseq_alignments_path'
+        if config_parser.has_option(section=section, option=option):
+            self.vep_refseq_alignments_path = config_parser.get(section=section, option=option)
 
         option = 'classpath_gatk'
         if config_parser.has_option(section=section, option=option):
@@ -3011,13 +3021,14 @@ class VariantCallingGATK(bsf.Analysis):
                     program='perl',
                     sub_command=bsf.process.Command()))
             """ @type _runnable_step: bsf.process.RunnableStep """
-            # FIXME: Distinguish between cohort and somatic annotation.
+            # FIXME: Distinguish between cohort and somatic annotation for RunnableStep configuration.
             # (section annotate_cohort_ensembl_vep vs annotate_somatic_ensembl_vep)
             # Read RunnableStep options from configuration sections:
             # [bsf.analyses.variant_calling.VariantCallingGATK.ensembl_vep]
             # self.set_runnable_step_configuration(runnable_step=_runnable_step)
             _runnable_step.arguments.append(os.path.join(self.vep_source, 'vep'))
             _sub_command = _runnable_step.sub_command
+            _sub_command.add_option_long(key='fork', value=str(stage_annotate_cohort_vep.threads))
             # Basic options
             _sub_command.add_switch_long(key='everything')
             # Input options
@@ -3034,6 +3045,8 @@ class VariantCallingGATK(bsf.Analysis):
             _sub_command.add_option_long(key='dir_cache', value=self.vep_cache)
             _sub_command.add_option_long(key='dir_plugins', value=self.vep_plugin)
             _sub_command.add_option_long(key='fasta_dir', value=self.vep_fasta)  # VEP e91 option
+            _sub_command.add_switch_long(key='merged')  # Ensembl and RefSeq
+            _sub_command.add_option_long(key='bam', value=self.vep_refseq_alignments_path)
             # Other annotation sources
             _sub_command.add_option_long(  # TODO: Has to be configurable
                 key='plugin',
@@ -3048,7 +3061,7 @@ class VariantCallingGATK(bsf.Analysis):
             # Data format options
             _sub_command.add_switch_long(key='vcf')
             # Filtering and QC options
-            _sub_command.add_switch_long(key='gencode_basic')
+            # _sub_command.add_switch_long(key='gencode_basic')  # This flag suppresses all RefSeq annotation.
             _sub_command.add_switch_long(key='dont_skip')
             _sub_command.add_switch_long(key='allow_non_variant')
             _sub_command.add_switch_long(key='flag_pick_allele_gene')
@@ -3090,7 +3103,7 @@ class VariantCallingGATK(bsf.Analysis):
                     program='perl',
                     sub_command=bsf.process.Command()))
             """ @type _runnable_step: bsf.process.RunnableStep """
-            # FIXME: Distinguish between cohort and somatic annotation.
+            # FIXME: Distinguish between cohort and somatic annotation for RunnableStep configuration.
             # (section annotate_cohort_ensembl_filter vs annotate_somatic_ensembl_filter)
             # Read RunnableStep options from configuration sections:
             # [bsf.analyses.variant_calling.VariantCallingGATK.ensembl_filter]
@@ -3127,32 +3140,22 @@ class VariantCallingGATK(bsf.Analysis):
 
             # Convert the CSQ INFO annotation into a set of INFO VEP_* annotation
             # that is more accessible to down-stream tools.
-            # FIXME: At the moment, this needs switching the Python version.
-            # runnable_annotate.add_runnable_step(
-            #     runnable_step=bsf.executables.vcf.RunnableStepCsqToVep(
-            #         name='vcf_convert_csq_to_vep',
-            #         soc_path=self.vep_soc_path,
-            #         ofc_path=self.vep_ofc_path,
-            #         vcf_path_old=file_path_annotate.vep_complete_raw_vcf_bgz,
-            #         vcf_path_new=file_path_annotate.vep_complete_vcf_bgz))
-            # FIXME: At the moment, this needs switching the Python version.
-            # runnable_annotate.add_runnable_step(
-            #     runnable_step=bsf.executables.vcf.RunnableStepCsqToVep(
-            #         name='vcf_convert_csq_to_vep',
-            #         soc_path=self.vep_soc_path,
-            #         ofc_path=self.vep_ofc_path,
-            #         vcf_path_old=file_path_annotate.vep_filtered_raw_vcf_bgz,
-            #         vcf_path_new=file_path_annotate.vep_filtered_vcf_bgz))
 
-            _runnable_step = runnable_annotate.add_runnable_step(
-                runnable_step=bsf.process.RunnableStep(
-                    name='vcf_complete_csq_to_vep',
-                    program=os.path.join(self.vep_cache, 'bsf_run_csq_to_vep.bash')))
-            _runnable_step.arguments.append(self.vep_soc_path)  # 1
-            _runnable_step.arguments.append(self.vep_ofc_path)  # 2
-            _runnable_step.arguments.append(file_path_annotate.vep_complete_raw_vcf_bgz)  # 3
-            _runnable_step.arguments.append(file_path_annotate.vep_complete_vcf_bgz)  # 4
-            _runnable_step.arguments.append(str(self.debug))  # 5
+            runnable_annotate.add_runnable_step(
+                runnable_step=bsf.executables.vcf.RunnableStepCsqToVep(
+                    name='ensembl_complete_csq_to_vep',
+                    soc_path=self.vep_soc_path,
+                    ofc_path=self.vep_ofc_path,
+                    vcf_path_old=file_path_annotate.vep_complete_raw_vcf_bgz,
+                    vcf_path_new=file_path_annotate.vep_complete_vcf_bgz))
+
+            runnable_annotate.add_runnable_step(
+                runnable_step=bsf.executables.vcf.RunnableStepCsqToVep(
+                    name='ensembl_filtered_csq_to_vep',
+                    soc_path=self.vep_soc_path,
+                    ofc_path=self.vep_ofc_path,
+                    vcf_path_old=file_path_annotate.vep_filtered_raw_vcf_bgz,
+                    vcf_path_new=file_path_annotate.vep_filtered_vcf_bgz))
 
             _runnable_step = runnable_annotate.add_runnable_step(
                 runnable_step=bsf.process.RunnableStep(
@@ -3161,16 +3164,6 @@ class VariantCallingGATK(bsf.Analysis):
                     arguments=[file_path_annotate.vep_complete_vcf_bgz]))
             """ @type _runnable_step: bsf.process.RunnableStep """
             _runnable_step.add_option_long(key='preset', value='vcf')
-
-            _runnable_step = runnable_annotate.add_runnable_step(
-                runnable_step=bsf.process.RunnableStep(
-                    name='vcf_filtered_csq_to_vep',
-                    program=os.path.join(self.vep_cache, 'bsf_run_csq_to_vep.bash')))
-            _runnable_step.arguments.append(self.vep_soc_path)  # 1
-            _runnable_step.arguments.append(self.vep_ofc_path)  # 2
-            _runnable_step.arguments.append(file_path_annotate.vep_filtered_raw_vcf_bgz)  # 3
-            _runnable_step.arguments.append(file_path_annotate.vep_filtered_vcf_bgz)  # 4
-            _runnable_step.arguments.append(str(self.debug))  # 5
 
             _runnable_step = runnable_annotate.add_runnable_step(
                 runnable_step=bsf.process.RunnableStep(
@@ -3191,49 +3184,49 @@ class VariantCallingGATK(bsf.Analysis):
         # VariantCallingGATK requires a genome version, which gets configured by the super-class.
 
         if not self.genome_version:
-            raise Exception("A 'VariantCallingGATK' analysis requires a 'genome_version' configuration option.")
+            raise Exception('A ' + self.name + " requires a 'genome_version' configuration option.")
 
         if not self.bwa_genome_db:
-            raise Exception("A 'VariantCallingGATK' analysis requires a 'bwa_genome_db' configuration option.")
+            raise Exception('A ' + self.name + " requires a 'bwa_genome_db' configuration option.")
 
         if not self.cohort_name:
             self.cohort_name = self.project_name  # The cohort_name used to default to just 'default'.
 
         if not self.gatk_bundle_version:
-            raise Exception("A 'VariantCallingGATK' analysis requires a 'gatk_bundle_version' configuration option.")
+            raise Exception('A ' + self.name + " requires a 'gatk_bundle_version' configuration option.")
 
         if not self.snpeff_genome_version:
-            raise Exception("A 'VariantCallingGATK' analysis requires a 'snpeff_genome_version' configuration option.")
+            raise Exception('A ' + self.name + " requires a 'snpeff_genome_version' configuration option.")
 
         if not self.vep_assembly:
             self.vep_assembly = bsf.standards.EnsemblVEP.get_name_assembly(genome_version=self.genome_version)
             if not self.vep_assembly:
-                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_assembly' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'vep_assembly' configuration option.")
 
         if not self.vep_cache:
             self.vep_cache = bsf.standards.EnsemblVEP.get_directory_cache(genome_version=self.genome_version)
             if not self.vep_cache:
-                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_cache' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'vep_cache' configuration option.")
 
         if not self.vep_fasta:
             self.vep_fasta = bsf.standards.EnsemblVEP.get_directory_fasta(genome_version=self.genome_version)
             if not self.vep_fasta:
-                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_fasta' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'vep_fasta' configuration option.")
 
         if not self.vep_plugin:
             self.vep_plugin = bsf.standards.EnsemblVEP.get_directory_plugin(genome_version=self.genome_version)
             if not self.vep_plugin:
-                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_plugin' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'vep_plugin' configuration option.")
 
         if not self.vep_source:
             self.vep_source = bsf.standards.EnsemblVEP.get_directory_source(genome_version=self.genome_version)
             if not self.vep_source:
-                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_source' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'vep_source' configuration option.")
 
         if not self.vep_species:
             self.vep_species = bsf.standards.EnsemblVEP.get_name_species(genome_version=self.genome_version)
             if not self.vep_species:
-                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_species' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'vep_species' configuration option.")
 
         if not self.vep_sql_user:
             self.vep_sql_user = bsf.standards.EnsemblVEP.get_sql_user(genome_version=self.genome_version)
@@ -3250,33 +3243,38 @@ class VariantCallingGATK(bsf.Analysis):
         if not self.vep_ofc_path:
             self.vep_ofc_path = bsf.standards.EnsemblVEP.get_ofc_path(genome_version=self.genome_version)
             if not self.vep_ofc_path:
-                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_ofc_path' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'vep_ofc_path' configuration option.")
 
         if not self.vep_soc_path:
             self.vep_soc_path = bsf.standards.EnsemblVEP.get_soc_path(genome_version=self.genome_version)
             if not self.vep_soc_path:
-                raise Exception("A 'VariantCallingGATK' analysis requires a 'vep_soc_path' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'vep_soc_path' configuration option.")
+
+        if not self.vep_refseq_alignments_path:
+            self.vep_refseq_alignments_path = bsf.standards.EnsemblVEP.get_refseq_alignments_path(
+                genome_version=self.genome_version)
+            if not self.vep_refseq_alignments_path:
+                raise Exception('A ' + self.name + " requires a 'vep_refseq_alignments_path' configuration option.")
 
         if not self.classpath_gatk:
             self.classpath_gatk = bsf.standards.JavaClassPath.get_gatk()
             if not self.classpath_gatk:
-                raise Exception("A 'VariantCallingGATK' analysis requires a 'classpath_gatk' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'classpath_gatk' configuration option.")
 
         if not self.classpath_picard:
             self.classpath_picard = bsf.standards.JavaClassPath.get_picard()
             if not self.classpath_picard:
-                raise Exception("A 'VariantCallingGATK' analysis requires a 'classpath_picard' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'classpath_picard' configuration option.")
 
         if not self.classpath_snpeff:
             self.classpath_snpeff = bsf.standards.JavaClassPath.get_snpeff()
             if not self.classpath_snpeff:
-                raise Exception("A 'VariantCallingGATK' analysis requires a 'classpath_snpeff' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'classpath_snpeff' configuration option.")
 
         if not self.classpath_vcf_filter:
             self.classpath_vcf_filter = bsf.standards.JavaClassPath.get_vcf_filter()
             if not self.classpath_vcf_filter:
-                raise Exception("A 'VariantCallingGATK' analysis requires a "
-                                "'classpath_vcf_filter' configuration option.")
+                raise Exception('A ' + self.name + " requires a 'classpath_vcf_filter' configuration option.")
 
         # Check for absolute paths and adjust if required before checking for existence.
 
@@ -3370,8 +3368,6 @@ class VariantCallingGATK(bsf.Analysis):
                 else:
                     raise Exception('The file path ' + repr(file_path) +
                                     " in option 'known_somatic_discovery' does not exist.")
-
-        # TODO: Define a bsf.standards.Default resource directory for COSMIC and prepend it if required.
 
         # Dict of VQSR InDel resources
 
@@ -4873,7 +4869,6 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_cohort_snpeff)
             runnable_step.add_gatk_option(key='variant', value=file_path_split_cohort_snpeff.sample_vcf)
             runnable_step.add_gatk_option(key='out', value=file_path_split_cohort_snpeff.sample_tsv)
-            runnable_step.add_gatk_switch(key='allowMissingData')
             runnable_step.add_gatk_switch(key='showFiltered')
             # Set of fixed VCF fields.
             for field_name in variants_to_table_fields['fixed']:
@@ -4951,7 +4946,6 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_cohort_vep)
             runnable_step.add_gatk_option(key='variant', value=file_path_split_cohort_vep.sample_vcf)
             runnable_step.add_gatk_option(key='out', value=file_path_split_cohort_vep.sample_tsv)
-            runnable_step.add_gatk_switch(key='allowMissingData')
             runnable_step.add_gatk_switch(key='showFiltered')
             # Set of fixed VCF fields.
             for field_name in variants_to_table_fields['fixed']:
@@ -5123,7 +5117,6 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_somatic_snpeff)
             runnable_step.add_gatk_option(key='variant', value=file_path_annotate_somatic_snpeff.annotated_vcf)
             runnable_step.add_gatk_option(key='out', value=file_path_split_somatic_snpeff.comparison_tsv)
-            runnable_step.add_gatk_switch(key='allowMissingData')
             runnable_step.add_gatk_switch(key='showFiltered')
             # Set of fixed VCF fields.
             for field_name in variants_to_table_fields['fixed']:
@@ -5185,7 +5178,6 @@ class VariantCallingGATK(bsf.Analysis):
             runnable_step.add_gatk_option(key='reference_sequence', value=reference_split_somatic_vep)
             runnable_step.add_gatk_option(key='variant', value=file_path_annotate_somatic_vep.vep_complete_vcf_bgz)
             runnable_step.add_gatk_option(key='out', value=file_path_split_somatic_vep.comparison_tsv)
-            runnable_step.add_gatk_switch(key='allowMissingData')
             runnable_step.add_gatk_switch(key='showFiltered')
             # Set of fixed VCF fields.
             for field_name in variants_to_table_fields['fixed']:
