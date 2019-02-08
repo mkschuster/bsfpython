@@ -32,127 +32,62 @@ Project:  https://github.com/alexdobin/STAR
 from __future__ import print_function
 
 import os
-import sys
-
-import pysam
 
 import bsf
+import bsf.analyses.aligner
 import bsf.annotation
 import bsf.process
 import bsf.standards
 
 
-class FilePathStarAlign(bsf.FilePath):
-    """The C{bsf.analyses.star_aligner.FilePathStarAlign} class models file paths at the alignment stage.
+class FilePathAlign(bsf.analyses.aligner.FilePathAlign):
+    """The C{bsf.analyses.star_aligner.FilePathAlign} class models file paths at the alignment stage.
 
     Attributes:
     @ivar aligned_sam: Aligned sequence alignment map (SAM) file path
     @type aligned_sam: str | unicode
     @ivar splice_junctions_tsv: Splice junctions tab-separated value (TSV) file path
     @type splice_junctions_tsv: str | unicode
+    @ivar star_prefix: STAR Aligner outFileNamePrefix file path
+    @type star_prefix: str | unicode
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.star_aligner.FilePathStarAlign} object
+        """Initialise a C{bsf.analyses.star_aligner.FilePathAlign} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
         @rtype
         """
-        super(FilePathStarAlign, self).__init__(prefix=prefix)
+        super(FilePathAlign, self).__init__(prefix=prefix)
 
-        self.aligned_sam = prefix + '_Aligned.out.sam'
+        # Override the aligned_sam instance variable of the super-class.
+        self.aligned_sam = os.path.join(prefix, '_'.join((prefix, 'Aligned.out.sam')))
 
-        self.splice_junctions_tsv = prefix + '_SJ.out.tab'
+        self.splice_junctions_tsv = os.path.join(prefix, '_'.join((prefix, 'SJ.out.tab')))
 
-        return
-
-
-class FilePathStarIndex(bsf.FilePath):
-    """The C{bsf.analyses.star_aligner.FilePathStarIndex} class models file paths at the indexing stage.
-
-    Attributes:
-    @ivar cleaned_sam: Cleaned sequence alignment map (SAM) file path
-    @type cleaned_sam: str | unicode
-    @ivar aligned_bai: Aligned binary alignment map index (BAI) file path
-    @type aligned_bai: str | unicode
-    @ivar aligned_bam: Aligned binary alignment map (BAM) file path
-    @type aligned_bam: str | unicode
-    @ivar aligned_md5: Aligned binary alignment map (BAM) file path
-    @type aligned_md5: str | unicode
-    """
-
-    def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.star_aligner.FilePathStarIndex} object
-
-        @param prefix: Prefix
-        @type prefix: str | unicode
-        @return:
-        @rtype
-        """
-        super(FilePathStarIndex, self).__init__(prefix=prefix)
-
-        self.cleaned_sam = prefix + '_Cleaned.sam'
-
-        self.aligned_bai = prefix + '_Aligned.bai'
-        self.aligned_bam = prefix + '_Aligned.bam'
-        self.aligned_md5 = prefix + '_Aligned.bam.md5'
+        self.star_prefix = os.path.join(prefix, '_'.join((prefix, '')))
 
         return
 
 
-class FilePathStarMerge(bsf.FilePath):
-    """The C{bsf.analyses.star_aligner.FilePathStarMerge} class models file paths at the merging stage.
-
-    Attributes:
-    @ivar merged_bai: Merged binary alignment map index (BAI) file path
-    @type merged_bai: str | unicode
-    @ivar merged_bam: Merged binary alignment map (BAM) file path
-    @type merged_bam: str | unicode
-    @ivar merged_lnk: Symbolic link for the merged binary alignment map (BAM) file path
-    @type merged_lnk: str | unicode
-    @ivar merged_md5: Merged binary alignment map (BAM) file path
-    @type merged_md5: str | unicode
-    """
-
-    def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.star_aligner.FilePathStarMerge} object
-
-        @param prefix: Prefix
-        @type prefix: str | unicode
-        @return:
-        @rtype
-        """
-        super(FilePathStarMerge, self).__init__(prefix=prefix)
-
-        self.merged_bai = prefix + '.bai'
-        self.merged_bam = prefix + '.bam'
-        self.merged_lnk = prefix + '.bam.bai'
-        self.merged_md5 = prefix + '.bam.md5'
-        # self.merged_tsv = prefix + '.tsv'
-        # self.merged_pdf = prefix + '.pdf'
-
-        return
-
-
-class FilePathStarSummary(bsf.FilePath):
-    """The C{bsf.analyses.star_aligner.FilePathStarSummary} class models file paths at the summary stage.
+class FilePathSummary(bsf.analyses.aligner.FilePathSummary):
+    """The C{bsf.analyses.star_aligner.FilePathSummary} class models file paths at the summary stage.
 
     Attributes:
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.star_aligner.FilePathStarSummary} object
+        """Initialise a C{bsf.analyses.star_aligner.FilePathSummary} object
 
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
         @rtype
         """
-        super(FilePathStarSummary, self).__init__(prefix=prefix)
+        super(FilePathSummary, self).__init__(prefix=prefix)
 
-        self.read_group_to_sample_tsv = prefix + '_read_group_to_sample.tsv'
         self.alignment_read_group_pdf = prefix + '_alignment_read_group.pdf'
         self.alignment_read_group_png = prefix + '_alignment_read_group.png'
         self.alignment_sample_png = prefix + '_alignment_sample.png'
@@ -179,16 +114,14 @@ class FilePathStarSummary(bsf.FilePath):
         return
 
 
-class StarAligner(bsf.Analysis):
-    """STAR Aligner C{bsf.Analysis} sub-class.
+class StarAligner(bsf.analyses.aligner.Aligner):
+    """STAR Aligner C{bsf.analyses.aligner.Aligner} sub-class.
 
     Attributes:
     @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @ivar replicate_grouping: Group all replicates into a single STAR process
-    @type replicate_grouping: bool | None
     @ivar index_directory: Genome directory with STAR indices
     @type index_directory: str | unicode | None
     @ivar transcriptome_version: Transcriptome version
@@ -205,82 +138,26 @@ class StarAligner(bsf.Analysis):
     prefix = 'star_aligner'
 
     @classmethod
-    def get_stage_name_align(cls):
-        """Get a particular C{bsf.Stage.name}.
+    def get_file_path_align(cls, prefix):
+        """Get a C{FilePathAlign} object from this or a sub-class.
 
-        @return: C{bsf.Stage.name}
-        @rtype: str
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return: C{FilePathAlign} or sub-class object
+        @rtype: FilePathAlign
         """
-        return '_'.join((cls.prefix, 'align'))
+        return FilePathAlign(prefix=prefix)
 
     @classmethod
-    def get_stage_name_index(cls):
-        """Get a particular C{bsf.Stage.name}.
+    def get_file_path_summary(cls, prefix):
+        """Get a C{FilePathSummary} object from this or a sub-class.
 
-        @return: C{bsf.Stage.name}
-        @rtype: str
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return: C{FilePathSummary} or sub-class object
+        @rtype: FilePathSummary
         """
-        return '_'.join((cls.prefix, 'index'))
-
-    @classmethod
-    def get_stage_name_merge(cls):
-        """Get a particular C{bsf.Stage.name}.
-
-        @return: C{bsf.Stage.name}
-        @rtype: str
-        """
-        return '_'.join((cls.prefix, 'merge'))
-
-    @classmethod
-    def get_stage_name_summary(cls):
-        """Get a particular C{bsf.Stage.name}.
-
-        @return: C{bsf.Stage.name}
-        @rtype: str
-        """
-        return '_'.join((cls.prefix, 'summary'))
-
-    @classmethod
-    def get_prefix_align(cls, paired_reads_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
-
-        @param paired_reads_name: Replicate key
-        @type paired_reads_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
-        @rtype: str
-        """
-        return '_'.join((cls.get_stage_name_align(), paired_reads_name))
-
-    @classmethod
-    def get_prefix_index(cls, paired_reads_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
-
-        @param paired_reads_name: Replicate key
-        @type paired_reads_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
-        @rtype: str
-        """
-        return '_'.join((cls.get_stage_name_index(), paired_reads_name))
-
-    @classmethod
-    def get_prefix_merge(cls, sample_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
-
-        @param sample_name: Sample name
-        @type sample_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
-        @rtype: str
-        """
-        return '_'.join((cls.get_stage_name_merge(), sample_name))
-
-    @classmethod
-    def get_prefix_summary(cls):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
-
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
-        @rtype: str
-        """
-        return cls.get_stage_name_summary()
+        return FilePathSummary(prefix=prefix)
 
     def __init__(
             self,
@@ -296,7 +173,6 @@ class StarAligner(bsf.Analysis):
             stage_list=None,
             collection=None,
             sample_list=None,
-            replicate_grouping=None,
             index_directory=None,
             transcriptome_version=None,
             transcriptome_gtf=None,
@@ -329,8 +205,6 @@ class StarAligner(bsf.Analysis):
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
-        @param replicate_grouping: Group all replicates into a single STAR process
-        @type replicate_grouping: bool | None
         @param index_directory: Genome directory with STAR indices
         @type index_directory: str | unicode
         @param transcriptome_version: Transcriptome version
@@ -342,7 +216,6 @@ class StarAligner(bsf.Analysis):
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: str | unicode | None
         """
-
         super(StarAligner, self).__init__(
             configuration=configuration,
             project_name=project_name,
@@ -355,16 +228,17 @@ class StarAligner(bsf.Analysis):
             debug=debug,
             stage_list=stage_list,
             collection=collection,
-            sample_list=sample_list)
+            sample_list=sample_list,
+            genome_fasta=None,
+            genome_index=None,
+            classpath_picard=classpath_picard)
 
         # Sub-class specific ...
 
-        self.replicate_grouping = replicate_grouping
         self.index_directory = index_directory
         self.transcriptome_version = transcriptome_version
         self.transcriptome_gtf = transcriptome_gtf
         self.two_pass_mapping = two_pass_mapping
-        self.classpath_picard = classpath_picard
 
         return
 
@@ -380,14 +254,9 @@ class StarAligner(bsf.Analysis):
         @return:
         @rtype:
         """
-
         super(StarAligner, self).set_configuration(configuration=configuration, section=section)
 
         # Sub-class specific ...
-
-        option = 'replicate_grouping'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.replicate_grouping = configuration.config_parser.getboolean(section=section, option=option)
 
         option = 'index_directory'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -405,9 +274,79 @@ class StarAligner(bsf.Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.two_pass_mapping = configuration.config_parser.get(section=section, option=option)
 
-        option = 'classpath_picard'
-        if configuration.config_parser.has_option(section=section, option=option):
-            self.classpath_picard = configuration.config_parser.get(section=section, option=option)
+        return
+
+    def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
+        """Add one or more STAR-specific C{bsf.process.RunnableStep} objects to the C{bsf.Runnable}.
+
+        @param runnable_align: C{bsf.Runnable}
+        @type runnable_align: bsf.Runnable
+        @param stage_align: C{bsf.Stage}
+        @type stage_align: bsf.Stage
+        @param file_path_1: FASTQ file path 1
+        @type file_path_1: str | unicode | None
+        @param file_path_2: FASTQ file path 2
+        @type file_path_2: str | unicode | None
+        @return:
+        @rtype:
+        """
+        file_path_align = runnable_align.file_path_object
+        """ @type file_path_align FilePathAlign """
+
+        # Run the STAR Aligner
+
+        runnable_step = runnable_align.add_runnable_step(
+            runnable_step=bsf.process.RunnableStep(
+                name='STAR',
+                program='STAR'))
+        """ @type runnable_step: bsf.process.RunnableStep """
+        self.set_runnable_step_configuration(runnable_step=runnable_step)
+        runnable_step.add_option_long(key='runThreadN', value=str(stage_align.threads))
+        runnable_step.add_option_long(key='genomeDir', value=self.index_directory)
+        runnable_step.add_option_long(key='outFileNamePrefix', value=file_path_align.star_prefix)
+        if self.two_pass_mapping == 'basic':
+            runnable_step.add_option_long(key='twopassMode', value='Basic')
+        # NOTE: The STAR aligner command line interface is seriously broken,
+        # as the readFilesIn option requires two values.
+        # Hence, use class bsf.argument.OptionMultiLong via wrapper Command.add_option_multi_long().
+        if file_path_2 is None:
+            runnable_step.add_option_long(
+                key='readFilesIn',
+                value=file_path_1)
+        else:
+            runnable_step.add_option_multi_long(
+                key='readFilesIn',
+                value=' '.join((file_path_1, file_path_2)))
+        if file_path_1.endswith('fastq.gz'):
+            runnable_step.add_option_long(key='readFilesCommand', value='zcat')
+
+        # Run GNU Zip over the rather large splice junction table.
+
+        runnable_step = runnable_align.add_runnable_step(
+            runnable_step=bsf.process.RunnableStep(
+                name='gzip',
+                program='gzip'))
+        """ @type runnable_step: bsf.process.RunnableStep """
+        runnable_step.add_switch_long(key='best')
+        runnable_step.arguments.append(file_path_align.splice_junctions_tsv)
+
+        return
+
+    def add_runnable_step_summary(self, runnable_summary, stage_summary):
+        """Add one or more STAR-specific C{bsf.process.RunnableStep} objects to the C{bsf.Runnable}.
+
+        @param runnable_summary: C{bsf.Runnable}
+        @type runnable_summary: bsf.Runnable
+        @param stage_summary: C{bsf.Stage}
+        @type stage_summary: bsf.Stage
+        @return:
+        @rtype:
+        """
+        runnable_summary.add_runnable_step(
+            runnable_step=bsf.process.RunnableStep(
+                name='summary',
+                program='bsf_star_aligner_summary.R'))
+        """ @type runnable_step: bsf.process.RunnableStep """
 
         return
 
@@ -419,23 +358,6 @@ class StarAligner(bsf.Analysis):
         @return:
         @rtype:
         """
-
-        def run_read_comparisons():
-            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
-
-            This implementation just adds all C{bsf.ngs.Sample} objects from the
-            C{bsf.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
-            C{bsf.Analysis.sample_list} instance variable.
-            @return:
-            @rtype:
-            """
-
-            self.sample_list.extend(self.collection.get_all_samples())
-
-            return
-
-        # Start of the run() method body.
-
         # Check for the project name already here,
         # since the super class method has to be called later.
         if not self.project_name:
@@ -451,19 +373,6 @@ class StarAligner(bsf.Analysis):
         if not self.genome_version:
             self.genome_version = bsf.standards.Transcriptome.get_genome(
                 transcriptome_version=self.transcriptome_version)
-
-        # Get the sample annotation sheet before calling the run() method of the bsf.Analysis super-class.
-
-        if self.sas_file:
-            self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
-            if not os.path.exists(path=self.sas_file):
-                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
-        else:
-            self.sas_file = self.get_annotation_file(prefix_list=[self.prefix], suffix='samples.csv')
-            if not self.sas_file:
-                raise Exception('No suitable sample annotation file in the current working directory.')
-
-        super(StarAligner, self).run()
 
         if not self.index_directory:
             self.index_directory = bsf.standards.FilePath.get_resource_transcriptome_index(
@@ -484,368 +393,7 @@ class StarAligner(bsf.Analysis):
             raise ('The ' + self.name + " 'two_pass_mapping' option can only take values " +
                    repr(two_pass_mapping_tuple) + ' not ' + repr(self.two_pass_mapping) + '.')
 
-        if not self.classpath_picard:
-            self.classpath_picard = bsf.standards.JavaClassPath.get_picard()
-            if not self.classpath_picard:
-                raise Exception('A ' + self.name + " requires a 'classpath_picard' configuration option.")
-
-        run_read_comparisons()
-
-        stage_align = self.get_stage(name=self.get_stage_name_align())
-        stage_index = self.get_stage(name=self.get_stage_name_index())
-        stage_merge = self.get_stage(name=self.get_stage_name_merge())
-        stage_summary = self.get_stage(name=self.get_stage_name_summary())
-
-        prefix_summary = stage_summary.name
-
-        file_path_summary = FilePathStarSummary(prefix=prefix_summary)
-
-        # Create an annotation sheet linking sample name and read group name, which is required for the
-        # summary script.
-
-        annotation_sheet = bsf.annotation.AnnotationSheet(
-            file_path=os.path.join(self.genome_directory, file_path_summary.read_group_to_sample_tsv),
-            file_type='excel-tab',
-            name='star_aligner_read_group',
-            field_names=['sample', 'read_group'])
-
-        runnable_merge_list = list()
-        """ @type runnable_merge_list: list[bsf.Runnable] """
-
-        # Sort the Python list of Sample objects by Sample.name.
-
-        self.sample_list.sort(key=lambda item: item.name)
-
-        for sample in self.sample_list:
-            if self.debug > 0:
-                print(self, 'Sample name:', sample.name)
-                sys.stdout.writelines(sample.trace(level=1))
-
-            runnable_index_list = list()
-            """ @type runnable_index_list: list[bsf.Runnable] """
-
-            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping, exclude=True)
-
-            if not paired_reads_dict:
-                # Skip Sample objects, which PairedReads objects have all been excluded.
-                continue
-
-            for paired_reads_name in sorted(paired_reads_dict):
-                for paired_reads in paired_reads_dict[paired_reads_name]:
-                    if self.debug > 0:
-                        print(self, 'PairedReads name:', paired_reads.get_name())
-
-                    ######################
-                    # 1. Alignment Stage #
-                    ######################
-
-                    prefix_align = '_'.join((stage_align.name, paired_reads.get_name()))
-
-                    # STAR-specific file paths
-
-                    file_path_align = FilePathStarAlign(prefix=prefix_align)
-
-                    # Create a Runnable and Executable for the STAR aligner.
-
-                    runnable_align = self.add_runnable(
-                        runnable=bsf.Runnable(
-                            name=prefix_align,
-                            code_module='bsf.runnables.generic',
-                            working_directory=self.genome_directory,
-                            cache_directory=self.cache_directory,
-                            file_path_object=file_path_align,
-                            debug=self.debug))
-                    executable_align = self.set_stage_runnable(
-                        stage=stage_align,
-                        runnable=runnable_align)
-
-                    runnable_step = runnable_align.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStep(
-                            name='STAR',
-                            program='STAR'))
-                    """ @type runnable_step: bsf.process.RunnableStep """
-                    self.set_runnable_step_configuration(runnable_step=runnable_step)
-                    runnable_step.add_option_long(key='runThreadN', value=str(stage_align.threads))
-                    runnable_step.add_option_long(key='genomeDir', value=self.index_directory)
-                    runnable_step.add_option_long(key='outFileNamePrefix', value=prefix_align + '_')
-                    if self.two_pass_mapping == 'basic':
-                        runnable_step.add_option_long(key='twopassMode', value='Basic')
-                    # NOTE: The STAR aligner command line interface is seriously broken,
-                    # as the readFilesIn option requires two values.
-                    # Hence, use class bsf.argument.OptionMultiLong via wrapper Command.add_option_multi_long().
-                    if paired_reads.reads_2 is None:
-                        runnable_step.add_option_long(
-                            key='readFilesIn',
-                            value=paired_reads.reads_1.file_path)
-                    else:
-                        runnable_step.add_option_multi_long(
-                            key='readFilesIn',
-                            value=' '.join((paired_reads.reads_1.file_path, paired_reads.reads_2.file_path)))
-                    if paired_reads.reads_1.file_path.endswith('fastq.gz'):
-                        runnable_step.add_option_long(key='readFilesCommand', value='zcat')
-
-                    # If the original BAM file was annotated in the PairedReads object, the read group can be set.
-
-                    if 'BAM File' in paired_reads.annotation_dict:
-                        # There should be only one BAM file linked to the PairedReads object.
-                        bam_file_path = paired_reads.annotation_dict['BAM File'][0]
-                        if os.path.exists(bam_file_path):
-                            alignment_file = pysam.AlignmentFile(bam_file_path, 'rb', check_sq=False)
-
-                            # Add the @RG line.
-                            for read_group_dict in alignment_file.header['RG']:
-                                """ @type read_group_dict: dict[str, str] """
-                                # There should also be only one read group.
-                                key_list = read_group_dict.keys()
-                                # Remove the 'ID' from the key_list, as it has to go first.
-                                key_list.remove('ID')
-                                read_group_str = ':'.join(('ID', read_group_dict['ID']))
-                                for key in key_list:
-                                    read_group_str += ' "' + ':'.join((key, read_group_dict[key])) + '"'
-                                runnable_step.add_option_long(key='outSAMattrRGline', value=read_group_str)
-
-                            # Add @PG lines.
-                            # The STAR aligner allows only a single @PG line, which is not terribly helpful.
-                            # for program_dict in alignment_file.header['PG']:
-                            #     """ @type program_dict: dict[str, str] """
-                            #     key_list = program_dict.keys()
-                            #     program_str = ''
-                            #     for key in key_list:
-                            #         program_str += ' "' + ':'.join((key, program_dict[key])) + '"'
-                            #     runnable_step.add_option_long(key='outSAMheaderPG', value=program_str)
-
-                    annotation_sheet.row_dicts.append({'sample': sample.name, 'read_group': paired_reads.get_name()})
-
-                    #####################
-                    # 2. Indexing Stage #
-                    #####################
-
-                    prefix_index = '_'.join((stage_index.name, paired_reads.get_name()))
-
-                    file_path_index = FilePathStarIndex(prefix=prefix_index)
-
-                    runnable_index = self.add_runnable(
-                        runnable=bsf.Runnable(
-                            name=prefix_index,
-                            code_module='bsf.runnables.generic',
-                            working_directory=self.genome_directory,
-                            cache_directory=self.cache_directory,
-                            file_path_object=file_path_index,
-                            debug=self.debug))
-                    executable_index = self.set_stage_runnable(
-                        stage=stage_index,
-                        runnable=runnable_index)
-                    executable_index.dependencies.append(executable_align.name)
-
-                    runnable_index_list.append(runnable_index)
-
-                    runnable_step = runnable_index.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepPicard(
-                            name='picard_clean_sam',
-                            obsolete_file_path_list=[file_path_align.aligned_sam],
-                            java_temporary_path=runnable_index.temporary_directory_path(absolute=False),
-                            java_heap_maximum='Xmx2G',
-                            picard_classpath=self.classpath_picard,
-                            picard_command='CleanSam'))
-                    """ @type runnable_step: bsf.process.RunnableStepPicard """
-                    # INPUT []
-                    runnable_step.add_picard_option(key='INPUT', value=file_path_align.aligned_sam)
-                    # OUTPUT []
-                    runnable_step.add_picard_option(key='OUTPUT', value=file_path_index.cleaned_sam)
-                    # TMP_DIR [null]
-                    runnable_step.add_picard_option(
-                        key='TMP_DIR',
-                        value=runnable_index.temporary_directory_path(absolute=False))
-                    # VERBOSITY [INFO]
-                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                    # QUIET [false]
-                    # VALIDATION_STRINGENCY [STRICT]
-                    # COMPRESSION_LEVEL [5]
-                    # MAX_RECORDS_IN_RAM [500000]
-                    # CREATE_INDEX [false]
-                    # CREATE_MD5_FILE [false]
-                    # REFERENCE_SEQUENCE [null]
-                    # GA4GH_CLIENT_SECRETS [client_secrets.json]
-                    # USE_JDK_DEFLATER [false]
-                    # USE_JDK_INFLATER [false]
-
-                    runnable_step = runnable_index.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepPicard(
-                            name='picard_sort_sam',
-                            obsolete_file_path_list=[file_path_index.cleaned_sam],
-                            java_temporary_path=runnable_index.temporary_directory_path(absolute=False),
-                            java_heap_maximum='Xmx6G',
-                            picard_classpath=self.classpath_picard,
-                            picard_command='SortSam'))
-                    """ @type runnable_step: bsf.process.RunnableStepPicard """
-                    # INPUT []
-                    runnable_step.add_picard_option(key='INPUT', value=file_path_index.cleaned_sam)
-                    # OUTPUT []
-                    runnable_step.add_picard_option(key='OUTPUT', value=file_path_index.aligned_bam)
-                    # SORT_ORDER []
-                    runnable_step.add_picard_option(key='SORT_ORDER', value='coordinate')
-                    # TMP_DIR [null]
-                    runnable_step.add_picard_option(
-                        key='TMP_DIR',
-                        value=runnable_index.temporary_directory_path(absolute=False))
-                    # VERBOSITY [INFO]
-                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                    # QUIET [false]
-                    # VALIDATION_STRINGENCY [STRICT]
-                    # COMPRESSION_LEVEL [5]
-                    runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
-                    # MAX_RECORDS_IN_RAM [500000]
-                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
-                    # CREATE_INDEX [false]
-                    runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
-                    # CREATE_MD5_FILE [false]
-                    runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
-                    # REFERENCE_SEQUENCE [null]
-                    # GA4GH_CLIENT_SECRETS [client_secrets.json]
-                    # USE_JDK_DEFLATER [false]
-                    # USE_JDK_INFLATER [false]
-
-                    # Run GNU Zip over the rather large splice junction table.
-
-                    runnable_step = runnable_index.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStep(
-                            name='gzip',
-                            program='gzip'))
-                    """ @type runnable_step: bsf.process.RunnableStep """
-                    runnable_step.add_switch_long(key='best')
-                    runnable_step.arguments.append(file_path_align.splice_junctions_tsv)
-
-            ####################
-            # 3. Merging Stage #
-            ####################
-
-            # For more than one ReadPair object the aligned BAM files need merging into Sample-specific ones.
-
-            prefix_merge = '_'.join((stage_merge.name, sample.name))
-
-            file_path_merge = FilePathStarMerge(prefix=prefix_merge)
-
-            runnable_merge = self.add_runnable(
-                runnable=bsf.Runnable(
-                    name=prefix_merge,
-                    code_module='bsf.runnables.generic',
-                    working_directory=self.genome_directory,
-                    cache_directory=self.cache_directory,
-                    file_path_object=file_path_merge,
-                    debug=self.debug))
-            executable_merge = self.set_stage_runnable(
-                stage=stage_merge,
-                runnable=runnable_merge)
-
-            runnable_merge_list.append(runnable_merge)
-
-            # Add dependencies on Runnable objects of the indexing stage.
-            for runnable_index in runnable_index_list:
-                executable_merge.dependencies.append(runnable_index.name)
-
-            if len(runnable_index_list) == 1:
-                runnable_index = runnable_index_list[0]
-                file_path_index = runnable_index.file_path_object
-                """ @type file_path_index: FilePathStarIndex """
-                # For a single ReadPair, just rename the files.
-                runnable_merge.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepMove(
-                        name='move_bam',
-                        source_path=file_path_index.aligned_bam,
-                        target_path=file_path_merge.merged_bam))
-                runnable_merge.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepMove(
-                        name='move_bai',
-                        source_path=file_path_index.aligned_bai,
-                        target_path=file_path_merge.merged_bai))
-                runnable_merge.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepMove(
-                        name='move_md5',
-                        source_path=file_path_index.aligned_md5,
-                        target_path=file_path_merge.merged_md5))
-            else:
-                # Run Picard MergeSamFiles on each BAM file.
-                runnable_step = runnable_merge.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepPicard(
-                        name='picard_merge_sam_files',
-                        java_temporary_path=runnable_merge.temporary_directory_path(absolute=False),
-                        java_heap_maximum='Xmx2G',
-                        picard_classpath=self.classpath_picard,
-                        picard_command='MergeSamFiles'))
-                """ @type runnable_step: bsf.process.RunnableStepPicard """
-                # INPUT []
-                for runnable_index in runnable_index_list:
-                    file_path_index = runnable_index.file_path_object
-                    """ @type file_path_index: FilePathStarIndex """
-                    runnable_step.obsolete_file_path_list.append(file_path_index.aligned_bam)
-                    runnable_step.obsolete_file_path_list.append(file_path_index.aligned_bai)
-                    runnable_step.obsolete_file_path_list.append(file_path_index.aligned_md5)
-                    runnable_step.add_picard_option(key='INPUT', value=file_path_index.aligned_bam, override=True)
-                    # OUTPUT []
-                runnable_step.add_picard_option(key='OUTPUT', value=file_path_merge.merged_bam)
-                # SORT_ORDER [coordinate]
-                # ASSUME_SORTED [false]
-                # MERGE_SEQUENCE_DICTIONARIES [false]
-                # USE_THREADING [false]
-                runnable_step.add_picard_option(key='USE_THREADING', value='true')
-                # COMMENT [null]
-                # INTERVALS [null]
-                # TMP_DIR [null]
-                runnable_step.add_picard_option(
-                    key='TMP_DIR',
-                    value=runnable_merge.temporary_directory_path(absolute=False))
-                # VERBOSITY [INFO]
-                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                # QUIET [false]
-                # VALIDATION_STRINGENCY [STRICT]
-                # COMPRESSION_LEVEL [5]
-                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
-                # MAX_RECORDS_IN_RAM [500000]
-                runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
-                # CREATE_INDEX [false]
-                runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
-                # CREATE_MD5_FILE [false]
-                runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
-                # REFERENCE_SEQUENCE [null]
-                # GA4GH_CLIENT_SECRETS [client_secrets.json]
-                # USE_JDK_DEFLATER [false]
-                # USE_JDK_INFLATER [false]
-
-            # Create a symbolic link from the Picard-style *.bai file to a samtools-style *.bam.bai file.
-
-            runnable_merge.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepLink(
-                    name='link',
-                    source_path=file_path_merge.merged_bai,
-                    target_path=file_path_merge.merged_lnk))
-
-        # Write the AnnotationSheet to disk.
-
-        annotation_sheet.to_file_path()
-
-        # Create a Runnable and Executable for the STAR summary.
-
-        runnable_summary = self.add_runnable(
-            runnable=bsf.Runnable(
-                name=prefix_summary,
-                code_module='bsf.runnables.generic',
-                working_directory=self.genome_directory,
-                cache_directory=self.cache_directory,
-                file_path_object=file_path_summary,
-                debug=self.debug))
-        executable_summary = self.set_stage_runnable(
-            stage=stage_summary,
-            runnable=runnable_summary)
-
-        # Add dependencies on Runnable objects of the merging stage.
-        for runnable_merge in runnable_merge_list:
-            executable_summary.dependencies.append(runnable_merge.name)
-
-        runnable_summary.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
-                name='summary',
-                program='bsf_star_aligner_summary.R'))
-        """ @type runnable_step: bsf.process.RunnableStep """
+        super(StarAligner, self).run()
 
         return
 
@@ -898,35 +446,34 @@ class StarAligner(bsf.Analysis):
             str_list.append('<tbody>\n')
 
             for sample in self.sample_list:
-                paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=self.replicate_grouping,
-                                                                exclude=True)
+                paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=True)
 
                 if not paired_reads_dict:
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                runnable_merge = self.runnable_dict[self.get_prefix_merge(sample_name=sample.name)]
-                file_path_merge = runnable_merge.file_path_object
-                """ @type file_path_merge: FilePathStarMerge """
+                runnable_sample = self.runnable_dict[self.get_prefix_sample(sample_name=sample.name)]
+                file_path_sample = runnable_sample.file_path_object
+                """ @type file_path_sample: bsf.analyses.aligner.FilePathSample """
 
                 str_list.append('<tr>\n')
                 # Sample
                 str_list.append('<td class="left">' + sample.name + '</td>\n')
                 # BAM
                 str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_merge.merged_bam + '">')
+                str_list.append('<a href="' + file_path_sample.merged_bam + '">')
                 str_list.append('<abbr title="Binary Alignment/Map">BAM</abbr>')
                 str_list.append('</a>')
                 str_list.append('</td>\n')
                 # BAI
                 str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_merge.merged_bai + '">')
+                str_list.append('<a href="' + file_path_sample.merged_bai + '">')
                 str_list.append('<abbr title="Binary Alignment/Map Index">BAI</abbr>')
                 str_list.append('</a>')
                 str_list.append('</td>\n')
                 # MD5
                 str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_merge.merged_md5 + '">')
+                str_list.append('<a href="' + file_path_sample.merged_md5 + '">')
                 str_list.append('<abbr title="Message Digest 5 Checksum">MD5</abbr>')
                 str_list.append('</a>')
                 str_list.append('</td>\n')
@@ -950,7 +497,7 @@ class StarAligner(bsf.Analysis):
 
             runnable_summary = self.runnable_dict[self.get_prefix_summary()]
             file_path_summary = runnable_summary.file_path_object
-            """ @type file_path_summary: FilePathStarSummary """
+            """ @type file_path_summary: FilePathSummary """
 
             # Alignment Summary Plots
             str_list.append('<tr>\n')
@@ -1093,17 +640,15 @@ class StarAligner(bsf.Analysis):
             # Sample-specific tracks
 
             for sample in self.sample_list:
-                paired_reads_dict = sample.get_all_paired_reads(
-                    replicate_grouping=self.replicate_grouping,
-                    exclude=True)
+                paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=True)
 
                 if not paired_reads_dict:
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                runnable_merge = self.runnable_dict[self.get_prefix_merge(sample_name=sample.name)]
-                file_path_merge = runnable_merge.file_path_object
-                """ @type file_path_merge: FilePathStarMerge """
+                runnable_sample = self.runnable_dict[self.get_prefix_sample(sample_name=sample.name)]
+                file_path_sample = runnable_sample.file_path_object
+                """ @type file_path_sample: bsf.analyses.aligner.FilePathSample """
 
                 #
                 # Add a trackDB entry for each Tophat accepted_hits.bam file.
@@ -1113,7 +658,7 @@ class StarAligner(bsf.Analysis):
                 str_list.append('type bam\n')
                 str_list.append('shortLabel ' + sample.name + '_alignments\n')
                 str_list.append('longLabel ' + sample.name + ' STAR alignments\n')
-                str_list.append('bigDataUrl ' + file_path_merge.merged_bam + '\n')
+                str_list.append('bigDataUrl ' + file_path_sample.merged_bam + '\n')
                 # str_list.append('html ...\n')
                 str_list.append('visibility dense\n')
 

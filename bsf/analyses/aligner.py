@@ -34,6 +34,7 @@ import sys
 import warnings
 
 import bsf
+import bsf.annotation
 
 
 class FilePathAlign(bsf.FilePath):
@@ -202,6 +203,8 @@ class FilePathSummary(bsf.FilePath):
 
         self.output_directory = prefix
 
+        self.read_group_to_sample_tsv = prefix + '_read_group_to_sample.tsv'
+
         return
 
 
@@ -322,6 +325,50 @@ class Aligner(bsf.Analysis):
         """
         return cls.get_stage_name_summary()
 
+    @classmethod
+    def get_file_path_align(cls, prefix):
+        """Get a C{FilePathAlign} object from this or a sub-class.
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return: C{FilePathAlign} or sub-class object
+        @rtype: FilePathAlign
+        """
+        return FilePathAlign(prefix=prefix)
+
+    @classmethod
+    def get_file_path_read_group(cls, prefix):
+        """Get a C{FilePathReadGroup} object from this or a sub-class.
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return: C{FilePathReadGroup} or sub-class object
+        @rtype: FilePathReadGroup
+        """
+        return FilePathReadGroup(prefix=prefix)
+
+    @classmethod
+    def get_file_path_sample(cls, prefix):
+        """Get a C{FilePathSample} object from this or a sub-class.
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return: C{FilePathSample} or sub-class object
+        @rtype: FilePathSample
+        """
+        return FilePathSample(prefix=prefix)
+
+    @classmethod
+    def get_file_path_summary(cls, prefix):
+        """Get a C{FilePathSummary} object from this or a sub-class.
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return: C{FilePathSummary} or sub-class object
+        @rtype: FilePathSummary
+        """
+        return FilePathSummary(prefix=prefix)
+
     def __init__(
             self,
             configuration=None,
@@ -431,7 +478,7 @@ class Aligner(bsf.Analysis):
         return
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add an Aligner-specific C{bsf.process.RunnableStep} to the C{bsf.Runnable}.
+        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects to the C{bsf.Runnable}.
 
         @param runnable_align: C{bsf.Runnable}
         @type runnable_align: bsf.Runnable
@@ -444,6 +491,24 @@ class Aligner(bsf.Analysis):
         @return:
         @rtype:
         """
+        return
+
+    def add_runnable_step_summary(self, runnable_summary, stage_summary):
+        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects to the C{bsf.Runnable}.
+
+        @param runnable_summary: C{bsf.Runnable}
+        @type runnable_summary: bsf.Runnable
+        @param stage_summary: C{bsf.Stage}
+        @type stage_summary: bsf.Stage
+        @return:
+        @rtype:
+        """
+        # runnable_summary.add_runnable_step(
+        #     runnable_step=bsf.process.RunnableStep(
+        #         name='summary',
+        #         program='bsf_aligner_summary.R'))
+        # """ @type runnable_step: bsf.process.RunnableStep """
+
         return
 
     def run(self):
@@ -495,6 +560,13 @@ class Aligner(bsf.Analysis):
 
         # Start of the run() method body.
 
+        # Check for the project name already here,
+        # since the super class method has to be called later.
+        if not self.project_name:
+            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
+
+        # Get the sample annotation sheet before calling the run() method of the bsf.Analysis super-class.
+
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
             if not os.path.exists(path=self.sas_file):
@@ -530,6 +602,19 @@ class Aligner(bsf.Analysis):
         stage_read_group = self.get_stage(name=self.get_stage_name_read_group())
         stage_sample = self.get_stage(name=self.get_stage_name_sample())
         stage_summary = self.get_stage(name=self.get_stage_name_summary())
+
+        prefix_summary = stage_summary.name
+
+        file_path_summary = self.get_file_path_summary(prefix=prefix_summary)
+
+        # Create an annotation sheet linking sample name and read group name, which is required for the
+        # summary script.
+
+        annotation_sheet = bsf.annotation.AnnotationSheet(
+            file_path=os.path.join(self.genome_directory, file_path_summary.read_group_to_sample_tsv),
+            file_type='excel-tab',
+            name='star_aligner_read_group',
+            field_names=['sample', 'read_group'])
 
         runnable_sample_list = list()
         """ @type runnable_sample_list: list[bsf.Runnable] """
@@ -591,11 +676,13 @@ class Aligner(bsf.Analysis):
                 # Alignment Stage #
                 ###################
 
+                annotation_sheet.row_dicts.append({'sample': sample.name, 'read_group': paired_reads.get_name()})
+
                 # Create a Runnable and Executable for alignment and processing.
 
                 prefix_align = self.get_prefix_align(paired_reads_name=paired_reads_name)
 
-                file_path_align = FilePathAlign(prefix=prefix_align)
+                file_path_align = self.get_file_path_align(prefix=prefix_align)
 
                 runnable_align = self.add_runnable(
                     runnable=bsf.Runnable(
@@ -741,7 +828,7 @@ class Aligner(bsf.Analysis):
                 # Create a Runnable and Executable for merging each read group.
                 prefix_read_group = self.get_prefix_read_group(read_group_name=bam_file_name)
 
-                file_path_read_group = FilePathReadGroup(prefix=prefix_read_group)
+                file_path_read_group = self.get_file_path_read_group(prefix=prefix_read_group)
 
                 runnable_read_group = self.add_runnable(
                     runnable=bsf.Runnable(
@@ -865,7 +952,7 @@ class Aligner(bsf.Analysis):
                                 file_path_read_group.merged_md5,
                             ],
                             java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
-                            java_heap_maximum='Xmx8G',
+                            java_heap_maximum='Xmx12G',
                             java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
                             picard_command='MergeBamAlignment'))
                     """ @type runnable_step: bsf.process.RunnableStepPicard """
@@ -933,7 +1020,7 @@ class Aligner(bsf.Analysis):
 
             prefix_sample = self.get_prefix_sample(sample_name=sample.name)
 
-            file_path_sample = FilePathSample(prefix=prefix_sample)
+            file_path_sample = self.get_file_path_sample(prefix=prefix_sample)
 
             runnable_sample = self.add_runnable(
                 runnable=bsf.Runnable(
@@ -1090,11 +1177,11 @@ class Aligner(bsf.Analysis):
         # Summary Stage #
         #################
 
+        # Write the AnnotationSheet to disk.
+
+        annotation_sheet.to_file_path()
+
         # Create a Runnable and Executable for the summary.
-
-        prefix_summary = stage_summary.name
-
-        file_path_summary = FilePathSummary(prefix=prefix_summary)
 
         runnable_summary = self.add_runnable(
             runnable=bsf.Runnable(
@@ -1112,10 +1199,6 @@ class Aligner(bsf.Analysis):
         for runnable_sample in runnable_sample_list:
             executable_summary.dependencies.append(runnable_sample.name)
 
-        # runnable_summary.add_runnable_step(
-        #     runnable_step=bsf.process.RunnableStep(
-        #         name='summary',
-        #         program='bsf_aligner_summary.R'))
-        # """ @type runnable_step: bsf.process.RunnableStep """
+        self.add_runnable_step_summary(runnable_summary=runnable_summary, stage_summary=stage_summary)
 
         return
