@@ -183,7 +183,7 @@ class FilePathAlignment(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathAlignment, self).__init__(prefix=prefix)
 
@@ -236,7 +236,7 @@ class FilePathProcessReadGroup(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathProcessReadGroup, self).__init__(prefix=prefix)
 
@@ -301,7 +301,7 @@ class FilePathProcessSample(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathProcessSample, self).__init__(prefix=prefix)
 
@@ -366,7 +366,7 @@ class FilePathDiagnoseSample(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathDiagnoseSample, self).__init__(prefix=prefix)
 
@@ -407,7 +407,7 @@ class FilePathMergeCohort(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathMergeCohort, self).__init__(prefix=prefix)
 
@@ -433,7 +433,7 @@ class FilePathGenotypeCohort(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathGenotypeCohort, self).__init__(prefix=prefix)
 
@@ -479,7 +479,7 @@ class FilePathProcessCohort(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathProcessCohort, self).__init__(prefix=prefix)
 
@@ -525,7 +525,7 @@ class FilePathAnnotateSnpEff(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathAnnotateSnpEff, self).__init__(prefix=prefix)
 
@@ -574,7 +574,7 @@ class FilePathAnnotateVEP(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathAnnotateVEP, self).__init__(prefix=prefix)
 
@@ -615,7 +615,7 @@ class FilePathSplitCohort(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathSplitCohort, self).__init__(prefix=prefix)
 
@@ -633,7 +633,7 @@ class FilePathSummary(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathSummary, self).__init__(prefix=prefix)
 
@@ -695,7 +695,7 @@ class FilePathSomatic(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathSomatic, self).__init__(prefix=prefix)
 
@@ -721,7 +721,7 @@ class FilePathSomaticScatterGather(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathSomaticScatterGather, self).__init__(prefix=prefix)
 

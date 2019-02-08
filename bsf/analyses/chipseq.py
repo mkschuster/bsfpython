@@ -163,7 +163,7 @@ class FilePathMacs14(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathMacs14, self).__init__(prefix=prefix)
 
@@ -183,7 +183,7 @@ class FilePathPeakCalling(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathPeakCalling, self).__init__(prefix=prefix)
 
@@ -217,7 +217,7 @@ class FilePathDiffBind(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathDiffBind, self).__init__(prefix=prefix)
 
@@ -243,7 +243,7 @@ class FilePathDiffBindContrast(bsf.FilePath):
         @param group_2: Group 2
         @type group_2: str
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathDiffBindContrast, self).__init__(prefix=prefix)
 

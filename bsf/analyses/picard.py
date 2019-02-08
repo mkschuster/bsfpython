@@ -462,7 +462,7 @@ class FilePathExtractIlluminaCell(bsf.FilePath):
         @param project_name: Project name
         @type project_name: str
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathExtractIlluminaCell, self).__init__(prefix=prefix)
 
@@ -514,7 +514,7 @@ class FilePathExtractIlluminaLane(bsf.FilePath):
         @param lane: Lane
         @type lane: str
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathExtractIlluminaLane, self).__init__(prefix=prefix)
 
@@ -2545,7 +2545,7 @@ class FilePathCollectHiSeqXPfFailMetricsLane(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathCollectHiSeqXPfFailMetricsLane, self).__init__(prefix=prefix)
 
@@ -2647,7 +2647,7 @@ class FilePathDownsampleSam(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathDownsampleSam, self).__init__(prefix=prefix)
 
@@ -2935,7 +2935,7 @@ class FilePathSamToFastqReadGroup(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathSamToFastqReadGroup, self).__init__(prefix=prefix)
 
@@ -2966,7 +2966,7 @@ class FilePathSamToFastqProject(bsf.FilePath):
         @param project_name: Project name
         @type project_name: str
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathSamToFastqProject, self).__init__(prefix=prefix)
 

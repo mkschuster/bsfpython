@@ -94,7 +94,7 @@ class FilePathTophat(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathTophat, self).__init__(prefix=prefix)
 
@@ -172,7 +172,7 @@ class FilePathCufflinks(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathCufflinks, self).__init__(prefix=prefix)
 
@@ -252,7 +252,7 @@ class FilePathCuffmerge(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathCuffmerge, self).__init__(prefix=prefix)
 
@@ -294,7 +294,7 @@ class FilePathCuffquant(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathCuffquant, self).__init__(prefix=prefix)
 
@@ -323,7 +323,7 @@ class FilePathCuffnorm(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathCuffnorm, self).__init__(prefix=prefix)
 
@@ -347,7 +347,7 @@ class FilePathCuffdiff(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathCuffdiff, self).__init__(prefix=prefix)
 
@@ -383,7 +383,7 @@ class FilePathMonocle(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathMonocle, self).__init__(prefix=prefix)
 
@@ -3386,7 +3386,7 @@ class FilePathDESeq(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathDESeq, self).__init__(prefix=prefix)
 

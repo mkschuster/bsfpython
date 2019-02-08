@@ -54,7 +54,7 @@ class FilePathFastQCReadGroup(bsf.FilePath):
         @param file_prefix: File prefix
         @type file_prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathFastQCReadGroup, self).__init__(prefix=prefix)
 

@@ -64,7 +64,7 @@ class FilePathAlign(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathAlign, self).__init__(prefix=prefix)
 
@@ -117,7 +117,7 @@ class FilePathReadGroup(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathReadGroup, self).__init__(prefix=prefix)
 
@@ -165,7 +165,7 @@ class FilePathSample(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathSample, self).__init__(prefix=prefix)
 
@@ -197,7 +197,7 @@ class FilePathSummary(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathSummary, self).__init__(prefix=prefix)
 

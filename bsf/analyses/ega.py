@@ -45,7 +45,7 @@ class FilePathEGACryptorReadGroup(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathEGACryptorReadGroup, self).__init__(prefix=prefix)
 

@@ -58,7 +58,7 @@ class FilePathAlign(bsf.analyses.aligner.FilePathAlign):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathAlign, self).__init__(prefix=prefix)
 
@@ -84,7 +84,7 @@ class FilePathSummary(bsf.analyses.aligner.FilePathSummary):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathSummary, self).__init__(prefix=prefix)
 

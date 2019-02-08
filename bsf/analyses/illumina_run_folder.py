@@ -694,7 +694,7 @@ class FilePathIlluminaRunFolderRestore(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathIlluminaRunFolderRestore, self).__init__(prefix=prefix)
 

@@ -69,7 +69,7 @@ class FilePathTrimmomaticReadGroup(bsf.FilePath):
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathTrimmomaticReadGroup, self).__init__(prefix=prefix)
 
@@ -110,7 +110,7 @@ class FilePathTrimmomaticProject(bsf.FilePath):
         @param project_name: Project name
         @type project_name: str
         @return:
-        @rtype
+        @rtype:
         """
         super(FilePathTrimmomaticProject, self).__init__(prefix=prefix)
 
