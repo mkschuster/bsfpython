@@ -2303,6 +2303,15 @@ class Collection(NextGenerationBase):
 
             if paired_reads is None:
                 # If a PairedReads object is not defined at this stage it cannot be annotated.
+                # Remove all PairedReads strings from the key list.
+                _key = 'PairedReads'
+                if sas_prefix:
+                    _key = sas_prefix + ' ' + _key
+
+                for _component in list(key_list):
+                    if _component.startswith(_key):
+                        key_list.remove(_component)
+
                 return
 
             _key = 'PairedReads Exclude'
