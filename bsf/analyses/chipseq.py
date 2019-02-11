@@ -33,7 +33,6 @@ import sys
 import warnings
 
 import bsf
-import bsf.analyses.aligner
 import bsf.analyses.bowtie
 import bsf.annotation
 import bsf.executables
@@ -751,11 +750,11 @@ class ChIPSeq(bsf.Analysis):
                 chipseq_comparison = self._comparison_dict[comparison_name]
                 factor = chipseq_comparison.factor.upper()
                 for t_sample in chipseq_comparison.t_samples:
-                    t_file_path_alignment = bsf.analyses.aligner.FilePathSample(
-                        prefix=bsf.analyses.aligner.Aligner.get_prefix_sample(sample_name=t_sample.name))
+                    t_file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
+                        prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=t_sample.name))
                     for c_sample in chipseq_comparison.c_samples:
-                        c_file_path_alignment = bsf.analyses.aligner.FilePathSample(
-                            prefix=bsf.analyses.aligner.Aligner.get_prefix_sample(sample_name=c_sample.name))
+                        c_file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
+                            prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=c_sample.name))
                         prefix_peak_calling = self.get_prefix_chipseq_peak_calling(
                             t_sample_name=t_sample.name,
                             c_sample_name=c_sample.name)
@@ -875,11 +874,11 @@ class ChIPSeq(bsf.Analysis):
                 chipseq_comparison = self._comparison_dict[comparison_name]
                 factor = chipseq_comparison.factor.upper()
                 for t_sample in chipseq_comparison.t_samples:
-                    t_file_path_alignment = bsf.analyses.aligner.FilePathSample(
-                        prefix=bsf.analyses.aligner.Aligner.get_prefix_sample(sample_name=t_sample.name))
+                    t_file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
+                        prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=t_sample.name))
                     for c_sample in chipseq_comparison.c_samples:
-                        c_file_path_alignment = bsf.analyses.aligner.FilePathSample(
-                            prefix=bsf.analyses.aligner.Aligner.get_prefix_sample(sample_name=c_sample.name))
+                        c_file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
+                            prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=c_sample.name))
                         prefix_peak_calling = self.get_prefix_chipseq_peak_calling(
                             t_sample_name=t_sample.name,
                             c_sample_name=c_sample.name)
@@ -1071,11 +1070,11 @@ class ChIPSeq(bsf.Analysis):
                     if not chipseq_comparison.diff_bind:
                         continue
                     for t_sample in chipseq_comparison.t_samples:
-                        t_file_path_alignment = bsf.analyses.aligner.FilePathSample(
-                            prefix=bsf.analyses.aligner.Aligner.get_prefix_sample(sample_name=t_sample.name))
+                        t_file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
+                            prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=t_sample.name))
                         for c_sample in chipseq_comparison.c_samples:
-                            c_file_path_alignment = bsf.analyses.aligner.FilePathSample(
-                                prefix=bsf.analyses.aligner.Aligner.get_prefix_sample(sample_name=c_sample.name))
+                            c_file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
+                                prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=c_sample.name))
 
                             # Get prefix and FilePath object for the peak calls.
                             prefix_peak_calling = self.get_prefix_chipseq_peak_calling(
@@ -1126,16 +1125,39 @@ class ChIPSeq(bsf.Analysis):
 
         # Start of the run() method body.
 
-        super(ChIPSeq, self).run()
+        # Check for the project name already here,
+        # since the super class method has to be called later.
+        if not self.project_name:
+            raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
 
         # ChIPSeq requires a genome version.
 
         if not self.genome_version:
             raise Exception('A ' + self.name + " requires a 'genome_version' configuration option.")
 
-        if not self.comparison_path:
-            raise Exception('A ' + self.name + " requires a 'cmp_file' configuration option.")
-        self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
+        # Get the sample annotation sheet before calling the run() method of the Analysis super-class.
+
+        if self.sas_file:
+            self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
+            if not os.path.exists(path=self.sas_file):
+                raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
+        else:
+            self.sas_file = self.get_annotation_file(prefix_list=[ChIPSeq.prefix], suffix='samples.csv')
+            if not self.sas_file:
+                raise Exception('No suitable sample annotation file in the current working directory.')
+
+        # Get the comparison annotation sheet before calling the run() method of the Analysis super-class.
+
+        if self.comparison_path:
+            self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
+            if not os.path.exists(path=self.comparison_path):
+                raise Exception('Comparison annotation file ' + repr(self.comparison_path) + ' does not exist.')
+        else:
+            self.comparison_path = self.get_annotation_file(prefix_list=[ChIPSeq.prefix], suffix='comparisons.csv')
+            if not self.comparison_path:
+                raise Exception('No suitable comparison annotation file in the current working directory.')
+
+        super(ChIPSeq, self).run()
 
         if not self.colour_default:
             self.colour_default = '0,0,0'
@@ -1614,8 +1636,8 @@ class ChIPSeq(bsf.Analysis):
             # Add UCSC trackDB entries for each Bowtie2 BAM file.
 
             for sample in self.sample_list:
-                file_path_alignment = bsf.analyses.aligner.FilePathSample(
-                    prefix=bsf.analyses.aligner.Aligner.get_prefix_sample(sample_name=sample.name))
+                file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
+                    prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=sample.name))
                 #
                 # Add a UCSC trackDB entry.
                 #
@@ -1927,8 +1949,8 @@ class ChIPSeq(bsf.Analysis):
             # Add UCSC trackDB entries for each Bowtie2 BAM file.
 
             for sample in self.sample_list:
-                file_path_alignment = bsf.analyses.aligner.FilePathSample(
-                    prefix=bsf.analyses.aligner.Aligner.get_prefix_sample(sample_name=sample.name))
+                file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
+                    prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=sample.name))
                 #
                 # Add a UCSC trackDB entry for each NAME.bam file.
                 #
