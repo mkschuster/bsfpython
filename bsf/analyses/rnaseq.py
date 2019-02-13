@@ -3706,12 +3706,13 @@ class DESeq(bsf.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
+                file_path_alignment = bsf.analyses.star_aligner.StarAligner.get_file_path_sample(
+                    prefix=bsf.analyses.star_aligner.StarAligner.get_prefix_sample(sample_name=sample.name))
+
                 row_dict = {
                     'sample': sample.name,
-                    'bam_path': bsf.analyses.star_aligner.StarAligner.get_prefix_merge(
-                        sample_name=sample.name) + '.bam',
-                    'bai_path': bsf.analyses.star_aligner.StarAligner.get_prefix_merge(
-                        sample_name=sample.name) + '.bai',
+                    'bam_path': file_path_alignment.merged_bam,
+                    'bai_path': file_path_alignment.merged_bai,
                 }
                 """ @type row_dict: dict[str, str | unicode] """
                 # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample DESeq *'.
