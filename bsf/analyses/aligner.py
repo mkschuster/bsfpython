@@ -326,48 +326,46 @@ class Aligner(bsf.Analysis):
         return cls.get_stage_name_summary()
 
     @classmethod
-    def get_file_path_align(cls, prefix):
+    def get_file_path_align(cls, paired_reads_name):
         """Get a C{FilePathAlign} object from this or a sub-class.
 
-        @param prefix: Prefix
-        @type prefix: str | unicode
+        @param paired_reads_name: C{bsf.ngs.PairedReads.name}
+        @type paired_reads_name: str
         @return: C{FilePathAlign} or sub-class object
         @rtype: FilePathAlign
         """
-        return FilePathAlign(prefix=prefix)
+        return FilePathAlign(prefix=cls.get_prefix_align(paired_reads_name=paired_reads_name))
 
     @classmethod
-    def get_file_path_read_group(cls, prefix):
+    def get_file_path_read_group(cls, read_group_name):
         """Get a C{FilePathReadGroup} object from this or a sub-class.
 
-        @param prefix: Prefix
-        @type prefix: str | unicode
+        @param read_group_name: Read group name
+        @type read_group_name: str
         @return: C{FilePathReadGroup} or sub-class object
         @rtype: FilePathReadGroup
         """
-        return FilePathReadGroup(prefix=prefix)
+        return FilePathReadGroup(prefix=cls.get_prefix_read_group(read_group_name=read_group_name))
 
     @classmethod
-    def get_file_path_sample(cls, prefix):
+    def get_file_path_sample(cls, sample_name):
         """Get a C{FilePathSample} object from this or a sub-class.
 
-        @param prefix: Prefix
-        @type prefix: str | unicode
+        @param sample_name: C{bsf.ngs.Sample.name}
+        @type sample_name: str
         @return: C{FilePathSample} or sub-class object
         @rtype: FilePathSample
         """
-        return FilePathSample(prefix=prefix)
+        return FilePathSample(prefix=cls.get_prefix_sample(sample_name=sample_name))
 
     @classmethod
-    def get_file_path_summary(cls, prefix):
+    def get_file_path_summary(cls):
         """Get a C{FilePathSummary} object from this or a sub-class.
 
-        @param prefix: Prefix
-        @type prefix: str | unicode
         @return: C{FilePathSummary} or sub-class object
         @rtype: FilePathSummary
         """
-        return FilePathSummary(prefix=prefix)
+        return FilePathSummary(prefix=cls.get_prefix_summary())
 
     def __init__(
             self,
@@ -603,9 +601,7 @@ class Aligner(bsf.Analysis):
         stage_sample = self.get_stage(name=self.get_stage_name_sample())
         stage_summary = self.get_stage(name=self.get_stage_name_summary())
 
-        prefix_summary = stage_summary.name
-
-        file_path_summary = self.get_file_path_summary(prefix=prefix_summary)
+        file_path_summary = self.get_file_path_summary()
 
         # Create an annotation sheet linking sample name and read group name, which is required for the
         # summary script.
@@ -680,13 +676,11 @@ class Aligner(bsf.Analysis):
 
                 # Create a Runnable and Executable for alignment and processing.
 
-                prefix_align = self.get_prefix_align(paired_reads_name=paired_reads_name)
-
-                file_path_align = self.get_file_path_align(prefix=prefix_align)
+                file_path_align = self.get_file_path_align(paired_reads_name=paired_reads_name)
 
                 runnable_align = self.add_runnable(
                     runnable=bsf.Runnable(
-                        name=prefix_align,
+                        name=self.get_prefix_align(paired_reads_name=paired_reads_name),
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
@@ -826,13 +820,12 @@ class Aligner(bsf.Analysis):
 
             for bam_file_name, (bam_file_path, runnable_index_list) in unmapped_bam_file_dict.iteritems():
                 # Create a Runnable and Executable for merging each read group.
-                prefix_read_group = self.get_prefix_read_group(read_group_name=bam_file_name)
 
-                file_path_read_group = self.get_file_path_read_group(prefix=prefix_read_group)
+                file_path_read_group = self.get_file_path_read_group(read_group_name=bam_file_name)
 
                 runnable_read_group = self.add_runnable(
                     runnable=bsf.Runnable(
-                        name=prefix_read_group,
+                        name=self.get_prefix_read_group(read_group_name=bam_file_name),
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
@@ -1018,13 +1011,11 @@ class Aligner(bsf.Analysis):
 
             # For more than one ReadPair object, the aligned BAM files need merging into Sample-specific ones.
 
-            prefix_sample = self.get_prefix_sample(sample_name=sample.name)
-
-            file_path_sample = self.get_file_path_sample(prefix=prefix_sample)
+            file_path_sample = self.get_file_path_sample(sample_name=sample.name)
 
             runnable_sample = self.add_runnable(
                 runnable=bsf.Runnable(
-                    name=prefix_sample,
+                    name=self.get_prefix_sample(sample_name=sample.name),
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
@@ -1185,7 +1176,7 @@ class Aligner(bsf.Analysis):
 
         runnable_summary = self.add_runnable(
             runnable=bsf.Runnable(
-                name=prefix_summary,
+                name=self.get_prefix_summary(),
                 code_module='bsf.runnables.generic',
                 working_directory=self.genome_directory,
                 cache_directory=self.cache_directory,

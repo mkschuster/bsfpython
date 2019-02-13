@@ -138,26 +138,24 @@ class StarAligner(bsf.analyses.aligner.Aligner):
     prefix = 'star_aligner'
 
     @classmethod
-    def get_file_path_align(cls, prefix):
+    def get_file_path_align(cls, paired_reads_name):
         """Get a C{FilePathAlign} object from this or a sub-class.
 
-        @param prefix: Prefix
-        @type prefix: str | unicode
+        @param paired_reads_name: C{bsf.ngs.PairedReads.name}
+        @type paired_reads_name: str
         @return: C{FilePathAlign} or sub-class object
         @rtype: FilePathAlign
         """
-        return FilePathAlign(prefix=prefix)
+        return FilePathAlign(prefix=cls.get_prefix_align(paired_reads_name=paired_reads_name))
 
     @classmethod
-    def get_file_path_summary(cls, prefix):
+    def get_file_path_summary(cls):
         """Get a C{FilePathSummary} object from this or a sub-class.
 
-        @param prefix: Prefix
-        @type prefix: str | unicode
         @return: C{FilePathSummary} or sub-class object
         @rtype: FilePathSummary
         """
-        return FilePathSummary(prefix=prefix)
+        return FilePathSummary(prefix=cls.get_prefix_summary())
 
     def __init__(
             self,

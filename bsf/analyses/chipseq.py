@@ -751,10 +751,10 @@ class ChIPSeq(bsf.Analysis):
                 factor = chipseq_comparison.factor.upper()
                 for t_sample in chipseq_comparison.t_samples:
                     t_file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                        prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=t_sample.name))
+                        sample_name=t_sample.name)
                     for c_sample in chipseq_comparison.c_samples:
                         c_file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                            prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=c_sample.name))
+                            sample_name=c_sample.name)
                         prefix_peak_calling = self.get_prefix_chipseq_peak_calling(
                             t_sample_name=t_sample.name,
                             c_sample_name=c_sample.name)
@@ -875,10 +875,10 @@ class ChIPSeq(bsf.Analysis):
                 factor = chipseq_comparison.factor.upper()
                 for t_sample in chipseq_comparison.t_samples:
                     t_file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                        prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=t_sample.name))
+                        sample_name=t_sample.name)
                     for c_sample in chipseq_comparison.c_samples:
                         c_file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                            prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=c_sample.name))
+                            sample_name=c_sample.name)
                         prefix_peak_calling = self.get_prefix_chipseq_peak_calling(
                             t_sample_name=t_sample.name,
                             c_sample_name=c_sample.name)
@@ -1071,10 +1071,10 @@ class ChIPSeq(bsf.Analysis):
                         continue
                     for t_sample in chipseq_comparison.t_samples:
                         t_file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                            prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=t_sample.name))
+                            sample_name=t_sample.name)
                         for c_sample in chipseq_comparison.c_samples:
                             c_file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                                prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=c_sample.name))
+                                sample_name=c_sample.name)
 
                             # Get prefix and FilePath object for the peak calls.
                             prefix_peak_calling = self.get_prefix_chipseq_peak_calling(
@@ -1636,8 +1636,7 @@ class ChIPSeq(bsf.Analysis):
             # Add UCSC trackDB entries for each Bowtie2 BAM file.
 
             for sample in self.sample_list:
-                file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                    prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=sample.name))
+                file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(sample_name=sample.name)
                 #
                 # Add a UCSC trackDB entry.
                 #
@@ -1949,8 +1948,7 @@ class ChIPSeq(bsf.Analysis):
             # Add UCSC trackDB entries for each Bowtie2 BAM file.
 
             for sample in self.sample_list:
-                file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                    prefix=bsf.analyses.bowtie.Bowtie2.get_prefix_sample(sample_name=sample.name))
+                file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(sample_name=sample.name)
                 #
                 # Add a UCSC trackDB entry for each NAME.bam file.
                 #
