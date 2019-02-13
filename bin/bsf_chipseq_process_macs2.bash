@@ -72,9 +72,8 @@ fi
 declare -a suffixes=('control_lambda' 'treat_pileup' 'bdgcmp' 'treat_pvalue');
 
 for suffix in "${suffixes[@]}"; do
-    if [[ -f "${prefix}/${prefix}_${suffix}.bdg" ]] && [[ ! -s "${prefix}/${prefix}_${suffix}.bw" ]]; then
+    if [[ -f "${prefix}/${prefix}_${suffix}.bdg" && ! -s "${prefix}/${prefix}_${suffix}.bw" ]]; then
         echo "$(date) bedGraphToBigWig: ${prefix}_${suffix}.bdg" || exit 1;
-        # echo "$(date) bedGraphToBigWig: ${prefix}_${suffix}.bdg" 1>&2 || exit 1;
 
         grep --extended-regexp --invert-match '^track|^browser' \
             "${prefix}/${prefix}_${suffix}.bdg" \
@@ -83,11 +82,14 @@ for suffix in "${suffixes[@]}"; do
             | bedClip 'stdin' "${chromosome_sizes}" "${prefix}/${prefix}_${suffix}_clipped.bdg" \
             || exit 1;
 
-        bedGraphToBigWig \
-            "${prefix}/${prefix}_${suffix}_clipped.bdg" \
-            "${chromosome_sizes}" \
-            "${prefix}/${prefix}_${suffix}.bw" \
-            || exit 1;
+        if [[ -s "${prefix}/${prefix}_${suffix}_clipped.bdg" ]]; then
+            # Run bedGraphToBigWig only, if the file size is greater than zero.
+            bedGraphToBigWig \
+                "${prefix}/${prefix}_${suffix}_clipped.bdg" \
+                "${chromosome_sizes}" \
+                "${prefix}/${prefix}_${suffix}.bw" \
+                || exit 1;
+        fi
 
         rm "${prefix}/${prefix}_${suffix}_clipped.bdg" || exit 1;
         rm "${prefix}/${prefix}_${suffix}.bdg" || exit 1;
@@ -100,7 +102,7 @@ done
 # prefix_summits.bed
 # prefix_peaks.narrowPeak  Linked to prefix_narrow_peaks.bed symbolically.
 
-if [[-f "${prefix}/${prefix}_peaks.narrowPeak" ]] && [[ ! -h "${prefix}/${prefix}_narrow_peaks.bed" ]]; then
+if [[ -f "${prefix}/${prefix}_peaks.narrowPeak" && ! -h "${prefix}/${prefix}_narrow_peaks.bed" ]]; then
     cd "${prefix}" || exit 1;
     ln -s \
         "${prefix}_peaks.narrowPeak" \
@@ -125,9 +127,8 @@ fi
 declare -a suffixes=('peaks' 'summits' 'narrow_peaks');
 
 for suffix in "${suffixes[@]}"; do
-    if [[ -f "${prefix}/${prefix}_${suffix}.bed" ]] && [[ ! -s "${prefix}/${prefix}_${suffix}.bb" ]]; then
+    if [[ -f "${prefix}/${prefix}_${suffix}.bed" && ! -s "${prefix}/${prefix}_${suffix}.bb" ]]; then
         echo "$(date) bedToBigBed: ${prefix}_${suffix}.bed" || exit 1;
-        # echo "$(date) bedToBigBed: ${prefix}_${suffix}.bed" 1>&2 || exit 1;
 
         grep --extended-regexp --invert-match '^track|^browser' \
             "${prefix}/${prefix}_${suffix}.bed" \
@@ -136,15 +137,18 @@ for suffix in "${suffixes[@]}"; do
             | bedClip 'stdin' "${chromosome_sizes}" "${prefix}/${prefix}_${suffix}_clipped.bed" \
             || exit 1;
 
-        declare cl='';
-        cl+='bedToBigBed';
-        if [[ "${suffix}" == 'narrow_peaks' ]]; then
-            cl+=' -type=bed6+4';
+        if [[ -s "${prefix}/${prefix}_${suffix}_clipped.bed" ]]; then
+            # Run bedToBigBed only, if the file size is greater than zero.
+            declare cl='';
+            cl+='bedToBigBed';
+            if [[ "${suffix}" == 'narrow_peaks' ]]; then
+                cl+=' -type=bed6+4';
+            fi
+            cl+=" ${prefix}/${prefix}_${suffix}_clipped.bed";
+            cl+=" ${chromosome_sizes}";
+            cl+=" ${prefix}/${prefix}_${suffix}.bb";
+            eval ${cl} || exit 1;
         fi
-        cl+=" ${prefix}/${prefix}_${suffix}_clipped.bed";
-        cl+=" ${chromosome_sizes}";
-        cl+=" ${prefix}/${prefix}_${suffix}.bb";
-        eval ${cl} || exit 1;
 
         rm "${prefix}/${prefix}_${suffix}_clipped.bed" || exit 1;
     fi

@@ -859,7 +859,7 @@ class ChIPSeq(bsf.Analysis):
                         process_macs14.arguments.append(prefix_peak_calling)
                         process_macs14.arguments.append(self.genome_sizes_path)
 
-                        if os.path.exists(file_path_peak_calling.summits_bb):
+                        if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.summits_bb)):
                             executable_peak_calling.submit = False
 
             return
@@ -1019,7 +1019,7 @@ class ChIPSeq(bsf.Analysis):
                         process_macs2.arguments.append(prefix_peak_calling)
                         process_macs2.arguments.append(self.genome_sizes_path)
 
-                        if os.path.exists(file_path_peak_calling.narrow_peaks_bb):
+                        if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.narrow_peaks_bb)):
                             executable_peak_calling.submit = False
 
             return
@@ -1764,39 +1764,40 @@ class ChIPSeq(bsf.Analysis):
                         #
                         # Add a UCSC trackDB entry for each NAME_control_lambda.bw file.
                         #
-                        # Common settings
-                        str_list.append('track ' + prefix_short + '_background\n')
-                        # TODO: The bigWig type must declare the expected signal range.
-                        # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
-                        str_list.append('type bigWig\n')
-                        str_list.append('shortLabel ' + prefix_short + '_bkg\n')
-                        str_list.append('longLabel ChIP background signal ' + prefix_long + '\n')
-                        str_list.append('bigDataUrl ' + file_path_peak_calling.control_bw + '\n')
-                        # str_list.append('html ...\n')
-                        str_list.append('visibility dense\n')
+                        if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.control_bw)):
+                            # Common settings
+                            str_list.append('track ' + prefix_short + '_background\n')
+                            # TODO: The bigWig type must declare the expected signal range.
+                            # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
+                            str_list.append('type bigWig\n')
+                            str_list.append('shortLabel ' + prefix_short + '_bkg\n')
+                            str_list.append('longLabel ChIP background signal ' + prefix_long + '\n')
+                            str_list.append('bigDataUrl ' + file_path_peak_calling.control_bw + '\n')
+                            # str_list.append('html ...\n')
+                            str_list.append('visibility dense\n')
 
-                        # Common optional settings
-                        str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
+                            # Common optional settings
+                            str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
 
-                        # bigWig - Signal graphing track settings
-                        str_list.append('alwaysZero off\n')
-                        str_list.append('autoScale off\n')
-                        str_list.append('graphTypeDefault bar\n')
-                        str_list.append('maxHeightPixels 100:60:20\n')
-                        # str_list.append('maxWindowToQuery 10000000\n')
-                        str_list.append('smoothingWindow 5\n')
-                        # str_list.append('transformFunc NONE\n')
-                        str_list.append('viewLimits 0:15\n')
-                        str_list.append('viewLimitsMax 0:40\n')
-                        str_list.append('windowingFunction maximum\n')
-                        # str_list.append('yLineMark <#>\n')
-                        # str_list.append('yLineOnOff on \n')
-                        # str_list.append('gridDefault on\n')
+                            # bigWig - Signal graphing track settings
+                            str_list.append('alwaysZero off\n')
+                            str_list.append('autoScale off\n')
+                            str_list.append('graphTypeDefault bar\n')
+                            str_list.append('maxHeightPixels 100:60:20\n')
+                            # str_list.append('maxWindowToQuery 10000000\n')
+                            str_list.append('smoothingWindow 5\n')
+                            # str_list.append('transformFunc NONE\n')
+                            str_list.append('viewLimits 0:15\n')
+                            str_list.append('viewLimitsMax 0:40\n')
+                            str_list.append('windowingFunction maximum\n')
+                            # str_list.append('yLineMark <#>\n')
+                            # str_list.append('yLineOnOff on \n')
+                            # str_list.append('gridDefault on\n')
 
-                        # Composite track settings
-                        str_list.append('parent ' + composite_group + ' on\n')
-                        str_list.append('centerLabelsDense off\n')
-                        str_list.append('\n')
+                            # Composite track settings
+                            str_list.append('parent ' + composite_group + ' on\n')
+                            str_list.append('centerLabelsDense off\n')
+                            str_list.append('\n')
 
                         #
                         # Add a factor-specific "enrichment" composite track once
@@ -1819,38 +1820,39 @@ class ChIPSeq(bsf.Analysis):
                         #
                         # Add a UCSC trackDB entry for each NAME_treat_pileup.bw file.
                         #
-                        # Common settings
-                        str_list.append('track ' + prefix_short + '_enrichment\n')
-                        # TODO: The bigWig type must declare the expected signal range.
-                        str_list.append('type bigWig\n')
-                        str_list.append('shortLabel ' + prefix_short + '_enr\n')
-                        str_list.append('longLabel ChIP enrichment signal ' + prefix_long + '\n')
-                        str_list.append('bigDataUrl ' + file_path_peak_calling.treatment_bw + '\n')
-                        # str_list.append('html ...\n')
-                        str_list.append('visibility dense\n')
+                        if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.treatment_bw)):
+                            # Common settings
+                            str_list.append('track ' + prefix_short + '_enrichment\n')
+                            # TODO: The bigWig type must declare the expected signal range.
+                            str_list.append('type bigWig\n')
+                            str_list.append('shortLabel ' + prefix_short + '_enr\n')
+                            str_list.append('longLabel ChIP enrichment signal ' + prefix_long + '\n')
+                            str_list.append('bigDataUrl ' + file_path_peak_calling.treatment_bw + '\n')
+                            # str_list.append('html ...\n')
+                            str_list.append('visibility dense\n')
 
-                        # Common optional settings
-                        str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
+                            # Common optional settings
+                            str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
 
-                        # bigWig - Signal graphing track settings
-                        str_list.append('alwaysZero off\n')
-                        str_list.append('autoScale off\n')
-                        str_list.append('graphTypeDefault bar\n')
-                        str_list.append('maxHeightPixels 100:60:20\n')
-                        # str_list.append('maxWindowToQuery 10000000\n')
-                        str_list.append('smoothingWindow 5\n')
-                        # str_list.append('transformFunc NONE\n')
-                        str_list.append('viewLimits 0:15\n')
-                        str_list.append('viewLimitsMax 0:40\n')
-                        str_list.append('windowingFunction maximum\n')
-                        # str_list.append('yLineMark <#>\n')
-                        # str_list.append('yLineOnOff on \n')
-                        # str_list.append('gridDefault on\n')
+                            # bigWig - Signal graphing track settings
+                            str_list.append('alwaysZero off\n')
+                            str_list.append('autoScale off\n')
+                            str_list.append('graphTypeDefault bar\n')
+                            str_list.append('maxHeightPixels 100:60:20\n')
+                            # str_list.append('maxWindowToQuery 10000000\n')
+                            str_list.append('smoothingWindow 5\n')
+                            # str_list.append('transformFunc NONE\n')
+                            str_list.append('viewLimits 0:15\n')
+                            str_list.append('viewLimitsMax 0:40\n')
+                            str_list.append('windowingFunction maximum\n')
+                            # str_list.append('yLineMark <#>\n')
+                            # str_list.append('yLineOnOff on \n')
+                            # str_list.append('gridDefault on\n')
 
-                        # Composite track settings
-                        str_list.append('parent ' + composite_group + ' on\n')
-                        str_list.append('centerLabelsDense off\n')
-                        str_list.append('\n')
+                            # Composite track settings
+                            str_list.append('parent ' + composite_group + ' on\n')
+                            str_list.append('centerLabelsDense off\n')
+                            str_list.append('\n')
 
                         #
                         # Add a factor-specific "intensity" composite track once
@@ -1872,78 +1874,81 @@ class ChIPSeq(bsf.Analysis):
                         #
                         # Add a UCSC trackDB entry for each NAME_bdgcmp.bw file.
                         #
-                        # Common settings
-                        str_list.append('track ' + prefix_short + '_intensity\n')
-                        # TODO: The bigWig type must declare the expected signal range.
-                        str_list.append('type bigWig\n')
-                        str_list.append('shortLabel ' + prefix_short + '_int\n')
-                        str_list.append('longLabel ChIP intensity ' + prefix_long + '\n')
-                        str_list.append('bigDataUrl ' + file_path_peak_calling.comparison_bw + '\n')
-                        # str_list.append('html ...\n')
-                        str_list.append('visibility full\n')
+                        if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.comparison_bw)):
+                            # Common settings
+                            str_list.append('track ' + prefix_short + '_intensity\n')
+                            # TODO: The bigWig type must declare the expected signal range.
+                            str_list.append('type bigWig\n')
+                            str_list.append('shortLabel ' + prefix_short + '_int\n')
+                            str_list.append('longLabel ChIP intensity ' + prefix_long + '\n')
+                            str_list.append('bigDataUrl ' + file_path_peak_calling.comparison_bw + '\n')
+                            # str_list.append('html ...\n')
+                            str_list.append('visibility full\n')
 
-                        # Common optional settings
-                        str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
+                            # Common optional settings
+                            str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
 
-                        # bigWig - Signal graphing track settings
-                        str_list.append('alwaysZero off\n')
-                        str_list.append('autoScale off\n')
-                        str_list.append('graphTypeDefault bar\n')
-                        str_list.append('maxHeightPixels 100:60:20\n')
-                        # str_list.append('maxWindowToQuery 10000000\n')
-                        str_list.append('smoothingWindow 5\n')
-                        # str_list.append('transformFunc NONE\n')
-                        str_list.append('viewLimits 0:15\n')
-                        str_list.append('viewLimitsMax 0:40\n')
-                        str_list.append('windowingFunction maximum\n')
-                        # str_list.append('yLineMark <#>\n')
-                        # str_list.append('yLineOnOff on \n')
-                        # str_list.append('gridDefault on\n')
+                            # bigWig - Signal graphing track settings
+                            str_list.append('alwaysZero off\n')
+                            str_list.append('autoScale off\n')
+                            str_list.append('graphTypeDefault bar\n')
+                            str_list.append('maxHeightPixels 100:60:20\n')
+                            # str_list.append('maxWindowToQuery 10000000\n')
+                            str_list.append('smoothingWindow 5\n')
+                            # str_list.append('transformFunc NONE\n')
+                            str_list.append('viewLimits 0:15\n')
+                            str_list.append('viewLimitsMax 0:40\n')
+                            str_list.append('windowingFunction maximum\n')
+                            # str_list.append('yLineMark <#>\n')
+                            # str_list.append('yLineOnOff on \n')
+                            # str_list.append('gridDefault on\n')
 
-                        # Composite track settings
-                        str_list.append('parent ' + composite_group + ' on\n')
-                        str_list.append('centerLabelsDense off\n')
-                        str_list.append('\n')
+                            # Composite track settings
+                            str_list.append('parent ' + composite_group + ' on\n')
+                            str_list.append('centerLabelsDense off\n')
+                            str_list.append('\n')
 
                         #
                         # Add a UCSC trackDB entry for each NAME_peaks.bb file.
                         #
-                        # Common settings
-                        str_list.append('track ' + prefix_short + '_peaks\n')
-                        str_list.append('type bigBed\n')
-                        str_list.append('shortLabel ' + prefix_short + '_peaks\n')
-                        str_list.append('longLabel ChIP peaks ' + prefix_long + '\n')
-                        str_list.append('bigDataUrl ' + file_path_peak_calling.narrow_peaks_bb + '\n')
-                        # str_list.append('html ...\n')
-                        str_list.append('visibility pack\n')
+                        if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.narrow_peaks_bb)):
+                            # Common settings
+                            str_list.append('track ' + prefix_short + '_peaks\n')
+                            str_list.append('type bigBed\n')
+                            str_list.append('shortLabel ' + prefix_short + '_peaks\n')
+                            str_list.append('longLabel ChIP peaks ' + prefix_long + '\n')
+                            str_list.append('bigDataUrl ' + file_path_peak_calling.narrow_peaks_bb + '\n')
+                            # str_list.append('html ...\n')
+                            str_list.append('visibility pack\n')
 
-                        # Common optional settings
-                        str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
+                            # Common optional settings
+                            str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
 
-                        # bigBed - Item or region track settings.
+                            # bigBed - Item or region track settings.
 
-                        # Supertrack settings
-                        str_list.append('parent Peaks\n')
-                        str_list.append('\n')
+                            # Supertrack settings
+                            str_list.append('parent Peaks\n')
+                            str_list.append('\n')
 
                         #
                         # Add a UCSC trackDB entry for each NAME_summits.bb file.
                         #
-                        # Common settings
-                        str_list.append('track ' + prefix_short + '_summits\n')
-                        str_list.append('type bigBed\n')
-                        str_list.append('shortLabel ' + prefix_short + '_summits\n')
-                        str_list.append('longLabel ChIP summits ' + prefix_long + '\n')
-                        str_list.append('bigDataUrl ' + file_path_peak_calling.summits_bb + '\n')
-                        # str_list.append('html ...\n')
-                        str_list.append('visibility pack\n')
+                        if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.summits_bb)):
+                            # Common settings
+                            str_list.append('track ' + prefix_short + '_summits\n')
+                            str_list.append('type bigBed\n')
+                            str_list.append('shortLabel ' + prefix_short + '_summits\n')
+                            str_list.append('longLabel ChIP summits ' + prefix_long + '\n')
+                            str_list.append('bigDataUrl ' + file_path_peak_calling.summits_bb + '\n')
+                            # str_list.append('html ...\n')
+                            str_list.append('visibility pack\n')
 
-                        # Common optional settings
-                        str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
+                            # Common optional settings
+                            str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
 
-                        # Supertrack settings
-                        str_list.append('parent Summits\n')
-                        str_list.append('\n')
+                            # Supertrack settings
+                            str_list.append('parent Summits\n')
+                            str_list.append('\n')
 
             # Add UCSC trackDB entries for each Bowtie2 BAM file.
 
