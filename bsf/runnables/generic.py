@@ -53,44 +53,47 @@ def run(runnable):
 
     # Create a Runnable-specific cache directory if it does not exist already.
 
-    cache_directory_path = runnable.cache_directory_path(absolute=True)
-    if not os.path.isdir(cache_directory_path):
-        try:
-            os.makedirs(cache_directory_path)
-        except OSError as exception:
-            if exception.errno != errno.EEXIST:
-                raise
+    if runnable.cache_path_dict:
+        cache_directory_path = runnable.cache_directory_path(absolute=True)
+        if not os.path.isdir(cache_directory_path):
+            try:
+                os.makedirs(cache_directory_path)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise
 
-    # Copy files from the cache dictionary into the cache directory.
+        # Copy files from the cache dictionary into the cache directory.
 
-    for key in runnable.cache_path_dict:
-        source_path = runnable.cache_path_dict[key]
-        target_path = os.path.join(cache_directory_path, os.path.basename(source_path))
+        for key in runnable.cache_path_dict:
+            source_path = runnable.cache_path_dict[key]
+            target_path = os.path.join(cache_directory_path, os.path.basename(source_path))
 
-        runnable_step = bsf.process.RunnableStep(name='_'.join((runnable.name, 'cache', key)), program='cp')
-        runnable_step.add_switch_short(key='p')
-        runnable_step.arguments.append(source_path)
-        runnable_step.arguments.append(target_path)
+            runnable_step = bsf.process.RunnableStep(name='_'.join((runnable.name, 'cache', key)), program='cp')
+            runnable_step.add_switch_short(key='p')
+            runnable_step.arguments.append(source_path)
+            runnable_step.arguments.append(target_path)
 
-        child_return_code = runnable_step.run()
+            child_return_code = runnable_step.run()
 
-        if child_return_code != 0:
-            # Remove the Runnable-specific cache directory and everything within it.
-            if os.path.exists(cache_directory_path):
-                shutil.rmtree(path=cache_directory_path, ignore_errors=False)
-            # Raise an Exception.
-            if child_return_code > 0:
-                raise Exception('[{}] Child process {}_{} failed with return code {}'.
-                                format(datetime.datetime.now().isoformat(),
-                                       runnable.name,
-                                       runnable_step.name,
-                                       +child_return_code))
-            elif child_return_code < 0:
-                raise Exception('[{}] Child process {}_{} received signal {}.'.
-                                format(datetime.datetime.now().isoformat(),
-                                       runnable.name,
-                                       runnable_step.name,
-                                       -child_return_code))
+            if child_return_code != 0:
+                # Remove the Runnable-specific cache directory and everything within it.
+                if os.path.exists(cache_directory_path):
+                    shutil.rmtree(path=cache_directory_path, ignore_errors=False)
+                # Raise an Exception.
+                if child_return_code > 0:
+                    raise Exception('[{}] Child process {}_{} failed with return code {}'.
+                                    format(datetime.datetime.now().isoformat(),
+                                           runnable.name,
+                                           runnable_step.name,
+                                           +child_return_code))
+                elif child_return_code < 0:
+                    raise Exception('[{}] Child process {}_{} received signal {}.'.
+                                    format(datetime.datetime.now().isoformat(),
+                                           runnable.name,
+                                           runnable_step.name,
+                                           -child_return_code))
+    else:
+        cache_directory_path = None
 
     # Create a Runnable-specific temporary directory if it does not exist already.
 
@@ -163,7 +166,7 @@ def run(runnable):
 
     # Remove the Runnable-specific cache directory and everything within it.
 
-    if os.path.exists(cache_directory_path):
+    if cache_directory_path and os.path.exists(cache_directory_path):
         shutil.rmtree(path=cache_directory_path, ignore_errors=False)
 
     # Remove the Runnable-specific temporary directory and everything within it.
