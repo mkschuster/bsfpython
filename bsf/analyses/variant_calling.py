@@ -2058,6 +2058,8 @@ class VariantCallingGATK(bsf.Analysis):
 
             return
 
+        use_cache = False
+
         variants_to_table_fields = {
             'fixed': ('CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER'),
             'haplotype_caller': {
@@ -2240,9 +2242,12 @@ class VariantCallingGATK(bsf.Analysis):
 
                 runnable_scatter_list.append(runnable_scatter)
 
-                reference_scatter = runnable_scatter.get_cache_file_path(
-                    file_path=self.bwa_genome_db,
-                    absolute=True)
+                if use_cache:
+                    reference_scatter = runnable_scatter.get_cache_file_path(
+                        file_path=self.bwa_genome_db,
+                        absolute=True)
+                else:
+                    reference_scatter = self.bwa_genome_db
 
                 # Run GATK CombineGVCFs
 
@@ -2340,9 +2345,12 @@ class VariantCallingGATK(bsf.Analysis):
                         temporary_runnable_gather_list.append(runnable_gather)
                         temporary_tile_index_list.append(partition_index)
 
-                        reference_gather = runnable_gather.get_cache_file_path(
-                            file_path=self.bwa_genome_db,
-                            absolute=True)
+                        if use_cache:
+                            reference_gather = runnable_gather.get_cache_file_path(
+                                file_path=self.bwa_genome_db,
+                                absolute=True)
+                        else:
+                            reference_gather = self.bwa_genome_db
 
                         # GATK CatVariants bypasses the GATK engine and thus requires a completely different
                         # command line.
@@ -2461,9 +2469,12 @@ class VariantCallingGATK(bsf.Analysis):
 
                 runnable_scatter_list.append(runnable_scatter)
 
-                reference_scatter = runnable_scatter.get_cache_file_path(
-                    file_path=self.bwa_genome_db,
-                    absolute=True)
+                if use_cache:
+                    reference_scatter = runnable_scatter.get_cache_file_path(
+                        file_path=self.bwa_genome_db,
+                        absolute=True)
+                else:
+                    reference_scatter = self.bwa_genome_db
 
                 # Run the GATK GenotypeGVCFs analysis.
 
@@ -2546,9 +2557,12 @@ class VariantCallingGATK(bsf.Analysis):
                         temporary_runnable_gather_list.append(runnable_gather)
                         temporary_tile_index_list.append(partition_index)
 
-                        reference_gather = runnable_gather.get_cache_file_path(
-                            file_path=self.bwa_genome_db,
-                            absolute=True)
+                        if use_cache:
+                            reference_gather = runnable_gather.get_cache_file_path(
+                                file_path=self.bwa_genome_db,
+                                absolute=True)
+                        else:
+                            reference_gather = self.bwa_genome_db
 
                         # GATK CatVariants by-passes the GATK engine and thus requires a completely different
                         # command line.
@@ -2680,9 +2694,12 @@ class VariantCallingGATK(bsf.Analysis):
 
                 runnable_scatter_list.append(runnable_scatter)
 
-                reference_scatter = runnable_scatter.get_cache_file_path(
-                    file_path=self.bwa_genome_db,
-                    absolute=True)
+                if use_cache:
+                    reference_scatter = runnable_scatter.get_cache_file_path(
+                        file_path=self.bwa_genome_db,
+                        absolute=True)
+                else:
+                    reference_scatter = self.bwa_genome_db
 
                 # Run GATK MuTect2
 
@@ -2791,9 +2808,12 @@ class VariantCallingGATK(bsf.Analysis):
                         temporary_runnable_gather_list.append(runnable_gather)
                         temporary_tile_index_list.append(partition_index)
 
-                        reference_gather = runnable_gather.get_cache_file_path(
-                            file_path=self.bwa_genome_db,
-                            absolute=True)
+                        if use_cache:
+                            reference_gather = runnable_gather.get_cache_file_path(
+                                file_path=self.bwa_genome_db,
+                                absolute=True)
+                        else:
+                            reference_gather = self.bwa_genome_db
 
                         # GATK CatVariants by-passes the GATK engine and thus requires a completely different
                         # command line.
@@ -2889,9 +2909,12 @@ class VariantCallingGATK(bsf.Analysis):
                     file_path_object=file_path_annotate,
                     debug=self.debug))
 
-            reference_annotate = runnable_annotate.get_cache_file_path(
-                file_path=self.bwa_genome_db,
-                absolute=True)
+            if use_cache:
+                reference_annotate = runnable_annotate.get_cache_file_path(
+                    file_path=self.bwa_genome_db,
+                    absolute=True)
+            else:
+                reference_annotate = self.bwa_genome_db
 
             # Run the snpEff tool for functional variant annotation.
 
@@ -3287,11 +3310,12 @@ class VariantCallingGATK(bsf.Analysis):
 
         # GATK does a lot of read requests from the reference FASTA file.
         # Place it and the accompanying *.fasta.fai and *.dict files in the cache directory.
-        self._cache_path_dict = {
-            'reference_fasta': self.bwa_genome_db,
-            'reference_fai': self.bwa_genome_db + '.fai',
-            'reference_dict': os.path.splitext(self.bwa_genome_db)[0] + '.dict'
-        }
+        if use_cache:
+            self._cache_path_dict = {
+                'reference_fasta': self.bwa_genome_db,
+                'reference_fai': self.bwa_genome_db + '.fai',
+                'reference_dict': os.path.splitext(self.bwa_genome_db)[0] + '.dict'
+            }
 
         # List of accessory cohort GVCF file paths
 
@@ -3660,9 +3684,12 @@ class VariantCallingGATK(bsf.Analysis):
                 # Set dependencies for succeeding bsf.Runnable or bsf.process.Executable objects.
                 runnable_process_read_group_list.append(runnable_process_lane)
 
-                reference_process_lane = runnable_process_lane.get_cache_file_path(
-                    file_path=self.bwa_genome_db,
-                    absolute=True)
+                if use_cache:
+                    reference_process_lane = runnable_process_lane.get_cache_file_path(
+                        file_path=self.bwa_genome_db,
+                        absolute=True)
+                else:
+                    reference_process_lane = self.bwa_genome_db
 
                 # Run the Picard MarkDuplicates analysis, unless configured to skip it.
 
@@ -3936,9 +3963,12 @@ class VariantCallingGATK(bsf.Analysis):
             for runnable_process_lane in runnable_process_read_group_list:
                 executable_process_sample.dependencies.append(runnable_process_lane.name)
 
-            reference_process_sample = runnable_process_sample.get_cache_file_path(
-                file_path=self.bwa_genome_db,
-                absolute=True)
+            if use_cache:
+                reference_process_sample = runnable_process_sample.get_cache_file_path(
+                    file_path=self.bwa_genome_db,
+                    absolute=True)
+            else:
+                reference_process_sample = self.bwa_genome_db
 
             if len(runnable_process_read_group_list) == 1:
                 # If there is only one read group, sample-level read processing can be skipped.
@@ -4298,9 +4328,12 @@ class VariantCallingGATK(bsf.Analysis):
             # Set dependencies for succeeding bsf.Runnable or bsf.process.Executable objects.
             runnable_diagnose_sample_list.append(runnable_diagnose_sample)
 
-            reference_diagnose_sample = runnable_diagnose_sample.get_cache_file_path(
-                file_path=self.bwa_genome_db,
-                absolute=True)
+            if use_cache:
+                reference_diagnose_sample = runnable_diagnose_sample.get_cache_file_path(
+                    file_path=self.bwa_genome_db,
+                    absolute=True)
+            else:
+                reference_diagnose_sample = self.bwa_genome_db
 
             # Run the GATK CallableLoci analysis per sample.
 
@@ -4598,9 +4631,12 @@ class VariantCallingGATK(bsf.Analysis):
         # Set dependencies on preceding bsf.Runnable.name or bsf.process.Executable.name objects.
         executable_process_cohort.dependencies.append(runnable_process_cohort_gather.name)
 
-        reference_process_cohort = runnable_process_cohort.get_cache_file_path(
-            file_path=self.bwa_genome_db,
-            absolute=True)
+        if use_cache:
+            reference_process_cohort = runnable_process_cohort.get_cache_file_path(
+                file_path=self.bwa_genome_db,
+                absolute=True)
+        else:
+            reference_process_cohort = self.bwa_genome_db
 
         # Run the VQSR procedure on SNPs.
 
@@ -4836,9 +4872,12 @@ class VariantCallingGATK(bsf.Analysis):
             # Set dependencies on preceding bsf.Runnable.name or bsf.process.Executable.name objects.
             executable_split_cohort_snpeff.dependencies.append(runnable_annotate_cohort_snpeff.name)
 
-            reference_split_cohort_snpeff = runnable_split_cohort_snpeff.get_cache_file_path(
-                file_path=self.bwa_genome_db,
-                absolute=True)
+            if use_cache:
+                reference_split_cohort_snpeff = runnable_split_cohort_snpeff.get_cache_file_path(
+                    file_path=self.bwa_genome_db,
+                    absolute=True)
+            else:
+                reference_split_cohort_snpeff = self.bwa_genome_db
 
             # Run the GATK SelectVariants analysis to split multi-sample VCF files into one per sample.
 
@@ -4913,9 +4952,12 @@ class VariantCallingGATK(bsf.Analysis):
             # Set dependencies on preceding bsf.Runnable.name or bsf.process.Executable.name objects.
             executable_split_cohort_vep.dependencies.append(runnable_annotate_cohort_vep.name)
 
-            reference_split_cohort_vep = runnable_split_cohort_vep.get_cache_file_path(
-                file_path=self.bwa_genome_db,
-                absolute=True)
+            if use_cache:
+                reference_split_cohort_vep = runnable_split_cohort_vep.get_cache_file_path(
+                    file_path=self.bwa_genome_db,
+                    absolute=True)
+            else:
+                reference_split_cohort_vep = self.bwa_genome_db
 
             # Run the GATK SelectVariants analysis to split multi-sample VCF files into one per sample.
 
@@ -5100,9 +5142,12 @@ class VariantCallingGATK(bsf.Analysis):
             # Set dependencies on preceding bsf.Runnable.name or bsf.process.Executable.name objects.
             executable_split_somatic_snpeff.dependencies.append(runnable_annotate_somatic_snpeff.name)
 
-            reference_split_somatic_snpeff = runnable_split_somatic_snpeff.get_cache_file_path(
-                file_path=self.bwa_genome_db,
-                absolute=True)
+            if use_cache:
+                reference_split_somatic_snpeff = runnable_split_somatic_snpeff.get_cache_file_path(
+                    file_path=self.bwa_genome_db,
+                    absolute=True)
+            else:
+                reference_split_somatic_snpeff = self.bwa_genome_db
 
             # Run the GATK VariantsToTable analysis.
 
@@ -5161,9 +5206,12 @@ class VariantCallingGATK(bsf.Analysis):
             # Set dependencies on preceding bsf.Runnable.name or bsf.process.Executable.name objects.
             executable_split_somatic_vep.dependencies.append(runnable_annotate_somatic_vep.name)
 
-            reference_split_somatic_vep = runnable_split_somatic_vep.get_cache_file_path(
-                file_path=self.bwa_genome_db,
-                absolute=True)
+            if use_cache:
+                reference_split_somatic_vep = runnable_split_somatic_vep.get_cache_file_path(
+                    file_path=self.bwa_genome_db,
+                    absolute=True)
+            else:
+                reference_split_somatic_vep = self.bwa_genome_db
 
             # Run the GATK VariantsToTable analysis.
 
