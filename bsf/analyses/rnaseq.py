@@ -423,10 +423,12 @@ class Tuxedo(bsf.Analysis):
     @type replicate_grouping: bool | None
     @ivar comparison_path: Comparison file path
     @type comparison_path: str | unicode | None
-    @ivar genome_index_path: Bowtie genome index path
-    @type genome_index_path: str | unicode | None
     @ivar genome_fasta_path: Reference genome sequence FASTA file path
     @type genome_fasta_path: str | unicode | None
+    @ivar genome_index_path: Bowtie genome index path
+    @type genome_index_path: str | unicode | None
+    @ivar genome_sizes_path: Reference genome sizes file path
+    @type genome_sizes_path: str | unicode | None
     @ivar transcriptome_version: Transcriptome version
     @type transcriptome_version: str | None
     @ivar transcriptome_index_path: Tophat transcriptome index path
@@ -671,8 +673,9 @@ class Tuxedo(bsf.Analysis):
             sample_list=None,
             replicate_grouping=None,
             comparison_path=None,
-            genome_index_path=None,
             genome_fasta_path=None,
+            genome_index_path=None,
+            genome_sizes_path=None,
             transcriptome_version=None,
             transcriptome_index_path=None,
             transcriptome_gtf_path=None,
@@ -714,10 +717,12 @@ class Tuxedo(bsf.Analysis):
         @type replicate_grouping: bool | None
         @param comparison_path: Comparison file path
         @type comparison_path: str | unicode | None
-        @param genome_index_path: Bowtie genome index path
-        @type genome_index_path: str | unicode | None
         @param genome_fasta_path: Reference genome sequence FASTA file path
         @type genome_fasta_path: str | unicode | None
+        @param genome_index_path: Bowtie genome index path
+        @type genome_index_path: str | unicode | None
+        @param genome_sizes_path: Reference genome sizes file path
+        @type genome_sizes_path: str | unicode | None
         @param transcriptome_version: Transcriptome version
         @type transcriptome_version: str | None
         @param transcriptome_index_path: Tophat transcriptome index path
@@ -759,8 +764,9 @@ class Tuxedo(bsf.Analysis):
 
         self.replicate_grouping = replicate_grouping
         self.comparison_path = comparison_path
-        self.genome_index_path = genome_index_path
         self.genome_fasta_path = genome_fasta_path
+        self.genome_index_path = genome_index_path
+        self.genome_sizes_path = genome_sizes_path
         self.transcriptome_version = transcriptome_version
         self.transcriptome_index_path = transcriptome_index_path
         self.transcriptome_gtf_path = transcriptome_gtf_path
@@ -801,13 +807,17 @@ class Tuxedo(bsf.Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.comparison_path = configuration.config_parser.get(section=section, option=option)
 
+        option = 'genome_fasta'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.genome_fasta_path = configuration.config_parser.get(section=section, option=option)
+
         option = 'genome_index'
         if configuration.config_parser.has_option(section=section, option=option):
             self.genome_index_path = configuration.config_parser.get(section=section, option=option)
 
-        option = 'genome_fasta'
+        option = 'genome_sizes'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.genome_fasta_path = configuration.config_parser.get(section=section, option=option)
+            self.genome_sizes_path = configuration.config_parser.get(section=section, option=option)
 
         option = 'transcriptome_version'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -1096,7 +1106,7 @@ class Tuxedo(bsf.Analysis):
         # Define the reference genome FASTA file path.
         # If it does not exist, construct it from defaults.
 
-        # Get the genome index
+        # Get the genome, FASTA, index and sizes.
 
         if not self.genome_index_path:
             self.genome_index_path = os.path.join(
@@ -1113,10 +1123,13 @@ class Tuxedo(bsf.Analysis):
         if not os.path.exists(self.genome_fasta_path):
             raise Exception('Genome FASTA file path {!r} does not exists.'.format(self.genome_fasta_path))
 
-        # TODO: Make this configurable via a genome configuration option?
-        genome_sizes_path = bsf.standards.FilePath.get_resource_genome_fasta_index(
-            genome_version=self.genome_version,
-            genome_index='bowtie2')
+        if not self.genome_sizes_path:
+            self.genome_sizes_path = bsf.standards.FilePath.get_resource_genome_fasta_index(
+                genome_version=self.genome_version,
+                genome_index='bowtie2')
+
+        if not os.path.exists(self.genome_sizes_path):
+            raise Exception('Genome sizes file path {!r} does not exists.'.format(self.genome_sizes_path))
 
         # Define a reference transcriptome index directory or a GTF file path.
 
@@ -1396,12 +1409,13 @@ class Tuxedo(bsf.Analysis):
                 runnable_step = runnable_process_tophat.add_runnable_step(
                     runnable_step=bsf.process.RunnableStep(
                         name='process_tophat',
-                        program='bsf_rnaseq_process_tophat2.sh'))
+                        program='bsf_rnaseq_process_tophat2.bash'))
                 """ @type runnable_step: bsf.process.RunnableStep """
                 self.set_runnable_step_configuration(runnable_step=runnable_step)
 
                 runnable_step.arguments.append(file_path_tophat.output_directory)
-                runnable_step.arguments.append(genome_sizes_path)
+                runnable_step.arguments.append(self.genome_fasta_path)
+                runnable_step.arguments.append(self.genome_sizes_path)
 
                 # Only submit this bsf.process.Executable if the 'accepted_hits.bam.bai' file does not exist.
                 # NOTE: This test is only required for older projects.
@@ -1573,7 +1587,7 @@ class Tuxedo(bsf.Analysis):
                 runnable_step.add_switch_short(key='tab')
                 runnable_step.add_option_pair_short(key='type', value='bed12+8')
                 runnable_step.arguments.append(file_path_cufflinks.temporary_sorted_tsv)
-                runnable_step.arguments.append(genome_sizes_path)
+                runnable_step.arguments.append(self.genome_sizes_path)
                 runnable_step.arguments.append(file_path_cufflinks.transcripts_bb)
 
                 # Add a symbolic link for the transcripts bigBed file, that includes a sample name prefix.
@@ -1807,7 +1821,7 @@ class Tuxedo(bsf.Analysis):
             runnable_step.add_switch_short(key='tab')
             runnable_step.add_option_pair_short(key='type', value='bed12+8')
             runnable_step.arguments.append(file_path_cuffmerge.temporary_sorted_tsv)
-            runnable_step.arguments.append(genome_sizes_path)
+            runnable_step.arguments.append(self.genome_sizes_path)
             runnable_step.arguments.append(file_path_cuffmerge.merged_bb)
 
             # Add a symbolic link for the merged bigBed file, that includes a comparison name prefix.
