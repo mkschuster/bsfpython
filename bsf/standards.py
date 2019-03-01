@@ -574,6 +574,17 @@ class EnsemblVEP(BaseSectionVersion):
         """
         return cls.get(option='refseq_alignments_path', version=genome_version)
 
+    @classmethod
+    def get_cadd_path(cls, genome_version=None):
+        """Get the Combined Annotation Dependent Depletion (CADD) file path.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Combined Annotation Dependent Depletion (CADD) file path
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='cadd_path', version=genome_version)
+
 
 class Genome(BaseSectionVersion):
     """The C{bsf.standards.Genome} class models Genome defaults.
@@ -1090,12 +1101,23 @@ class FilePath(BaseSection):
         return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='intervals'))
 
     @classmethod
-    def get_resource_cosmic(cls, absolute=True):
-        """Get the COSMIC resource directory path.
+    def get_resource_cadd(cls, absolute=True):
+        """Get the Combined Annotation Dependent Depletion (CADD) resource directory path.
 
         @param absolute: Absolute file path
         @type absolute: bool
-        @return: COSMIC resource directory path
+        @return: Combined Annotation Dependent Depletion (CADD) resource directory path
+        @rtype: None | str | unicode
+        """
+        return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='cadd'))
+
+    @classmethod
+    def get_resource_cosmic(cls, absolute=True):
+        """Get the Catalogue Of Somatic Mutations In Cancer (COSMIC) resource directory path.
+
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Catalogue Of Somatic Mutations In Cancer (COSMIC) resource directory path
         @rtype: None | str | unicode
         """
         return cls._prepend_resource(absolute=absolute, file_path=cls.get(option='cosmic'))

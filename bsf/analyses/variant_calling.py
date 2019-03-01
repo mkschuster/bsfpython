@@ -911,7 +911,8 @@ class VariantCallingGATK(bsf.Analysis):
     @ivar known_sites_recalibration: Python C{list} of Python C{str} or C{unicode} VCF file paths
         for Base Quality Score Recalibration (BQSR)
     @type known_sites_recalibration: list[str | unicode] | None
-    @ivar known_somatic_discovery: Cosmic VCF file path for somatic variant discovery via MuTect2
+    @ivar known_somatic_discovery: Catalogue Of Somatic Mutations In Cancer (COSMIC) VCF file path
+        for somatic variant discovery via MuTect2
     @type known_somatic_discovery: list[str | unicode] | None
     @ivar annotation_resources_dict: Python C{dict} of Python C{str} (annotation resource name) key and
         Python C{tuple} of
@@ -963,6 +964,8 @@ class VariantCallingGATK(bsf.Analysis):
     @type snpeff_genome_version: str | None
     @ivar genome_annotation_gtf: Genome annotation Gene Transfer Format (GTF) file path
     @type genome_annotation_gtf: str | unicode | None
+    @ivar vep_annotation: Ensembl Variant Effect Predictor (VEP) annotation type (i.e. ensembl, refseq or merged)
+    @type vep_annotation: str
     @ivar vep_assembly: Ensembl Variant Effect Predictor (VEP) assembly
     @type vep_assembly: str | unicode | None
     @ivar vep_cache: Ensembl Variant Effect Predictor (VEP) cache directory
@@ -989,6 +992,8 @@ class VariantCallingGATK(bsf.Analysis):
     @type vep_soc_path: str | unicode | None
     @ivar vep_refseq_alignments_path: Ensembl Variant Effect Predictor (VEP) RefSeq alignments (BAM) file path
     @type vep_refseq_alignments_path: str | unicode | None
+    @ivar vep_plugin_cadd_path: Ensembl Variant Effect Predictor (VEP) CADD file path
+    @type vep_plugin_cadd_path: str | unicode | None
     @ivar classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
     @type classpath_gatk: str | unicode | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -1371,6 +1376,7 @@ class VariantCallingGATK(bsf.Analysis):
             gatk_bundle_version=None,
             snpeff_genome_version=None,
             genome_annotation_gtf=None,
+            vep_annotation=None,
             vep_assembly=None,
             vep_cache=None,
             vep_fasta=None,
@@ -1384,6 +1390,7 @@ class VariantCallingGATK(bsf.Analysis):
             vep_ofc_path=None,
             vep_soc_path=None,
             vep_refseq_alignments_path=None,
+            vep_plugin_cadd_path=None,
             classpath_gatk=None,
             classpath_picard=None,
             classpath_snpeff=None,
@@ -1439,7 +1446,8 @@ class VariantCallingGATK(bsf.Analysis):
         @param known_sites_recalibration: Python C{list} of Python C{str} or C{unicode} VCF file paths
             for Base Quality Score Recalibration (BQSR)
         @type known_sites_recalibration: list[str | unicode] | None
-        @param known_somatic_discovery: Cosmic VCF file path for somatic variant discovery via MuTect2
+        @param known_somatic_discovery: Catalogue Of Somatic Mutations In Cancer (COSMIC) VCF file path
+            for somatic variant discovery via MuTect2
         @type known_somatic_discovery: list[str | unicode] | None
         @param annotation_resources_dict: Python C{dict} of Python C{str} (annotation resource name) key and
             Python C{tuple} of
@@ -1491,6 +1499,8 @@ class VariantCallingGATK(bsf.Analysis):
         @type snpeff_genome_version: str | None
         @param genome_annotation_gtf: Genome annotation Gene Transfer Format (GTF) file path
         @type genome_annotation_gtf: str | unicode | None
+        @param vep_annotation: Ensembl Variant Effect Predictor (VEP) annotation type (i.e. ensembl, refseq or merged)
+        @type vep_annotation: str
         @param vep_assembly: Ensembl Variant Effect Predictor (VEP) assembly
         @type vep_assembly: str | unicode | None
         @param vep_fasta: Ensembl Variant Effect Predictor (VEP) FASTA directory
@@ -1517,6 +1527,8 @@ class VariantCallingGATK(bsf.Analysis):
         @type vep_soc_path: str | unicode | None
         @param vep_refseq_alignments_path: Ensembl Variant Effect Predictor (VEP) RefSeq alignments (BAM) file path
         @type vep_refseq_alignments_path: str | unicode | None
+        @param vep_plugin_cadd_path: Ensembl Variant Effect Predictor (VEP) CADD file path
+        @type vep_plugin_cadd_path: str | unicode | None
         @param classpath_gatk: Genome Analysis Tool Kit Java Archive (JAR) class path directory
         @type classpath_gatk: str | unicode | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
@@ -1588,6 +1600,7 @@ class VariantCallingGATK(bsf.Analysis):
         self.snpeff_genome_version = snpeff_genome_version
         self.genome_annotation_gtf = genome_annotation_gtf
 
+        self.vep_annotation = vep_annotation
         self.vep_assembly = vep_assembly
         self.vep_cache = vep_cache
         self.vep_fasta = vep_fasta
@@ -1601,6 +1614,7 @@ class VariantCallingGATK(bsf.Analysis):
         self.vep_ofc_path = vep_ofc_path
         self.vep_soc_path = vep_soc_path
         self.vep_refseq_alignments_path = vep_refseq_alignments_path
+        self.vep_plugin_cadd_path = vep_plugin_cadd_path
 
         self.classpath_gatk = classpath_gatk
         self.classpath_picard = classpath_picard
@@ -1916,6 +1930,10 @@ class VariantCallingGATK(bsf.Analysis):
         if config_parser.has_option(section=section, option=option):
             self.genome_annotation_gtf = config_parser.get(section=section, option=option)
 
+        option = 'vep_annotation'
+        if config_parser.has_option(section=section, option=option):
+            self.vep_annotation = config_parser.get(section=section, option=option)
+
         option = 'vep_assembly'
         if config_parser.has_option(section=section, option=option):
             self.vep_assembly = config_parser.get(section=section, option=option)
@@ -1967,6 +1985,10 @@ class VariantCallingGATK(bsf.Analysis):
         option = 'vep_refseq_alignments_path'
         if config_parser.has_option(section=section, option=option):
             self.vep_refseq_alignments_path = config_parser.get(section=section, option=option)
+
+        option = 'vep_plugin_cadd_path'
+        if config_parser.has_option(section=section, option=option):
+            self.vep_plugin_cadd_path = config_parser.get(section=section, option=option)
 
         option = 'classpath_gatk'
         if config_parser.has_option(section=section, option=option):
@@ -3068,12 +3090,13 @@ class VariantCallingGATK(bsf.Analysis):
             _sub_command.add_option_long(key='dir_cache', value=self.vep_cache)
             _sub_command.add_option_long(key='dir_plugins', value=self.vep_plugin)
             _sub_command.add_option_long(key='fasta_dir', value=self.vep_fasta)  # VEP e91 option
-            _sub_command.add_switch_long(key='merged')  # Ensembl and RefSeq
+            if self.vep_annotation in ('refseq', 'merged'):
+                # Options --refseq  or --merged.
+                _sub_command.add_switch_long(key=self.vep_annotation)
             _sub_command.add_option_long(key='bam', value=self.vep_refseq_alignments_path)
             # Other annotation sources
-            _sub_command.add_option_long(  # TODO: Has to be configurable
-                key='plugin',
-                value='CADD,/scratch/lab_bsf/resources/CADD/b37/whole_genome_SNVs.tsv.gz')
+            if self.vep_plugin_cadd_path:
+                _sub_command.add_option_long(key='plugin', value=','.join(('CADD', self.vep_plugin_cadd_path)))
             # Output options
             _sub_command.add_switch_long(key='allele_number')
             _sub_command.add_switch_long(key='no_escape')  # Do not percent escape HGVS strings
@@ -3084,7 +3107,10 @@ class VariantCallingGATK(bsf.Analysis):
             # Data format options
             _sub_command.add_switch_long(key='vcf')
             # Filtering and QC options
-            # _sub_command.add_switch_long(key='gencode_basic')  # This flag suppresses all RefSeq annotation.
+            if self.vep_annotation == 'ensembl':
+                # Since the --gencode_basic option suppresses all RefSeq annotation,
+                # it can only be set for Ensembl annotation.
+                _sub_command.add_switch_long(key='gencode_basic')
             _sub_command.add_switch_long(key='dont_skip')
             _sub_command.add_switch_long(key='allow_non_variant')
             _sub_command.add_switch_long(key='flag_pick_allele_gene')
@@ -3221,6 +3247,14 @@ class VariantCallingGATK(bsf.Analysis):
         if not self.snpeff_genome_version:
             raise Exception('A ' + self.name + " requires a 'snpeff_genome_version' configuration option.")
 
+        if not self.vep_annotation:
+            self.vep_annotation = 'ensembl'
+
+        if self.vep_annotation not in ('ensembl', 'refseq', 'merged'):
+            raise Exception(
+                'The ' + self.name + " option 'vep_annotation' has to be 'ensembl', 'refseq' or 'merged', " +
+                'not ' + repr(self.vep_annotation) + '.')
+
         if not self.vep_assembly:
             self.vep_assembly = bsf.standards.EnsemblVEP.get_name_assembly(genome_version=self.genome_version)
             if not self.vep_assembly:
@@ -3278,6 +3312,13 @@ class VariantCallingGATK(bsf.Analysis):
                 genome_version=self.genome_version)
             if not self.vep_refseq_alignments_path:
                 raise Exception('A ' + self.name + " requires a 'vep_refseq_alignments_path' configuration option.")
+
+        if not self.vep_plugin_cadd_path:
+            self.vep_plugin_cadd_path = bsf.standards.EnsemblVEP.get_cadd_path(genome_version=self.genome_version)
+        if self.vep_plugin_cadd_path and not os.path.isabs(self.vep_plugin_cadd_path):
+            cadd_resource_path = bsf.standards.FilePath.get_resource_cadd(absolute=True)
+            if cadd_resource_path:
+                self.vep_plugin_cadd_path = os.path.join(cadd_resource_path, self.vep_plugin_cadd_path)
 
         if not self.classpath_gatk:
             self.classpath_gatk = bsf.standards.JavaClassPath.get_gatk()
@@ -3380,7 +3421,7 @@ class VariantCallingGATK(bsf.Analysis):
                     raise Exception('The file path ' + repr(file_path) +
                                     " in option 'known_sites_recalibration' does not exist.")
 
-        # List of known (COSMIC) sites for somatic variant calling
+        # List of known Catalogue Of Somatic Mutations In Cancer (COSMIC) sites for somatic variant calling
 
         if self.known_somatic_discovery:
             for i, file_path in enumerate(self.known_somatic_discovery):
