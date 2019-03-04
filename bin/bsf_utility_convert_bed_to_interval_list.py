@@ -1,4 +1,4 @@
-#! /usr/bin/env python2.7
+#!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to convert a BED file into a Picard interval list file.

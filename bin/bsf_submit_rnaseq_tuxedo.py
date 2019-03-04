@@ -1,4 +1,4 @@
-#! /usr/bin/env python2.7
+#!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to drive the Tuxedo suite-based RNA-Seq analysis pipeline.

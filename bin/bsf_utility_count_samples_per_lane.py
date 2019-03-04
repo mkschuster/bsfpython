@@ -1,4 +1,4 @@
-#! /usr/bin/env python2.7
+#!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python utility script to report the number of samples per lane.

@@ -477,7 +477,7 @@ def submit(stage, debug=0):
     output_list = list()
     """ @type output_list: list[str | unicode] """
 
-    output_list.append('#! /usr/bin/env bash\n')
+    output_list.append('#!/usr/bin/env bash\n')
     output_list.append('\n')
 
     if debug > 0:

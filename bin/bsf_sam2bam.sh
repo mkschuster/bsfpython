@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+#!/usr/bin/env bash
 # -*- coding: utf-8 -*-
 #
 # BSF GNU Bourne-Again (Bash) script to convert an aligned SAM file
@@ -29,7 +29,7 @@
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-if [ -z "${LANG}" ]; then
+if [[ -z "${LANG}" ]]; then
     declare -x LANG='C'
 else
     LANG='C'

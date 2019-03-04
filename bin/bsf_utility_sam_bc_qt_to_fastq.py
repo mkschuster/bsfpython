@@ -1,4 +1,4 @@
-#! /usr/bin/env python2.7
+#!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to extract the index read sequence (BC) and quality scores (QT) of an unaligned BAM file

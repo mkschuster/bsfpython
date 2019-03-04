@@ -1,4 +1,4 @@
-#! /usr/bin/env bash
+#!/usr/bin/env bash
 # -*- coding: utf-8 -*-
 #
 # BSF GNU Bourne-Again (Bash) script to convert an (unmapped) BAM or SAM file
