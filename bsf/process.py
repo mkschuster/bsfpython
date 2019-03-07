@@ -2168,3 +2168,105 @@ class RunnableStepSleep(RunnableStep):
             time.sleep(self.sleep_time)
 
         return 0
+
+
+class RunnableStepSetEnvironment(RunnableStep):
+    """The C{bsf.process.RunnableStepSetEnvironment} class represents a step setting the process environment.
+
+    Attributes:
+    @ivar key: Environment key
+    @type key: str
+    @ivar value: Environment value
+    @type value: str
+    """
+
+    def __init__(
+            self,
+            name,
+            program=None,
+            options=None,
+            arguments=None,
+            sub_command=None,
+            stdout_path=None,
+            stderr_path=None,
+            dependencies=None,
+            hold=None,
+            submit=True,
+            process_identifier=None,
+            process_name=None,
+            obsolete_file_path_list=None,
+            key=None,
+            value=None):
+        """Initialise a C{bsf.process.RunnableStepSetEnvironment}.
+
+        @param name: Name
+        @type name: str | None
+        @param program: Program
+        @type program: str | None
+        @param options: Python C{dict} of Python C{str} (C{bsf.argument.Argument.key}) key and
+            Python C{list} value objects of C{bsf.argument.Argument} objects
+        @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
+        @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
+        @type arguments: list[str | unicode]
+        @param sub_command: Subordinate C{bsf.process.Command}
+        @type sub_command: bsf.process.Command | None
+        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
+        @type stdout_path: str | unicode | None
+        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
+        @type stderr_path: str | unicode | None
+        @param dependencies: Python C{list} of C{bsf.process.Executable.name}
+            properties in the context of C{bsf.Stage} dependencies
+        @type dependencies: list[bsf.process.Executable.name] | None
+        @param hold: Hold on job scheduling
+        @type hold: str | None
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @type submit: bool
+        @param process_identifier: Process identifier
+        @type process_identifier: str | None
+        @param process_name: Process name
+        @type process_name: str | None
+        @param obsolete_file_path_list: Python C{list} of file paths that can be removed
+            after successfully completing this C{bsf.process.RunnableStep}
+        @type obsolete_file_path_list: list[str | unicode] | None
+        @param key: Environment key
+        @type key: str
+        @return:
+        @rtype:
+        """
+        super(RunnableStepSetEnvironment, self).__init__(
+            name=name,
+            program=program,
+            options=options,
+            arguments=arguments,
+            sub_command=sub_command,
+            stdout_path=stdout_path,
+            stderr_path=stderr_path,
+            dependencies=dependencies,
+            hold=hold,
+            submit=submit,
+            process_identifier=process_identifier,
+            process_name=process_name,
+            obsolete_file_path_list=obsolete_file_path_list)
+
+        self.key = key
+        self.value = value
+
+        return
+
+    def run(self, max_thread_joins=10, thread_join_timeout=10, debug=0):
+        """Run a C{bsf.process.RunnableStepSetEnvironment}.
+
+        @param max_thread_joins: Maximum number of attempts to join the output threads
+        @type max_thread_joins: int
+        @param thread_join_timeout: Timeout for each attempt to join the output threads
+        @type thread_join_timeout: int
+        @param debug: Debug level
+        @type debug: int
+        @return: Return value of the child in the Python subprocess,
+            negative values indicate that the child received a signal
+        @rtype: int
+        """
+        if self.key is not None:
+            os.environ[self.key] = self.value
+
+        return 0

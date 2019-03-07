@@ -2108,6 +2108,14 @@ class Tuxedo(bsf.Analysis):
                     # Add the executable_run_cuffmerge dependency to the executable_run_cuffdiff process.
                     executable_run_cuffdiff.dependencies.append(executable_run_cuffmerge.name)
 
+                # Set the environment variable 'LANG' to 'C'.
+                runnable_run_cuffdiff.add_runnable_step(
+                    runnable_step=bsf.process.RunnableStepSetEnvironment(
+                        name='set_environment',
+                        key='LANG',
+                        value='C'))
+                """ @type runnable_step: bsf.process.RunnableStepSetEnvironment """
+
                 # Create a new Cuffdiff bsf.process.RunnableStep.
 
                 runnable_step_run_cuffdiff = runnable_run_cuffdiff.add_runnable_step(
