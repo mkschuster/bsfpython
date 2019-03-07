@@ -1046,8 +1046,8 @@ class Tuxedo(bsf.Analysis):
             """
             with open(annotation_path, 'wt') as _annotation_file:
                 _annotation_file.write('sample_id\tgroup_label\n')
-                for _group_name, per_group_list in annotation_dict.iteritems():
-                    for _file_path in per_group_list:
+                for _group_name in sorted(annotation_dict):
+                    for _file_path in annotation_dict[_group_name]:
                         _annotation_file.write(_file_path + '\t' + _group_name + '\n')
 
             return
