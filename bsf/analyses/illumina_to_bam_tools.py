@@ -159,12 +159,14 @@ class LibraryAnnotationSheet(bsf.annotation.AnnotationSheet):
 
         return flow_cell_dict
 
-    def validate(self, lanes=8):
+    def validate(self, lanes=None):
         """
         Validate a C{LibraryAnnotationSheet}.
 
+        If the number of lanes is provided, all lanes in the range are validated or else,
+        the validation is just based on annotation for the lane variable.
         @param lanes: Number of lanes to validate
-        @type lanes: int
+        @type lanes: int | None
         @return: Warning messages
         @rtype: str
         """
@@ -272,7 +274,14 @@ class LibraryAnnotationSheet(bsf.annotation.AnnotationSheet):
                                row_number,
                                flow_cell_dict[row_dict['lane']]['read_structure'])
 
-        for lane_int in range(0 + 1, lanes + 1):
+        if lanes is None:
+            # If the number of lanes was not provided, validate just on the basis if the lane annotation.
+            lane_list = sorted(flow_cell_dict)
+        else:
+            # If the number of lanes was provided, validate all lanes in the range.
+            lane_list = range(0 + 1, lanes + 1)
+
+        for lane_int in lane_list:
             lane_str = str(lane_int)
 
             # Check that all lanes have annotation.
