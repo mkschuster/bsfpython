@@ -30,7 +30,6 @@
 from __future__ import print_function
 
 import argparse
-import os
 import sys
 
 import bsf.analyses.picard
@@ -137,14 +136,6 @@ if name_space.force:
 
 if name_space.library_path:
     analysis.library_path = name_space.library_path
-
-# If a library file has not been defined so far, check,
-# if a standard library file i.e. PROJECT_NAME_libraries.csv exists in the current directory.
-
-if not analysis.library_path:
-    library_path = '_'.join((analysis.project_name, 'libraries.csv'))
-    if os.path.exists(path=library_path):
-        analysis.library_path = library_path
 
 # Do the work.
 
