@@ -92,8 +92,8 @@ if not os.path.isdir(path_temporary):
         if exception.errno != errno.EEXIST:
             raise
 
-path_fastq_1 = "{}{}_R1.fastq".format(prefix, replicate_key)
-path_fastq_2 = "{}{}_R2.fastq".format(prefix, replicate_key)
+path_fastq_1 = "{}{}_R1.fastq.gz".format(prefix, replicate_key)
+path_fastq_2 = "{}{}_R2.fastq.gz".format(prefix, replicate_key)
 path_aligned_sam = "{}{}_aligned.sam".format(prefix, replicate_key)
 path_cleaned_sam = "{}{}_cleaned.sam".format(prefix, replicate_key)
 path_header_sam = "{}{}_header.sam".format(prefix, replicate_key)
@@ -120,7 +120,7 @@ run_bwa.stdout_path = path_aligned_sam
 # It would be good to run SamToFastq to get one FASTQ file (pair) per read group,
 # align them separately and set the correct read group for each.
 # Picard writes out a file per platform unit PU, with special characters replaced by underscores and
-# '_1.fastq', as well as '_2.fastq' appended.
+# '_1.fastq.gz', as well as '_2.fastq.gz' appended.
 # See function makeFileNameSafe
 # https://github.com/samtools/htsjdk/blob/1.114/src/java/htsjdk/samtools/util/IOUtil.java#L719
 # TODO: Once this works, it should be turned into a generic method useful in the ChIPSeq and RNASeq analyses, too.
@@ -167,14 +167,45 @@ if run_bwa.sub_command.program == 'mem' and run_bwa.sub_command.arguments[1][-4:
     picard_process.sub_command = bsf.process.Command(program='SamToFastq')
 
     sam_to_fastq = picard_process.sub_command
+    # INPUT Required
     sam_to_fastq.add_option_pair(key='INPUT', value=run_bwa.sub_command.arguments[1])
+    # FASTQ Required
     sam_to_fastq.add_option_pair(key='FASTQ', value=path_fastq_1)
+    # SECOND_END_FASTQ [null]
     sam_to_fastq.add_option_pair(key='SECOND_END_FASTQ', value=path_fastq_2)
-    sam_to_fastq.add_option_pair(key='INCLUDE_NON_PF_READS', value='false')  # TODO: Make this configurable.
+    # UNPAIRED_FASTQ [null]
+    # OUTPUT_PER_RG [false]
+    # COMPRESS_OUTPUTS_PER_RG [false]
+    # RG_TAG [PU]
+    # OUTPUT_DIR [null]
+    # RE_REVERSE [true]
+    # INTERLEAVE [false]
+    # INCLUDE_NON_PF_READS [false]
+    sam_to_fastq.add_option_pair(key='INCLUDE_NON_PF_READS', value='false')
+    # CLIPPING_ATTRIBUTE [null]
+    # CLIPPING_ACTION [null]
+    # CLIPPING_MIN_LENGTH [0]
+    # READ1_TRIM [0]
+    # READ1_MAX_BASES_TO_WRITE [null]
+    # READ2_TRIM [0]
+    # READ2_MAX_BASES_TO_WRITE [null]
+    # QUALITY [null]
+    # INCLUDE_NON_PRIMARY_ALIGNMENTS [null]
+    # TMP_DIR [null]
     sam_to_fastq.add_option_pair(key='TMP_DIR', value=path_temporary)
+    # VERBOSITY [INFO]
     sam_to_fastq.add_option_pair(key='VERBOSITY', value='WARNING')
-    sam_to_fastq.add_option_pair(key='QUIET', value='false')
-    sam_to_fastq.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
+    # QUIET [false]
+    # VALIDATION_STRINGENCY [STRICT]
+    # COMPRESSION_LEVEL [5]
+    # MAX_RECORDS_IN_RAM [500000]
+    # CREATE_INDEX [false]
+    # CREATE_MD5_FILE [false]
+    # REFERENCE_SEQUENCE [null]
+    # GA4GH_CLIENT_SECRETS [client_secrets.json]
+    # USE_JDK_DEFLATER [false]
+    # USE_JDK_INFLATER [false]
+    # OPTIONS_FILE Required
 
     child_return_code = java_process.run()
 
@@ -223,12 +254,25 @@ picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 
 picard_process.sub_command = bsf.process.Command(program='CleanSam')
 
 clean_sam = picard_process.sub_command
+# INPUT Required
 clean_sam.add_option_pair(key='INPUT', value=path_aligned_sam)
+# OUTPUT Required
 clean_sam.add_option_pair(key='OUTPUT', value=path_cleaned_sam)
+# TMP_DIR [null]
 clean_sam.add_option_pair(key='TMP_DIR', value=path_temporary)
+# VERBOSITY [INFO]
 clean_sam.add_option_pair(key='VERBOSITY', value='WARNING')
-clean_sam.add_option_pair(key='QUIET', value='false')
-clean_sam.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
+# QUIET [false]
+# VALIDATION_STRINGENCY [STRICT]
+# COMPRESSION_LEVEL [5]
+# MAX_RECORDS_IN_RAM [500000]
+# CREATE_INDEX [false]
+# CREATE_MD5_FILE [false]
+# REFERENCE_SEQUENCE [null]
+# GA4GH_CLIENT_SECRETS [client_secrets.json]
+# USE_JDK_DEFLATER [false]
+# USE_JDK_INFLATER [false]
+# OPTIONS_FILE Required
 
 child_return_code = java_process.run()
 
@@ -289,13 +333,27 @@ if len(sam_header_pg) or len(sam_header_rg):
     picard_process.sub_command = bsf.process.Command(program='ReplaceSamHeader')
 
     replace_sam_header = picard_process.sub_command
+    # INPUT Required
     replace_sam_header.add_option_pair(key='INPUT', value=path_cleaned_sam)
+    # HEADER Required
     replace_sam_header.add_option_pair(key='HEADER', value=path_header_sam)
+    # OUTPUT Required
     replace_sam_header.add_option_pair(key='OUTPUT', value=path_temporary_sam)
+    # TMP_DIR [null]
     replace_sam_header.add_option_pair(key='TMP_DIR', value=path_temporary)
+    # VERBOSITY [INFO]
     replace_sam_header.add_option_pair(key='VERBOSITY', value='WARNING')
-    replace_sam_header.add_option_pair(key='QUIET', value='false')
-    replace_sam_header.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
+    # QUIET [false]
+    # VALIDATION_STRINGENCY [STRICT]
+    # COMPRESSION_LEVEL [5]
+    # MAX_RECORDS_IN_RAM [500000]
+    # CREATE_INDEX [false]
+    # CREATE_MD5_FILE [false]
+    # REFERENCE_SEQUENCE [null]
+    # GA4GH_CLIENT_SECRETS [client_secrets.json]
+    # USE_JDK_DEFLATER [false]
+    # USE_JDK_INFLATER [false]
+    # OPTIONS_FILE Required
 
     child_return_code = java_process.run()
 
@@ -327,17 +385,31 @@ picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 
 picard_process.sub_command = bsf.process.Command(program='SortSam')
 
 sort_sam = picard_process.sub_command
+# INPUT Required
 sort_sam.add_option_pair(key='INPUT', value=path_cleaned_sam)
+# OUTPUT Required
 sort_sam.add_option_pair(key='OUTPUT', value=path_sorted_bam)
+# SORT_ORDER Required
 sort_sam.add_option_pair(key='SORT_ORDER', value='coordinate')
+# TMP_DIR [null]
 sort_sam.add_option_pair(key='TMP_DIR', value=path_temporary)
+# VERBOSITY [INFO]
 sort_sam.add_option_pair(key='VERBOSITY', value='WARNING')
-sort_sam.add_option_pair(key='QUIET', value='false')
-sort_sam.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
+# QUIET [false]
+# VALIDATION_STRINGENCY [STRICT]
+# COMPRESSION_LEVEL [5]
 sort_sam.add_option_pair(key='COMPRESSION_LEVEL', value='9')
+# MAX_RECORDS_IN_RAM [500000]
 sort_sam.add_option_pair(key='MAX_RECORDS_IN_RAM', value='2000000')
+# CREATE_INDEX [false]
 sort_sam.add_option_pair(key='CREATE_INDEX', value='true')
+# CREATE_MD5_FILE [false]
 sort_sam.add_option_pair(key='CREATE_MD5_FILE', value='true')
+# REFERENCE_SEQUENCE [null]
+# GA4GH_CLIENT_SECRETS [client_secrets.json]
+# USE_JDK_DEFLATER [false]
+# USE_JDK_INFLATER [false]
+# OPTIONS_FILE Required
 
 child_return_code = java_process.run()
 
