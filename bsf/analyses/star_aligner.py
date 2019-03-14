@@ -296,7 +296,9 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         runnable_step = runnable_align.add_runnable_step(
             runnable_step=bsf.process.RunnableStep(
                 name='STAR',
-                program='STAR'))
+                program='STAR',
+                stdout_path=file_path_align.stdout_txt,
+                stderr_path=file_path_align.stderr_txt))
         """ @type runnable_step: bsf.process.RunnableStep """
         self.set_runnable_step_configuration(runnable_step=runnable_step)
         runnable_step.add_option_long(key='runThreadN', value=str(stage_align.threads))

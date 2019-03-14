@@ -43,6 +43,10 @@ class FilePathAlign(bsf.FilePath):
     Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str | unicode
+    @ivar stderr_txt: Text file to capture STDERR of the aligner
+    @type stderr_txt: str | unicode
+    @ivar stdout_txt: Text file to capture STDOUT of the aligner
+    @type stdout_txt: str | unicode
     @ivar aligned_sam: Aligned sequence alignment map (SAM) file path
     @type aligned_sam: str | unicode
     @ivar cleaned_sam: Cleaned sequence alignment map (SAM) file path
@@ -58,6 +62,7 @@ class FilePathAlign(bsf.FilePath):
     @ivar aligned_bai_link_target: Symbolic link target of the aligned binary alignment map index (BAI) file path
     @type aligned_bai_link_target: str | unicode
     """
+
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.aligner.FilePathAlign} object
 
@@ -69,6 +74,9 @@ class FilePathAlign(bsf.FilePath):
         super(FilePathAlign, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
+
+        self.stderr_txt = os.path.join(prefix, '_'.join((prefix, 'stderr.txt')))
+        self.stdout_txt = os.path.join(prefix, '_'.join((prefix, 'stdout.txt')))
 
         self.aligned_sam = os.path.join(prefix, '_'.join((prefix, 'aligned.sam')))
 
@@ -111,6 +119,7 @@ class FilePathReadGroup(bsf.FilePath):
     @ivar sorted_bai_link_target: Symbolic link target of the sorted binary alignment map index (BAI) file path
     @type sorted_bai_link_target: str | unicode
     """
+
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.aligner.FilePathReadGroup} object
 
@@ -159,6 +168,7 @@ class FilePathSample(bsf.FilePath):
     @ivar alignment_summary_metrics_tsv: Picard Alignment Summary Metrics file path
     @type alignment_summary_metrics_tsv: str | unicode
     """
+
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.aligner.FilePathSample} object
 
@@ -191,6 +201,7 @@ class FilePathSummary(bsf.FilePath):
     @ivar output_directory: Output directory
     @type output_directory: str | unicode
     """
+
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.aligner.FilePathSummary} object
 
@@ -501,12 +512,6 @@ class Aligner(bsf.Analysis):
         @return:
         @rtype:
         """
-        # runnable_summary.add_runnable_step(
-        #     runnable_step=bsf.process.RunnableStep(
-        #         name='summary',
-        #         program='bsf_aligner_summary.R'))
-        # """ @type runnable_step: bsf.process.RunnableStep """
-
         return
 
     def run(self):
@@ -525,7 +530,6 @@ class Aligner(bsf.Analysis):
             @return:
             @rtype:
             """
-
             self.sample_list.extend(self.collection.get_all_samples())
 
             return

@@ -63,7 +63,9 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
         runnable_step = runnable_align.add_runnable_step(
             runnable_step=bsf.process.RunnableStep(
                 name='bowtie1',
-                program='bowtie'))
+                program='bowtie',
+                stdout_path=file_path_align.stdout_txt,
+                stderr_path=file_path_align.stderr_txt))
         """ @type runnable_step: bsf.process.RunnableStep """
         runnable_step.arguments.append(self.genome_index)
 
@@ -142,7 +144,9 @@ class Bowtie2(bsf.analyses.aligner.Aligner):
         runnable_step = runnable_align.add_runnable_step(
             runnable_step=bsf.process.RunnableStep(
                 name='bowtie2',
-                program='bowtie2'))
+                program='bowtie2',
+                stdout_path=file_path_align.stdout_txt,
+                stderr_path=file_path_align.stderr_txt))
         """ @type runnable_step: bsf.process.RunnableStep """
         runnable_step.add_option_short(key='S', value=file_path_align.aligned_sam)
         runnable_step.add_option_short(key='x', value=self.genome_index)
