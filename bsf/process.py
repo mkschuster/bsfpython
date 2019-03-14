@@ -692,8 +692,11 @@ class Executable(Command):
 
     @staticmethod
     def process_stream(file_handle, thread_lock, debug, file_type, file_path=None):
-        """Process I{STDOUT} or I{STDERR} from the child process as a thread.
+        """Process a I{STDOUT} or I{STDERR} text stream from the child process as a thread.
 
+        If a file_path was provided, a corresponding Python C{file} will be opened in text mode,
+        if not C{sys.stdout} or C{sys.stderr} will be used according to the I{file_type}.
+        If a debug level was set, diagnostic output will be printed to C{sys.stdout}, as well as the output stream.
         @param file_handle: The I{STDOUT} or I{STDERR} file handle
         @type file_handle: file
         @param thread_lock: A Python C{threading.Lock} object
@@ -706,43 +709,45 @@ class Executable(Command):
         @type file_path: str | unicode | None
         @return:
         @rtype:
-        @raise Exception: The file_type has to be either I{STDOUT} or I{STDERR}
+        @raise Exception: If file_type is neither I{STDOUT} nor I{STDERR}
         """
+        def get_timestamp():
+            return '[' + datetime.datetime.now().isoformat() + ']'
+
         if file_type not in ('STDOUT', 'STDERR'):
             raise Exception('The file_type has to be either STDOUT or STDERR.')
 
         thread_lock.acquire(True)
         if debug > 0:
-            print('[' + datetime.datetime.now().isoformat() + ']',
-                  'Started Runner ' + repr(file_type) + ' processor in module ' + repr(__name__) + '.')
+            print(get_timestamp(),
+                  'Started Runner ' + repr(file_type) + ' processor in module ' + repr(__name__) + '.',
+                  file=sys.stdout)
         output_file = None
         if file_path:
             output_file = open(file_path, 'wt')
             if debug > 0:
-                print('[' + datetime.datetime.now().isoformat() + ']',
-                      'Opened ' + repr(file_type) + ' file ' + repr(file_path) + '.')
+                print(get_timestamp(), 'Opened ' + repr(file_type) + ' file ' + repr(file_path) + '.', file=sys.stdout)
+        elif file_type == 'STDOUT':
+            output_file = sys.stdout
+        elif file_type == 'STDERR':
+            output_file = sys.stderr
         thread_lock.release()
 
         for line_str in file_handle:
             thread_lock.acquire(True)
-            if output_file is None:
-                print('[' + datetime.datetime.now().isoformat() + ']',
-                      file_type + ': ' + line_str.rstrip())
+            if debug > 0:
+                print(get_timestamp(), file_type + ': ' + line_str.rstrip(), file=output_file)
             else:
                 output_file.write(line_str)
             thread_lock.release()
 
         thread_lock.acquire(True)
         if debug > 0:
-            print('[' + datetime.datetime.now().isoformat() + ']',
-                  'Received EOF on ' + repr(file_type) + ' pipe.')
-        if output_file is None:
-            pass
-        else:
+            print(get_timestamp(), 'Received EOF on ' + repr(file_type) + ' pipe.', file=sys.stdout)
+        if file_path:
             output_file.close()
             if debug > 0:
-                print('[' + datetime.datetime.now().isoformat() + ']',
-                      'Closed ' + repr(file_type) + ' file ' + repr(file_path) + '.')
+                print(get_timestamp(), 'Closed ' + repr(file_type) + ' file ' + repr(file_path) + '.', file=sys.stdout)
         thread_lock.release()
 
         return
