@@ -971,16 +971,21 @@ class Executable(Command):
         while attempt_counter < self.maximum_attempts:
             attempt_counter += 1
 
-            child_process = subprocess.Popen(
-                args=self.command_list(),
-                bufsize=0,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                shell=False,
-                close_fds=on_posix)
-            # TODO: It would be wonderful to catch Exceptions here.
-            # OSError: [Errno 2] No such file or directory
+            try:
+                child_process = subprocess.Popen(
+                    args=self.command_list(),
+                    bufsize=0,
+                    stdin=subprocess.PIPE,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    shell=False,
+                    close_fds=on_posix)
+            except OSError as exception:
+                if exception.errno == errno.ENOENT:
+                    raise Exception('Executable ' + repr(self.program) + ' could not be found.')
+                else:
+                    # Re-raise the Exception object.
+                    raise exception
 
             # Up to three threads, writing to STDIN, as well as reading from STDOUT and STDERR,
             # should make sure that buffers are not filling up.
