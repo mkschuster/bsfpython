@@ -25,7 +25,6 @@ A package of classes and methods supporting Bowtie alignment analyses.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from __future__ import print_function
 
 import os
@@ -44,10 +43,10 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
     prefix = 'bowtie1'
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add a Bowtie1-specific C{bsf.process.RunnableStep} to the C{bsf.Runnable}.
+        """Add a Bowtie1-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.Runnable}.
 
-        @param runnable_align: C{bsf.Runnable}
-        @type runnable_align: bsf.Runnable
+        @param runnable_align: C{bsf.procedure.ConsecutiveRunnable}
+        @type runnable_align: bsf.procedure.ConsecutiveRunnable
         @param stage_align: C{bsf.Stage}
         @type stage_align: bsf.Stage
         @param file_path_1: FASTQ file path 1
@@ -125,10 +124,10 @@ class Bowtie2(bsf.analyses.aligner.Aligner):
     prefix = 'bowtie2'
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add a Bowtie2-specific C{bsf.process.RunnableStep} to the C{bsf.Runnable}.
+        """Add a Bowtie2-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.Runnable}.
 
-        @param runnable_align: C{bsf.Runnable}
-        @type runnable_align: bsf.Runnable
+        @param runnable_align: C{bsf.procedure.ConsecutiveRunnable}
+        @type runnable_align: bsf.procedure.ConsecutiveRunnable
         @param stage_align: C{bsf.Stage}
         @type stage_align: bsf.Stage
         @param file_path_1: FASTQ file path 1

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Runnables module
 
-A package of classes and methods supporting the BSF C{bsf.Runnable} class.
+A package of classes and methods supporting the BSF C{bsf.procedure.Runnable} class.
 """
 #  Copyright 2013 - 2019 Michael K. Schuster
 #

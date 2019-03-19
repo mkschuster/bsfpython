@@ -25,7 +25,6 @@ A package of classes and methods supporting the Trimmomatic tool.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from __future__ import print_function
 
 import os
@@ -33,11 +32,12 @@ import sys
 
 import bsf
 import bsf.ngs
+import bsf.procedure
 import bsf.process
 import bsf.standards
 
 
-class FilePathTrimmomaticReadGroup(bsf.FilePath):
+class FilePathTrimmomaticReadGroup(bsf.procedure.FilePath):
     """The C{bsf.analyses.trimmomatic.FilePathTrimmomaticReadGroup} models read group-specific Trimmomatic files.
 
     Attributes:
@@ -88,7 +88,7 @@ class FilePathTrimmomaticReadGroup(bsf.FilePath):
         return
 
 
-class FilePathTrimmomaticProject(bsf.FilePath):
+class FilePathTrimmomaticProject(bsf.procedure.FilePath):
     """The C{bsf.analyses.trimmomatic.FilePathTrimmomaticProject} class models project-specific Trimmomatic files.
 
     Attributes:
@@ -172,29 +172,29 @@ class Trimmomatic(bsf.Analysis):
 
     @classmethod
     def get_prefix_read_group(cls, read_group_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param read_group_name: Read group name
         @type read_group_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
     @classmethod
     def get_prefix_summary(cls):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return cls.get_stage_name_summary()
 
     @classmethod
     def get_prefix_project(cls):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return cls.get_stage_name_project()
@@ -448,8 +448,8 @@ class Trimmomatic(bsf.Analysis):
 
                     # Create a Runnable and an Executable for running the Trimmomatic analysis.
 
-                    runnable_read_group = self.add_runnable(
-                        runnable=bsf.Runnable(
+                    runnable_read_group = self.add_runnable_consecutive(
+                        runnable=bsf.procedure.ConsecutiveRunnable(
                             name=prefix_read_group,
                             code_module='bsf.runnables.generic',
                             working_directory=self.project_directory,
@@ -576,8 +576,8 @@ class Trimmomatic(bsf.Analysis):
 
                     prefix_summary = '_'.join((stage_summary.name, paired_reads_name))
 
-                    runnable_summary = self.add_runnable(
-                        runnable=bsf.Runnable(
+                    runnable_summary = self.add_runnable_consecutive(
+                        runnable=bsf.procedure.ConsecutiveRunnable(
                             name=prefix_summary,
                             code_module='bsf.runnables.generic',
                             working_directory=self.project_directory,
@@ -614,8 +614,8 @@ class Trimmomatic(bsf.Analysis):
             name=prefix_project)
         annotation_sheet.to_file_path()
 
-        runnable_project = self.add_runnable(
-            runnable=bsf.Runnable(
+        runnable_project = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
                 name=prefix_project,
                 code_module='bsf.runnables.picard_sam_to_fastq_sample_sheet',
                 working_directory=self.project_directory,

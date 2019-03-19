@@ -25,7 +25,6 @@ A package of classes and methods supporting ChIP-Seq analyses.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from __future__ import print_function
 
 import os
@@ -37,6 +36,7 @@ import bsf.analyses.bowtie
 import bsf.annotation
 import bsf.executables
 import bsf.ngs
+import bsf.procedure
 import bsf.process
 import bsf.standards
 
@@ -155,7 +155,7 @@ class ChIPSeqComparison(object):
         return
 
 
-class FilePathMacs14(bsf.FilePath):
+class FilePathMacs14(bsf.procedure.FilePath):
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.chipseq.FilePathMacs14} object
 
@@ -175,7 +175,7 @@ class FilePathMacs14(bsf.FilePath):
         return
 
 
-class FilePathPeakCalling(bsf.FilePath):
+class FilePathPeakCalling(bsf.procedure.FilePath):
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.chipseq.FilePathPeakCalling} object
 
@@ -209,7 +209,7 @@ class FilePathPeakCalling(bsf.FilePath):
         return
 
 
-class FilePathDiffBind(bsf.FilePath):
+class FilePathDiffBind(bsf.procedure.FilePath):
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.chipseq.FilePathDiffBind} object
 
@@ -231,7 +231,7 @@ class FilePathDiffBind(bsf.FilePath):
         return
 
 
-class FilePathDiffBindContrast(bsf.FilePath):
+class FilePathDiffBindContrast(bsf.procedure.FilePath):
     def __init__(self, prefix, group_1, group_2):
         """Initialise a C{bsf.analyses.chipseq.FilePathDiffBind} object
 
@@ -391,24 +391,24 @@ class ChIPSeq(bsf.Analysis):
 
     @classmethod
     def get_prefix_chipseq_peak_calling(cls, t_sample_name, c_sample_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param t_sample_name: Treatment C{bsf.ngs.Sample.name}
         @type t_sample_name: str
         @param c_sample_name: Control C{bsf.ngs.Sample.name}
         @type c_sample_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return cls.get_stage_name_peak_calling() + '_' + t_sample_name + '__' + c_sample_name
 
     @classmethod
     def get_prefix_diff_bind(cls, factor_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param factor_name: Factor name
         @type factor_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_diff_bind(), factor_name))
@@ -761,8 +761,8 @@ class ChIPSeq(bsf.Analysis):
 
                         file_path_peak_calling = FilePathMacs14(prefix=prefix_peak_calling)
 
-                        runnable_peak_calling = self.add_runnable(
-                            runnable=bsf.Runnable(
+                        runnable_peak_calling = self.add_runnable_consecutive(
+                            runnable=bsf.procedure.ConsecutiveRunnable(
                                 name=prefix_peak_calling,
                                 code_module='bsf.runnables.generic',
                                 working_directory=self.genome_directory,
@@ -885,8 +885,8 @@ class ChIPSeq(bsf.Analysis):
 
                         file_path_peak_calling = FilePathPeakCalling(prefix=prefix_peak_calling)
 
-                        runnable_peak_calling = self.add_runnable(
-                            runnable=bsf.Runnable(
+                        runnable_peak_calling = self.add_runnable_consecutive(
+                            runnable=bsf.procedure.ConsecutiveRunnable(
                                 name=prefix_peak_calling,
                                 code_module='bsf.runnables.generic',
                                 working_directory=self.genome_directory,

@@ -34,7 +34,7 @@
 import argparse
 import importlib
 
-import bsf
+import bsf.procedure
 
 argument_parser = argparse.ArgumentParser(
     description='Generic BSF runner script.')
@@ -47,7 +47,7 @@ argument_parser.add_argument(
 
 arguments = argument_parser.parse_args()
 
-runnable = bsf.Runnable.from_pickler_path(file_path=arguments.pickler_path)
+runnable = bsf.procedure.Runnable.from_pickler_path(file_path=arguments.pickler_path)
 
 python_module = importlib.import_module(name=runnable.code_module)
 

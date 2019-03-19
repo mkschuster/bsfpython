@@ -25,7 +25,6 @@ A package of classes and methods supporting analyses of the Illumina2Bam-Tools p
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import os
 import warnings
 
@@ -34,6 +33,7 @@ import bsf.analyses.illumina_run_folder
 import bsf.annotation
 import bsf.illumina
 import bsf.ngs
+import bsf.procedure
 import bsf.process
 import bsf.standards
 
@@ -438,7 +438,7 @@ class RunnableStepIlluminaToBam(bsf.process.RunnableStepJava):
         return self.sub_command.sub_command.add_option_pair(key=key, value=value, override=override)
 
 
-class FilePathIlluminaToBamLane(bsf.FilePath):
+class FilePathIlluminaToBamLane(bsf.procedure.FilePath):
     """The C{bsf.analyses.illumina_to_bam_tools.FilePathIlluminaRunFolderRestore} models files in an archive directory.
 
     Attributes:
@@ -547,24 +547,24 @@ class IlluminaToBam(bsf.Analysis):
 
     @classmethod
     def get_prefix_cell(cls, project_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
     def get_prefix_lane(cls, project_name, lane):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_lane(), project_name, lane))
@@ -931,9 +931,9 @@ class IlluminaToBam(bsf.Analysis):
                 lane=lane_str,
                 experiment_directory=experiment_directory)
 
-            # NOTE: The bsf.Runnable.name has to match the Executable.name that gets submitted via the Stage.
-            runnable_lane = self.add_runnable(
-                runnable=bsf.Runnable(
+            # NOTE: The bsf.procedure.Runnable.name has to match the Executable.name that gets submitted via the Stage.
+            runnable_lane = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory,
@@ -1126,8 +1126,8 @@ class IlluminaToBam(bsf.Analysis):
 
         # Add another flow cell-specific Runnable to reset directory and file mode permissions if requested.
 
-        runnable_cell = self.add_runnable(
-            runnable=bsf.Runnable(
+        runnable_cell = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
@@ -1147,7 +1147,7 @@ class IlluminaToBam(bsf.Analysis):
         return
 
 
-class FilePathBamIndexDecoderCell(bsf.FilePath):
+class FilePathBamIndexDecoderCell(bsf.procedure.FilePath):
     """The C{bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderCell} models flow cell-specific file paths.
 
     Attributes:
@@ -1181,7 +1181,7 @@ class FilePathBamIndexDecoderCell(bsf.FilePath):
         return
 
 
-class FilePathBamIndexDecoderLane(bsf.FilePath):
+class FilePathBamIndexDecoderLane(bsf.procedure.FilePath):
     """The C{bsf.analyses.illumina_to_bam_tools.FilePathBamIndexDecoderLane} models lane-specific file paths.
 
     Attributes:
@@ -1302,24 +1302,24 @@ class BamIndexDecoder(bsf.Analysis):
 
     @classmethod
     def get_prefix_cell(cls, project_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
     def get_prefix_lane(cls, project_name, lane):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_lane(), project_name, lane))
@@ -1706,8 +1706,8 @@ class BamIndexDecoder(bsf.Analysis):
                 })
 
             # NOTE: The Runnable.name has to match the Executable.name that gets submitted via the Stage.
-            runnable_lane = self.add_runnable(
-                runnable=bsf.Runnable(
+            runnable_lane = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory,
@@ -1940,8 +1940,8 @@ class BamIndexDecoder(bsf.Analysis):
 
         # Create a flow-cell specific Runnable.
 
-        runnable_cell = self.add_runnable(
-            runnable=bsf.Runnable(
+        runnable_cell = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,

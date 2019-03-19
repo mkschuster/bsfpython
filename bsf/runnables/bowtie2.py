@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Bowtie2 Runnables module
+"""Bowtie2 Runnable module
 
 A package of classes and methods to run the Bowtie2 short read aligner.
 """
@@ -25,7 +25,6 @@ A package of classes and methods to run the Bowtie2 short read aligner.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from __future__ import print_function
 
 import errno
@@ -119,8 +118,8 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
     """Run Picard SamToFastq on a BAM file and convert into a FASTQ file pair per read group (@RG).
 
     Expand a BAM file into a pair of FASTQ files per SAM read group.
-    @param runnable: C{bsf.Runnable}
-    @type runnable: bsf.Runnable
+    @param runnable: C{bsf.procedure.ConsecutiveRunnable}
+    @type runnable: bsf.procedure.ConsecutiveRunnable
     @param bam_file_path: BAM file path
     @type bam_file_path: str | unicode
     @return:
@@ -217,8 +216,8 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
 def run_bowtie2(runnable):
     """Run Bowtie2.
 
-    @param runnable: C{bsf.Runnable}
-    @type runnable: bsf.Runnable
+    @param runnable: C{bsf.procedure.ConsecutiveRunnable}
+    @type runnable: bsf.procedure.ConsecutiveRunnable
     @return:
     @rtype:
     """
@@ -239,7 +238,7 @@ def run_bowtie2(runnable):
             and os.path.getsize(filename=file_path_read_group.aligned_sam):
         return
 
-    # FIXME: The Runnable object now only has a list of RunnableStep objects.
+    # FIXME: The ConsecutiveRunnable object now only has a list of RunnableStep objects.
     # FIXME: The bsf.executables.Bowtie2 object is also deprecated.
     # bowtie2 = runnable.executable_dict['bowtie2']
     # The following bowtie2 definition is only a placeholder.
@@ -401,10 +400,10 @@ def run_bowtie2(runnable):
 
 
 def run(runnable):
-    """Run the C{bsf.Runnable}.
+    """Run the C{bsf.procedure.ConsecutiveRunnable}.
 
-    @param runnable: C{bsf.Runnable}
-    @type runnable: bsf.Runnable
+    @param runnable: C{bsf.procedure.ConsecutiveRunnable}
+    @type runnable: bsf.procedure.ConsecutiveRunnable
     @return:
     @rtype:
     """
@@ -426,7 +425,7 @@ def run(runnable):
             if exception.errno != errno.EEXIST:
                 raise
 
-    # Run all Executable objects of this Runnable.
+    # Run all Executable objects of this ConsecutiveRunnable.
 
     run_bowtie2(runnable=runnable)
 

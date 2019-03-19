@@ -39,17 +39,17 @@ import bsf.ngs
 
 
 def run(runnable):
-    """Run the the C{bsf.Runnable}.
+    """Run the the C{bsf.procedure.ConsecutiveRunnable}.
 
-    @param runnable: C{bsf.Runnable}
-    @type runnable: bsf.Runnable
+    @param runnable: C{bsf.procedure.ConsecutiveRunnable}
+    @type runnable: bsf.procedure.ConsecutiveRunnable
     @return:
     @rtype:
     """
 
     def run_get_value(key):
         """Get the value of the first C{bsf.argument.OptionLong} object registered under a key
-        in the first C{bsf.process.RunnableStep} object of this C{bsf.Runnable} object.
+        in the first C{bsf.process.RunnableStep} object of this C{bsf.procedure.ConsecutiveRunnable} object.
 
         @param key: C{bsf.argument.OptionLong} key
         @type key: str | unicode
@@ -60,8 +60,8 @@ def run(runnable):
         """ @type argument: bsf.argument.OptionLong """
         return argument.value
 
-    # If the Runnable status file exists, there is nothing to do and
-    # this Runnable should not have been submitted in the first place.
+    # If the ConsecutiveRunnable status file exists, there is nothing to do and
+    # this ConsecutiveRunnable should not have been submitted in the first place.
 
     if os.path.exists(runnable.runnable_status_file_path(success=True, absolute=False)):
         return
@@ -117,7 +117,8 @@ def run(runnable):
 
     runnable_step.remove_obsolete_file_paths()
 
-    # Upon success, create a Runnable-specific status file that indicates completion for the whole Runnable.
+    # Upon success, create a ConsecutiveRunnable-specific status file that indicates completion
+    # for the whole ConsecutiveRunnable.
 
     runnable.runnable_status_file_remove()
     runnable.runnable_status_file_create(success=True)

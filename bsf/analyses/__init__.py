@@ -25,7 +25,6 @@ A package of classes and methods supporting analyses.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from __future__ import print_function
 
 import os
@@ -62,11 +61,11 @@ class RunBamToFastq(bsf.Analysis):
 
     @classmethod
     def get_prefix_read_group(cls, read_group_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param read_group_name: Read group name
         @type read_group_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))

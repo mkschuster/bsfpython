@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Generic Runnables module
 
-A package of classes and methods to run C{bsf.process.RunnableStep} objects of a C{bsf.Runnable}.
+A package of classes and methods to run C{bsf.process.RunnableStep} objects of a C{bsf.procedure.Runnable}.
 Empty status files keep track of completed C{bsf.process.RunnableStep} objects and allow for
-restarting of the C{bsf.Runnable} object processing.
+restarting of the C{bsf.procedure.Runnable} object processing.
 """
 #  Copyright 2013 - 2019 Michael K. Schuster
 #
@@ -27,7 +27,6 @@ restarting of the C{bsf.Runnable} object processing.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import datetime
 import errno
 import os
@@ -37,21 +36,21 @@ import bsf.process
 
 
 def run(runnable):
-    """Run the the C{bsf.Runnable}.
+    """Run the the C{bsf.procedure.ConsecutiveRunnable}.
 
-    @param runnable: C{bsf.Runnable}
-    @type runnable: bsf.Runnable
+    @param runnable: C{bsf.procedure.ConsecutiveRunnable}
+    @type runnable: bsf.procedure.ConsecutiveRunnable
     @return:
     @rtype:
     """
 
-    # If the Runnable status file exists, there is nothing to do and
-    # this Runnable should not have been submitted in the first place.
+    # If the ConsecutiveRunnable status file exists, there is nothing to do and
+    # this ConsecutiveRunnable should not have been submitted in the first place.
 
     if os.path.exists(runnable.runnable_status_file_path(success=True, absolute=False)):
         return
 
-    # Create a Runnable-specific cache directory if it does not exist already.
+    # Create a ConsecutiveRunnable-specific cache directory if it does not exist already.
 
     if runnable.cache_path_dict:
         cache_directory_path = runnable.cache_directory_path(absolute=True)
@@ -68,7 +67,9 @@ def run(runnable):
             source_path = runnable.cache_path_dict[key]
             target_path = os.path.join(cache_directory_path, os.path.basename(source_path))
 
-            runnable_step = bsf.process.RunnableStep(name='_'.join((runnable.name, 'cache', key)), program='cp')
+            runnable_step = bsf.process.RunnableStep(
+                name='_'.join((runnable.name, 'cache', key)),
+                program='cp')
             runnable_step.add_switch_short(key='p')
             runnable_step.arguments.append(source_path)
             runnable_step.arguments.append(target_path)
@@ -76,7 +77,7 @@ def run(runnable):
             child_return_code = runnable_step.run()
 
             if child_return_code != 0:
-                # Remove the Runnable-specific cache directory and everything within it.
+                # Remove the ConsecutiveRunnable-specific cache directory and everything within it.
                 if os.path.exists(cache_directory_path):
                     shutil.rmtree(path=cache_directory_path, ignore_errors=False)
                 # Raise an Exception.
@@ -95,7 +96,7 @@ def run(runnable):
     else:
         cache_directory_path = None
 
-    # Create a Runnable-specific temporary directory if it does not exist already.
+    # Create a ConsecutiveRunnable-specific temporary directory if it does not exist already.
 
     temporary_directory_path = runnable.temporary_directory_path(absolute=False)
     if not os.path.isdir(temporary_directory_path):
@@ -164,18 +165,19 @@ def run(runnable):
 
     # Irrespective of failure ...
 
-    # Remove the Runnable-specific cache directory and everything within it.
+    # Remove the ConsecutiveRunnable-specific cache directory and everything within it.
 
     if cache_directory_path and os.path.exists(cache_directory_path):
         shutil.rmtree(path=cache_directory_path, ignore_errors=False)
 
-    # Remove the Runnable-specific temporary directory and everything within it.
+    # Remove the ConsecutiveRunnable-specific temporary directory and everything within it.
 
     if os.path.exists(temporary_directory_path):
         shutil.rmtree(path=temporary_directory_path, ignore_errors=False)
 
     if child_return_code == 0:
-        # Upon success, create a Runnable-specific status file that indicates completion for the whole Runnable.
+        # Upon success, create a ConsecutiveRunnable-specific status file that indicates completion
+        # for the whole ConsecutiveRunnable.
 
         runnable.runnable_status_file_remove()
         runnable.runnable_status_file_create(success=True)

@@ -25,7 +25,6 @@ A package of classes and methods modelling processes.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from __future__ import print_function
 
 import datetime
@@ -1128,7 +1127,7 @@ class Executable(Command):
 
 
 class RunnableStep(Executable):
-    """The C{bsf.process.RunnableStep} represents one C{bsf.process.Executable} in a C{bsf.Runnable}.
+    """The C{bsf.process.RunnableStep} represents one C{bsf.process.Executable} in a C{bsf.procedure.Runnable}.
 
     Attributes:
     @ivar obsolete_file_path_list: Python C{list} of file paths that can be removed

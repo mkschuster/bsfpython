@@ -26,7 +26,6 @@ Reference: http://www.biomedical-sequencing.at/
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from __future__ import print_function
 
 import cgi
@@ -36,13 +35,13 @@ import getpass
 import importlib
 import inspect
 import os
-import pickle
 import sys
 import urllib
 import uuid
 import warnings
 
 import bsf.ngs
+import bsf.procedure
 import bsf.process
 import bsf.standards
 
@@ -55,7 +54,7 @@ class Analysis(object):
     """The C{bsf.Analysis} class represents a high-level analysis.
 
     It consists of one or more C{bsf.Stage} objects that may run one or more
-    C{bsf.process.Executable} or C{bsf.process.Runnable} objects (programs).
+    C{bsf.process.Executable} or C{bsf.process.RunnableStep} objects (programs).
 
     Attributes:
     @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
@@ -95,8 +94,9 @@ class Analysis(object):
     @type e_mail: str | None
     @ivar stage_list: Python C{list} of C{bsf.Stage} objects
     @type stage_list: list[bsf.Stage]
-    @ivar runnable_dict: Python C{dict} of Python C{str} (C{bsf.Runnable.name}) key data and C{bsf.Runnable} value data
-    @type runnable_dict: dict[bsf.Runnable.name, bsf.Runnable]
+    @ivar runnable_dict: Python C{dict} of Python C{str} (C{bsf.procedure.Runnable.name}) key data and
+        C{bsf.procedure.Runnable} value data
+    @type runnable_dict: dict[bsf.procedure.Runnable.name, bsf.procedure.Runnable]
     @ivar collection: C{bsf.ngs.Collection}
     @type collection: bsf.ngs.Collection
     @ivar sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -197,8 +197,9 @@ class Analysis(object):
         @type debug: int | None
         @param stage_list: Python C{list} of C{bsf.Stage} objects
         @type stage_list: list[bsf.Stage] | None
-        @param runnable_dict: Python C{dict} of Python C{str} (C{bsf.Runnable.name}) and C{bsf.Runnable} value data
-        @type runnable_dict: dict[bsf.Runnable.name, bsf.Runnable] | None
+        @param runnable_dict: Python C{dict} of Python C{str} (C{bsf.procedure.Runnable.name}) and
+            C{bsf.procedure.Runnable} value data
+        @type runnable_dict: dict[bsf.procedure.Runnable.name, bsf.procedure.Runnable] | None
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection | None
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -313,15 +314,15 @@ class Analysis(object):
         return stage
 
     def add_runnable(self, runnable):
-        """Convenience method to facilitate initialising, adding and returning a C{bsf.Runnable}.
+        """Convenience method to facilitate initialising, adding and returning a C{bsf.procedure.Runnable}.
 
-        @param runnable: C{bsf.Runnable}
-        @type runnable: bsf.Runnable
-        @return: C{bsf.Runnable}
-        @rtype: bsf.Runnable
-        @raise Exception: The C{bsf.Runnable.name} already exists in the C{bsf.Analysis.runnable_dict}
+        @param runnable: C{bsf.procedure.Runnable}
+        @type runnable: bsf.procedure.Runnable
+        @return: C{bsf.procedure.Runnable}
+        @rtype: bsf.procedure.Runnable
+        @raise Exception: The C{bsf.procedure.Runnable.name} already exists in the C{bsf.Analysis.runnable_dict}
         """
-        assert isinstance(runnable, Runnable)
+        assert isinstance(runnable, bsf.procedure.Runnable)
 
         if runnable.name in self.runnable_dict:
             raise Exception('A Runnable with name ' + repr(runnable.name) +
@@ -330,6 +331,30 @@ class Analysis(object):
             self.runnable_dict[runnable.name] = runnable
 
         return runnable
+
+    def add_runnable_concurrent(self, runnable):
+        """Convenience method to facilitate initialising, adding and returning a C{bsf.procedure.ConcurrentRunnable}.
+
+        @param runnable: C{bsf.procedure.ConcurrentRunnable}
+        @type runnable: bsf.procedure.ConcurrentRunnable
+        @return: C{bsf.procedure.ConcurrentRunnable}
+        @rtype: bsf.procedure.ConcurrentRunnable
+        @raise Exception: The C{bsf.procedure.Runnable.name} already exists in the C{bsf.Analysis.runnable_dict}
+        """
+        assert isinstance(runnable, bsf.procedure.ConcurrentRunnable)
+        return self.add_runnable(runnable=runnable)
+
+    def add_runnable_consecutive(self, runnable):
+        """Convenience method to facilitate initialising, adding and returning a C{bsf.procedure.ConsecutiveRunnable}.
+
+        @param runnable: C{bsf.procedure.ConsecutiveRunnable}
+        @type runnable: bsf.procedure.ConsecutiveRunnable
+        @return: C{bsf.procedure.ConsecutiveRunnable}
+        @rtype: bsf.procedure.ConsecutiveRunnable
+        @raise Exception: The C{bsf.procedure.Runnable.name} already exists in the C{bsf.Analysis.runnable_dict}
+        """
+        assert isinstance(runnable, bsf.procedure.ConsecutiveRunnable)
+        return self.add_runnable(runnable=runnable)
 
     def add_sample(self, sample):
         """Add a C{bsf.ngs.Sample} to the Python C{list} of C{bsf.ngs.Sample} objects.
@@ -535,6 +560,7 @@ class Analysis(object):
         @return:
         @rtype:
         """
+
         def _set_configuration(command, section):
             """Recursively set default C{bsf.argument.Argument} objects for a C{bsf.process.RunnableStep}.
 
@@ -576,22 +602,22 @@ class Analysis(object):
         return
 
     def set_stage_runnable(self, stage, runnable):
-        """Create a C{bsf.process.Executable} to assign a C{bsf.Runnable} to a C{bsf.Stage}.
+        """Create a C{bsf.process.Executable} to assign a C{bsf.procedure.Runnable} to a C{bsf.Stage}.
 
-        In case the file in C{bsf.Runnable.get_relative_status_path} exists already,
+        In case the file in C{bsf.procedure.Runnable.get_relative_status_path} exists already,
         C{bsf.process.Executable.submit} will be set to C{False}.
 
         @param stage: C{bsf.Stage}
         @type stage: bsf.Stage
-        @param runnable: C{bsf.Runnable}
-        @type runnable: bsf.Runnable
+        @param runnable: C{bsf.procedure.Runnable}
+        @type runnable: bsf.procedure.Runnable
         @return: C{bsf.process.Executable}
         @rtype: bsf.process.Executable
-        @raise Exception: A C{bsf.Runnable.name} does not exist in C{bsf.Analysis.runnable_dict}
+        @raise Exception: A C{bsf.procedure.Runnable.name} does not exist in C{bsf.Analysis.runnable_dict}
         @raise Exception: A C{bsf.Stage} does not exist in C{bsf.Analysis.stage_list}
         """
         assert isinstance(stage, Stage)
-        assert isinstance(runnable, Runnable)
+        assert isinstance(runnable, bsf.procedure.Runnable)
 
         if stage not in self.stage_list:
             raise Exception('A Stage with name ' + repr(stage.name) +
@@ -601,7 +627,7 @@ class Analysis(object):
             raise Exception('A Runnable with name ' + repr(runnable.name) +
                             ' does not exist in the Analysis with name ' + repr(self.project_name) + '.')
 
-        executable = bsf.process.Executable(name=runnable.name, program=Runnable.runner_script)
+        executable = bsf.process.Executable(name=runnable.name, program=bsf.procedure.Runnable.runner_script)
         executable.add_option_long(key='pickler-path', value=runnable.pickler_path)
 
         # Only submit the bsf.process.Executable if the status file does not exist already.
@@ -1498,14 +1524,14 @@ class Analysis(object):
         """Submit each C{bsf.Stage}.
 
         Submits each C{bsf.process.Executable} of either all C{bsf.Stage} objects or a named one and pickles
-        each C{bsf.Runnable}.
+        each C{bsf.procedure.Runnable}.
 
         @param name: Only submit C{bsf.process.Executable} objects linked to C{bsf.Stage.name}
         @type name: bsf.Stage.name
         @return:
         @rtype:
         """
-        # Pickle all Runnable objects.
+        # Pickle all bsf.procedure.Runnable objects.
 
         for runnable in self.runnable_dict.values():
             runnable.to_pickler_path()
@@ -1540,7 +1566,7 @@ class Analysis(object):
 class Stage(object):
     """The C{bsf.Stage} class represents a stage of a C{bsf.Analysis}.
 
-    A C{bsf.Stage} represents C{bsf.process.Executable} or C{bsf.Runnable} objects that share
+    A C{bsf.Stage} represents C{bsf.process.Executable} or C{bsf.procedure.Runnable} objects that share
     similar resource requirements of a I{Distributed Resource Management System} (I{DRMS}).
 
     Attributes:
@@ -1857,404 +1883,5 @@ class Stage(object):
 
         python_module = importlib.import_module(name='.'.join((__name__, 'drms', self.implementation)))
         python_module.submit(stage=self, debug=debug)
-
-        return
-
-
-class FilePath(object):
-    """The C{bsf.FilePath} class represents formalised file path information for the C{bsf.Runnable} class.
-
-    Each C{bsf.Runnable} class is expected to define its corresponding C{bsf.FilePath} sub-class.
-    Attributes:
-    @ivar prefix: File path prefix
-    @type prefix: str | unicode
-    #ivar temporary_directory: Temporary directory path
-    #type temporary_directory: str | unicode
-    """
-
-    def __init__(self, prefix):
-        """Initialise a C{bsf.FilePath}.
-
-        @param prefix: File path prefix
-        @type prefix: str | unicode
-        @return:
-        @rtype:
-        """
-        self.prefix = prefix
-
-        return
-
-
-class Runnable(object):
-    """The C{bsf.Runnable} class represents one or more C{bsf.process.Executable} objects for the I{Runner} script.
-
-    A C{bsf.Runnable} holds all information to run one or more C{bsf.process.Executable} objects through the
-    C{bsf.Runnable.runner_script}. It can be thought of a GNU Bash script that executes as set of
-    C{bsf.process.RunnableStep} objects reflecting commands of a GNU Bash script.
-
-    Attributes:
-    @cvar runner_script: Name of the I{Runner} script
-    @type runner_script: str | unicode
-    @ivar name: Name
-    @type name: str
-    @ivar code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
-        C{bsf.process.Executable} objects via the C{bsf.Runnable.runner_script}.
-    @type code_module: str
-    @ivar cache_directory: Cache directory
-    @type cache_directory: str | unicode | None
-    @ivar cache_path_dict: Python C{dict} of Python C{str} (name) key and
-        Python C{str} (file_path) value data of files that will be copied into the C{bsf.Runnable.cache_directory}
-    @type cache_path_dict: dict[str, str | unicode]
-    @ivar file_path_object: C{bsf.FilePath}
-    @type file_path_object: bsf.FilePath
-    @ivar runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
-    @type runnable_step_list: list[bsf.process.RunnableStep]
-    @ivar working_directory: Working directory to write C{pickle.Pickler} files
-    @type working_directory: str | unicode | None
-    @ivar debug: Debug level
-    @type debug: int
-    """
-
-    runner_script = 'bsf_runner.py'
-
-    def __init__(
-            self,
-            name,
-            code_module,
-            working_directory,
-            cache_directory=None,
-            cache_path_dict=None,
-            file_path_object=None,
-            runnable_step_list=None,
-            debug=0):
-        """Initialise a C{bsf.Runnable}.
-
-        @param name: Name
-        @type name: str
-        @param code_module: The name of a module, usually in C{bsf.runnables} that implements the logic required to run
-            C{bsf.process.Executable} objects via the C{bsf.Runnable.runner_script}
-        @type code_module: str
-        @param working_directory: Working directory for writing a Python C{pickle.Pickler} file
-        @type working_directory: str | unicode
-        @param cache_directory: Cache directory
-        @type cache_directory: str | unicode | None
-        @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
-            Python C{str} (file_path) value data of files that will be copied into the C{bsf.Runnable.cache_directory}
-        @type cache_path_dict: dict[str, str | unicode]
-        @param file_path_object: C{bsf.FilePath}
-        @type file_path_object: bsf.FilePath
-        @param runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
-        @type runnable_step_list: list[bsf.process.RunnableStep]
-        @param debug: Integer debugging level
-        @type debug: int
-        @return:
-        @rtype:
-        """
-
-        super(Runnable, self).__init__()
-
-        self.name = name  # Can be None.
-        self.code_module = code_module  # Can be None.
-        self.working_directory = working_directory
-        self.cache_directory = cache_directory
-
-        if cache_path_dict is None:
-            self.cache_path_dict = dict()
-        else:
-            self.cache_path_dict = cache_path_dict
-
-        if file_path_object is None:
-            self.file_path_object = FilePath(prefix='default_file_path')
-        else:
-            self.file_path_object = file_path_object
-
-        if runnable_step_list is None:
-            self.runnable_step_list = list()
-        else:
-            self.runnable_step_list = runnable_step_list
-
-        if debug is None:
-            self.debug = 0
-        else:
-            assert isinstance(debug, int)
-            self.debug = debug
-
-        return
-
-    def trace(self, level=1):
-        """Trace a C{bsf.Runnable}.
-
-        @param level: Indentation level
-        @type level: int
-        @return: Trace information
-        @rtype: list[str | unicode]
-        """
-        indent = '  ' * level
-
-        str_list = list()
-        """ @type str_list: list[str | unicode] """
-
-        str_list.append('{}{!r}\n'.format(indent, self))
-        str_list.append('{}  name: {!r}\n'.format(indent, self.name))
-        str_list.append('{}  code_module: {!r}\n'.format(indent, self.code_module))
-        str_list.append('{}  working_directory: {!r}\n'.format(indent, self.working_directory))
-        str_list.append('{}  cache_directory: {!r}\n'.format(indent, self.cache_directory))
-        str_list.append('{}  cache_path_dict: {!r}\n'.format(indent, self.cache_path_dict))
-        str_list.append('{}  file_path_object: {!r}\n'.format(indent, self.file_path_object))
-        str_list.append('{}  runnable_step_list: {!r}\n'.format(indent, self.runnable_step_list))
-        str_list.append('{}  debug: {!r}\n'.format(indent, self.debug))
-
-        str_list.append('{}  Python dict of Python str (cache path) objects:\n'.format(indent))
-        for key in sorted(self.cache_path_dict):
-            str_list.append('{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.cache_path_dict[key]))
-
-        str_list.append('{}  Python list of RunnableStep objects:\n'.format(indent))
-        for runnable_step in self.runnable_step_list:
-            str_list.extend(runnable_step.trace(level=level + 1))
-
-        return str_list
-
-    def add_runnable_step(self, runnable_step=None):
-        """Convenience method to facilitate initialising, adding and returning a C{bsf.process.RunnableStep}.
-
-        @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep | None
-        @return: C{bsf.process.RunnableStep}
-        @rtype: bsf.process.RunnableStep
-        """
-        if runnable_step is None:
-            return
-
-        assert isinstance(runnable_step, bsf.process.RunnableStep)
-
-        self.runnable_step_list.append(runnable_step)
-
-        return runnable_step
-
-    @property
-    def pickler_path(self):
-        """Get the Python C{pickle.Pickler} file path.
-
-        @return: Python C{pickle.Pickler} file path
-        @rtype: str | unicode
-        """
-        return os.path.join(self.working_directory, '.'.join((self.name, 'pkl')))
-
-    def to_pickler_path(self):
-        """Write this C{bsf.Runnable} as a Python C{pickle.Pickler} file into the working directory.
-
-        @return:
-        @rtype:
-        """
-        with open(self.pickler_path, 'wb') as output_file:
-            pickler = pickle.Pickler(file=output_file, protocol=pickle.HIGHEST_PROTOCOL)
-            pickler.dump(obj=self)
-
-        return
-
-    @classmethod
-    def from_pickler_path(cls, file_path):
-        """Create a C{bsf.Runnable} from a Python C{pickle.Pickler} file via Python C{pickle.Unpickler}.
-
-        @param file_path: File path to a Python C{pickle.Pickler} file
-        @type file_path: str | unicode
-        @return: C{bsf.Runnable}
-        @rtype: bsf.Runnable
-        """
-        with open(file_path, 'rb') as input_file:
-            runnable = pickle.Unpickler(file=input_file).load()
-            """ @type runnable: bsf.Runnable """
-
-        # Did the Unpickler really return a Runnable object?
-        assert isinstance(runnable, Runnable)
-
-        return runnable
-
-    def cache_directory_path(self, absolute=False):
-        """Get the absolute or relative cache directory path of a C{bsf.Runnable}.
-
-        If C{bsf.Runnable.cache_directory} is not defined, C{bsf.Runnable.working_directory} will be prepended.
-        Since the relative cache directory path includes the C{bsf.Runnable.name},
-        the directory is C{bsf.Runnable}-specific.
-        (i.e. C{bsf.Runnable.cache_directory}/C{bsf.Runnable.name}_cache or
-        C{bsf.Runnable.working_directory}/C{bsf.Runnable.name}_cache)
-
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Absolute or relative cache directory path
-        @rtype: str | unicode
-        """
-        directory_name = '_'.join((self.name, 'cache'))
-
-        if absolute:
-            if self.cache_directory:
-                default_path = self.cache_directory
-            else:
-                default_path = self.working_directory
-            return bsf.standards.Configuration.get_absolute_path(
-                file_path=directory_name,
-                default_path=default_path)
-        else:
-            return directory_name
-
-    def get_cache_file_path(self, file_path, absolute=False):
-        """Get the absolute or relative cache file path for a file path.
-
-        @param file_path: Default file path
-        @type file_path: str | unicode
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Absolute or relative cache file path
-        @rtype: str | unicode
-        """
-        file_path = os.path.normpath(file_path)
-        file_name = os.path.basename(file_path)
-
-        return os.path.join(self.cache_directory_path(absolute=absolute), file_name)
-
-    def temporary_directory_path(self, absolute=False):
-        """Get the absolute or relative temporary directory path of a C{bsf.Runnable}.
-
-        The absolute path prepends the C{bsf.Runnable.working_directory},
-        the relative just C{bsf.Runnable.name}_temporary.
-        @param absolute: Absolute or relative file path
-        @type absolute: bool
-        @return: Absolute or relative temporary directory path
-        @rtype: str | unicode
-        """
-        directory_name = '_'.join((self.name, 'temporary'))
-
-        if absolute:
-            return os.path.join(self.working_directory, directory_name)
-        else:
-            return directory_name
-
-    def runnable_status_file_path(self, success=True, absolute=False):
-        """Get the status file path for a C{bsf.Runnable}.
-
-        @param success: Successful completion
-        @type success: bool
-        @param absolute: Absolute file path
-        @type absolute: bool
-        @return: Status file path
-        @rtype: str | unicode
-        """
-        if success:
-            file_name = '_'.join((self.name, 'completed.txt'))
-        else:
-            file_name = '_'.join((self.name, 'failed.txt'))
-
-        if absolute:
-            return os.path.join(self.working_directory, file_name)
-        else:
-            return file_name
-
-    def runnable_status_file_create(self, success=True):
-        """Create an empty status file for a C{bsf.Runnable}.
-
-        This method is mainly used by C{bsf.runnable.generic} and related modules.
-
-        @param success: Successful completion
-        @type success: bool
-        @return:
-        @rtype:
-        """
-        status_path = self.runnable_status_file_path(success=success)
-        open(status_path, 'wt').close()
-
-        return
-
-    def runnable_status_file_remove(self):
-        """Remove the status file for a C{bsf.Runnable}.
-
-        This method is mainly used by C{bsf.runnable.generic} and related modules.
-
-        @return:
-        @rtype:
-        """
-        # Automatically remove both status files, successful or not.
-
-        status_path = self.runnable_status_file_path(success=True)
-        try:
-            os.remove(status_path)
-        except OSError as exception:
-            if exception.errno != errno.ENOENT:
-                raise
-
-        status_path = self.runnable_status_file_path(success=False)
-        try:
-            os.remove(status_path)
-        except OSError as exception:
-            if exception.errno != errno.ENOENT:
-                raise
-
-        return
-
-    def runnable_step_status_file_path(self, runnable_step=None, success=True):
-        """Get the status file path for a C{bsf.process.RunnableStep} of a C{bsf.Runnable}.
-
-        @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep | None
-        @param success: Successful completion
-        @type success: bool
-        @return: Status file path
-        @rtype: str | None
-        """
-        if runnable_step is None:
-            return
-
-        if success:
-            return '_'.join((self.name, runnable_step.name, 'completed.txt'))
-        else:
-            return '_'.join((self.name, runnable_step.name, 'failed.txt'))
-
-    def runnable_step_status_file_create(self, runnable_step=None, success=True):
-        """Create an empty status file for a C{bsf.process.RunnableStep} of a C{bsf.Runnable}.
-
-        This method is mainly used by C{bsf.runnable.generic} and related modules.
-
-        @param runnable_step: C{bsf.process.RunnableStep} | None
-        @type runnable_step: bsf.process.RunnableStep
-        @param success: Successful completion
-        @type success: bool
-        @return:
-        @rtype:
-        """
-        if runnable_step is None:
-            return
-
-        status_path = self.runnable_step_status_file_path(runnable_step=runnable_step, success=success)
-        open(status_path, 'wt').close()
-
-        return
-
-    def runnable_step_status_file_remove(self, runnable_step):
-        """Remove the status file for a C{bsf.process.RunnableStep} of a C{bsf.Runnable}.
-
-        This method is mainly used by C{bsf.runnable.generic} and related modules.
-
-        @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep | None
-        @return:
-        @rtype:
-        """
-        if runnable_step is None:
-            return
-
-        # Automatically remove both status files, successful or not.
-
-        status_path = self.runnable_step_status_file_path(runnable_step=runnable_step, success=True)
-        try:
-            os.remove(status_path)
-        except OSError as exception:
-            if exception.errno != errno.ENOENT:
-                raise
-
-        status_path = self.runnable_step_status_file_path(runnable_step=runnable_step, success=False)
-        try:
-            os.remove(status_path)
-        except OSError as exception:
-            if exception.errno != errno.ENOENT:
-                raise
 
         return

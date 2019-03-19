@@ -28,7 +28,6 @@ Project:  https://github.com/alexdobin/STAR
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from __future__ import print_function
 
 import os
@@ -275,10 +274,10 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         return
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add one or more STAR-specific C{bsf.process.RunnableStep} objects to the C{bsf.Runnable}.
+        """Add one or more STAR-specific C{bsf.process.RunnableStep} objects to the C{bsf.procedure.Runnable}.
 
-        @param runnable_align: C{bsf.Runnable}
-        @type runnable_align: bsf.Runnable
+        @param runnable_align: C{bsf.procedure.ConsecutiveRunnable}
+        @type runnable_align: bsf.procedure.ConsecutiveRunnable
         @param stage_align: C{bsf.Stage}
         @type stage_align: bsf.Stage
         @param file_path_1: FASTQ file path 1
@@ -333,10 +332,10 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         return
 
     def add_runnable_step_summary(self, runnable_summary, stage_summary):
-        """Add one or more STAR-specific C{bsf.process.RunnableStep} objects to the C{bsf.Runnable}.
+        """Add one or more STAR-specific C{bsf.process.RunnableStep} objects to the C{bsf.procedure.Runnable}.
 
-        @param runnable_summary: C{bsf.Runnable}
-        @type runnable_summary: bsf.Runnable
+        @param runnable_summary: C{bsf.procedure.ConsecutiveRunnable}
+        @type runnable_summary: bsf.procedure.ConsecutiveRunnable
         @param stage_summary: C{bsf.Stage}
         @type stage_summary: bsf.Stage
         @return:

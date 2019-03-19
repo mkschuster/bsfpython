@@ -25,7 +25,6 @@ A package of classes and methods supporting Aligner analyses.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from __future__ import print_function
 
 import os
@@ -35,9 +34,10 @@ import warnings
 
 import bsf
 import bsf.annotation
+import bsf.procedure
 
 
-class FilePathAlign(bsf.FilePath):
+class FilePathAlign(bsf.procedure.FilePath):
     """The C{bsf.analyses.aligner.FilePathAlign} class models file paths at the alignment stage.
 
     Attributes:
@@ -92,7 +92,7 @@ class FilePathAlign(bsf.FilePath):
         return
 
 
-class FilePathReadGroup(bsf.FilePath):
+class FilePathReadGroup(bsf.procedure.FilePath):
     """The C{bsf.analyses.aligner.FilePathReadGroup} class models file paths at the read group processing stage.
 
     Attributes:
@@ -149,7 +149,7 @@ class FilePathReadGroup(bsf.FilePath):
         return
 
 
-class FilePathSample(bsf.FilePath):
+class FilePathSample(bsf.procedure.FilePath):
     """The C{bsf.analyses.aligner.FilePathSample} class models file paths at the sample processing stage.
 
     Attributes:
@@ -194,7 +194,7 @@ class FilePathSample(bsf.FilePath):
         return
 
 
-class FilePathSummary(bsf.FilePath):
+class FilePathSummary(bsf.procedure.FilePath):
     """The C{bsf.analyses.aligner.FilePathSummary} class models file paths at the summary stage.
 
     Attributes:
@@ -285,53 +285,53 @@ class Aligner(bsf.Analysis):
 
     @classmethod
     def get_prefix_align(cls, paired_reads_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param paired_reads_name: C{bsf.ngs.PairedReads.name}
         @type paired_reads_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_align(), paired_reads_name))
 
     @classmethod
     def get_prefix_index(cls, paired_reads_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param paired_reads_name: C{bsf.ngs.PairedReads.name}
         @type paired_reads_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_index(), paired_reads_name))
 
     @classmethod
     def get_prefix_read_group(cls, read_group_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param read_group_name: Read group name
         @type read_group_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
     @classmethod
     def get_prefix_sample(cls, sample_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param sample_name: C{bsf.ngs.Sample.name}
         @type sample_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_sample(), sample_name))
 
     @classmethod
     def get_prefix_summary(cls):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return cls.get_stage_name_summary()
@@ -487,10 +487,10 @@ class Aligner(bsf.Analysis):
         return
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects to the C{bsf.Runnable}.
+        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects to the C{bsf.procedure.Runnable}.
 
-        @param runnable_align: C{bsf.Runnable}
-        @type runnable_align: bsf.Runnable
+        @param runnable_align: C{bsf.procedure.Runnable}
+        @type runnable_align: bsf.procedure.Runnable
         @param stage_align: C{bsf.Stage}
         @type stage_align: bsf.Stage
         @param file_path_1: FASTQ file path 1
@@ -503,10 +503,10 @@ class Aligner(bsf.Analysis):
         return
 
     def add_runnable_step_summary(self, runnable_summary, stage_summary):
-        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects to the C{bsf.Runnable}.
+        """Add one or more Aligner-specific C{bsf.process.RunnableStep} objects to the C{bsf.procedure.Runnable}.
 
-        @param runnable_summary: C{bsf.Runnable}
-        @type runnable_summary: bsf.Runnable
+        @param runnable_summary: C{bsf.procedure.Runnable}
+        @type runnable_summary: bsf.procedure.Runnable
         @param stage_summary: C{bsf.Stage}
         @type stage_summary: bsf.Stage
         @return:
@@ -617,7 +617,7 @@ class Aligner(bsf.Analysis):
             field_names=['sample', 'read_group'])
 
         runnable_sample_list = list()
-        """ @type runnable_sample_list: list[bsf.Runnable] """
+        """ @type runnable_sample_list: list[bsf.procedure.Runnable] """
 
         # Sort the Python list of Sample objects by Sample.name.
 
@@ -631,10 +631,10 @@ class Aligner(bsf.Analysis):
             # To run Picard MergeBamAlignment, all alignments from a BAM file need merging into one.
 
             unmapped_bam_file_dict = dict()
-            """ @type unmapped_bam_file_dict: dict[str | unicode, (str | unicode, list[bsf.Runnable])] """
+            """ @type unmapped_bam_file_dict: dict[str | unicode, (str | unicode, list[bsf.procedure.Runnable])] """
 
             runnable_read_group_list = list()
-            """ @type runnable_read_group_list: list[bsf.Runnable] """
+            """ @type runnable_read_group_list: list[bsf.procedure.Runnable] """
 
             paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=True)
 
@@ -682,8 +682,8 @@ class Aligner(bsf.Analysis):
 
                 file_path_align = self.get_file_path_align(paired_reads_name=paired_reads_name)
 
-                runnable_align = self.add_runnable(
-                    runnable=bsf.Runnable(
+                runnable_align = self.add_runnable_consecutive(
+                    runnable=bsf.procedure.ConsecutiveRunnable(
                         name=self.get_prefix_align(paired_reads_name=paired_reads_name),
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
@@ -719,8 +719,8 @@ class Aligner(bsf.Analysis):
 
                 # file_path_index = FilePathIndex(prefix=prefix_index)
 
-                runnable_index = self.add_runnable(
-                    runnable=bsf.Runnable(
+                runnable_index = self.add_runnable_consecutive(
+                    runnable=bsf.procedure.ConsecutiveRunnable(
                         name=prefix_index,
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
@@ -827,8 +827,8 @@ class Aligner(bsf.Analysis):
 
                 file_path_read_group = self.get_file_path_read_group(read_group_name=bam_file_name)
 
-                runnable_read_group = self.add_runnable(
-                    runnable=bsf.Runnable(
+                runnable_read_group = self.add_runnable_consecutive(
+                    runnable=bsf.procedure.ConsecutiveRunnable(
                         name=self.get_prefix_read_group(read_group_name=bam_file_name),
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
@@ -1017,8 +1017,8 @@ class Aligner(bsf.Analysis):
 
             file_path_sample = self.get_file_path_sample(sample_name=sample.name)
 
-            runnable_sample = self.add_runnable(
-                runnable=bsf.Runnable(
+            runnable_sample = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_sample(sample_name=sample.name),
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
@@ -1178,8 +1178,8 @@ class Aligner(bsf.Analysis):
 
         # Create a Runnable and Executable for the summary.
 
-        runnable_summary = self.add_runnable(
-            runnable=bsf.Runnable(
+        runnable_summary = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_summary(),
                 code_module='bsf.runnables.generic',
                 working_directory=self.genome_directory,

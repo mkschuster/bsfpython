@@ -25,7 +25,6 @@ A package of classes and methods modelling Picard analyses data files and data d
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from __future__ import print_function
 
 import os
@@ -41,6 +40,7 @@ import bsf.analyses.illumina_to_bam_tools
 import bsf.annotation
 import bsf.illumina
 import bsf.ngs
+import bsf.procedure
 import bsf.process
 import bsf.standards
 
@@ -93,24 +93,24 @@ class PicardIlluminaRunFolder(bsf.Analysis):
 
     @classmethod
     def get_prefix_cell(cls, project_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
     def get_prefix_lane(cls, project_name, lane):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_lane(), project_name, lane))
@@ -442,7 +442,7 @@ class IlluminaBasecallsToSamSheet(bsf.annotation.AnnotationSheet):
         return
 
 
-class FilePathExtractIlluminaCell(bsf.FilePath):
+class FilePathExtractIlluminaCell(bsf.procedure.FilePath):
     """The C{bsf.analyses.picard.FilePathExtractIlluminaCell} models flow cell-specific file paths.
 
     Attributes:
@@ -476,7 +476,7 @@ class FilePathExtractIlluminaCell(bsf.FilePath):
         return
 
 
-class FilePathExtractIlluminaLane(bsf.FilePath):
+class FilePathExtractIlluminaLane(bsf.procedure.FilePath):
     """The C{bsf.analyses.picard.FilePathExtractIlluminaLane} models lane-specific file paths.
 
     Attributes:
@@ -961,8 +961,8 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             # Create a Runnable and Executable for the lane stage.
 
-            runnable_lane = self.add_runnable(
-                runnable=bsf.Runnable(
+            runnable_lane = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory,
@@ -1199,8 +1199,8 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         # Create a flow-cell specific Runnable.
 
-        runnable_cell = self.add_runnable(
-            runnable=bsf.Runnable(
+        runnable_cell = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
@@ -1231,7 +1231,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         return
 
 
-class FilePathIlluminaMultiplexSam(bsf.FilePath):
+class FilePathIlluminaMultiplexSam(bsf.procedure.FilePath):
     """The C{bsf.analyses.picard.FilePathIlluminaMultiplexSam} class models files in a directory.
 
     Attributes:
@@ -1583,8 +1583,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
                 lane=lane_str,
                 experiment_directory=experiment_directory)
 
-            runnable_lane = self.add_runnable(
-                runnable=bsf.Runnable(
+            runnable_lane = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory,
@@ -1659,6 +1659,9 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             # USE_JDK_DEFLATER [false]
             # USE_JDK_INFLATER [false]
             # OPTIONS_FILE Required
+            # DEFLATER_THREADS [0]
+            # NOTE: Only available in version: 2.18.24-CeMM
+            runnable_step.add_picard_option(key='DEFLATER_THREADS', value='16')
 
             # Create the experiment directory if it does not exist already.
 
@@ -1685,8 +1688,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
         # Add another flow cell-specific Runnable to reset directory and file mode permissions if requested.
 
-        runnable_cell = self.add_runnable(
-            runnable=bsf.Runnable(
+        runnable_cell = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
@@ -1706,7 +1709,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         return
 
 
-class FilePathIlluminaDemultiplexSamCell(bsf.FilePath):
+class FilePathIlluminaDemultiplexSamCell(bsf.procedure.FilePath):
     """The C{bsf.analyses.picard.FilePathIlluminaDemultiplexSamCell} models flow cell-specific file paths.
 
     Attributes:
@@ -1740,7 +1743,7 @@ class FilePathIlluminaDemultiplexSamCell(bsf.FilePath):
         return
 
 
-class FilePathIlluminaDemultiplexSamLane(bsf.FilePath):
+class FilePathIlluminaDemultiplexSamLane(bsf.procedure.FilePath):
     """The C{bsf.analyses.picard.FilePathIlluminaDemultiplexSamLane} models lane-specific file paths.
 
     Attributes:
@@ -1910,24 +1913,24 @@ class IlluminaDemultiplexSam(bsf.Analysis):
 
     @classmethod
     def get_prefix_cell(cls, project_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_cell(), project_name))
 
     @classmethod
     def get_prefix_lane(cls, project_name, lane):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_lane(), project_name, lane))
@@ -2367,8 +2370,8 @@ class IlluminaDemultiplexSam(bsf.Analysis):
 
             # Create a Runnable and Executable for the lane stage.
 
-            runnable_lane = self.add_runnable(
-                runnable=bsf.Runnable(
+            runnable_lane = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory,
@@ -2532,8 +2535,8 @@ class IlluminaDemultiplexSam(bsf.Analysis):
 
         # Create a flow-cell specific Runnable.
 
-        runnable_cell = self.add_runnable(
-            runnable=bsf.Runnable(
+        runnable_cell = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory,
@@ -2564,7 +2567,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         return
 
 
-class FilePathCollectHiSeqXPfFailMetricsLane(bsf.FilePath):
+class FilePathCollectHiSeqXPfFailMetricsLane(bsf.procedure.FilePath):
     """The C{bsf.analyses.picard.FilePathCollectHiSeqXPfFailMetricsLane} models files in a directory.
 
     Attributes:
@@ -2626,8 +2629,8 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
 
             file_path_lane = FilePathCollectHiSeqXPfFailMetricsLane(prefix=prefix_lane)
 
-            runnable_lane = self.add_runnable(
-                runnable=bsf.Runnable(
+            runnable_lane = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(
                         project_name=self.project_name,
                         lane=lane_str),
@@ -2667,7 +2670,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
         return
 
 
-class FilePathDownsampleSam(bsf.FilePath):
+class FilePathDownsampleSam(bsf.procedure.FilePath):
     """The C{bsf.analyses.picard.FilePathDownsampleSam} models files in a directory.
 
     Attributes:
@@ -2720,11 +2723,11 @@ class DownsampleSam(bsf.Analysis):
 
     @classmethod
     def get_prefix_read_group(cls, read_group_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param read_group_name: Read group name
         @type read_group_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
@@ -2891,8 +2894,8 @@ class DownsampleSam(bsf.Analysis):
 
                     # Create a Runnable for running the Picard DownsampleSam analysis.
 
-                    runnable_picard_dss = self.add_runnable(
-                        runnable=bsf.Runnable(
+                    runnable_picard_dss = self.add_runnable_consecutive(
+                        runnable=bsf.procedure.ConsecutiveRunnable(
                             name=prefix_read_group,
                             code_module='bsf.runnables.generic',
                             working_directory=self.project_directory,
@@ -2964,7 +2967,7 @@ class DownsampleSam(bsf.Analysis):
         return
 
 
-class FilePathSamToFastqReadGroup(bsf.FilePath):
+class FilePathSamToFastqReadGroup(bsf.procedure.FilePath):
     """The C{bsf.analyses.picard.FilePathSamToFastqReadGroup} class models read group-specific Picard SamToFastq files.
 
     Attributes:
@@ -2987,7 +2990,7 @@ class FilePathSamToFastqReadGroup(bsf.FilePath):
         return
 
 
-class FilePathSamToFastqProject(bsf.FilePath):
+class FilePathSamToFastqProject(bsf.procedure.FilePath):
     """The C{bsf.analyses.picard.FilePathSamToFastqProject} class models project-specific Picard SamToFastq files.
 
     Attributes:
@@ -3028,9 +3031,9 @@ class SamToFastq(bsf.Analysis):
     @type name: str
     @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
-    @cvar stage_name_read_group: C{bsf.Stage.name} for read group-specific C{bsf.Runnable} objects
+    @cvar stage_name_read_group: C{bsf.Stage.name} for read group-specific C{bsf.procedure.Runnable} objects
     @type stage_name_read_group: str
-    @cvar stage_name_project: C{bsf.Stage.name} for project-specific C{bsf.Runnable} objects
+    @cvar stage_name_project: C{bsf.Stage.name} for project-specific C{bsf.procedure.Runnable} objects
     @type stage_name_project: str
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
     @type classpath_picard: None | str | unicode
@@ -3064,22 +3067,22 @@ class SamToFastq(bsf.Analysis):
 
     @classmethod
     def get_prefix_read_group(cls, read_group_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param read_group_name: Read group name
         @type read_group_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
     @classmethod
     def get_prefix_project(cls, project_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: Project name
         @type project_name: str | unicode
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_project(), project_name))
@@ -3324,8 +3327,8 @@ class SamToFastq(bsf.Analysis):
 
                         # Create a Runnable for running the Picard SamToFastq analysis.
 
-                        runnable_read_group = self.add_runnable(
-                            runnable=bsf.Runnable(
+                        runnable_read_group = self.add_runnable_consecutive(
+                            runnable=bsf.procedure.ConsecutiveRunnable(
                                 name=prefix_read_group,
                                 code_module='bsf.runnables.generic',
                                 working_directory=self.project_directory,
@@ -3419,8 +3422,8 @@ class SamToFastq(bsf.Analysis):
             name=prefix_project)
         annotation_sheet.to_file_path()
 
-        runnable_project = self.add_runnable(
-            runnable=bsf.Runnable(
+        runnable_project = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
                 name=prefix_project,
                 code_module='bsf.runnables.picard_sam_to_fastq_sample_sheet',
                 working_directory=self.project_directory,

@@ -25,11 +25,11 @@ A package of classes and methods supporting analyses to archive and restore Illu
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import os
 
 import bsf
 import bsf.illumina
+import bsf.procedure
 import bsf.process
 import bsf.standards
 
@@ -99,52 +99,48 @@ class IlluminaRunFolderArchive(bsf.Analysis):
 
     @classmethod
     def get_prefix_pre_process(cls, project_name):
-        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this C{bsf.Analysis}.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
-        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
-            C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_pre_process(), project_name))
 
     @classmethod
     def get_prefix_base_calls(cls, project_name, lane):
-        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this C{bsf.Analysis}.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
-            C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_base_calls(), project_name, lane))
 
     @classmethod
     def get_prefix_intensities(cls, project_name, lane):
-        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this C{bsf.Analysis}.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
-            C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_intensities(), project_name, lane))
 
     @classmethod
     def get_prefix_archive_folder(cls, project_name):
-        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this C{bsf.Analysis}.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
-        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
-            C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_archive_folder(), project_name))
@@ -389,8 +385,8 @@ class IlluminaRunFolderArchive(bsf.Analysis):
 
         # Pre-process on folder level.
 
-        runnable_pre_process_folder = self.add_runnable(
-            runnable=bsf.Runnable(
+        runnable_pre_process_folder = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_pre_process(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
@@ -510,8 +506,8 @@ class IlluminaRunFolderArchive(bsf.Analysis):
 
             # Process the IRF/Data/Intensities/BaseCalls/ directory.
 
-            runnable_base_calls = self.add_runnable(
-                runnable=bsf.Runnable(
+            runnable_base_calls = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_base_calls(project_name=self.project_name, lane=str(lane_int)),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
@@ -552,8 +548,8 @@ class IlluminaRunFolderArchive(bsf.Analysis):
 
                 # Process IRF/Data/Intensities/L00[1-8]/ directories if they exist.
 
-                runnable_intensities = self.add_runnable(
-                    runnable=bsf.Runnable(
+                runnable_intensities = self.add_runnable_consecutive(
+                    runnable=bsf.procedure.ConsecutiveRunnable(
                         name=self.get_prefix_intensities(project_name=self.project_name, lane=str(lane_int)),
                         code_module='bsf.runnables.generic',
                         working_directory=self.project_directory))
@@ -628,8 +624,8 @@ class IlluminaRunFolderArchive(bsf.Analysis):
 
         # Process the whole run folder.
 
-        runnable_archive_folder = self.add_runnable(
-            runnable=bsf.Runnable(
+        runnable_archive_folder = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_archive_folder(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
@@ -678,7 +674,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
         return
 
 
-class FilePathIlluminaRunFolderRestore(bsf.FilePath):
+class FilePathIlluminaRunFolderRestore(bsf.procedure.FilePath):
     """The C{bsf.analyses.illumina_run_folder.FilePathIlluminaRunFolderRestore} models files in an archive directory.
 
     Attributes:
@@ -760,41 +756,37 @@ class IlluminaRunFolderRestore(bsf.Analysis):
 
     @classmethod
     def get_prefix_extract_archive(cls, project_name, lane):
-        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this
-        C{bsf.Analysis}.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
-            C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_extract_archive(), project_name, lane))
 
     @classmethod
     def get_prefix_compress_base_calls(cls, project_name, lane):
-        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this C{bsf.Analysis}.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
         @param lane: A lane number
         @type lane: str
-        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
-            C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_compress_base_calls(), project_name, lane))
 
     @classmethod
     def get_prefix_compress_logs(cls, project_name):
-        """Get a process-specific prefix for a C{bsf.Runnable} or C{bsf.process.Executable} of this C{bsf.Analysis}.
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param project_name: A project name
         @type project_name: str
-        @return: The process-specific prefix for a C{bsf.process.Executable} or a C{bsf.Runnable} of this
-            C{bsfAnalysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_compress_logs(), project_name))
@@ -983,8 +975,8 @@ class IlluminaRunFolderRestore(bsf.Analysis):
 
         # Extract the IRF_Folder.tar file.
 
-        runnable_extract_folder = self.add_runnable(
-            runnable=bsf.Runnable(
+        runnable_extract_folder = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_extract_archive(project_name=self.project_name, lane='folder'),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
@@ -1005,8 +997,8 @@ class IlluminaRunFolderRestore(bsf.Analysis):
 
         # Compress all files in the IRF/Logs and IRF/Data/RTALogs directories.
 
-        runnable_compress_logs = self.add_runnable(
-            runnable=bsf.Runnable(
+        runnable_compress_logs = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_compress_logs(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
@@ -1035,8 +1027,8 @@ class IlluminaRunFolderRestore(bsf.Analysis):
 
         # Extract the IRF_intensities.tar file.
 
-        runnable_extract_intensities = self.add_runnable(
-            runnable=bsf.Runnable(
+        runnable_extract_intensities = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_extract_archive(project_name=self.project_name, lane='intensities'),
                 code_module='bsf.runnables.generic',
                 working_directory=self.project_directory))
@@ -1069,8 +1061,8 @@ class IlluminaRunFolderRestore(bsf.Analysis):
             if not os.path.exists(os.path.join(self.archive_directory, file_path_dict['L{:03d}'.format(lane_int)])):
                 continue
 
-            runnable_extract_lane = self.add_runnable(
-                runnable=bsf.Runnable(
+            runnable_extract_lane = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_extract_archive(project_name=self.project_name, lane=str(lane_int)),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))
@@ -1100,8 +1092,8 @@ class IlluminaRunFolderRestore(bsf.Analysis):
 
             # Create one process per lane to compress the base call (*.bcl) files.
 
-            runnable_compress_base_calls = self.add_runnable(
-                runnable=bsf.Runnable(
+            runnable_compress_base_calls = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_compress_base_calls(project_name=self.project_name, lane=str(lane_int)),
                     code_module='bsf.runnables.generic',
                     working_directory=self.project_directory))

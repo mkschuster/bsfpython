@@ -25,15 +25,15 @@ A package of classes and methods supporting the EGA Cryptor tool.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import os
 import sys
 
 import bsf
+import bsf.procedure
 import bsf.process
 
 
-class FilePathEGACryptorReadGroup(bsf.FilePath):
+class FilePathEGACryptorReadGroup(bsf.procedure.FilePath):
     """The C{bsf.analyses.ega.FilePathEGACryptorReadGroup} models read group-specific EGA Cryptor file paths.
 
     Attributes:
@@ -78,11 +78,11 @@ class EGACryptor(bsf.Analysis):
 
     @classmethod
     def get_prefix_read_group(cls, read_group_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param read_group_name: Read group name
         @type read_group_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
@@ -239,8 +239,8 @@ class EGACryptor(bsf.Analysis):
 
                     # Create a Runnable and an Executable for running the EGA Cryptor analysis.
 
-                    runnable_read_group = self.add_runnable(
-                        runnable=bsf.Runnable(
+                    runnable_read_group = self.add_runnable_consecutive(
+                        runnable=bsf.procedure.ConsecutiveRunnable(
                             name=prefix_read_group,
                             code_module='bsf.runnables.generic',
                             working_directory=self.project_directory,

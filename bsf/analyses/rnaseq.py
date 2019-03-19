@@ -25,7 +25,6 @@ A package of classes and methods supporting RNA-seq analyses.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from __future__ import print_function
 
 import errno
@@ -40,11 +39,12 @@ import bsf.analyses.star_aligner
 import bsf.annotation
 import bsf.executables
 import bsf.ngs
+import bsf.procedure
 import bsf.process
 import bsf.standards
 
 
-class FilePathTophat(bsf.FilePath):
+class FilePathTophat(bsf.procedure.FilePath):
     """The C{bsf.analyses.rnaseq.FilePathTophat} models files in a sample-specific TopHat directory.
 
     Attributes:
@@ -121,7 +121,7 @@ class FilePathTophat(bsf.FilePath):
         return
 
 
-class FilePathProcessTophat(bsf.FilePath):
+class FilePathProcessTophat(bsf.procedure.FilePath):
     """The C{bsf.analyses.rnaseq.FilePathProcessTophat} models files in a sample-specific Tophat directory.
 
     Attributes:
@@ -130,7 +130,7 @@ class FilePathProcessTophat(bsf.FilePath):
     pass
 
 
-class FilePathCufflinks(bsf.FilePath):
+class FilePathCufflinks(bsf.procedure.FilePath):
     """The C{bsf.analyses.rnaseq.FilePathCufflinks} models files in a sample-specific Cufflinks directory.
 
     Attributes:
@@ -195,7 +195,7 @@ class FilePathCufflinks(bsf.FilePath):
         return
 
 
-class FilePathProcessCufflinks(bsf.FilePath):
+class FilePathProcessCufflinks(bsf.procedure.FilePath):
     """The C{bsf.analyses.rnaseq.FilePathProcessCufflinks} models files in a sample-specific Cufflinks directory.
 
     Attributes:
@@ -204,7 +204,7 @@ class FilePathProcessCufflinks(bsf.FilePath):
     pass
 
 
-class FilePathCuffmerge(bsf.FilePath):
+class FilePathCuffmerge(bsf.procedure.FilePath):
     """The C{bsf.analyses.rnaseq.FilePathCuffmerge} models files in a comparison-specific Cuffmerge directory.
 
     Attributes:
@@ -278,7 +278,7 @@ class FilePathCuffmerge(bsf.FilePath):
         return
 
 
-class FilePathCuffquant(bsf.FilePath):
+class FilePathCuffquant(bsf.procedure.FilePath):
     """The C{bsf.analyses.rnaseq.FilePathCuffquant} models files in a sample-specific Cuffquant directory.
 
     Attributes:
@@ -307,7 +307,7 @@ class FilePathCuffquant(bsf.FilePath):
         return
 
 
-class FilePathCuffnorm(bsf.FilePath):
+class FilePathCuffnorm(bsf.procedure.FilePath):
     """The C{bsf.analyses.rnaseq.FilePathCuffnorm} models files in a comparison-specific Cuffnorm directory.
 
     Attributes:
@@ -333,7 +333,7 @@ class FilePathCuffnorm(bsf.FilePath):
         return
 
 
-class FilePathCuffdiff(bsf.FilePath):
+class FilePathCuffdiff(bsf.procedure.FilePath):
     """The C{bsf.analyses.rnaseq.FilePathCuffdiff} models files in a comparison-specific Cuffdiff directory.
 
     Attributes:
@@ -358,7 +358,7 @@ class FilePathCuffdiff(bsf.FilePath):
         return
 
 
-class FilePathProcessCuffdiff(bsf.FilePath):
+class FilePathProcessCuffdiff(bsf.procedure.FilePath):
     """The C{bsf.analyses.rnaseq.FilePathProcessCuffdiff} models files in a comparison-specific Cuffdiff directory.
 
     Attributes:
@@ -367,7 +367,7 @@ class FilePathProcessCuffdiff(bsf.FilePath):
     pass
 
 
-class FilePathMonocle(bsf.FilePath):
+class FilePathMonocle(bsf.procedure.FilePath):
     """The C{bsf.analyses.rnaseq.FilePathMonocle} models files in a comparison-specific Monocle directory.
 
     Attributes:
@@ -549,110 +549,110 @@ class Tuxedo(bsf.Analysis):
 
     @classmethod
     def get_prefix_run_tophat(cls, paired_reads_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param paired_reads_name: PairedReads name
         @type paired_reads_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_run_tophat(), paired_reads_name))
 
     @classmethod
     def get_prefix_process_tophat(cls, paired_reads_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param paired_reads_name: PairedReads name
         @type paired_reads_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_process_tophat(), paired_reads_name))
 
     @classmethod
     def get_prefix_run_cufflinks(cls, paired_reads_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param paired_reads_name: PairedReads name
         @type paired_reads_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_run_cufflinks(), paired_reads_name))
 
     @classmethod
     def get_prefix_process_cufflinks(cls):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return cls.get_stage_name_process_cufflinks()
 
     @classmethod
     def get_prefix_run_cuffmerge(cls, comparison_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param comparison_name: Comparison name
         @type comparison_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_run_cuffmerge(), comparison_name))
 
     @classmethod
     def get_prefix_run_cuffquant(cls, comparison_name, paired_reads_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param comparison_name: Comparison name
         @type comparison_name: str
         @param paired_reads_name: PairedReads name
         @type paired_reads_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_run_cuffquant(), comparison_name, paired_reads_name))
 
     @classmethod
     def get_prefix_run_cuffnorm(cls, comparison_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param comparison_name: Comparison name
         @type comparison_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_run_cuffnorm(), comparison_name))
 
     @classmethod
     def get_prefix_run_cuffdiff(cls, comparison_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param comparison_name: Comparison name
         @type comparison_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_run_cuffdiff(), comparison_name))
 
     @classmethod
     def get_prefix_process_cuffdiff(cls, comparison_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param comparison_name: Comparison name
         @type comparison_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_process_cuffdiff(), comparison_name))
 
     @classmethod
     def get_prefix_monocle(cls, comparison_name):
-        """Get a Python C{str} for setting C{bsf.process.Executable.dependencies} in other C{bsf.Analysis} objects
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
         @param comparison_name: Comparison name
         @type comparison_name: str
-        @return: The dependency string for a C{bsf.process.Executable} of this C{bsf.Analysis}
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_monocle(), comparison_name))
@@ -1258,7 +1258,7 @@ class Tuxedo(bsf.Analysis):
                 file_path_tophat = FilePathTophat(prefix='_'.join(('rnaseq_tophat', paired_reads_name)))
 
                 # runnable_run_tophat = self.add_runnable(
-                #         runnable=Runnable(
+                #         runnable=bsf.procedure.ConsecutiveRunnable(
                 #                 name=self.get_prefix_rnaseq_run_tophat(paired_reads_name=paired_reads_name),
                 #                 code_module='bsf.runnables.generic',
                 #                 working_directory=self.genome_directory,
@@ -1389,7 +1389,7 @@ class Tuxedo(bsf.Analysis):
 
                 file_path_process_tophat = FilePathProcessTophat(prefix=prefix_process_tophat)
 
-                runnable_process_tophat = self.add_runnable(runnable=bsf.Runnable(
+                runnable_process_tophat = self.add_runnable_consecutive(runnable=bsf.procedure.ConsecutiveRunnable(
                     name=prefix_process_tophat,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
@@ -1435,8 +1435,8 @@ class Tuxedo(bsf.Analysis):
                 # should use the same 'rnaseq_cufflinks' directory.
                 file_path_cufflinks = FilePathCufflinks(prefix='_'.join(('rnaseq_cufflinks', paired_reads_name)))
 
-                runnable_run_cufflinks = self.add_runnable(
-                    runnable=bsf.Runnable(
+                runnable_run_cufflinks = self.add_runnable_consecutive(
+                    runnable=bsf.procedure.ConsecutiveRunnable(
                         name=prefix_run_cufflinks,
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
@@ -1611,8 +1611,8 @@ class Tuxedo(bsf.Analysis):
 
             file_path_process_cufflinks = FilePathProcessCufflinks(prefix=prefix_process_cufflinks)
 
-            runnable_process_cufflinks = self.add_runnable(
-                runnable=bsf.Runnable(
+            runnable_process_cufflinks = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
                     name=prefix_process_cufflinks,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
@@ -1676,8 +1676,8 @@ class Tuxedo(bsf.Analysis):
 
             file_path_cuffmerge = FilePathCuffmerge(prefix=prefix_run_cuffmerge)
 
-            runnable_run_cuffmerge = self.add_runnable(
-                runnable=bsf.Runnable(
+            runnable_run_cuffmerge = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
                     name=prefix_run_cuffmerge,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
@@ -1888,8 +1888,8 @@ class Tuxedo(bsf.Analysis):
                         file_path_run_cuffquant.tophat_accepted_hits = \
                             os.path.join('_'.join(('rnaseq_tophat', paired_reads_name)), 'accepted_hits.bam')
 
-                        runnable_run_cuffquant = self.add_runnable(
-                            runnable=bsf.Runnable(
+                        runnable_run_cuffquant = self.add_runnable_consecutive(
+                            runnable=bsf.procedure.ConsecutiveRunnable(
                                 name=prefix_run_cuffquant,
                                 code_module='bsf.runnables.generic',
                                 working_directory=self.genome_directory,
@@ -2013,8 +2013,8 @@ class Tuxedo(bsf.Analysis):
 
             file_path_run_cuffnorm = FilePathCuffnorm(prefix=prefix_run_cuffnorm)
 
-            runnable_run_cuffnorm = self.add_runnable(
-                runnable=bsf.Runnable(
+            runnable_run_cuffnorm = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
                     name=prefix_run_cuffnorm,
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
@@ -2090,8 +2090,8 @@ class Tuxedo(bsf.Analysis):
 
                 file_path_run_cuffdiff = FilePathCuffdiff(prefix=prefix_run_cuffdiff)
 
-                runnable_run_cuffdiff = self.add_runnable(
-                    runnable=bsf.Runnable(
+                runnable_run_cuffdiff = self.add_runnable_consecutive(
+                    runnable=bsf.procedure.ConsecutiveRunnable(
                         name=prefix_run_cuffdiff,
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
@@ -2221,8 +2221,8 @@ class Tuxedo(bsf.Analysis):
 
                 file_path_process_cuffdiff = FilePathProcessCuffdiff(prefix=prefix_process_cuffdiff)
 
-                runnable_process_cuffdiff = self.add_runnable(
-                    runnable=bsf.Runnable(
+                runnable_process_cuffdiff = self.add_runnable_consecutive(
+                    runnable=bsf.procedure.ConsecutiveRunnable(
                         name=prefix_process_cuffdiff,
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
@@ -3398,7 +3398,7 @@ class Tuxedo(bsf.Analysis):
         return
 
 
-class FilePathDESeq(bsf.FilePath):
+class FilePathDESeq(bsf.procedure.FilePath):
     """The C{bsf.analyses.rnaseq.FilePathDESeq} models files in a comparison-specific DESeq directory.
     """
 
