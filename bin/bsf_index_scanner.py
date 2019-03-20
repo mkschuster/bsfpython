@@ -270,10 +270,10 @@ elif file_type == '.bam':
     thread_join_counter = 0
 
     while thread_out.is_alive() and thread_join_counter < max_thread_joins:
-        thread_lock.acquire(True)
+        # thread_lock.acquire(True)
         # print('[{}] Waiting for STDOUT processor to finish.'.format(
         #     datetime.datetime.now().isoformat()))
-        thread_lock.release()
+        # thread_lock.release()
 
         thread_out.join(timeout=thread_join_timeout)
         thread_join_counter += 1
@@ -281,26 +281,16 @@ elif file_type == '.bam':
     thread_join_counter = 0
 
     while thread_err.is_alive() and thread_join_counter < max_thread_joins:
-        thread_lock.acquire(True)
+        # thread_lock.acquire(True)
         # print('[{}] Waiting for STDERR processor to finish.'.format(
         #     datetime.datetime.now().isoformat()))
-        thread_lock.release()
+        # thread_lock.release()
 
         thread_err.join(timeout=thread_join_timeout)
         thread_join_counter += 1
 
-    if child_return_code > 0:
-        if name_space.debug > 0:
-            print('[{}] Child process {!r} failed with exit code {}'.format(
-                datetime.datetime.now().isoformat(), executable.name, +child_return_code))
-    elif child_return_code < 0:
-        if name_space.debug > 0:
-            print('[{}] Child process {!r} received signal {}.'.format(
-                datetime.datetime.now().isoformat(), executable.name, -child_return_code))
-    else:
-        if name_space.debug > 0:
-            print('[{}] Child process {!r} completed successfully {}.'.format(
-                datetime.datetime.now().isoformat(), executable.name, +child_return_code))
+    if name_space.debug > 0:
+        executable.evaluate_return_code(return_code=child_return_code)
 else:
     raise Exception('Unsupported file format.')
 

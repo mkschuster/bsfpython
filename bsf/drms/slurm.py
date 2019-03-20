@@ -997,16 +997,14 @@ def check_state(stage, debug=0):
         """
         if _debug > 0:
             _thread_lock.acquire(True)
-            print('[' + datetime.datetime.now().isoformat() + ']',
-                  "Started Runner 'STDOUT' processor in module " + repr(__name__) + '.')
+            print(bsf.process.get_timestamp(), "Started Runner 'STDOUT' processor in module " + repr(__name__) + '.')
             _thread_lock.release()
 
         if _stdout_path:
             output_file = open(_stdout_path, 'wt')
             if _debug > 0:
                 _thread_lock.acquire(True)
-                print('[' + datetime.datetime.now().isoformat() + ']',
-                      "Opened 'STDOUT' file " + repr(_stdout_path) + '.')
+                print(bsf.process.get_timestamp(), "Opened 'STDOUT' file " + repr(_stdout_path) + '.')
                 _thread_lock.release()
         else:
             output_file = None
@@ -1075,8 +1073,7 @@ def check_state(stage, debug=0):
 
         if _debug > 0:
             _thread_lock.acquire(True)
-            print('[' + datetime.datetime.now().isoformat() + ']',
-                  "Received EOF on 'STDOUT' pipe.")
+            print(bsf.process.get_timestamp(), "Received EOF on 'STDOUT' pipe.")
             _thread_lock.release()
 
         if output_file:
@@ -1084,8 +1081,7 @@ def check_state(stage, debug=0):
 
             if _debug > 0:
                 _thread_lock.acquire(True)
-                print('[' + datetime.datetime.now().isoformat() + ']',
-                      "Closed 'STDOUT' file " + repr(_stdout_path) + '.')
+                print(bsf.process.get_timestamp(), "Closed 'STDOUT' file " + repr(_stdout_path) + '.')
                 _thread_lock.release()
 
         # Commit changes to the database and explicitly disconnect so that other threads have access.

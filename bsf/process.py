@@ -42,6 +42,15 @@ import bsf.argument
 import bsf.standards
 
 
+def get_timestamp():
+    """Get the current time stamp in ISO format.
+
+    @return: ISO format time stamp
+    @rtype: str
+    """
+    return '[' + datetime.datetime.now().isoformat() + ']'
+
+
 class Command(object):
     """The C{bsf.process.Command} class represents one program, its options and arguments.
 
@@ -710,9 +719,6 @@ class Executable(Command):
         @rtype:
         @raise Exception: If file_type is neither I{STDOUT} nor I{STDERR}
         """
-        def get_timestamp():
-            return '[' + datetime.datetime.now().isoformat() + ']'
-
         if file_type not in ('STDOUT', 'STDERR'):
             raise Exception('The file_type has to be either STDOUT or STDERR.')
 
@@ -1047,8 +1053,7 @@ class Executable(Command):
                 while thread_in.is_alive() and thread_join_counter < max_thread_joins:
                     if debug > 0:
                         thread_lock.acquire(True)
-                        print('[' + datetime.datetime.now().isoformat() + ']',
-                              'Waiting for STDIN processor to finish.')
+                        print(get_timestamp(), 'Waiting for STDIN processor to finish.')
                         thread_lock.release()
 
                     thread_in.join(timeout=thread_join_timeout)
@@ -1059,8 +1064,7 @@ class Executable(Command):
             while thread_out.is_alive() and thread_join_counter < max_thread_joins:
                 if debug > 0:
                     thread_lock.acquire(True)
-                    print('[' + datetime.datetime.now().isoformat() + ']',
-                          'Waiting for STDOUT processor to finish.')
+                    print(get_timestamp(), 'Waiting for STDOUT processor to finish.')
                     thread_lock.release()
 
                 thread_out.join(timeout=thread_join_timeout)
@@ -1071,8 +1075,7 @@ class Executable(Command):
             while thread_err.is_alive() and thread_join_counter < max_thread_joins:
                 if debug > 0:
                     thread_lock.acquire(True)
-                    print('[' + datetime.datetime.now().isoformat() + ']',
-                          'Waiting for STDERR processor to finish.')
+                    print(get_timestamp(), 'Waiting for STDERR processor to finish.')
                     thread_lock.release()
 
                 thread_err.join(timeout=thread_join_timeout)
@@ -1080,23 +1083,23 @@ class Executable(Command):
 
             if child_return_code > 0:
                 if debug > 0:
-                    print('[' + datetime.datetime.now().isoformat() + ']',
+                    print(get_timestamp(),
                           'Child process ' + repr(self.name) +
                           ' failed with exit code ' + repr(+child_return_code) + '.')
             elif child_return_code < 0:
                 if debug > 0:
-                    print('[' + datetime.datetime.now().isoformat() + ']',
+                    print(get_timestamp(),
                           'Child process ' + repr(self.name) +
                           ' received signal ' + repr(-child_return_code) + '.')
             else:
                 if debug > 0:
-                    print('[' + datetime.datetime.now().isoformat() + ']',
+                    print(get_timestamp(),
                           'Child process ' + repr(self.name) +
                           ' completed successfully ' + repr(+child_return_code) + '.')
                 break
         else:
             if debug > 0:
-                print('[' + datetime.datetime.now().isoformat() + ']',
+                print(get_timestamp(),
                       'Runnable ' + repr(self.name) +
                       ' exceeded the maximum retry counter ' + repr(self.maximum_attempts) + '.')
 
@@ -1111,15 +1114,15 @@ class Executable(Command):
         @rtype:
         """
         if return_code > 0:
-            print('[' + datetime.datetime.now().isoformat() + ']',
+            print(get_timestamp(),
                   'Child process ' + repr(self.name) +
                   ' failed with return code ' + repr(+return_code) + '.')
         elif return_code < 0:
-            print('[' + datetime.datetime.now().isoformat() + ']',
+            print(get_timestamp(),
                   'Child process ' + repr(self.name) +
                   ' received signal ' + repr(-return_code) + '.')
         else:
-            print('[' + datetime.datetime.now().isoformat() + ']',
+            print(get_timestamp(),
                   'Child process ' + repr(self.name) +
                   ' completed with return code ' + repr(+return_code) + '.')
 
