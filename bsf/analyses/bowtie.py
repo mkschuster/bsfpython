@@ -31,7 +31,7 @@ import os
 
 import bsf
 import bsf.analyses.aligner
-import bsf.process
+import bsf.procedure
 
 
 class Bowtie1(bsf.analyses.aligner.Aligner):
@@ -43,10 +43,10 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
     prefix = 'bowtie1'
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add a Bowtie1-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.Runnable}.
+        """Add a Bowtie1-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.ConcurrentRunnable}.
 
-        @param runnable_align: C{bsf.procedure.ConsecutiveRunnable}
-        @type runnable_align: bsf.procedure.ConsecutiveRunnable
+        @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
+        @type runnable_align: bsf.procedure.ConcurrentRunnable
         @param stage_align: C{bsf.Stage}
         @type stage_align: bsf.Stage
         @param file_path_1: FASTQ file path 1
@@ -59,13 +59,15 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
         file_path_align = runnable_align.file_path_object
         """ @type file_path_align bsf.analyses.aligner.FilePathAlign """
 
-        runnable_step = runnable_align.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
-                name='bowtie1',
-                program='bowtie',
-                stdout_path=file_path_align.stdout_txt,
-                stderr_path=file_path_align.stderr_txt))
+        runnable_step = bsf.process.RunnableStep(name='bowtie1', program='bowtie')
         """ @type runnable_step: bsf.process.RunnableStep """
+        runnable_align.add_sub_process(
+            sub_process=bsf.procedure.SubProcess(
+                runnable_step=runnable_step,
+                stdin=None,
+                stdout=bsf.procedure.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+                stderr=bsf.procedure.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt')))
+
         runnable_step.arguments.append(self.genome_index)
 
         # For Bowtie1 unpaired reads are an argument, paired reads come with options -1 <m1> and -2 <m2>.
@@ -124,10 +126,10 @@ class Bowtie2(bsf.analyses.aligner.Aligner):
     prefix = 'bowtie2'
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add a Bowtie2-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.Runnable}.
+        """Add a Bowtie2-specific C{bsf.process.RunnableStep} to the C{bsf.procedure.ConcurrentRunnable}.
 
-        @param runnable_align: C{bsf.procedure.ConsecutiveRunnable}
-        @type runnable_align: bsf.procedure.ConsecutiveRunnable
+        @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
+        @type runnable_align: bsf.procedure.ConcurrentRunnable
         @param stage_align: C{bsf.Stage}
         @type stage_align: bsf.Stage
         @param file_path_1: FASTQ file path 1
@@ -140,13 +142,15 @@ class Bowtie2(bsf.analyses.aligner.Aligner):
         file_path_align = runnable_align.file_path_object
         """ @type file_path_align bsf.analyses.aligner.FilePathAlign """
 
-        runnable_step = runnable_align.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
-                name='bowtie2',
-                program='bowtie2',
-                stdout_path=file_path_align.stdout_txt,
-                stderr_path=file_path_align.stderr_txt))
+        runnable_step = bsf.process.RunnableStep(name='bowtie2', program='bowtie2')
         """ @type runnable_step: bsf.process.RunnableStep """
+        runnable_align.add_sub_process(
+            sub_process=bsf.procedure.SubProcess(
+                runnable_step=runnable_step,
+                stdin=None,
+                stdout=bsf.procedure.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+                stderr=bsf.procedure.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt')))
+
         runnable_step.add_option_short(key='S', value=file_path_align.aligned_sam)
         runnable_step.add_option_short(key='x', value=self.genome_index)
         runnable_step.add_option_long(key='threads', value=str(stage_align.threads))

@@ -49,8 +49,8 @@ class FilePathAlign(bsf.procedure.FilePath):
     @type stdout_txt: str | unicode
     @ivar aligned_sam: Aligned sequence alignment map (SAM) file path
     @type aligned_sam: str | unicode
-    @ivar cleaned_sam: Cleaned sequence alignment map (SAM) file path
-    @type cleaned_sam: str | unicode
+    @ivar cleaned_bam: Cleaned sequence alignment map (SAM) file path
+    @type cleaned_bam: str | unicode
     @ivar aligned_bai: Aligned binary alignment map index (BAI) file path
     @type aligned_bai: str | unicode
     @ivar aligned_bam: Aligned binary alignment map (BAM) file path
@@ -80,7 +80,7 @@ class FilePathAlign(bsf.procedure.FilePath):
 
         self.aligned_sam = os.path.join(prefix, '_'.join((prefix, 'aligned.sam')))
 
-        self.cleaned_sam = os.path.join(prefix, '_'.join((prefix, 'cleaned.sam')))
+        self.cleaned_bam = os.path.join(prefix, '_'.join((prefix, 'cleaned.bam')))
 
         self.aligned_bai = os.path.join(prefix, '_'.join((prefix, 'aligned.bai')))
         self.aligned_bam = os.path.join(prefix, '_'.join((prefix, 'aligned.bam')))
@@ -682,10 +682,12 @@ class Aligner(bsf.Analysis):
 
                 file_path_align = self.get_file_path_align(paired_reads_name=paired_reads_name)
 
-                runnable_align = self.add_runnable_consecutive(
-                    runnable=bsf.procedure.ConsecutiveRunnable(
+                # Create a new ConcurrentRunnable to run the aligner and Picard CleanSam, concurrently.
+
+                runnable_align = self.add_runnable_concurrent(
+                    runnable=bsf.procedure.ConcurrentRunnable(
                         name=self.get_prefix_align(paired_reads_name=paired_reads_name),
-                        code_module='bsf.runnables.generic',
+                        code_module='bsf.runnables.concurrent',
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
                         file_path_object=file_path_align,
@@ -694,14 +696,62 @@ class Aligner(bsf.Analysis):
                     stage=stage_align,
                     runnable=runnable_align)
 
-                # Make a directory.
+                # Make a directory via RunnableStepMakeDirectory.
 
-                runnable_align.add_runnable_step(
+                runnable_align.add_runnable_step_pre(
                     runnable_step=bsf.process.RunnableStepMakeDirectory(
                         name='make_directory',
                         directory_path=file_path_align.output_directory))
 
-                # Run the Aligner.
+                # Make a named pipe via RunnableStepMakeNamedPipe.
+
+                runnable_align.add_runnable_step_pre(
+                    runnable_step=bsf.process.RunnableStepMakeNamedPipe(
+                        name='make_fifo',
+                        file_path=file_path_align.aligned_sam))
+
+                # Start Picard CleanSam first, which should block while open the named pipe for reading,
+                # then the aligner.
+
+                runnable_step = bsf.process.RunnableStepPicard(
+                    name='picard_clean_sam',
+                    obsolete_file_path_list=[
+                        file_path_align.aligned_sam,
+                    ],
+                    java_temporary_path=runnable_align.temporary_directory_path(absolute=False),
+                    java_heap_maximum='Xmx4G',
+                    java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
+                    picard_command='CleanSam')
+                """ @type runnable_step: bsf.process.RunnableStepPicard """
+                # INPUT []
+                runnable_step.add_picard_option(key='INPUT', value=file_path_align.aligned_sam)
+                # OUTPUT []
+                runnable_step.add_picard_option(key='OUTPUT', value=file_path_align.cleaned_bam)
+                # TMP_DIR [null]
+                runnable_step.add_picard_option(
+                    key='TMP_DIR',
+                    value=runnable_align.temporary_directory_path(absolute=False))
+                # VERBOSITY [INFO]
+                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
+                # QUIET [false]
+                # VALIDATION_STRINGENCY [STRICT]
+                # COMPRESSION_LEVEL [5]
+                # MAX_RECORDS_IN_RAM [500000]
+                # CREATE_INDEX [false]
+                # CREATE_MD5_FILE [false]
+                # REFERENCE_SEQUENCE [null]
+                # GA4GH_CLIENT_SECRETS [client_secrets.json]
+                # USE_JDK_DEFLATER [false]
+                # USE_JDK_INFLATER [false]
+
+                runnable_align.add_sub_process(
+                    sub_process=bsf.procedure.SubProcess(
+                        runnable_step=runnable_step,
+                        stdin=None,
+                        stdout=bsf.procedure.ConnectorSink(),
+                        stderr=bsf.procedure.ConnectorSink()))
+
+                # Start the Aligner.
 
                 self.add_runnable_step_aligner(
                     runnable_align=runnable_align,
@@ -742,47 +792,13 @@ class Aligner(bsf.Analysis):
                 else:
                     unmapped_bam_file_dict[bam_file_name] = (bam_file_path, [runnable_index])
 
-                # Run Picard CleanSam to convert the aligned SAM file into a cleaned SAM file.
-
-                runnable_step = runnable_index.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepPicard(
-                        name='picard_clean_sam',
-                        obsolete_file_path_list=[
-                            file_path_align.aligned_sam,
-                        ],
-                        java_temporary_path=runnable_index.temporary_directory_path(absolute=False),
-                        java_heap_maximum='Xmx4G',
-                        java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
-                        picard_command='CleanSam'))
-                """ @type runnable_step: bsf.process.RunnableStepPicard """
-                # INPUT []
-                runnable_step.add_picard_option(key='INPUT', value=file_path_align.aligned_sam)
-                # OUTPUT []
-                runnable_step.add_picard_option(key='OUTPUT', value=file_path_align.cleaned_sam)
-                # TMP_DIR [null]
-                runnable_step.add_picard_option(
-                    key='TMP_DIR',
-                    value=runnable_index.temporary_directory_path(absolute=False))
-                # VERBOSITY [INFO]
-                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                # QUIET [false]
-                # VALIDATION_STRINGENCY [STRICT]
-                # COMPRESSION_LEVEL [5]
-                # MAX_RECORDS_IN_RAM [500000]
-                # CREATE_INDEX [false]
-                # CREATE_MD5_FILE [false]
-                # REFERENCE_SEQUENCE [null]
-                # GA4GH_CLIENT_SECRETS [client_secrets.json]
-                # USE_JDK_DEFLATER [false]
-                # USE_JDK_INFLATER [false]
-
-                # Run Picard SortSam to convert the cleaned SAM file into a coordinate sorted BAM file.
+                # Run Picard SortSam to convert the cleaned BAM file into a coordinate sorted BAM file.
 
                 runnable_step = runnable_index.add_runnable_step(
                     runnable_step=bsf.process.RunnableStepPicard(
                         name='picard_sort_sam',
                         obsolete_file_path_list=[
-                            file_path_align.cleaned_sam,
+                            file_path_align.cleaned_bam,
                         ],
                         java_temporary_path=runnable_index.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
@@ -790,7 +806,7 @@ class Aligner(bsf.Analysis):
                         picard_command='SortSam'))
                 """ @type runnable_step: bsf.process.RunnableStepPicard """
                 # INPUT []
-                runnable_step.add_picard_option(key='INPUT', value=file_path_align.cleaned_sam)
+                runnable_step.add_picard_option(key='INPUT', value=file_path_align.cleaned_bam)
                 # OUTPUT []
                 runnable_step.add_picard_option(key='OUTPUT', value=file_path_align.aligned_bam)
                 # SORT_ORDER []

@@ -274,10 +274,10 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         return
 
     def add_runnable_step_aligner(self, runnable_align, stage_align, file_path_1, file_path_2):
-        """Add one or more STAR-specific C{bsf.process.RunnableStep} objects to the C{bsf.procedure.Runnable}.
+        """Add one or more STAR-specific C{bsf.process.RunnableStep} objects to the C{bsf.procedure.ConcurrentRunnable}.
 
-        @param runnable_align: C{bsf.procedure.ConsecutiveRunnable}
-        @type runnable_align: bsf.procedure.ConsecutiveRunnable
+        @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
+        @type runnable_align: bsf.procedure.ConcurrentRunnable
         @param stage_align: C{bsf.Stage}
         @type stage_align: bsf.Stage
         @param file_path_1: FASTQ file path 1
@@ -292,14 +292,17 @@ class StarAligner(bsf.analyses.aligner.Aligner):
 
         # Run the STAR Aligner
 
-        runnable_step = runnable_align.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
-                name='STAR',
-                program='STAR',
-                stdout_path=file_path_align.stdout_txt,
-                stderr_path=file_path_align.stderr_txt))
+        runnable_step = bsf.process.RunnableStep(name='STAR', program='STAR')
         """ @type runnable_step: bsf.process.RunnableStep """
+        runnable_align.add_sub_process(
+            sub_process=bsf.procedure.SubProcess(
+                runnable_step=runnable_step,
+                stdin=None,
+                stdout=bsf.procedure.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+                stderr=bsf.procedure.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt')))
+
         self.set_runnable_step_configuration(runnable_step=runnable_step)
+
         runnable_step.add_option_long(key='runThreadN', value=str(stage_align.threads))
         runnable_step.add_option_long(key='genomeDir', value=self.index_directory)
         runnable_step.add_option_long(key='outFileNamePrefix', value=file_path_align.star_prefix)
@@ -321,7 +324,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
 
         # Run GNU Zip over the rather large splice junction table.
 
-        runnable_step = runnable_align.add_runnable_step(
+        runnable_step = runnable_align.add_runnable_step_post(
             runnable_step=bsf.process.RunnableStep(
                 name='gzip',
                 program='gzip'))
