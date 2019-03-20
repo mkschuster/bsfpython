@@ -27,9 +27,7 @@ restarting of the C{bsf.procedure.ConsecutiveRunnable} object processing.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import errno
 import os
-import shutil
 
 import bsf.process
 
@@ -49,37 +47,13 @@ def run(runnable):
     if os.path.exists(runnable.runnable_status_file_path(success=True, absolute=False)):
         return
 
-    # Create a ConsecutiveRunnable-specific cache directory if it does not exist already.
+    # Create and populate a ConsecutiveRunnable-specific cache directory if it does not exist already.
 
-    if runnable.cache_path_dict:
-        cache_directory_path = runnable.cache_directory_path(absolute=True)
-        if not os.path.isdir(cache_directory_path):
-            try:
-                os.makedirs(cache_directory_path)
-            except OSError as exception:
-                if exception.errno != errno.EEXIST:
-                    raise
-
-        # Copy files from the cache dictionary into the cache directory.
-
-        for key in runnable.cache_path_dict:
-            try:
-                shutil.copy2(src=runnable.cache_path_dict[key], dst=cache_directory_path)
-            except OSError:
-                shutil.rmtree(path=cache_directory_path, ignore_errors=False)
-                raise
-    else:
-        cache_directory_path = None
+    runnable.cache_directory_create()
 
     # Create a ConsecutiveRunnable-specific temporary directory if it does not exist already.
 
-    temporary_directory_path = runnable.temporary_directory_path(absolute=False)
-    if not os.path.isdir(temporary_directory_path):
-        try:
-            os.makedirs(temporary_directory_path)
-        except OSError as exception:
-            if exception.errno != errno.EEXIST:
-                raise
+    runnable.temporary_directory_create()
 
     # Check the Python list of bsf.process.RunnableStep objects in reverse order to see what has completed already.
     # If a bsf.process.RunnableStep is complete, it will be the first one on the list to become the
@@ -142,13 +116,11 @@ def run(runnable):
 
     # Remove the ConsecutiveRunnable-specific cache directory and everything within it.
 
-    if cache_directory_path and os.path.exists(cache_directory_path):
-        shutil.rmtree(path=cache_directory_path, ignore_errors=False)
+    runnable.cache_directory_remove()
 
     # Remove the ConsecutiveRunnable-specific temporary directory and everything within it.
 
-    if os.path.exists(temporary_directory_path):
-        shutil.rmtree(path=temporary_directory_path, ignore_errors=False)
+    runnable.temporary_directory_remove()
 
     if child_return_code == 0:
         # Upon success, create a ConsecutiveRunnable-specific status file that indicates completion

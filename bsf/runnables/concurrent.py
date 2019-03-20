@@ -80,6 +80,14 @@ def run(runnable):
     if os.path.exists(runnable.runnable_status_file_path(success=True, absolute=False)):
         return
 
+    # Create and populate a ConcurrentRunnable-specific cache directory if it does not exist already.
+
+    runnable.cache_directory_create()
+
+    # Create a ConcurrentRunnable-specific temporary directory if it does not exist already.
+
+    runnable.temporary_directory_create()
+
     for sub_process in runnable.sub_process_list:
         # Create and assign sub-processes.
         try:
@@ -113,6 +121,14 @@ def run(runnable):
             if isinstance(connector, bsf.procedure.ConnectorPipeNamed):
                 if os.path.exists(connector.file_path):
                     os.remove(connector.file_path)
+
+    # Remove the ConcurrentRunnable-specific cache directory and everything within it.
+
+    runnable.cache_directory_remove()
+
+    # Remove the ConcurrentRunnable-specific temporary directory and everything within it.
+
+    runnable.temporary_directory_remove()
 
     # Upon success, create a ConcurrentRunnable-specific status file that indicates completion
     # for the whole ConcurrentRunnable.

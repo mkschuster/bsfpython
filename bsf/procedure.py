@@ -24,6 +24,7 @@
 import errno
 import os
 import pickle
+import shutil
 
 import bsf.process
 import bsf.standards
@@ -238,6 +239,53 @@ class Runnable(object):
         else:
             return directory_name
 
+    def cache_directory_create(self):
+        """Create a cache directory, if it does not exist and populate it from the cache dictionary.
+
+        In case of an error during the copy, the entire cache directory is removed before an Exception is re-raised.
+        @return:
+        @rtype:
+        """
+        if not self.cache_path_dict:
+            return
+
+        cache_directory_path = self.cache_directory_path(absolute=True)
+
+        # Create a Runnable-specific cache directory if it does not exist already.
+
+        if not os.path.isdir(cache_directory_path):
+            try:
+                os.makedirs(cache_directory_path)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise
+
+        # Copy files from the cache dictionary into the cache directory.
+
+        for key in self.cache_path_dict:
+            try:
+                shutil.copy2(src=self.cache_path_dict[key], dst=cache_directory_path)
+            except OSError:
+                shutil.rmtree(path=cache_directory_path, ignore_errors=False)
+                raise
+
+        return
+
+    def cache_directory_remove(self):
+        """Remove the cache directory and its contents, if it exists.
+
+        @return:
+        @rtype:
+        """
+        cache_directory_path = self.cache_directory_path(absolute=True)
+
+        # Remove the Runnable-specific cache directory and everything within it.
+
+        if os.path.exists(cache_directory_path):
+            shutil.rmtree(path=cache_directory_path, ignore_errors=False)
+
+        return
+
     def get_cache_file_path(self, file_path, absolute=False):
         """Get the absolute or relative cache file path for a file path.
 
@@ -269,6 +317,36 @@ class Runnable(object):
             return os.path.join(self.working_directory, directory_name)
         else:
             return directory_name
+
+    def temporary_directory_create(self):
+        """Create a temporary directory, if it does not exist.
+
+        @return:
+        @rtype:
+        """
+        temporary_directory_path = self.temporary_directory_path(absolute=False)
+
+        if not os.path.isdir(temporary_directory_path):
+            try:
+                os.makedirs(temporary_directory_path)
+            except OSError as exception:
+                if exception.errno != errno.EEXIST:
+                    raise
+
+        return
+
+    def temporary_directory_remove(self):
+        """Remove the temporary directory and its contents, if it exists.
+
+        @return:
+        @rtype:
+        """
+        temporary_directory_path = self.temporary_directory_path(absolute=False)
+
+        if os.path.exists(temporary_directory_path):
+            shutil.rmtree(path=temporary_directory_path, ignore_errors=False)
+
+        return
 
     def runnable_status_file_path(self, success=True, absolute=False):
         """Get the status file path for a C{bsf.procedure.Runnable}.
