@@ -55,62 +55,7 @@ def run(runnable):
 
     runnable.temporary_directory_create()
 
-    # Check the Python list of bsf.process.RunnableStep objects in reverse order to see what has completed already.
-    # If a bsf.process.RunnableStep is complete, it will be the first one on the list to become the
-    # previous bsf.process.RunnableStep.
-
-    runnable_step_list = list()
-    """ @type runnable_step_list: list[bsf.process.RunnableStep] """
-    for runnable_step in reversed(runnable.runnable_step_list):
-        runnable_step_list.append(runnable_step)
-        if os.path.exists(path=runnable.runnable_step_status_file_path(
-                runnable_step=runnable_step,
-                success=True)):
-            break
-    runnable_step_list.reverse()
-
-    # Work through the list of bsf.process.RunnableStep objects in logical order.
-    # Keep track of the previous bsf.process.RunnableStep.
-
-    child_return_code = 0
-    runnable_step_current = None
-    runnable_step_previous = None
-
-    for runnable_step_current in runnable_step_list:
-        # Check for a bsf.process.RunnableStep-specific status file.
-        if os.path.exists(path=runnable.runnable_step_status_file_path(
-                runnable_step=runnable_step_current,
-                success=True)):
-            # If a status file exists, this RunnableStep is complete.
-            # Set it as the previous RunnableStep and continue with the next RunnableStep.
-            runnable_step_previous = runnable_step_current
-            continue
-
-        # Do the work.
-
-        child_return_code = runnable_step_current.run()
-
-        # Upon failure, break out of this loop without deleting obsolete files or altering status files at this point.
-
-        if child_return_code != 0:
-            break
-
-        # Delete the list of file paths that the current bsf.process.RunnableStep declared to be obsolete now.
-
-        runnable_step_current.remove_obsolete_file_paths()
-
-        # Create an empty status file upon success.
-
-        runnable.runnable_step_status_file_create(runnable_step=runnable_step_current, success=True)
-
-        # Remove the status file of the previous bsf.process.RunnableStep, if it has been defined at this stage.
-
-        if runnable_step_previous is not None:
-            runnable.runnable_step_status_file_remove(runnable_step=runnable_step_previous)
-
-        # Finally, make the current RunnableStep the previous RunnableStep.
-
-        runnable_step_previous = runnable_step_current
+    exception = runnable.run()
 
     # Irrespective of failure ...
 
@@ -122,32 +67,12 @@ def run(runnable):
 
     runnable.temporary_directory_remove()
 
-    if child_return_code == 0:
-        # Upon success, create a ConsecutiveRunnable-specific status file that indicates completion
-        # for the whole ConsecutiveRunnable.
+    runnable.runnable_status_file_remove()
 
-        runnable.runnable_status_file_remove()
-        runnable.runnable_status_file_create(success=True)
-
-        # Remove the status file of the previous RunnableStep, if it has been defined at this stage.
-
-        if runnable_step_previous is not None:
-            runnable.runnable_step_status_file_remove(runnable_step=runnable_step_previous)
+    if exception is not None:
+        runnable.runnable_status_file_create(success=False)
+        raise exception
     else:
-        # Upon failure, create a RunnableStep-specific status file showing failure and raise an Exception.
-
-        if runnable_step_current is not None:
-            runnable.runnable_step_status_file_create(runnable_step=runnable_step_current, success=False)
-
-        if child_return_code > 0:
-            raise Exception(bsf.process.get_timestamp() +
-                            ' Child process ' + repr(runnable.name) + ' ' + repr(runnable_step_current.name) +
-                            ' failed with return code ' +
-                            repr(+child_return_code) + '.')
-        elif child_return_code < 0:
-            raise Exception(bsf.process.get_timestamp() +
-                            ' Child process ' + repr(runnable.name) + ' ' + repr(runnable_step_current.name) +
-                            ' received signal ' +
-                            repr(-child_return_code) + '.')
+        runnable.runnable_status_file_create(success=True)
 
     return

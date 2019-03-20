@@ -478,6 +478,98 @@ class Runnable(object):
 
         return
 
+    def run_consecutively(self, runnable_step_list):
+        """Run a Python C{list} of C{bsf.process.RunnableStep} objects through a C{bsf.procedure.ConsecutiveRunnable}.
+
+        @param runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
+        @type runnable_step_list: list[bsf.process.RunnableStep]
+        @return: Exception in case of a RunnableStep failure
+        @rtype: Exception | None
+        """
+        # Check the Python list of bsf.process.RunnableStep objects in reverse order to see what has completed already.
+        # If a bsf.process.RunnableStep is complete, it will be the first one on the list to become the
+        # previous bsf.process.RunnableStep.
+
+        new_runnable_step_list = list()
+        """ @type new_runnable_step_list: list[bsf.process.RunnableStep] """
+        for runnable_step in reversed(runnable_step_list):
+            new_runnable_step_list.append(runnable_step)
+            if os.path.exists(path=self.runnable_step_status_file_path(
+                    runnable_step=runnable_step,
+                    success=True)):
+                break
+        new_runnable_step_list.reverse()
+
+        # Work through the list of bsf.process.RunnableStep objects in logical order.
+        # Keep track of the previous bsf.process.RunnableStep.
+
+        child_return_code = 0
+        runnable_step_current = None
+        runnable_step_previous = None
+
+        for runnable_step_current in new_runnable_step_list:
+            # Check for a bsf.process.RunnableStep-specific status file.
+            if os.path.exists(path=self.runnable_step_status_file_path(
+                    runnable_step=runnable_step_current,
+                    success=True)):
+                # If a status file exists, this RunnableStep is complete.
+                # Set it as the previous RunnableStep and continue with the next RunnableStep.
+                runnable_step_previous = runnable_step_current
+                continue
+
+            # Do the work.
+
+            child_return_code = runnable_step_current.run()
+
+            # Upon failure, break out of this loop without deleting obsolete files or altering status files
+            # at this point.
+
+            if child_return_code != 0:
+                break
+
+            # Delete the list of file paths that the current bsf.process.RunnableStep declared to be obsolete now.
+
+            runnable_step_current.remove_obsolete_file_paths()
+
+            # Create an empty status file upon success.
+
+            self.runnable_step_status_file_create(runnable_step=runnable_step_current, success=True)
+
+            # Remove the status file of the previous bsf.process.RunnableStep, if it has been defined at this stage.
+
+            if runnable_step_previous is not None:
+                self.runnable_step_status_file_remove(runnable_step=runnable_step_previous)
+
+            # Finally, make the current RunnableStep the previous RunnableStep.
+
+            runnable_step_previous = runnable_step_current
+
+        if child_return_code == 0:
+            # Upon success, remove the status file of the previous RunnableStep, if it has been defined at this stage.
+
+            if runnable_step_previous is not None:
+                self.runnable_step_status_file_remove(runnable_step=runnable_step_previous)
+        else:
+            # Upon failure, create a RunnableStep-specific status file showing failure and return an Exception object.
+
+            if runnable_step_current is not None:
+                self.runnable_step_status_file_create(runnable_step=runnable_step_current, success=False)
+
+            if child_return_code > 0:
+                return Exception(
+                    bsf.process.get_timestamp() +
+                    ' Child process ' + repr(self.name) + ' ' + repr(runnable_step_current.name) +
+                    ' failed with return code ' +
+                    repr(+child_return_code) + '.')
+            elif child_return_code < 0:
+                return Exception(
+                    bsf.process.get_timestamp() +
+                    ' Child process ' + repr(self.name) + ' ' + repr(runnable_step_current.name) +
+                    ' received signal ' +
+                    repr(-child_return_code) + '.')
+
+        return None
+
 
 class ConsecutiveRunnable(Runnable):
     """The C{bsf.procedure.ConsecutiveRunnable} represents a procedure of consecutively running
@@ -587,6 +679,14 @@ class ConsecutiveRunnable(Runnable):
         self.runnable_step_list.append(runnable_step)
 
         return runnable_step
+
+    def run(self):
+        """Convenience function to run a C{bsf.procedure.ConsecutiveRunnable}.
+
+        @return: Exception in case of a RunnableStep failure
+        @rtype: Exception | None
+        """
+        return self.run_consecutively(runnable_step_list=self.runnable_step_list)
 
 
 class Connector(object):
@@ -729,8 +829,12 @@ class ConcurrentRunnable(Runnable):
     C{bsf.process.RunnableStep} or sub-classes thereof.
 
     Attributes:
+    @ivar runnable_step_list_pre: Python C{list} of C{bsf.process.RunnableStep} object to pre-run
+    @type runnable_step_list_pre: list[bsf.process.RunnableStep] | None
     @ivar sub_process_list: Python C{list} of C{SubProcess} objects
     @type sub_process_list: list[SubProcess]
+    @ivar runnable_step_list_post: Python C{list} of C{bsf.process.RunnableStep} object to post-run
+    @type runnable_step_list_post: list[bsf.process.RunnableStep] | None
     """
 
     def __init__(
@@ -742,7 +846,9 @@ class ConcurrentRunnable(Runnable):
             cache_path_dict=None,
             file_path_object=None,
             debug=0,
-            sub_process_list=None):
+            runnable_step_list_pre=None,
+            sub_process_list=None,
+            runnable_step_list_post=None):
         """Initialise a C{bsf.ConcurrentRunnable}.
 
         @param name: Name
@@ -757,13 +863,17 @@ class ConcurrentRunnable(Runnable):
         @param cache_path_dict: Python C{dict} of Python C{str} (name) key and
             Python C{str} (file_path) value data of files that will be copied into the
             C{bsf.procedure.Runnable.cache_directory}
-        @type cache_path_dict: dict[str, str | unicode]
+        @type cache_path_dict: dict[str, str | unicode] | None
         @param file_path_object: C{bsf.procedure.FilePath}
-        @type file_path_object: bsf.procedure.FilePath
+        @type file_path_object: bsf.procedure.FilePath | None
         @param debug: Integer debugging level
         @type debug: int
+        @param runnable_step_list_pre: Python C{list} of C{bsf.process.RunnableStep} object to pre-run
+        @type runnable_step_list_pre: list[bsf.process.RunnableStep] | None
         @param sub_process_list: Python C{list} of C{SubProcess} objects
-        @type sub_process_list: list[SubProcess]
+        @type sub_process_list: list[SubProcess] | None
+        @param runnable_step_list_post: Python C{list} of C{bsf.process.RunnableStep} object to post-run
+        @type runnable_step_list_post: list[bsf.process.RunnableStep] | None
         @return:
         @rtype:
         """
@@ -776,12 +886,56 @@ class ConcurrentRunnable(Runnable):
             file_path_object=file_path_object,
             debug=debug)
 
+        if runnable_step_list_pre is None:
+            self.runnable_step_list_pre = list()
+        else:
+            self.runnable_step_list_pre = runnable_step_list_pre
+
         if sub_process_list is None:
             self.sub_process_list = list()
         else:
             self.sub_process_list = sub_process_list
 
+        if runnable_step_list_post is None:
+            self.runnable_step_list_post = list()
+        else:
+            self.runnable_step_list_post = runnable_step_list_post
+
         return
+
+    def add_runnable_step_pre(self, runnable_step):
+        """Convenience method to add a C{bsf.process.RunnableStep} to the pre-run list.
+
+        @param runnable_step: C{bsf.process.RunnableStep}
+        @type runnable_step: bsf.process.RunnableStep
+        @return: C{bsf.process.RunnableStep}
+        @rtype: bsf.process.RunnableStep
+        """
+        if runnable_step is None:
+            return
+
+        assert isinstance(runnable_step, bsf.process.RunnableStep)
+
+        self.runnable_step_list_pre.append(runnable_step)
+
+        return runnable_step
+
+    def add_runnable_step_post(self, runnable_step):
+        """Convenience method to add a C{bsf.process.RunnableStep} to the post-run list.
+
+        @param runnable_step: C{bsf.process.RunnableStep}
+        @type runnable_step: bsf.process.RunnableStep
+        @return: C{bsf.process.RunnableStep}
+        @rtype: bsf.process.RunnableStep
+        """
+        if runnable_step is None:
+            return
+
+        assert isinstance(runnable_step, bsf.process.RunnableStep)
+
+        self.runnable_step_list_post.append(runnable_step)
+
+        return runnable_step
 
     def add_sub_process(self, sub_process=None):
         """Convenience method to facilitate initialising, adding and returning a C{bsf.procedure.SubProcess}.

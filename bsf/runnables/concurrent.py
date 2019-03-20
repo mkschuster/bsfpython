@@ -43,6 +43,26 @@ def run(runnable):
     @rtype:
     """
 
+    def _run_consecutively(runnable_step_list):
+        """Run a Python C{list} of C{bsf.process.RunnableStep} objects consecutively.
+
+        @param runnable_step_list: Python C{list} of C{bsf.process.RunnableStep} objects
+        @type runnable_step_list: list[bsf.process.RunnableStep]
+        @return:
+        @rtype:
+        """
+        _exception = runnable.run_consecutively(runnable_step_list=runnable_step_list)
+
+        if _exception is not None:
+            # Remove the ConcurrentRunnable-specific cache directory and everything within it.
+            runnable.cache_directory_remove()
+            # Remove the ConcurrentRunnable-specific temporary directory and everything within it.
+            runnable.temporary_directory_remove()
+            runnable.runnable_status_file_create(success=False)
+            raise _exception
+
+        return
+
     def _map_connector(_connector):
         """Map a connector to a file handle.
 
@@ -88,6 +108,10 @@ def run(runnable):
 
     runnable.temporary_directory_create()
 
+    # Now, process the RunnableStep objects on the pre-run list.
+
+    _run_consecutively(runnable_step_list=runnable.runnable_step_list_pre)
+
     for sub_process in runnable.sub_process_list:
         # Create and assign sub-processes.
         try:
@@ -111,16 +135,36 @@ def run(runnable):
     # At this stage all subprocess.Popen objects should have been created.
     # Now, wait for all child processes to complete.
 
+    exception_str_list = list()
     for sub_process in runnable.sub_process_list:
-        sub_process.sub_process.wait()
+        child_return_code = sub_process.sub_process.wait()
 
-    # Remove named FIFO pipes by checking all three connectors of a SubProcess.
-    for sub_process in runnable.sub_process_list:
-        for attribute in ('stdin', 'stdout', 'stderr'):
-            connector = sub_process.__getattribute__(attribute)
-            if isinstance(connector, bsf.procedure.ConnectorPipeNamed):
-                if os.path.exists(connector.file_path):
-                    os.remove(connector.file_path)
+        if child_return_code > 0:
+            exception_str_list.append(
+                bsf.process.get_timestamp() +
+                ' Child process ' + repr(runnable.name) + ' ' + repr(sub_process.runnable_step.name) +
+                ' failed with return code ' +
+                repr(+child_return_code) + '.')
+        elif child_return_code < 0:
+            exception_str_list.append(
+                bsf.process.get_timestamp() +
+                ' Child process ' + repr(runnable.name) + ' ' + repr(sub_process.runnable_step.name) +
+                ' received signal ' +
+                repr(-child_return_code) + '.')
+        else:
+            # Delete the list of file paths that the bsf.process.RunnableStep declared to be obsolete now.
+
+            sub_process.runnable_step.remove_obsolete_file_paths()
+
+    if exception_str_list:
+        runnable.cache_directory_remove()
+        runnable.temporary_directory_remove()
+        runnable.runnable_status_file_create(success=False)
+        raise Exception('\n'.join(exception_str_list))
+
+    # Finally, process the RunnableStep object on the post-run list.
+
+    _run_consecutively(runnable_step_list=runnable.runnable_step_list_post)
 
     # Remove the ConcurrentRunnable-specific cache directory and everything within it.
 
