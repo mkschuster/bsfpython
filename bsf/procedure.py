@@ -596,12 +596,21 @@ class ConnectorProcess(Connector):
         return
 
 
-class SubProcess(object):
-    """The C{SubProcess} class represents one C{bsf.process.Executable} to be run via C{subprocess.Popen}.
+class ConnectorSink(Connector):
+    """The C{ConnectorSink} class represents a C{file} connection to /dev/null.
 
     Attributes:
-    @ivar executable: C{bsf.process.Executable} or sub-class thereof
-    @type executable: bsf.process.Executable
+    """
+
+    pass
+
+
+class SubProcess(object):
+    """The C{SubProcess} class represents one C{bsf.process.RunnableStep} to be run via C{subprocess.Popen}.
+
+    Attributes:
+    @ivar runnable_step: C{bsf.process.RunnableStep} or sub-class thereof
+    @type runnable_step: bsf.process.RunnableStep
     @ivar stdin: C{Connector} for STDIN
     @type stdin: Connector
     @ivar stdout: C{Connector} for STDOUT
@@ -610,11 +619,11 @@ class SubProcess(object):
     @type stderr Connector
     """
 
-    def __init__(self, executable, stdin=None, stdout=None, stderr=None, sub_process=None):
+    def __init__(self, runnable_step, stdin=None, stdout=None, stderr=None, sub_process=None):
         """Initialise a C{SubProcess} object.
 
-        @param executable: C{bsf.process.Executable} or sub-class thereof
-        @type executable: bsf.process.Executable
+        @param runnable_step: C{bsf.process.RunnableStep} or sub-class thereof
+        @type runnable_step: bsf.process.RunnableStep
         @param stdin: C{Connector} for STDIN
         @type stdin: Connector | None
         @param stdout: C{Connector} for STDOUT
@@ -628,7 +637,7 @@ class SubProcess(object):
         """
         super(SubProcess, self).__init__()
 
-        self.executable = executable
+        self.runnable_step = runnable_step
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr

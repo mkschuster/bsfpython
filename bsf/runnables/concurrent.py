@@ -51,6 +51,9 @@ def run(runnable):
         @return: File handle
         @rtype: file | subprocess.PIPE
         """
+        if isinstance(_connector, bsf.procedure.ConnectorSink):
+            return open('/dev/null', 'wb')
+
         if isinstance(_connector, bsf.procedure.ConnectorFile):
             if isinstance(_connector, bsf.procedure.ConnectorPipeNamed):
                 # A named pipe needs creating before it can be opened.
@@ -63,18 +66,25 @@ def run(runnable):
 
         if isinstance(_connector, bsf.procedure.ConnectorProcess):
             for _sub_process in runnable.sub_process_list:
-                if _sub_process.executable.name == _connector.name:
+                if _sub_process.runnable_step.name == _connector.name:
                     if _sub_process.sub_process is None:
-                        raise Exception('Sub-process ' + repr(_sub_process.executable.name) + ' not initialised, yet.')
+                        raise Exception(
+                            'Sub-process ' + repr(_sub_process.runnable_step.name) + ' not initialised, yet.')
                     return getattr(_sub_process.sub_process, _connector.connection)
 
         return None
+
+    # If the ConcurrentRunnable status file exists, there is nothing to do and
+    # this ConcurrentRunnable should not have been submitted in the first place.
+
+    if os.path.exists(runnable.runnable_status_file_path(success=True, absolute=False)):
+        return
 
     for sub_process in runnable.sub_process_list:
         # Create and assign sub-processes.
         try:
             sub_process.sub_process = subprocess.Popen(
-                args=sub_process.executable.command_list(),
+                args=sub_process.runnable_step.command_list(),
                 stdin=_map_connector(_connector=sub_process.stdin),
                 stdout=_map_connector(_connector=sub_process.stdout),
                 stderr=_map_connector(_connector=sub_process.stderr),
@@ -82,7 +92,10 @@ def run(runnable):
                 shell=False)
         except OSError as exception:
             if exception.errno == errno.ENOENT:
-                raise Exception('Executable ' + repr(sub_process.executable.program) + ' could not be found.')
+                raise Exception(
+                    repr(sub_process.runnable_step) + ' ' +
+                    repr(sub_process.runnable_step.program) +
+                    ' could not be found.')
             else:
                 # Re-raise the Exception object.
                 raise exception
@@ -100,5 +113,10 @@ def run(runnable):
             if isinstance(connector, bsf.procedure.ConnectorPipeNamed):
                 if os.path.exists(connector.file_path):
                     os.remove(connector.file_path)
+
+    # Upon success, create a ConcurrentRunnable-specific status file that indicates completion
+    # for the whole ConcurrentRunnable.
+    runnable.runnable_status_file_remove()
+    runnable.runnable_status_file_create(success=True)
 
     return
