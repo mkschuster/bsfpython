@@ -31,7 +31,6 @@ are automatically deleted.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import os
 
 import bsf.argument
@@ -93,6 +92,7 @@ def run(runnable):
                                 paired_reads_keep = True
                             else:
                                 os.remove(paired_reads.reads_1.file_path)
+                                paired_reads.reads_1 = None
                         else:
                             # The PairedReads object does not have a meaningful Reads object in reads1.
                             paired_reads.reads_1 = None
@@ -102,6 +102,7 @@ def run(runnable):
                                 paired_reads_keep = True
                             else:
                                 os.remove(paired_reads.reads_2.file_path)
+                                paired_reads.reads_2 = None
                         else:
                             # The PairedReads object does not have a meaningful Reads object in reads2.
                             paired_reads.reads_2 = None
