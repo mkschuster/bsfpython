@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Generic Runnables module
+"""Generic ConsecutiveRunnable module
 
-A package of classes and methods to run C{bsf.process.RunnableStep} objects of a C{bsf.procedure.Runnable}.
+A package of classes and methods to run C{bsf.process.RunnableStep} objects of a C{bsf.procedure.ConsecutiveRunnable}.
 Empty status files keep track of completed C{bsf.process.RunnableStep} objects and allow for
-restarting of the C{bsf.procedure.Runnable} object processing.
+restarting of the C{bsf.procedure.ConsecutiveRunnable} object processing.
 """
 #  Copyright 2013 - 2019 Michael K. Schuster
 #
@@ -27,7 +27,6 @@ restarting of the C{bsf.procedure.Runnable} object processing.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import datetime
 import errno
 import os
 import shutil
@@ -64,35 +63,11 @@ def run(runnable):
         # Copy files from the cache dictionary into the cache directory.
 
         for key in runnable.cache_path_dict:
-            source_path = runnable.cache_path_dict[key]
-            target_path = os.path.join(cache_directory_path, os.path.basename(source_path))
-
-            runnable_step = bsf.process.RunnableStep(
-                name='_'.join((runnable.name, 'cache', key)),
-                program='cp')
-            runnable_step.add_switch_short(key='p')
-            runnable_step.arguments.append(source_path)
-            runnable_step.arguments.append(target_path)
-
-            child_return_code = runnable_step.run()
-
-            if child_return_code != 0:
-                # Remove the ConsecutiveRunnable-specific cache directory and everything within it.
-                if os.path.exists(cache_directory_path):
-                    shutil.rmtree(path=cache_directory_path, ignore_errors=False)
-                # Raise an Exception.
-                if child_return_code > 0:
-                    raise Exception('[{}] Child process {}_{} failed with return code {}'.
-                                    format(datetime.datetime.now().isoformat(),
-                                           runnable.name,
-                                           runnable_step.name,
-                                           +child_return_code))
-                elif child_return_code < 0:
-                    raise Exception('[{}] Child process {}_{} received signal {}.'.
-                                    format(datetime.datetime.now().isoformat(),
-                                           runnable.name,
-                                           runnable_step.name,
-                                           -child_return_code))
+            try:
+                shutil.copy2(src=runnable.cache_path_dict[key], dst=cache_directory_path)
+            except OSError:
+                shutil.rmtree(path=cache_directory_path, ignore_errors=False)
+                raise
     else:
         cache_directory_path = None
 
@@ -193,16 +168,14 @@ def run(runnable):
             runnable.runnable_step_status_file_create(runnable_step=runnable_step_current, success=False)
 
         if child_return_code > 0:
-            raise Exception('[{}] Child process {}_{} failed with return code {}'.
-                            format(datetime.datetime.now().isoformat(),
-                                   runnable.name,
-                                   runnable_step_current.name,
-                                   +child_return_code))
+            raise Exception(bsf.process.get_timestamp() +
+                            ' Child process ' + repr(runnable.name) + ' ' + repr(runnable_step_current.name) +
+                            ' failed with return code ' +
+                            repr(+child_return_code) + '.')
         elif child_return_code < 0:
-            raise Exception('[{}] Child process {}_{} received signal {}.'.
-                            format(datetime.datetime.now().isoformat(),
-                                   runnable.name,
-                                   runnable_step_current.name,
-                                   -child_return_code))
+            raise Exception(bsf.process.get_timestamp() +
+                            ' Child process ' + repr(runnable.name) + ' ' + repr(runnable_step_current.name) +
+                            ' received signal ' +
+                            repr(-child_return_code) + '.')
 
     return
