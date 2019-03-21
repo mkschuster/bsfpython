@@ -748,8 +748,8 @@ class Aligner(bsf.Analysis):
                     sub_process=bsf.procedure.SubProcess(
                         runnable_step=runnable_step,
                         stdin=None,
-                        stdout=bsf.procedure.ConnectorSink(),
-                        stderr=bsf.procedure.ConnectorSink()))
+                        stdout=bsf.procedure.ConnectorStandardOutput(),
+                        stderr=bsf.procedure.ConnectorStandardError()))
 
                 # Start the Aligner.
 

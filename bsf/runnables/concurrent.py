@@ -30,6 +30,7 @@ restarting of the C{bsf.procedure.ConcurrentRunnable} object processing.
 import errno
 import os
 import subprocess
+import threading
 
 import bsf.procedure
 
@@ -84,6 +85,9 @@ def run(runnable):
         if isinstance(_connector, bsf.procedure.ConnectorPipe):
             return subprocess.PIPE
 
+        if isinstance(_connector, bsf.procedure.ConnectorStandardStream):
+            return subprocess.PIPE
+
         if isinstance(_connector, bsf.procedure.ConnectorProcess):
             for _sub_process in runnable.sub_process_list:
                 if _sub_process.runnable_step.name == _connector.name:
@@ -112,6 +116,8 @@ def run(runnable):
 
     _run_consecutively(runnable_step_list=runnable.runnable_step_list_pre)
 
+    thread_lock = threading.Lock()
+
     for sub_process in runnable.sub_process_list:
         # Create and assign sub-processes.
         try:
@@ -132,6 +138,49 @@ def run(runnable):
                 # Re-raise the Exception object.
                 raise exception
 
+        # Start threads for standard stream prcessing to prevent buffers from filling up and
+        # sub-processes from blocking.
+
+        for attribute in ('stdin', 'stdout', 'stderr'):
+            connector = getattr(sub_process, attribute)
+            """ @type connector: bsf.procedure.Connector """
+            if isinstance(connector, bsf.procedure.ConnectorStandardInput):
+                if sub_process.runnable_step.stdin_callable is None:
+                    # If a specific STDIN callable is not defined, run bsf.process.Executable.process_stdin().
+                    pass
+                else:
+                    connector.thread = threading.Thread(
+                        target=sub_process.runnable_step.stdin_callable,
+                        args=[sub_process.sub_process.stdin, thread_lock, runnable.debug],
+                        kwargs=sub_process.runnable_step.stdin_kwargs)
+            if isinstance(connector, bsf.procedure.ConnectorStandardOutput):
+                if sub_process.runnable_step.stdout_callable is None:
+                    # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
+                    connector.thread = threading.Thread(
+                        target=sub_process.runnable_step.process_stdout,
+                        args=[sub_process.sub_process.stdout, thread_lock, runnable.debug],
+                        kwargs={'stdout_path': sub_process.runnable_step.stdout_path})
+                else:
+                    connector.thread = threading.Thread(
+                        target=sub_process.runnable_step.stdout_callable,
+                        args=[sub_process.sub_process.stdout, thread_lock, runnable.debug],
+                        kwargs=sub_process.runnable_step.stdout_kwargs)
+            if isinstance(connector, bsf.procedure.ConnectorStandardError):
+                if sub_process.runnable_step.stderr_callable is None:
+                    # If a specific STDERR callable is not defined, run bsf.process.Executable.process_stderr().
+                    connector.thread = threading.Thread(
+                        target=bsf.process.Executable.process_stderr,
+                        args=[sub_process.sub_process.stderr, thread_lock, runnable.debug],
+                        kwargs={'stderr_path': sub_process.runnable_step.stderr_path})
+                else:
+                    connector.thread = threading.Thread(
+                        target=sub_process.runnable_step.stderr_callable,
+                        args=[sub_process.sub_process.stderr, thread_lock, runnable.debug],
+                        kwargs=sub_process.runnable_step.stderr_kwargs)
+            if isinstance(connector, bsf.procedure.ConnectorStandardStream) and connector.thread:
+                connector.thread.daemon = True
+                connector.thread.start()
+
     # At this stage all subprocess.Popen objects should have been created.
     # Now, wait for all child processes to complete.
 
@@ -139,20 +188,41 @@ def run(runnable):
     for sub_process in runnable.sub_process_list:
         child_return_code = sub_process.sub_process.wait()
 
+        # First, join all standard stream processing threads.
+
+        for attribute in ('stdin', 'stdout', 'stderr'):
+            connector = getattr(sub_process, attribute)
+            """ @type connector: bsf.procedure.Connector """
+            if isinstance(connector, bsf.procedure.ConnectorStandardStream) and connector.thread:
+                thread_join_counter = 0
+                while connector.thread.is_alive() and thread_join_counter < connector.thread_joins:
+                    if runnable.debug > 0:
+                        thread_lock.acquire(True)
+                        print(bsf.process.get_timestamp(), 'Waiting for ' + repr(attribute) + ' processor to finish.')
+                        thread_lock.release()
+
+                    connector.thread.join(timeout=connector.thread_timeout)
+                    thread_join_counter += 1
+
+        # Second, inspect the child process' return code.
+
         if child_return_code > 0:
+            # Child return code.
             exception_str_list.append(
                 bsf.process.get_timestamp() +
                 ' Child process ' + repr(runnable.name) + ' ' + repr(sub_process.runnable_step.name) +
                 ' failed with return code ' +
                 repr(+child_return_code) + '.')
         elif child_return_code < 0:
+            # Child signal.
             exception_str_list.append(
                 bsf.process.get_timestamp() +
                 ' Child process ' + repr(runnable.name) + ' ' + repr(sub_process.runnable_step.name) +
                 ' received signal ' +
                 repr(-child_return_code) + '.')
         else:
-            # Delete the list of file paths that the bsf.process.RunnableStep declared to be obsolete now.
+            # Upon success, delete the list of file paths that the bsf.process.RunnableStep
+            # declared to be obsolete now.
 
             sub_process.runnable_step.remove_obsolete_file_paths()
 

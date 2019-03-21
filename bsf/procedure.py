@@ -783,6 +783,64 @@ class ConnectorSink(Connector):
     pass
 
 
+class ConnectorStandardStream(Connector):
+    """The C{ConnectorStandardStream} class represents a standard stream processed via C{threading.Thread}.
+
+    Standard streams (i.e. STDIN, STDOUT, STDERR) require processing via a C{threading.Thread} to prevent buffers from
+    filling up and subsequently sub-processes (C{subprocess.Popen}) from blocking.
+    Attributes:
+    @ivar thread_callable: Callable for C{threading.Thread.target}
+    @type thread_callable: object | None
+    @ivar thread_kwargs: Python C{dict} of keyword arguments for C{threading.Thread.kwargs}
+    @type thread_kwargs: dict[str, object] | None
+    @ivar thread_joins: Maximum number of attempts calling C{threading.Thread.join}
+    @type thread_joins: int
+    @ivar thread_timeout: Timeout in seconds for calling C{threading.Thread.join}
+    @type thread_timeout: int
+    @ivar thread: C{threading.Thread} object | None
+    @type thread: threading.Thread
+    """
+
+    def __init__(self, thread_callable=None, thread_kwargs=None, thread_joins=10, thread_timeout=10, thread=None):
+        """Initialise a C{bsf.procedure.ConnectorStandardStream} object.
+
+        @param thread_callable: Callable for C{threading.Thread.target}
+        @type thread_callable: object | None
+        @param thread_kwargs: Python C{dict} of keyword arguments for C{threading.Thread.kwargs}
+        @type thread_kwargs: dict[str, object] | None
+        @param thread_joins: Maximum number of attempts calling C{threading.Thread.join}
+        @type thread_joins: int
+        @param thread_timeout: Timeout in seconds for calling C{threading.Thread.join}
+        @type thread_timeout: int
+        @param thread: C{threading.Thread} object
+        @type thread: threading.Thread | None
+        @return:
+        @rtype:
+        """
+        self.thread_callable = thread_callable
+        self.thread_kwargs = thread_kwargs
+        self.thread_joins = thread_joins
+        self.thread_timeout = thread_timeout
+        self.thread = thread
+
+        return
+
+
+class ConnectorStandardInput(ConnectorStandardStream):
+
+    pass
+
+
+class ConnectorStandardOutput(ConnectorStandardStream):
+
+    pass
+
+
+class ConnectorStandardError(ConnectorStandardStream):
+
+    pass
+
+
 class SubProcess(object):
     """The C{SubProcess} class represents one C{bsf.process.RunnableStep} to be run via C{subprocess.Popen}.
 
