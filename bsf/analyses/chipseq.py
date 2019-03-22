@@ -356,16 +356,18 @@ class ChIPSeq(bsf.Analysis):
     @type replicate_grouping: bool
     @ivar comparison_path: Comparison file path
     @type comparison_path: str | unicode | None
+    @ivar genome_fasta_path: Reference genome sequence FASTA file path
+    @type genome_fasta_path: str | unicode | None
+    @ivar genome_sizes_path: Reference genome (chromosome) sizes file path
+    @type genome_sizes_path: str | unicode | None
     @ivar colour_default: Default UCSC Genome Browser Track Hub RGB colour
     @type colour_default: str | None
     @ivar colour_dict: Python C{dict} of
         Python C{str} factor name key and
         Python C{str} RGB colour value data
     @type colour_dict: dict[str, str] | None
-    @ivar genome_fasta_path: Reference genome sequence FASTA file path
-    @type genome_fasta_path: str | unicode | None
-    @ivar genome_sizes_path: Reference genome (chromosome) sizes file path
-    @type genome_sizes_path: str | unicode | None
+    @ivar factor_default: Default factor
+    @type factor_default: str
     """
 
     name = 'ChIP-seq Analysis'
@@ -466,16 +468,18 @@ class ChIPSeq(bsf.Analysis):
         @type replicate_grouping: bool
         @param comparison_path: Comparison file path
         @type comparison_path: str | unicode | None
+        @param genome_fasta_path: Reference genome sequence FASTA file path
+        @type genome_fasta_path: str | unicode | None
+        @param genome_sizes_path: Reference genome (chromosome) sizes file path
+        @type genome_sizes_path: str | unicode | None
         @param colour_default: Default UCSC Genome Browser Track Hub RGB colour
         @type colour_default: str | None
         @param colour_dict: Python C{dict} of
             Python C{str} factor name key and
             Python C{str} RGB colour value data
         @type colour_dict: dict[str, str] | None
-        @param genome_fasta_path: Reference genome sequence FASTA file path
-        @type genome_fasta_path: str | unicode | None
-        @param genome_sizes_path: Reference genome (chromosome) sizes file path
-        @type genome_sizes_path: str | unicode | None
+        @param factor_default: Default factor
+        @type factor_default: str
         @return:
         @rtype:
         """
