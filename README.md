@@ -87,6 +87,18 @@ the merged assemblies on the basis of the BAM alignments produced by Tophat2.
 
 ### Genetic Variant Calling
 
+## Dependencies
+
+* Python ([The Python Software Foundation](https://www.python.org/))
+* R ([The R Foundation for Statistical Computing Platform](https://www.r-project.org/))
+
+### ChIP-seq
+
+* MACS2 ([Tao Liu lab at UB and Xiaole Shirley Liu lab at DFCI](https://github.com/taoliu/MACS))
+* DiffBind
+* Kent Tools
+* convert ([ImageMagick Studio LLC](http://www.imagemagick.org/))
+
 ## References
 
 

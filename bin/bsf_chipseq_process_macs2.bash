@@ -154,6 +154,16 @@ for suffix in "${suffixes[@]}"; do
     fi
 done
 
+if [[ -f "${prefix}/${prefix}_model.r" ]];
+then
+    Rscript "${prefix}/${prefix}_model.r";
+fi
+
+if [[ -f "${prefix}/${prefix}_model.pdf" ]];
+then
+    convert "${prefix}/${prefix}_model.pdf" "${prefix}/${prefix}_model.png";
+fi
+
 if [[ -d "${temporary_directory}" ]]; then
     rm -R "${temporary_directory}" || exit 1;
 fi
