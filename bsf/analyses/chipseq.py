@@ -183,27 +183,64 @@ class ChIPSeqComparison(object):
         return ChIPSeq.get_file_path_peak_calling(t_name=self.t_name, c_name=self.c_name)
 
 
-class FilePathMacs14(bsf.procedure.FilePath):
-    def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.chipseq.FilePathMacs14} object
-
-        @param prefix: Prefix
-        @type prefix: str | unicode
-        @return:
-        @rtype:
-        """
-        super(FilePathMacs14, self).__init__(prefix=prefix)
-
-        self.output_directory = prefix
-        self.name_prefix = os.path.join(prefix, prefix)  # MACS14 --name option
-
-        self.summits_bed = os.path.join(prefix, '_'.join((prefix, 'summits.bed')))
-        self.summits_bb = os.path.join(prefix, '_'.join((prefix, 'summits.bb')))
-
-        return
-
-
 class FilePathPeakCalling(bsf.procedure.FilePath):
+    """The C{bsf.analyses.chipseq.FilePathPeakCalling} models files in a comparison-specific MACS directory.
+
+    Attributes:
+    @ivar output_directory: Output directory
+    @type output_directory: str | unicode
+    @ivar name_prefix: MACS --name option
+    @type name_prefix: str | unicode
+    @ivar control_bdg: Control (lambda) signal in BEDgraph format
+    @type control_bdg: str | unicode
+    @ivar control_bw: Control (lambda) signal in BigWIG format
+    @type control_bw: str | unicode
+    @ivar control_bwi: Control (lambda) BigWIG information
+    @type control_bwi: str | unicode
+    @ivar treatment_bdg: Treatment signal in BEDgraph format
+    @type treatment_bdg: str | unicode
+    @ivar treatment_bw: Treatment signal in BigWIG format
+    @type treatment_bw: str | unicode
+    @ivar treatment_bwi: Treatment BigWIG information
+    @type treatment_bwi: str | unicode
+    @ivar comparison_log_fe_bdg: Comparison signal as log10(fold-enrichment) in BEDgraph format
+    @type comparison_log_fe_bdg: str | unicode
+    @ivar comparison_log_fe_bw: Comparison signal as log10(fold-enrichment) in BigWIG format
+    @type comparison_log_fe_bw: str | unicode
+    @ivar comparison_log_fe_bwi: Comparison signal as log10(fold-enrichment) BigWIG information
+    @type comparison_log_fe_bwi: str | unicode
+    @ivar comparison_ppois_bdg: Comparison signal as Poisson p-value in BEDgraph format
+    @type comparison_ppois_bdg: str | unicode
+    @ivar comparison_ppois_bw: Comparison signal as Poisson p-value in BigWIG format
+    @type comparison_ppois_bw: str | unicode
+    @ivar comparison_ppois_bwi: Comparison signal as Poisson p-value BigWIG information
+    @type comparison_ppois_bwi: str | unicode
+    @ivar comparison_subtract_bdg: Comparison signal as subtraction in BEDgraph format
+    @type comparison_subtract_bdg: str | unicode
+    @ivar comparison_subtract_bw: Comparison signal as subtraction in BigWIG format
+    @type comparison_subtract_bw: str | unicode
+    @ivar comparison_subtract_bwi: Comparison signal as subtraction BigWIG information
+    @type comparison_subtract_bwi: str | unicode
+
+    @ivar summits_bed: Peak summits in BED format
+    @type summits_bed: str | unicode
+    @ivar summits_bb: Peak summits in BigBED format
+    @type summits_bb: str | unicode
+    @ivar peaks_tsv: MACS2 peaks in tab-separated value (TSV) format
+    @type peaks_tsv: str | unicode
+    @ivar peaks_xls: MACS2 peaks in tab-separated value (TSV) format
+    @type peaks_xls: str | unicode
+
+    @ivar model_r: MACS peak model as Rscript
+    @type model_r: str | unicode
+    @ivar model_pdf: MACS "Peak Model" and "Cross-Correlation" plots in PDF format
+    @type model_pdf: str | unicode
+    @ivar model_0_png: MACS "Peak Model" plot in PDF format
+    @type model_0_png: str | unicode
+    @ivar model_1_png: MACS "Cross-Correlation" plot in PDF format
+    @type model_1_png: str | unicode
+    """
+
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.chipseq.FilePathPeakCalling} object
 
@@ -219,19 +256,32 @@ class FilePathPeakCalling(bsf.procedure.FilePath):
 
         self.control_bdg = os.path.join(prefix, '_'.join((prefix, 'control_lambda.bdg')))
         self.control_bw = os.path.join(prefix, '_'.join((prefix, 'control_lambda.bw')))
+        self.control_bwi = os.path.join(prefix, '_'.join((prefix, 'control_lambda_bwi.txt')))
+
         self.treatment_bdg = os.path.join(prefix, '_'.join((prefix, 'treat_pileup.bdg')))
         self.treatment_bw = os.path.join(prefix, '_'.join((prefix, 'treat_pileup.bw')))
-        self.comparison_bdg = os.path.join(prefix, '_'.join((prefix, 'bdgcmp.bdg')))
-        self.comparison_bw = os.path.join(prefix, '_'.join((prefix, 'bdgcmp.bw')))
+        self.treatment_bwi = os.path.join(prefix, '_'.join((prefix, 'treat_pileup_bwi.txt')))
 
-        # self.peaks_bed = os.path.join(prefix, '_'.join((prefix, 'peaks.bed')))
-        # self.peaks_bb = os.path.join(prefix, '_'.join((prefix, 'peaks.bb')))
+        self.comparison_log_fe_bdg = os.path.join(prefix, '_'.join((prefix, 'logFE.bdg')))
+        self.comparison_log_fe_bw = os.path.join(prefix, '_'.join((prefix, 'logFE.bw')))
+        self.comparison_log_fe_bwi = os.path.join(prefix, '_'.join((prefix, 'logFE_bwi.txt')))
+
+        self.comparison_ppois_bdg = os.path.join(prefix, '_'.join((prefix, 'ppois.bdg')))
+        self.comparison_ppois_bw = os.path.join(prefix, '_'.join((prefix, 'ppois.bw')))
+        self.comparison_ppois_bwi = os.path.join(prefix, '_'.join((prefix, 'ppois_bwi.txt')))
+
+        self.comparison_subtract_bdg = os.path.join(prefix, '_'.join((prefix, 'subtract.bdg')))
+        self.comparison_subtract_bw = os.path.join(prefix, '_'.join((prefix, 'subtract.bw')))
+        self.comparison_subtract_bwi = os.path.join(prefix, '_'.join((prefix, 'subtract_bwi.txt')))
+
         self.peaks_narrow = os.path.join(prefix, '_'.join((prefix, 'peaks.narrowPeak')))
         self.narrow_peaks_bed = os.path.join(prefix, '_'.join((prefix, 'narrow_peaks.bed')))
         self.narrow_peaks_bb = os.path.join(prefix, '_'.join((prefix, 'narrow_peaks.bb')))
         self.summits_bed = os.path.join(prefix, '_'.join((prefix, 'summits.bed')))
         self.summits_bb = os.path.join(prefix, '_'.join((prefix, 'summits.bb')))
+        self.peaks_tsv = os.path.join(prefix, '_'.join((prefix, 'peaks.tsv')))
         self.peaks_xls = os.path.join(prefix, '_'.join((prefix, 'peaks.xls')))
+
         self.model_r = os.path.join(prefix, '_'.join((prefix, 'model.r')))
         self.model_pdf = os.path.join(prefix, '_'.join((prefix, 'model.pdf')))
         self.model_0_png = os.path.join(prefix, '_'.join((prefix, 'model-0.png')))
@@ -840,7 +890,7 @@ class ChIPSeq(bsf.Analysis):
 
                 prefix_peak_calling = chipseq_comparison.get_prefix_peak_calling()
 
-                file_path_peak_calling = FilePathMacs14(prefix=prefix_peak_calling)
+                file_path_peak_calling = FilePathPeakCalling(prefix=prefix_peak_calling)
 
                 runnable_peak_calling = self.add_runnable_consecutive(
                     runnable=bsf.procedure.ConsecutiveRunnable(
@@ -902,6 +952,8 @@ class ChIPSeq(bsf.Analysis):
                     pass
                 elif factor == 'H3K4ME3':
                     pass  # Default settings from above.
+                elif factor == 'H3K9AC':
+                    pass
                 elif factor == 'H3K9ME3':
                     pass
                 elif factor == 'H3K27AC':
@@ -1075,6 +1127,8 @@ class ChIPSeq(bsf.Analysis):
                     pass
                 elif factor == 'H3K4ME3':
                     pass  # Default settings from above.
+                elif factor == 'H3K9AC':
+                    pass
                 elif factor == 'H3K9ME3':
                     pass
                 elif factor == 'H3K27AC':
@@ -1131,16 +1185,19 @@ class ChIPSeq(bsf.Analysis):
 
                 # --scaling-factor [1.0]
                 # --pseudocount [0.0]
+                runnable_step_macs2_bdg_cmp.sub_command.add_option_long(key='pseudocount', value='0.00001')
 
                 # --method [ppois] i.e. Poisson Pvalue -log10(pvalue), which yields data on a logarithmic scale
-                # runnable_step_macs2_bdg_cmp.sub_command.add_option_long(key='method', value='FE')
+                runnable_step_macs2_bdg_cmp.sub_command.add_option_multi_long(
+                    key='method',
+                    value='ppois subtract logFE')
 
                 # --outdir [.]
                 # --o-prefix [null]
-                # --ofile
                 runnable_step_macs2_bdg_cmp.sub_command.add_option_long(
-                    key='ofile',
-                    value=file_path_peak_calling.comparison_bdg)
+                    key='o-prefix',
+                    value=file_path_peak_calling.name_prefix)
+                # --ofile
 
                 # Add a RunnableStep to process MACS2 output.
 
@@ -1239,19 +1296,31 @@ class ChIPSeq(bsf.Analysis):
 
                 dbs.to_file_path()
 
-                # Create the DiffBind job.
-
-                diff_bind = stage_diff_bind.add_executable(
-                    executable=bsf.process.Executable(
+                runnable_diff_bind = self.add_runnable_consecutive(
+                    runnable=bsf.procedure.ConsecutiveRunnable(
                         name=prefix_diff_bind,
+                        code_module='bsf.runnables.generic',
+                        working_directory=self.genome_directory,
+                        file_path_object=file_path_diff_bind,
+                        debug=self.debug))
+                executable_diff_bind = self.set_stage_runnable(
+                    stage=stage_diff_bind,
+                    runnable=runnable_diff_bind)
+                executable_diff_bind.dependencies.extend(job_dependencies)
+
+                # Add a RunnableStep for Bioconductor DiffBind.
+
+                runnable_step = runnable_diff_bind.add_runnable_step(
+                    runnable_step=bsf.process.RunnableStep(
+                        name='diff_bind',
                         program='bsf_chipseq_diffbind.R'))
-                diff_bind.dependencies.extend(job_dependencies)
 
-                diff_bind.add_option_long(key='factor', value=factor_name)
-                diff_bind.add_option_long(key='sample-annotation', value=file_path_diff_bind.sample_annotation_sheet)
-
-                if os.path.exists(os.path.join(self.genome_directory, file_path_diff_bind.correlation_read_counts_png)):
-                    diff_bind.submit = False
+                runnable_step.add_option_long(
+                    key='factor',
+                    value=factor_name)
+                runnable_step.add_option_long(
+                    key='sample-annotation',
+                    value=file_path_diff_bind.sample_annotation_sheet)
 
             return
 
@@ -1507,8 +1576,8 @@ class ChIPSeq(bsf.Analysis):
                 str_list.append('</td>\n')
                 # Peaks
                 str_list.append('<td>')
-                str_list.append('<a href="' + file_path_peak_calling.peaks_xls + '">')
-                str_list.append('<abbr title="Tab-Separated Value">XLS</abbr>')
+                str_list.append('<a href="' + file_path_peak_calling.peaks_tsv + '">')
+                str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
                 str_list.append('</a>')
                 str_list.append('</td>\n')
                 # Peak Model
@@ -1565,11 +1634,9 @@ class ChIPSeq(bsf.Analysis):
 
             for factor_name in sorted(self._factor_dict):
                 prefix_diff_bind = self.get_prefix_diff_bind(factor_name=factor_name)
-                # runnable_diff_bind = self.runnable_dict[prefix_diff_bind]
-                # file_path_diff_bind = runnable_diff_bind.file_path_object
-                # """ @type file_path_diff_bind: FilePathDiffBind """
-                # TODO: For the moment, DiffBind is run via an Executable, not a Runnable.
-                file_path_diff_bind = self.get_file_path_diff_bind(factor_name=factor_name)
+                runnable_diff_bind = self.runnable_dict[prefix_diff_bind]
+                file_path_diff_bind = runnable_diff_bind.file_path_object
+                """ @type file_path_diff_bind: FilePathDiffBind """
 
                 str_list.append('<tr>\n')
 
@@ -1821,6 +1888,36 @@ class ChIPSeq(bsf.Analysis):
 
             return
 
+        def get_bigwig_info_signal_range(file_path):
+            """Private function to read the bigWig signal range from a BigWig information file.
+
+            @param file_path: BigWigInfo file path
+            @type file_path: str | unicode
+            @return: UCSC Track Hub "type bigWig" line with optional signal range
+            @rtype: str
+            """
+            if os.path.isabs(file_path):
+                file_path_absolute = file_path
+            else:
+                file_path_absolute = os.path.join(self.genome_directory, file_path)
+
+            if os.path.exists(file_path_absolute):
+                minimum = None
+                maximum = None
+
+                with open(file_path_absolute, 'rt') as file_handle:
+                    for line in file_handle:
+                        if line.startswith('min:'):
+                            line_list = line.split()
+                            minimum = line_list[1].strip()
+                        if line.startswith('max:'):
+                            line_list = line.split()
+                            maximum = line_list[1].strip()
+
+                return 'type bigWig ' + minimum + ' ' + maximum + '\n'
+            else:
+                return 'type bigWig\n'
+
         def report_hub_2():
             """Private function to create a UCSC Track Hub for MACS2.
 
@@ -1899,14 +1996,8 @@ class ChIPSeq(bsf.Analysis):
                     prefix_short = chipseq_comparison.t_name
                     prefix_long = chipseq_comparison.t_name
 
-                # Add UCSC trackDB entries for each treatment/control and absolute/normalised pair.
-                # NAME_control_lambda.bw
-                # NAME_treat_pileup.bw
-                # NAME_bdgcmp.bw
-
-                #
                 # Add a factor-specific "background" composite track once
-                #
+
                 composite_group = '_'.join((factor_name, 'background'))
                 if composite_group not in composite_groups:
                     composite_groups[composite_group] = True
@@ -1922,15 +2013,12 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('centerLabelsDense on\n')
                     str_list.append('\n')
 
-                #
                 # Add a UCSC trackDB entry for each NAME_control_lambda.bw file.
-                #
+
                 if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.control_bw)):
                     # Common settings
                     str_list.append('track ' + prefix_short + '_background\n')
-                    # TODO: The bigWig type must declare the expected signal range.
-                    # The signal range of a bigWig file would be available via the UCSC tool bigWigInfo.
-                    str_list.append('type bigWig\n')
+                    str_list.append(get_bigwig_info_signal_range(file_path=file_path_peak_calling.control_bwi))
                     str_list.append('shortLabel ' + prefix_short + '_bkg\n')
                     str_list.append('longLabel ChIP background signal ' + prefix_long + '\n')
                     str_list.append('bigDataUrl ' + file_path_peak_calling.control_bw + '\n')
@@ -1960,9 +2048,8 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('centerLabelsDense off\n')
                     str_list.append('\n')
 
-                #
                 # Add a factor-specific "enrichment" composite track once
-                #
+
                 composite_group = '_'.join((factor_name, 'enrichment'))
                 if composite_group not in composite_groups:
                     composite_groups[composite_group] = True
@@ -1978,14 +2065,12 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('centerLabelsDense on\n')
                     str_list.append('\n')
 
-                #
                 # Add a UCSC trackDB entry for each NAME_treat_pileup.bw file.
-                #
+
                 if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.treatment_bw)):
                     # Common settings
                     str_list.append('track ' + prefix_short + '_enrichment\n')
-                    # TODO: The bigWig type must declare the expected signal range.
-                    str_list.append('type bigWig\n')
+                    str_list.append(get_bigwig_info_signal_range(file_path=file_path_peak_calling.treatment_bwi))
                     str_list.append('shortLabel ' + prefix_short + '_enr\n')
                     str_list.append('longLabel ChIP enrichment signal ' + prefix_long + '\n')
                     str_list.append('bigDataUrl ' + file_path_peak_calling.treatment_bw + '\n')
@@ -2015,16 +2100,17 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('centerLabelsDense off\n')
                     str_list.append('\n')
 
-                #
                 # Add a factor-specific "intensity" composite track once
-                #
-                composite_group = '_'.join((factor_name, 'intensity'))
+
+                composite_group = '_'.join((factor_name, 'intensity_ppois'))
                 if composite_group not in composite_groups:
                     composite_groups[composite_group] = True
                     str_list.append('track ' + composite_group + '\n')
                     str_list.append('type bigWig\n')
                     str_list.append('shortLabel ' + composite_group + '\n')
-                    str_list.append("longLabel ChIP intensity for factor '" + factor_name + "'\n")
+                    str_list.append("longLabel ChIP intensity for factor '" +
+                                    factor_name +
+                                    "' as Poisson p-value (-log10(pvalue))\n")
                     str_list.append('visibility full\n')
                     str_list.append('compositeTrack on\n')
                     str_list.append('parent Comparison\n')
@@ -2032,17 +2118,17 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('centerLabelsDense on\n')
                     str_list.append('\n')
 
-                #
-                # Add a UCSC trackDB entry for each NAME_bdgcmp.bw file.
-                #
-                if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.comparison_bw)):
+                # Add a UCSC trackDB entry for each NAME_ppois.bw file.
+
+                if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.comparison_ppois_bw)):
                     # Common settings
-                    str_list.append('track ' + prefix_short + '_intensity\n')
-                    # TODO: The bigWig type must declare the expected signal range.
-                    str_list.append('type bigWig\n')
-                    str_list.append('shortLabel ' + prefix_short + '_int\n')
-                    str_list.append('longLabel ChIP intensity ' + prefix_long + '\n')
-                    str_list.append('bigDataUrl ' + file_path_peak_calling.comparison_bw + '\n')
+                    str_list.append('track ' + prefix_short + '_ppois\n')
+                    str_list.append(
+                        get_bigwig_info_signal_range(
+                            file_path=file_path_peak_calling.comparison_ppois_bwi))
+                    str_list.append('shortLabel ' + prefix_short + '_ppois\n')
+                    str_list.append('longLabel ChIP intensity as Poisson p-value ' + prefix_long + '\n')
+                    str_list.append('bigDataUrl ' + file_path_peak_calling.comparison_ppois_bw + '\n')
                     # str_list.append('html ...\n')
                     str_list.append('visibility full\n')
 
@@ -2069,9 +2155,114 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('centerLabelsDense off\n')
                     str_list.append('\n')
 
-                #
+                composite_group = '_'.join((factor_name, 'intensity_subtract'))
+                if composite_group not in composite_groups:
+                    composite_groups[composite_group] = True
+                    str_list.append('track ' + composite_group + '\n')
+                    str_list.append('type bigWig\n')
+                    str_list.append('shortLabel ' + composite_group + '\n')
+                    str_list.append("longLabel ChIP intensity for factor '" +
+                                    factor_name +
+                                    "' as subtraction\n")
+                    str_list.append('visibility full\n')
+                    str_list.append('compositeTrack on\n')
+                    str_list.append('parent Comparison\n')
+                    str_list.append('allButtonPair on\n')
+                    str_list.append('centerLabelsDense on\n')
+                    str_list.append('\n')
+
+                # Add a UCSC trackDB entry for each NAME_subtract.bw file.
+
+                if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.comparison_subtract_bw)):
+                    # Common settings
+                    str_list.append('track ' + prefix_short + '_subtract\n')
+                    str_list.append(
+                        get_bigwig_info_signal_range(
+                            file_path=file_path_peak_calling.comparison_subtract_bwi))
+                    str_list.append('shortLabel ' + prefix_short + '_subtract\n')
+                    str_list.append('longLabel ChIP intensity as subtraction ' + prefix_long + '\n')
+                    str_list.append('bigDataUrl ' + file_path_peak_calling.comparison_subtract_bw + '\n')
+                    # str_list.append('html ...\n')
+                    str_list.append('visibility full\n')
+
+                    # Common optional settings
+                    str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
+
+                    # bigWig - Signal graphing track settings
+                    str_list.append('alwaysZero off\n')
+                    str_list.append('autoScale off\n')
+                    str_list.append('graphTypeDefault bar\n')
+                    str_list.append('maxHeightPixels 100:60:20\n')
+                    # str_list.append('maxWindowToQuery 10000000\n')
+                    str_list.append('smoothingWindow 5\n')
+                    # str_list.append('transformFunc NONE\n')
+                    str_list.append('viewLimits 0:15\n')
+                    str_list.append('viewLimitsMax 0:40\n')
+                    str_list.append('windowingFunction maximum\n')
+                    # str_list.append('yLineMark <#>\n')
+                    # str_list.append('yLineOnOff on \n')
+                    # str_list.append('gridDefault on\n')
+
+                    # Composite track settings
+                    str_list.append('parent ' + composite_group + ' on\n')
+                    str_list.append('centerLabelsDense off\n')
+                    str_list.append('\n')
+
+                # Add a UCSC trackDB entry for each NAME_logFE.bw file.
+
+                composite_group = '_'.join((factor_name, 'intensity_log_fe'))
+                if composite_group not in composite_groups:
+                    composite_groups[composite_group] = True
+                    str_list.append('track ' + composite_group + '\n')
+                    str_list.append('type bigWig\n')
+                    str_list.append('shortLabel ' + composite_group + '\n')
+                    str_list.append("longLabel ChIP intensity for factor '" +
+                                    factor_name +
+                                    "' as log10(fold-enrichment)\n")
+                    str_list.append('visibility full\n')
+                    str_list.append('compositeTrack on\n')
+                    str_list.append('parent Comparison\n')
+                    str_list.append('allButtonPair on\n')
+                    str_list.append('centerLabelsDense on\n')
+                    str_list.append('\n')
+
+                if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.comparison_log_fe_bw)):
+                    # Common settings
+                    str_list.append('track ' + prefix_short + '_log_fe\n')
+                    str_list.append(
+                        get_bigwig_info_signal_range(
+                            file_path=file_path_peak_calling.comparison_log_fe_bwi))
+                    str_list.append('shortLabel ' + prefix_short + '_log_fe\n')
+                    str_list.append('longLabel ChIP intensity as log10(fold-enrichment) ' + prefix_long + '\n')
+                    str_list.append('bigDataUrl ' + file_path_peak_calling.comparison_log_fe_bw + '\n')
+                    # str_list.append('html ...\n')
+                    str_list.append('visibility full\n')
+
+                    # Common optional settings
+                    str_list.append('color ' + self.get_colour(factor=factor_name) + '\n')
+
+                    # bigWig - Signal graphing track settings
+                    str_list.append('alwaysZero off\n')
+                    str_list.append('autoScale off\n')
+                    str_list.append('graphTypeDefault bar\n')
+                    str_list.append('maxHeightPixels 100:60:20\n')
+                    # str_list.append('maxWindowToQuery 10000000\n')
+                    str_list.append('smoothingWindow 5\n')
+                    # str_list.append('transformFunc NONE\n')
+                    str_list.append('viewLimits 0:15\n')
+                    str_list.append('viewLimitsMax 0:40\n')
+                    str_list.append('windowingFunction maximum\n')
+                    # str_list.append('yLineMark <#>\n')
+                    # str_list.append('yLineOnOff on \n')
+                    # str_list.append('gridDefault on\n')
+
+                    # Composite track settings
+                    str_list.append('parent ' + composite_group + ' on\n')
+                    str_list.append('centerLabelsDense off\n')
+                    str_list.append('\n')
+
                 # Add a UCSC trackDB entry for each NAME_peaks.bb file.
-                #
+
                 if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.narrow_peaks_bb)):
                     # Common settings
                     str_list.append('track ' + prefix_short + '_peaks\n')
@@ -2091,9 +2282,8 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('parent Peaks\n')
                     str_list.append('\n')
 
-                #
                 # Add a UCSC trackDB entry for each NAME_summits.bb file.
-                #
+
                 if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.summits_bb)):
                     # Common settings
                     str_list.append('track ' + prefix_short + '_summits\n')
@@ -2115,9 +2305,9 @@ class ChIPSeq(bsf.Analysis):
 
             for sample in self.sample_list:
                 file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(sample_name=sample.name)
-                #
+
                 # Add a UCSC trackDB entry for each NAME.bam file.
-                #
+
                 # Common settings
                 str_list.append('track ' + sample.name + '_alignment\n')
                 str_list.append('type bam\n')

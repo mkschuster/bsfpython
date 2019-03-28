@@ -59,17 +59,23 @@ fi
 
 # Convert the following MACS2 bedGraph files into the BigWig format.
 #
-# prefix_control_lambda.bdg
-# prefix_treat_pileup.bdg
-# prefix_treat_pvalue.bdg  Obsolete since MACS 2.0.10
-# prefix_treat_qvalue.bdg  Obsolete since MACS 2.0.10
+# callpeak:
+#   prefix_control_lambda.bdg
+#   prefix_treat_pileup.bdg
+#   prefix_treat_pvalue.bdg  Obsolete since MACS 2.0.10
+#   prefix_treat_qvalue.bdg  Obsolete since MACS 2.0.10
+#
+# bdgcmp:
+#   prefix_ppois.bdg
+#   prefix_subtract.bdg
+#   prefix_logFE.bdg
 
 # The UCSC Genome Browser recommends the following sort command.
 # sort -k1,1 -k2,2n unsorted.bedGraph > sorted.bedGraph
 
 # https://gist.github.com/taoliu/2469050
 
-declare -a suffixes=('control_lambda' 'treat_pileup' 'bdgcmp' 'treat_pvalue');
+declare -a suffixes=('control_lambda' 'treat_pileup' 'ppois' 'subtract' 'logFE');
 
 for suffix in "${suffixes[@]}"; do
     if [[ -f "${prefix}/${prefix}_${suffix}.bdg" && ! -s "${prefix}/${prefix}_${suffix}.bw" ]]; then
@@ -89,6 +95,9 @@ for suffix in "${suffixes[@]}"; do
                 "${chromosome_sizes}" \
                 "${prefix}/${prefix}_${suffix}.bw" \
                 || exit 1;
+
+            bigWigInfo "${prefix}/${prefix}_${suffix}.bw" > "${prefix}/${prefix}_${suffix}_bwi.txt" \
+                || exit 1;
         fi
 
         rm "${prefix}/${prefix}_${suffix}_clipped.bdg" || exit 1;
@@ -107,6 +116,10 @@ if [[ -f "${prefix}/${prefix}_peaks.narrowPeak" && ! -h "${prefix}/${prefix}_nar
     ln -s \
         "${prefix}_peaks.narrowPeak" \
         "${prefix}_narrow_peaks.bed" \
+        || exit 1;
+    ln -s \
+        "${prefix}_peaks.xls" \
+        "${prefix}_peaks.tsv" \
         || exit 1;
     cd '-' || exit 1;
 fi
