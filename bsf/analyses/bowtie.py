@@ -31,6 +31,7 @@ import os
 
 import bsf
 import bsf.analyses.aligner
+import bsf.connector
 import bsf.procedure
 
 
@@ -65,8 +66,8 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
             sub_process=bsf.procedure.SubProcess(
                 runnable_step=runnable_step,
                 stdin=None,
-                stdout=bsf.procedure.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-                stderr=bsf.procedure.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt')))
+                stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt')))
 
         runnable_step.arguments.append(self.genome_index)
 
@@ -148,8 +149,8 @@ class Bowtie2(bsf.analyses.aligner.Aligner):
             sub_process=bsf.procedure.SubProcess(
                 runnable_step=runnable_step,
                 stdin=None,
-                stdout=bsf.procedure.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-                stderr=bsf.procedure.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt')))
+                stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt')))
 
         runnable_step.add_option_short(key='S', value=file_path_align.aligned_sam)
         runnable_step.add_option_short(key='x', value=self.genome_index)

@@ -34,6 +34,7 @@ import warnings
 
 import bsf
 import bsf.annotation
+import bsf.connector
 import bsf.procedure
 
 
@@ -748,8 +749,8 @@ class Aligner(bsf.Analysis):
                     sub_process=bsf.procedure.SubProcess(
                         runnable_step=runnable_step,
                         stdin=None,
-                        stdout=bsf.procedure.ConnectorStandardOutput(),
-                        stderr=bsf.procedure.ConnectorStandardError()))
+                        stdout=bsf.connector.StandardOutputStream(),
+                        stderr=bsf.connector.StandardErrorStream()))
 
                 # Start the Aligner.
 

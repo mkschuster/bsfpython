@@ -35,6 +35,7 @@ import os
 import bsf
 import bsf.analyses.aligner
 import bsf.annotation
+import bsf.connector
 import bsf.process
 import bsf.standards
 
@@ -298,8 +299,8 @@ class StarAligner(bsf.analyses.aligner.Aligner):
             sub_process=bsf.procedure.SubProcess(
                 runnable_step=runnable_step,
                 stdin=None,
-                stdout=bsf.procedure.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-                stderr=bsf.procedure.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt')))
+                stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt')))
 
         self.set_runnable_step_configuration(runnable_step=runnable_step)
 

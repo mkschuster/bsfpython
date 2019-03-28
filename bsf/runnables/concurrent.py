@@ -32,6 +32,7 @@ import os
 import subprocess
 import threading
 
+import bsf.connector
 import bsf.procedure
 
 
@@ -67,28 +68,28 @@ def run(runnable):
     def _map_connector(_connector):
         """Map a connector to a file handle.
 
-        @param _connector: C{Connector} or sub-class thereof.
-        @type _connector: procedure.Connector
+        @param _connector: C{bsf.connector.Connector} or sub-class thereof.
+        @type _connector: bsf.connector.Connector
         @return: File handle
         @rtype: file | subprocess.PIPE
         """
-        if isinstance(_connector, bsf.procedure.ConnectorSink):
+        if isinstance(_connector, bsf.connector.ElectronicSink):
             return open('/dev/null', 'wb')
 
-        if isinstance(_connector, bsf.procedure.ConnectorFile):
-            if isinstance(_connector, bsf.procedure.ConnectorPipeNamed):
+        if isinstance(_connector, bsf.connector.ConnectorFile):
+            if isinstance(_connector, bsf.connector.ConnectorPipeNamed):
                 # A named pipe needs creating before it can be opened.
                 if not os.path.exists(_connector.file_path):
                     os.mkfifo(_connector.file_path)
             return open(_connector.file_path, _connector.file_mode)
 
-        if isinstance(_connector, bsf.procedure.ConnectorPipe):
+        if isinstance(_connector, bsf.connector.ConnectorPipe):
             return subprocess.PIPE
 
-        if isinstance(_connector, bsf.procedure.ConnectorStandardStream):
+        if isinstance(_connector, bsf.connector.StandardStream):
             return subprocess.PIPE
 
-        if isinstance(_connector, bsf.procedure.ConnectorProcess):
+        if isinstance(_connector, bsf.connector.ConcurrentProcess):
             for _sub_process in runnable.sub_process_list:
                 if _sub_process.runnable_step.name == _connector.name:
                     if _sub_process.sub_process is None:
@@ -143,8 +144,8 @@ def run(runnable):
 
         for attribute in ('stdin', 'stdout', 'stderr'):
             connector = getattr(sub_process, attribute)
-            """ @type connector: bsf.procedure.Connector """
-            if isinstance(connector, bsf.procedure.ConnectorStandardInput):
+            """ @type connector: bsf.connector.Connector """
+            if isinstance(connector, bsf.connector.StandardInputStream):
                 if sub_process.runnable_step.stdin_callable is None:
                     # If a specific STDIN callable is not defined, run bsf.process.Executable.process_stdin().
                     pass
@@ -153,7 +154,7 @@ def run(runnable):
                         target=sub_process.runnable_step.stdin_callable,
                         args=[sub_process.sub_process.stdin, thread_lock, runnable.debug],
                         kwargs=sub_process.runnable_step.stdin_kwargs)
-            if isinstance(connector, bsf.procedure.ConnectorStandardOutput):
+            if isinstance(connector, bsf.connector.StandardOutputStream):
                 if sub_process.runnable_step.stdout_callable is None:
                     # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
                     connector.thread = threading.Thread(
@@ -165,7 +166,7 @@ def run(runnable):
                         target=sub_process.runnable_step.stdout_callable,
                         args=[sub_process.sub_process.stdout, thread_lock, runnable.debug],
                         kwargs=sub_process.runnable_step.stdout_kwargs)
-            if isinstance(connector, bsf.procedure.ConnectorStandardError):
+            if isinstance(connector, bsf.connector.StandardErrorStream):
                 if sub_process.runnable_step.stderr_callable is None:
                     # If a specific STDERR callable is not defined, run bsf.process.Executable.process_stderr().
                     connector.thread = threading.Thread(
@@ -177,7 +178,7 @@ def run(runnable):
                         target=sub_process.runnable_step.stderr_callable,
                         args=[sub_process.sub_process.stderr, thread_lock, runnable.debug],
                         kwargs=sub_process.runnable_step.stderr_kwargs)
-            if isinstance(connector, bsf.procedure.ConnectorStandardStream) and connector.thread:
+            if isinstance(connector, bsf.connector.StandardStream) and connector.thread:
                 connector.thread.daemon = True
                 connector.thread.start()
 
@@ -192,8 +193,8 @@ def run(runnable):
 
         for attribute in ('stdin', 'stdout', 'stderr'):
             connector = getattr(sub_process, attribute)
-            """ @type connector: bsf.procedure.Connector """
-            if isinstance(connector, bsf.procedure.ConnectorStandardStream) and connector.thread:
+            """ @type connector: bsf.connector.Connector """
+            if isinstance(connector, bsf.connector.StandardStream) and connector.thread:
                 thread_join_counter = 0
                 while connector.thread.is_alive() and thread_join_counter < connector.thread_joins:
                     if runnable.debug > 0:
