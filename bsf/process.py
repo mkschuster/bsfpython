@@ -39,6 +39,7 @@ import time
 import warnings
 
 import bsf.argument
+import bsf.connector
 import bsf.standards
 
 
@@ -667,22 +668,12 @@ class Executable(Command):
     """The C{bsf.process.Executable} class represents one C{bsf.process.Command} as UNIX process.
 
     Attributes:
-    @ivar stdin_callable: Standard input I{STDIN} callable
-    @type stdin_callable: object | None
-    @ivar stdin_kwargs: Standard input I{STDIN} keyword arguments
-    @type stdin_kwargs: dict[str, object]
-    @ivar stdout_callable: Standard output I{STDOUT} callable
-    @type stdout_callable: object | None
-    @ivar stdout_kwargs: Standard output I{STDOUT} keyword arguments
-    @type stdout_kwargs: dict[str, object]
-    @ivar stdout_path: Standard output (STDOUT) redirection in Bash (1>word)
-    @type stdout_path: str | unicode | None
-    @ivar stderr_callable: Standard error I{STDERR} callable
-    @type stderr_callable: object | None
-    @ivar stderr_kwargs: Standard error I{STDERR} keyword arguments
-    @type stderr_kwargs: dict[str, object]
-    @ivar stderr_path: Standard error (STDERR) redirection in Bash (2>word)
-    @type stderr_path: str | unicode | None
+    @ivar stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+    @type stdin: bsf.connector.Connector | None
+    @ivar stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+    @type stdout: bsf.connector.Connector | None
+    @ivar stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+    @type stderr: bsf.connector.Connector | None
     @ivar dependencies: Python C{list} of C{bsf.process.Executable.name} properties in the
         context of C{bsf.Stage} dependencies
     @type dependencies: list[bsf.process.Executable.name]
@@ -696,6 +687,8 @@ class Executable(Command):
     @type process_identifier: str | None
     @ivar process_name: Process name
     @type process_name: str | None
+    @ivar sub_process: C{subprocess.Popen}
+    @type sub_process: subprocess.Popen | None
     """
 
     @staticmethod
@@ -808,20 +801,16 @@ class Executable(Command):
             options=None,
             arguments=None,
             sub_command=None,
-            stdin_callable=None,
-            stdin_kwargs=None,
-            stdout_callable=None,
-            stdout_kwargs=None,
-            stdout_path=None,
-            stderr_callable=None,
-            stderr_kwargs=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             maximum_attempts=1,
             process_identifier=None,
-            process_name=None):
+            process_name=None,
+            sub_process=None):
         """Initialise a C{bsf.process.Executable}.
 
         @param name: Name
@@ -835,22 +824,12 @@ class Executable(Command):
         @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
-        @param stdin_callable: Standard input I{STDIN} callable
-        @type stdin_callable: object | None
-        @param stdin_kwargs: Standard input I{STDIN} keyword arguments
-        @type stdin_kwargs: dict[str, object] | None
-        @param stdout_callable: Standard output I{STDOUT} callable
-        @type stdout_callable: object | None
-        @param stdout_kwargs: Standard output I{STDOUT} keyword arguments
-        @type stdout_kwargs: dict[str, object] | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_callable: Standard error I{STDERR} callable
-        @type stderr_callable: object | None
-        @param stderr_kwargs: Standard error I{STDERR} keyword arguments
-        @type stderr_kwargs: dict[str, object] | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -864,6 +843,8 @@ class Executable(Command):
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @return:
         @rtype:
         """
@@ -881,16 +862,9 @@ class Executable(Command):
             arguments=arguments,
             sub_command=sub_command)
 
-        self.stdin_callable = stdin_callable
-        self.stdin_kwargs = stdin_kwargs
-
-        self.stdout_callable = stdout_callable
-        self.stdout_kwargs = stdout_kwargs
-        self.stdout_path = stdout_path
-
-        self.stderr_callable = stderr_callable
-        self.stderr_kwargs = stderr_kwargs
-        self.stderr_path = stderr_path
+        self.stdin = stdin
+        self.stdout = stdout
+        self.stderr = stderr
 
         if dependencies is None:
             self.dependencies = list()
@@ -913,6 +887,8 @@ class Executable(Command):
         self.process_identifier = process_identifier
         self.process_name = process_name
 
+        self.sub_process = sub_process
+
         return
 
     def trace(self, level):
@@ -929,11 +905,9 @@ class Executable(Command):
         """ @type str_list: list[str | unicode] """
 
         str_list.append('{}{!r}\n'.format(indent, self))
-        str_list.append('{}  stdin_callable:     {!r}\n'.format(indent, self.stdin_callable))
-        str_list.append('{}  stdout_callable:    {!r}\n'.format(indent, self.stdout_callable))
-        str_list.append('{}  stdout_path:        {!r}\n'.format(indent, self.stdout_path))
-        str_list.append('{}  stderr_callable:    {!r}\n'.format(indent, self.stderr_callable))
-        str_list.append('{}  stderr_path:        {!r}\n'.format(indent, self.stderr_path))
+        str_list.append('{}  stdin:              {!r}\n'.format(indent, self.stdin))
+        str_list.append('{}  stdout:             {!r}\n'.format(indent, self.stdout))
+        str_list.append('{}  stderr:             {!r}\n'.format(indent, self.stderr))
         str_list.append('{}  hold:               {!r}\n'.format(indent, self.hold))
         str_list.append('{}  submit:             {!r}\n'.format(indent, self.submit))
         str_list.append('{}  maximum_attempts:   {!r}\n'.format(indent, self.maximum_attempts))
@@ -968,118 +942,140 @@ class Executable(Command):
             negative values indicate that the child received a signal
         @rtype: int
         """
-        on_posix = 'posix' in sys.builtin_module_names
+
+        def _map_connector(_connector):
+            """Map a connector to a file handle.
+
+            @param _connector: C{bsf.connector.Connector} or sub-class thereof.
+            @type _connector: bsf.connector.Connector
+            @return: File handle
+            @rtype: file | subprocess.PIPE
+            """
+            if isinstance(_connector, bsf.connector.ElectronicSink):
+                return open('/dev/null', 'wb')
+
+            if isinstance(_connector, bsf.connector.ConnectorFile):
+                if isinstance(_connector, bsf.connector.ConnectorPipeNamed):
+                    # A named pipe needs creating before it can be opened.
+                    if not os.path.exists(_connector.file_path):
+                        os.mkfifo(_connector.file_path)
+                return open(_connector.file_path, _connector.file_mode)
+
+            if isinstance(_connector, bsf.connector.ConnectorPipe):
+                return subprocess.PIPE
+
+            if isinstance(_connector, bsf.connector.StandardStream):
+                return subprocess.PIPE
+
+            if isinstance(_connector, bsf.connector.ConcurrentProcess):
+                # A bsf.connector.ConcurrentProcess object
+                raise Exception('A ' + type(_connector).__name__ +
+                                ' object cannot be set for a ' + type(self).__name__ +
+                                ' object.')
+
+            return None
+
+        # Up to three threads, writing to STDIN, as well as reading from STDOUT and STDERR,
+        # should make sure that buffers are not filling up. If STDOUT or STDERR connectors are not defined,
+        # the defaults need be set to avoid the process from blocking.
+
+        if self.stdout is None:
+            self.stdout = bsf.connector.StandardOutputStream()
+
+        if self.stderr is None:
+            self.stderr = bsf.connector.StandardErrorStream()
 
         child_return_code = 0
         attempt_counter = 0
+
+        thread_lock = threading.Lock()
 
         while attempt_counter < self.maximum_attempts:
             attempt_counter += 1
 
             try:
-                child_process = subprocess.Popen(
+                self.sub_process = subprocess.Popen(
                     args=self.command_list(),
                     bufsize=0,
-                    stdin=subprocess.PIPE,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    shell=False,
-                    close_fds=on_posix)
+                    stdin=_map_connector(_connector=self.stdin),
+                    stdout=_map_connector(_connector=self.stdout),
+                    stderr=_map_connector(_connector=self.stderr),
+                    close_fds='posix' in sys.builtin_module_names,
+                    shell=False)
             except OSError as exception:
                 if exception.errno == errno.ENOENT:
-                    raise Exception('Executable ' + repr(self.program) + ' could not be found.')
+                    raise Exception(repr(self) + ' ' + repr(self.program) + ' could not be found.')
                 else:
                     # Re-raise the Exception object.
                     raise exception
 
-            # Up to three threads, writing to STDIN, as well as reading from STDOUT and STDERR,
-            # should make sure that buffers are not filling up.
+            # Start threads for standard stream processing to prevent buffers from filling up and
+            # sub-processes from blocking.
 
-            thread_lock = threading.Lock()
+            for attribute in ('stdin', 'stdout', 'stderr'):
+                connector = getattr(self, attribute)
+                """ @type connector: bsf.connector.Connector """
 
-            # Start a STDIN thread.
+                if isinstance(connector, bsf.connector.StandardInputStream):
+                    if connector.thread_callable is None:
+                        # If a specific STDIN callable is not defined, run bsf.process.Executable.process_stdin().
+                        pass
+                    else:
+                        connector.thread = threading.Thread(
+                            target=connector.thread_callable,
+                            args=[self.sub_process.stdin, thread_lock, debug],
+                            kwargs=connector.thread_kwargs)
 
-            if self.stdin_callable is None:
-                thread_in = None
-            else:
-                thread_in = threading.Thread(
-                    target=self.stdin_callable,
-                    args=[child_process.stdin, thread_lock, debug],
-                    kwargs=self.stdin_kwargs)
-                thread_in.daemon = True  # Thread dies with the program.
-                thread_in.start()
+                if isinstance(connector, bsf.connector.StandardOutputStream):
+                    if connector.thread_callable is None:
+                        # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
+                        connector.thread = threading.Thread(
+                            target=connector.thread_callable,
+                            args=[self.sub_process.stdout, thread_lock, debug],
+                            kwargs={'stdout_path': connector.file_path})
+                    else:
+                        connector.thread = threading.Thread(
+                            target=connector.thread_callable,
+                            args=[self.sub_process.stdout, thread_lock, debug],
+                            kwargs=connector.thread_kwargs)
 
-            # Start a STDOUT thread.
+                if isinstance(connector, bsf.connector.StandardErrorStream):
+                    if connector.thread_callable is None:
+                        # If a specific STDERR callable is not defined, run bsf.process.Executable.process_stderr().
+                        connector.thread = threading.Thread(
+                            target=bsf.process.Executable.process_stderr,
+                            args=[self.sub_process.stderr, thread_lock, debug],
+                            kwargs={'stderr_path': connector.file_path})
+                    else:
+                        connector.thread = threading.Thread(
+                            target=connector.thread_callable,
+                            args=[self.sub_process.stderr, thread_lock, debug],
+                            kwargs=connector.thread_kwargs)
 
-            if self.stdout_callable is None:
-                # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
-                thread_out = threading.Thread(
-                    target=bsf.process.Executable.process_stdout,
-                    args=[child_process.stdout, thread_lock, debug],
-                    kwargs={'stdout_path': self.stdout_path})
-            else:
-                thread_out = threading.Thread(
-                    target=self.stdout_callable,
-                    args=[child_process.stdout, thread_lock, debug],
-                    kwargs=self.stdout_kwargs)
+                if isinstance(connector, bsf.connector.StandardStream) and connector.thread:
+                    connector.thread.daemon = True
+                    connector.thread.start()
 
-            thread_out.daemon = True  # Thread dies with the program.
-            thread_out.start()
+            child_return_code = self.sub_process.wait()
 
-            # Start a STDERR thread.
+            # First, join all standard stream processing threads.
 
-            if self.stderr_callable is None:
-                # If a specific STDERR callable is not defined, run bsf.process.Executable.process_stderr().
-                thread_err = threading.Thread(
-                    target=bsf.process.Executable.process_stderr,
-                    args=[child_process.stderr, thread_lock, debug],
-                    kwargs={'stderr_path': self.stderr_path})
-            else:
-                thread_err = threading.Thread(
-                    target=self.stderr_callable,
-                    args=[child_process.stderr, thread_lock, debug],
-                    kwargs=self.stderr_kwargs)
+            for attribute in ('stdin', 'stdout', 'stderr'):
+                connector = getattr(self, attribute)
+                """ @type connector: bsf.connector.Connector """
+                if isinstance(connector, bsf.connector.StandardStream) and connector.thread:
+                    thread_join_counter = 0
+                    while connector.thread.is_alive() and thread_join_counter < connector.thread_joins:
+                        if debug > 0:
+                            thread_lock.acquire(True)
+                            print(bsf.process.get_timestamp(),
+                                  'Waiting for ' + repr(attribute) + ' processor to finish.')
+                            thread_lock.release()
 
-            thread_err.daemon = True  # Thread dies with the program.
-            thread_err.start()
+                        connector.thread.join(timeout=connector.thread_timeout)
+                        thread_join_counter += 1
 
-            # Wait for the child process to finish.
-
-            child_return_code = child_process.wait()
-
-            thread_join_counter = 0
-
-            if thread_in is not None:
-                while thread_in.is_alive() and thread_join_counter < max_thread_joins:
-                    if debug > 0:
-                        thread_lock.acquire(True)
-                        print(get_timestamp(), 'Waiting for STDIN processor to finish.')
-                        thread_lock.release()
-
-                    thread_in.join(timeout=thread_join_timeout)
-                    thread_join_counter += 1
-
-            thread_join_counter = 0
-
-            while thread_out.is_alive() and thread_join_counter < max_thread_joins:
-                if debug > 0:
-                    thread_lock.acquire(True)
-                    print(get_timestamp(), 'Waiting for STDOUT processor to finish.')
-                    thread_lock.release()
-
-                thread_out.join(timeout=thread_join_timeout)
-                thread_join_counter += 1
-
-            thread_join_counter = 0
-
-            while thread_err.is_alive() and thread_join_counter < max_thread_joins:
-                if debug > 0:
-                    thread_lock.acquire(True)
-                    print(get_timestamp(), 'Waiting for STDERR processor to finish.')
-                    thread_lock.release()
-
-                thread_err.join(timeout=thread_join_timeout)
-                thread_join_counter += 1
+            # Second, inspect the child process' return code.
 
             if child_return_code > 0:
                 if debug > 0:
@@ -1145,13 +1141,15 @@ class RunnableStep(Executable):
             options=None,
             arguments=None,
             sub_command=None,
-            stdout_path=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             process_identifier=None,
             process_name=None,
+            sub_process=None,
             obsolete_file_path_list=None):
         """Initialise a C{bsf.process.RunnableStep}.
 
@@ -1166,10 +1164,12 @@ class RunnableStep(Executable):
         @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -1181,6 +1181,8 @@ class RunnableStep(Executable):
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode] | None
@@ -1193,13 +1195,15 @@ class RunnableStep(Executable):
             options=options,
             arguments=arguments,
             sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
             dependencies=dependencies,
             hold=hold,
             submit=submit,
             process_identifier=process_identifier,
-            process_name=process_name)
+            process_name=process_name,
+            sub_process=sub_process)
 
         if obsolete_file_path_list is None:
             self.obsolete_file_path_list = list()
@@ -1264,13 +1268,15 @@ class RunnableStepChangeMode(RunnableStep):
             options=None,
             arguments=None,
             sub_command=None,
-            stdout_path=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             process_identifier=None,
             process_name=None,
+            sub_process=None,
             obsolete_file_path_list=None,
             file_path=None,
             mode_directory=None,
@@ -1288,10 +1294,12 @@ class RunnableStepChangeMode(RunnableStep):
         @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -1303,6 +1311,8 @@ class RunnableStepChangeMode(RunnableStep):
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode] | None
@@ -1321,13 +1331,15 @@ class RunnableStepChangeMode(RunnableStep):
             options=options,
             arguments=arguments,
             sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
             dependencies=dependencies,
             hold=hold,
             submit=submit,
             process_identifier=process_identifier,
             process_name=process_name,
+            sub_process=sub_process,
             obsolete_file_path_list=obsolete_file_path_list)
 
         self.file_path = file_path
@@ -1452,13 +1464,15 @@ class RunnableStepCopy(RunnableStep):
             options=None,
             arguments=None,
             sub_command=None,
-            stdout_path=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             process_identifier=None,
             process_name=None,
+            sub_process=None,
             obsolete_file_path_list=None,
             source_path=None,
             target_path=None):
@@ -1475,10 +1489,12 @@ class RunnableStepCopy(RunnableStep):
         @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -1490,6 +1506,8 @@ class RunnableStepCopy(RunnableStep):
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode] | None
@@ -1507,13 +1525,15 @@ class RunnableStepCopy(RunnableStep):
             options=options,
             arguments=arguments,
             sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
             dependencies=dependencies,
             hold=hold,
             submit=submit,
             process_identifier=process_identifier,
             process_name=process_name,
+            sub_process=sub_process,
             obsolete_file_path_list=obsolete_file_path_list)
 
         self.source_path = source_path
@@ -1556,13 +1576,15 @@ class RunnableStepJava(RunnableStep):
             options=None,
             arguments=None,
             sub_command=None,
-            stdout_path=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             process_identifier=None,
             process_name=None,
+            sub_process=None,
             obsolete_file_path_list=None,
             java_temporary_path=None,
             java_heap_maximum=None,
@@ -1580,10 +1602,12 @@ class RunnableStepJava(RunnableStep):
         @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -1595,6 +1619,8 @@ class RunnableStepJava(RunnableStep):
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode] | None
@@ -1614,13 +1640,15 @@ class RunnableStepJava(RunnableStep):
             options=options,
             arguments=arguments,
             sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
             dependencies=dependencies,
             hold=hold,
             submit=submit,
             process_identifier=process_identifier,
             process_name=process_name,
+            sub_process=sub_process,
             obsolete_file_path_list=obsolete_file_path_list)
 
         # JavaVM name
@@ -1670,13 +1698,15 @@ class RunnableStepPicard(RunnableStepJava):
             options=None,
             arguments=None,
             sub_command=None,
-            stdout_path=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             process_identifier=None,
             process_name=None,
+            sub_process=None,
             obsolete_file_path_list=None,
             java_temporary_path=None,
             java_heap_maximum=None,
@@ -1696,10 +1726,12 @@ class RunnableStepPicard(RunnableStepJava):
         @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -1711,6 +1743,8 @@ class RunnableStepPicard(RunnableStepJava):
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode] | None
@@ -1733,13 +1767,15 @@ class RunnableStepPicard(RunnableStepJava):
             options=options,
             arguments=arguments,
             sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
             dependencies=dependencies,
             hold=hold,
             submit=submit,
             process_identifier=process_identifier,
             process_name=process_name,
+            sub_process=sub_process,
             obsolete_file_path_list=obsolete_file_path_list,
             java_temporary_path=java_temporary_path,
             java_heap_maximum=java_heap_maximum,
@@ -1787,13 +1823,15 @@ class RunnableStepLink(RunnableStep):
             options=None,
             arguments=None,
             sub_command=None,
-            stdout_path=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             process_identifier=None,
             process_name=None,
+            sub_process=None,
             obsolete_file_path_list=None,
             source_path=None,
             target_path=None):
@@ -1810,10 +1848,12 @@ class RunnableStepLink(RunnableStep):
         @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -1825,6 +1865,8 @@ class RunnableStepLink(RunnableStep):
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode] | None
@@ -1841,13 +1883,15 @@ class RunnableStepLink(RunnableStep):
             options=options,
             arguments=arguments,
             sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
             dependencies=dependencies,
             hold=hold,
             submit=submit,
             process_identifier=process_identifier,
             process_name=process_name,
+            sub_process=sub_process,
             obsolete_file_path_list=obsolete_file_path_list)
 
         self.source_path = source_path
@@ -1893,13 +1937,15 @@ class RunnableStepMakeDirectory(RunnableStep):
             options=None,
             arguments=None,
             sub_command=None,
-            stdout_path=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             process_identifier=None,
             process_name=None,
+            sub_process=None,
             obsolete_file_path_list=None,
             directory_path=None):
         """Initialise a C{bsf.process.RunnableStepMakeDirectory}.
@@ -1915,10 +1961,12 @@ class RunnableStepMakeDirectory(RunnableStep):
         @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -1930,6 +1978,8 @@ class RunnableStepMakeDirectory(RunnableStep):
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode] | None
@@ -1944,13 +1994,15 @@ class RunnableStepMakeDirectory(RunnableStep):
             options=options,
             arguments=arguments,
             sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
             dependencies=dependencies,
             hold=hold,
             submit=submit,
             process_identifier=process_identifier,
             process_name=process_name,
+            sub_process=sub_process,
             obsolete_file_path_list=obsolete_file_path_list)
 
         self.directory_path = directory_path
@@ -1995,13 +2047,15 @@ class RunnableStepMakeNamedPipe(RunnableStep):
             options=None,
             arguments=None,
             sub_command=None,
-            stdout_path=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             process_identifier=None,
             process_name=None,
+            sub_process=None,
             obsolete_file_path_list=None,
             file_path=None):
         """Initialise a C{bsf.process.RunnableStepMakeNamedPipe}.
@@ -2017,10 +2071,12 @@ class RunnableStepMakeNamedPipe(RunnableStep):
         @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -2032,6 +2088,8 @@ class RunnableStepMakeNamedPipe(RunnableStep):
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode] | None
@@ -2046,13 +2104,15 @@ class RunnableStepMakeNamedPipe(RunnableStep):
             options=options,
             arguments=arguments,
             sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
             dependencies=dependencies,
             hold=hold,
             submit=submit,
             process_identifier=process_identifier,
             process_name=process_name,
+            sub_process=sub_process,
             obsolete_file_path_list=obsolete_file_path_list)
 
         self.file_path = file_path
@@ -2099,13 +2159,15 @@ class RunnableStepMove(RunnableStep):
             options=None,
             arguments=None,
             sub_command=None,
-            stdout_path=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             process_identifier=None,
             process_name=None,
+            sub_process=None,
             obsolete_file_path_list=None,
             source_path=None,
             target_path=None):
@@ -2122,10 +2184,12 @@ class RunnableStepMove(RunnableStep):
         @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -2137,6 +2201,8 @@ class RunnableStepMove(RunnableStep):
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode] | None
@@ -2153,13 +2219,15 @@ class RunnableStepMove(RunnableStep):
             options=options,
             arguments=arguments,
             sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
             dependencies=dependencies,
             hold=hold,
             submit=submit,
             process_identifier=process_identifier,
             process_name=process_name,
+            sub_process=sub_process,
             obsolete_file_path_list=obsolete_file_path_list)
 
         self.source_path = source_path
@@ -2201,13 +2269,15 @@ class RunnableStepSleep(RunnableStep):
             options=None,
             arguments=None,
             sub_command=None,
-            stdout_path=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             process_identifier=None,
             process_name=None,
+            sub_process=None,
             obsolete_file_path_list=None,
             sleep_time=None):
         """Initialise a C{bsf.process.RunnableStepSleep}.
@@ -2223,10 +2293,12 @@ class RunnableStepSleep(RunnableStep):
         @type arguments: list[str | unicode]
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -2238,6 +2310,8 @@ class RunnableStepSleep(RunnableStep):
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode] | None
@@ -2252,13 +2326,15 @@ class RunnableStepSleep(RunnableStep):
             options=options,
             arguments=arguments,
             sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
             dependencies=dependencies,
             hold=hold,
             submit=submit,
             process_identifier=process_identifier,
             process_name=process_name,
+            sub_process=sub_process,
             obsolete_file_path_list=obsolete_file_path_list)
 
         self.sleep_time = sleep_time
@@ -2301,13 +2377,15 @@ class RunnableStepSetEnvironment(RunnableStep):
             options=None,
             arguments=None,
             sub_command=None,
-            stdout_path=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             process_identifier=None,
             process_name=None,
+            sub_process=None,
             obsolete_file_path_list=None,
             key=None,
             value=None):
@@ -2324,10 +2402,12 @@ class RunnableStepSetEnvironment(RunnableStep):
         @type arguments: list[str | unicode]
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -2339,6 +2419,8 @@ class RunnableStepSetEnvironment(RunnableStep):
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode] | None
@@ -2353,13 +2435,15 @@ class RunnableStepSetEnvironment(RunnableStep):
             options=options,
             arguments=arguments,
             sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
             dependencies=dependencies,
             hold=hold,
             submit=submit,
             process_identifier=process_identifier,
             process_name=process_name,
+            sub_process=sub_process,
             obsolete_file_path_list=obsolete_file_path_list)
 
         self.key = key

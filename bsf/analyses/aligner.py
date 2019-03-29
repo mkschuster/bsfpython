@@ -714,15 +714,16 @@ class Aligner(bsf.Analysis):
                 # Start Picard CleanSam first, which should block while open the named pipe for reading,
                 # then the aligner.
 
-                runnable_step = bsf.process.RunnableStepPicard(
-                    name='picard_clean_sam',
-                    obsolete_file_path_list=[
-                        file_path_align.aligned_sam,
-                    ],
-                    java_temporary_path=runnable_align.temporary_directory_path(absolute=False),
-                    java_heap_maximum='Xmx4G',
-                    java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
-                    picard_command='CleanSam')
+                runnable_step = runnable_align.add_runnable_step(
+                    runnable_step=bsf.process.RunnableStepPicard(
+                        name='picard_clean_sam',
+                        obsolete_file_path_list=[
+                            file_path_align.aligned_sam,
+                        ],
+                        java_temporary_path=runnable_align.temporary_directory_path(absolute=False),
+                        java_heap_maximum='Xmx4G',
+                        java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
+                        picard_command='CleanSam'))
                 """ @type runnable_step: bsf.process.RunnableStepPicard """
                 # INPUT []
                 runnable_step.add_picard_option(key='INPUT', value=file_path_align.aligned_sam)
@@ -744,13 +745,6 @@ class Aligner(bsf.Analysis):
                 # GA4GH_CLIENT_SECRETS [client_secrets.json]
                 # USE_JDK_DEFLATER [false]
                 # USE_JDK_INFLATER [false]
-
-                runnable_align.add_sub_process(
-                    sub_process=bsf.procedure.SubProcess(
-                        runnable_step=runnable_step,
-                        stdin=None,
-                        stdout=bsf.connector.StandardOutputStream(),
-                        stderr=bsf.connector.StandardErrorStream()))
 
                 # Start the Aligner.
 

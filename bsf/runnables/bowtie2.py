@@ -36,6 +36,7 @@ import sys
 import bsf
 import bsf.analyses.aligner
 import bsf.argument
+import bsf.connector
 import bsf.process
 import bsf.standards
 
@@ -134,7 +135,7 @@ def run_picard_sam_to_fastq(runnable, bam_file_path):
         name='samtools_view',
         program='samtools',
         sub_command=bsf.process.Command(program='view'),
-        stdout_path=sam_file_path)
+        stdout=bsf.connector.ConnectorFile(file_path=sam_file_path, file_mode='wt'))
 
     samtools_view = samtools.sub_command
     samtools_view.add_switch_short(key='H')
@@ -249,7 +250,7 @@ def run_bowtie2(runnable):
     # Since SLURM copies the submitted script into its spool directory, this is not the case.
     bowtie2 = bsf.process.Executable(name='bowtie2', program='bowtie2')
 
-    # aligned_sam = bowtie2.stdout_path
+    # aligned_sam = bowtie2.stdout.file_path
 
     # TODO: For the moment, convert only files set in the bowtie2 -U option.
     # Pop the original list of -U options off the Bowtie2 Executable object.
@@ -307,7 +308,7 @@ def run_bowtie2(runnable):
 
         # Set the STDOUT path by removing '_1.fastq' from the temporary R1 FASTQ file.
         sam_file_path = rgc.fastq_1_path[:-8] + '.sam'
-        bowtie2.stdout_path = sam_file_path
+        bowtie2.stdout = bsf.connector.ConnectorFile(file_path=sam_file_path, file_mode='wt')
         sam_file_path_list.append(sam_file_path)
 
         sys.stdout.writelines(bowtie2.trace(level=1))
@@ -336,7 +337,7 @@ def run_bowtie2(runnable):
         sam_file_path = os.path.join(
             runnable.temporary_directory_path(absolute=False),
             'unpaired_fastq_files.sam')
-        bowtie2.stdout_path = sam_file_path
+        bowtie2.stdout = bsf.connector.ConnectorFile(file_path=sam_file_path, file_mode='wt')
         sam_file_path_list.append(sam_file_path)
 
         sys.stdout.writelines(bowtie2.trace(level=1))
@@ -361,7 +362,7 @@ def run_bowtie2(runnable):
         sam_file_path = os.path.join(
             runnable.temporary_directory_path(absolute=False),
             'paired_fastq_files.sam')
-        bowtie2.stdout_path = sam_file_path
+        bowtie2.stdout = bsf.connector.ConnectorFile(file_path=sam_file_path, file_mode='wt')
         sam_file_path_list.append(sam_file_path)
 
         sys.stdout.writelines(bowtie2.trace(level=1))

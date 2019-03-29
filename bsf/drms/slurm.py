@@ -26,11 +26,9 @@ Distributed Resource Management System (DRMS) module.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from __future__ import print_function
 
 import csv
-import datetime
 import errno
 import math
 import os
@@ -38,6 +36,7 @@ import re
 import threading
 import warnings
 
+import bsf.connector
 import bsf.database
 import bsf.process
 
@@ -807,8 +806,9 @@ def submit(stage, debug=0):
             name=executable.name,
             program='sbatch',
             sub_command=executable,
-            stdout_callable=submit_sbatch_stdout,
-            stdout_kwargs={'_executable': executable})
+            stdout=bsf.connector.StandardOutputStream(
+                thread_callable=submit_sbatch_stdout,
+                thread_kwargs={'_executable': executable}))
 
         # Add Stage-specific options.
 
@@ -1116,8 +1116,9 @@ def check_state(stage, debug=0):
     executable_drms = bsf.process.Executable(
         name='sacct',
         program='sacct',
-        stdout_callable=check_state_stdout,
-        stdout_kwargs={'_process_slurm_adaptor': process_slurm_adaptor})
+        stdout=bsf.connector.StandardOutputStream(
+            thread_callable=check_state_stdout,
+            thread_kwargs={'_process_slurm_adaptor': process_slurm_adaptor}))
     executable_drms.add_option_long(key='jobs', value=','.join(map(lambda x: x.job_id, process_slurm_list)))
     executable_drms.add_switch_long(key='long')
     executable_drms.add_switch_long(key='parsable')

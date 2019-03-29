@@ -33,6 +33,7 @@ import errno
 import os
 import re
 
+import bsf.connector
 import bsf.database
 import bsf.process
 
@@ -489,8 +490,9 @@ def submit(stage, debug=0):
             name=executable.name,
             program='qsub',
             sub_command=executable,
-            stdout_callable=submit_qsub_stdout,
-            stdout_kwargs={'_executable': executable})
+            stdout=bsf.connector.StandardOutputStream(
+                thread_callable=submit_qsub_stdout,
+                thread_kwargs={'_executable': executable}))
 
         # Add Stage-specific options.
 

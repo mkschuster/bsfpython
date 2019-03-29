@@ -29,6 +29,8 @@ Distributed Resource Management System (DRMS) module.
 
 import os
 
+import bsf.connector
+
 
 def submit(stage, debug=0):
     """Submit each C{bsf.process.Executable} of a C{bsf.Stage}.
@@ -58,10 +60,10 @@ def submit(stage, debug=0):
         if not executable.submit:
             output_list.append('# ')
         output_list.append(executable.command_str())
-        if executable.stdout_path:
-            output_list.append(' 1>' + executable.stdout_path)
-        if executable.stderr_path:
-            output_list.append(' 2>' + executable.stderr_path)
+        if isinstance(executable.stdout, bsf.connector.ConnectorFile):
+            output_list.append(' 1>' + executable.stdout.file_path)
+        if isinstance(executable.stderr, bsf.connector.ConnectorFile):
+            output_list.append(' 2>' + executable.stderr.file_path)
         output_list.append('\n')
         output_list.append('\n')
 

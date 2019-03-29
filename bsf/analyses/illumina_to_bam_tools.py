@@ -338,13 +338,15 @@ class RunnableStepIlluminaToBam(bsf.process.RunnableStepJava):
             options=None,
             arguments=None,
             sub_command=None,
-            stdout_path=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             process_identifier=None,
             process_name=None,
+            sub_process=None,
             obsolete_file_path_list=None,
             java_temporary_path=None,
             java_heap_maximum=None,
@@ -362,12 +364,12 @@ class RunnableStepIlluminaToBam(bsf.process.RunnableStepJava):
         @type options: dict[bsf.argument.Argument.key, list[bsf.argument.Argument]] | None
         @param arguments: Python C{list} of Python C{str} or C{unicode} (program argument) objects
         @type arguments: list[str | unicode] | None
-        @param sub_command: Subordinate C{bsf.process.Command}
-        @type sub_command: bsf.process.Command | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -377,6 +379,8 @@ class RunnableStepIlluminaToBam(bsf.process.RunnableStepJava):
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @param process_name: Process name
         @type process_name: str | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
@@ -401,13 +405,15 @@ class RunnableStepIlluminaToBam(bsf.process.RunnableStepJava):
             options=options,
             arguments=arguments,
             sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
             dependencies=dependencies,
             hold=hold,
             submit=submit,
             process_identifier=process_identifier,
             process_name=process_name,
+            sub_process=sub_process,
             obsolete_file_path_list=obsolete_file_path_list,
             java_temporary_path=java_temporary_path,
             java_heap_maximum=java_heap_maximum,

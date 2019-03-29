@@ -33,6 +33,7 @@ import os
 import pickle
 import shutil
 
+import bsf.connector
 import bsf.standards
 
 # Set the environment consistently.
@@ -108,9 +109,9 @@ sam_header_rg = list()
 
 # Run BWA to produce an aligned SAM file.
 
-run_bwa = pickler_dict['bwa_executable']
-assert isinstance(run_bwa, bsf.process.Executable)
-run_bwa.stdout_path = path_aligned_sam
+executable_bwa = pickler_dict['bwa_executable']
+assert isinstance(executable_bwa, bsf.process.Executable)
+executable_bwa.stdout = bsf.connector.ConnectorFile(file_path=path_aligned_sam, file_mode='wt')
 
 # Check if the run_bwa sub-command got a BAM file to align in mem mode.
 # If so, convert it first into FASTQ file(s).
@@ -125,7 +126,7 @@ run_bwa.stdout_path = path_aligned_sam
 # https://github.com/samtools/htsjdk/blob/1.114/src/java/htsjdk/samtools/util/IOUtil.java#L719
 # TODO: Once this works, it should be turned into a generic method useful in the ChIPSeq and RNASeq analyses, too.
 
-if run_bwa.sub_command.program == 'mem' and run_bwa.sub_command.arguments[1][-4:] == '.bam':
+if executable_bwa.sub_command.program == 'mem' and executable_bwa.sub_command.arguments[1][-4:] == '.bam':
 
     # Propagate SAM header lines @PG and @RG into the final BAM file.
 
@@ -133,11 +134,11 @@ if run_bwa.sub_command.program == 'mem' and run_bwa.sub_command.arguments[1][-4:
         name='samtools_view',
         program='samtools',
         sub_command=bsf.process.Command(program='view'),
-        stdout_path=path_temporary_sam)
+        stdout=bsf.connector.ConnectorFile(file_path=path_temporary_sam, file_mode='wt'))
 
     samtools_view = samtools.sub_command
     samtools_view.add_switch_short(key='H')
-    samtools_view.arguments.append(run_bwa.sub_command.arguments[1])
+    samtools_view.arguments.append(executable_bwa.sub_command.arguments[1])
 
     child_return_code = samtools.run()
 
@@ -168,7 +169,7 @@ if run_bwa.sub_command.program == 'mem' and run_bwa.sub_command.arguments[1][-4:
 
     sam_to_fastq = picard_process.sub_command
     # INPUT Required
-    sam_to_fastq.add_option_pair(key='INPUT', value=run_bwa.sub_command.arguments[1])
+    sam_to_fastq.add_option_pair(key='INPUT', value=executable_bwa.sub_command.arguments[1])
     # FASTQ Required
     sam_to_fastq.add_option_pair(key='FASTQ', value=path_fastq_1)
     # SECOND_END_FASTQ [null]
@@ -219,21 +220,21 @@ if run_bwa.sub_command.program == 'mem' and run_bwa.sub_command.arguments[1][-4:
     if len(sam_header_rg) > 1:
         raise Exception(
             "BAM file {!r} contains more than one read group line, which is not supported, yet.\n"
-            "RGs: {!r}".format(run_bwa.sub_command.arguments[1], sam_header_rg))
+            "RGs: {!r}".format(executable_bwa.sub_command.arguments[1], sam_header_rg))
 
-    run_bwa.sub_command.add_option_short(key='R', value=sam_header_rg[0].rstrip().replace("\t", "\\t"))
+    executable_bwa.sub_command.add_option_short(key='R', value=sam_header_rg[0].rstrip().replace("\t", "\\t"))
 
     # After the SamToFastq conversion, the second and third arguments in the BWA sub-command need replacing.
 
-    run_bwa.sub_command.arguments = [run_bwa.sub_command.arguments[0]]
-    run_bwa.sub_command.arguments.append(path_fastq_1)
+    executable_bwa.sub_command.arguments = [executable_bwa.sub_command.arguments[0]]
+    executable_bwa.sub_command.arguments.append(path_fastq_1)
     if os.path.getsize(filename=path_fastq_2):
-        run_bwa.sub_command.arguments.append(path_fastq_2)
+        executable_bwa.sub_command.arguments.append(path_fastq_2)
 
-child_return_code = run_bwa.run()
+child_return_code = executable_bwa.run()
 
 if child_return_code:
-    raise Exception('Could not complete the {!r} step.'.format(run_bwa.name))
+    raise Exception('Could not complete the {!r} step.'.format(executable_bwa.name))
 
 # Remove the temporary, uncompressed FASTQ files if they exist.
 if os.path.exists(path=path_fastq_1):
@@ -287,7 +288,7 @@ if len(sam_header_pg) or len(sam_header_rg):
         name='samtools_view',
         program='samtools',
         sub_command=bsf.process.Command(program='view'),
-        stdout_path=path_temporary_sam)
+        stdout=bsf.connector.ConnectorFile(file_path=path_temporary_sam, file_mode='wt'))
 
     samtools_view = samtools.sub_command
     samtools_view.add_switch_short(key='H')

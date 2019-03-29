@@ -141,9 +141,18 @@ class StandardStream(Connector):
     @type thread: threading.Thread
     """
 
-    def __init__(self, thread_callable=None, thread_kwargs=None, thread_joins=10, thread_timeout=10, thread=None):
+    def __init__(
+            self,
+            file_path=None,
+            thread_callable=None,
+            thread_kwargs=None,
+            thread_joins=10,
+            thread_timeout=10,
+            thread=None):
         """Initialise a C{StandardStream} object.
 
+        @param file_path: File path
+        @type file_path: str | unicode | None
         @param thread_callable: Callable for C{threading.Thread.target}
         @type thread_callable: object | None
         @param thread_kwargs: Python C{dict} of keyword arguments for C{threading.Thread.kwargs}
@@ -157,6 +166,7 @@ class StandardStream(Connector):
         @return:
         @rtype:
         """
+        self.file_path = file_path
         self.thread_callable = thread_callable
         self.thread_kwargs = thread_kwargs
         self.thread_joins = thread_joins

@@ -37,6 +37,7 @@ import warnings
 import bsf
 import bsf.annotation
 import bsf.argument
+import bsf.connector
 import bsf.executables
 import bsf.executables.vcf
 import bsf.intervals
@@ -58,13 +59,15 @@ class RunnableStepGATK(bsf.process.RunnableStepJava):
             options=None,
             arguments=None,
             sub_command=None,
-            stdout_path=None,
-            stderr_path=None,
+            stdin=None,
+            stdout=None,
+            stderr=None,
             dependencies=None,
             hold=None,
             submit=True,
             process_identifier=None,
             process_name=None,
+            sub_process=None,
             obsolete_file_path_list=None,
             java_temporary_path=None,
             java_heap_maximum=None,
@@ -83,10 +86,12 @@ class RunnableStepGATK(bsf.process.RunnableStepJava):
         @type arguments: list[str | unicode] | None
         @param sub_command: Subordinate C{bsf.process.Command}
         @type sub_command: bsf.process.Command | None
-        @param stdout_path: Standard output (I{STDOUT}) redirection in Bash (1>word)
-        @type stdout_path: str | unicode | None
-        @param stderr_path: Standard error (I{STDERR}) redirection in Bash (2>word)
-        @type stderr_path: str | unicode | None
+        @param stdin: Standard input I{STDIN} C{bsf.connector.Connector}
+        @type stdin: bsf.connector.Connector | None
+        @param stdout: Standard output I{STDOUT} C{bsf.connector.Connector}
+        @type stdout: bsf.connector.Connector | None
+        @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
+        @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
             properties in the context of C{bsf.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
@@ -98,6 +103,8 @@ class RunnableStepGATK(bsf.process.RunnableStepJava):
         @type process_identifier: str | None
         @param process_name: Process name
         @type process_name: str | None
+        @param sub_process: C{subprocess.Popen}
+        @type sub_process: subprocess.Popen | None
         @param obsolete_file_path_list: Python C{list} of file paths that can be removed
             after successfully completing this C{bsf.process.RunnableStep}
         @type obsolete_file_path_list: list[str | unicode] | None
@@ -116,13 +123,15 @@ class RunnableStepGATK(bsf.process.RunnableStepJava):
             options=options,
             arguments=arguments,
             sub_command=sub_command,
-            stdout_path=stdout_path,
-            stderr_path=stderr_path,
+            stdin=stdin,
+            stdout=stdout,
+            stderr=stderr,
             dependencies=dependencies,
             hold=hold,
             submit=submit,
             process_identifier=process_identifier,
             process_name=process_name,
+            sub_process=sub_process,
             obsolete_file_path_list=obsolete_file_path_list,
             java_temporary_path=java_temporary_path,
             java_heap_maximum=java_heap_maximum,
@@ -2949,7 +2958,8 @@ class VariantCallingGATK(bsf.Analysis):
                 runnable_step=bsf.process.RunnableStep(
                     name='snpeff',
                     program='java',
-                    sub_command=bsf.process.Command(program='eff')))
+                    sub_command=bsf.process.Command(program='eff'),
+                    stdout=bsf.connector.ConnectorFile(file_path=file_path_annotate.snpeff_vcf, file_mode='wt')))
             """ @type _runnable_step: bsf.process.RunnableStep """
 
             _runnable_step.add_switch_short(
@@ -2962,7 +2972,6 @@ class VariantCallingGATK(bsf.Analysis):
             _runnable_step.add_option_pair(
                 key='-Djava.io.tmpdir',
                 value=runnable_annotate.temporary_directory_path(absolute=False))
-            _runnable_step.stdout_path = file_path_annotate.snpeff_vcf
 
             _sub_command = _runnable_step.sub_command
             _sub_command.add_switch_short(key='download')

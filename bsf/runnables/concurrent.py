@@ -27,6 +27,8 @@ restarting of the C{bsf.procedure.ConcurrentRunnable} object processing.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+from __future__ import print_function
+
 import errno
 import os
 import subprocess
@@ -90,12 +92,14 @@ def run(runnable):
             return subprocess.PIPE
 
         if isinstance(_connector, bsf.connector.ConcurrentProcess):
-            for _sub_process in runnable.sub_process_list:
-                if _sub_process.runnable_step.name == _connector.name:
-                    if _sub_process.sub_process is None:
+            for _runnable_step in runnable.runnable_step_list_concurrent:
+                if _runnable_step.name == _connector.name:
+                    if _runnable_step.sub_process is None:
                         raise Exception(
-                            'Sub-process ' + repr(_sub_process.runnable_step.name) + ' not initialised, yet.')
-                    return getattr(_sub_process.sub_process, _connector.connection)
+                            'Sub-process ' + repr(_runnable_step.name) + ' not initialised, yet.')
+                    return getattr(_runnable_step.sub_process, _connector.connection)
+            else:
+                raise Exception('Could not find a suitable RunnableStep for Connector.name ' + repr(_connector.name))
 
         return None
 
@@ -119,65 +123,76 @@ def run(runnable):
 
     thread_lock = threading.Lock()
 
-    for sub_process in runnable.sub_process_list:
+    for runnable_step in runnable.runnable_step_list_concurrent:
+        # Per RunnableStep, up to three threads, writing to STDIN, as well as reading from STDOUT and STDERR,
+        # should make sure that buffers are not filling up. If STDOUT or STDERR connectors are not defined,
+        # defaults need be set to avoid the sub-process from blocking.
+
+        if runnable_step.stdout is None:
+            runnable_step.stdout = bsf.connector.StandardOutputStream()
+
+        if runnable_step.stderr is None:
+            runnable_step.stderr = bsf.connector.StandardErrorStream()
+
         # Create and assign sub-processes.
         try:
-            sub_process.sub_process = subprocess.Popen(
-                args=sub_process.runnable_step.command_list(),
-                stdin=_map_connector(_connector=sub_process.stdin),
-                stdout=_map_connector(_connector=sub_process.stdout),
-                stderr=_map_connector(_connector=sub_process.stderr),
+            runnable_step.sub_process = subprocess.Popen(
+                args=runnable_step.command_list(),
+                stdin=_map_connector(_connector=runnable_step.stdin),
+                stdout=_map_connector(_connector=runnable_step.stdout),
+                stderr=_map_connector(_connector=runnable_step.stderr),
                 close_fds=True,
                 shell=False)
         except OSError as exception:
             if exception.errno == errno.ENOENT:
                 raise Exception(
-                    repr(sub_process.runnable_step) + ' ' +
-                    repr(sub_process.runnable_step.program) +
+                    repr(runnable_step) + ' ' +
+                    repr(runnable_step.program) +
                     ' could not be found.')
             else:
                 # Re-raise the Exception object.
                 raise exception
 
-        # Start threads for standard stream prcessing to prevent buffers from filling up and
-        # sub-processes from blocking.
-
         for attribute in ('stdin', 'stdout', 'stderr'):
-            connector = getattr(sub_process, attribute)
+            connector = getattr(runnable_step, attribute)
             """ @type connector: bsf.connector.Connector """
+
             if isinstance(connector, bsf.connector.StandardInputStream):
-                if sub_process.runnable_step.stdin_callable is None:
+                if connector.thread_callable is None:
                     # If a specific STDIN callable is not defined, run bsf.process.Executable.process_stdin().
                     pass
                 else:
                     connector.thread = threading.Thread(
-                        target=sub_process.runnable_step.stdin_callable,
-                        args=[sub_process.sub_process.stdin, thread_lock, runnable.debug],
-                        kwargs=sub_process.runnable_step.stdin_kwargs)
+                        target=connector.thread_callable,
+                        args=[runnable_step.sub_process.stdin, thread_lock, runnable.debug],
+                        kwargs=connector.thread_kwargs)
+
             if isinstance(connector, bsf.connector.StandardOutputStream):
-                if sub_process.runnable_step.stdout_callable is None:
+                if connector.thread_callable is None:
                     # If a specific STDOUT callable is not defined, run bsf.process.Executable.process_stdout().
                     connector.thread = threading.Thread(
-                        target=sub_process.runnable_step.process_stdout,
-                        args=[sub_process.sub_process.stdout, thread_lock, runnable.debug],
-                        kwargs={'stdout_path': sub_process.runnable_step.stdout_path})
+                        target=connector.thread_callable,
+                        args=[runnable_step.sub_process.stdout, thread_lock, runnable.debug],
+                        kwargs={'stdout_path': connector.file_path})
                 else:
                     connector.thread = threading.Thread(
-                        target=sub_process.runnable_step.stdout_callable,
-                        args=[sub_process.sub_process.stdout, thread_lock, runnable.debug],
-                        kwargs=sub_process.runnable_step.stdout_kwargs)
+                        target=connector.thread_callable,
+                        args=[runnable_step.sub_process.stdout, thread_lock, runnable.debug],
+                        kwargs=connector.thread_kwargs)
+
             if isinstance(connector, bsf.connector.StandardErrorStream):
-                if sub_process.runnable_step.stderr_callable is None:
+                if connector.thread_callable is None:
                     # If a specific STDERR callable is not defined, run bsf.process.Executable.process_stderr().
                     connector.thread = threading.Thread(
                         target=bsf.process.Executable.process_stderr,
-                        args=[sub_process.sub_process.stderr, thread_lock, runnable.debug],
-                        kwargs={'stderr_path': sub_process.runnable_step.stderr_path})
+                        args=[runnable_step.sub_process.stderr, thread_lock, runnable.debug],
+                        kwargs={'stderr_path': connector.file_path})
                 else:
                     connector.thread = threading.Thread(
-                        target=sub_process.runnable_step.stderr_callable,
-                        args=[sub_process.sub_process.stderr, thread_lock, runnable.debug],
-                        kwargs=sub_process.runnable_step.stderr_kwargs)
+                        target=connector.thread_callable,
+                        args=[runnable_step.sub_process.stderr, thread_lock, runnable.debug],
+                        kwargs=connector.thread_kwargs)
+
             if isinstance(connector, bsf.connector.StandardStream) and connector.thread:
                 connector.thread.daemon = True
                 connector.thread.start()
@@ -186,13 +201,13 @@ def run(runnable):
     # Now, wait for all child processes to complete.
 
     exception_str_list = list()
-    for sub_process in runnable.sub_process_list:
-        child_return_code = sub_process.sub_process.wait()
+    for runnable_step in runnable.runnable_step_list_concurrent:
+        child_return_code = runnable_step.sub_process.wait()
 
         # First, join all standard stream processing threads.
 
         for attribute in ('stdin', 'stdout', 'stderr'):
-            connector = getattr(sub_process, attribute)
+            connector = getattr(runnable_step, attribute)
             """ @type connector: bsf.connector.Connector """
             if isinstance(connector, bsf.connector.StandardStream) and connector.thread:
                 thread_join_counter = 0
@@ -211,21 +226,21 @@ def run(runnable):
             # Child return code.
             exception_str_list.append(
                 bsf.process.get_timestamp() +
-                ' Child process ' + repr(runnable.name) + ' ' + repr(sub_process.runnable_step.name) +
+                ' Child process ' + repr(runnable.name) + ' ' + repr(runnable_step.name) +
                 ' failed with return code ' +
                 repr(+child_return_code) + '.')
         elif child_return_code < 0:
             # Child signal.
             exception_str_list.append(
                 bsf.process.get_timestamp() +
-                ' Child process ' + repr(runnable.name) + ' ' + repr(sub_process.runnable_step.name) +
+                ' Child process ' + repr(runnable.name) + ' ' + repr(runnable_step.name) +
                 ' received signal ' +
                 repr(-child_return_code) + '.')
         else:
             # Upon success, delete the list of file paths that the bsf.process.RunnableStep
             # declared to be obsolete now.
 
-            sub_process.runnable_step.remove_obsolete_file_paths()
+            runnable_step.remove_obsolete_file_paths()
 
     if exception_str_list:
         runnable.cache_directory_remove()

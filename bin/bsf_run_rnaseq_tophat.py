@@ -37,6 +37,7 @@ import re
 import shutil
 import sys
 
+import bsf.connector
 import bsf.process
 import bsf.standards
 
@@ -64,7 +65,7 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
         name='samtools_view',
         program='samtools',
         sub_command=bsf.process.Command(program='view'),
-        stdout_path=path_temporary_sam)
+        stdout=bsf.connector.ConnectorFile(file_path=path_temporary_sam, file_mode='wt'))
 
     samtools_view = samtools.sub_command
     samtools_view.add_switch_short(key='H')

@@ -32,7 +32,6 @@ from __future__ import print_function
 
 import argparse
 import collections
-import datetime
 import os
 import platform
 import subprocess
@@ -257,7 +256,7 @@ elif file_type == '.bam':
         kwargs={
             'stderr_handle': child_process.stderr,
             'thread_lock': thread_lock,
-            'stderr_path': executable.stderr_path,
+            # 'stderr_path': executable.stderr_path,
             'debug': 0,
         })
     thread_err.daemon = True  # Thread dies with the program.

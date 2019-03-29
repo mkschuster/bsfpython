@@ -695,47 +695,6 @@ class ConsecutiveRunnable(Runnable):
         return self.run_consecutively(runnable_step_list=self.runnable_step_list)
 
 
-class SubProcess(object):
-    """The C{SubProcess} class represents one C{bsf.process.RunnableStep} to be run via C{subprocess.Popen}.
-
-    Attributes:
-    @ivar runnable_step: C{bsf.process.RunnableStep} or sub-class thereof
-    @type runnable_step: bsf.process.RunnableStep
-    @ivar stdin: C{bsf.connector.Connector} for STDIN
-    @type stdin: bsf.connector.Connector | None
-    @ivar stdout: C{bsf.connector.Connector} for STDOUT
-    @type stdout: bsf.connector.Connector | None
-    @ivar stderr: C{bsf.connector.Connector} for STDERR
-    @type stderr bsf.connector.Connector | None
-    """
-
-    def __init__(self, runnable_step, stdin=None, stdout=None, stderr=None, sub_process=None):
-        """Initialise a C{SubProcess} object.
-
-        @param runnable_step: C{bsf.process.RunnableStep} or sub-class thereof
-        @type runnable_step: bsf.process.RunnableStep
-        @param stdin: C{bsf.connector.Connector} for STDIN
-        @type stdin: bsf.connector.Connector | None
-        @param stdout: C{bsf.connector.Connector} for STDOUT
-        @type stdout: bsf.connector.Connector | None
-        @param stderr: C{bsf.connector.Connector} for STDERR
-        @type stderr bsf.connector.Connector | None
-        @param sub_process: C{subprocess.Popen}
-        @type sub_process: subprocess.Popen | None
-        @return:
-        @rtype:
-        """
-        super(SubProcess, self).__init__()
-
-        self.runnable_step = runnable_step
-        self.stdin = stdin
-        self.stdout = stdout
-        self.stderr = stderr
-        self.sub_process = sub_process
-
-        return
-
-
 class ConcurrentRunnable(Runnable):
     """The C{bsf.procedure.ConcurrentRunnable} represents a procedure of concurrently running
     C{bsf.process.RunnableStep} or sub-classes thereof.
@@ -743,8 +702,8 @@ class ConcurrentRunnable(Runnable):
     Attributes:
     @ivar runnable_step_list_pre: Python C{list} of C{bsf.process.RunnableStep} object to pre-run
     @type runnable_step_list_pre: list[bsf.process.RunnableStep] | None
-    @ivar sub_process_list: Python C{list} of C{SubProcess} objects
-    @type sub_process_list: list[SubProcess]
+    @ivar runnable_step_list_concurrent: Python C{list} of C{bsf.process.RunnableStep} objects
+    @type runnable_step_list_concurrent: list[bsf.process.RunnableStep] | None
     @ivar runnable_step_list_post: Python C{list} of C{bsf.process.RunnableStep} object to post-run
     @type runnable_step_list_post: list[bsf.process.RunnableStep] | None
     """
@@ -759,7 +718,7 @@ class ConcurrentRunnable(Runnable):
             file_path_object=None,
             debug=0,
             runnable_step_list_pre=None,
-            sub_process_list=None,
+            runnable_step_list_concurrent=None,
             runnable_step_list_post=None):
         """Initialise a C{bsf.ConcurrentRunnable}.
 
@@ -782,8 +741,8 @@ class ConcurrentRunnable(Runnable):
         @type debug: int
         @param runnable_step_list_pre: Python C{list} of C{bsf.process.RunnableStep} object to pre-run
         @type runnable_step_list_pre: list[bsf.process.RunnableStep] | None
-        @param sub_process_list: Python C{list} of C{SubProcess} objects
-        @type sub_process_list: list[SubProcess] | None
+        @param runnable_step_list_concurrent: Python C{list} of C{bsf.process.RunnableStep} objects
+        @type runnable_step_list_concurrent: list[bsf.process.RunnableStep] | None
         @param runnable_step_list_post: Python C{list} of C{bsf.process.RunnableStep} object to post-run
         @type runnable_step_list_post: list[bsf.process.RunnableStep] | None
         @return:
@@ -803,10 +762,10 @@ class ConcurrentRunnable(Runnable):
         else:
             self.runnable_step_list_pre = runnable_step_list_pre
 
-        if sub_process_list is None:
-            self.sub_process_list = list()
+        if runnable_step_list_concurrent is None:
+            self.runnable_step_list_concurrent = list()
         else:
-            self.sub_process_list = sub_process_list
+            self.runnable_step_list_concurrent = runnable_step_list_concurrent
 
         if runnable_step_list_post is None:
             self.runnable_step_list_post = list()
@@ -849,19 +808,19 @@ class ConcurrentRunnable(Runnable):
 
         return runnable_step
 
-    def add_sub_process(self, sub_process=None):
-        """Convenience method to facilitate initialising, adding and returning a C{bsf.procedure.SubProcess}.
+    def add_runnable_step(self, runnable_step=None):
+        """Convenience method to facilitate initialising, adding and returning a C{bsf.process.RunnableStep}.
 
-        @param sub_process: C{bsf.procedure.SubProcess}
-        @type sub_process: bsf.procedure.SubProcess | None
-        @return: C{bsf.procedure.SubProcess}
-        @rtype: bsf.procedure.SubProcess
+        @param runnable_step: C{bsf.process.RunnableStep}
+        @type runnable_step: bsf.process.RunnableStep | None
+        @return: C{bsf.process.RunnableStep}
+        @rtype: bsf.process.RunnableStep
         """
-        if sub_process is None:
+        if runnable_step is None:
             return
 
-        assert isinstance(sub_process, bsf.procedure.SubProcess)
+        assert isinstance(runnable_step, bsf.process.RunnableStep)
 
-        self.sub_process_list.append(sub_process)
+        self.runnable_step_list_concurrent.append(runnable_step)
 
-        return sub_process
+        return runnable_step

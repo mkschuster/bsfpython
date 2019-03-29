@@ -28,6 +28,7 @@ A package of classes and methods supporting analyses to archive and restore Illu
 import os
 
 import bsf
+import bsf.connector
 import bsf.illumina
 import bsf.procedure
 import bsf.process
@@ -616,7 +617,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
                     runnable_step=bsf.process.RunnableStep(
                         name='md5sum',
                         program='md5sum',
-                        stdout_path=archive_file_path + '.md5'))
+                        stdout=bsf.connector.ConnectorFile(file_path=archive_file_path + '.md5', file_mode='wt')))
 
                 md5_sum.add_switch_long(key='binary')
 
@@ -665,7 +666,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
             runnable_step=bsf.process.RunnableStep(
                 name='md5_sum',
                 program='md5sum',
-                stdout_path=archive_file_path + '.md5'))
+                stdout=bsf.connector.ConnectorFile(file_path=archive_file_path + '.md5', file_mode='wt')))
 
         md5_sum.add_switch_long(key='binary')
 

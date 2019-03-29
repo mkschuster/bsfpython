@@ -35,6 +35,7 @@ import os
 import subprocess
 import sys
 
+import bsf.connector
 import bsf.process
 
 
@@ -167,8 +168,9 @@ with open(name_space.reference_vcf, 'rt') as input_file:
 
 stdin_executable = bsf.process.Executable(
     program='bgzip',
-    stdout_callable=process_stdout,
-    stdout_kwargs={'output_file_path': name_space.output_path})
+    stdout=bsf.connector.StandardOutputStream(
+        thread_callable=process_stdout,
+        thread_kwargs={'output_file_path': name_space.output_path}))
 stdin_executable.add_switch_long(key='decompress')
 stdin_executable.add_switch_long(key='stdout')
 stdin_executable.arguments.append(name_space.input_path)
