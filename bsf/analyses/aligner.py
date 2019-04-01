@@ -217,6 +217,30 @@ class FilePathSummary(bsf.procedure.FilePath):
 
         self.read_group_to_sample_tsv = prefix + '_read_group_to_sample.tsv'
 
+        # Picard Alignment Summary Metrics (PASM)
+
+        self.pasm_absolute_read_group_pdf = prefix + '_pasm_absolute_read_group.pdf'
+        self.pasm_absolute_read_group_png = prefix + '_pasm_absolute_read_group.png'
+
+        self.pasm_absolute_sample_pdf = prefix + '_pasm_absolute_sample.pdf'
+        self.pasm_absolute_sample_png = prefix + '_pasm_absolute_sample.png'
+
+        self.pasm_percentage_read_group_pdf = prefix + '_pasm_percentage_read_group.pdf'
+        self.pasm_percentage_read_group_png = prefix + '_pasm_percentage_read_group.png'
+
+        self.pasm_percentage_sample_pdf = prefix + '_pasm_percentage_sample.pdf'
+        self.pasm_percentage_sample_png = prefix + '_pasm_percentage_sample.png'
+
+        self.pasm_strand_balance_read_group_pdf = prefix + '_pasm_strand_balance_read_group.pdf'
+        self.pasm_strand_balance_read_group_png = prefix + '_pasm_strand_balance_read_group.png'
+
+        self.pasm_strand_balance_sample_pdf = prefix + '_pasm_strand_balance_sample.pdf'
+        self.pasm_strand_balance_sample_png = prefix + '_pasm_strand_balance_sample.png'
+
+        self.pasm_table_read_group_tsv = prefix + '_pasm_metrics_read_group.tsv'
+
+        self.pasm_table_sample_tsv = prefix + '_pasm_metrics_sample.tsv'
+
         return
 
 
@@ -1216,6 +1240,257 @@ class Aligner(bsf.Analysis):
         for runnable_sample in runnable_sample_list:
             executable_summary.dependencies.append(runnable_sample.name)
 
+        # Add a RunnableStep to summarise and plot the Picard Collect Alignment Summary Metrics reports.
+
+        runnable_step = runnable_summary.add_runnable_step(
+            runnable_step=bsf.process.RunnableStep(
+                name='picard_summary',
+                program='bsf_aligner_summary.R'))
+        """ @type runnable_step: bsf.process.RunnableStep """
+        runnable_step.add_option_long(key='prefix', value=self.prefix)
+
+        # Add aligner-specific RunnableStep objects.
+
         self.add_runnable_step_summary(runnable_summary=runnable_summary, stage_summary=stage_summary)
+
+        return
+
+    def report(self):
+
+        def report_html():
+            """Private function to create a HTML report.
+
+            @return:
+            @rtype:
+            """
+            # Create a symbolic link containing the project name and a UUID.
+            link_path = self.create_public_project_link()
+
+            # This code only needs the public URL.
+
+            # Write a HTML document.
+
+            str_list = list()
+            """ @type str_list: list[str | unicode] """
+
+            str_list.append('<h1 id="' + self.prefix + '_analysis">' + self.project_name + ' ' + self.name + '</h1>\n')
+            str_list.append('\n')
+
+            str_list.extend(self.get_html_genome(genome_version=self.genome_version))
+            str_list.append('\n')
+
+            str_list.append('<p id="ucsc_track_hub">')
+            str_list.extend(self.ucsc_hub_html_anchor(link_path=link_path))
+            str_list.append('</p>\n')
+            str_list.append('\n')
+
+            str_list.append('<h2 id="sample_section">Sample Table</h2>\n')
+            str_list.append('\n')
+            str_list.append('<table id="sample_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th>Sample</th>\n')
+            str_list.append('<th>BAM</th>\n')
+            str_list.append('<th>BAI</th>\n')
+            str_list.append('<th>MD5</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
+
+            for sample in self.sample_list:
+                paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=True)
+
+                if not paired_reads_dict:
+                    # Skip Sample objects, which PairedReads objects have all been excluded.
+                    continue
+
+                runnable_sample = self.runnable_dict[self.get_prefix_sample(sample_name=sample.name)]
+                file_path_sample = runnable_sample.file_path_object
+                """ @type file_path_sample: bsf.analyses.aligner.FilePathSample """
+
+                str_list.append('<tr>\n')
+                # Sample
+                str_list.append('<td class="left">' + sample.name + '</td>\n')
+                # BAM
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_sample.merged_bam + '">')
+                str_list.append('<abbr title="Binary Alignment/Map">BAM</abbr>')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
+                # BAI
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_sample.merged_bai + '">')
+                str_list.append('<abbr title="Binary Alignment/Map Index">BAI</abbr>')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
+                # MD5
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_sample.merged_md5 + '">')
+                str_list.append('<abbr title="Message Digest 5 Checksum">MD5</abbr>')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
+                str_list.append('</tr>\n')
+
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
+
+            str_list.append('<h2 id="qc_plots">QC Plots</h2>\n')
+            str_list.append('\n')
+            str_list.append('<table id="qc_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th>Sample</th>\n')
+            str_list.append('<th>Read Group</th>\n')
+            str_list.append('<th>Metrics</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
+
+            runnable_summary = self.runnable_dict[self.get_prefix_summary()]
+            file_path_summary = runnable_summary.file_path_object
+            """ @type file_path_summary: FilePathSummary """
+
+            # Alignment Summary Plot Absolute Mapped
+            str_list.append('<tr>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.pasm_absolute_sample_pdf + '">')
+            str_list.append('<img alt="Absolute Mapped - Sample"')
+            str_list.append(' src="' + file_path_summary.pasm_absolute_sample_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.pasm_absolute_read_group_pdf + '">')
+            str_list.append('<img alt="Absolute Mapped - Read Group"')
+            str_list.append(' src="' + file_path_summary.pasm_absolute_read_group_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="left">Absolute Mapped</td>\n')
+            str_list.append('</tr>\n')
+
+            # Alignment Summary Plot Percentage Mapped
+            str_list.append('<tr>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.pasm_percentage_sample_pdf + '">')
+            str_list.append('<img alt="Percentage Mapped - Sample"')
+            str_list.append(' src="' + file_path_summary.pasm_percentage_sample_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.pasm_percentage_read_group_pdf + '">')
+            str_list.append('<img alt="Percentage Mapped - Read Group"')
+            str_list.append(' src="' + file_path_summary.pasm_percentage_read_group_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="left">Percentage Mapped</td>\n')
+            str_list.append('</tr>\n')
+
+            # Alignment Summary Plot Strand Balance
+            str_list.append('<tr>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.pasm_strand_balance_sample_pdf + '">')
+            str_list.append('<img alt="Strand Balance - Sample"')
+            str_list.append(' src="' + file_path_summary.pasm_strand_balance_sample_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.pasm_strand_balance_read_group_pdf + '">')
+            str_list.append('<img alt="Strand Balance - Read Group"')
+            str_list.append(' src="' + file_path_summary.pasm_strand_balance_read_group_png + '"')
+            str_list.append(' height="100" width="100" />')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="left">Strand Balance</td>\n')
+            str_list.append('</tr>\n')
+
+            # Summary Tables
+            str_list.append('<tr>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.pasm_table_sample_tsv + '">')
+            str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="center">')
+            str_list.append('<a href="' + file_path_summary.pasm_table_read_group_tsv + '">')
+            str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+            str_list.append('</a>')
+            str_list.append('</td>\n')
+            str_list.append('<td class="left">Summary</td>\n')
+            str_list.append('</tr>\n')
+
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
+
+            self.report_to_file(content=str_list)
+
+            return
+
+        def report_hub():
+            """Private function to create a UCSC Track Hub.
+
+            @return:
+            @rtype:
+            """
+
+            str_list = list()
+            """ @type str_list: list[str | unicode] """
+
+            # Group via UCSC super tracks.
+
+            str_list.append('track Alignments\n')
+            str_list.append('shortLabel Alignments\n')
+            str_list.append('longLabel STAR alignments\n')
+            str_list.append('visibility hide\n')
+            str_list.append('superTrack on\n')
+            str_list.append('group alignments\n')
+            str_list.append('\n')
+
+            # Sample-specific tracks
+
+            for sample in self.sample_list:
+                paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=True)
+
+                if not paired_reads_dict:
+                    # Skip Sample objects, which PairedReads objects have all been excluded.
+                    continue
+
+                runnable_sample = self.runnable_dict[self.get_prefix_sample(sample_name=sample.name)]
+                file_path_sample = runnable_sample.file_path_object
+                """ @type file_path_sample: bsf.analyses.aligner.FilePathSample """
+
+                #
+                # Add a trackDB entry for each Tophat accepted_hits.bam file.
+                #
+                # Common settings
+                str_list.append('track ' + sample.name + '_alignments\n')
+                str_list.append('type bam\n')
+                str_list.append('shortLabel ' + sample.name + '_' + self.prefix + '_alignments\n')
+                str_list.append('longLabel ' + sample.name + self.name + ' alignments\n')
+                str_list.append('bigDataUrl ' + file_path_sample.merged_bam + '\n')
+                # str_list.append('html ...\n')
+                str_list.append('visibility dense\n')
+
+                # Common optional settings
+                str_list.append('color 0,0,0\n')
+
+                # bam/cram - Compressed Sequence Alignment track settings
+                # None
+
+                # Composite track settings
+                str_list.append('parent Alignments\n')
+                str_list.append('\n')
+
+            self.ucsc_hub_to_file(content=str_list)
+
+            return
+
+        report_html()
+        report_hub()
 
         return
