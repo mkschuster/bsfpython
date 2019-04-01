@@ -108,8 +108,8 @@ class FilePathSummary(bsf.analyses.aligner.FilePathSummary):
         self.mapped_number_read_group_png = prefix + '_mapped_number_read_group.png'
         self.mapped_number_sample_png = prefix + '_mapped_number_sample.png'
         self.mapped_number_sample_pdf = prefix + '_mapped_number_sample.pdf'
-        self.table_read_group = prefix + '_table_read_group.tsv'
-        self.table_sample = prefix + '_table_sample.tsv'
+        self.table_read_group_tsv = prefix + '_table_read_group.tsv'
+        self.table_sample_tsv = prefix + '_table_sample.tsv'
 
         return
 
@@ -129,7 +129,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
     @ivar transcriptome_gtf: GTF file path of transcriptome annotation
     @type transcriptome_gtf: str | unicode | None
     @ivar two_pass_mapping: Basic two-pass mapping
-    @type two_pass_mapping: bool | None
+    @type two_pass_mapping: str | unicode | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
     @type classpath_picard: str | unicode | None
     """
@@ -346,7 +346,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         """
         runnable_summary.add_runnable_step(
             runnable_step=bsf.process.RunnableStep(
-                name='summary',
+                name='star_summary',
                 program='bsf_star_aligner_summary.R'))
         """ @type runnable_step: bsf.process.RunnableStep """
 
@@ -599,12 +599,12 @@ class StarAligner(bsf.analyses.aligner.Aligner):
             # Summary Tables
             str_list.append('<tr>\n')
             str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.table_sample + '">')
+            str_list.append('<a href="' + file_path_summary.table_sample_tsv + '">')
             str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
             str_list.append('</a>')
             str_list.append('</td>\n')
             str_list.append('<td class="center">')
-            str_list.append('<a href="' + file_path_summary.table_read_group + '">')
+            str_list.append('<a href="' + file_path_summary.table_read_group_tsv + '">')
             str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
             str_list.append('</a>')
             str_list.append('</td>\n')
