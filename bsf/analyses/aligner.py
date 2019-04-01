@@ -787,7 +787,7 @@ class Aligner(bsf.Analysis):
                 else:
                     unmapped_bam_file_dict[bam_file_name] = (bam_file_path, [runnable_index])
 
-                # Run Picard SortSam to convert the cleaned BAM file into a coordinate sorted BAM file.
+                # Run Picard SortSam to convert the cleaned BAM file into a query name sorted BAM file.
 
                 runnable_step = runnable_index.add_runnable_step(
                     runnable_step=bsf.process.RunnableStepPicard(
@@ -805,7 +805,7 @@ class Aligner(bsf.Analysis):
                 # OUTPUT []
                 runnable_step.add_picard_option(key='OUTPUT', value=file_path_align.aligned_bam)
                 # SORT_ORDER []
-                runnable_step.add_picard_option(key='SORT_ORDER', value='coordinate')
+                runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
                 # TMP_DIR [null]
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
@@ -815,13 +815,10 @@ class Aligner(bsf.Analysis):
                 # QUIET [false]
                 # VALIDATION_STRINGENCY [STRICT]
                 # COMPRESSION_LEVEL [5]
-                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
                 # MAX_RECORDS_IN_RAM [500000]
                 runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
                 # CREATE_INDEX [false]
-                runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
                 # CREATE_MD5_FILE [false]
-                runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
                 # REFERENCE_SEQUENCE [null]
                 # GA4GH_CLIENT_SECRETS [client_secrets.json]
                 # USE_JDK_DEFLATER [false]
@@ -868,19 +865,9 @@ class Aligner(bsf.Analysis):
                     # For a single ReadPair, just rename the files.
                     runnable_read_group.add_runnable_step(
                         runnable_step=bsf.process.RunnableStepMove(
-                            name='move_bai',
-                            source_path=file_path_align.aligned_bai,
-                            target_path=file_path_read_group.merged_bai))
-                    runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMove(
                             name='move_bam',
                             source_path=file_path_align.aligned_bam,
                             target_path=file_path_read_group.merged_bam))
-                    runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMove(
-                            name='move_md5',
-                            source_path=file_path_align.aligned_md5,
-                            target_path=file_path_read_group.merged_md5))
                 else:
                     runnable_step = runnable_read_group.add_runnable_step(
                         runnable_step=bsf.process.RunnableStepPicard(
@@ -904,12 +891,53 @@ class Aligner(bsf.Analysis):
                     # OUTPUT []
                     runnable_step.add_picard_option(key='OUTPUT', value=file_path_read_group.merged_bam)
                     # SORT_ORDER [coordinate]
+                    runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
                     # ASSUME_SORTED [false]
                     # MERGE_SEQUENCE_DICTIONARIES [false]
                     # USE_THREADING [false]
                     runnable_step.add_picard_option(key='USE_THREADING', value='true')
                     # COMMENT [null]
                     # INTERVALS [null]
+                    # TMP_DIR [null]
+                    runnable_step.add_picard_option(
+                        key='TMP_DIR',
+                        value=runnable_read_group.temporary_directory_path(absolute=False))
+                    # VERBOSITY [INFO]
+                    runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
+                    # QUIET [false]
+                    # VALIDATION_STRINGENCY [STRICT]
+                    # COMPRESSION_LEVEL [5]
+                    # MAX_RECORDS_IN_RAM [500000]
+                    runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+                    # CREATE_INDEX [false]
+                    # CREATE_MD5_FILE [false]
+                    # REFERENCE_SEQUENCE [null]
+                    # GA4GH_CLIENT_SECRETS [client_secrets.json]
+                    # USE_JDK_DEFLATER [false]
+                    # USE_JDK_INFLATER [false]
+
+                if bam_file_path is None:
+                    # Without an unaligned BAM file, run Picard SortSam by coordinate.
+
+                    runnable_step = runnable_read_group.add_runnable_step(
+                        runnable_step=bsf.process.RunnableStepPicard(
+                            name='picard_sort_sam',
+                            obsolete_file_path_list=[
+                                file_path_read_group.merged_bai,
+                                file_path_read_group.merged_bam,
+                                file_path_read_group.merged_md5,
+                            ],
+                            java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
+                            java_heap_maximum='Xmx4G',
+                            java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
+                            picard_command='SortSam'))
+                    """ @type runnable_step: bsf.process.RunnableStepPicard """
+                    # INPUT []
+                    runnable_step.add_picard_option(key='INPUT', value=file_path_read_group.merged_bam)
+                    # OUTPUT []
+                    runnable_step.add_picard_option(key='OUTPUT', value=file_path_read_group.sorted_bam)
+                    # SORT_ORDER []
+                    runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
                     # TMP_DIR [null]
                     runnable_step.add_picard_option(
                         key='TMP_DIR',
@@ -930,24 +958,6 @@ class Aligner(bsf.Analysis):
                     # GA4GH_CLIENT_SECRETS [client_secrets.json]
                     # USE_JDK_DEFLATER [false]
                     # USE_JDK_INFLATER [false]
-
-                if bam_file_path is None:
-                    # Without an unmapped BAM file, just rename the files.
-                    runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMove(
-                            name='move_bai',
-                            source_path=file_path_read_group.merged_bai,
-                            target_path=file_path_read_group.sorted_bai))
-                    runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMove(
-                            name='move_bam',
-                            source_path=file_path_read_group.merged_bam,
-                            target_path=file_path_read_group.sorted_bam))
-                    runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMove(
-                            name='move_md5',
-                            source_path=file_path_read_group.merged_md5,
-                            target_path=file_path_read_group.sorted_md5))
                 else:
                     # Run Picard MergeBamAlignment to annotate the merged aligned with the unaligned BAM file.
 
@@ -1074,6 +1084,7 @@ class Aligner(bsf.Analysis):
                         target_path=file_path_sample.merged_md5))
             else:
                 # Run Picard MergeSamFiles on each BAM file.
+
                 runnable_step = runnable_sample.add_runnable_step(
                     runnable_step=bsf.process.RunnableStepPicard(
                         name='picard_merge_sam_files',
