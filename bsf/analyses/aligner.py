@@ -256,6 +256,8 @@ class Aligner(bsf.Analysis):
     @type genome_fasta: str | unicode | None
     @ivar genome_index: Genome index
     @type genome_index: str | unicode | None
+    @ivar keep_read_group: Keep the Read Group-level BAM files
+    @type keep_read_group: bool | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
     @type classpath_picard: None | str | unicode
     """
@@ -419,6 +421,7 @@ class Aligner(bsf.Analysis):
             sample_list=None,
             genome_fasta=None,
             genome_index=None,
+            keep_read_group=None,
             classpath_picard=None):
         """Initialise a C{bsf.analyses.aligner.Aligner}.
 
@@ -452,6 +455,8 @@ class Aligner(bsf.Analysis):
         @type genome_fasta: str | unicode | None
         @param genome_index: Genome index
         @type genome_index: str | unicode | None
+        @param keep_read_group: Keep the Read Group-level BAM files
+        @type keep_read_group: bool | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: None | str | unicode
         @return:
@@ -475,6 +480,7 @@ class Aligner(bsf.Analysis):
 
         self.genome_fasta = genome_fasta
         self.genome_index = genome_index
+        self.keep_read_group = keep_read_group
         self.classpath_picard = classpath_picard
 
         return
@@ -504,6 +510,10 @@ class Aligner(bsf.Analysis):
         option = 'genome_index'
         if config_parser.has_option(section=section, option=option):
             self.genome_index = config_parser.get(section=section, option=option)
+
+        option = 'keep_read_group'
+        if config_parser.has_option(section=section, option=option):
+            self.keep_read_group = config_parser.get(section=section, option=option)
 
         option = 'classpath_picard'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -1090,22 +1100,40 @@ class Aligner(bsf.Analysis):
                 runnable_read_group = runnable_read_group_list[0]
                 file_path_read_group = runnable_read_group.file_path_object
                 """ @type file_path_read_group: FilePathReadGroup """
-                # For a single ReadPair, just rename the files.
-                runnable_sample.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepMove(
-                        name='move_bai',
-                        source_path=file_path_read_group.sorted_bai,
-                        target_path=file_path_sample.merged_bai))
-                runnable_sample.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepMove(
-                        name='move_bam',
-                        source_path=file_path_read_group.sorted_bam,
-                        target_path=file_path_sample.merged_bam))
-                runnable_sample.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepMove(
-                        name='move_md5',
-                        source_path=file_path_read_group.sorted_md5,
-                        target_path=file_path_sample.merged_md5))
+                if self.keep_read_group:
+                    # For a single ReadPair, just copy the files.
+                    runnable_sample.add_runnable_step(
+                        runnable_step=bsf.process.RunnableStepCopy(
+                            name='copy_bai',
+                            source_path=file_path_read_group.sorted_bai,
+                            target_path=file_path_sample.merged_bai))
+                    runnable_sample.add_runnable_step(
+                        runnable_step=bsf.process.RunnableStepCopy(
+                            name='copy_bam',
+                            source_path=file_path_read_group.sorted_bam,
+                            target_path=file_path_sample.merged_bam))
+                    runnable_sample.add_runnable_step(
+                        runnable_step=bsf.process.RunnableStepCopy(
+                            name='copy_md5',
+                            source_path=file_path_read_group.sorted_md5,
+                            target_path=file_path_sample.merged_md5))
+                else:
+                    # For a single ReadPair, just rename the files.
+                    runnable_sample.add_runnable_step(
+                        runnable_step=bsf.process.RunnableStepMove(
+                            name='move_bai',
+                            source_path=file_path_read_group.sorted_bai,
+                            target_path=file_path_sample.merged_bai))
+                    runnable_sample.add_runnable_step(
+                        runnable_step=bsf.process.RunnableStepMove(
+                            name='move_bam',
+                            source_path=file_path_read_group.sorted_bam,
+                            target_path=file_path_sample.merged_bam))
+                    runnable_sample.add_runnable_step(
+                        runnable_step=bsf.process.RunnableStepMove(
+                            name='move_md5',
+                            source_path=file_path_read_group.sorted_md5,
+                            target_path=file_path_sample.merged_md5))
             else:
                 # Run Picard MergeSamFiles on each BAM file.
 
@@ -1121,9 +1149,10 @@ class Aligner(bsf.Analysis):
                 for runnable_read_group in runnable_read_group_list:
                     file_path_read_group = runnable_read_group.file_path_object
                     """ @type file_path_read_group: FilePathReadGroup """
-                    runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_bai)
-                    runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_bam)
-                    runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_md5)
+                    if not self.keep_read_group:
+                        runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_bai)
+                        runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_bam)
+                        runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_md5)
                     runnable_step.add_picard_option(key='INPUT', value=file_path_read_group.sorted_bam, override=True)
 
                 # OUTPUT []
