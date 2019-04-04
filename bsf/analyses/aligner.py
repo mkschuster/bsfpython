@@ -76,19 +76,19 @@ class FilePathAlign(bsf.procedure.FilePath):
 
         self.output_directory = prefix
 
-        self.stderr_txt = os.path.join(prefix, '_'.join((prefix, 'stderr.txt')))
-        self.stdout_txt = os.path.join(prefix, '_'.join((prefix, 'stdout.txt')))
+        self.stderr_txt = os.path.join(prefix, prefix + '_stderr.txt')
+        self.stdout_txt = os.path.join(prefix, prefix + '_stdout.txt')
 
-        self.aligned_sam = os.path.join(prefix, '_'.join((prefix, 'aligned.sam')))
+        self.aligned_sam = os.path.join(prefix, prefix + '_aligned.sam')
 
-        self.cleaned_bam = os.path.join(prefix, '_'.join((prefix, 'cleaned.bam')))
+        self.cleaned_bam = os.path.join(prefix, prefix + '_cleaned.bam')
 
-        self.aligned_bai = os.path.join(prefix, '_'.join((prefix, 'aligned.bai')))
-        self.aligned_bam = os.path.join(prefix, '_'.join((prefix, 'aligned.bam')))
-        self.aligned_md5 = os.path.join(prefix, '_'.join((prefix, 'aligned.bam.md5')))
+        self.aligned_bai = os.path.join(prefix, prefix + '_aligned.bai')
+        self.aligned_bam = os.path.join(prefix, prefix + '_aligned.bam')
+        self.aligned_md5 = os.path.join(prefix, prefix + '_aligned.bam.md5')
 
-        self.aligned_bai_link_source = '_'.join((prefix, 'aligned.bai'))
-        self.aligned_bai_link_target = os.path.join(prefix, '_'.join((prefix, 'aligned.bam.bai')))
+        self.aligned_bai_link_source = prefix + '_aligned.bai'
+        self.aligned_bai_link_target = os.path.join(prefix, prefix + '_aligned.bam.bai')
 
         return
 
@@ -133,19 +133,19 @@ class FilePathReadGroup(bsf.procedure.FilePath):
 
         self.output_directory = prefix
 
-        self.merged_bai = os.path.join(prefix, '_'.join((prefix, 'merged.bai')))
-        self.merged_bam = os.path.join(prefix, '_'.join((prefix, 'merged.bam')))
-        self.merged_md5 = os.path.join(prefix, '_'.join((prefix, 'merged.bam.md5')))
+        self.merged_bai = os.path.join(prefix, prefix + '_merged.bai')
+        self.merged_bam = os.path.join(prefix, prefix + '_merged.bam')
+        self.merged_md5 = os.path.join(prefix, prefix + '_merged.bam.md5')
 
-        self.merged_bai_link_source = '_'.join((prefix, 'merged.bai'))
-        self.merged_bai_link_target = os.path.join(prefix, '_'.join((prefix, 'merged.bam.bai')))
+        self.merged_bai_link_source = prefix + '_merged.bai'
+        self.merged_bai_link_target = os.path.join(prefix, prefix + '_merged.bam.bai')
 
-        self.sorted_bai = os.path.join(prefix, '_'.join((prefix, 'sorted.bai')))
-        self.sorted_bam = os.path.join(prefix, '_'.join((prefix, 'sorted.bam')))
-        self.sorted_md5 = os.path.join(prefix, '_'.join((prefix, 'sorted.bam.md5')))
+        self.sorted_bai = os.path.join(prefix, prefix + '.bai')
+        self.sorted_bam = os.path.join(prefix, prefix + '.bam')
+        self.sorted_md5 = os.path.join(prefix, prefix + '.bam.md5')
 
-        self.sorted_bai_link_source = '_'.join((prefix, 'sorted.bai'))
-        self.sorted_bai_link_target = os.path.join(prefix, '_'.join((prefix, 'sorted.bam.bai')))
+        self.sorted_bai_link_source = prefix + '.bai'
+        self.sorted_bai_link_target = os.path.join(prefix, prefix + '.bam.bai')
 
         return
 
@@ -275,15 +275,6 @@ class Aligner(bsf.Analysis):
         return '_'.join((cls.prefix, 'align'))
 
     @classmethod
-    def get_stage_name_index(cls):
-        """Get a particular C{bsf.Stage.name}.
-
-        @return: C{bsf.Stage.name}
-        @rtype: str
-        """
-        return '_'.join((cls.prefix, 'index'))
-
-    @classmethod
     def get_stage_name_read_group(cls):
         """Get a particular C{bsf.Stage.name}.
 
@@ -320,17 +311,6 @@ class Aligner(bsf.Analysis):
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_align(), paired_reads_name))
-
-    @classmethod
-    def get_prefix_index(cls, paired_reads_name):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
-
-        @param paired_reads_name: C{bsf.ngs.PairedReads.name}
-        @type paired_reads_name: str
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
-        """
-        return '_'.join((cls.get_stage_name_index(), paired_reads_name))
 
     @classmethod
     def get_prefix_read_group(cls, read_group_name):
@@ -635,7 +615,6 @@ class Aligner(bsf.Analysis):
         run_read_comparisons()
 
         stage_align = self.get_stage(name=self.get_stage_name_align())
-        stage_index = self.get_stage(name=self.get_stage_name_index())
         stage_read_group = self.get_stage(name=self.get_stage_name_read_group())
         stage_sample = self.get_stage(name=self.get_stage_name_sample())
         stage_summary = self.get_stage(name=self.get_stage_name_summary())
@@ -738,15 +717,59 @@ class Aligner(bsf.Analysis):
                         name='make_directory',
                         directory_path=file_path_align.output_directory))
 
-                # Make a named pipe via RunnableStepMakeNamedPipe.
+                # Make named pipes via RunnableStepMakeNamedPipe.
 
                 runnable_align.add_runnable_step_pre(
                     runnable_step=bsf.process.RunnableStepMakeNamedPipe(
-                        name='make_fifo',
+                        name='make_fifo_aligned_sam',
                         file_path=file_path_align.aligned_sam))
 
-                # Start Picard CleanSam first, which should block while open the named pipe for reading,
-                # then the aligner.
+                runnable_align.add_runnable_step_pre(
+                    runnable_step=bsf.process.RunnableStepMakeNamedPipe(
+                        name='make_fifo_cleaned_bam',
+                        file_path=file_path_align.cleaned_bam))
+
+                # Start the programs in reverse order so that they do not block while opening their named pipe(s).
+
+                # Run Picard SortSam to convert the cleaned BAM file into a query name-sorted BAM file.
+
+                runnable_step = runnable_align.add_runnable_step(
+                    runnable_step=bsf.process.RunnableStepPicard(
+                        name='picard_sort_sam',
+                        obsolete_file_path_list=[
+                            file_path_align.cleaned_bam,
+                        ],
+                        java_temporary_path=runnable_align.temporary_directory_path(absolute=False),
+                        java_heap_maximum='Xmx4G',
+                        java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
+                        picard_command='SortSam'))
+                """ @type runnable_step: bsf.process.RunnableStepPicard """
+                # INPUT []
+                runnable_step.add_picard_option(key='INPUT', value=file_path_align.cleaned_bam)
+                # OUTPUT []
+                runnable_step.add_picard_option(key='OUTPUT', value=file_path_align.aligned_bam)
+                # SORT_ORDER []
+                runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
+                # TMP_DIR [null]
+                runnable_step.add_picard_option(
+                    key='TMP_DIR',
+                    value=runnable_align.temporary_directory_path(absolute=False))
+                # VERBOSITY [INFO]
+                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
+                # QUIET [false]
+                # VALIDATION_STRINGENCY [STRICT]
+                # COMPRESSION_LEVEL [5]
+                # MAX_RECORDS_IN_RAM [500000]
+                runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+                # CREATE_INDEX [false]
+                # CREATE_MD5_FILE [false]
+                # REFERENCE_SEQUENCE [null]
+                # GA4GH_CLIENT_SECRETS [client_secrets.json]
+                # USE_JDK_DEFLATER [false]
+                # USE_JDK_INFLATER [false]
+
+                # Run Picard CleanSam to split alignments at sequence boundaries and
+                # set mapping quality of unmapped reads to 0.
 
                 runnable_step = runnable_align.add_runnable_step(
                     runnable_step=bsf.process.RunnableStepPicard(
@@ -755,7 +778,7 @@ class Aligner(bsf.Analysis):
                             file_path_align.aligned_sam,
                         ],
                         java_temporary_path=runnable_align.temporary_directory_path(absolute=False),
-                        java_heap_maximum='Xmx4G',
+                        java_heap_maximum='Xmx2G',
                         java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
                         picard_command='CleanSam'))
                 """ @type runnable_step: bsf.process.RunnableStepPicard """
@@ -772,6 +795,7 @@ class Aligner(bsf.Analysis):
                 # QUIET [false]
                 # VALIDATION_STRINGENCY [STRICT]
                 # COMPRESSION_LEVEL [5]
+                runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='0')
                 # MAX_RECORDS_IN_RAM [500000]
                 # CREATE_INDEX [false]
                 # CREATE_MD5_FILE [false]
@@ -788,75 +812,15 @@ class Aligner(bsf.Analysis):
                     file_path_1=file_path_1,
                     file_path_2=file_path_2)
 
-                ##################
-                # Indexing Stage #
-                ##################
-
-                # Create a Runnable and Executable for indexing each read group.
-
-                prefix_index = self.get_prefix_index(paired_reads_name=paired_reads_name)
-
-                # file_path_index = FilePathIndex(prefix=prefix_index)
-
-                runnable_index = self.add_runnable_consecutive(
-                    runnable=bsf.procedure.ConsecutiveRunnable(
-                        name=prefix_index,
-                        code_module='bsf.runnables.generic',
-                        working_directory=self.genome_directory,
-                        cache_directory=self.cache_directory,
-                        file_path_object=file_path_align,
-                        debug=self.debug))
-                executable_index = self.set_stage_runnable(
-                    stage=stage_index,
-                    runnable=runnable_index)
-                executable_index.dependencies.append(runnable_align.name)
-
-                # Record the indexing Runnable under the unmapped BAM file name
+                # Record the alignment Runnable under the unmapped BAM file name
                 # to merge the sub-alignments of all (trimmed) FASTQ files that
                 # resulted from an unmapped BAM file.
                 bam_file_name, bam_file_path = run_get_unmapped_bam(_paired_reads=paired_reads)
 
                 if bam_file_name in unmapped_bam_file_dict:
-                    unmapped_bam_file_dict[bam_file_name][1].append(runnable_index)
+                    unmapped_bam_file_dict[bam_file_name][1].append(runnable_align)
                 else:
-                    unmapped_bam_file_dict[bam_file_name] = (bam_file_path, [runnable_index])
-
-                # Run Picard SortSam to convert the cleaned BAM file into a query name sorted BAM file.
-
-                runnable_step = runnable_index.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepPicard(
-                        name='picard_sort_sam',
-                        obsolete_file_path_list=[
-                            file_path_align.cleaned_bam,
-                        ],
-                        java_temporary_path=runnable_index.temporary_directory_path(absolute=False),
-                        java_heap_maximum='Xmx4G',
-                        java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
-                        picard_command='SortSam'))
-                """ @type runnable_step: bsf.process.RunnableStepPicard """
-                # INPUT []
-                runnable_step.add_picard_option(key='INPUT', value=file_path_align.cleaned_bam)
-                # OUTPUT []
-                runnable_step.add_picard_option(key='OUTPUT', value=file_path_align.aligned_bam)
-                # SORT_ORDER []
-                runnable_step.add_picard_option(key='SORT_ORDER', value='queryname')
-                # TMP_DIR [null]
-                runnable_step.add_picard_option(
-                    key='TMP_DIR',
-                    value=runnable_index.temporary_directory_path(absolute=False))
-                # VERBOSITY [INFO]
-                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
-                # QUIET [false]
-                # VALIDATION_STRINGENCY [STRICT]
-                # COMPRESSION_LEVEL [5]
-                # MAX_RECORDS_IN_RAM [500000]
-                runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
-                # CREATE_INDEX [false]
-                # CREATE_MD5_FILE [false]
-                # REFERENCE_SEQUENCE [null]
-                # GA4GH_CLIENT_SECRETS [client_secrets.json]
-                # USE_JDK_DEFLATER [false]
-                # USE_JDK_INFLATER [false]
+                    unmapped_bam_file_dict[bam_file_name] = (bam_file_path, [runnable_align])
 
             ###############################
             # Read Group Processing Stage #
@@ -864,7 +828,7 @@ class Aligner(bsf.Analysis):
 
             # Merge all aligned BAM files of each read group of an unaligned BAM file.
 
-            for bam_file_name, (bam_file_path, runnable_index_list) in unmapped_bam_file_dict.iteritems():
+            for bam_file_name, (bam_file_path, runnable_align_list) in unmapped_bam_file_dict.iteritems():
                 # Create a Runnable and Executable for merging each read group.
 
                 file_path_read_group = self.get_file_path_read_group(read_group_name=bam_file_name)
@@ -882,8 +846,8 @@ class Aligner(bsf.Analysis):
                     runnable=runnable_read_group)
 
                 # Record the dependency for all alignment Runnable objects.
-                for runnable_index in runnable_index_list:
-                    executable_read_group.dependencies.append(runnable_index.name)
+                for runnable_align in runnable_align_list:
+                    executable_read_group.dependencies.append(runnable_align.name)
 
                 runnable_read_group_list.append(runnable_read_group)
 
@@ -892,9 +856,9 @@ class Aligner(bsf.Analysis):
                         name='make_directory',
                         directory_path=file_path_read_group.output_directory))
 
-                if len(runnable_index_list) == 1:
-                    runnable_index = runnable_index_list[0]
-                    file_path_align = runnable_index.file_path_object
+                if len(runnable_align_list) == 1:
+                    runnable_align = runnable_align_list[0]
+                    file_path_align = runnable_align.file_path_object
                     """ @type file_path_align: FilePathAlign """
                     # For a single ReadPair, just rename the files.
                     runnable_read_group.add_runnable_step(
@@ -912,16 +876,14 @@ class Aligner(bsf.Analysis):
                             picard_command='MergeSamFiles'))
                     """ @type runnable_step: bsf.process.RunnableStepPicard """
                     # INPUT []
-                    for runnable_index in runnable_index_list:
-                        file_path_align = runnable_index.file_path_object
+                    for runnable_align in runnable_align_list:
+                        file_path_align = runnable_align.file_path_object
                         """ @type file_path_align: FilePathAlign """
                         runnable_step.add_picard_option(
                             key='INPUT',
                             value=file_path_align.aligned_bam,
                             override=True)
-                        runnable_step.obsolete_file_path_list.append(file_path_align.aligned_bai)
                         runnable_step.obsolete_file_path_list.append(file_path_align.aligned_bam)
-                        runnable_step.obsolete_file_path_list.append(file_path_align.aligned_md5)
                     # OUTPUT []
                     runnable_step.add_picard_option(key='OUTPUT', value=file_path_read_group.merged_bam)
                     # SORT_ORDER [coordinate]
@@ -957,9 +919,7 @@ class Aligner(bsf.Analysis):
                         runnable_step=bsf.process.RunnableStepPicard(
                             name='picard_sort_sam',
                             obsolete_file_path_list=[
-                                file_path_read_group.merged_bai,
                                 file_path_read_group.merged_bam,
-                                file_path_read_group.merged_md5,
                             ],
                             java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx4G',
@@ -999,9 +959,7 @@ class Aligner(bsf.Analysis):
                         runnable_step=bsf.process.RunnableStepPicard(
                             name='picard_merge_bam_alignment',
                             obsolete_file_path_list=[
-                                file_path_read_group.merged_bai,
                                 file_path_read_group.merged_bam,
-                                file_path_read_group.merged_md5,
                             ],
                             java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx12G',
