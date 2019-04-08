@@ -26,7 +26,6 @@ specific for Illumina sequencing systems.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 from __future__ import print_function
 
 import datetime
@@ -2345,10 +2344,19 @@ class RunFolder(object):
             """ @type quality_cycle_list: list[int] """
             quality_start_list = list()
             """ @type quality_start_list: list[int] """
+            quality_cycle_start_read_1 = 0
             for run_information_read in self.run_information.run_information_read_list:
                 if not run_information_read.index:
-                    quality_cycle_list.extend(range(cycle_number + 24, cycle_number + run_information_read.cycles))
-                    quality_start_list.append(cycle_number + 24)
+                    # The quality_cycle is the minimum of cycle 25 and the read length minus one.
+                    quality_cycle_offset = min(24, run_information_read.cycles - 1)
+                    quality_cycle_list.extend(
+                        range(
+                            cycle_number + quality_cycle_offset,
+                            cycle_number + run_information_read.cycles))
+                    quality_start_list.append(cycle_number + quality_cycle_offset)
+                    if run_information_read.number == 1:
+                        # Capture the quality cycle offset for the first non-index read.
+                        quality_cycle_start_read_1 = quality_cycle_offset + 1
                 cycle_number += run_information_read.cycles
 
             for cycle in range(0 + 1, self.run_information.get_cycle_number + 1):
@@ -2384,16 +2392,20 @@ class RunFolder(object):
                 if cycle in quality_start_list:
                     _cycle_file_name_list.append('TileMetricsOut.bin')
 
-                if 1 == cycle:
+                if cycle == 1:
                     _cycle_file_name_list.append('OpticalModelMetricsOut.bin')
 
-                if 10 == cycle:
+                if cycle == 10:
                     _cycle_file_name_list.append('ExtendedTileMetricsOut.bin')
 
-                if 25 == cycle:
+                if cycle == quality_cycle_start_read_1:
+                    # The following files appear at either 25 or the end or read 1, which ever is shorter.
+                    _cycle_file_name_list.append('CorrectedIntMetricsOut.bin')
+                    _cycle_file_name_list.append('QMetricsOut.bin')
                     _cycle_file_name_list.append('PFGridMetricsOut.bin')
 
-                if 25 <= cycle:
+                if cycle > 25:
+                    # Irrespective of read 1 length, the following files appear after cycle 25.
                     _cycle_file_name_list.append('CorrectedIntMetricsOut.bin')
                     _cycle_file_name_list.append('QMetricsOut.bin')
 
