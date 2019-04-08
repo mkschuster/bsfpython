@@ -203,53 +203,68 @@ class FilePathPeakCalling(bsf.procedure.FilePath):
     @type output_directory: str | unicode
     @ivar name_prefix: MACS --name option
     @type name_prefix: str | unicode
-    @ivar control_bdg: Control (lambda) signal in BEDgraph format
+
+    @ivar control_bdg: Control (lambda) signal bedGraph
     @type control_bdg: str | unicode
-    @ivar control_bw: Control (lambda) signal in BigWIG format
+    @ivar control_bw: Control (lambda) signal bigWig
     @type control_bw: str | unicode
-    @ivar control_bwi: Control (lambda) BigWIG information
+    @ivar control_bwi: Control (lambda) signal bigWigInfo
     @type control_bwi: str | unicode
-    @ivar treatment_bdg: Treatment signal in BEDgraph format
+
+    @ivar treatment_bdg: Treatment signal bedGraph
     @type treatment_bdg: str | unicode
-    @ivar treatment_bw: Treatment signal in BigWIG format
+    @ivar treatment_bw: Treatment signal bigWig
     @type treatment_bw: str | unicode
-    @ivar treatment_bwi: Treatment BigWIG information
+    @ivar treatment_bwi: Treatment signal bigWigInfo
     @type treatment_bwi: str | unicode
-    @ivar comparison_log_fe_bdg: Comparison signal as log10(fold-enrichment) in BEDgraph format
+
+    @ivar comparison_log_fe_bdg: Comparison signal as log10(fold-enrichment) bedGraph
     @type comparison_log_fe_bdg: str | unicode
-    @ivar comparison_log_fe_bw: Comparison signal as log10(fold-enrichment) in BigWIG format
+    @ivar comparison_log_fe_bw: Comparison signal as log10(fold-enrichment) bigWig
     @type comparison_log_fe_bw: str | unicode
-    @ivar comparison_log_fe_bwi: Comparison signal as log10(fold-enrichment) BigWIG information
+    @ivar comparison_log_fe_bwi: Comparison signal as log10(fold-enrichment) bigWigInfo
     @type comparison_log_fe_bwi: str | unicode
-    @ivar comparison_ppois_bdg: Comparison signal as Poisson p-value in BEDgraph format
+
+    @ivar comparison_ppois_bdg: Comparison signal as Poisson p-value bedGraph
     @type comparison_ppois_bdg: str | unicode
-    @ivar comparison_ppois_bw: Comparison signal as Poisson p-value in BigWIG format
+    @ivar comparison_ppois_bw: Comparison signal as Poisson p-value bigWig
     @type comparison_ppois_bw: str | unicode
-    @ivar comparison_ppois_bwi: Comparison signal as Poisson p-value BigWIG information
+    @ivar comparison_ppois_bwi: Comparison signal as Poisson p-value bigWigInfo
     @type comparison_ppois_bwi: str | unicode
-    @ivar comparison_subtract_bdg: Comparison signal as subtraction in BEDgraph format
+
+    @ivar comparison_subtract_bdg: Comparison signal as subtraction bedGraph
     @type comparison_subtract_bdg: str | unicode
-    @ivar comparison_subtract_bw: Comparison signal as subtraction in BigWIG format
+    @ivar comparison_subtract_bw: Comparison signal as subtraction bigWig
     @type comparison_subtract_bw: str | unicode
-    @ivar comparison_subtract_bwi: Comparison signal as subtraction BigWIG information
+    @ivar comparison_subtract_bwi: Comparison signal as subtraction bigWigInfo
     @type comparison_subtract_bwi: str | unicode
 
-    @ivar summits_bed: Peak summits in BED format
+    @ivar summits_bed: Peak summits BED
     @type summits_bed: str | unicode
-    @ivar summits_bb: Peak summits in BigBED format
+    @ivar summits_bb: Peak summits bigBed
     @type summits_bb: str | unicode
-    @ivar peaks_tsv: MACS2 peaks in tab-separated value (TSV) format
+    @ivar summits_bbi: Peak summits bigBedInfo
+    @type summits_bbi: str | unicode
+
+    @ivar narrow_peaks_bed: Narrow peaks BED
+    @type narrow_peaks_bed: str | unicode
+    @ivar narrow_peaks_bb: Narrow peaks bigBed
+    @type narrow_peaks_bb: str | unicode
+    @ivar narrow_peaks_bbi: Narrow peaks bigBedInfo
+    @type narrow_peaks_bbi: str | unicode
+
+    @ivar peaks_tsv: MACS2 peaks tab-separated value (TSV)
     @type peaks_tsv: str | unicode
-    @ivar peaks_xls: MACS2 peaks in tab-separated value (TSV) format
+    @ivar peaks_xls: MACS2 peaks tab-separated value (TSV)
     @type peaks_xls: str | unicode
 
     @ivar model_r: MACS peak model as Rscript
     @type model_r: str | unicode
-    @ivar model_pdf: MACS "Peak Model" and "Cross-Correlation" plots in PDF format
+    @ivar model_pdf: MACS "Peak Model" and "Cross-Correlation" plots PDF
     @type model_pdf: str | unicode
-    @ivar model_0_png: MACS "Peak Model" plot in PDF format
+    @ivar model_0_png: MACS "Peak Model" plot PNG
     @type model_0_png: str | unicode
-    @ivar model_1_png: MACS "Cross-Correlation" plot in PDF format
+    @ivar model_1_png: MACS "Cross-Correlation" plot PNG
     @type model_1_png: str | unicode
     """
 
@@ -287,10 +302,15 @@ class FilePathPeakCalling(bsf.procedure.FilePath):
         self.comparison_subtract_bwi = os.path.join(prefix, '_'.join((prefix, 'subtract_bwi.txt')))
 
         self.peaks_narrow = os.path.join(prefix, '_'.join((prefix, 'peaks.narrowPeak')))
+
         self.narrow_peaks_bed = os.path.join(prefix, '_'.join((prefix, 'narrow_peaks.bed')))
         self.narrow_peaks_bb = os.path.join(prefix, '_'.join((prefix, 'narrow_peaks.bb')))
+        self.narrow_peaks_bbi = os.path.join(prefix, '_'.join((prefix, 'narrow_peaks_bbi.txt')))
+
         self.summits_bed = os.path.join(prefix, '_'.join((prefix, 'summits.bed')))
         self.summits_bb = os.path.join(prefix, '_'.join((prefix, 'summits.bb')))
+        self.summits_bbi = os.path.join(prefix, '_'.join((prefix, 'summits_bbi.txt')))
+
         self.peaks_tsv = os.path.join(prefix, '_'.join((prefix, 'peaks.tsv')))
         self.peaks_xls = os.path.join(prefix, '_'.join((prefix, 'peaks.xls')))
 
@@ -1176,7 +1196,7 @@ class ChIPSeq(bsf.Analysis):
                             ' or adjust Python code if necessary.',
                             UserWarning)
 
-                    # Add a RunnableStep to compare BedGraph files.
+                    # Add a RunnableStep to compare bedGraph files.
 
                     runnable_step_macs2_bdg_cmp = runnable_peak_calling.add_runnable_step(
                         runnable_step=bsf.process.RunnableStep(
@@ -1928,9 +1948,9 @@ class ChIPSeq(bsf.Analysis):
             return
 
         def get_bigwig_info_signal_range(file_path):
-            """Private function to read the bigWig signal range from a BigWig information file.
+            """Private function to read the bigWig signal range from a bigWig information file.
 
-            @param file_path: BigWigInfo file path
+            @param file_path: bigWigInfo file path
             @type file_path: str | unicode
             @return: UCSC Track Hub "type bigWig" line with optional signal range
             @rtype: str
@@ -2114,7 +2134,7 @@ class ChIPSeq(bsf.Analysis):
             """ @type str_list_5: list[str | unicode] """
 
             str_list_5.append('track peaks\n')
-            str_list_5.append('type bigBed\n')
+            str_list_5.append('type bigBed 6+4\n')
             str_list_5.append('shortLabel ChIP Peaks\n')
             str_list_5.append('longLabel ChIP Peaks\n')
             str_list_5.append('visibility hide\n')
@@ -2136,7 +2156,7 @@ class ChIPSeq(bsf.Analysis):
             """ @type str_list_6: list[str | unicode] """
 
             str_list_6.append('track summits\n')
-            str_list_6.append('type bigBed\n')
+            str_list_6.append('type bigBed 4+1\n')
             str_list_6.append('shortLabel ChIP Summits\n')
             str_list_6.append('longLabel ChIP Summits\n')
             str_list_6.append('visibility hide\n')
@@ -2348,7 +2368,7 @@ class ChIPSeq(bsf.Analysis):
                             os.path.join(self.genome_directory, file_path_peak_calling.narrow_peaks_bb)):
                         # Common settings
                         str_list_5.append('  track ' + prefix_short + '_peaks\n')
-                        str_list_5.append('  type bigBed\n')
+                        str_list_5.append('  type bigBed 6+4\n')
                         str_list_5.append('  shortLabel ' + prefix_short + '_peaks\n')
                         str_list_5.append('  longLabel ChIP peaks ' + prefix_long + '\n')
                         str_list_5.append('  bigDataUrl ' + file_path_peak_calling.narrow_peaks_bb + '\n')
@@ -2372,7 +2392,7 @@ class ChIPSeq(bsf.Analysis):
                             os.path.join(self.genome_directory, file_path_peak_calling.summits_bb)):
                         # Common settings
                         str_list_6.append('  track ' + prefix_short + '_summits\n')
-                        str_list_6.append('  type bigBed\n')
+                        str_list_6.append('  type bigBed 4+1\n')
                         str_list_6.append('  shortLabel ' + prefix_short + '_summits\n')
                         str_list_6.append('  longLabel ChIP summits ' + prefix_long + '\n')
                         str_list_6.append('  bigDataUrl ' + file_path_peak_calling.summits_bb + '\n')
