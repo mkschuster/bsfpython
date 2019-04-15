@@ -322,6 +322,24 @@ class FilePathPeakCalling(bsf.procedure.FilePath):
         return
 
 
+class FilePathChIPQC(bsf.procedure.FilePath):
+    def __init__(self, prefix):
+        """Initialise a C{bsf.analyses.chipseq.FilePathChIPQC} object
+
+        @param prefix: Prefix
+        @type prefix: str | unicode
+        @return:
+        @rtype:
+        """
+        super(FilePathChIPQC, self).__init__(prefix=prefix)
+
+        self.output_directory = prefix
+
+        self.report_html = os.path.join(prefix, 'ChIPQC.html')
+
+        return
+
+
 class FilePathDiffBind(bsf.procedure.FilePath):
     def __init__(self, prefix):
         """Initialise a C{bsf.analyses.chipseq.FilePathDiffBind} object
@@ -508,6 +526,15 @@ class ChIPSeq(bsf.Analysis):
         return '_'.join((cls.prefix, 'peak_calling'))
 
     @classmethod
+    def get_stage_name_chipqc(cls):
+        """Get a Python C{str} for a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'chipqc'))
+
+    @classmethod
     def get_stage_name_diff_bind(cls):
         """Get a Python C{str} for a particular C{bsf.Stage.name}.
 
@@ -531,6 +558,19 @@ class ChIPSeq(bsf.Analysis):
             return cls.get_stage_name_peak_calling() + '_' + t_name + '__' + c_name
         else:
             return cls.get_stage_name_peak_calling() + '_' + t_name
+
+    @classmethod
+    def get_prefix_chipqc(cls, comparison_name, factor_name):
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+
+        @param comparison_name: Comparison name
+        @type comparison_name: str
+        @param factor_name: Factor name
+        @type factor_name: str
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_chipqc(), comparison_name, factor_name))
 
     @classmethod
     def get_prefix_diff_bind(cls, comparison_name, factor_name):
@@ -562,8 +602,24 @@ class ChIPSeq(bsf.Analysis):
                 c_name=c_name))
 
     @classmethod
+    def get_file_path_chipqc(cls, comparison_name, factor_name):
+        """Get a C{FilePathChIPQC} object from this or a sub-class.
+
+        @param comparison_name: Comparison name
+        @type comparison_name: str
+        @param factor_name: Factor name
+        @type factor_name: str
+        @return: C{FilePathChIPQC} or sub-class object
+        @rtype: FilePathChIPQC
+        """
+        return FilePathChIPQC(
+            prefix=cls.get_prefix_chipqc(
+                comparison_name=comparison_name,
+                factor_name=factor_name))
+
+    @classmethod
     def get_file_path_diff_bind(cls, comparison_name, factor_name):
-        """Get a C{FilePathAlign} object from this or a sub-class.
+        """Get a C{FilePathDiffBind} object from this or a sub-class.
 
         @param comparison_name: Comparison name
         @type comparison_name: str
@@ -1369,6 +1425,23 @@ class ChIPSeq(bsf.Analysis):
                         key='sample-annotation',
                         value=file_path_diff_bind.sample_annotation_sheet)
 
+                    # Add a RunnableStep for Bioconductor ChIPQC.
+
+                    runnable_step = runnable_diff_bind.add_runnable_step(
+                        runnable_step=bsf.process.RunnableStep(
+                            name='chipqc',
+                            program='bsf_chipseq_chipqc.R'))
+
+                    runnable_step.add_option_long(
+                        key='comparison',
+                        value=comparison_name)
+                    runnable_step.add_option_long(
+                        key='factor',
+                        value=factor_name)
+                    runnable_step.add_option_long(
+                        key='threads',
+                        value=str(stage_diff_bind.threads))
+
             return
 
         # Start of the run() method body.
@@ -1608,9 +1681,7 @@ class ChIPSeq(bsf.Analysis):
             for comparison_name in sorted(self._comparison_dict):
                 for comparison_pair in sorted(self._comparison_dict[comparison_name]):
                     chipseq_comparison = self._comparison_dict[comparison_name][comparison_pair]
-                    runnable_peak_calling = self.runnable_dict[chipseq_comparison.get_prefix_peak_calling()]
-                    file_path_peak_calling = runnable_peak_calling.file_path_object
-                    """ @type file_path_peak_calling: FilePathPeakCalling """
+                    file_path_peak_calling = chipseq_comparison.get_file_path_peak_calling()
 
                     str_list.append('<tr>\n')
                     # Comparison name
@@ -1677,18 +1748,20 @@ class ChIPSeq(bsf.Analysis):
             str_list.append('<th>PCA Plot</th>\n')
             str_list.append('<th>Box Plot</th>\n')
             str_list.append('<th>Differentially Bound Sites</th>\n')
+            str_list.append('<th>ChIPQC Report</th>\n')
             str_list.append('</tr>\n')
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
 
             for comparison_name in sorted(self._factor_dict):
                 for factor_name in sorted(self._factor_dict[comparison_name]):
-                    prefix_diff_bind = self.get_prefix_diff_bind(
+                    file_path_diff_bind = self.get_file_path_diff_bind(
                         comparison_name=comparison_name,
                         factor_name=factor_name)
-                    runnable_diff_bind = self.runnable_dict[prefix_diff_bind]
-                    file_path_diff_bind = runnable_diff_bind.file_path_object
-                    """ @type file_path_diff_bind: FilePathDiffBind """
+
+                    file_path_chipqc = self.get_file_path_chipqc(
+                        comparison_name=comparison_name,
+                        factor_name=factor_name)
 
                     str_list.append('<tr>\n')
 
@@ -1742,6 +1815,14 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('<td></td>\n')  # Box Plot
                     str_list.append('<td></td>\n')  # DiffBind Report
 
+                    # ChIPQC HTML Report
+                    str_list.append('<td>')
+                    if os.path.exists(os.path.join(self.genome_directory, file_path_chipqc.report_html)):
+                        str_list.append('<a href="' + file_path_chipqc.report_html + '">')
+                        str_list.append('<abbr title="Hypertext Markup Language">HTML</abbr>')
+                        str_list.append('</a>')
+                    str_list.append('</td>\n')
+
                     str_list.append('</tr>\n')
 
                     # Read the file of contrasts ...
@@ -1760,10 +1841,11 @@ class ChIPSeq(bsf.Analysis):
 
                     for row_dict in annotation_sheet.row_dicts:
                         file_path_diff_bind_contrast = FilePathDiffBindContrast(
-                            prefix=prefix_diff_bind,
+                            prefix=self.get_prefix_diff_bind(
+                                comparison_name=comparison_name,
+                                factor_name=factor_name),
                             group_1=row_dict['Group1'],
                             group_2=row_dict['Group2'])
-                        # suffix = '__'.join((row_dict['Group1'], row_dict['Group2']))
 
                         str_list.append('<tr>\n')
 
@@ -1825,6 +1907,9 @@ class ChIPSeq(bsf.Analysis):
                             str_list.append('<abbr title="Comma-Separated Value">CSV</abbr>')
                             str_list.append('</a>')
                         str_list.append('</td>\n')
+
+                        # ChIPQC
+                        str_list.append('<td></td>\n')
 
                         str_list.append('</tr>\n')
 
@@ -2176,9 +2261,7 @@ class ChIPSeq(bsf.Analysis):
                 for comparison_pair in sorted(self._comparison_dict[comparison_name]):
                     chipseq_comparison = self._comparison_dict[comparison_name][comparison_pair]
                     factor_name = chipseq_comparison.factor
-                    runnable_peak_calling = self.runnable_dict[chipseq_comparison.get_prefix_peak_calling()]
-                    file_path_peak_calling = runnable_peak_calling.file_path_object
-                    """ @type file_path_peak_calling: FilePathPeakCalling """
+                    file_path_peak_calling = chipseq_comparison.get_file_path_peak_calling()
 
                     if chipseq_comparison.c_name:
                         prefix_short = '__'.join((chipseq_comparison.t_name, chipseq_comparison.c_name))
