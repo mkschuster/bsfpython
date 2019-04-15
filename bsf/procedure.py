@@ -25,7 +25,6 @@ A package of classes and methods modelling procedures.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import errno
 import os
 import pickle
@@ -500,7 +499,7 @@ class Runnable(object):
         """ @type new_runnable_step_list: list[bsf.process.RunnableStep] """
         for runnable_step in reversed(runnable_step_list):
             new_runnable_step_list.append(runnable_step)
-            if os.path.exists(path=self.runnable_step_status_file_path(
+            if os.path.exists(self.runnable_step_status_file_path(
                     runnable_step=runnable_step,
                     success=True)):
                 break
@@ -515,7 +514,7 @@ class Runnable(object):
 
         for runnable_step_current in new_runnable_step_list:
             # Check for a bsf.process.RunnableStep-specific status file.
-            if os.path.exists(path=self.runnable_step_status_file_path(
+            if os.path.exists(self.runnable_step_status_file_path(
                     runnable_step=runnable_step_current,
                     success=True)):
                 # If a status file exists, this RunnableStep is complete.

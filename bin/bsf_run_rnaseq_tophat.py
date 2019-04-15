@@ -132,7 +132,7 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
         file_name_1 = os.path.join(path_temporary, file_name_prefix + '_1.fastq')
         file_name_2 = os.path.join(path_temporary, file_name_prefix + '_2.fastq')
 
-        if os.path.exists(path=file_name_2):
+        if os.path.exists(file_name_2):
             file_paths.append((file_name_1, file_name_2))
         else:
             file_paths.append((file_name_1, None))
@@ -224,7 +224,7 @@ for i in range(0, len(old_file_paths_1)):
         # This file needs converting.
         for file_path_1, file_path_2 in run_picard_sam_to_fastq(input_path=old_file_paths_1[i],
                                                                 temporary_path=path_temporary):
-            if file_path_2 and os.path.exists(path=file_path_2):
+            if file_path_2 and os.path.exists(file_path_2):
                 if (os.path.getsize(file_path_2) >= minimum_size) and (os.path.getsize(file_path_1) >= minimum_size):
                     new_file_paths_1.append(file_path_1)
                     new_file_paths_2.append(file_path_2)
@@ -242,7 +242,7 @@ for i in range(0, len(old_file_paths_1)):
         except IndexError:
             file_path_2 = None
 
-        if file_path_2 and os.path.exists(path=file_path_2):
+        if file_path_2 and os.path.exists(file_path_2):
             if (os.path.getsize(file_path_2) >= minimum_size) and (os.path.getsize(file_path_1) >= minimum_size):
                 # Only append the pair if both files are larger or equal to 1024 bytes.
                 # Empty GNU Zip files teem to have 20 bytes.
@@ -272,7 +272,7 @@ if child_return_code:
 # Clean up temporary files.
 
 for file_path in temporary_files:
-    if os.path.exists(path=file_path):
+    if os.path.exists(file_path):
         os.remove(file_path)
 
 # Remove the temporary directory and everything within it.

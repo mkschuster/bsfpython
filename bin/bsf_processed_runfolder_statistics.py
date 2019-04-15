@@ -51,7 +51,7 @@ prf_path = bsf.standards.Configuration.get_absolute_path(
     file_path=prf_path,
     default_path=bsf.standards.FilePath.get_sequences(absolute=True))
 
-if not os.path.exists(path=prf_path):
+if not os.path.exists(prf_path):
     raise Exception('Could not find processed run folder directory {!r}'.format(prf_path))
 
 for file_name in os.listdir(prf_path):

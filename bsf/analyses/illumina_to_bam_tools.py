@@ -807,7 +807,7 @@ class IlluminaToBam(bsf.Analysis):
 
         # Check that the Illumina Run Folder is complete.
 
-        if not (os.path.exists(path=os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
+        if not (os.path.exists(os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
             raise bsf.illumina.RunFolderNotComplete(
                 'The Illumina run directory {!r} is not complete.'.format(self.run_directory))
 
@@ -1596,7 +1596,7 @@ class BamIndexDecoder(bsf.Analysis):
 
         self.library_path = self.configuration.get_absolute_path(file_path=self.library_path)
 
-        if not os.path.exists(path=self.library_path):
+        if not os.path.exists(self.library_path):
             raise Exception('Library annotation file {!r} does not exist.'.format(self.library_path))
 
         # Load the LibraryAnnotationSheet and validate.

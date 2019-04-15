@@ -395,14 +395,14 @@ class Analysis(object):
             file_name = '_'.join((self.project_name, self.genome_version, prefix, suffix))
             if self.debug > 0:
                 print('Checking annotation sheet: ', repr(file_name))
-            if os.path.exists(path=file_name):
+            if os.path.exists(file_name):
                 return file_name
 
             # Fall-back test without the genome version.
             file_name = '_'.join((self.project_name, prefix, suffix))
             if self.debug > 0:
                 print('Checking annotation sheet: ', repr(file_name))
-            if os.path.exists(path=file_name):
+            if os.path.exists(file_name):
                 return file_name
 
         return
@@ -1227,7 +1227,7 @@ class Analysis(object):
                 if not os.path.isabs(source_path):
                     source_path = os.path.join(html_path, source_path)
                 source_path = os.path.normpath(source_path)
-                if not os.path.exists(path=source_path):
+                if not os.path.exists(source_path):
                     # Both paths for os.path.samefile have to exist.
                     # Check for dangling symbolic links.
                     warnings.warn(

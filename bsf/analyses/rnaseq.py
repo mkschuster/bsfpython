@@ -1074,7 +1074,7 @@ class Tuxedo(bsf.Analysis):
 
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
-            if not os.path.exists(path=self.sas_file):
+            if not os.path.exists(self.sas_file):
                 raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
         else:
             self.sas_file = self.get_annotation_file(prefix_list=[self.prefix], suffix='samples.csv')
@@ -2844,8 +2844,7 @@ class Tuxedo(bsf.Analysis):
                 # Squared Coefficient of Variation (SCV) Plots for Genes and Isoforms
 
                 str_list.append('<td class="center">')
-                if os.path.exists(
-                        path=os.path.join(self.genome_directory, path_prefix, path_prefix + '_genes_scv.png')):
+                if os.path.exists(os.path.join(self.genome_directory, path_prefix, path_prefix + '_genes_scv.png')):
                     str_list.append(self.get_html_anchor(
                         prefix=path_prefix,
                         suffix='genes_scv.pdf',
@@ -2858,8 +2857,7 @@ class Tuxedo(bsf.Analysis):
                 str_list.append('</td>\n')
 
                 str_list.append('<td class="center">')
-                if os.path.exists(
-                        path=os.path.join(self.genome_directory, path_prefix, path_prefix + '_isoforms_scv.png')):
+                if os.path.exists(os.path.join(self.genome_directory, path_prefix, path_prefix + '_isoforms_scv.png')):
                     str_list.append(self.get_html_anchor(
                         prefix=path_prefix,
                         suffix='isoforms_scv.pdf',
@@ -3032,8 +3030,7 @@ class Tuxedo(bsf.Analysis):
                 # Multidimensional Scaling Plot for Genes
 
                 str_list.append('<td class="center">')
-                if os.path.exists(
-                        path=os.path.join(self.genome_directory, path_prefix, path_prefix + '_genes_mds.png')):
+                if os.path.exists(os.path.join(self.genome_directory, path_prefix, path_prefix + '_genes_mds.png')):
                     str_list.append(self.get_html_anchor(
                         prefix=path_prefix,
                         suffix='genes_mds.pdf',
@@ -3633,7 +3630,7 @@ class DESeq(bsf.Analysis):
 
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
-            if not os.path.exists(path=self.sas_file):
+            if not os.path.exists(self.sas_file):
                 raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
         else:
             self.sas_file = self.get_annotation_file(
@@ -3646,7 +3643,7 @@ class DESeq(bsf.Analysis):
 
         if self.comparison_path:
             self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
-            if not os.path.exists(path=self.comparison_path):
+            if not os.path.exists(self.comparison_path):
                 raise Exception(
                     'Comparison (design) annotation file ' + repr(self.comparison_path) + ' does not exist.')
         else:
@@ -3660,7 +3657,7 @@ class DESeq(bsf.Analysis):
 
         if self.contrast_path:
             self.contrast_path = self.configuration.get_absolute_path(file_path=self.contrast_path)
-            if not os.path.exists(path=self.contrast_path):
+            if not os.path.exists(self.contrast_path):
                 raise Exception('Contrast annotation file ' + repr(self.contrast_path) + ' does not exist.')
         else:
             self.contrast_path = self.get_annotation_file(

@@ -265,7 +265,7 @@ if name_space.illumina2bam:
 
     if not analysis_bid.library_path:
         library_path = '_'.join((analysis_bid.project_name, 'libraries.csv'))
-        if os.path.exists(path=library_path):
+        if os.path.exists(library_path):
             analysis_bid.library_path = library_path
 
     if analysis_bid.library_path:
@@ -381,7 +381,7 @@ else:
 
     if not analysis_ids.library_path:
         library_path = '_'.join((analysis_ids.project_name, 'libraries.csv'))
-        if os.path.exists(path=library_path):
+        if os.path.exists(library_path):
             analysis_ids.library_path = library_path
 
     if analysis_ids.library_path:

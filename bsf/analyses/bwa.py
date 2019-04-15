@@ -103,7 +103,7 @@ class MaximalExactMatches(bsf.analyses.aligner.Aligner):
 
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
-            if not os.path.exists(path=self.sas_file):
+            if not os.path.exists(self.sas_file):
                 raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
         else:
             self.sas_file = self.get_annotation_file(prefix_list=[MaximalExactMatches.prefix], suffix='samples.csv')

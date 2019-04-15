@@ -26,7 +26,6 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import argparse
 import errno
 import os
@@ -228,7 +227,7 @@ if executable_bwa.sub_command.program == 'mem' and executable_bwa.sub_command.ar
 
     executable_bwa.sub_command.arguments = [executable_bwa.sub_command.arguments[0]]
     executable_bwa.sub_command.arguments.append(path_fastq_1)
-    if os.path.getsize(filename=path_fastq_2):
+    if os.path.getsize(path_fastq_2):
         executable_bwa.sub_command.arguments.append(path_fastq_2)
 
 child_return_code = executable_bwa.run()
@@ -237,9 +236,9 @@ if child_return_code:
     raise Exception('Could not complete the {!r} step.'.format(executable_bwa.name))
 
 # Remove the temporary, uncompressed FASTQ files if they exist.
-if os.path.exists(path=path_fastq_1):
+if os.path.exists(path_fastq_1):
     os.remove(path_fastq_1)
-if os.path.exists(path=path_fastq_2):
+if os.path.exists(path_fastq_2):
     os.remove(path_fastq_2)
 
 # Run Picard CleanSam to convert the aligned SAM file into a cleaned SAM file.
@@ -370,7 +369,7 @@ if len(sam_header_pg) or len(sam_header_rg):
 
 # Remove the aligned SAM file.
 
-if os.path.exists(path=path_aligned_sam):
+if os.path.exists(path_aligned_sam):
     os.remove(path_aligned_sam)
 
 # Run Picard SortSam to convert the cleaned SAM file into a coordinate sorted BAM file.
@@ -419,7 +418,7 @@ if child_return_code:
 
 # Remove the cleaned SAM file.
 
-if os.path.exists(path=path_cleaned_sam):
+if os.path.exists(path_cleaned_sam):
     os.remove(path_cleaned_sam)
 
 # Remove the temporary directory and everything within it.

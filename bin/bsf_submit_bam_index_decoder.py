@@ -129,7 +129,7 @@ if name_space.library_path:
 
 if not analysis.library_path:
     library_path = '_'.join((analysis.project_name, 'libraries.csv'))
-    if os.path.exists(path=library_path):
+    if os.path.exists(library_path):
         analysis.library_path = library_path
 
 # Do the work.

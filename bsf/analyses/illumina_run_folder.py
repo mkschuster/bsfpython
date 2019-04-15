@@ -331,7 +331,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
         # to prevent archiving and deleting of an incomplete folder.
         # Alternatively, require force to start archiving.
 
-        if not (os.path.exists(path=os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
+        if not (os.path.exists(os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
             raise bsf.illumina.RunFolderNotComplete(
                 'The Illumina run directory {!r} is not complete.'.format(self.run_directory))
 

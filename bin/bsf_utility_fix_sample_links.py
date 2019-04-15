@@ -56,7 +56,7 @@ def scan_directory(directory_path, debug=0):
         elif stat.S_ISLNK(file_mode):
             # For a link, evaluate the link.
             source_path = os.readlink(file_path)
-            if not os.path.exists(path=source_path):
+            if not os.path.exists(source_path):
                 print('source {!r} target {!r} of old symbolic link'.format(source_path, file_name))
                 # Split the entire source path to get the last two components of the source path including
                 # the lanes-specific BAM file and the flow cell directory.

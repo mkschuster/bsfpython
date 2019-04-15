@@ -277,7 +277,7 @@ class PicardIlluminaRunFolder(bsf.Analysis):
 
         # Check that the Illumina Run Folder is complete.
 
-        if not (os.path.exists(path=os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
+        if not (os.path.exists(os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
             raise bsf.illumina.RunFolderNotComplete(
                 'The Illumina Run Folder ' + repr(self.run_directory) + ' is not complete.')
 
@@ -814,7 +814,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         self.library_path = self.configuration.get_absolute_path(file_path=self.library_path)
 
-        if not os.path.exists(path=self.library_path):
+        if not os.path.exists(self.library_path):
             raise Exception(
                 'The ' + self.name + " 'library_path' " + repr(self.library_path) + ' is not a valid file.')
 
@@ -1505,7 +1505,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
         # Check that the Illumina Run Folder is complete.
 
-        if not (os.path.exists(path=os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
+        if not (os.path.exists(os.path.join(self.run_directory, 'RTAComplete.txt')) or self.force):
             raise bsf.illumina.RunFolderNotComplete(
                 'The Illumina Run Folder ' + repr(self.run_directory) + ' is not complete.')
 
@@ -2203,7 +2203,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
 
         self.library_path = self.configuration.get_absolute_path(file_path=self.library_path)
 
-        if not os.path.exists(path=self.library_path):
+        if not os.path.exists(self.library_path):
             raise Exception('The ' + self.name + " 'library_path' " + repr(self.library_path) +
                             ' is not a valid file.')
 

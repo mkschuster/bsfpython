@@ -3359,7 +3359,7 @@ class VariantCallingGATK(bsf.Analysis):
         self.bwa_genome_db = self.configuration.get_absolute_path(
             file_path=self.bwa_genome_db,
             default_path=self.get_gatk_bundle_path)
-        if not os.path.exists(path=self.bwa_genome_db):
+        if not os.path.exists(self.bwa_genome_db):
             raise Exception('The file path ' + repr(self.bwa_genome_db) +
                             " in option 'bwa_genome_db' does not exist.")
 
@@ -6031,9 +6031,10 @@ class VariantCallingGATK(bsf.Analysis):
             """ @type file_path_summary: FilePathSummary """
 
             # Alignment Summary - TSV
-            if os.path.exists(os.path.join(
-                    self.genome_directory,
-                    file_path_summary.alignment_metrics_sample_tsv)):
+            if os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.alignment_metrics_sample_tsv)):
                 str_list.append('<tr>\n')
                 str_list.append('<td class="center">')
                 str_list.append('<a href="' + file_path_summary.alignment_metrics_sample_tsv + '">TSV</a>')
@@ -6048,9 +6049,10 @@ class VariantCallingGATK(bsf.Analysis):
                 str_list.append('</tr>\n')
 
             # Alignment Summary - Percent Aligned
-            if os.path.exists(os.path.join(
-                    self.genome_directory,
-                    file_path_summary.alignment_percentage_sample_png)):
+            if os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.alignment_percentage_sample_png)):
                 str_list.append('<tr>\n')
                 str_list.append('<td class="center">')
                 str_list.append('<a href="' + file_path_summary.alignment_percentage_sample_pdf + '">')
@@ -6070,9 +6072,10 @@ class VariantCallingGATK(bsf.Analysis):
                 str_list.append('</tr>\n')
 
             # Alignment Summary - Reads Aligned
-            if os.path.exists(os.path.join(
-                    self.genome_directory,
-                    file_path_summary.alignment_absolute_sample_png)):
+            if os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.alignment_absolute_sample_png)):
                 str_list.append('<tr>\n')
                 str_list.append('<td class="center">')
                 str_list.append('<a href="' + file_path_summary.alignment_absolute_sample_pdf + '">')
@@ -6092,9 +6095,10 @@ class VariantCallingGATK(bsf.Analysis):
                 str_list.append('</tr>\n')
 
             # Duplication - TSV
-            if os.path.exists(os.path.join(
-                    self.genome_directory,
-                    file_path_summary.duplication_metrics_sample_tsv)):
+            if os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.duplication_metrics_sample_tsv)):
                 str_list.append('<tr>\n')
                 str_list.append('<td class="center">')
                 str_list.append('<a href="' + file_path_summary.duplication_metrics_sample_tsv + '">TSV</a>')
@@ -6141,9 +6145,10 @@ class VariantCallingGATK(bsf.Analysis):
                 str_list.append('</tr>\n')
 
             # Hybrid Selection - TSV
-            if os.path.exists(os.path.join(
-                    self.genome_directory,
-                    file_path_summary.hybrid_metrics_sample_tsv)):
+            if os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.hybrid_metrics_sample_tsv)):
                 str_list.append('<tr>\n')
                 str_list.append('<td class="center">')
                 str_list.append('<a href="' + file_path_summary.hybrid_metrics_sample_tsv + '">TSV</a>')
@@ -6181,9 +6186,10 @@ class VariantCallingGATK(bsf.Analysis):
                 str_list.append('</tr>\n')
 
             # Hybrid Selection - Mean Target Coverage
-            if os.path.exists(os.path.join(
-                    self.genome_directory,
-                    file_path_summary.hybrid_coverage_sample_png)):
+            if os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.hybrid_coverage_sample_png)):
                 str_list.append('<tr>\n')
                 str_list.append('<td class="center">')
                 str_list.append('<a href="' + file_path_summary.hybrid_coverage_sample_pdf + '">')
@@ -6203,9 +6209,10 @@ class VariantCallingGATK(bsf.Analysis):
                 str_list.append('</tr>\n')
 
             # Hybrid Selection - Excluded Bases
-            if os.path.exists(os.path.join(
-                    self.genome_directory,
-                    file_path_summary.hybrid_excluded_bases_sample_png)):
+            if os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.hybrid_excluded_bases_sample_png)):
                 str_list.append('<tr>\n')
                 str_list.append('<td class="center">')
                 str_list.append('<a href="' + file_path_summary.hybrid_excluded_bases_sample_pdf + '">')
@@ -6226,9 +6233,10 @@ class VariantCallingGATK(bsf.Analysis):
 
             # Hybrid Selection - Percent Unique Reads
             # The plot is meaningless if Picard MarkDuplicates has not run.
-            if not self.skip_mark_duplicates and os.path.exists(os.path.join(
-                    self.genome_directory,
-                    file_path_summary.hybrid_unique_percentage_sample_png)):
+            if not self.skip_mark_duplicates and os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.hybrid_unique_percentage_sample_png)):
                 str_list.append('<tr>\n')
                 str_list.append('<td class="center">')
                 str_list.append('<a href="' + file_path_summary.hybrid_unique_percentage_sample_pdf + '">')
@@ -6248,9 +6256,10 @@ class VariantCallingGATK(bsf.Analysis):
                 str_list.append('</tr>\n')
 
             # Non-Callable Loci - TSV
-            if os.path.exists(os.path.join(
-                    self.genome_directory,
-                    file_path_summary.non_callable_metrics_sample_tsv)):
+            if os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.non_callable_metrics_sample_tsv)):
                 str_list.append('<tr>\n')
                 str_list.append('<td class="center">')
                 str_list.append('<a href="' + file_path_summary.non_callable_metrics_sample_tsv + '">TSV</a>')
@@ -6260,9 +6269,10 @@ class VariantCallingGATK(bsf.Analysis):
                 str_list.append('</tr>\n')
 
             # Non-Callable Loci - Fraction
-            if os.path.exists(os.path.join(
-                    self.genome_directory,
-                    file_path_summary.non_callable_percentage_sample_png)):
+            if os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.non_callable_percentage_sample_png)):
                 str_list.append('<tr>\n')
                 str_list.append('<td class="center">')
                 str_list.append('<a href="' + file_path_summary.non_callable_percentage_sample_pdf + '">')
@@ -6276,9 +6286,10 @@ class VariantCallingGATK(bsf.Analysis):
                 str_list.append('</tr>\n')
 
             # Non-Callable Loci - Number
-            if os.path.exists(os.path.join(
-                    self.genome_directory,
-                    file_path_summary.non_callable_absolute_sample_png)):
+            if os.path.exists(
+                    os.path.join(
+                        self.genome_directory,
+                        file_path_summary.non_callable_absolute_sample_png)):
                 str_list.append('<tr>\n')
                 str_list.append('<td class="center">')
                 str_list.append('<a href="' + file_path_summary.non_callable_absolute_sample_pdf + '">')

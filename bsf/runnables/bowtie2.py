@@ -235,8 +235,8 @@ def run_bowtie2(runnable):
             if exception.errno != errno.EEXIST:
                 raise
 
-    if os.path.exists(path=file_path_read_group.aligned_sam) \
-            and os.path.getsize(filename=file_path_read_group.aligned_sam):
+    if os.path.exists(file_path_read_group.aligned_sam) \
+            and os.path.getsize(file_path_read_group.aligned_sam):
         return
 
     # FIXME: The ConsecutiveRunnable object now only has a list of RunnableStep objects.

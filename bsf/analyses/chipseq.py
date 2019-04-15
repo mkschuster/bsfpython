@@ -1460,7 +1460,7 @@ class ChIPSeq(bsf.Analysis):
 
         if self.sas_file:
             self.sas_file = self.configuration.get_absolute_path(file_path=self.sas_file)
-            if not os.path.exists(path=self.sas_file):
+            if not os.path.exists(self.sas_file):
                 raise Exception('Sample annotation file ' + repr(self.sas_file) + ' does not exist.')
         else:
             self.sas_file = self.get_annotation_file(prefix_list=[ChIPSeq.prefix], suffix='samples.csv')
@@ -1471,7 +1471,7 @@ class ChIPSeq(bsf.Analysis):
 
         if self.comparison_path:
             self.comparison_path = self.configuration.get_absolute_path(file_path=self.comparison_path)
-            if not os.path.exists(path=self.comparison_path):
+            if not os.path.exists(self.comparison_path):
                 raise Exception('Comparison annotation file ' + repr(self.comparison_path) + ' does not exist.')
         else:
             self.comparison_path = self.get_annotation_file(prefix_list=[ChIPSeq.prefix], suffix='comparisons.csv')
@@ -1829,7 +1829,7 @@ class ChIPSeq(bsf.Analysis):
 
                     file_path = os.path.join(self.genome_directory, file_path_diff_bind.contrasts_csv)
 
-                    if not os.path.exists(path=file_path):
+                    if not os.path.exists(file_path):
                         warnings.warn(
                             'Contrasts table does not exist: ' + file_path,
                             UserWarning)
