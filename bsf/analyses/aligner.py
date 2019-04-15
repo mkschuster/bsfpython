@@ -162,10 +162,18 @@ class FilePathSample(bsf.procedure.FilePath):
     @type merged_bam: str | unicode
     @ivar merged_md5: Merged binary alignment map (BAM) file path
     @type merged_md5: str | unicode
-    @ivar merged_bai_link_source: Symbolic link source of the merged binary alignment map index (BAI) file path
-    @type merged_bai_link_source: str | unicode
-    @ivar merged_bai_link_target: Symbolic link target of the merged binary alignment map index (BAI) file path
-    @type merged_bai_link_target: str | unicode
+    @ivar duplicate_bai: Duplicate-marked binary alignment map index (BAI) file path
+    @type duplicate_bai: str | unicode
+    @ivar duplicate_bam: Duplicate-marked binary alignment map (BAM) file path
+    @type duplicate_bam: str | unicode
+    @ivar duplicate_md5: Duplicate-marked binary alignment map (BAM) file path
+    @type duplicate_md5: str | unicode
+    @ivar duplicate_bai_link_source: Symbolic link source of the binary alignment map index (BAI) file path
+    @type duplicate_bai_link_source: str | unicode
+    @ivar duplicate_bai_link_target: Symbolic link target of the binary alignment map index (BAI) file path
+    @type duplicate_bai_link_target: str | unicode
+    @ivar duplicate_metrics_tsv: Picard Duplicate Metrics TSV file path
+    @type duplicate_metrics_tsv: str | unicode
     @ivar alignment_summary_metrics_tsv: Picard Alignment Summary Metrics file path
     @type alignment_summary_metrics_tsv: str | unicode
     """
@@ -182,13 +190,19 @@ class FilePathSample(bsf.procedure.FilePath):
 
         self.output_directory = prefix
 
-        # For the final files, just end in the suffix.
-        self.merged_bai = os.path.join(prefix, prefix + '.bai')
-        self.merged_bam = os.path.join(prefix, prefix + '.bam')
-        self.merged_md5 = os.path.join(prefix, prefix + '.bam.md5')
+        self.merged_bai = os.path.join(prefix, prefix + '_merged.bai')
+        self.merged_bam = os.path.join(prefix, prefix + '_merged.bam')
+        self.merged_md5 = os.path.join(prefix, prefix + '_merged.bam.md5')
 
-        self.merged_bai_link_source = prefix + '.bai'
-        self.merged_bai_link_target = os.path.join(prefix, prefix + '.bam.bai')
+        # For the final files, just end in the suffix.
+        self.duplicate_bai = os.path.join(prefix, prefix + '.bai')
+        self.duplicate_bam = os.path.join(prefix, prefix + '.bam')
+        self.duplicate_md5 = os.path.join(prefix, prefix + '.bam.md5')
+
+        self.duplicate_bai_link_source = prefix + '.bai'
+        self.duplicate_bai_link_target = os.path.join(prefix, prefix + '.bam.bai')
+
+        self.duplicate_metrics_tsv = os.path.join(prefix, prefix + '_duplicate_metrics.tsv')
 
         self.alignment_summary_metrics_tsv = os.path.join(prefix, '_'.join((prefix, 'alignment_summary_metrics.tsv')))
 
@@ -201,6 +215,44 @@ class FilePathSummary(bsf.procedure.FilePath):
     Attributes:
     @ivar output_directory: Output directory
     @type output_directory: str | unicode
+    @ivar pasm_absolute_read_group_pdf: Picard Alignment Summary Metrics absolute per read group PDF plot
+    @type pasm_absolute_read_group_pdf: str | unicode
+    @ivar pasm_absolute_read_group_png: Picard Alignment Summary Metrics absolute per read group PNG plot
+    @type pasm_absolute_read_group_pdf: str | unicode
+    @ivar pasm_absolute_sample_pdf: Picard Alignment Summary Metrics absolute per sample PDF plot
+    @type pasm_absolute_sample_pdf: str | unicode
+    @ivar pasm_absolute_sample_png: Picard Alignment Summary Metrics absolute per sample PNG plot
+    @type pasm_absolute_sample_png: str | unicode
+    @ivar pasm_percentage_read_group_pdf: Picard Alignment Summary Metrics percentage per read group PDF plot
+    @type pasm_percentage_read_group_pdf: str | unicode
+    @ivar pasm_percentage_read_group_png: Picard Alignment Summary Metrics percentage per read group PNG plot
+    @type pasm_percentage_read_group_png: str | unicode
+    @ivar pasm_percentage_sample_pdf: Picard Alignment Summary Metrics percentage per sample PDF plot
+    @type pasm_percentage_sample_pdf: str | unicode
+    @ivar pasm_percentage_sample_png: Picard Alignment Summary Metrics percentage per sample PNG plot
+    @type pasm_percentage_sample_png: str | unicode
+    @ivar pasm_strand_balance_read_group_pdf: Picard Alignment Summary Metrics strand balance per read group PDF plot
+    @type pasm_strand_balance_read_group_pdf: str | unicode
+    @ivar pasm_strand_balance_read_group_png: Picard Alignment Summary Metrics strand balance per read group PNG plot
+    @type pasm_strand_balance_read_group_pdf: str | unicode
+    @ivar pasm_strand_balance_sample_pdf: Picard Alignment Summary Metrics strand balance per sample PDF plot
+    @type pasm_strand_balance_sample_pdf: str | unicode
+    @ivar pasm_strand_balance_sample_png: Picard Alignment Summary Metrics strand balance per sample PDF plot
+    @type pasm_strand_balance_sample_png: str | unicode
+    @ivar pasm_table_read_group_tsv: Picard Alignment Summary Metrics table per read group
+    @type pasm_table_read_group_tsv: str | unicode
+    @ivar pasm_table_sample_tsv: Picard Alignment Summary Metrics table per sample
+    @type pasm_table_sample_tsv: str | unicode
+    @ivar pdsm_levels_sample_pdf: Picard Duplication Metrics levels per sample PDF plot
+    @type pdsm_levels_sample_pdf: str | unicode
+    @ivar pdsm_levels_sample_png: Picard Duplication Metrics levels per sample PNG plot
+    @type pdsm_levels_sample_png: str | unicode
+    @ivar pdsm_percentage_sample_pdf: Picard Duplication Metrics percentage per sample PDF plot
+    @type pdsm_percentage_sample_pdf: str | unicode
+    @ivar pdsm_percentage_sample_png: Picard Duplication Metrics percentage per sample PNG plot
+    @type pdsm_percentage_sample_png: str | unicode
+    @ivar pdsm_table_sample_tsv: Picard Duplication Metrics table per sample
+    @type pdsm_table_sample_tsv: str | unicode
     """
 
     def __init__(self, prefix):
@@ -241,6 +293,14 @@ class FilePathSummary(bsf.procedure.FilePath):
 
         self.pasm_table_sample_tsv = prefix + '_pasm_metrics_sample.tsv'
 
+        self.pdsm_levels_sample_pdf = prefix + '_pdsm_levels_sample.pdf'
+        self.pdsm_levels_sample_png = prefix + '_pdsm_levels_sample.png'
+
+        self.pdsm_percentage_sample_pdf = prefix + '_pdsm_percentage_sample.pdf'
+        self.pdsm_percentage_sample_png = prefix + '_pdsm_percentage_sample.png'
+
+        self.pdsm_table_sample_tsv = prefix + '_pdsm_metrics_sample.tsv'
+
         return
 
 
@@ -258,8 +318,10 @@ class Aligner(bsf.Analysis):
     @type genome_index: str | unicode | None
     @ivar keep_read_group: Keep the Read Group-level BAM files
     @type keep_read_group: bool | None
+    @ivar skip_mark_duplicates: Skip Picard MarkDuplicates
+    @type skip_mark_duplicates: bool | None
     @ivar classpath_picard: Picard tools Java Archive (JAR) class path directory
-    @type classpath_picard: None | str | unicode
+    @type classpath_picard: str | unicode | None
     """
 
     name = 'Aligner Analysis'
@@ -402,6 +464,7 @@ class Aligner(bsf.Analysis):
             genome_fasta=None,
             genome_index=None,
             keep_read_group=None,
+            skip_mark_duplicates=None,
             classpath_picard=None):
         """Initialise a C{bsf.analyses.aligner.Aligner}.
 
@@ -437,8 +500,10 @@ class Aligner(bsf.Analysis):
         @type genome_index: str | unicode | None
         @param keep_read_group: Keep the Read Group-level BAM files
         @type keep_read_group: bool | None
+        @param skip_mark_duplicates: Skip Picard MarkDuplicates
+        @type skip_mark_duplicates: bool | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
-        @type classpath_picard: None | str | unicode
+        @type classpath_picard: str | unicode | None
         @return:
         @rtype:
         """
@@ -461,6 +526,7 @@ class Aligner(bsf.Analysis):
         self.genome_fasta = genome_fasta
         self.genome_index = genome_index
         self.keep_read_group = keep_read_group
+        self.skip_mark_duplicates = skip_mark_duplicates
         self.classpath_picard = classpath_picard
 
         return
@@ -494,6 +560,10 @@ class Aligner(bsf.Analysis):
         option = 'keep_read_group'
         if config_parser.has_option(section=section, option=option):
             self.keep_read_group = config_parser.get(section=section, option=option)
+
+        option = 'skip_mark_duplicates'
+        if config_parser.has_option(section=section, option=option):
+            self.skip_mark_duplicates = config_parser.getboolean(section=section, option=option)
 
         option = 'classpath_picard'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -733,8 +803,7 @@ class Aligner(bsf.Analysis):
 
                 # Run Picard SortSam to convert the cleaned BAM file into a query name-sorted BAM file.
 
-                runnable_step = runnable_align.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepPicard(
+                runnable_step = bsf.process.RunnableStepPicard(
                         name='picard_sort_sam',
                         obsolete_file_path_list=[
                             file_path_align.cleaned_bam,
@@ -742,8 +811,9 @@ class Aligner(bsf.Analysis):
                         java_temporary_path=runnable_align.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
                         java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
-                        picard_command='SortSam'))
-                """ @type runnable_step: bsf.process.RunnableStepPicard """
+                        picard_command='SortSam')
+                runnable_align.add_runnable_step(runnable_step=runnable_step)
+
                 # INPUT []
                 runnable_step.add_picard_option(key='INPUT', value=file_path_align.cleaned_bam)
                 # OUTPUT []
@@ -771,8 +841,7 @@ class Aligner(bsf.Analysis):
                 # Run Picard CleanSam to split alignments at sequence boundaries and
                 # set mapping quality of unmapped reads to 0.
 
-                runnable_step = runnable_align.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepPicard(
+                runnable_step = bsf.process.RunnableStepPicard(
                         name='picard_clean_sam',
                         obsolete_file_path_list=[
                             file_path_align.aligned_sam,
@@ -780,8 +849,9 @@ class Aligner(bsf.Analysis):
                         java_temporary_path=runnable_align.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx2G',
                         java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
-                        picard_command='CleanSam'))
-                """ @type runnable_step: bsf.process.RunnableStepPicard """
+                        picard_command='CleanSam')
+                runnable_align.add_runnable_step(runnable_step=runnable_step)
+
                 # INPUT []
                 runnable_step.add_picard_option(key='INPUT', value=file_path_align.aligned_sam)
                 # OUTPUT []
@@ -858,8 +928,7 @@ class Aligner(bsf.Analysis):
 
                 if len(runnable_align_list) == 1:
                     runnable_align = runnable_align_list[0]
-                    file_path_align = runnable_align.file_path_object
-                    """ @type file_path_align: FilePathAlign """
+                    file_path_align = FilePathAlign(prefix=runnable_align.name)
                     # For a single ReadPair, just rename the files.
                     runnable_read_group.add_runnable_step(
                         runnable_step=bsf.process.RunnableStepMove(
@@ -867,18 +936,17 @@ class Aligner(bsf.Analysis):
                             source_path=file_path_align.aligned_bam,
                             target_path=file_path_read_group.merged_bam))
                 else:
-                    runnable_step = runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepPicard(
+                    runnable_step = bsf.process.RunnableStepPicard(
                             name='picard_merge_sam_files',
                             java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx4G',
                             picard_classpath=self.classpath_picard,
-                            picard_command='MergeSamFiles'))
-                    """ @type runnable_step: bsf.process.RunnableStepPicard """
+                            picard_command='MergeSamFiles')
+                    runnable_read_group.add_runnable_step(runnable_step=runnable_step)
+
                     # INPUT []
                     for runnable_align in runnable_align_list:
-                        file_path_align = runnable_align.file_path_object
-                        """ @type file_path_align: FilePathAlign """
+                        file_path_align = FilePathAlign(prefix=runnable_align.name)
                         runnable_step.add_picard_option(
                             key='INPUT',
                             value=file_path_align.aligned_bam,
@@ -915,8 +983,7 @@ class Aligner(bsf.Analysis):
                 if bam_file_path is None:
                     # Without an unaligned BAM file, run Picard SortSam by coordinate.
 
-                    runnable_step = runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepPicard(
+                    runnable_step = bsf.process.RunnableStepPicard(
                             name='picard_sort_sam',
                             obsolete_file_path_list=[
                                 file_path_read_group.merged_bam,
@@ -924,8 +991,9 @@ class Aligner(bsf.Analysis):
                             java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx4G',
                             java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
-                            picard_command='SortSam'))
-                    """ @type runnable_step: bsf.process.RunnableStepPicard """
+                            picard_command='SortSam')
+                    runnable_read_group.add_runnable_step(runnable_step=runnable_step)
+
                     # INPUT []
                     runnable_step.add_picard_option(key='INPUT', value=file_path_read_group.merged_bam)
                     # OUTPUT []
@@ -955,8 +1023,7 @@ class Aligner(bsf.Analysis):
                 else:
                     # Run Picard MergeBamAlignment to annotate the merged aligned with the unaligned BAM file.
 
-                    runnable_step = runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepPicard(
+                    runnable_step = bsf.process.RunnableStepPicard(
                             name='picard_merge_bam_alignment',
                             obsolete_file_path_list=[
                                 file_path_read_group.merged_bam,
@@ -964,8 +1031,9 @@ class Aligner(bsf.Analysis):
                             java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx12G',
                             java_jar_path=os.path.join(self.classpath_picard, 'picard.jar'),
-                            picard_command='MergeBamAlignment'))
-                    """ @type runnable_step: bsf.process.RunnableStepPicard """
+                            picard_command='MergeBamAlignment')
+                    runnable_read_group.add_runnable_step(runnable_step=runnable_step)
+
                     # UNMAPPED_BAM []
                     runnable_step.add_picard_option(key='UNMAPPED_BAM', value=bam_file_path)
                     # ALIGNED_BAM [null]
@@ -1056,8 +1124,7 @@ class Aligner(bsf.Analysis):
 
             if len(runnable_read_group_list) == 1:
                 runnable_read_group = runnable_read_group_list[0]
-                file_path_read_group = runnable_read_group.file_path_object
-                """ @type file_path_read_group: FilePathReadGroup """
+                file_path_read_group = FilePathReadGroup(prefix=runnable_read_group.name)
                 if self.keep_read_group:
                     # For a single ReadPair, just copy the files.
                     runnable_sample.add_runnable_step(
@@ -1095,18 +1162,17 @@ class Aligner(bsf.Analysis):
             else:
                 # Run Picard MergeSamFiles on each BAM file.
 
-                runnable_step = runnable_sample.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepPicard(
+                runnable_step = bsf.process.RunnableStepPicard(
                         name='picard_merge_sam_files',
                         java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx4G',
                         picard_classpath=self.classpath_picard,
-                        picard_command='MergeSamFiles'))
-                """ @type runnable_step: bsf.process.RunnableStepPicard """
+                        picard_command='MergeSamFiles')
+                runnable_sample.add_runnable_step(runnable_step=runnable_step)
+
                 # INPUT []
                 for runnable_read_group in runnable_read_group_list:
-                    file_path_read_group = runnable_read_group.file_path_object
-                    """ @type file_path_read_group: FilePathReadGroup """
+                    file_path_read_group = FilePathReadGroup(prefix=runnable_read_group.name)
                     if not self.keep_read_group:
                         runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_bai)
                         runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_bam)
@@ -1122,6 +1188,90 @@ class Aligner(bsf.Analysis):
                 runnable_step.add_picard_option(key='USE_THREADING', value='true')
                 # COMMENT [null]
                 # INTERVALS [null]
+                # TMP_DIR [null]
+                runnable_step.add_picard_option(
+                    key='TMP_DIR',
+                    value=runnable_sample.temporary_directory_path(absolute=False))
+                # VERBOSITY [INFO]
+                runnable_step.add_picard_option(key='VERBOSITY', value='WARNING')
+                # QUIET [false]
+                # VALIDATION_STRINGENCY [STRICT]
+                # COMPRESSION_LEVEL [5]
+                if self.skip_mark_duplicates:
+                    runnable_step.add_picard_option(key='COMPRESSION_LEVEL', value='9')
+                # MAX_RECORDS_IN_RAM [500000]
+                runnable_step.add_picard_option(key='MAX_RECORDS_IN_RAM', value='2000000')
+                # CREATE_INDEX [false]
+                if self.skip_mark_duplicates:
+                    runnable_step.add_picard_option(key='CREATE_INDEX', value='true')
+                # CREATE_MD5_FILE [false]
+                if self.skip_mark_duplicates:
+                    runnable_step.add_picard_option(key='CREATE_MD5_FILE', value='true')
+                # REFERENCE_SEQUENCE [null]
+                # GA4GH_CLIENT_SECRETS [client_secrets.json]
+                # USE_JDK_DEFLATER [false]
+                # USE_JDK_INFLATER [false]
+
+            # Run Picard MarkDuplicates
+
+            if self.skip_mark_duplicates:
+                runnable_sample.add_runnable_step(
+                    runnable_step=bsf.process.RunnableStepMove(
+                        name='move_bai',
+                        source_path=file_path_sample.merged_bai,
+                        target_path=file_path_sample.duplicate_bai))
+                runnable_sample.add_runnable_step(
+                    runnable_step=bsf.process.RunnableStepMove(
+                        name='move_bam',
+                        source_path=file_path_sample.merged_bam,
+                        target_path=file_path_sample.duplicate_bam))
+                runnable_sample.add_runnable_step(
+                    runnable_step=bsf.process.RunnableStepMove(
+                        name='move_md5',
+                        source_path=file_path_sample.merged_md5,
+                        target_path=file_path_sample.duplicate_md5))
+            else:
+                runnable_step = bsf.process.RunnableStepPicard(
+                    name='picard_mark_duplicates',
+                    obsolete_file_path_list=[
+                        file_path_sample.merged_bai,
+                        file_path_sample.merged_bam,
+                        file_path_sample.merged_md5,
+                    ],
+                    java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
+                    java_heap_maximum='Xmx4G',
+                    picard_classpath=self.classpath_picard,
+                    picard_command='MarkDuplicates')
+                runnable_sample.add_runnable_step(runnable_step=runnable_step)
+
+                # MAX_SEQUENCES_FOR_DISK_READ_ENDS_MAP Obsolete [50000]
+                # MAX_FILE_HANDLES_FOR_READ_ENDS_MAP [8000]
+                # SORTING_COLLECTION_SIZE_RATIO [0.25]
+                # BARCODE_TAG [null]
+                # READ_ONE_BARCODE_TAG [null]
+                # READ_TWO_BARCODE_TAG [null]
+                # TAG_DUPLICATE_SET_MEMBERS [false]
+                # REMOVE_SEQUENCING_DUPLICATES [false]
+                # TAGGING_POLICY [DontTag]
+                # INPUT Required
+                runnable_step.add_picard_option(key='INPUT', value=file_path_sample.merged_bam)
+                # OUTPUT Required
+                runnable_step.add_picard_option(key='OUTPUT', value=file_path_sample.duplicate_bam)
+                # METRICS_FILE Required
+                runnable_step.add_picard_option(key='METRICS_FILE', value=file_path_sample.duplicate_metrics_tsv)
+                # REMOVE_DUPLICATES [false]
+                # ASSUME_SORTED Deprecated
+                # ASSUME_SORT_ORDER [null]
+                # DUPLICATE_SCORING_STRATEGY [SUM_OF_BASE_QUALITIES]
+                # PROGRAM_RECORD_ID [MarkDuplicates]
+                # PROGRAM_GROUP_VERSION [null]
+                # PROGRAM_GROUP_COMMAND_LINE [null]
+                # PROGRAM_GROUP_NAME [MarkDuplicates]
+                # COMMENT [null]
+                # READ_NAME_REGEX [.]
+                # OPTICAL_DUPLICATE_PIXEL_DISTANCE [100]
+                # NOTE: Should be 2500 for patterned flow cells.
+                runnable_step.add_picard_option(key='OPTICAL_DUPLICATE_PIXEL_DISTANCE', value='3000')
                 # TMP_DIR [null]
                 runnable_step.add_picard_option(
                     key='TMP_DIR',
@@ -1148,19 +1298,19 @@ class Aligner(bsf.Analysis):
             runnable_sample.add_runnable_step(
                 runnable_step=bsf.process.RunnableStepLink(
                     name='link',
-                    source_path=file_path_sample.merged_bai_link_source,
-                    target_path=file_path_sample.merged_bai_link_target))
+                    source_path=file_path_sample.duplicate_bai_link_source,
+                    target_path=file_path_sample.duplicate_bai_link_target))
 
             # Run the Picard CollectAlignmentSummaryMetrics analysis.
 
-            runnable_step = runnable_sample.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepPicard(
+            runnable_step = bsf.process.RunnableStepPicard(
                     name='picard_collect_alignment_summary_metrics',
                     java_temporary_path=runnable_sample.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
                     picard_classpath=self.classpath_picard,
-                    picard_command='CollectAlignmentSummaryMetrics'))
-            """ @type runnable_step: bsf.process.RunnableStepPicard """
+                    picard_command='CollectAlignmentSummaryMetrics')
+            runnable_sample.add_runnable_step(runnable_step=runnable_step)
+
             # MAX_INSERT_SIZE [100000]
             # EXPECTED_PAIR_ORIENTATIONS [FR]
             # ADAPTER_SEQUENCE [
@@ -1178,7 +1328,7 @@ class Aligner(bsf.Analysis):
             runnable_step.add_picard_option(key='METRIC_ACCUMULATION_LEVEL', value='READ_GROUP', override=True)
             # IS_BISULFITE_SEQUENCED [false]
             # INPUT []
-            runnable_step.add_picard_option(key='INPUT', value=file_path_sample.merged_bam)
+            runnable_step.add_picard_option(key='INPUT', value=file_path_sample.duplicate_bam)
             # OUTPUT []
             runnable_step.add_picard_option(key='OUTPUT', value=file_path_sample.alignment_summary_metrics_tsv)
             # ASSUME_SORTED [true]
@@ -1291,9 +1441,7 @@ class Aligner(bsf.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                runnable_sample = self.runnable_dict[self.get_prefix_sample(sample_name=sample.name)]
-                file_path_sample = runnable_sample.file_path_object
-                """ @type file_path_sample: bsf.analyses.aligner.FilePathSample """
+                file_path_sample = self.get_file_path_sample(sample_name=sample.name)
 
                 str_list.append('<tr>\n')
                 # Sample
@@ -1334,9 +1482,7 @@ class Aligner(bsf.Analysis):
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
 
-            runnable_summary = self.runnable_dict[self.get_prefix_summary()]
-            file_path_summary = runnable_summary.file_path_object
-            """ @type file_path_summary: FilePathSummary """
+            file_path_summary = self.get_file_path_summary()
 
             # Alignment Summary Plot Absolute Mapped
             str_list.append('<tr>\n')
@@ -1395,7 +1541,7 @@ class Aligner(bsf.Analysis):
             str_list.append('<td class="left">Strand Balance</td>\n')
             str_list.append('</tr>\n')
 
-            # Summary Tables
+            # Alignment Summary Metrics Tables
             str_list.append('<tr>\n')
             str_list.append('<td class="center">')
             str_list.append('<a href="' + file_path_summary.pasm_table_sample_tsv + '">')
@@ -1407,8 +1553,48 @@ class Aligner(bsf.Analysis):
             str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
             str_list.append('</a>')
             str_list.append('</td>\n')
-            str_list.append('<td class="left">Summary</td>\n')
+            str_list.append('<td class="left">Alignment Summary</td>\n')
             str_list.append('</tr>\n')
+
+            if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_levels_sample_png)):
+                str_list.append('<tr>\n')
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_summary.pdsm_levels_sample_pdf + '">')
+                str_list.append('<img alt="Duplication Levels - Sample"')
+                str_list.append(' src="' + file_path_summary.pdsm_levels_sample_png + '"')
+                str_list.append(' height="100" width="100" />')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
+                str_list.append('<td class="center">')
+                str_list.append('</td>\n')
+                str_list.append('<td class="left">Duplication Levels</td>\n')
+                str_list.append('</tr>\n')
+
+            if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_percentage_sample_png)):
+                str_list.append('<tr>\n')
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_summary.pdsm_percentage_sample_pdf + '">')
+                str_list.append('<img alt="Duplication Percentage - Sample"')
+                str_list.append(' src="' + file_path_summary.pdsm_percentage_sample_png + '"')
+                str_list.append(' height="100" width="100" />')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
+                str_list.append('<td class="center">')
+                str_list.append('</td>\n')
+                str_list.append('<td class="left">Duplication Percentage</td>\n')
+                str_list.append('</tr>\n')
+
+            if os.path.exists(os.path.join(self.genome_directory, file_path_summary.pdsm_table_sample_tsv)):
+                str_list.append('<tr>\n')
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_summary.pdsm_table_sample_tsv + '">')
+                str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
+                str_list.append('<td class="center">')
+                str_list.append('</td>\n')
+                str_list.append('<td class="left">Duplication Summary</td>\n')
+                str_list.append('</tr>\n')
 
             str_list.append('</tbody>\n')
             str_list.append('</table>\n')
@@ -1447,9 +1633,7 @@ class Aligner(bsf.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                runnable_sample = self.runnable_dict[self.get_prefix_sample(sample_name=sample.name)]
-                file_path_sample = runnable_sample.file_path_object
-                """ @type file_path_sample: bsf.analyses.aligner.FilePathSample """
+                file_path_sample = self.get_file_path_sample(sample_name=sample.name)
 
                 #
                 # Add a trackDB entry for each Tophat accepted_hits.bam file.

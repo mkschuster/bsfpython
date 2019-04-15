@@ -175,6 +175,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
             transcriptome_version=None,
             transcriptome_gtf=None,
             two_pass_mapping=None,
+            skip_mark_duplicates=None,
             classpath_picard=None):
         """Initialise a C{bsf.analyses.star_aligner.StarAligner} object.
 
@@ -211,6 +212,8 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         @type transcriptome_gtf: str | unicode | None
         @param two_pass_mapping: Basic two-pass mapping
         @type two_pass_mapping: str | unicode | None
+        @param skip_mark_duplicates: Mark duplicates
+        @type skip_mark_duplicates: bool | None
         @param classpath_picard: Picard tools Java Archive (JAR) class path directory
         @type classpath_picard: str | unicode | None
         """
@@ -229,6 +232,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
             sample_list=sample_list,
             genome_fasta=None,
             genome_index=None,
+            skip_mark_duplicates=skip_mark_duplicates,
             classpath_picard=classpath_picard)
 
         # Sub-class specific ...
