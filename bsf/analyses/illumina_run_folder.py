@@ -402,8 +402,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
 
         # 3. Reset all file permissions for directories.
 
-        reset_directory_permissions = runnable_pre_process_folder.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='reset_directory_permissions',
                 program='find',
                 sub_command=bsf.process.Command(
@@ -411,9 +410,10 @@ class IlluminaRunFolderArchive(bsf.Analysis):
                     sub_command=bsf.process.Command(
                         program='-execdir',
                         sub_command=bsf.process.Command(
-                            program='chmod')))))
+                            program='chmod'))))
+        runnable_pre_process_folder.add_runnable_step(runnable_step=runnable_step)
 
-        find_command = reset_directory_permissions.sub_command  # directory option
+        find_command = runnable_step.sub_command  # directory option
         find_command.add_option_short(key='type', value='d')
         exec_dir_command = find_command.sub_command  # -execdir option
         chmod_command = exec_dir_command.sub_command  # chmod command
@@ -423,8 +423,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
 
         # 4. Reset all file permissions for regular files.
 
-        reset_file_permissions = runnable_pre_process_folder.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='reset_file_permissions',
                 program='find',
                 sub_command=bsf.process.Command(
@@ -432,9 +431,10 @@ class IlluminaRunFolderArchive(bsf.Analysis):
                     sub_command=bsf.process.Command(
                         program='-execdir',
                         sub_command=bsf.process.Command(
-                            program='chmod')))))
+                            program='chmod'))))
+        runnable_pre_process_folder.add_runnable_step(runnable_step=runnable_step)
 
-        find_command = reset_file_permissions.sub_command  # directory option
+        find_command = runnable_step.sub_command  # directory option
         find_command.add_option_short(key='type', value='f')
         exec_dir_command = find_command.sub_command  # -execdir option
         chmod_command = exec_dir_command.sub_command  # chmod command
@@ -446,50 +446,50 @@ class IlluminaRunFolderArchive(bsf.Analysis):
         #    The NextSeq compresses into a single Logs.zip file.
 
         if irf.run_parameters.get_instrument_type not in ('NextSeq',):
-            compress_logs = runnable_pre_process_folder.add_runnable_step(
-                runnable_step=bsf.process.RunnableStep(
+            runnable_step = bsf.process.RunnableStep(
                     name='compress_logs',
-                    program='pigz'))
+                    program='pigz')
+            runnable_pre_process_folder.add_runnable_step(runnable_step=runnable_step)
 
-            compress_logs.add_switch_long(key='best')
-            compress_logs.add_option_long(key='processes', value=str(stage_pre_process_folder.threads))
-            compress_logs.add_switch_long(key='recursive')
-            compress_logs.arguments.append(os.path.join(self.run_directory, 'Logs'))
+            runnable_step.add_switch_long(key='best')
+            runnable_step.add_option_long(key='processes', value=str(stage_pre_process_folder.threads))
+            runnable_step.add_switch_long(key='recursive')
+            runnable_step.arguments.append(os.path.join(self.run_directory, 'Logs'))
 
         # 6. Compress all files in the IRF/Data/RTALogs/ directory if it exists.
         #    It does not on the HiSeq 3000/4000 and NovaSeq platforms.
 
         if os.path.isdir(os.path.join(self.run_directory, 'Data', 'RTALogs')):
-            compress_rta_logs = runnable_pre_process_folder.add_runnable_step(
-                runnable_step=bsf.process.RunnableStep(
+            runnable_step = bsf.process.RunnableStep(
                     name='compress_rta_logs',
-                    program='pigz'))
+                    program='pigz')
+            runnable_pre_process_folder.add_runnable_step(runnable_step=runnable_step)
 
-            compress_rta_logs.add_switch_long(key='best')
-            compress_rta_logs.add_option_long(key='processes', value=str(stage_pre_process_folder.threads))
-            compress_rta_logs.add_switch_long(key='recursive')
-            compress_rta_logs.arguments.append(os.path.join(self.run_directory, 'Data', 'RTALogs'))
+            runnable_step.add_switch_long(key='best')
+            runnable_step.add_option_long(key='processes', value=str(stage_pre_process_folder.threads))
+            runnable_step.add_switch_long(key='recursive')
+            runnable_step.arguments.append(os.path.join(self.run_directory, 'Data', 'RTALogs'))
 
         # 7. Compress all files in the IRF/RTALogs/ directory if it exists.
         #    It only exists on the HiSeq 3000/4000 platform.
 
         if os.path.isdir(os.path.join(self.run_directory, 'RTALogs')):
-            compress_rta_logs = runnable_pre_process_folder.add_runnable_step(
-                runnable_step=bsf.process.RunnableStep(
+            runnable_step = bsf.process.RunnableStep(
                     name='compress_rta_logs',
-                    program='pigz'))
+                    program='pigz')
+            runnable_pre_process_folder.add_runnable_step(runnable_step=runnable_step)
 
-            compress_rta_logs.add_switch_long(key='best')
-            compress_rta_logs.add_option_long(key='processes', value=str(stage_pre_process_folder.threads))
-            compress_rta_logs.add_switch_long(key='recursive')
-            compress_rta_logs.arguments.append(os.path.join(self.run_directory, 'RTALogs'))
+            runnable_step.add_switch_long(key='best')
+            runnable_step.add_option_long(key='processes', value=str(stage_pre_process_folder.threads))
+            runnable_step.add_switch_long(key='recursive')
+            runnable_step.arguments.append(os.path.join(self.run_directory, 'RTALogs'))
 
         # 8. Create the archive directory.
 
-        runnable_pre_process_folder.add_runnable_step(
-            runnable_step=bsf.process.RunnableStepMakeDirectory(
+        runnable_step = bsf.process.RunnableStepMakeDirectory(
                 name='make_directory',
-                directory_path=self.archive_directory))
+                directory_path=self.archive_directory)
+        runnable_pre_process_folder.add_runnable_step(runnable_step=runnable_step)
 
         # Process per lane.
 
@@ -523,8 +523,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
 
             # 1. Compress all base call (*.bcl) files.
 
-            compress_base_calls = runnable_base_calls.add_runnable_step(
-                runnable_step=bsf.process.RunnableStep(
+            runnable_step = bsf.process.RunnableStep(
                     name='compress_base_calls',
                     program='find',
                     sub_command=bsf.process.Command(
@@ -534,9 +533,10 @@ class IlluminaRunFolderArchive(bsf.Analysis):
                         sub_command=bsf.process.Command(
                             program='-execdir',
                             sub_command=bsf.process.Command(
-                                program='pigz')))))
+                                program='pigz'))))
+            runnable_base_calls.add_runnable_step(runnable_step=runnable_step)
 
-            find_command = compress_base_calls.sub_command  # directory option
+            find_command = runnable_step.sub_command  # directory option
             find_command.add_option_short(key='name', value='*.bcl')
             exec_dir_command = find_command.sub_command  # -execdir option
             pigz_command = exec_dir_command.sub_command  # pigz command
@@ -575,38 +575,39 @@ class IlluminaRunFolderArchive(bsf.Analysis):
                     archive_file_path = '.'.join((archive_file_path, 'tar'))
                 archive_file_path = os.path.join(self.archive_directory, archive_file_path)
 
-                archive_intensities_tar = runnable_intensities.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStep(
+                runnable_step = bsf.process.RunnableStep(
                         name='archive_intensities_tar',
                         program='tar',
-                        stdout=bsf.connector.ConnectorPipe()))
+                        stdout=bsf.connector.ConnectorPipe())
+                runnable_intensities.add_runnable_step(runnable_step=runnable_step)
 
-                archive_intensities_tar.add_switch_long(key='create')
-                archive_intensities_tar.add_option_long(key='directory', value=os.path.dirname(self.run_directory))
+                runnable_step.add_switch_long(key='create')
+                runnable_step.add_option_long(key='directory', value=os.path.dirname(self.run_directory))
                 # archive_intensities_tar.add_option_long(key='file', value=archive_file_path)
-                archive_intensities_tar.add_option_long(key='exclude', value='*.clocs', override=True)
-                archive_intensities_tar.add_option_long(key='exclude', value='*.locs', override=True)
+                runnable_step.add_option_long(key='exclude', value='*.clocs', override=True)
+                runnable_step.add_option_long(key='exclude', value='*.locs', override=True)
                 if self.compress_archive_files:
                     # archive_intensities_tar.add_switch_long(key='gzip')
                     pass
 
-                archive_folder_pigz = runnable_intensities.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStep(
-                        name='archive_intensities_pigz',
-                        program='pigz',
-                        stdin=bsf.connector.ConcurrentProcess(name='archive_intensities_tar', connection='stdout'),
-                        stdout=bsf.connector.ConnectorFile(file_path=archive_file_path, file_mode='wb')))
-                archive_folder_pigz.add_switch_long(key='best')
-                archive_folder_pigz.add_switch_long(key='stdout')
-                archive_folder_pigz.add_option_long(key='processes', value=str(stage_archive_intensities.threads))
-
                 # Archiving needs the relative path.
-                archive_intensities_tar.arguments.append(
+                runnable_step.arguments.append(
                     os.path.join(
                         os.path.basename(self.run_directory),
                         'Data',
                         'Intensities',
                         'L{:03d}'.format(lane_int)))
+
+                runnable_step = bsf.process.RunnableStep(
+                        name='archive_intensities_pigz',
+                        program='pigz',
+                        stdin=bsf.connector.ConcurrentProcess(name='archive_intensities_tar', connection='stdout'),
+                        stdout=bsf.connector.ConnectorFile(file_path=archive_file_path, file_mode='wb'))
+                runnable_intensities.add_runnable_step(runnable_step=runnable_step)
+
+                runnable_step.add_switch_long(key='best')
+                runnable_step.add_switch_long(key='stdout')
+                runnable_step.add_option_long(key='processes', value=str(stage_archive_intensities.threads))
 
                 # Record dependencies for the archive run folder analysis stage.
                 # Since cluster intensity files are no longer automatically deleted,
@@ -628,15 +629,15 @@ class IlluminaRunFolderArchive(bsf.Analysis):
 
                 # 3. Calculate a MD5 checksum.
 
-                md5_sum = runnable_intensities.add_runnable_step_post(
-                    runnable_step=bsf.process.RunnableStep(
+                runnable_step = bsf.process.RunnableStep(
                         name='md5sum',
                         program='md5sum',
-                        stdout=bsf.connector.ConnectorFile(file_path=archive_file_path + '.md5', file_mode='wt')))
+                        stdout=bsf.connector.ConnectorFile(file_path=archive_file_path + '.md5', file_mode='wt'))
+                runnable_intensities.add_runnable_step_post(runnable_step=runnable_step)
 
-                md5_sum.add_switch_long(key='binary')
+                runnable_step.add_switch_long(key='binary')
 
-                md5_sum.arguments.append(archive_file_path)
+                runnable_step.arguments.append(archive_file_path)
 
         # Process the whole run folder.
 
@@ -660,44 +661,45 @@ class IlluminaRunFolderArchive(bsf.Analysis):
             archive_file_path = '.'.join((archive_file_path, 'tar'))
         archive_file_path = os.path.join(self.archive_directory, archive_file_path)
 
-        archive_folder_tar = runnable_archive_folder.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='archive_folder_tar',
                 program='tar',
-                stdout=bsf.connector.ConnectorPipe()))
+                stdout=bsf.connector.ConnectorPipe())
+        runnable_archive_folder.add_runnable_step(runnable_step=runnable_step)
 
-        archive_folder_tar.add_switch_long(key='create')
-        archive_folder_tar.add_option_long(key='directory', value=os.path.dirname(self.run_directory))
+        runnable_step.add_switch_long(key='create')
+        runnable_step.add_option_long(key='directory', value=os.path.dirname(self.run_directory))
         # archive_folder_tar.add_option_long(key='file', value=archive_file_path)
         for pattern in exclude_intensities_patterns:
-            archive_folder_tar.add_option_long(key='exclude', value=pattern, override=True)
+            runnable_step.add_option_long(key='exclude', value=pattern, override=True)
         if self.compress_archive_files:
             # archive_folder_tar.add_switch_long(key='gzip')
             pass
 
-        archive_folder_tar.arguments.append(os.path.basename(self.run_directory))
+        runnable_step.arguments.append(os.path.basename(self.run_directory))
 
-        archive_folder_pigz = runnable_archive_folder.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='archive_folder_pigz',
                 program='pigz',
                 stdin=bsf.connector.ConcurrentProcess(name='archive_folder_tar', connection='stdout'),
-                stdout=bsf.connector.ConnectorFile(file_path=archive_file_path, file_mode='wb')))
-        archive_folder_pigz.add_switch_long(key='best')
-        archive_folder_pigz.add_switch_long(key='stdout')
-        archive_folder_pigz.add_option_long(key='processes', value=str(stage_archive_folder.threads))
+                stdout=bsf.connector.ConnectorFile(file_path=archive_file_path, file_mode='wb'))
+        runnable_archive_folder.add_runnable_step(runnable_step=runnable_step)
+
+        runnable_step.add_switch_long(key='best')
+        runnable_step.add_switch_long(key='stdout')
+        runnable_step.add_option_long(key='processes', value=str(stage_archive_folder.threads))
 
         # 2. Calculate a MD5 checksum.
 
-        md5_sum = runnable_archive_folder.add_runnable_step_post(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='md5_sum',
                 program='md5sum',
-                stdout=bsf.connector.ConnectorFile(file_path=archive_file_path + '.md5', file_mode='wt')))
+                stdout=bsf.connector.ConnectorFile(file_path=archive_file_path + '.md5', file_mode='wt'))
+        runnable_archive_folder.add_runnable_step_post(runnable_step=runnable_step)
 
-        md5_sum.add_switch_long(key='binary')
+        runnable_step.add_switch_long(key='binary')
 
-        md5_sum.arguments.append(archive_file_path)
+        runnable_step.arguments.append(archive_file_path)
 
         return
 
@@ -973,7 +975,7 @@ class IlluminaRunFolderRestore(bsf.Analysis):
             raise Exception('The Illumina Run Folder directory {!r} exists already.'.
                             format(run_directory_path))
 
-        # A FilePath object cannot be used, because instruments have a varable number of lanes.
+        # A FilePath object cannot be used, because instruments have a variable number of lanes.
         file_path_dict = {
             'folder': '_'.join((run_directory_name, 'Folder.tar')),
             'intensities': '_'.join((run_directory_name, 'Intensities.tar')),
@@ -1012,14 +1014,14 @@ class IlluminaRunFolderRestore(bsf.Analysis):
             stage=stage_extract_archive,
             runnable=runnable_extract_folder)
 
-        extract_folder = runnable_extract_folder.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='extract_folder',
-                program='tar'))
+                program='tar')
+        runnable_extract_folder.add_runnable_step(runnable_step=runnable_step)
 
-        extract_folder.add_switch_long(key='extract')
-        extract_folder.add_option_long(key='directory', value=self.illumina_directory)
-        extract_folder.add_option_long(
+        runnable_step.add_switch_long(key='extract')
+        runnable_step.add_option_long(key='directory', value=self.illumina_directory)
+        runnable_step.add_option_long(
             key='file',
             value=os.path.join(self.archive_directory, file_path_dict['folder']))
 
@@ -1035,23 +1037,23 @@ class IlluminaRunFolderRestore(bsf.Analysis):
             runnable=runnable_compress_logs)
         executable_compress_logs.dependencies.append(executable_extract_folder.name)
 
-        compress_logs = runnable_compress_logs.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='compress_logs',
-                program='gzip'))
+                program='gzip')
+        runnable_compress_logs.add_runnable_step(runnable_step=runnable_step)
 
-        compress_logs.add_switch_long(key='best')
-        compress_logs.add_switch_long(key='recursive')
-        compress_logs.arguments.append(os.path.join(run_directory_path, 'Logs'))
+        runnable_step.add_switch_long(key='best')
+        runnable_step.add_switch_long(key='recursive')
+        runnable_step.arguments.append(os.path.join(run_directory_path, 'Logs'))
 
-        compress_rta_logs = runnable_compress_logs.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='compress_rta_logs',
-                program='gzip'))
+                program='gzip')
+        runnable_compress_logs.add_runnable_step(runnable_step=runnable_step)
 
-        compress_rta_logs.add_switch_long(key='best')
-        compress_rta_logs.add_switch_long(key='recursive')
-        compress_rta_logs.arguments.append(os.path.join(run_directory_path, 'Data', 'RTALogs'))
+        runnable_step.add_switch_long(key='best')
+        runnable_step.add_switch_long(key='recursive')
+        runnable_step.arguments.append(os.path.join(run_directory_path, 'Data', 'RTALogs'))
 
         # Extract the IRF_intensities.tar file.
 
@@ -1065,19 +1067,19 @@ class IlluminaRunFolderRestore(bsf.Analysis):
             runnable=runnable_extract_intensities)
 
         # Sleep 60 seconds to allow the first process to create all directories.
-        runnable_extract_intensities.add_runnable_step(
-            runnable_step=bsf.process.RunnableStepSleep(
+        runnable_step = bsf.process.RunnableStepSleep(
                 name='sleep',
-                sleep_time=60.0))
+                sleep_time=60.0)
+        runnable_extract_intensities.add_runnable_step(runnable_step=runnable_step)
 
-        extract_intensities = runnable_extract_intensities.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='extract_intensities',
-                program='tar'))
+                program='tar')
+        runnable_extract_intensities.add_runnable_step(runnable_step=runnable_step)
 
-        extract_intensities.add_switch_long(key='extract')
-        extract_intensities.add_option_long(key='directory', value=self.illumina_directory)
-        extract_intensities.add_option_long(
+        runnable_step.add_switch_long(key='extract')
+        runnable_step.add_option_long(key='directory', value=self.illumina_directory)
+        runnable_step.add_option_long(
             key='file',
             value=os.path.join(self.archive_directory, file_path_dict['intensities']))
 
@@ -1099,24 +1101,24 @@ class IlluminaRunFolderRestore(bsf.Analysis):
                 runnable=runnable_extract_lane)
 
             # Sleep 90 seconds to allow the first process to create all directories.
-            runnable_extract_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepSleep(
+            runnable_step = bsf.process.RunnableStepSleep(
                     name='sleep',
-                    sleep_time=90.0))
+                    sleep_time=90.0)
+            runnable_extract_lane.add_runnable_step(runnable_step=runnable_step)
 
-            extract_lane = runnable_extract_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStep(
+            runnable_step = bsf.process.RunnableStep(
                     name='extract_lane',
-                    program='tar'))
+                    program='tar')
+            runnable_extract_lane.add_runnable_step(runnable_step=runnable_step)
 
-            extract_lane.add_switch_long(key='extract')
-            extract_lane.add_option_long(key='directory', value=self.illumina_directory)
-            extract_lane.add_option_long(
+            runnable_step.add_switch_long(key='extract')
+            runnable_step.add_option_long(key='directory', value=self.illumina_directory)
+            runnable_step.add_option_long(
                 key='file',
                 value=os.path.join(self.archive_directory, file_path_dict['L{:03d}'.format(lane_int)]))
 
             if not self.extract_intensities:
-                extract_lane.add_option_long(key='exclude', value='C*.1', override=True)
+                runnable_step.add_option_long(key='exclude', value='C*.1', override=True)
 
             # Create one process per lane to compress the base call (*.bcl) files.
 
@@ -1133,8 +1135,7 @@ class IlluminaRunFolderRestore(bsf.Analysis):
             # Since find has a somewhat broken syntax, definition of the bsf.process.RunnableStep gets a bit complex.
             # The following command line needs to be run
             # find IRF/Data/Intensities/BaseCalls/L000 -name '*.bcl' -execdir gzip --best {} +
-            compress_base_calls = runnable_compress_base_calls.add_runnable_step(
-                runnable_step=bsf.process.RunnableStep(
+            runnable_step = bsf.process.RunnableStep(
                     name='compress_base_calls',
                     program='find',
                     sub_command=bsf.process.Command(
@@ -1144,9 +1145,10 @@ class IlluminaRunFolderRestore(bsf.Analysis):
                         sub_command=bsf.process.Command(
                             program='-execdir',
                             sub_command=bsf.process.Command(
-                                program='gzip')))))
+                                program='gzip'))))
+            runnable_compress_base_calls.add_runnable_step(runnable_step=runnable_step)
 
-            find_command = compress_base_calls.sub_command  # directory option
+            find_command = runnable_step.sub_command  # directory option
             find_command.add_option_short(key='name', value='*.bcl')
             exec_dir_command = find_command.sub_command  # -execdir option
             gzip_command = exec_dir_command.sub_command  # gzip command

@@ -60,13 +60,12 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
         file_path_align = runnable_align.file_path_object
         """ @type file_path_align bsf.analyses.aligner.FilePathAlign """
 
-        runnable_step = runnable_align.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='bowtie1',
                 program='bowtie',
                 stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt')))
-        """ @type runnable_step: bsf.process.RunnableStep """
+                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+        runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         runnable_step.arguments.append(self.genome_index)
 
@@ -142,13 +141,12 @@ class Bowtie2(bsf.analyses.aligner.Aligner):
         file_path_align = runnable_align.file_path_object
         """ @type file_path_align bsf.analyses.aligner.FilePathAlign """
 
-        runnable_step = runnable_align.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='bowtie2',
                 program='bowtie2',
                 stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt')))
-        """ @type runnable_step: bsf.process.RunnableStep """
+                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+        runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         runnable_step.add_option_short(key='S', value=file_path_align.aligned_sam)
         runnable_step.add_option_short(key='x', value=self.genome_index)

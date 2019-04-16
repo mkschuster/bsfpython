@@ -297,13 +297,12 @@ class StarAligner(bsf.analyses.aligner.Aligner):
 
         # Run the STAR Aligner
 
-        runnable_step = runnable_align.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='STAR',
                 program='STAR',
                 stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt')))
-        """ @type runnable_step: bsf.process.RunnableStep """
+                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+        runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         self.set_runnable_step_configuration(runnable_step=runnable_step)
 
@@ -328,11 +327,11 @@ class StarAligner(bsf.analyses.aligner.Aligner):
 
         # Run GNU Zip over the rather large splice junction table.
 
-        runnable_step = runnable_align.add_runnable_step_post(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='gzip',
-                program='gzip'))
-        """ @type runnable_step: bsf.process.RunnableStep """
+                program='gzip')
+        runnable_align.add_runnable_step_post(runnable_step=runnable_step)
+
         runnable_step.add_switch_long(key='best')
         runnable_step.arguments.append(file_path_align.splice_junctions_tsv)
 
@@ -348,11 +347,10 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         @return:
         @rtype:
         """
-        runnable_summary.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='star_summary',
-                program='bsf_star_aligner_summary.R'))
-        """ @type runnable_step: bsf.process.RunnableStep """
+                program='bsf_star_aligner_summary.R')
+        runnable_summary.add_runnable_step(runnable_step=runnable_step)
 
         return
 

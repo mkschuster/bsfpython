@@ -975,29 +975,29 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             # Create an output_directory in the project_directory.
 
-            runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMakeDirectory(
+            runnable_step = bsf.process.RunnableStepMakeDirectory(
                     name='make_output_directory',
-                    directory_path=file_path_lane.output_directory))
+                    directory_path=file_path_lane.output_directory)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Create a samples_directory in the project_directory.
 
-            runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMakeDirectory(
+            runnable_step = bsf.process.RunnableStepMakeDirectory(
                     name='make_samples_directory',
-                    directory_path=file_path_lane.samples_directory))
+                    directory_path=file_path_lane.samples_directory)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Create a RunnableStep for Picard ExtractIlluminaBarcodes, only if index (barcode) reads are present.
 
             if barcode_number > 0:
-                runnable_step = runnable_lane.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepPicard(
+                runnable_step = bsf.process.RunnableStepPicard(
                         name='picard_extract_illumina_barcodes',
                         java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                         java_heap_maximum='Xmx2G',
                         picard_classpath=self.classpath_picard,
-                        picard_command='ExtractIlluminaBarcodes'))
-                """ @type runnable_step: bsf.process.RunnableStepPicard """
+                        picard_command='ExtractIlluminaBarcodes')
+                runnable_lane.add_runnable_step(runnable_step=runnable_step)
+
                 # BASECALLS_DIR Required
                 runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
                 # OUTPUT_DIR [null] Default to BASECALLS_DIR
@@ -1054,24 +1054,25 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
                 # Plot the metrics file.
 
-                runnable_step = runnable_lane.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStep(
+                runnable_step = bsf.process.RunnableStep(
                         name='plot_metrics',
-                        program='bsf_illumina_demultiplex_sam.R'))
+                        program='bsf_illumina_demultiplex_sam.R')
+                runnable_lane.add_runnable_step(runnable_step=runnable_step)
+
                 runnable_step.add_option_long(key='file-path', value=file_path_lane.metrics_tsv)
 
             # Picard IlluminaBasecallsToSam
 
             # Create a RunnableStep for Picard IlluminaBasecallsToSam.
 
-            runnable_step = runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepPicard(
+            runnable_step = bsf.process.RunnableStepPicard(
                     name='picard_illumina_basecalls_to_sam',
                     java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx2G',
                     picard_classpath=self.classpath_picard,
-                    picard_command='IlluminaBasecallsToSam'))
-            """ @type runnable_step: bsf.process.RunnableStepPicard """
+                    picard_command='IlluminaBasecallsToSam')
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
+
             # BASECALLS_DIR Required
             runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
             # BARCODES_DIR [null] Defaults to BASECALLS_DIR
@@ -1158,39 +1159,39 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
             # Create the experiment directory if it does not exist already.
 
-            runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMakeDirectory(
+            runnable_step = bsf.process.RunnableStepMakeDirectory(
                     name='make_directory',
-                    directory_path=experiment_directory))
+                    directory_path=experiment_directory)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Move the samples directory into the experiment directory.
 
-            runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMove(
+            runnable_step = bsf.process.RunnableStepMove(
                     name='move_samples_directory',
                     source_path=file_path_lane.samples_directory,
-                    target_path=experiment_directory))
+                    target_path=experiment_directory)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Move the metrics file into the experiment directory.
 
             if barcode_number > 0:
-                runnable_lane.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepMove(
+                runnable_step = bsf.process.RunnableStepMove(
                         name='move_metrics_tsv',
                         source_path=file_path_lane.metrics_tsv,
-                        target_path=experiment_directory))
+                        target_path=experiment_directory)
+                runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-                runnable_lane.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepMove(
+                runnable_step = bsf.process.RunnableStepMove(
                         name='move_metrics_pdf',
                         source_path=file_path_lane.metrics_number_pdf,
-                        target_path=experiment_directory))
+                        target_path=experiment_directory)
+                runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-                runnable_lane.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepMove(
+                runnable_step = bsf.process.RunnableStepMove(
                         name='move_metrics_png',
                         source_path=file_path_lane.metrics_number_png,
-                        target_path=experiment_directory))
+                        target_path=experiment_directory)
+                runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
         # Finally, write the flow cell-specific SampleAnnotationSheet to the internal file path,
         # but keep the order of field names defined above.
@@ -1213,20 +1214,20 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         # Move the SampleAnnotationSheet from the project_directory to the experiment_directory.
 
         if os.path.exists(sample_annotation_sheet.file_path):
-            runnable_cell.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMove(
+            runnable_step = bsf.process.RunnableStepMove(
                     name='move_sample_annotation',
                     source_path=file_path_cell.sample_annotation_sheet_csv,
-                    target_path=experiment_directory))
+                    target_path=experiment_directory)
+            runnable_cell.add_runnable_step(runnable_step=runnable_step)
 
         # Change directory and file access permissions.
 
-        runnable_cell.add_runnable_step(
-            runnable_step=bsf.process.RunnableStepChangeMode(
+        runnable_step = bsf.process.RunnableStepChangeMode(
                 name='chmod',
                 file_path=experiment_directory,
                 mode_directory=self.mode_directory,
-                mode_file=self.mode_file))
+                mode_file=self.mode_file)
+        runnable_cell.add_runnable_step(runnable_step=runnable_step)
 
         return
 
@@ -1607,14 +1608,14 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
             # Run Picard IlluminaBasecallsToUndemuxSam.
 
-            runnable_step = runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepPicard(
+            runnable_step = bsf.process.RunnableStepPicard(
                     name='picard_illumina_basecalls_to_multiplex_sam',
                     java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx16G',
                     picard_classpath=self.classpath_picard,
-                    picard_command='IlluminaBasecallsToMultiplexSam'))
-            """ @type runnable_step: bsf.process.RunnableStepPicard """
+                    picard_command='IlluminaBasecallsToMultiplexSam')
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
+
             # RUN_DIR Required
             runnable_step.add_picard_option(key='RUN_DIR', value=self.run_directory)
             # LANE Required
@@ -1665,26 +1666,26 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
             # Create the experiment directory if it does not exist already.
 
-            runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMakeDirectory(
+            runnable_step = bsf.process.RunnableStepMakeDirectory(
                     name='make_directory',
-                    directory_path=experiment_directory))
+                    directory_path=experiment_directory)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Move and rename the final, sorted BAM file.
 
-            runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMove(
+            runnable_step = bsf.process.RunnableStepMove(
                     name='move_sorted_bam',
                     source_path=file_path_lane.sorted_bam,
-                    target_path=file_path_lane.archive_bam))
+                    target_path=file_path_lane.archive_bam)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Move and rename the checksum file.
 
-            runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMove(
+            runnable_step = bsf.process.RunnableStepMove(
                     name='move_sorted_md5',
                     source_path=file_path_lane.sorted_md5,
-                    target_path=file_path_lane.archive_md5))
+                    target_path=file_path_lane.archive_md5)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
         # Add another flow cell-specific Runnable to reset directory and file mode permissions if requested.
 
@@ -1699,12 +1700,12 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             runnable=runnable_cell)
         executable_cell.dependencies.extend(cell_dependency_list)
 
-        runnable_cell.add_runnable_step(
-            runnable_step=bsf.process.RunnableStepChangeMode(
+        runnable_step = bsf.process.RunnableStepChangeMode(
                 name='chmod',
                 file_path=experiment_directory,
                 mode_directory=self.mode_directory,
-                mode_file=self.mode_file))
+                mode_file=self.mode_file)
+        runnable_cell.add_runnable_step(runnable_step=runnable_step)
 
         return
 
@@ -2394,21 +2395,21 @@ class IlluminaDemultiplexSam(bsf.Analysis):
 
             # Create a samples_directory in the project_directory.
 
-            runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMakeDirectory(
+            runnable_step = bsf.process.RunnableStepMakeDirectory(
                     name='make_project_lane_samples_directory',
-                    directory_path=file_path_lane.samples_directory))
+                    directory_path=file_path_lane.samples_directory)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Run Picard IlluminaSamDemux.
 
-            runnable_step = runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepPicard(
+            runnable_step = bsf.process.RunnableStepPicard(
                     name='picard_illumina_demultiplex_sam',
                     java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx5G',
                     picard_classpath=self.classpath_picard,
-                    picard_command='IlluminaSamDemux'))
-            """ @type runnable_step: bsf.process.RunnableStepPicard """
+                    picard_command='IlluminaSamDemux')
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
+
             # INPUT Required
             runnable_step.add_picard_option(key='INPUT', value=file_path_lane.archive_bam)
             # OUTPUT_DIR [null] Defaults to the same directory as INPUT.
@@ -2478,46 +2479,47 @@ class IlluminaDemultiplexSam(bsf.Analysis):
 
             # Plot the metrics file.
 
-            runnable_step = runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStep(
+            runnable_step = bsf.process.RunnableStep(
                     name='plot_metrics',
-                    program='bsf_illumina_demultiplex_sam.R'))
+                    program='bsf_illumina_demultiplex_sam.R')
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
+
             runnable_step.add_option_long(key='file-path', value=file_path_lane.metrics_tsv)
 
             # Create the experiment directory if it does not exist already.
 
-            runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMakeDirectory(
+            runnable_step = bsf.process.RunnableStepMakeDirectory(
                     name='make_experiment_directory',
-                    directory_path=experiment_directory))
+                    directory_path=experiment_directory)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Move the samples directory into the experiment directory.
 
-            runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMove(
+            runnable_step = bsf.process.RunnableStepMove(
                     name='move_project_lane_samples_directory',
                     source_path=file_path_lane.samples_directory,
-                    target_path=experiment_directory))
+                    target_path=experiment_directory)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
             # Move the metrics file into the experiment directory.
 
-            runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMove(
+            runnable_step = bsf.process.RunnableStepMove(
                     name='move_metrics_tsv',
                     source_path=file_path_lane.metrics_tsv,
-                    target_path=experiment_directory))
+                    target_path=experiment_directory)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-            runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMove(
+            runnable_step = bsf.process.RunnableStepMove(
                     name='move_metrics_pdf',
                     source_path=file_path_lane.metrics_number_pdf,
-                    target_path=experiment_directory))
+                    target_path=experiment_directory)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
-            runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMove(
+            runnable_step = bsf.process.RunnableStepMove(
                     name='move_metrics_png',
                     source_path=file_path_lane.metrics_number_png,
-                    target_path=experiment_directory))
+                    target_path=experiment_directory)
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
 
         # Finally, write the flow cell-specific Collection to the internal file path.
 
@@ -2549,20 +2551,20 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         # Move the SampleAnnotationSheet from the project_directory to the experiment_directory.
 
         if os.path.exists(collection.file_path):
-            runnable_cell.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMove(
+            runnable_step = bsf.process.RunnableStepMove(
                     name='move_sample_annotation',
                     source_path=file_path_cell.sample_annotation_sheet_csv,
-                    target_path=experiment_directory))
+                    target_path=experiment_directory)
+            runnable_cell.add_runnable_step(runnable_step=runnable_step)
 
         # Change directory and file access permissions.
 
-        runnable_cell.add_runnable_step(
-            runnable_step=bsf.process.RunnableStepChangeMode(
+        runnable_step = bsf.process.RunnableStepChangeMode(
                 name='chmod',
                 file_path=experiment_directory,
                 mode_directory=self.mode_directory,
-                mode_file=self.mode_file))
+                mode_file=self.mode_file)
+        runnable_cell.add_runnable_step(runnable_step=runnable_step)
 
         return
 
@@ -2645,14 +2647,14 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
 
             cell_dependency_list.append(executable_lane.name)
 
-            runnable_step = runnable_lane.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepPicard(
+            runnable_step = bsf.process.RunnableStepPicard(
                     name='collect_hiseq_x_fail_metrics',
                     java_temporary_path=runnable_lane.temporary_directory_path(absolute=False),
                     java_heap_maximum='Xmx4G',
                     picard_classpath=self.classpath_picard,
-                    picard_command='CollectHiSeqXPfFailMetrics'))
-            """ @type runnable_step: bsf.process.RunnableStepPicard """
+                    picard_command='CollectHiSeqXPfFailMetrics')
+            runnable_lane.add_runnable_step(runnable_step=runnable_step)
+
             # BASECALLS_DIR Required
             runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
             # OUTPUT Required
@@ -2907,21 +2909,21 @@ class DownsampleSam(bsf.Analysis):
 
                     # Create a new RunnableStepMakeDirectory in preparation of the Picard program.
 
-                    # runnable_picard_dss.add_runnable_step(
-                    #     runnable_step=bsf.process.RunnableStepMakeDirectory(
-                    #         name='make_directory',
-                    #         directory_path=file_path_read_group.output_directory))
+                    # runnable_step = bsf.process.RunnableStepMakeDirectory(
+                    #    name='make_directory',
+                    #    directory_path=file_path_read_group.output_directory)
+                    # runnable_picard_dss.add_runnable_step(runnable_step=runnable_step)
 
                     # Create a new RunnableStep for the Picard DownsampleSam program.
 
-                    runnable_step = runnable_picard_dss.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepPicard(
+                    runnable_step = bsf.process.RunnableStepPicard(
                             name='picard_downsample_sam',
                             java_temporary_path=runnable_picard_dss.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx2G',
                             picard_classpath=self.classpath_picard,
-                            picard_command='DownsampleSam'))
-                    """ @type runnable_step: bsf.process.RunnableStepPicard """
+                            picard_command='DownsampleSam')
+                    runnable_picard_dss.add_runnable_step(runnable_step=runnable_step)
+
                     # INPUT Required
                     runnable_step.add_picard_option(key='INPUT', value=bam_file_path)
                     # OUTPUT Required
@@ -3267,8 +3269,8 @@ class SamToFastq(bsf.Analysis):
                                 repl='_',
                                 string=read_group_dict['PU'])
                             read_group_list = ['@RG']
-                            read_group_list.extend(map(lambda x: ':'.join((x, read_group_dict[x])),
-                                                       read_group_dict.iterkeys()))
+                            read_group_list.extend(
+                                map(lambda x: ':'.join((x, read_group_dict[x])), read_group_dict.keys()))
                             if read_group_dict == alignment_file.header['RG'][0]:
                                 # Use the '==' rather than the 'is' operator, since dictionaries do not seem to be
                                 # at the same memory address.
@@ -3341,21 +3343,21 @@ class SamToFastq(bsf.Analysis):
 
                         # Create a new RunnableStepMakeDirectory in preparation of the Picard program.
 
-                        runnable_read_group.add_runnable_step(
-                            runnable_step=bsf.process.RunnableStepMakeDirectory(
+                        runnable_step = bsf.process.RunnableStepMakeDirectory(
                                 name='mkdir',
-                                directory_path=file_path_read_group.output_directory))
+                                directory_path=file_path_read_group.output_directory)
+                        runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
                         # Create a new RunnableStep for the Picard SamToFastq program.
 
-                        runnable_step = runnable_read_group.add_runnable_step(
-                            runnable_step=bsf.process.RunnableStepPicard(
+                        runnable_step = bsf.process.RunnableStepPicard(
                                 name='picard_sam_to_fastq',
                                 java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                                 java_heap_maximum='Xmx2G',
                                 picard_classpath=self.classpath_picard,
-                                picard_command='SamToFastq'))
-                        """ @type runnable_step: bsf.process.RunnableStepPicard """
+                                picard_command='SamToFastq')
+                        runnable_read_group.add_runnable_step(runnable_step=runnable_step)
+
                         # INPUT Required
                         runnable_step.add_picard_option(key='INPUT', value=bam_file_path)
                         # FASTQ Required
@@ -3435,9 +3437,13 @@ class SamToFastq(bsf.Analysis):
 
         # Create a new RunnableStep.
 
-        runnable_step_project = runnable_project.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
-                name='prune_sample_annotation_sheet'))
+        runnable_step = bsf.process.RunnableStep(
+                name='prune_sample_annotation_sheet')
+        runnable_project.add_runnable_step(runnable_step=runnable_step)
+
+        runnable_step.add_option_long(key='sas_path_old', value=file_path_project.sas_path_old)
+        runnable_step.add_option_long(key='sas_path_new', value=file_path_project.sas_path_new)
+        runnable_step.add_option_long(key='minimum_size', value='1024')
 
         runnable_step_project.add_option_long(key='sas_path_old', value=file_path_project.sas_path_old)
         runnable_step_project.add_option_long(key='sas_path_new', value=file_path_project.sas_path_new)

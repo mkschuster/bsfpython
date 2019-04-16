@@ -61,14 +61,13 @@ class MaximalExactMatches(bsf.analyses.aligner.Aligner):
         file_path_align = runnable_align.file_path_object
         """ @type file_path_align bsf.analyses.aligner.FilePathAlign """
 
-        runnable_step = runnable_align.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='bwa_mem',
                 program='bwa',
                 sub_command=bsf.process.Command(name='mem', program='mem'),
                 stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt')))
-        """ @type runnable_step: bsf.process.RunnableStep """
+                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+        runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         sub_command = runnable_step.sub_command
         # -t [1] Number of threads

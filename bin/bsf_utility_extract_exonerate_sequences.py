@@ -117,5 +117,5 @@ for vulgar in vulgar_list:
 
 # Clean up stage: close all Bio.SeqIO file handles.
 
-for seq_io in seq_io_dict.itervalues():
+for seq_io in seq_io_dict.values():
     seq_io.close()

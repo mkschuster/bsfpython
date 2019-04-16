@@ -25,7 +25,6 @@ A package of classes and methods modelling configuration and default information
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-
 import ConfigParser
 import os
 
@@ -185,7 +184,7 @@ class Configuration(object):
             self.config_parser = config_parser
 
         self._config_path_list = None
-        """ @type _config_path_list: list[str | unicode] """
+        """ @type _config_path_list: list[str | unicode] | None """
 
         return
 

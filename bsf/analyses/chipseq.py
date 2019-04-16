@@ -995,30 +995,31 @@ class ChIPSeq(bsf.Analysis):
 
                     # Add a RunnableStep to create the output directory.
 
-                    runnable_peak_calling.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMakeDirectory(
+                    runnable_step = bsf.process.RunnableStepMakeDirectory(
                             name='make_directory',
-                            directory_path=file_path_peak_calling.output_directory))
+                            directory_path=file_path_peak_calling.output_directory)
+                    runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Add a RunnableStep for MACS14 call peak.
 
-                    runnable_step_macs14_call_peak = runnable_peak_calling.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStep(
+                    runnable_step = bsf.process.RunnableStep(
                             name='macs14_call_peak',
                             program='macs14',
-                            sub_command=bsf.process.Command(program='callpeak')))
+                            sub_command=bsf.process.Command(program='callpeak'))
+                    runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
+
                     # Read RunnableStep options from configuration sections:
                     # [bsf.analyses.chipseq.ChIPSeq.macs14_call_peak]
                     # [bsf.analyses.chipseq.ChIPSeq.macs14_call_peak.callpeak]
-                    self.set_runnable_step_configuration(runnable_step=runnable_step_macs14_call_peak)
+                    self.set_runnable_step_configuration(runnable_step=runnable_step)
 
-                    runnable_step_macs14_call_peak.add_option_multi_long(
+                    runnable_step.add_option_multi_long(
                         key='treatment',
                         value=' '.join(t_file_path_list))
 
                     if c_file_path_list:
                         # Control (input) samples are optional.
-                        runnable_step_macs14_call_peak.add_option_multi_long(
+                        runnable_step.add_option_multi_long(
                             key='control',
                             value=' '.join(c_file_path_list))
 
@@ -1026,15 +1027,15 @@ class ChIPSeq(bsf.Analysis):
                     # the resulting R script has them set too. Hence the R script has to be started
                     # from the genome_directory. However, the R script needs re-writing anyway, because
                     # it would be better to use the PNG rather than the PDF device for plotting.
-                    runnable_step_macs14_call_peak.sub_command.add_option_long(
+                    runnable_step.sub_command.add_option_long(
                         key='name',
                         value=file_path_peak_calling.name_prefix)
 
                     # The 'gsize' option has to be specified via the configuration.ini file in section
                     # [bsf.analyses.chipseq.ChIPSeq.macs14_call_peak.callpeak].
-                    runnable_step_macs14_call_peak.add_switch_long(key='single-profile')
-                    runnable_step_macs14_call_peak.add_switch_long(key='call-subpeaks')
-                    runnable_step_macs14_call_peak.add_switch_long(key='wig')
+                    runnable_step.add_switch_long(key='single-profile')
+                    runnable_step.add_switch_long(key='call-subpeaks')
+                    runnable_step.add_switch_long(key='wig')
 
                     if factor == 'H3K4ME1':
                         pass
@@ -1057,9 +1058,9 @@ class ChIPSeq(bsf.Analysis):
                     elif factor == 'H3K36ME3':
                         # Parameter setting for H3K36me3 according to Nature Protocols (2012)
                         # Vol.7 No.9 1728-1740 doi:10.1038/nprot.2012.101 Protocol (D)
-                        runnable_step_macs14_call_peak.add_switch_long(key='nomodel')
-                        runnable_step_macs14_call_peak.add_option_long(key='shiftsize', value='73')
-                        runnable_step_macs14_call_peak.add_option_long(key='pvalue', value='1e-3')
+                        runnable_step.add_switch_long(key='nomodel')
+                        runnable_step.add_option_long(key='shiftsize', value='73')
+                        runnable_step.add_option_long(key='pvalue', value='1e-3')
                     elif factor == 'H3K56AC':
                         pass
                     elif factor == 'H4K16AC':
@@ -1075,14 +1076,14 @@ class ChIPSeq(bsf.Analysis):
 
                     # Add a RunnableStep to process MACS14 output.
 
-                    process_macs14 = runnable_peak_calling.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStep(
+                    runnable_step = bsf.process.RunnableStep(
                             name='process_macs14',
-                            program='bsf_chipseq_process_macs14.bash'))
+                            program='bsf_chipseq_process_macs14.bash')
+                    runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Specify the output path as in the macs14 --name option.
-                    process_macs14.arguments.append(prefix_peak_calling)
-                    process_macs14.arguments.append(self.genome_sizes_path)
+                    runnable_step.arguments.append(prefix_peak_calling)
+                    runnable_step.arguments.append(self.genome_sizes_path)
 
                     if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.summits_bb)):
                         executable_peak_calling.submit = False
@@ -1127,30 +1128,31 @@ class ChIPSeq(bsf.Analysis):
 
                     # Add a RunnableStep to create the output directory.
 
-                    runnable_peak_calling.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMakeDirectory(
+                    runnable_step = bsf.process.RunnableStepMakeDirectory(
                             name='make_directory',
-                            directory_path=file_path_peak_calling.output_directory))
+                            directory_path=file_path_peak_calling.output_directory)
+                    runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Add a RunnableStep for MACS2 call peak.
 
-                    runnable_step_macs2_call_peak = runnable_peak_calling.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStep(
+                    runnable_step = bsf.process.RunnableStep(
                             name='macs2_call_peak',
                             program='macs2',
-                            sub_command=bsf.process.Command(program='callpeak')))
+                            sub_command=bsf.process.Command(program='callpeak'))
+                    runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
+
                     # Read RunnableStep options from configuration sections:
                     # [bsf.analyses.chipseq.ChIPSeq.macs2_call_peak]
                     # [bsf.analyses.chipseq.ChIPSeq.macs2_call_peak.callpeak]
-                    self.set_runnable_step_configuration(runnable_step=runnable_step_macs2_call_peak)
+                    self.set_runnable_step_configuration(runnable_step=runnable_step)
 
-                    runnable_step_macs2_call_peak.sub_command.add_option_multi_long(
+                    runnable_step.sub_command.add_option_multi_long(
                         key='treatment',
                         value=' '.join(t_file_path_list))
 
                     if c_file_path_list:
                         # The control (input) samples are optional.
-                        runnable_step_macs2_call_peak.sub_command.add_option_multi_long(
+                        runnable_step.sub_command.add_option_multi_long(
                             key='control',
                             value=' '.join(c_file_path_list))
                     # --format ["AUTO"]
@@ -1167,16 +1169,16 @@ class ChIPSeq(bsf.Analysis):
                     # the resulting R script has them set too. Hence the R script has to be started
                     # from the genome_directory. However, the R script needs re-writing anyway, because
                     # it would be better to use the PNG rather than the PDF device for plotting.
-                    runnable_step_macs2_call_peak.sub_command.add_option_long(
+                    runnable_step.sub_command.add_option_long(
                         key='name',
                         value=file_path_peak_calling.name_prefix)
 
                     # --bdg [False]
-                    runnable_step_macs2_call_peak.sub_command.add_switch_long(key='bdg')
+                    runnable_step.sub_command.add_switch_long(key='bdg')
                     # --verbose [2]
                     # --trackline [False]
                     # --SPMR [False]
-                    runnable_step_macs2_call_peak.sub_command.add_switch_long(key='SPMR')
+                    runnable_step.sub_command.add_switch_long(key='SPMR')
 
                     # Shifting model arguments
                     # --nomodel [False]
@@ -1193,7 +1195,7 @@ class ChIPSeq(bsf.Analysis):
                     # --ratio [ignore]
                     # --down-sample [False]
                     # --seed [null]
-                    runnable_step_macs2_call_peak.sub_command.add_option_long(
+                    runnable_step.sub_command.add_option_long(
                         key='tempdir',
                         value=runnable_peak_calling.temporary_directory_path(absolute=False))
                     # --nolambda [null]
@@ -1233,10 +1235,10 @@ class ChIPSeq(bsf.Analysis):
                     elif factor == 'H3K36ME3':
                         # Parameter setting for H3K36me3 according to Nature Protocols (2012)
                         # Vol.7 No.9 1728-1740 doi:10.1038/nprot.2012.101 Protocol (D)
-                        runnable_step_macs2_call_peak.sub_command.add_switch_long(key='nomodel')
+                        runnable_step.sub_command.add_switch_long(key='nomodel')
                         # The shiftsize option is no longer supported in MACS 2.1.0
-                        # runnable_step_macs2_call_peak.add_option_long(key='shiftsize', value='73')
-                        runnable_step_macs2_call_peak.sub_command.add_option_long(
+                        # runnable_step.add_option_long(key='shiftsize', value='73')
+                        runnable_step.sub_command.add_option_long(
                             key='pvalue',
                             value='1e-3')
                     elif factor == 'H3K56AC':
@@ -1254,51 +1256,52 @@ class ChIPSeq(bsf.Analysis):
 
                     # Add a RunnableStep to compare bedGraph files.
 
-                    runnable_step_macs2_bdg_cmp = runnable_peak_calling.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStep(
+                    runnable_step = bsf.process.RunnableStep(
                             name='macs2_bdg_cmp',
                             program='macs2',
-                            sub_command=bsf.process.Command(program='bdgcmp')))
+                            sub_command=bsf.process.Command(program='bdgcmp'))
+                    runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
+
                     # Read RunnableStep options from configuration sections:
                     # [bsf.analyses.chipseq.ChIPSeq.macs2_bdg_cmp]
                     # [bsf.analyses.chipseq.ChIPSeq.macs2_bdg_cmp.bdgcmp]
-                    self.set_runnable_step_configuration(runnable_step=runnable_step_macs2_bdg_cmp)
+                    self.set_runnable_step_configuration(runnable_step=runnable_step)
 
                     # --tfile
-                    runnable_step_macs2_bdg_cmp.sub_command.add_option_long(
+                    runnable_step.sub_command.add_option_long(
                         key='tfile',
                         value=file_path_peak_calling.treatment_bdg)
 
                     # --cfile
-                    runnable_step_macs2_bdg_cmp.sub_command.add_option_long(
+                    runnable_step.sub_command.add_option_long(
                         key='cfile',
                         value=file_path_peak_calling.control_bdg)
 
                     # --scaling-factor [1.0]
                     # --pseudocount [0.0]
-                    runnable_step_macs2_bdg_cmp.sub_command.add_option_long(key='pseudocount', value='0.00001')
+                    runnable_step.sub_command.add_option_long(key='pseudocount', value='0.00001')
 
                     # --method [ppois] i.e. Poisson Pvalue -log10(pvalue), which yields data on a logarithmic scale
-                    runnable_step_macs2_bdg_cmp.sub_command.add_option_multi_long(
+                    runnable_step.sub_command.add_option_multi_long(
                         key='method',
                         value='ppois subtract logFE')
 
                     # --outdir [.]
                     # --o-prefix [null]
-                    runnable_step_macs2_bdg_cmp.sub_command.add_option_long(
+                    runnable_step.sub_command.add_option_long(
                         key='o-prefix',
                         value=file_path_peak_calling.name_prefix)
                     # --ofile
 
                     # Add a RunnableStep to process MACS2 output.
 
-                    process_macs2 = runnable_peak_calling.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStep(
+                    runnable_step = bsf.process.RunnableStep(
                             name='process_macs2',
-                            program='bsf_chipseq_process_macs2.bash'))
+                            program='bsf_chipseq_process_macs2.bash')
+                    runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
-                    process_macs2.arguments.append(prefix_peak_calling)
-                    process_macs2.arguments.append(self.genome_sizes_path)
+                    runnable_step.arguments.append(prefix_peak_calling)
+                    runnable_step.arguments.append(self.genome_sizes_path)
 
                     if os.path.exists(os.path.join(self.genome_directory, file_path_peak_calling.narrow_peaks_bb)):
                         executable_peak_calling.submit = False
@@ -1410,10 +1413,10 @@ class ChIPSeq(bsf.Analysis):
 
                     # Add a RunnableStep for Bioconductor DiffBind.
 
-                    runnable_step = runnable_diff_bind.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStep(
+                    runnable_step = bsf.process.RunnableStep(
                             name='diff_bind',
-                            program='bsf_chipseq_diffbind.R'))
+                            program='bsf_chipseq_diffbind.R')
+                    runnable_diff_bind.add_runnable_step(runnable_step=runnable_step)
 
                     runnable_step.add_option_long(
                         key='comparison',
@@ -1427,10 +1430,10 @@ class ChIPSeq(bsf.Analysis):
 
                     # Add a RunnableStep for Bioconductor ChIPQC.
 
-                    runnable_step = runnable_diff_bind.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStep(
+                    runnable_step = bsf.process.RunnableStep(
                             name='chipqc',
-                            program='bsf_chipseq_chipqc.R'))
+                            program='bsf_chipseq_chipqc.R')
+                    runnable_diff_bind.add_runnable_step(runnable_step=runnable_step)
 
                     runnable_step.add_option_long(
                         key='comparison',

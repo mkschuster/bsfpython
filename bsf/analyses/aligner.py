@@ -782,22 +782,22 @@ class Aligner(bsf.Analysis):
 
                 # Make a directory via RunnableStepMakeDirectory.
 
-                runnable_align.add_runnable_step_pre(
-                    runnable_step=bsf.process.RunnableStepMakeDirectory(
+                runnable_step = bsf.process.RunnableStepMakeDirectory(
                         name='make_directory',
-                        directory_path=file_path_align.output_directory))
+                        directory_path=file_path_align.output_directory)
+                runnable_align.add_runnable_step_pre(runnable_step=runnable_step)
 
                 # Make named pipes via RunnableStepMakeNamedPipe.
 
-                runnable_align.add_runnable_step_pre(
-                    runnable_step=bsf.process.RunnableStepMakeNamedPipe(
+                runnable_step = bsf.process.RunnableStepMakeNamedPipe(
                         name='make_fifo_aligned_sam',
-                        file_path=file_path_align.aligned_sam))
+                        file_path=file_path_align.aligned_sam)
+                runnable_align.add_runnable_step_pre(runnable_step=runnable_step)
 
-                runnable_align.add_runnable_step_pre(
-                    runnable_step=bsf.process.RunnableStepMakeNamedPipe(
+                runnable_step = bsf.process.RunnableStepMakeNamedPipe(
                         name='make_fifo_cleaned_bam',
-                        file_path=file_path_align.cleaned_bam))
+                        file_path=file_path_align.cleaned_bam)
+                runnable_align.add_runnable_step_pre(runnable_step=runnable_step)
 
                 # Start the programs in reverse order so that they do not block while opening their named pipe(s).
 
@@ -898,7 +898,7 @@ class Aligner(bsf.Analysis):
 
             # Merge all aligned BAM files of each read group of an unaligned BAM file.
 
-            for bam_file_name, (bam_file_path, runnable_align_list) in unmapped_bam_file_dict.iteritems():
+            for bam_file_name, (bam_file_path, runnable_align_list) in unmapped_bam_file_dict.items():
                 # Create a Runnable and Executable for merging each read group.
 
                 file_path_read_group = self.get_file_path_read_group(read_group_name=bam_file_name)
@@ -921,20 +921,20 @@ class Aligner(bsf.Analysis):
 
                 runnable_read_group_list.append(runnable_read_group)
 
-                runnable_read_group.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepMakeDirectory(
+                runnable_step = bsf.process.RunnableStepMakeDirectory(
                         name='make_directory',
-                        directory_path=file_path_read_group.output_directory))
+                        directory_path=file_path_read_group.output_directory)
+                runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
                 if len(runnable_align_list) == 1:
                     runnable_align = runnable_align_list[0]
                     file_path_align = FilePathAlign(prefix=runnable_align.name)
                     # For a single ReadPair, just rename the files.
-                    runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMove(
+                    runnable_step = bsf.process.RunnableStepMove(
                             name='move_bam',
                             source_path=file_path_align.aligned_bam,
-                            target_path=file_path_read_group.merged_bam))
+                            target_path=file_path_read_group.merged_bam)
+                    runnable_read_group.add_runnable_step(runnable_step=runnable_step)
                 else:
                     runnable_step = bsf.process.RunnableStepPicard(
                             name='picard_merge_sam_files',
@@ -1117,48 +1117,52 @@ class Aligner(bsf.Analysis):
             for runnable_read_group in runnable_read_group_list:
                 executable_sample.dependencies.append(runnable_read_group.name)
 
-            runnable_sample.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepMakeDirectory(
+            runnable_step = bsf.process.RunnableStepMakeDirectory(
                     name='make_directory',
-                    directory_path=file_path_sample.output_directory))
+                    directory_path=file_path_sample.output_directory)
+            runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
             if len(runnable_read_group_list) == 1:
                 runnable_read_group = runnable_read_group_list[0]
                 file_path_read_group = FilePathReadGroup(prefix=runnable_read_group.name)
                 if self.keep_read_group:
                     # For a single ReadPair, just copy the files.
-                    runnable_sample.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepCopy(
+                    runnable_step = bsf.process.RunnableStepCopy(
                             name='copy_bai',
                             source_path=file_path_read_group.sorted_bai,
-                            target_path=file_path_sample.merged_bai))
-                    runnable_sample.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepCopy(
+                            target_path=file_path_sample.merged_bai)
+                    runnable_sample.add_runnable_step(runnable_step=runnable_step)
+
+                    runnable_step = bsf.process.RunnableStepCopy(
                             name='copy_bam',
                             source_path=file_path_read_group.sorted_bam,
-                            target_path=file_path_sample.merged_bam))
-                    runnable_sample.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepCopy(
+                            target_path=file_path_sample.merged_bam)
+                    runnable_sample.add_runnable_step(runnable_step=runnable_step)
+
+                    runnable_step = bsf.process.RunnableStepCopy(
                             name='copy_md5',
                             source_path=file_path_read_group.sorted_md5,
-                            target_path=file_path_sample.merged_md5))
+                            target_path=file_path_sample.merged_md5)
+                    runnable_sample.add_runnable_step(runnable_step=runnable_step)
                 else:
                     # For a single ReadPair, just rename the files.
-                    runnable_sample.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMove(
+                    runnable_step = bsf.process.RunnableStepMove(
                             name='move_bai',
                             source_path=file_path_read_group.sorted_bai,
-                            target_path=file_path_sample.merged_bai))
-                    runnable_sample.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMove(
+                            target_path=file_path_sample.merged_bai)
+                    runnable_sample.add_runnable_step(runnable_step=runnable_step)
+
+                    runnable_step = bsf.process.RunnableStepMove(
                             name='move_bam',
                             source_path=file_path_read_group.sorted_bam,
-                            target_path=file_path_sample.merged_bam))
-                    runnable_sample.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMove(
+                            target_path=file_path_sample.merged_bam)
+                    runnable_sample.add_runnable_step(runnable_step=runnable_step)
+
+                    runnable_step = bsf.process.RunnableStepMove(
                             name='move_md5',
                             source_path=file_path_read_group.sorted_md5,
-                            target_path=file_path_sample.merged_md5))
+                            target_path=file_path_sample.merged_md5)
+                    runnable_sample.add_runnable_step(runnable_step=runnable_step)
             else:
                 # Run Picard MergeSamFiles on each BAM file.
 
@@ -1215,21 +1219,23 @@ class Aligner(bsf.Analysis):
             # Run Picard MarkDuplicates
 
             if self.skip_mark_duplicates:
-                runnable_sample.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepMove(
+                runnable_step = bsf.process.RunnableStepMove(
                         name='move_bai',
                         source_path=file_path_sample.merged_bai,
-                        target_path=file_path_sample.duplicate_bai))
-                runnable_sample.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepMove(
+                        target_path=file_path_sample.duplicate_bai)
+                runnable_sample.add_runnable_step(runnable_step=runnable_step)
+
+                runnable_step = bsf.process.RunnableStepMove(
                         name='move_bam',
                         source_path=file_path_sample.merged_bam,
-                        target_path=file_path_sample.duplicate_bam))
-                runnable_sample.add_runnable_step(
-                    runnable_step=bsf.process.RunnableStepMove(
+                        target_path=file_path_sample.duplicate_bam)
+                runnable_sample.add_runnable_step(runnable_step=runnable_step)
+
+                runnable_step = bsf.process.RunnableStepMove(
                         name='move_md5',
                         source_path=file_path_sample.merged_md5,
-                        target_path=file_path_sample.duplicate_md5))
+                        target_path=file_path_sample.duplicate_md5)
+                runnable_sample.add_runnable_step(runnable_step=runnable_step)
             else:
                 runnable_step = bsf.process.RunnableStepPicard(
                     name='picard_mark_duplicates',
@@ -1295,11 +1301,11 @@ class Aligner(bsf.Analysis):
 
             # Create a symbolic link from the Picard-style *.bai file to a samtools-style *.bam.bai file.
 
-            runnable_sample.add_runnable_step(
-                runnable_step=bsf.process.RunnableStepLink(
+            runnable_step = bsf.process.RunnableStepLink(
                     name='link',
                     source_path=file_path_sample.duplicate_bai_link_source,
-                    target_path=file_path_sample.duplicate_bai_link_target))
+                    target_path=file_path_sample.duplicate_bai_link_target)
+            runnable_sample.add_runnable_step(runnable_step=runnable_step)
 
             # Run the Picard CollectAlignmentSummaryMetrics analysis.
 
@@ -1379,11 +1385,11 @@ class Aligner(bsf.Analysis):
 
         # Add a RunnableStep to summarise and plot the Picard Collect Alignment Summary Metrics reports.
 
-        runnable_step = runnable_summary.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
+        runnable_step = bsf.process.RunnableStep(
                 name='picard_summary',
-                program='bsf_aligner_summary.R'))
-        """ @type runnable_step: bsf.process.RunnableStep """
+                program='bsf_aligner_summary.R')
+        runnable_summary.add_runnable_step(runnable_step=runnable_step)
+
         runnable_step.add_option_long(key='prefix', value=self.prefix)
 
         # Add aligner-specific RunnableStep objects.

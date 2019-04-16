@@ -714,16 +714,16 @@ class AnnotationSheet(object):
             self.row_dicts = row_dicts
 
         self._csv_reader_file = None
-        """ @type _csv_reader_file: file """
+        """ @type _csv_reader_file: file | None """
 
         self._csv_reader_object = None
-        """ @type _csv_reader_object: csv.DictReader """
+        """ @type _csv_reader_object: csv.DictReader | None """
 
         self._csv_writer_file = None
-        """ @type _csv_writer_file: file """
+        """ @type _csv_writer_file: file | None """
 
         self._csv_writer_object = None
-        """ @type _csv_writer_object: csv.DictWriter """
+        """ @type _csv_writer_object: csv.DictWriter | None """
 
         return
 
@@ -935,7 +935,7 @@ class AnnotationSheet(object):
         field_names = list()
 
         for row_dict in self.row_dicts:
-            for key in row_dict.iterkeys():
+            for key in row_dict.keys():
                 if key not in field_names:
                     field_names.append(key)
 

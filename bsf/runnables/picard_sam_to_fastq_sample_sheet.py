@@ -79,9 +79,9 @@ def run(runnable):
         name='picard_sam_to_fastq',
         sas_path=file_path_old)
 
-    for prf in collection.processed_run_folder_dict.itervalues():
-        for project in prf.project_dict.itervalues():
-            for sample in project.sample_dict.itervalues():
+    for prf in collection.processed_run_folder_dict.values():
+        for project in prf.project_dict.values():
+            for sample in project.sample_dict.values():
                 new_paired_reads_list = list()
                 """ @type new_paired_reads_list: list[bsf.ngs.PairedReads] """
                 for paired_reads in sample.paired_reads_list:

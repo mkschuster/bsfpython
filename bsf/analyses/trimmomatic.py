@@ -462,20 +462,19 @@ class Trimmomatic(bsf.Analysis):
 
                     # Create a new RunnableStepMakeDirectory in preparation of the Trimmomatic program.
 
-                    runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMakeDirectory(
+                    runnable_step_read_group = bsf.process.RunnableStepMakeDirectory(
                             name='mkdir',
-                            directory_path=file_path_read_group.output_directory))
+                            directory_path=file_path_read_group.output_directory)
+                    runnable_read_group.add_runnable_step(runnable_step=runnable_step_read_group)
 
                     # Create a RunnableStep for the Trimmomatic program.
 
-                    runnable_step_read_group = runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepJava(
+                    runnable_step_read_group = bsf.process.RunnableStepJava(
                             name='trimmomatic',
                             java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx4G',
-                            java_jar_path=self.classpath_trimmomatic))
-                    """ @type runnable_step_read_group: bsf.process.RunnableStepJava """
+                            java_jar_path=self.classpath_trimmomatic)
+                    runnable_read_group.add_runnable_step(runnable_step=runnable_step_read_group)
 
                     if paired_reads.reads_2 is None:
                         runnable_step_read_group.sub_command.sub_command = bsf.process.Command(program='SE')
@@ -587,13 +586,14 @@ class Trimmomatic(bsf.Analysis):
 
                     # Create a new RunnableStep to aggregate the trim log file.
 
-                    runnable_step_summary = runnable_summary.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStep(
+                    runnable_step_summary = bsf.process.RunnableStep(
                             name='trimmomatic_summary',
                             program='bsf_trimmomatic_summary.R',
                             obsolete_file_path_list=[
                                 file_path_read_group.trim_log_tsv,
-                            ]))
+                            ])
+                    runnable_summary.add_runnable_step(runnable_step=runnable_step_summary)
+
                     runnable_step_summary.add_option_long(
                         key='file_path',
                         value=file_path_read_group.trim_log_tsv)
@@ -627,9 +627,9 @@ class Trimmomatic(bsf.Analysis):
 
         # Create a new RunnableStep.
 
-        runnable_step_project = runnable_project.add_runnable_step(
-            runnable_step=bsf.process.RunnableStep(
-                name='prune_sample_annotation_sheet'))
+        runnable_step_project = bsf.process.RunnableStep(
+                name='prune_sample_annotation_sheet')
+        runnable_project.add_runnable_step(runnable_step=runnable_step_project)
 
         runnable_step_project.add_option_long(key='sas_path_old', value=file_path_project.sas_path_old)
         runnable_step_project.add_option_long(key='sas_path_new', value=file_path_project.sas_path_new)
@@ -691,7 +691,7 @@ class Trimmomatic(bsf.Analysis):
             # read groups after trimming that do no longer correspond to the initial Runnable objects. Sigh.
             # Transiently create a Python dict without the suffix and sort its keys (bsf.ngs.PairedReads.name).
 
-            for paired_reads_name in sorted(dict(map(lambda item: (item[:-1], True), paired_reads_dict.iterkeys()))):
+            for paired_reads_name in sorted(dict(map(lambda item: (item[:-1], True), paired_reads_dict.keys()))):
                 prefix_read_group = self.get_prefix_read_group(read_group_name=paired_reads_name)
 
                 # The second read may still not be there.
@@ -699,8 +699,7 @@ class Trimmomatic(bsf.Analysis):
                     continue
 
                 runnable_read_group = self.runnable_dict[prefix_read_group]
-                file_path_read_group = runnable_read_group.file_path_object
-                """ @type file_path_read_group: FilePathTrimmomaticReadGroup """
+                file_path_read_group = FilePathTrimmomaticReadGroup(prefix=prefix_read_group)
 
                 report_list.append('<tr>\n')
                 # Sample

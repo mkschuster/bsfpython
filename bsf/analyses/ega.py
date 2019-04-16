@@ -249,33 +249,35 @@ class EGACryptor(bsf.Analysis):
 
                     # Create a new RunnableStepMakeDirectory in preparation of the EGA Cryptor program.
 
-                    runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMakeDirectory(
+                    runnable_step = bsf.process.RunnableStepMakeDirectory(
                             name='mkdir',
-                            directory_path=file_path_read_group.output_directory))
+                            directory_path=file_path_read_group.output_directory)
+                    runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
                     link_target_path = os.path.join(
                         file_path_read_group.output_directory,
                         os.path.basename(paired_reads.reads_1.file_path))
-                    runnable_read_group.add_runnable_step(runnable_step=bsf.process.RunnableStepLink(
+
+                    runnable_step = bsf.process.RunnableStepLink(
                         name='link',
                         source_path=paired_reads.reads_1.file_path,
-                        target_path=link_target_path))
+                        target_path=link_target_path)
+                    runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
                     # Create a RunnableStep to run the Java-based EGA Cryptor.
 
-                    runnable_step_read_group = runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepJava(
+                    runnable_step = bsf.process.RunnableStepJava(
                             name='ega_cryptor',
                             java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
                             java_heap_maximum='Xmx4G',
-                            java_jar_path=self.classpath_ega_cryptor))
+                            java_jar_path=self.classpath_ega_cryptor)
+                    runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
                     # Use a sequence of sub-Command objects to separate options that have to appear
                     # in a particular order. Sigh!
 
-                    runnable_step_read_group.sub_command.sub_command = bsf.process.Command()
-                    sub_command = runnable_step_read_group.sub_command.sub_command
+                    runnable_step.sub_command.sub_command = bsf.process.Command()
+                    sub_command = runnable_step.sub_command.sub_command
                     sub_command.add_switch_short(key='p')
 
                     sub_command.sub_command = bsf.process.Command()

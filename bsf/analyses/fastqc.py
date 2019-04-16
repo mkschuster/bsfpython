@@ -262,15 +262,16 @@ class FastQC(bsf.Analysis):
 
                     # Create a new RunnableStepMakeDirectory in preparation of the FastQC program.
 
-                    runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStepMakeDirectory(
+                    runnable_step = bsf.process.RunnableStepMakeDirectory(
                             name='mkdir',
-                            directory_path=file_path_read_group.output_directory))
+                            directory_path=file_path_read_group.output_directory)
+                    runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
-                    runnable_step = runnable_read_group.add_runnable_step(
-                        runnable_step=bsf.process.RunnableStep(
+                    runnable_step = bsf.process.RunnableStep(
                             name=prefix_read_group,
-                            program='fastqc'))
+                            program='fastqc')
+                    runnable_read_group.add_runnable_step(runnable_step=runnable_step)
+
                     runnable_step.add_switch_long(key='quiet')
                     runnable_step.add_option_long(key='outdir', value=file_path_read_group.output_directory)
                     runnable_step.add_option_long(key='threads', value=str(stage_read_group.threads))

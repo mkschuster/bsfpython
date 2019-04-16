@@ -460,9 +460,9 @@ class PairedReads(NextGenerationBase):
     For the C{bsf.ngs.Reads.file_type} I{CASAVA} this represents a read pair (i.e. I{R1} and I{R2}).
     Attributes:
     @ivar reads_1: First C{bsf.ngs.Reads} object
-    @type reads_1: bsf.ngs.Reads
+    @type reads_1: bsf.ngs.Reads | None
     @ivar reads_2: Second C{bsf.ngs.Reads} object
-    @type reads_2: bsf.ngs.Reads
+    @type reads_2: bsf.ngs.Reads | None
     @ivar exclude: Exclude from processing
     @type exclude: bool | None
     @ivar index_1: Index sequence 1
@@ -1193,7 +1193,7 @@ class Project(NextGenerationBase):
         else:
             self.sample_dict = sample_dict
             # Set this bsf.ngs.Project as weak reference for each bsf.ngs.Sample in the dict.
-            for sample in self.sample_dict.itervalues():
+            for sample in self.sample_dict.values():
                 sample.weak_reference_project = weakref.ReferenceType(self)
 
         self.weak_reference_prf = weak_reference_prf
@@ -1439,7 +1439,7 @@ class ProcessedRunFolder(NextGenerationBase):
         else:
             self.project_dict = project_dict
             # Set this bsf.ngs.ProcessedRunFolder as weak reference for each bsf.ngs.Project in the dict.
-            for project in self.project_dict.itervalues():
+            for project in self.project_dict.values():
                 project.weak_reference_prf = weakref.ReferenceType(self)
 
         self.weak_reference_collection = weak_reference_collection
@@ -2450,7 +2450,7 @@ class Collection(NextGenerationBase):
         else:
             self.processed_run_folder_dict = processed_run_folder_dict
             # Set this bsf.ngs.Collection as weak reference for each bsf.ngs.ProcessedRunFolder in the dict.
-            for prf in self.processed_run_folder_dict.itervalues():
+            for prf in self.processed_run_folder_dict.values():
                 prf.weak_reference_collection = weakref.ReferenceType(self)
 
         if sample_group_dict is None:
@@ -2718,27 +2718,27 @@ class Collection(NextGenerationBase):
 
         # Scan the Collection and its contained objects for additional (annotation) field names.
 
-        for prf in self.processed_run_folder_dict.itervalues():
+        for prf in self.processed_run_folder_dict.values():
             if prf.annotation_dict:  # not None and not empty
-                for prf_annotation_key in prf.annotation_dict.iterkeys():
+                for prf_annotation_key in prf.annotation_dict.keys():
                     prf_annotation_field = ' '.join(('ProcessedRunFolder', prf_annotation_key))
                     if prf_annotation_field not in sas.field_names:
                         sas.field_names.append(prf_annotation_field)
-            for project in prf.project_dict.itervalues():
+            for project in prf.project_dict.values():
                 if project.annotation_dict:  # not None and not empty
-                    for project_annotation_key in project.annotation_dict.iterkeys():
+                    for project_annotation_key in project.annotation_dict.keys():
                         project_annotation_field = ' '.join(('Project', project_annotation_key))
                         if project_annotation_field not in sas.field_names:
                             sas.field_names.append(project_annotation_field)
-                for sample in project.sample_dict.itervalues():
+                for sample in project.sample_dict.values():
                     if sample.annotation_dict:  # not None and not empty
-                        for sample_annotation_key in sample.annotation_dict.iterkeys():
+                        for sample_annotation_key in sample.annotation_dict.keys():
                             sample_annotation_field = ' '.join(('Sample', sample_annotation_key))
                             if sample_annotation_field not in sas.field_names:
                                 sas.field_names.append(sample_annotation_field)
                     for paired_reads in sample.paired_reads_list:
                         if paired_reads.annotation_dict:  # not None and not empty
-                            for paired_reads_annotation_key in paired_reads.annotation_dict.iterkeys():
+                            for paired_reads_annotation_key in paired_reads.annotation_dict.keys():
                                 paired_reads_annotation_field = ' '.join(('PairedReads', paired_reads_annotation_key))
                                 if paired_reads_annotation_field not in sas.field_names:
                                     sas.field_names.append(paired_reads_annotation_field)
@@ -2807,7 +2807,7 @@ class Collection(NextGenerationBase):
             return dict()
 
         row_dict = None
-        """ @type row_dict: dict[str, str] """
+        """ @type row_dict: dict[str, str] | None """
 
         for prf_name in sorted(self.processed_run_folder_dict):
             prf = self.processed_run_folder_dict[prf_name]
@@ -2993,7 +2993,7 @@ class SampleGroup(object):
 
         for sample in self.sample_list:
             for paired_reads_name, paired_reads_list in \
-                    sample.get_all_paired_reads(replicate_grouping=replicate_grouping).iteritems():
+                    sample.get_all_paired_reads(replicate_grouping=replicate_grouping).items():
                 if paired_reads_name not in group_dict:
                     group_dict[paired_reads_name] = list()
 

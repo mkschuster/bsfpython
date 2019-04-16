@@ -190,11 +190,11 @@ for aligned_segment in alignment_file:
             aligned_segment.get_tag('QT') + '\n'
         )
 
-for read_group_id in fifo_queue_dict.iterkeys():
+for read_group_id in fifo_queue_dict.keys():
     for fifo_queue in fifo_queue_dict[read_group_id]:
         fifo_queue.join()
 
-for read_group_id in gzip_file_dict.iterkeys():
+for read_group_id in gzip_file_dict.keys():
     for gzip_file in gzip_file_dict[read_group_id]:
         gzip_file.close()
 

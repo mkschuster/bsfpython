@@ -299,7 +299,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
 
         if debug > 1:
             # Print the new header.
-            for key, vmd in vh_new.info.iteritems():
+            for key, vmd in vh_new.info.items():
                 """ @type key: str """
                 """ @type value: pysam.libcbcf.VariantMetadata """
                 # print('Key:', repr(key), 'VariantMetadata:', repr(vmd))

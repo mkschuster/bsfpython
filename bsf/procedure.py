@@ -668,22 +668,20 @@ class ConsecutiveRunnable(Runnable):
 
         return str_list
 
-    def add_runnable_step(self, runnable_step=None):
+    def add_runnable_step(self, runnable_step):
         """Convenience method to facilitate initialising, adding and returning a C{bsf.process.RunnableStep}.
 
         @param runnable_step: C{bsf.process.RunnableStep}
         @type runnable_step: bsf.process.RunnableStep | None
-        @return: C{bsf.process.RunnableStep}
-        @rtype: bsf.process.RunnableStep
+        @return:
+        @rtype:
         """
         if runnable_step is None:
             return
 
-        assert isinstance(runnable_step, bsf.process.RunnableStep)
-
         self.runnable_step_list.append(runnable_step)
 
-        return runnable_step
+        return
 
     def run(self):
         """Convenience function to run a C{bsf.procedure.ConsecutiveRunnable}.
@@ -777,49 +775,43 @@ class ConcurrentRunnable(Runnable):
         """Convenience method to add a C{bsf.process.RunnableStep} to the pre-run list.
 
         @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep
-        @return: C{bsf.process.RunnableStep}
-        @rtype: bsf.process.RunnableStep
+        @type runnable_step: bsf.process.RunnableStep | None
+        @return:
+        @rtype:
         """
         if runnable_step is None:
             return
 
-        assert isinstance(runnable_step, bsf.process.RunnableStep)
-
         self.runnable_step_list_pre.append(runnable_step)
 
-        return runnable_step
+        return
 
     def add_runnable_step_post(self, runnable_step):
         """Convenience method to add a C{bsf.process.RunnableStep} to the post-run list.
 
         @param runnable_step: C{bsf.process.RunnableStep}
-        @type runnable_step: bsf.process.RunnableStep
-        @return: C{bsf.process.RunnableStep}
-        @rtype: bsf.process.RunnableStep
+        @type runnable_step: bsf.process.RunnableStep | None
+        @return:
+        @rtype:
         """
         if runnable_step is None:
             return
-
-        assert isinstance(runnable_step, bsf.process.RunnableStep)
 
         self.runnable_step_list_post.append(runnable_step)
 
-        return runnable_step
+        return
 
-    def add_runnable_step(self, runnable_step=None):
-        """Convenience method to facilitate initialising, adding and returning a C{bsf.process.RunnableStep}.
+    def add_runnable_step(self, runnable_step):
+        """Convenience method to facilitate initialising and adding a C{bsf.process.RunnableStep}.
 
         @param runnable_step: C{bsf.process.RunnableStep}
         @type runnable_step: bsf.process.RunnableStep | None
-        @return: C{bsf.process.RunnableStep}
-        @rtype: bsf.process.RunnableStep
+        @return:
+        @rtype:
         """
         if runnable_step is None:
             return
 
-        assert isinstance(runnable_step, bsf.process.RunnableStep)
-
         self.runnable_step_list_concurrent.append(runnable_step)
 
-        return runnable_step
+        return
