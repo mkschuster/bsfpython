@@ -3380,7 +3380,9 @@ class SamToFastq(bsf.Analysis):
                         else:
                             runnable_step.add_picard_option(key='INCLUDE_NON_PF_READS', value='false')
                         # CLIPPING_ATTRIBUTE [null]
+                        runnable_step.add_picard_option(key='CLIPPING_ATTRIBUTE', value='XT')
                         # CLIPPING_ACTION [null]
+                        runnable_step.add_picard_option(key='CLIPPING_ACTION', value='N')
                         # CLIPPING_MIN_LENGTH [0]
                         # READ1_TRIM [0]
                         # READ1_MAX_BASES_TO_WRITE [null]
