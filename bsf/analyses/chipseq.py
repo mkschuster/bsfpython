@@ -971,12 +971,12 @@ class ChIPSeq(bsf.Analysis):
                     t_file_path_list = list()
                     for t_sample in chipseq_comparison.t_samples:
                         t_file_path_list.append(bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                            sample_name=t_sample.name).merged_bam)
+                            sample_name=t_sample.name).sample_bam)
 
                     c_file_path_list = list()
                     for c_sample in chipseq_comparison.c_samples:
                         c_file_path_list.append(bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                            sample_name=c_sample.name).merged_bam)
+                            sample_name=c_sample.name).sample_bam)
 
                     prefix_peak_calling = chipseq_comparison.get_prefix_peak_calling()
 
@@ -1104,12 +1104,12 @@ class ChIPSeq(bsf.Analysis):
                     t_file_path_list = list()
                     for t_sample in chipseq_comparison.t_samples:
                         t_file_path_list.append(bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                            sample_name=t_sample.name).merged_bam)
+                            sample_name=t_sample.name).sample_bam)
 
                     c_file_path_list = list()
                     for c_sample in chipseq_comparison.c_samples:
                         c_file_path_list.append(bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                            sample_name=c_sample.name).merged_bam)
+                            sample_name=c_sample.name).sample_bam)
 
                     prefix_peak_calling = chipseq_comparison.get_prefix_peak_calling()
 
@@ -1366,12 +1366,12 @@ class ChIPSeq(bsf.Analysis):
                         t_file_path_list = list()
                         for t_sample in chipseq_comparison.t_samples:
                             t_file_path_list.append(bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                                sample_name=t_sample.name).merged_bam)
+                                sample_name=t_sample.name).sample_bam)
 
                         c_file_path_list = list()
                         for c_sample in chipseq_comparison.c_samples:
                             c_file_path_list.append(bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                                sample_name=c_sample.name).merged_bam)
+                                sample_name=c_sample.name).sample_bam)
                         else:
                             c_file_path_list.append('')
 
@@ -1577,12 +1577,12 @@ class ChIPSeq(bsf.Analysis):
                     t_file_path_list = list()
                     for t_sample in chipseq_comparison.t_samples:
                         t_file_path_list.append(bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                            sample_name=t_sample.name).merged_bam)
+                            sample_name=t_sample.name).sample_bam)
 
                     c_file_path_list = list()
                     for c_sample in chipseq_comparison.c_samples:
                         c_file_path_list.append(bsf.analyses.bowtie.Bowtie2.get_file_path_sample(
-                            sample_name=c_sample.name).merged_bam)
+                            sample_name=c_sample.name).sample_bam)
                     else:
                         c_file_path_list.append('')
 
@@ -2011,7 +2011,7 @@ class ChIPSeq(bsf.Analysis):
             # Add UCSC trackDB entries for each Bowtie2 BAM file.
 
             for sample in self.sample_list:
-                file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(sample_name=sample.name)
+                file_path_sample = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(sample_name=sample.name)
                 #
                 # Add a UCSC trackDB entry.
                 #
@@ -2020,7 +2020,7 @@ class ChIPSeq(bsf.Analysis):
                 str_list.append('type bam\n')
                 str_list.append('shortLabel Alignment_' + sample.name + '\n')
                 str_list.append('longLabel Bowtie2 alignment of ' + sample.name + '\n')
-                str_list.append('bigDataUrl ' + file_path_alignment.merged_bam + '\n')
+                str_list.append('bigDataUrl ' + file_path_sample.sample_bam + '\n')
                 # str_list.append('html ...\n')
                 str_list.append('visibility hide\n')
 
@@ -2497,7 +2497,7 @@ class ChIPSeq(bsf.Analysis):
             # Add UCSC trackDB entries for each Bowtie2 BAM file.
 
             for sample in self.sample_list:
-                file_path_alignment = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(sample_name=sample.name)
+                file_path_sample = bsf.analyses.bowtie.Bowtie2.get_file_path_sample(sample_name=sample.name)
 
                 # Add a UCSC trackDB entry for each NAME.bam file.
 
@@ -2506,7 +2506,7 @@ class ChIPSeq(bsf.Analysis):
                 str_list_1.append('  type bam\n')
                 str_list_1.append('  shortLabel ' + sample.name + '_alignment\n')
                 str_list_1.append('  longLabel ' + sample.name + ' ChIP read alignment\n')
-                str_list_1.append('  bigDataUrl ' + file_path_alignment.merged_bam + '\n')
+                str_list_1.append('  bigDataUrl ' + file_path_sample.sample_bam + '\n')
                 # str_list_1.append('  html ...\n')
                 str_list_1.append('  visibility hide\n')
 

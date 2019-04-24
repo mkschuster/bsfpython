@@ -292,8 +292,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         @return:
         @rtype:
         """
-        file_path_align = runnable_align.file_path_object
-        """ @type file_path_align FilePathAlign """
+        file_path_align = FilePathAlign(prefix=runnable_align.name)
 
         # Run the STAR Aligner
 
@@ -456,28 +455,26 @@ class StarAligner(bsf.analyses.aligner.Aligner):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                runnable_sample = self.runnable_dict[self.get_prefix_sample(sample_name=sample.name)]
-                file_path_sample = runnable_sample.file_path_object
-                """ @type file_path_sample: bsf.analyses.aligner.FilePathSample """
+                file_path_sample = self.get_file_path_sample(sample_name=sample.name)
 
                 str_list.append('<tr>\n')
                 # Sample
                 str_list.append('<td class="left">' + sample.name + '</td>\n')
                 # BAM
                 str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_sample.merged_bam + '">')
+                str_list.append('<a href="' + file_path_sample.sample_bam + '">')
                 str_list.append('<abbr title="Binary Alignment/Map">BAM</abbr>')
                 str_list.append('</a>')
                 str_list.append('</td>\n')
                 # BAI
                 str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_sample.merged_bai + '">')
+                str_list.append('<a href="' + file_path_sample.sample_bai + '">')
                 str_list.append('<abbr title="Binary Alignment/Map Index">BAI</abbr>')
                 str_list.append('</a>')
                 str_list.append('</td>\n')
                 # MD5
                 str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_sample.merged_md5 + '">')
+                str_list.append('<a href="' + file_path_sample.sample_md5 + '">')
                 str_list.append('<abbr title="Message Digest 5 Checksum">MD5</abbr>')
                 str_list.append('</a>')
                 str_list.append('</td>\n')
@@ -499,9 +496,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
 
-            runnable_summary = self.runnable_dict[self.get_prefix_summary()]
-            file_path_summary = runnable_summary.file_path_object
-            """ @type file_path_summary: FilePathSummary """
+            file_path_summary = self.get_file_path_summary()
 
             # Alignment Summary Plots
             str_list.append('<tr>\n')
@@ -650,9 +645,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                runnable_sample = self.runnable_dict[self.get_prefix_sample(sample_name=sample.name)]
-                file_path_sample = runnable_sample.file_path_object
-                """ @type file_path_sample: bsf.analyses.aligner.FilePathSample """
+                file_path_sample = self.get_file_path_sample(sample_name=sample.name)
 
                 #
                 # Add a trackDB entry for each Tophat accepted_hits.bam file.
@@ -662,7 +655,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
                 str_list.append('type bam\n')
                 str_list.append('shortLabel ' + sample.name + '_alignments\n')
                 str_list.append('longLabel ' + sample.name + ' STAR alignments\n')
-                str_list.append('bigDataUrl ' + file_path_sample.merged_bam + '\n')
+                str_list.append('bigDataUrl ' + file_path_sample.sample_bam + '\n')
                 # str_list.append('html ...\n')
                 str_list.append('visibility dense\n')
 

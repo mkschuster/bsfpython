@@ -119,6 +119,12 @@ class FilePathReadGroup(bsf.procedure.FilePath):
     @type sorted_bai_link_source: str | unicode
     @ivar sorted_bai_link_target: Symbolic link target of the sorted binary alignment map index (BAI) file path
     @type sorted_bai_link_target: str | unicode
+    @ivar read_group_bai: Read group binary alignment map index (BAI) file path
+    @type read_group_bai: str | unicode
+    @ivar read_group_bam: Read group binary alignment map (BAM) file path
+    @type read_group_bam: str | unicode
+    @ivar read_group_md5: Read group binary alignment map (BAM) file path
+    @type read_group_md5: str | unicode
     """
 
     def __init__(self, prefix):
@@ -146,6 +152,10 @@ class FilePathReadGroup(bsf.procedure.FilePath):
 
         self.sorted_bai_link_source = prefix + '.bai'
         self.sorted_bai_link_target = os.path.join(prefix, prefix + '.bam.bai')
+
+        self.read_group_bai = self.sorted_bai
+        self.read_group_bam = self.sorted_bam
+        self.read_group_md5 = self.sorted_md5
 
         return
 
@@ -176,6 +186,12 @@ class FilePathSample(bsf.procedure.FilePath):
     @type duplicate_metrics_tsv: str | unicode
     @ivar alignment_summary_metrics_tsv: Picard Alignment Summary Metrics file path
     @type alignment_summary_metrics_tsv: str | unicode
+    @ivar sample_bai: Sample binary alignment map index (BAI) file path
+    @type sample_bai: str | unicode
+    @ivar sample_bam: Sample binary alignment map (BAM) file path
+    @type sample_bam: str | unicode
+    @ivar sample_md5: Sample binary alignment map (BAM) file path
+    @type sample_md5: str | unicode
     """
 
     def __init__(self, prefix):
@@ -205,6 +221,11 @@ class FilePathSample(bsf.procedure.FilePath):
         self.duplicate_metrics_tsv = os.path.join(prefix, prefix + '_duplicate_metrics.tsv')
 
         self.alignment_summary_metrics_tsv = os.path.join(prefix, '_'.join((prefix, 'alignment_summary_metrics.tsv')))
+
+        # Create aliases for user friendliness.
+        self.sample_bam = self.duplicate_bam
+        self.sample_bai = self.duplicate_bai
+        self.sample_md5 = self.duplicate_md5
 
         return
 
@@ -928,6 +949,7 @@ class Aligner(bsf.Analysis):
 
                 if len(runnable_align_list) == 1:
                     runnable_align = runnable_align_list[0]
+                    # NOTE: Since the Runnable.name already contains the prefix, FilePathAlign() has to be used.
                     file_path_align = FilePathAlign(prefix=runnable_align.name)
                     # For a single ReadPair, just rename the files.
                     runnable_step = bsf.process.RunnableStepMove(
@@ -946,6 +968,7 @@ class Aligner(bsf.Analysis):
 
                     # INPUT []
                     for runnable_align in runnable_align_list:
+                        # NOTE: Since the Runnable.name already contains the prefix, FilePathAlign() has to be used.
                         file_path_align = FilePathAlign(prefix=runnable_align.name)
                         runnable_step.add_picard_option(
                             key='INPUT',
@@ -1124,6 +1147,7 @@ class Aligner(bsf.Analysis):
 
             if len(runnable_read_group_list) == 1:
                 runnable_read_group = runnable_read_group_list[0]
+                # NOTE: Since the Runnable.name already contains the prefix, FilePathReadGroup() has to be used.
                 file_path_read_group = FilePathReadGroup(prefix=runnable_read_group.name)
                 if self.keep_read_group:
                     # For a single ReadPair, just copy the files.
@@ -1176,6 +1200,7 @@ class Aligner(bsf.Analysis):
 
                 # INPUT []
                 for runnable_read_group in runnable_read_group_list:
+                    # NOTE: Since the Runnable.name already contains the prefix, FilePathReadGroup() has to be used.
                     file_path_read_group = FilePathReadGroup(prefix=runnable_read_group.name)
                     if not self.keep_read_group:
                         runnable_step.obsolete_file_path_list.append(file_path_read_group.sorted_bai)
@@ -1379,7 +1404,7 @@ class Aligner(bsf.Analysis):
             stage=stage_summary,
             runnable=runnable_summary)
 
-        # Add dependencies on Runnable objects of the merging stage.
+        # Add dependencies on Runnable objects of the sample stage.
         for runnable_sample in runnable_sample_list:
             executable_summary.dependencies.append(runnable_sample.name)
 

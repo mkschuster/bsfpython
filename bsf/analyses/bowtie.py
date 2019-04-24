@@ -57,8 +57,7 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
         @return:
         @rtype:
         """
-        file_path_align = runnable_align.file_path_object
-        """ @type file_path_align bsf.analyses.aligner.FilePathAlign """
+        file_path_align = bsf.analyses.aligner.FilePathAlign(prefix=runnable_align.name)
 
         runnable_step = bsf.process.RunnableStep(
                 name='bowtie1',
@@ -138,8 +137,7 @@ class Bowtie2(bsf.analyses.aligner.Aligner):
         @return:
         @rtype:
         """
-        file_path_align = runnable_align.file_path_object
-        """ @type file_path_align bsf.analyses.aligner.FilePathAlign """
+        file_path_align = bsf.analyses.aligner.FilePathAlign(prefix=runnable_align.name)
 
         runnable_step = bsf.process.RunnableStep(
                 name='bowtie2',
