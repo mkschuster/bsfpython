@@ -628,12 +628,14 @@ class StarAligner(bsf.analyses.aligner.Aligner):
 
             # Group via UCSC super tracks.
 
-            str_list.append('track Alignments\n')
-            str_list.append('shortLabel Alignments\n')
-            str_list.append('longLabel STAR alignments\n')
+            str_list.append('track alignment\n')
+            str_list.append('type bam\n')
+            str_list.append('shortLabel Alignment\n')
+            str_list.append('longLabel ' + self.name + ' Alignment\n')
             str_list.append('visibility hide\n')
-            str_list.append('superTrack on\n')
-            str_list.append('group alignments\n')
+            str_list.append('compositeTrack on\n')
+            str_list.append('allButtonPair on\n')  # Has to be off to allow for configuration via a matrix.
+            str_list.append('centerLabelsDense on\n')
             str_list.append('\n')
 
             # Sample-specific tracks
@@ -651,23 +653,24 @@ class StarAligner(bsf.analyses.aligner.Aligner):
                 # Add a trackDB entry for each Tophat accepted_hits.bam file.
                 #
                 # Common settings
-                str_list.append('track ' + sample.name + '_alignments\n')
-                str_list.append('type bam\n')
-                str_list.append('shortLabel ' + sample.name + '_alignments\n')
-                str_list.append('longLabel ' + sample.name + ' STAR alignments\n')
-                str_list.append('bigDataUrl ' + file_path_sample.sample_bam + '\n')
-                # str_list.append('html ...\n')
-                str_list.append('visibility dense\n')
+                str_list.append('  track ' + sample.name + '_alignment\n')
+                str_list.append('  type bam\n')
+                str_list.append('  shortLabel ' + '_'.join((sample.name, self.prefix, 'alignment')) + '\n')
+                str_list.append('  longLabel ' + ' '.join((sample.name, self.name, 'Alignment')) + '\n')
+                str_list.append('  bigDataUrl ' + file_path_sample.sample_bam + '\n')
+                # str_list.append('  html ...\n')
+                str_list.append('  visibility dense\n')
 
                 # Common optional settings
-                str_list.append('color 0,0,0\n')
+                # str_list.append('  color 0,0,0\n')
 
                 # bam/cram - Compressed Sequence Alignment track settings
                 # None
 
                 # Composite track settings
-                str_list.append('parent Alignments\n')
-                str_list.append('\n')
+                str_list.append('  parent alignment on\n')
+                str_list.append('  centerLabelsDense on\n')
+                str_list.append('  \n')
 
             self.ucsc_hub_to_file(content=str_list)
 
