@@ -71,7 +71,7 @@ class Hisat2(bsf.analyses.aligner.Aligner):
     @type rna_strand: str
     """
 
-    name = 'Hisat2 Analysis'
+    name = 'HISAT2 Analysis'
     prefix = 'hisat2'
 
     @classmethod
