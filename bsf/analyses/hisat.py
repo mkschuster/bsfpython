@@ -229,7 +229,8 @@ class Hisat2(bsf.analyses.aligner.Aligner):
 
         # TODO: The --rna-strandness option would require attributes from the sample.
         # This function interface thus needs to change to accommodate for both Sample and PairedReads objects.
-        runnable_step.add_option_long(key='rna-strandness', value=self.rna_strand)
+        if self.rna_strand:
+            runnable_step.add_option_long(key='rna-strandness', value=self.rna_strand)
 
         # For cufflinks compatible alignment reporting (XS:A:[+|-]).
         runnable_step.add_switch_long(key='dta-cufflinks')
@@ -284,8 +285,8 @@ class Hisat2(bsf.analyses.aligner.Aligner):
                     genome_index='hisat2'),
                 self.genome_version)
 
-        if not self.rna_strand:
-            raise Exception('A ' + self.name + " requires a 'rna_strand' configuration option.")
+        if self.rna_strand and self.rna_strand not in ('F', 'R', 'FR', 'RF'):
+            raise Exception("The 'rna_strand' configuration option has to be 'F', 'R', 'FR', 'RF' or ''.")
 
         super(Hisat2, self).run()
 
