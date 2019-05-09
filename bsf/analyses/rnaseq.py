@@ -2004,85 +2004,84 @@ class Tuxedo(bsf.Analysis):
                 with open(os.path.join(self.genome_directory, file_path_cuffmerge.assembly_txt), 'wt') as assembly_file:
                     assembly_file.writelines(cuffmerge_transcript_gtf_list)
 
-            # Create a Cuffnorm Runnable per comparison.
-            # FIXME: At least 2 BAM files are required.
-            # Check the cuffdiff_cuffnorm_abundances_dict across groups.
+            if len(self._comparison_dict[comparison_name]) >= 2:
+                # Create a Cuffnorm Runnable per comparison, if there are at least two SampleGroup objects.
 
-            prefix_run_cuffnorm = self.get_prefix_run_cuffnorm(comparison_name=comparison_name)
+                prefix_run_cuffnorm = self.get_prefix_run_cuffnorm(comparison_name=comparison_name)
 
-            file_path_run_cuffnorm = FilePathCuffnorm(prefix=prefix_run_cuffnorm)
+                file_path_run_cuffnorm = FilePathCuffnorm(prefix=prefix_run_cuffnorm)
 
-            runnable_run_cuffnorm = self.add_runnable_consecutive(
-                runnable=bsf.procedure.ConsecutiveRunnable(
-                    name=prefix_run_cuffnorm,
-                    code_module='bsf.runnables.generic',
-                    working_directory=self.genome_directory,
-                    file_path_object=file_path_run_cuffnorm,
-                    debug=self.debug))
-            executable_run_cuffnorm = self.set_stage_runnable(
-                stage=stage_run_cuffnorm,
-                runnable=runnable_run_cuffnorm)
-            # Submit the bsf.process.Executable if the status file AND the sample group list above supports it.
-            executable_run_cuffnorm.submit &= cuffmerge_cuffnorm_submit
-            executable_run_cuffnorm.dependencies.extend(cuffdiff_cuffnorm_dependencies)
+                runnable_run_cuffnorm = self.add_runnable_consecutive(
+                    runnable=bsf.procedure.ConsecutiveRunnable(
+                        name=prefix_run_cuffnorm,
+                        code_module='bsf.runnables.generic',
+                        working_directory=self.genome_directory,
+                        file_path_object=file_path_run_cuffnorm,
+                        debug=self.debug))
+                executable_run_cuffnorm = self.set_stage_runnable(
+                    stage=stage_run_cuffnorm,
+                    runnable=runnable_run_cuffnorm)
+                # Submit the bsf.process.Executable if the status file AND the sample group list above supports it.
+                executable_run_cuffnorm.submit &= cuffmerge_cuffnorm_submit
+                executable_run_cuffnorm.dependencies.extend(cuffdiff_cuffnorm_dependencies)
 
-            # Create a new Cuffnorm bsf.process.RunnableStep.
+                # Create a new Cuffnorm bsf.process.RunnableStep.
 
-            runnable_step_cuffnorm = bsf.process.RunnableStep(
-                    name='cuffnorm',
-                    program='cuffnorm')
-            runnable_run_cuffnorm.add_runnable_step(runnable_step=runnable_step_cuffnorm)
+                runnable_step_cuffnorm = bsf.process.RunnableStep(
+                        name='cuffnorm',
+                        program='cuffnorm')
+                runnable_run_cuffnorm.add_runnable_step(runnable_step=runnable_step_cuffnorm)
 
-            # Set Cuffnorm options.
+                # Set Cuffnorm options.
 
-            # General Options:
-            # --output-dir write all output files to this directory [.]
-            runnable_step_cuffnorm.add_option_long(
-                key='output-dir',
-                value=file_path_run_cuffnorm.output_directory)
-            # --labels comma-separated list of condition labels []
-            # --norm-standards-file Housekeeping/spike genes to normalize libraries [NULL]
-            # --num-threads number of threads used during quantification [1]
-            runnable_step_cuffnorm.add_option_long(
-                key='num-threads',
-                value=str(stage_run_cuffnorm.threads))
-            # --library-type Library prep used for input reads [fr-unstranded]
-            if self.library_type:
+                # General Options:
+                # --output-dir write all output files to this directory [.]
                 runnable_step_cuffnorm.add_option_long(
-                    key='library-type',
-                    value=self.library_type)
-            # --library-norm-method Method used to normalize library sizes [geometric]
-            # --output-format Format for output tables [simple-table]
+                    key='output-dir',
+                    value=file_path_run_cuffnorm.output_directory)
+                # --labels comma-separated list of condition labels []
+                # --norm-standards-file Housekeeping/spike genes to normalize libraries [NULL]
+                # --num-threads number of threads used during quantification [1]
+                runnable_step_cuffnorm.add_option_long(
+                    key='num-threads',
+                    value=str(stage_run_cuffnorm.threads))
+                # --library-type Library prep used for input reads [fr-unstranded]
+                if self.library_type:
+                    runnable_step_cuffnorm.add_option_long(
+                        key='library-type',
+                        value=self.library_type)
+                # --library-norm-method Method used to normalize library sizes [geometric]
+                # --output-format Format for output tables [simple-table]
 
-            # Advanced Options:
-            # --compatible-hits-norm count hits compatible with reference RNAs only [TRUE]
-            # --total-hits-norm count all hits for normalization [FALSE]
-            # --quiet log-friendly quiet processing (no progress bar) [FALSE]
-            runnable_step_cuffnorm.add_switch_long(key='quiet')
-            # --seed value of random number generator seed [0]
-            # --no-update-check do not contact server to check for update availability [FALSE]
-            runnable_step_cuffnorm.add_switch_long(key='no-update-check')
+                # Advanced Options:
+                # --compatible-hits-norm count hits compatible with reference RNAs only [TRUE]
+                # --total-hits-norm count all hits for normalization [FALSE]
+                # --quiet log-friendly quiet processing (no progress bar) [FALSE]
+                runnable_step_cuffnorm.add_switch_long(key='quiet')
+                # --seed value of random number generator seed [0]
+                # --no-update-check do not contact server to check for update availability [FALSE]
+                runnable_step_cuffnorm.add_switch_long(key='no-update-check')
 
-            # Undocumented Options:
-            # --use-sample-sheet
-            runnable_step_cuffnorm.add_switch_long(key='use-sample-sheet')
+                # Undocumented Options:
+                # --use-sample-sheet
+                runnable_step_cuffnorm.add_switch_long(key='use-sample-sheet')
 
-            # Add the Cuffmerge GTF file as first Cuffnorm argument.
-            runnable_step_cuffnorm.arguments.append(file_path_cuffmerge.merged_gtf)
+                # Add the Cuffmerge GTF file as first Cuffnorm argument.
+                runnable_step_cuffnorm.arguments.append(file_path_cuffmerge.merged_gtf)
 
-            # Add an abundances annotation file as second Cuffnorm argument.
-            # Writing a Cuffnorm abundances TSV file requires an absolute path,
-            # because the working directory is not set at the current stage of job submission.
-            run_write_annotation(
-                annotation_path=os.path.join(self.genome_directory, file_path_run_cuffnorm.abundances_tsv),
-                annotation_dict=cuffdiff_cuffnorm_abundances_dict)
-            runnable_step_cuffnorm.arguments.append(file_path_run_cuffnorm.abundances_tsv)
+                # Add an abundances annotation file as second Cuffnorm argument.
+                # Writing a Cuffnorm abundances TSV file requires an absolute path,
+                # because the working directory is not set at the current stage of job submission.
+                run_write_annotation(
+                    annotation_path=os.path.join(self.genome_directory, file_path_run_cuffnorm.abundances_tsv),
+                    annotation_dict=cuffdiff_cuffnorm_abundances_dict)
+                runnable_step_cuffnorm.arguments.append(file_path_run_cuffnorm.abundances_tsv)
 
-            # Adjust field names to the annotation before writing to disk.
-            monocle_annotation_sheet.to_file_path(adjust_field_names=True)
+                # Adjust field names to the annotation before writing to disk.
+                monocle_annotation_sheet.to_file_path(adjust_field_names=True)
 
             if len(self._comparison_dict[comparison_name]) >= 2:
-                # Create a Cuffdiff Runnable per comparison if there are at least two SampleGroup objects.
+                # Create a Cuffdiff Runnable per comparison, if there are at least two SampleGroup objects.
 
                 prefix_run_cuffdiff = self.get_prefix_run_cuffdiff(comparison_name=comparison_name)
 
