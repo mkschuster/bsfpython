@@ -430,58 +430,20 @@ class StarAligner(bsf.analyses.aligner.Aligner):
             str_list.extend(self.get_html_transcriptome(transcriptome_version=self.transcriptome_version))
             str_list.append('\n')
 
+            str_list.append('<h2 id="alignment_visualisation">Alignment Visualisation</h2>\n')
+            str_list.append('\n')
+
             str_list.append('<p id="ucsc_track_hub">')
+            str_list.append('Alignments can be visualised by attaching the ')
             str_list.extend(self.ucsc_hub_html_anchor(link_path=link_path))
+            str_list.append('.\n')
+            str_list.append('Upon following the link, a project-specific track configuration section ')
+            str_list.append('<strong>' + self.project_name + '</strong> ')
+            str_list.append('gets added to the UCSC Genome Browser display. By default, all tracks are turned off. ')
+            str_list.append('While all tracks can be switched on directly from the configuration section, ')
+            str_list.append('especially for larger projects, it may be better to activate individual tracks by ')
+            str_list.append('following the track category label, first.\n')
             str_list.append('</p>\n')
-            str_list.append('\n')
-
-            str_list.append('<h2 id="sample_section">Sample Table</h2>\n')
-            str_list.append('\n')
-            str_list.append('<table id="sample_table">\n')
-            str_list.append('<thead>\n')
-            str_list.append('<tr>\n')
-            str_list.append('<th>Sample</th>\n')
-            str_list.append('<th>BAM</th>\n')
-            str_list.append('<th>BAI</th>\n')
-            str_list.append('<th>MD5</th>\n')
-            str_list.append('</tr>\n')
-            str_list.append('</thead>\n')
-            str_list.append('<tbody>\n')
-
-            for sample in self.sample_list:
-                paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=True)
-
-                if not paired_reads_dict:
-                    # Skip Sample objects, which PairedReads objects have all been excluded.
-                    continue
-
-                file_path_sample = self.get_file_path_sample(sample_name=sample.name)
-
-                str_list.append('<tr>\n')
-                # Sample
-                str_list.append('<td class="left">' + sample.name + '</td>\n')
-                # BAM
-                str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_sample.sample_bam + '">')
-                str_list.append('<abbr title="Binary Alignment/Map">BAM</abbr>')
-                str_list.append('</a>')
-                str_list.append('</td>\n')
-                # BAI
-                str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_sample.sample_bai + '">')
-                str_list.append('<abbr title="Binary Alignment/Map Index">BAI</abbr>')
-                str_list.append('</a>')
-                str_list.append('</td>\n')
-                # MD5
-                str_list.append('<td class="center">')
-                str_list.append('<a href="' + file_path_sample.sample_md5 + '">')
-                str_list.append('<abbr title="Message Digest 5 Checksum">MD5</abbr>')
-                str_list.append('</a>')
-                str_list.append('</td>\n')
-                str_list.append('</tr>\n')
-
-            str_list.append('</tbody>\n')
-            str_list.append('</table>\n')
             str_list.append('\n')
 
             str_list.append('<h2 id="qc_plots">QC Plots</h2>\n')
@@ -607,6 +569,55 @@ class StarAligner(bsf.analyses.aligner.Aligner):
             str_list.append('</td>\n')
             str_list.append('<td class="left">Summary</td>\n')
             str_list.append('</tr>\n')
+
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
+
+            str_list.append('<h2 id="sample_section">Sample Table</h2>\n')
+            str_list.append('\n')
+            str_list.append('<table id="sample_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th>Sample</th>\n')
+            str_list.append('<th>BAM</th>\n')
+            str_list.append('<th>BAI</th>\n')
+            str_list.append('<th>MD5</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
+
+            for sample in self.sample_list:
+                paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False, exclude=True)
+
+                if not paired_reads_dict:
+                    # Skip Sample objects, which PairedReads objects have all been excluded.
+                    continue
+
+                file_path_sample = self.get_file_path_sample(sample_name=sample.name)
+
+                str_list.append('<tr>\n')
+                # Sample
+                str_list.append('<td class="left">' + sample.name + '</td>\n')
+                # BAM
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_sample.sample_bam + '">')
+                str_list.append('<abbr title="Binary Alignment/Map">BAM</abbr>')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
+                # BAI
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_sample.sample_bai + '">')
+                str_list.append('<abbr title="Binary Alignment/Map Index">BAI</abbr>')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
+                # MD5
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_sample.sample_md5 + '">')
+                str_list.append('<abbr title="Message Digest 5 Checksum">MD5</abbr>')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
+                str_list.append('</tr>\n')
 
             str_list.append('</tbody>\n')
             str_list.append('</table>\n')
