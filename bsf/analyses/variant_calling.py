@@ -1687,24 +1687,6 @@ class VariantCallingGATK(bsf.Analysis):
         @rtype:
         """
 
-        def set_comma_separated_list(_section, _option):
-            """Private function to get, process and set a comma separated configuration value.
-
-            Get the configuration C{str} from the C{SafeConfigParser}, split it on a comma,
-            strip white space characters and remove remaining empty strings.
-            @param _section: Configuration file section
-            @type _section: str
-            @param _option: Configuration file option
-            @type _option: str
-            @return: Python C{list} of Python C{str} or C{unicode} objects
-            @rtype: list[str | unicode]
-            """
-            return filter(
-                lambda x: x != '',
-                map(
-                    lambda x: x.strip(),
-                    config_parser.get(section=_section, option=_option).split(',')))
-
         def set_vqsr_configuration(vqsr_resources_dict, variation_type):
             """Private function to read variant quality score recalibration (VQSR) configuration information.
 
@@ -1729,7 +1711,7 @@ class VariantCallingGATK(bsf.Analysis):
                 if vqsr_resources_dict is None:
                     vqsr_resources_dict = dict()
                 # Split the resource list on a comma, split white space characters and remove remaining empty strings.
-                for resource_key in set_comma_separated_list(_section=section, _option=vqsr_option):
+                for resource_key in configuration.get_list_from_csv(section=section, option=vqsr_option):
                     # The VQSR resource section consists of section.vqsr_(indel|snp)_resource.
                     resource_section = '.'.join((section, '_'.join(('vqsr', variation_type, resource_key))))
                     if config_parser.has_section(section=resource_section):
@@ -1769,7 +1751,7 @@ class VariantCallingGATK(bsf.Analysis):
                 if annotation_resources_dict is None:
                     annotation_resources_dict = dict()
                 # Split the resource list on a comma, split white space characters and remove remaining empty strings.
-                for resource_name in set_comma_separated_list(_section=section, _option=annotation_option):
+                for resource_name in configuration.get_list_from_csv(section=section, option=annotation_option):
                     # The annotation resource section consists of section.annotation_resource.
                     resource_section = '.'.join((section, '_'.join(('annotation', resource_name))))
                     if config_parser.has_section(section=resource_section):
@@ -1784,9 +1766,9 @@ class VariantCallingGATK(bsf.Analysis):
                         if config_parser.has_option(section=resource_section, option=resource_option):
                             # Split the annotation list on a comma, split white space characters and
                             # remove remaining empty strings.
-                            annotation_list = set_comma_separated_list(
-                                _section=resource_section,
-                                _option=resource_option)
+                            annotation_list = configuration.get_list_from_csv(
+                                section=resource_section,
+                                option=resource_option)
                         else:
                             raise Exception(
                                 'Missing configuration option ' + repr(resource_option) +
@@ -1825,7 +1807,7 @@ class VariantCallingGATK(bsf.Analysis):
 
         option = 'accessory_cohort_gvcfs'
         if config_parser.has_option(section=section, option=option):
-            self.accessory_cohort_gvcfs = set_comma_separated_list(_section=section, _option=option)
+            self.accessory_cohort_gvcfs = configuration.get_list_from_csv(section=section, option=option)
 
         option = 'skip_mark_duplicates'
         if config_parser.has_option(section=section, option=option):
@@ -1853,11 +1835,11 @@ class VariantCallingGATK(bsf.Analysis):
 
         option = 'vqsr_annotations_indel'
         if config_parser.has_option(section=section, option=option):
-            self.vqsr_annotations_indel_list = set_comma_separated_list(_section=section, _option=option)
+            self.vqsr_annotations_indel_list = configuration.get_list_from_csv(section=section, option=option)
 
         option = 'vqsr_annotations_snp'
         if config_parser.has_option(section=section, option=option):
-            self.vqsr_annotations_snp_list = set_comma_separated_list(_section=section, _option=option)
+            self.vqsr_annotations_snp_list = configuration.get_list_from_csv(section=section, option=option)
 
         option = 'vqsr_bad_lod_cutoff_indel'
         if config_parser.has_option(section=section, option=option):
@@ -1898,23 +1880,23 @@ class VariantCallingGATK(bsf.Analysis):
 
         option = 'known_sites_realignment'
         if config_parser.has_option(section=section, option=option):
-            self.known_sites_realignment = set_comma_separated_list(_section=section, _option=option)
+            self.known_sites_realignment = configuration.get_list_from_csv(section=section, option=option)
 
         option = 'known_sites_recalibration'
         if config_parser.has_option(section=section, option=option):
-            self.known_sites_recalibration = set_comma_separated_list(_section=section, _option=option)
+            self.known_sites_recalibration = configuration.get_list_from_csv(section=section, option=option)
 
         option = 'known_somatic_discovery'
         if config_parser.has_option(section=section, option=option):
-            self.known_somatic_discovery = set_comma_separated_list(_section=section, _option=option)
+            self.known_somatic_discovery = configuration.get_list_from_csv(section=section, option=option)
 
         option = 'exclude_intervals'
         if config_parser.has_option(section=section, option=option):
-            self.exclude_intervals_list = set_comma_separated_list(_section=section, _option=option)
+            self.exclude_intervals_list = configuration.get_list_from_csv(section=section, option=option)
 
         option = 'include_intervals'
         if config_parser.has_option(section=section, option=option):
-            self.include_intervals_list = set_comma_separated_list(_section=section, _option=option)
+            self.include_intervals_list = configuration.get_list_from_csv(section=section, option=option)
 
         option = 'interval_padding'
         if config_parser.has_option(section=section, option=option):

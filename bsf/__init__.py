@@ -46,10 +46,6 @@ import bsf.process
 import bsf.standards
 
 
-def _comma_separated_to_list(value_string):
-    return filter(lambda x: x != '', map(lambda x: x.strip(), value_string.split(',')))
-
-
 class Analysis(object):
     """The C{bsf.Analysis} class represents a high-level analysis.
 
@@ -1810,19 +1806,11 @@ class Stage(object):
 
         option = 'node_list_exclude'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.node_list_exclude = filter(
-                lambda x: x != '',
-                map(
-                    lambda x: x.strip(),
-                    configuration.config_parser.get(section=section, option=option).split(',')))
+            self.node_list_exclude = configuration.get_list_from_csv(section=section, option=option)
 
         option = 'node_list_include'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.node_list_include = filter(
-                lambda x: x != '',
-                map(
-                    lambda x: x.strip(),
-                    configuration.config_parser.get(section=section, option=option).split(',')))
+            self.node_list_include = configuration.get_list_from_csv(section=section, option=option)
 
         option = 'time_limit'
         if configuration.config_parser.has_option(section=section, option=option):

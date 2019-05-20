@@ -301,21 +301,13 @@ class Trimmomatic(bsf.Analysis):
 
         option = 'trimming_steps_pe'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.trimming_step_pe_list = filter(
-                lambda x: x != '',
-                map(
-                    lambda x: x.strip(),
-                    configuration.config_parser.get(section=section, option=option).split(',')))
+            self.trimming_step_pe_list = configuration.get_list_from_csv(section=section, option=option)
 
         # Get the list of default trimming steps for single-end data mode.
 
         option = 'trimming_steps_se'
         if configuration.config_parser.has_option(section=section, option=option):
-            self.trimming_step_se_list = filter(
-                lambda x: x != '',
-                map(
-                    lambda x: x.strip(),
-                    configuration.config_parser.get(section=section, option=option).split(',')))
+            self.trimming_step_se_list = configuration.get_list_from_csv(section=section, option=option)
 
         # Get the Trimmomatic tool Java Archive (JAR) class path directory.
 
@@ -412,8 +404,7 @@ class Trimmomatic(bsf.Analysis):
             """ @type sample_step_list: list[str | unicode] """
             if 'Trimmomatic Steps' in sample.annotation_dict:
                 for trimming_step in sample.annotation_dict['Trimmomatic Steps']:
-                    sample_step_list.extend(
-                        filter(lambda x: x != '', map(lambda x: x.strip(), trimming_step.split(','))))
+                    sample_step_list.extend(self.configuration.list_from_csv(csv_string=trimming_step))
                 run_adjust_illumina_clip_path(trimming_step_list=sample_step_list)
 
             # The Trimmomatic analysis does not obey excluded PairedReads objects,
@@ -428,8 +419,7 @@ class Trimmomatic(bsf.Analysis):
                     paired_reads_step_list = list()
                     if 'Trimmomatic Steps' in paired_reads.annotation_dict:
                         for trimming_step in paired_reads.annotation_dict['Trimmomatic Steps']:
-                            paired_reads_step_list.extend(
-                                filter(lambda x: x != '', map(lambda x: x.strip(), trimming_step.split(','))))
+                            paired_reads_step_list.extend(self.configuration.list_from_csv(csv_string=trimming_step))
                         run_adjust_illumina_clip_path(trimming_step_list=paired_reads_step_list)
 
                     # Apply some sanity checks.

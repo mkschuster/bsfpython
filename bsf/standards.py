@@ -129,8 +129,7 @@ class Configuration(object):
         @raise Exception: Configuration file path does not exist
         """
         # Expand each file_path for user and variable names.
-        temporary_list = map(lambda x: cls.get_absolute_path(file_path=x), file_path_list)
-        """ @type temporary_list: list[str | unicode] """
+        temporary_list = [cls.get_absolute_path(file_path=x) for x in file_path_list]
 
         file_path_list = list()
         for temporary_path in temporary_list:
@@ -220,6 +219,31 @@ class Configuration(object):
         @rtype: None | str | unicode
         """
         return self.get_absolute_path(file_path=self.config_parser.get(section=section, option=option))
+
+    @staticmethod
+    def list_from_csv(csv_string):
+        """Convert a comma-separated Python C{str} into a Python C{list} of Python C{str} objects.
+
+        All elements are stripped and only non-empty elements are appended to the list.
+        @param csv_string:
+        @return:
+        """
+        return [x.strip() for x in csv_string.split(',') if x.strip()]
+
+    def get_list_from_csv(self, section, option):
+        """Convert a comma-separated Python C{str} into a Python C{list} of Python C{str} objects.
+
+        All elements are stripped and only non-empty elements are appended to the list.
+        @param section: Configuration file section string
+        @type section: str | unicode
+        @param option: Configuration file option string
+        @type option: str | unicode
+        @return: Python C{list} of Python C{str} objects
+        @rtype: list[str] | None
+        """
+        csv_string = self.config_parser.get(section=section, option=option)
+        if csv_string:
+            return self.list_from_csv(csv_string=csv_string)
 
 
 class BaseSection(object):

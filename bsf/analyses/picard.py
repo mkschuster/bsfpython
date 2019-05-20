@@ -3269,8 +3269,7 @@ class SamToFastq(bsf.Analysis):
                                 repl='_',
                                 string=read_group_dict['PU'])
                             read_group_list = ['@RG']
-                            read_group_list.extend(
-                                map(lambda x: ':'.join((x, read_group_dict[x])), read_group_dict.keys()))
+                            read_group_list.extend([':'.join((key, value)) for key, value in read_group_dict.items()])
                             if read_group_dict == alignment_file.header['RG'][0]:
                                 # Use the '==' rather than the 'is' operator, since dictionaries do not seem to be
                                 # at the same memory address.

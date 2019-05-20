@@ -488,15 +488,16 @@ class DatabaseAdaptor(object):
         @return: Column name for primary key
         @rtype: str | unicode | None
         """
-        name_list = map(lambda x: x[0], filter(lambda x: 'AUTOINCREMENT' in x[1], self.column_definition))
+        primary_key = None
 
-        list_length = len(name_list)
-        if list_length < 1:
-            return None
-        elif list_length == 1:
-            return name_list[0]
-        else:
-            raise Exception("SQL column definition with more than one 'AUTOINCREMENT' attribute.")
+        for item in self.column_definition:
+            if 'AUTOINCREMENT' in item[1]:
+                if primary_key:
+                    raise Exception("SQL column definition with more than one 'AUTOINCREMENT' attribute.")
+                else:
+                    primary_key = item[0]
+
+        return primary_key
 
     def _build_column_result_expression(self):
         """Build a SQL expression of column names typically used in I{SELECT} statements.
@@ -865,7 +866,7 @@ class DatabaseAdaptor(object):
         if not primary_name:
             raise Exception('Cannot update table ' + repr(self.table_name) + ' without a primary key.')
 
-        value_list = map(lambda x: object_instance.__getattribute__(x), self._get_column_name_list_without_primary())
+        value_list = [object_instance.__getattribute__(item) for item in self._get_column_name_list_without_primary()]
         value_list.append(object_instance.__getattribute__(primary_name))
 
         try:

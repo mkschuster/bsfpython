@@ -407,12 +407,12 @@ class RunInformation(object):
 
         # Sort by the RunInformationRead.number.
 
-        run_information_read_list.sort(key=lambda item: item.number)
+        run_information_read_list.sort(key=lambda _item: _item.number)
 
         # Warn if there is not at least one non-index read (i.e. RunInformationRead.index).
 
-        non_index_reads = filter(lambda item: not item.index, run_information_read_list)
-        if len(non_index_reads) == 0:
+        non_index_reads_list = [item for item in run_information_read_list if not item.index]
+        if len(non_index_reads_list) == 0:
             warnings.warn(
                 'No non-index read in Illumina RunInformation: ' + repr(file_path),
                 UserWarning)
@@ -1083,10 +1083,10 @@ class RunFolder(object):
         return cls(
             file_path=file_path,
             file_type='Illumina',
-            date=component_list[0],
-            instrument=component_list[1],
-            run=component_list[2],
-            flow_cell=component_list[3],
+            date=component_list[0].decode(),
+            instrument=component_list[1].decode(),
+            run=component_list[2].decode(),
+            flow_cell=component_list[3].decode(),
             run_information=RunInformation.from_file_path(file_path=os.path.join(file_path, 'RunInfo.xml')),
             run_parameters=RunParameters.from_file_path(file_path=run_parameters_path),
             image_analysis=ImageAnalysis.from_file_path(file_path=os.path.join(
