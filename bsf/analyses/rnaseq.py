@@ -3723,8 +3723,8 @@ class DESeq(bsf.Analysis):
 
                 row_dict = {
                     'sample': sample.name,
-                    'bam_path': file_path_sample.merged_bam,
-                    'bai_path': file_path_sample.merged_bai,
+                    'bam_path': file_path_sample.sample_bam,
+                    'bai_path': file_path_sample.sample_bai,
                 }
                 """ @type row_dict: dict[str, str | unicode] """
                 # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample DESeq *'.
@@ -3790,7 +3790,20 @@ class DESeq(bsf.Analysis):
             str_list.extend(self.get_html_transcriptome(transcriptome_version=self.transcriptome_version))
             str_list.append('\n')
 
-            str_list.append('<p>')
+            str_list.append('<p id="star_aligner">')
+            str_list.append('<a href="https://github.com/alexdobin/STAR">STAR</a> ')
+            str_list.append('aligns RNA-seq reads to a reference genome in order to identify ')
+            str_list.append('exon-exon splice junctions.\n')
+            # str_list.append('<br />\n')
+            str_list.append('Please see the ')
+            str_list.append('<a href="' + bsf.analyses.star_aligner.StarAligner.prefix + '_report.html">')
+            str_list.append(self.project_name + ' ' + bsf.analyses.star_aligner.StarAligner.name)
+            str_list.append('</a> report for quality plots and ')
+            str_list.append('a link to alignment visualisation in the UCSC Genome Browser.\n')
+            str_list.append('</p>\n')
+            str_list.append('\n')
+
+            str_list.append('<p id="deseq2">')
             str_list.append('The <a href="https://bioconductor.org/">Bioconductor</a> ')
             str_list.append('<a href="https://bioconductor.org/packages/release/bioc/html/DESeq2.html">DESeq2</a> ')
             str_list.append('package estimates variance-mean dependence in count data from ')
@@ -3913,6 +3926,7 @@ class DESeq(bsf.Analysis):
             str_list.append('<th class="left">Significant Genes</th>\n')
             str_list.append('<th class="left">Significant Number</th>\n')
             str_list.append('<th class="left">MA Plot</th>\n')
+            str_list.append('<th class="left">Volcano Plot</th>\n')
             str_list.append('</tr>\n')
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
@@ -3997,6 +4011,20 @@ class DESeq(bsf.Analysis):
                                             prefix=design_prefix,
                                             suffix='_'.join(('contrast', numerator, 'against', denominator, 'ma.png')),
                                             text='MA plot',
+                                            height='80',
+                                            width='80')) +
+                                    '</td>\n')
+                    # Volcano Plot
+                    str_list.append('<td>' +
+                                    self.get_html_anchor(
+                                        prefix=design_prefix,
+                                        suffix='_'.join((
+                                            'contrast', numerator, 'against', denominator, 'volcano.pdf')),
+                                        text=self.get_html_image(
+                                            prefix=design_prefix,
+                                            suffix='_'.join((
+                                                'contrast', numerator, 'against', denominator, 'volcano.png')),
+                                            text='Volcano plot',
                                             height='80',
                                             width='80')) +
                                     '</td>\n')
