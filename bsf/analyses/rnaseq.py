@@ -3920,13 +3920,13 @@ class DESeq(bsf.Analysis):
             str_list.append('<tr>\n')
             str_list.append('<th class="left">Design</th>\n')
             str_list.append('<th class="left">Contrast</th>\n')
-            str_list.append('<th class="left">Numerator</th>\n')
-            str_list.append('<th class="left">Denominator</th>\n')
             str_list.append('<th class="left">Differential Genes</th>\n')
             str_list.append('<th class="left">Significant Genes</th>\n')
             str_list.append('<th class="left">Significant Number</th>\n')
             str_list.append('<th class="left">MA Plot</th>\n')
             str_list.append('<th class="left">Volcano Plot</th>\n')
+            str_list.append('<th class="left">Numerator</th>\n')
+            str_list.append('<th class="left">Denominator</th>\n')
             str_list.append('</tr>\n')
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
@@ -3972,10 +3972,6 @@ class DESeq(bsf.Analysis):
                     str_list.append('<td class="left">' + row_dict['Design'] + '</td>\n')
                     # Contrast
                     str_list.append('<td class="left">' + row_dict['Label'] + '</td>\n')
-                    # Numerator
-                    str_list.append('<td class="left">' + row_dict['Numerator'] + '</td>\n')
-                    # Denominator
-                    str_list.append('<td class="left">' + row_dict['Denominator'] + '</td>\n')
                     # TSV
                     numerator = row_dict['Numerator'].replace(',', '_')
                     denominator = row_dict['Denominator'].replace(',', '_')
@@ -4028,6 +4024,10 @@ class DESeq(bsf.Analysis):
                                             height='80',
                                             width='80')) +
                                     '</td>\n')
+                    # Numerator
+                    str_list.append('<td class="left">' + row_dict['Numerator'] + '</td>\n')
+                    # Denominator
+                    str_list.append('<td class="left">' + row_dict['Denominator'] + '</td>\n')
                     str_list.append('</tr>\n')
 
             str_list.append('</tbody>\n')
