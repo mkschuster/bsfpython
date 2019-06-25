@@ -353,9 +353,13 @@ class FilePathDiffBind(bsf.procedure.FilePath):
 
         self.output_directory = prefix
         self.sample_annotation_sheet = prefix + '_samples.csv'
+        self.correlation_read_counts_pdf = os.path.join(prefix, prefix + '_correlation_read_counts.pdf')
         self.correlation_read_counts_png = os.path.join(prefix, prefix + '_correlation_read_counts.png')
+        self.correlation_peak_caller_score_pdf = os.path.join(prefix, prefix + '_correlation_peak_caller_score.pdf')
         self.correlation_peak_caller_score_png = os.path.join(prefix, prefix + '_correlation_peak_caller_score.png')
+        self.correlation_analysis_pdf = os.path.join(prefix, prefix + '_correlation_analysis.pdf')
         self.correlation_analysis_png = os.path.join(prefix, prefix + '_correlation_analysis.png')
+        self.pca_pdf = os.path.join(prefix, prefix + '_pca_plot.pdf')
         self.pca_png = os.path.join(prefix, prefix + '_pca_plot.png')
         self.contrasts_csv = os.path.join(prefix, prefix + '_contrasts.csv')
 
@@ -379,9 +383,13 @@ class FilePathDiffBindContrast(bsf.procedure.FilePath):
 
         suffix = group_1 + '__' + group_2
 
+        self.ma_plot_pdf = os.path.join(prefix, prefix + '_ma_plot_' + suffix + '.pdf')
         self.ma_plot_png = os.path.join(prefix, prefix + '_ma_plot_' + suffix + '.png')
+        self.scatter_plot_pdf = os.path.join(prefix, prefix + '_scatter_plot_' + suffix + '.pdf')
         self.scatter_plot_png = os.path.join(prefix, prefix + '_scatter_plot_' + suffix + '.png')
+        self.pca_plot_pdf = os.path.join(prefix, prefix + '_pca_plot_' + suffix + '.pdf')
         self.pca_plot_png = os.path.join(prefix, prefix + '_pca_plot_' + suffix + '.png')
+        self.box_plot_pdf = os.path.join(prefix, prefix + '_box_plot_' + suffix + '.pdf')
         self.box_plot_png = os.path.join(prefix, prefix + '_box_plot_' + suffix + '.png')
         self.dba_report_csv = os.path.join(prefix, prefix + '_report_' + suffix + '.csv')
 
@@ -1774,7 +1782,7 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('<td><strong>' + factor_name + '</strong></td>\n')
                     # Correlation heat map of peak caller scores
                     str_list.append('<td>')
-                    str_list.append('<a href="' + file_path_diff_bind.correlation_peak_caller_score_png + '">')
+                    str_list.append('<a href="' + file_path_diff_bind.correlation_peak_caller_score_pdf + '">')
                     str_list.append('<img')
                     str_list.append(' alt="DiffBind correlation analysis for factor ' + factor_name + '"')
                     str_list.append(' src="' + file_path_diff_bind.correlation_peak_caller_score_png + '"')
@@ -1784,7 +1792,7 @@ class ChIPSeq(bsf.Analysis):
 
                     # Correlation heat map of counts
                     str_list.append('<td>')
-                    str_list.append('<a href="' + file_path_diff_bind.correlation_read_counts_png + '">')
+                    str_list.append('<a href="' + file_path_diff_bind.correlation_read_counts_pdf + '">')
                     str_list.append('<img')
                     str_list.append(' alt="DiffBind correlation analysis for factor ' + factor_name + '"')
                     str_list.append(' src="' + file_path_diff_bind.correlation_read_counts_png + '"')
@@ -1794,7 +1802,7 @@ class ChIPSeq(bsf.Analysis):
 
                     # Correlation heat map of differential binding analysis
                     str_list.append('<td>')
-                    str_list.append('<a href="' + file_path_diff_bind.correlation_analysis_png + '">')
+                    str_list.append('<a href="' + file_path_diff_bind.correlation_analysis_pdf + '">')
                     str_list.append('<img')
                     str_list.append(' alt="DiffBind correlation analysis for factor ' + factor_name + '"')
                     str_list.append(' src="' + file_path_diff_bind.correlation_analysis_png + '"')
@@ -1807,7 +1815,7 @@ class ChIPSeq(bsf.Analysis):
 
                     # Score-based PCA Plot
                     str_list.append('<td>')
-                    str_list.append('<a href="' + file_path_diff_bind.pca_png + '">')
+                    str_list.append('<a href="' + file_path_diff_bind.pca_pdf + '">')
                     str_list.append('<img')
                     str_list.append(' alt="Score-based PCA plot for factor ' + factor_name + '"')
                     str_list.append(' src="' + file_path_diff_bind.pca_png + '"')
@@ -1860,7 +1868,7 @@ class ChIPSeq(bsf.Analysis):
 
                         # MA Plot
                         str_list.append('<td>')
-                        str_list.append('<a href="' + file_path_diff_bind_contrast.ma_plot_png + '">')
+                        str_list.append('<a href="' + file_path_diff_bind_contrast.ma_plot_pdf + '">')
                         str_list.append('<img')
                         str_list.append(' alt="DiffBind MA plot for factor ' + factor_name + '"')
                         str_list.append(' src="' + file_path_diff_bind_contrast.ma_plot_png + '"')
@@ -1870,7 +1878,7 @@ class ChIPSeq(bsf.Analysis):
 
                         # Scatter Plot
                         str_list.append('<td>')
-                        str_list.append('<a href="' + file_path_diff_bind_contrast.scatter_plot_png + '">')
+                        str_list.append('<a href="' + file_path_diff_bind_contrast.scatter_plot_pdf + '">')
                         str_list.append('<img')
                         str_list.append(' alt="DiffBind scatter plot for factor ' + factor_name + '"')
                         str_list.append(' src="' + file_path_diff_bind_contrast.scatter_plot_png + '"')
@@ -1882,7 +1890,7 @@ class ChIPSeq(bsf.Analysis):
                         str_list.append('<td>')
                         if os.path.exists(
                                 os.path.join(self.genome_directory, file_path_diff_bind_contrast.pca_plot_png)):
-                            str_list.append('<a href="' + file_path_diff_bind_contrast.pca_plot_png + '">')
+                            str_list.append('<a href="' + file_path_diff_bind_contrast.pca_plot_pdf + '">')
                             str_list.append('<img')
                             str_list.append(' alt="DiffBind PCA plot for factor ' + factor_name + '"')
                             str_list.append(' src="' + file_path_diff_bind_contrast.pca_plot_png + '"')
@@ -1894,7 +1902,7 @@ class ChIPSeq(bsf.Analysis):
                         str_list.append('<td>')
                         if os.path.exists(
                                 os.path.join(self.genome_directory, file_path_diff_bind_contrast.box_plot_png)):
-                            str_list.append('<a href="' + file_path_diff_bind_contrast.box_plot_png + '">')
+                            str_list.append('<a href="' + file_path_diff_bind_contrast.box_plot_pdf + '">')
                             str_list.append('<img')
                             str_list.append(' alt="DiffBind Box plot for factor ' + factor_name + '"')
                             str_list.append(' src="' + file_path_diff_bind_contrast.box_plot_png + '"')
