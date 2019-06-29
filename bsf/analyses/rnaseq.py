@@ -3616,6 +3616,9 @@ class DESeq(bsf.Analysis):
             self.genome_version = bsf.standards.Transcriptome.get_genome(
                 transcriptome_version=self.transcriptome_version)
 
+        if not self.genome_version:
+            raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
+
         # Get the annotation sheets before calling the run() method of the Analysis super-class.
         # If file paths were not provided, try to find them in the current directory.
         # The complication is that either the Tuxedo.prefix or the DESeq.prefix could be used.
@@ -3722,10 +3725,16 @@ class DESeq(bsf.Analysis):
                 file_path_sample = bsf.analyses.star_aligner.StarAligner.get_file_path_sample(sample_name=sample.name)
 
                 row_dict = {
-                    'sample': sample.name,
                     'bam_path': file_path_sample.sample_bam,
                     'bai_path': file_path_sample.sample_bai,
                 }
+                # If the sample annotation sheet contains a "DESeq sample" variable,
+                # technical replicates need collapsing. Set the original bsf.ngs.Sample.name as
+                # 'run', the DESeq sample name will be filled in from the annotation dict below.
+                if "DESeq sample" in sample.annotation_dict:
+                    row_dict['run'] = sample.name
+                else:
+                    row_dict['sample'] = sample.name
                 """ @type row_dict: dict[str, str | unicode] """
                 # Set additional columns from the Sample Annotation Sheet prefixed with 'Sample DESeq *'.
                 for annotation_key in filter(lambda x: x.startswith('DESeq '), sample.annotation_dict.keys()):
