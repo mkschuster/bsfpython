@@ -1070,6 +1070,9 @@ class Tuxedo(bsf.Analysis):
             self.genome_version = bsf.standards.Transcriptome.get_genome(
                 transcriptome_version=self.transcriptome_version)
 
+        if not self.genome_version:
+            raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
+
         # Get the sample annotation sheet before calling the run() method of the Analysis super-class.
 
         if self.sas_file:
@@ -1191,7 +1194,8 @@ class Tuxedo(bsf.Analysis):
 
             self.transcriptome_gtf_path = bsf.standards.FilePath.get_resource_transcriptome_gtf(
                 transcriptome_version=self.transcriptome_version,
-                transcriptome_index='tophat2')
+                transcriptome_index='tophat2',
+                basic=False)
 
             if not os.path.exists(self.transcriptome_gtf_path):
                 raise Exception('Reference transcriptome GTF file path {!r} does not exist.'.

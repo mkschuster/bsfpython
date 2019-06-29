@@ -1067,27 +1067,60 @@ class FilePath(BaseSection):
                 index_directory)
 
     @classmethod
-    def get_resource_transcriptome_gtf(cls, transcriptome_version, transcriptome_index, absolute=True):
+    def get_resource_transcriptome_gtf(cls, transcriptome_version, transcriptome_index, basic=True, absolute=True):
         """Get a transcriptome GTF resource file path.
 
         @param transcriptome_version: Transcriptome version (e.g. mm10_e87, ...)
         @type transcriptome_version: str
         @param transcriptome_index: Transcriptome index (e.g. star, tophat, ...)
         @type transcriptome_index: str
+        @param basic: Basic transcriptome
+        @type basic: bool
         @param absolute: Absolute file path
         @type absolute: bool
         @return: Transcriptome GTF resource file path
         @rtype: None | str | unicode
-        @return: Absolute path to the transcriptome GTF file
-        @rtype: str | unicode
         @raise Exception: Unknown transcriptome index name
         """
+        if basic:
+            file_name = transcriptome_version + '.basic.gtf'
+        else:
+            file_name = transcriptome_version + '.gtf'
+
         return os.path.join(
             cls.get_resource_transcriptome_index(
                 transcriptome_version=transcriptome_version,
                 transcriptome_index=transcriptome_index,
                 absolute=absolute),
-            transcriptome_version + '.gtf')
+            file_name)
+
+    @classmethod
+    def get_resource_transcriptome_txdb(cls, transcriptome_version, transcriptome_index, basic=True, absolute=True):
+        """Get a transcriptome TxDb resource file path.
+
+        @param transcriptome_version: Transcriptome version (e.g. mm10_e87, ...)
+        @type transcriptome_version: str
+        @param transcriptome_index: Transcriptome index (e.g. star, tophat, ...)
+        @type transcriptome_index: str
+        @param basic: Basic transcriptome
+        @type basic: bool
+        @param absolute: Absolute file path
+        @type absolute: bool
+        @return: Transcriptome TxDb resource file path
+        @rtype: None | str | unicode
+        @raise Exception: Unknown transcriptome index name
+        """
+        if basic:
+            file_name = transcriptome_version + '.basic.sqlite'
+        else:
+            file_name = transcriptome_version + '.sqlite'
+
+        return os.path.join(
+            cls.get_resource_transcriptome_index(
+                transcriptome_version=transcriptome_version,
+                transcriptome_index=transcriptome_index,
+                absolute=absolute),
+            file_name)
 
     @classmethod
     def get_resource_gatk_bundle(cls, gatk_bundle_version=None, genome_version=None, absolute=True):

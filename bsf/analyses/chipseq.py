@@ -362,6 +362,8 @@ class FilePathDiffBind(bsf.procedure.FilePath):
         self.pca_pdf = os.path.join(prefix, prefix + '_pca_plot.pdf')
         self.pca_png = os.path.join(prefix, prefix + '_pca_plot.png')
         self.contrasts_csv = os.path.join(prefix, prefix + '_contrasts.csv')
+        self.chromosome_regions_pdf = os.path.join(prefix, prefix + '_peak_set_chromosome_regions.pdf')
+        self.chromosome_regions_png = os.path.join(prefix, prefix + '_peak_set_chromosome_regions.png')
 
         return
 
@@ -391,7 +393,8 @@ class FilePathDiffBindContrast(bsf.procedure.FilePath):
         self.pca_plot_png = os.path.join(prefix, prefix + '_pca_plot_' + suffix + '.png')
         self.box_plot_pdf = os.path.join(prefix, prefix + '_box_plot_' + suffix + '.pdf')
         self.box_plot_png = os.path.join(prefix, prefix + '_box_plot_' + suffix + '.png')
-        self.dba_report_csv = os.path.join(prefix, prefix + '_report_' + suffix + '.csv')
+        self.dba_report_tsv = os.path.join(prefix, prefix + '_peaks_' + suffix + '.tsv')
+        self.dba_report_genes_tsv = os.path.join(prefix, prefix + '_peaks_' + suffix + '_genes.tsv')
 
         return
 
@@ -511,6 +514,12 @@ class ChIPSeq(bsf.Analysis):
     @type genome_fasta_path: str | unicode | None
     @ivar genome_sizes_path: Reference genome (chromosome) sizes file path
     @type genome_sizes_path: str | unicode | None
+    @ivar transcriptome_version: Transcriptome version
+    @type transcriptome_version: str | None
+    @ivar transcriptome_gtf_path: Transcriptome GTF file path
+    @type transcriptome_gtf_path: str | unicode | None
+    @ivar transcriptome_txdb_path: Transcriptome TxDb file path
+    @type transcriptome_txdb_path: str | unicode | None
     @ivar colour_default: Default UCSC Genome Browser Track Hub RGB colour
     @type colour_default: str | None
     @ivar colour_dict: Python C{dict} of
@@ -659,6 +668,9 @@ class ChIPSeq(bsf.Analysis):
             comparison_path=None,
             genome_fasta_path=None,
             genome_sizes_path=None,
+            transcriptome_version=None,
+            transcriptome_gtf_path=None,
+            transcriptome_txdb_path=None,
             colour_default=None,
             colour_dict=None,
             factor_default=None):
@@ -698,6 +710,12 @@ class ChIPSeq(bsf.Analysis):
         @type genome_fasta_path: str | unicode | None
         @param genome_sizes_path: Reference genome (chromosome) sizes file path
         @type genome_sizes_path: str | unicode | None
+        @param transcriptome_version: Transcriptome version
+        @type transcriptome_version: str | None
+        @param transcriptome_gtf_path: Transcriptome GTF file path
+        @type transcriptome_gtf_path: str | unicode | None
+        @param transcriptome_txdb_path: Transcriptome TxDb file path
+        @type transcriptome_txdb_path: str | unicode | None
         @param colour_default: Default UCSC Genome Browser Track Hub RGB colour
         @type colour_default: str | None
         @param colour_dict: Python C{dict} of
@@ -737,6 +755,9 @@ class ChIPSeq(bsf.Analysis):
         self.factor_default = factor_default
         self.genome_fasta_path = genome_fasta_path
         self.genome_sizes_path = genome_sizes_path
+        self.transcriptome_version = transcriptome_version
+        self.transcriptome_gtf_path = transcriptome_gtf_path
+        self.transcriptome_txdb_path = transcriptome_txdb_path
 
         self._comparison_dict = dict()
         """ @type _comparison_dict: dict[str, dict[str, ChIPSeqComparison]] """
@@ -778,6 +799,18 @@ class ChIPSeq(bsf.Analysis):
         option = 'genome_sizes'
         if configuration.config_parser.has_option(section=section, option=option):
             self.genome_sizes_path = configuration.config_parser.get(section=section, option=option)
+
+        option = 'transcriptome_version'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.transcriptome_version = configuration.config_parser.get(section=section, option=option)
+
+        option = 'transcriptome_gtf'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.transcriptome_gtf_path = configuration.config_parser.get(section=section, option=option)
+
+        option = 'transcriptome_txdb'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.transcriptome_txdb_path = configuration.config_parser.get(section=section, option=option)
 
         option = 'colour_default'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -1436,6 +1469,27 @@ class ChIPSeq(bsf.Analysis):
                         key='sample-annotation',
                         value=file_path_diff_bind.sample_annotation_sheet)
 
+                    # Add a RunnableStep for Bioconductor ChIPpeakAnno
+
+                    if self.transcriptome_gtf_path and self.transcriptome_txdb_path:
+                        runnable_step = bsf.process.RunnableStep(
+                            name='annotation',
+                            program='bsf_chipseq_annotation.R')
+                        runnable_diff_bind.add_runnable_step(runnable_step=runnable_step)
+
+                        runnable_step.add_option_long(
+                            key='comparison',
+                            value=comparison_name)
+                        runnable_step.add_option_long(
+                            key='factor',
+                            value=factor_name)
+                        runnable_step.add_option_long(
+                            key='gtf-reference',
+                            value=self.transcriptome_gtf_path)
+                        runnable_step.add_option_long(
+                            key='txdb-path',
+                            value=self.transcriptome_txdb_path)
+
                     # Add a RunnableStep for Bioconductor ChIPQC.
 
                     runnable_step = bsf.process.RunnableStep(
@@ -1462,10 +1516,17 @@ class ChIPSeq(bsf.Analysis):
         if not self.project_name:
             raise Exception('A ' + self.name + " requires a 'project_name' configuration option.")
 
-        # ChIPSeq requires a genome version.
+        # ChIPSeq requires a transcriptome version.
+
+        if not self.transcriptome_version:
+            raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
 
         if not self.genome_version:
-            raise Exception('A ' + self.name + " requires a 'genome_version' configuration option.")
+            self.genome_version = bsf.standards.Transcriptome.get_genome(
+                transcriptome_version=self.transcriptome_version)
+
+        if not self.genome_version:
+            raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
 
         # Get the sample annotation sheet before calling the run() method of the Analysis super-class.
 
@@ -1488,6 +1549,20 @@ class ChIPSeq(bsf.Analysis):
             self.comparison_path = self.get_annotation_file(prefix_list=[ChIPSeq.prefix], suffix='comparisons.csv')
             if not self.comparison_path:
                 raise Exception('No suitable comparison annotation file in the current working directory.')
+
+        if not self.transcriptome_gtf_path:
+            self.transcriptome_gtf_path = bsf.standards.FilePath.get_resource_transcriptome_gtf(
+                transcriptome_version=self.transcriptome_version,
+                transcriptome_index='none',
+                basic=True,
+                absolute=True)
+
+        if not self.transcriptome_txdb_path:
+            self.transcriptome_txdb_path = bsf.standards.FilePath.get_resource_transcriptome_txdb(
+                transcriptome_version=self.transcriptome_version,
+                transcriptome_index='none',
+                basic=True,
+                absolute=True)
 
         super(ChIPSeq, self).run()
 
@@ -1824,7 +1899,17 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('</td>\n')
 
                     str_list.append('<td></td>\n')  # Box Plot
-                    str_list.append('<td></td>\n')  # DiffBind Report
+
+                    # DiffBind Report
+                    str_list.append('<td>')
+                    if os.path.exists(os.path.join(self.genome_directory, file_path_diff_bind.chromosome_regions_png)):
+                        str_list.append('<a href="' + file_path_diff_bind.chromosome_regions_pdf + '">')
+                        str_list.append('<img')
+                        str_list.append(' alt="Chromosome region plot for factor ' + factor_name + '"')
+                        str_list.append(' src="' + file_path_diff_bind.chromosome_regions_png + '"')
+                        str_list.append(' height="80" width="80">')
+                        str_list.append('</a>')
+                    str_list.append('</td>\n')
 
                     # ChIPQC HTML Report
                     str_list.append('<td>')
@@ -1911,11 +1996,17 @@ class ChIPSeq(bsf.Analysis):
                         str_list.append('</td>\n')
 
                         # DiffBind report (optional)
+                        # Try the annotated report (*_suffix_genes.tsv) first, then the unannotated one (_suffix.tsv).
                         str_list.append('<td>')
                         if os.path.exists(
-                                os.path.join(self.genome_directory, file_path_diff_bind_contrast.dba_report_csv)):
-                            str_list.append('<a href="' + file_path_diff_bind_contrast.dba_report_csv + '">')
-                            str_list.append('<abbr title="Comma-Separated Value">CSV</abbr>')
+                                os.path.join(self.genome_directory, file_path_diff_bind_contrast.dba_report_genes_tsv)):
+                            str_list.append('<a href="' + file_path_diff_bind_contrast.dba_report_genes_tsv + '">')
+                            str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+                            str_list.append('</a>')
+                        elif os.path.exists(
+                                os.path.join(self.genome_directory, file_path_diff_bind_contrast.dba_report_tsv)):
+                            str_list.append('<a href="' + file_path_diff_bind_contrast.dba_report_tsv + '">')
+                            str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
                             str_list.append('</a>')
                         str_list.append('</td>\n')
 

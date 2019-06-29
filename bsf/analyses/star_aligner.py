@@ -377,6 +377,9 @@ class StarAligner(bsf.analyses.aligner.Aligner):
             self.genome_version = bsf.standards.Transcriptome.get_genome(
                 transcriptome_version=self.transcriptome_version)
 
+        if not self.genome_version:
+            raise Exception('A ' + self.name + " requires a valid 'transcriptome_version' configuration option.")
+
         if not self.index_directory:
             self.index_directory = bsf.standards.FilePath.get_resource_transcriptome_index(
                 transcriptome_version=self.transcriptome_version,
@@ -386,7 +389,9 @@ class StarAligner(bsf.analyses.aligner.Aligner):
             # FIXME: The transcriptome_gtf is currently not used.
             self.transcriptome_gtf = bsf.standards.FilePath.get_resource_transcriptome_gtf(
                 transcriptome_version=self.transcriptome_version,
-                transcriptome_index='star')
+                transcriptome_index='none',
+                basic=True,
+                absolute=True)
 
         if not self.two_pass_mapping:
             self.two_pass_mapping = 'none'
