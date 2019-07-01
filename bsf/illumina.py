@@ -210,6 +210,20 @@ class RunInformationFlowcellLayout(object):
 
         return
 
+    def has_tile(self, tile):
+        """Test the C{RunInformationFlowcellLayout} for a particular tile.
+
+        @param tile: Flowcell tile
+        @type tile: str
+        @return: C{True} if the tile is in the C{RunInformationFlowcellLayout}, C{False} otherwise
+        @rtype: bool
+        """
+        if self.tile_list:
+            return tile in self.tile_list
+        else:
+            # The tile list is not populated, return true.
+            return True
+
 
 class RunInformationRead(object):
     """The C{bsf.illumina.RunInformationRead} class models
@@ -641,6 +655,16 @@ class RunInformation(object):
                 read_structure_list.append(str(run_information_read.cycles) + 'B')
 
         return read_structure_list
+
+    def has_tile(self, tile):
+        """Convenience method to test the C{RunInformationFlowcellLayout} for a particular tile.
+
+        @param tile: Flowcell tile
+        @type tile: str
+        @return: C{True} if the tile is in the C{RunInformationFlowcellLayout}, C{False} otherwise
+        @rtype: bool
+        """
+        return self.flow_cell_layout.has_tile(tile=tile)
 
 
 class RunParameters(object):
@@ -1744,6 +1768,10 @@ class RunFolder(object):
                     for surface in range(0 + 1, fcl.surface_count + 1):
                         # NovaSeq has only L001_<surface>.cbcl files.
                         if rta in ('v3.3.3', 'v3.4.4'):
+                            # To make matters even more complicated, NovaSeq SP flow cells only
+                            # have base calls for the second surface.
+                            if surface == 1 and self.run_parameters.get_flow_cell_type == 'SP':
+                                continue
                             _entry_name = '{}_{:d}.cbcl'.format(lane_name, surface)
                             if _entry_name in cycle_dict:
                                 del cycle_dict[_entry_name]
@@ -1815,11 +1843,13 @@ class RunFolder(object):
                             # Process tile filter files.
                             # s_1_1101.filter
                             # s_1_2316.filter
-                            _entry_name = 's_{:1d}_{:1d}{:1d}{:02d}.filter'.format(lane, surface, swath, tile)
-                            if _entry_name in lane_dict:
-                                del lane_dict[_entry_name]
-                            else:
-                                print('Missing tile filter file', os.path.join(lane_path, _entry_name))
+                            _tile_name = '{:1d}_{:1d}{:1d}{:02d}'.format(lane, surface, swath, tile)
+                            if self.run_information.has_tile(tile=_tile_name):
+                                _entry_name = 's_{:1d}_{:1d}{:1d}{:02d}.filter'.format(lane, surface, swath, tile)
+                                if _entry_name in lane_dict:
+                                    del lane_dict[_entry_name]
+                                else:
+                                    print('Missing tile filter file', os.path.join(lane_path, _entry_name))
 
             if len(lane_dict):
                 print(lane_path, 'with number of entries:', str(len(lane_dict)))
@@ -2653,6 +2683,10 @@ class RunFolder(object):
                                     # s_2_1103_green.png
                                     # s_2_1103_red.png
                                     if (tile - 3) % 10:
+                                        continue
+                                    # NovaSeq SP flow cells have only particular tiles from the full range defined.
+                                    if not self.run_information.has_tile(tile='{:1d}_{:1d}{:1d}{:02d}'.format(
+                                            lane, surface, swath, tile)):
                                         continue
                                     tile_file = 's_{:1d}_{:1d}{:1d}{:02d}_{}.png'.format(
                                         lane, surface, swath, tile, base)
