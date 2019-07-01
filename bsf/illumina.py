@@ -130,7 +130,7 @@ class Adaptors(object):
         if adaptor_class:  # not None and not empty
             adaptor_class_list = [adaptor_class]
         else:
-            adaptor_class_list = self.adaptor_dict.keys()
+            adaptor_class_list = [key for key in self.adaptor_dict]
 
         # Iterate over all adaptor classes.
         for adaptor_class_key in adaptor_class_list:
@@ -138,7 +138,7 @@ class Adaptors(object):
             if adaptor_type:  # not None and not empty
                 adaptor_type_list = [adaptor_type]
             else:
-                adaptor_type_list = class_dict.keys()
+                adaptor_type_list = [key for key in class_dict]
 
             # Iterate over all adaptor types.
             for adaptor_type_key in adaptor_type_list:
@@ -146,7 +146,7 @@ class Adaptors(object):
                 if adaptor_name:  # not None and not empty
                     adaptor_name_list = [adaptor_name]
                 else:
-                    adaptor_name_list = type_dict.keys()
+                    adaptor_name_list = [key for key in type_dict]
 
                 # Iterate over all adaptor names.
                 for adaptor_name_key in adaptor_name_list:
@@ -176,9 +176,11 @@ class RunInformationFlowcellLayout(object):
     @type swath_count: int
     @ivar tile_count: Number of tiles
     @type tile_count: int
+    @ivar tile_list: Python C{list} of Python C{str} tile names
+    @type tile_list: list[str]
     """
 
-    def __init__(self, lane_count=0, surface_count=0, swath_count=0, tile_count=0):
+    def __init__(self, lane_count=0, surface_count=0, swath_count=0, tile_count=0, tile_list=None):
         """Initialise a C{bsf.illumina.RunInformationFlowcellLayout} object.
 
         @param lane_count: Number of lanes
@@ -189,6 +191,8 @@ class RunInformationFlowcellLayout(object):
         @type swath_count: int
         @param tile_count: Number of tiles
         @type tile_count: int
+        @param tile_list: Python C{list} of Python C{str} tile names
+        @type tile_list: list[str]
         @return:
         @rtype:
         """
@@ -198,6 +202,11 @@ class RunInformationFlowcellLayout(object):
         self.surface_count = surface_count
         self.swath_count = swath_count
         self.tile_count = tile_count
+
+        if tile_list is None:
+            self.tile_list = list()
+        else:
+            self.tile_list = tile_list
 
         return
 
@@ -424,11 +433,20 @@ class RunInformation(object):
         xml_flow_cell_layout = run_info_tree.find(path='Run/FlowcellLayout')
         """ @type xml_flow_cell_layout: xml.etree.ElementTree.Element | None """
         if xml_flow_cell_layout is not None:
+            xml_tiles = run_info_tree.find(path='Run/FlowcellLayout/TileSet/Tiles')
+            if xml_tiles is not None:
+                """ @type tile_name_list: list[str] | None """
+                tile_name_list = [xml_tile.text for xml_tile in xml_tiles]
+            else:
+                tile_name_list = None
+                """ @type tile_name_list: list[str] | None """
+
             flow_cell_layout = RunInformationFlowcellLayout(
                 lane_count=int(xml_flow_cell_layout.get(key='LaneCount')),
                 surface_count=int(xml_flow_cell_layout.get(key='SurfaceCount')),
                 swath_count=int(xml_flow_cell_layout.get(key='SwathCount')),
-                tile_count=int(xml_flow_cell_layout.get(key='TileCount')))
+                tile_count=int(xml_flow_cell_layout.get(key='TileCount')),
+                tile_list=tile_name_list)
         else:
             flow_cell_layout = None
 
@@ -907,7 +925,7 @@ class XMLConfiguration(object):
 
 class AnalysisConfiguration(XMLConfiguration):
     """The C{bsf.illumina.AnalysisConfiguration} class models Image and Base Call analysis
-    XML configuration files inside and Illumina Run Folder.
+    XML configuration files inside an Illumina Run Folder.
 
     Attributes:
     @ivar file_path: File path
@@ -1203,7 +1221,7 @@ class RunFolder(object):
                 self._missing_base_call_tiles[lane] = dict()
             lane_dict = self._missing_base_call_tiles[lane]
             if self.base_call_analysis.has_lane(lane=str(lane)):
-                # Lanes are not defined of the config.xml file could not be read.
+                # Lanes are not defined, if the config.xml file could not be read.
                 for surface in range(0 + 1, fcl.surface_count + 1):
                     for swath in range(0 + 1, fcl.swath_count + 1):
                         for tile in range(0 + 1, fcl.tile_count + 1):
@@ -1364,7 +1382,7 @@ class RunFolder(object):
             _file_name_list.append('NextSeqCalibration.cfg')
             _file_name_list.append('NextSeqOverride.cfg')
 
-        if rta in ('v3.3.3',):
+        if rta in ('v3.3.3', 'v3.4.4'):
             # NovaSeq
             _file_name_list.append('Effective.cfg')
             _file_name_list.append('LaserPowerVariability.xml')
@@ -1399,7 +1417,7 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta in ('2.4.11', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
+        if rta in ('2.4.11', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3', 'v3.4.4'):
             # RTA 2.4.11 (NextSeq) doe not have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             # RTA 2.7.3 (HiSeq 3000/4000) does no longer have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             return
@@ -1529,7 +1547,7 @@ class RunFolder(object):
         fcl = self.run_information.flow_cell_layout
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta in ('2.4.11', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
+        if rta in ('2.4.11', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3', 'v3.4.4'):
             # RTA 2.4.11 (NextSeq) does not have a IRF/Data/Intensities/BaseCalls/Matrix/ directory.
             # RTA 2.7.3 (HiSeq 3000/4000) does no longer have a IRF/Data/Intensities/BaseCalls/Phasing/ directory.
             return
@@ -1653,7 +1671,7 @@ class RunFolder(object):
 
         # Process the IRF/Data/Intensities/BaseCalls/config.xml file.
 
-        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
+        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3', 'v3.4.4'):
             # HiSeq 3000/4000 and NextSeq does not have the IRF/Data/Intensities/BaseCalls/config.xml file.
             _entry_name = 'config.xml'
             if _entry_name in _directory_dict:
@@ -1725,7 +1743,7 @@ class RunFolder(object):
 
                     for surface in range(0 + 1, fcl.surface_count + 1):
                         # NovaSeq has only L001_<surface>.cbcl files.
-                        if rta in ('v3.3.3',):
+                        if rta in ('v3.3.3', 'v3.4.4'):
                             _entry_name = '{}_{:d}.cbcl'.format(lane_name, surface)
                             if _entry_name in cycle_dict:
                                 del cycle_dict[_entry_name]
@@ -1778,7 +1796,7 @@ class RunFolder(object):
                 for surface in range(0 + 1, fcl.surface_count + 1):
                     for swath in range(0 + 1, fcl.swath_count + 1):
                         for tile in range(0 + 1, fcl.tile_count + 1):
-                            # Not all tiles have to exists especially after catastrophic events during the
+                            # Not all tiles have to exist, especially after catastrophic events during the
                             # cluster generation step.
                             tile_name = '{:1d}{:1d}{:02d}'.format(surface, swath, tile)
                             if self._is_missing_base_call_tile(lane=lane, tile=tile_name):
@@ -1786,8 +1804,8 @@ class RunFolder(object):
                             # Process tile control files.
                             # s_1_1101.control
                             # s_1_2316.control
-                            if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
-                                # HiSeq 3000/4000 and NovaSeq does not have control files.
+                            if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3', 'v3.4.4'):
+                                # HiSeq 3000/4000 and NovaSeq do not have control files.
                                 _entry_name = 's_{:1d}_{:1d}{:1d}{:02d}.control'.format(lane, surface, swath, tile)
                                 if _entry_name in lane_dict:
                                     del lane_dict[_entry_name]
@@ -1939,7 +1957,7 @@ class RunFolder(object):
             directory_path=_directory_path,
             debug=debug)
 
-        if rta in ('2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
+        if rta in ('2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3', 'v3.4.4'):
             # The HiSeq 3000/4000 instrument has:
             # s.locs
 
@@ -2215,7 +2233,7 @@ class RunFolder(object):
             directory_path=_directory_path,
             debug=debug)
 
-        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
+        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3', 'v3.4.4'):
             # Exclude the HiSeq 3000/4000 and NextSeq instruments.
             # Check the IRF/Data/ImageSize.dat file.
             _entry_name = 'ImageSize.dat'
@@ -2320,7 +2338,7 @@ class RunFolder(object):
             _file_name_list.append('FWHMGridMetricsOut.bin')
             _file_name_list.append('StaticRunMetricsOut.bin')
 
-        if rta in ('v3.3.3',):
+        if rta in ('v3.3.3', 'v3.4.4'):
             # NovaSeq instrument.
             _file_name_list.append('AlignmentMetricsOut.bin')
             _file_name_list.append('BasecallingMetricsOut.bin')
@@ -2421,7 +2439,7 @@ class RunFolder(object):
         if rta not in ('1.18.54', '2.4.11', '2.5.2'):
             _file_name_list.append('ImageMetricsOut.bin')
 
-        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
+        if rta not in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3', 'v3.4.4'):
             # Other than HiSeq 3000/4000, NextSeq and NovaSeq instruments.
             _file_name_list.append('ControlMetricsOut.bin')
 
@@ -2526,7 +2544,7 @@ class RunFolder(object):
         else:
             _file_name_list.append(flow_cell_barcode + '.xml')
 
-            if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3'):
+            if rta not in ('2.5.2', '2.7.3', '2.7.6', '2.7.7', 'v3.3.3', 'v3.4.4'):
                 # The HiSeq 3000/4000 and NovaSeq instruments do not have a 'FCID_RunState.xml' file.
                 _file_name_list.append(flow_cell_barcode + '_RunState.xml')
 
@@ -2562,6 +2580,9 @@ class RunFolder(object):
             return
 
         flow_cell_barcode = self.run_parameters.get_flow_cell_barcode.lower()
+
+        read_start_list = self.run_information.get_read_start_list
+        # read_end_list = self.run_information.get_read_end_list
 
         # Helper dict to map surface numbers to abbreviations.
 
@@ -2604,6 +2625,10 @@ class RunFolder(object):
             # Process the IRF/Thumbnail_Images/L00[1-8]/C[0-9]+.1/ directories.
 
             for cycle in range(0 + 1, self.run_information.get_cycle_number + 1):
+                if rta in ('v3.4.4', ) and cycle not in read_start_list:
+                    # Since RTA v3.4.4, only the first cycles of each read have thumbnail images.
+                    continue
+
                 cycle_name = 'C{:d}.1'.format(cycle)
                 cycle_path = os.path.join(lane_path, cycle_name)
                 if cycle_name in lane_dict:
@@ -2619,10 +2644,11 @@ class RunFolder(object):
 
                 for surface in range(0 + 1, fcl.surface_count + 1):
                     for swath in range(0 + 1, fcl.swath_count + 1):
-                        if rta in ('v3.3.3',):
+                        if rta in ('v3.3.3', 'v3.4.4'):
                             # NovaSeq has green and red bases.
                             for base in ('green', 'red'):
                                 for tile in range(0 + 1, fcl.tile_count + 1):
+                                    # FIXME: This should work off the list of tiles configured in RunInfo.xml.
                                     # NovaSeq only stores thumbnails for tiles that end in 3. Strange.
                                     # s_2_1103_green.png
                                     # s_2_1103_red.png
@@ -2718,6 +2744,7 @@ class RunFolder(object):
                 '2.7.6',  # HiSeq Control Software 3.3.76 (HiSeq 3000/4000)
                 '2.7.7',  # HiSeq Control Software HD 3.4.0.38 (HiSeq 3000/4000)
                 'v3.3.3',  # NovaSeq Control Software 1.2.0 (NovaSeq 6000)
+                'v3.4.4',  # NovaSeq Control Software 1.6.0 (NovaSeq 6000)
         ):
             raise Exception('Unsupported RTA version: ' + repr(rta))
 
@@ -2752,7 +2779,7 @@ class RunFolder(object):
 
         # Check the IRF/PeriodicSaveRates/ directory.
 
-        if rta not in ('1.18.54', 'v3.3.3'):
+        if rta not in ('1.18.54', 'v3.3.3', 'v3.4.4'):
             # Not for MiSeq and NovaSeq instruments.
             self._check_periodic_save_rates(
                 directory_dict=_directory_dict,
@@ -2781,7 +2808,7 @@ class RunFolder(object):
             'RunInfo.xml',
         ]
 
-        if rta in ('2.4.11', 'v3.3.3'):
+        if rta in ('2.4.11', 'v3.3.3', 'v3.4.4'):
             # On the NextSeq and NovaSeq instruments.
             _file_name_list.append('RunParameters.xml')
         else:
@@ -2792,7 +2819,7 @@ class RunFolder(object):
             # The MiSeq instrument has a sample annotation sheet.
             _file_name_list.append('SampleSheet.csv')
 
-        if rta not in ('1.18.54', '2.4.11', 'v3.3.3'):
+        if rta not in ('1.18.54', '2.4.11', 'v3.3.3', 'v3.4.4'):
             # Not for MiSeq, NextSeq and NovaSeq instruments.
             _file_name_list.append('First_Base_Report.htm')
 
@@ -2805,10 +2832,10 @@ class RunFolder(object):
             if rta not in ('2.4.11',):
                 # Not on the NextSeq instrument.
                 _file_name_list.append('SequencingComplete.txt')
-        elif rta in ('v3.3.3',):
+        elif rta in ('v3.3.3', 'v3.4.4'):
             _file_name_list.append('CopyComplete.txt')
             _file_name_list.append('RTA3.cfg')
-            _file_name_list.append('RunComplete.txt')
+            # _file_name_list.append('RunComplete.txt')
             _file_name_list.append('SequenceComplete.txt')
         else:
             # Other than HiSeq 3000/4000 and NovaSeq instruments.
