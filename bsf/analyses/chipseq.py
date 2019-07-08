@@ -1742,10 +1742,20 @@ class ChIPSeq(bsf.Analysis):
             str_list.append('</p>\n')
             str_list.append('\n')
 
+            str_list.append('<p id="bowtie2_report">\n')
+            str_list.append('Please see the ')
+            str_list.append('<a href="' + bsf.analyses.bowtie.Bowtie2.prefix + '_report.html">')
+            str_list.append(self.project_name + ' ' + bsf.analyses.bowtie.Bowtie2.name)
+            str_list.append('</a> report for quality plots and ')
+            str_list.append('a link to alignment visualisation in the UCSC Genome Browser.\n')
+            str_list.append('</p>\n')
+            str_list.append('\n')
+
             # Construct an automatic UCSC Track Hub link.
 
             str_list.append('<p id="ucsc_track_hub">\n')
             str_list.append('View Bowtie2 <strong>read alignment</strong> tracks for each sample\n')
+            str_list.append('and <strong>ChIP-seq signal</strong> and background tracks\n')
             str_list.append('in their genomic context via the project-specific\n')
             str_list.extend(self.ucsc_hub_html_anchor(link_path=link_path))
             str_list.append('.')
@@ -2182,7 +2192,7 @@ class ChIPSeq(bsf.Analysis):
                     factor_dict[chipseq_comparison.factor] = True
 
             factor_str = ''
-            for factor in factor_dict.keys():
+            for factor in factor_dict:
                 factor_str += ' ' + factor + '=' + factor
 
             # Composite track alignment (BAM)
