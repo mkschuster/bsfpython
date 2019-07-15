@@ -1293,19 +1293,6 @@ class VariantCallingGATK(bsf.Analysis):
         return '_'.join((cls.get_stage_name_somatic(), comparison_name))
 
     @classmethod
-    def get_prefix_somatic_scatter(cls, comparison_name, tile_index):
-        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
-
-        @param comparison_name: Comparison name
-        @type comparison_name: str
-        @param tile_index: Tile index
-        @type tile_index: int
-        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
-        @rtype: str
-        """
-        return '_'.join((cls.get_stage_name_somatic(), comparison_name, 'scatter', str(tile_index)))
-
-    @classmethod
     def get_prefix_annotate_somatic_snpeff(cls, comparison_name):
         """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
 
@@ -2205,12 +2192,13 @@ class VariantCallingGATK(bsf.Analysis):
             @type analysis_stage: bsf.Stage
             @param cohort_runnable_dict: Python C{dict} of Python C{str} key and Python C{list} of
                 C{bsf.procedure.Runnable}, Python C{str} of Python C{unicode} object value data
-            @type cohort_runnable_dict: dict[str, list[bsf.procedure.Runnable | str | unicode]]
+            @type cohort_runnable_dict: dict[str, list[(bsf.procedure.Runnable | str | unicode, str)]]
             @param cohort_name: Cohort name to select a Python list of C{bsf.procedure.Runnable} objects from the
                 I{cohort_runnable_dict} Python C{dict}
             @type cohort_name: str
-            @return: Final C{bsf.procedure.Runnable} of the gather stage
-            @rtype: bsf.procedure.Runnable
+            @return: A Python C{tuple} of the final C{bsf.procedure.Runnable} of the gather stage and
+                the gVCF file path
+            @rtype: (bsf.procedure.Runnable, str | unicode)
             """
 
             # Private variables are prefixed with an underscore to avoid clashes with variables in the run() method.
@@ -2251,7 +2239,6 @@ class VariantCallingGATK(bsf.Analysis):
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
                         cache_path_dict=self._cache_path_dict,
-                        file_path_object=file_path_merge_cohort_scatter,
                         debug=self.debug))
                 executable_scatter = self.set_stage_runnable(
                     stage=analysis_stage,
@@ -2260,7 +2247,7 @@ class VariantCallingGATK(bsf.Analysis):
                 # but do not override the state set by the bsf.Analysis.set_stage_runnable() method.
                 if not final_index_exists:
                     executable_scatter.submit = False
-                for cohort_component in cohort_object_list:
+                for cohort_component, cohort_component_prefix in cohort_object_list:
                     # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
                     # Set them only for bsf.procedure.Runnable objects,
                     # but not for Python str | unicode (file path) objects.
@@ -2298,22 +2285,9 @@ class VariantCallingGATK(bsf.Analysis):
                             key='intervals',
                             value=_interval.to_gatk_interval(),
                             override=True)
-                for cohort_component in cohort_object_list:
-                    if isinstance(cohort_component, bsf.procedure.Runnable):
-                        # Variant GVCF file paths are stored under
-                        # the 'raw_variants_gvcf_vcf' attribute for the 'process_sample' stage or under
-                        # the 'combined_gvcf_vcf' attribute for the 'merge_cohort' stage.
-                        variant_path = ''
-                        for variant_key in ('raw_variants_gvcf_vcf', 'combined_gvcf_vcf'):
-                            try:
-                                variant_path = getattr(cohort_component.file_path_object, variant_key)
-                            except AttributeError:
-                                pass
-                        _runnable_step.add_gatk_option(key='variant', value=variant_path, override=True)
-                    elif isinstance(cohort_component, (str, unicode)):
-                        _runnable_step.add_gatk_option(key='variant', value=cohort_component, override=True)
-                    else:
-                        raise Exception('Unexpected object type on merge_cohort list.')
+                for cohort_component, _file_path_gvcf in cohort_object_list:
+                    # Regardless of the cohort_component class, set the file path.
+                    _runnable_step.add_gatk_option(key='variant', value=_file_path_gvcf, override=True)
                 _runnable_step.add_gatk_option(
                     key='out',
                     value=file_path_merge_cohort_scatter.combined_gvcf_vcf)
@@ -2340,8 +2314,7 @@ class VariantCallingGATK(bsf.Analysis):
                     partition_list = [tile_index_list[offset:offset + self.number_of_chunks_cohort]
                                       for offset in range(0, len(tile_index_list), self.number_of_chunks_cohort)]
 
-                    for partition_index in range(0, len(partition_list)):
-                        chunk_index_list = partition_list[partition_index]
+                    for partition_index, chunk_index_list in enumerate(partition_list):
                         # The file prefix includes the level and partition index.
                         prefix_merge_cohort_gather = '_'.join((
                             analysis_stage.name,
@@ -2359,7 +2332,6 @@ class VariantCallingGATK(bsf.Analysis):
                                 working_directory=self.genome_directory,
                                 cache_directory=self.cache_directory,
                                 cache_path_dict=self._cache_path_dict,
-                                file_path_object=file_path_merge_cohort_gather,
                                 debug=self.debug))
                         executable_gather = self.set_stage_runnable(
                             stage=analysis_stage,
@@ -2400,23 +2372,24 @@ class VariantCallingGATK(bsf.Analysis):
                         _sub_command.add_switch_long(key='assumeSorted')
                         # Finally, process per chunk index.
                         for chunk_index in chunk_index_list:
-                            _runnable_object = runnable_gather_list[chunk_index]
-                            _file_path_object = _runnable_object.file_path_object
-                            """ @type _file_path_object: FilePathMergeCohort """
+                            _runnable_scatter_or_gather = runnable_gather_list[chunk_index]
+                            _file_path_scatter_or_gather = FilePathMergeCohort(prefix=_runnable_scatter_or_gather.name)
                             # Set GATK option variant
                             _sub_command.add_option_long(
                                 key='variant',
-                                value=_file_path_object.combined_gvcf_vcf,
+                                value=_file_path_scatter_or_gather.combined_gvcf_vcf,
                                 override=True)
                             # Delete the *.g.vcf.gz file.
-                            _runnable_step.obsolete_file_path_list.append(_file_path_object.combined_gvcf_vcf)
+                            _runnable_step.obsolete_file_path_list.append(
+                                _file_path_scatter_or_gather.combined_gvcf_vcf)
                             # Delete the *.g.vcf.gz.tbi file.
-                            _runnable_step.obsolete_file_path_list.append(_file_path_object.combined_gvcf_tbi)
+                            _runnable_step.obsolete_file_path_list.append(
+                                _file_path_scatter_or_gather.combined_gvcf_tbi)
                             # Set dependencies on preceding bsf.procedure.Runnable.name or
                             # bsf.process.Executable.name objects.
                             # Depend on the bsf.procedure.Runnable.name of the corresponding
                             # bsf.procedure.Runnable of the scattering above.
-                            executable_gather.dependencies.append(_runnable_object.name)
+                            executable_gather.dependencies.append(_runnable_scatter_or_gather.name)
 
                     # Set the temporary index list as the new list and increment the merge level.
                     runnable_gather_list = temporary_runnable_gather_list
@@ -2425,8 +2398,10 @@ class VariantCallingGATK(bsf.Analysis):
 
             # For the last gather bsf.procedure.Runnable, move (rename) file paths to the top-level prefix and
             # adjust the FilePath object accordingly.
-            file_path_merge_cohort_gather = runnable_gather.file_path_object
-            """ @type file_path_merge_cohort_gather: FilePathMergeCohort """
+            # NOTE: The renaming of merged cohort files from *_scatter_0_* or *_gather_1_0_* to
+            # *_combined.g.vcf causes a lot of extra work, because the file names can no longer be
+            # deduced form the Runnable.name.
+            file_path_merge_cohort_gather = FilePathMergeCohort(prefix=runnable_gather.name)
 
             _runnable_step = bsf.process.RunnableStepMove(
                 name='merge_cohort_gather_move_vcf',
@@ -2443,11 +2418,13 @@ class VariantCallingGATK(bsf.Analysis):
             file_path_merge_cohort_gather.combined_gvcf_vcf = file_path_merge_cohort_final.combined_gvcf_vcf
             file_path_merge_cohort_gather.combined_gvcf_tbi = file_path_merge_cohort_final.combined_gvcf_tbi
 
-            return runnable_gather
+            return runnable_gather, file_path_merge_cohort_final.combined_gvcf_vcf
 
-        def run_genotype_cohort_scatter_gather():
+        def run_genotype_cohort_scatter_gather(file_path_cohort_gvcf):
             """Private function to genotype a cohort in a scatter and gather approach.
 
+            @param file_path_cohort_gvcf: Cohort-level gVCF file path
+            @type file_path_cohort_gvcf: str | unicode
             @return: Final C{bsf.procedure.Runnable} of the gather stage
             @rtype: bsf.procedure.Runnable
             """
@@ -2484,7 +2461,6 @@ class VariantCallingGATK(bsf.Analysis):
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
                         cache_path_dict=self._cache_path_dict,
-                        file_path_object=file_path_genotype_cohort_scatter,
                         debug=self.debug))
                 executable_scatter = self.set_stage_runnable(
                     stage=stage_process_cohort,
@@ -2529,7 +2505,7 @@ class VariantCallingGATK(bsf.Analysis):
                             override=True)
                 if self.known_sites_discovery:
                     _runnable_step.add_gatk_option(key='dbsnp', value=self.known_sites_discovery)
-                _runnable_step.add_gatk_option(key='variant', value=file_path_merge_cohort.combined_gvcf_vcf)
+                _runnable_step.add_gatk_option(key='variant', value=file_path_cohort_gvcf)
                 _runnable_step.add_gatk_option(key='out', value=file_path_genotype_cohort_scatter.genotyped_raw_vcf)
 
             # Gather
@@ -2554,8 +2530,7 @@ class VariantCallingGATK(bsf.Analysis):
                     partition_list = [tile_index_list[offset:offset + self.number_of_chunks_cohort]
                                       for offset in range(0, len(tile_index_list), self.number_of_chunks_cohort)]
 
-                    for partition_index in range(0, len(partition_list)):
-                        chunk_index_list = partition_list[partition_index]
+                    for partition_index, chunk_index_list in enumerate(partition_list):
                         # The file prefix includes the level and partition index.
                         prefix_process_cohort_gather = '_'.join(
                             (stage_process_cohort.name,
@@ -2573,7 +2548,6 @@ class VariantCallingGATK(bsf.Analysis):
                                 working_directory=self.genome_directory,
                                 cache_directory=self.cache_directory,
                                 cache_path_dict=self._cache_path_dict,
-                                file_path_object=file_path_genotype_cohort_gather,
                                 debug=self.debug))
                         executable_gather = self.set_stage_runnable(
                             stage=stage_process_cohort,
@@ -2615,21 +2589,23 @@ class VariantCallingGATK(bsf.Analysis):
                         # Finally, add bsf.process.RunnableStep options, obsolete files and
                         # bsf.process.Executable dependencies per chunk index.
                         for chunk_index in chunk_index_list:
-                            runnable_object = runnable_gather_list[chunk_index]
-                            file_path_object = runnable_object.file_path_object
-                            """ @type file_path_object: FilePathGenotypeCohort """
+                            runnable_scatter_or_gather = runnable_gather_list[chunk_index]
+                            _file_path_scatter_or_gather = FilePathGenotypeCohort(
+                                prefix=runnable_scatter_or_gather.name)
                             # Set GATK option variant
                             _sub_command.add_option_long(
                                 key='variant',
-                                value=file_path_object.genotyped_raw_vcf,
+                                value=_file_path_scatter_or_gather.genotyped_raw_vcf,
                                 override=True)
                             # Delete the *.g.vcf.gz file.
-                            _runnable_step.obsolete_file_path_list.append(file_path_object.genotyped_raw_vcf)
+                            _runnable_step.obsolete_file_path_list.append(
+                                _file_path_scatter_or_gather.genotyped_raw_vcf)
                             # Delete the *.g.vcf.gz.tbi file.
-                            _runnable_step.obsolete_file_path_list.append(file_path_object.genotyped_raw_tbi)
+                            _runnable_step.obsolete_file_path_list.append(
+                                _file_path_scatter_or_gather.genotyped_raw_tbi)
                             # Set dependencies on preceding bsf.procedure.Runnable.name or
                             # bsf.process.Executable.name objects.
-                            executable_gather.dependencies.append(runnable_object.name)
+                            executable_gather.dependencies.append(runnable_scatter_or_gather.name)
 
                     # Set the temporary index list as the new list and increment the merge level.
                     runnable_gather_list = temporary_runnable_gather_list
@@ -2638,8 +2614,7 @@ class VariantCallingGATK(bsf.Analysis):
 
             # For the last gather bsf.procedure.Runnable, move (rename) file paths to the top-level prefix and
             # adjust the FilePath object accordingly.
-            file_path_genotype_cohort_gather = runnable_gather.file_path_object
-            """ @type file_path_genotype_cohort_gather: FilePathGenotypeCohort """
+            file_path_genotype_cohort_gather = FilePathGenotypeCohort(prefix=runnable_gather.name)
 
             _runnable_step = bsf.process.RunnableStepMove(
                 name='process_cohort_gather_move_vcf',
@@ -2692,16 +2667,14 @@ class VariantCallingGATK(bsf.Analysis):
             tile_index_list = range(0, len(self._tile_region_somatic_list))
 
             for tile_index in tile_index_list:
-                file_path_somatic_scatter = FilePathSomaticScatterGather(
-                    prefix=self.get_prefix_somatic_scatter(
-                        comparison_name=comparison_key,
-                        tile_index=tile_index))
+                prefix_somatic_scatter = '_'.join(
+                    (self.get_stage_name_somatic(), comparison_key, 'scatter', str(tile_index)))
+
+                file_path_somatic_scatter = FilePathSomaticScatterGather(prefix=prefix_somatic_scatter)
 
                 runnable_scatter = self.add_runnable_consecutive(
                     runnable=bsf.procedure.ConsecutiveRunnable(
-                        name=self.get_prefix_somatic_scatter(
-                            comparison_name=comparison_key,
-                            tile_index=tile_index),
+                        name=prefix_somatic_scatter,
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
@@ -2811,15 +2784,10 @@ class VariantCallingGATK(bsf.Analysis):
                     partition_list = [tile_index_list[offset:offset + self.number_of_chunks_somatic]
                                       for offset in range(0, len(tile_index_list), self.number_of_chunks_somatic)]
 
-                    for partition_index in range(0, len(partition_list)):
-                        chunk_index_list = partition_list[partition_index]
+                    for partition_index, chunk_index_list in enumerate(partition_list):
                         # The file prefix includes the level and partition index.
-                        prefix_somatic_gather = '_'.join((
-                            stage_somatic.name,
-                            comparison_key,
-                            'gather',
-                            str(gather_level),
-                            str(partition_index)))
+                        prefix_somatic_gather = '_'.join((self.get_stage_name_somatic(), comparison_key, 'gather',
+                                                          str(gather_level), str(partition_index)))
 
                         file_path_somatic_gather = FilePathSomaticScatterGather(prefix=prefix_somatic_gather)
 
@@ -2872,25 +2840,20 @@ class VariantCallingGATK(bsf.Analysis):
                         # Finally, add bsf.process.RunnableStep options, obsolete files and
                         # bsf.process.Executable dependencies per chunk index.
                         for chunk_index in chunk_index_list:
-                            file_path_somatic_scatter = FilePathSomaticScatterGather(
-                                prefix=self.get_prefix_somatic_scatter(
-                                    comparison_name=comparison_key,
-                                    tile_index=chunk_index))
+                            runnable_object = runnable_gather_list[chunk_index]
+                            file_path_somatic_gather = FilePathSomaticScatterGather(prefix=runnable_object.name)
                             # Set GATK option variant
                             _sub_command.add_option_long(
                                 key='variant',
-                                value=file_path_somatic_scatter.somatic_vcf,
+                                value=file_path_somatic_gather.somatic_vcf,
                                 override=True)
                             # Delete the *.g.vcf.gz file.
-                            _runnable_step.obsolete_file_path_list.append(file_path_somatic_scatter.somatic_vcf)
+                            _runnable_step.obsolete_file_path_list.append(file_path_somatic_gather.somatic_vcf)
                             # Delete the *.g.vcf.gz.tbi file.
-                            _runnable_step.obsolete_file_path_list.append(file_path_somatic_scatter.somatic_tbi)
+                            _runnable_step.obsolete_file_path_list.append(file_path_somatic_gather.somatic_tbi)
                             # Set dependencies on preceding bsf.procedure.Runnable.name or
                             # bsf.process.Executable.name objects.
-                            executable_gather.dependencies.append(
-                                self.get_prefix_somatic_scatter(
-                                    comparison_name=comparison_key,
-                                    tile_index=chunk_index))
+                            executable_gather.dependencies.append(runnable_object.name)
 
                     # Set the temporary index list as the new list and increment the merge level.
                     runnable_gather_list = temporary_runnable_gather_list
@@ -2899,8 +2862,7 @@ class VariantCallingGATK(bsf.Analysis):
 
             # For the last gather bsf.procedure.Runnable, move (rename) file paths to the top-level prefix and
             # adjust the FilePath object accordingly.
-            file_path_somatic_gather = runnable_gather.file_path_object
-            """ @type file_path_somatic_gather: FilePathSomaticScatterGather """
+            file_path_somatic_gather = FilePathSomaticScatterGather(prefix=runnable_gather.name)
 
             _runnable_step = bsf.process.RunnableStepMove(
                 name='somatic_gather_move_vcf',
@@ -3565,7 +3527,7 @@ class VariantCallingGATK(bsf.Analysis):
         # This dictionary is required by the merge_cohort stage to hierarchically merge cohorts.
 
         runnable_process_sample_dict = dict()
-        """ @type runnable_process_sample_dict: dict[str, list[bsf.procedure.Runnable]] """
+        """ @type runnable_process_sample_dict: dict[str, list[(bsf.procedure.Runnable, str | unicode)]] """
 
         # Create a Python list of diagnose_sample bsf.procedure.Runnable objects.
 
@@ -4033,8 +3995,7 @@ class VariantCallingGATK(bsf.Analysis):
                 # If there is only one read group, sample-level read processing can be skipped.
                 # Rename files on the basis of the first and only list component.
                 runnable_process_lane = runnable_process_read_group_list[0]
-                file_path_process_read_group = runnable_process_lane.file_path_object
-                """ @type file_path_process_read_group: FilePathProcessReadGroup """
+                file_path_process_read_group = FilePathProcessReadGroup(prefix=runnable_process_lane.name)
 
                 # Rename the BAM file.
                 runnable_step = bsf.process.RunnableStepMove(
@@ -4351,7 +4312,9 @@ class VariantCallingGATK(bsf.Analysis):
             if cohort_key not in runnable_process_sample_dict:
                 runnable_process_sample_dict[cohort_key] = list()
             _runnable_process_sample_list = runnable_process_sample_dict[cohort_key]
-            _runnable_process_sample_list.append(runnable_process_sample)
+            _runnable_process_sample_list.append((
+                runnable_process_sample,
+                file_path_process_sample.raw_variants_gvcf_vcf))
 
             ################################
             # Step 4: Diagnose the sample. #
@@ -4608,12 +4571,15 @@ class VariantCallingGATK(bsf.Analysis):
         # Initialise a single key with the final cohort name and an empty list for merging the final cohort.
 
         runnable_merge_cohort_dict = {self.cohort_name: []}
+        """ @type runnable_merge_cohort_dict: 
+            dict[str, list[(bsf.procedure.Runnable | str | unicode, str | unicode)]] """
+
         runnable_merge_cohort_list = runnable_merge_cohort_dict[self.cohort_name]
 
         # Run the GATK CombineGVCFs analysis for each cohort and Sample defined in this project to build up
         # cohort-specific GVCF files.
 
-        for cohort_key in runnable_process_sample_dict.keys():
+        for cohort_key in runnable_process_sample_dict:
             runnable_merge_cohort_list.append(
                 run_merge_cohort_scatter_gather(
                     analysis_stage=stage_merge_cohort,
@@ -4625,9 +4591,9 @@ class VariantCallingGATK(bsf.Analysis):
         if len(runnable_merge_cohort_list) == 1:
             # If the cohort-specific bsf.procedure.Runnable list has only one component,
             # the merge has already been completed.
-            runnable_merge_cohort = runnable_merge_cohort_list[-1]
+            runnable_merge_cohort, file_path_merge_cohort_gvcf = runnable_merge_cohort_list[-1]
         elif len(runnable_merge_cohort_list) > 1:
-            runnable_merge_cohort = run_merge_cohort_scatter_gather(
+            runnable_merge_cohort, file_path_merge_cohort_gvcf = run_merge_cohort_scatter_gather(
                 analysis_stage=stage_merge_cohort,
                 cohort_runnable_dict=runnable_merge_cohort_dict,
                 cohort_name=self.cohort_name)
@@ -4643,18 +4609,23 @@ class VariantCallingGATK(bsf.Analysis):
             # The run_merge_cohort_scatter_gather() method can cope with bsf.procedure.Runnable or
             # str | unicode objects.
             cohort_key = '_'.join((self.cohort_name, 'accessory'))
-            runnable_merge_cohort_dict = {cohort_key: [runnable_merge_cohort]}
+            runnable_merge_cohort_dict = {cohort_key: [(runnable_merge_cohort, file_path_merge_cohort_gvcf)]}
             runnable_merge_cohort_list = runnable_merge_cohort_dict[cohort_key]
-            runnable_merge_cohort_list.extend(self.accessory_cohort_gvcfs)
+            for accessory_cohort_gvcf in self.accessory_cohort_gvcfs:
+                runnable_merge_cohort_list.append((accessory_cohort_gvcf, accessory_cohort_gvcf))
 
-            runnable_merge_cohort = run_merge_cohort_scatter_gather(
+            runnable_merge_cohort, file_path_merge_cohort_gvcf = run_merge_cohort_scatter_gather(
                 analysis_stage=stage_merge_cohort,
                 cohort_runnable_dict=runnable_merge_cohort_dict,
                 cohort_name=cohort_key)
 
+            # prefix_merge_cohort = self.get_prefix_merge_cohort(cohort_name=cohort_key)
+        else:
+            # prefix_merge_cohort = self.get_prefix_merge_cohort(cohort_name=self.cohort_name)
+            pass
+
         # Specify the final FilePathMergeCohort object from the final bsf.procedure.Runnable object.
-        file_path_merge_cohort = runnable_merge_cohort.file_path_object
-        """ @type file_path_merge_cohort: FilePathMergeCohort """
+        # file_path_merge_cohort = FilePathMergeCohort(prefix=prefix_merge_cohort)
 
         ###############################
         # Step 6: Process per cohort. #
@@ -4674,7 +4645,8 @@ class VariantCallingGATK(bsf.Analysis):
             prefix=self.get_prefix_process_cohort(
                 cohort_name=self.cohort_name))
 
-        runnable_process_cohort_gather = run_genotype_cohort_scatter_gather()
+        runnable_process_cohort_gather = run_genotype_cohort_scatter_gather(
+            file_path_cohort_gvcf=file_path_merge_cohort_gvcf)
 
         file_path_process_cohort = FilePathProcessCohort(
             prefix=self.get_prefix_process_cohort(
@@ -5516,7 +5488,7 @@ class VariantCallingGATK(bsf.Analysis):
 
             # Process per (somatic) comparison
 
-            for comparison_name in self._comparison_dict.keys():
+            for comparison_name in self._comparison_dict:
                 file_path_somatic = FilePathSomatic(
                     prefix=self.get_prefix_somatic(
                         comparison_name=comparison_name))
