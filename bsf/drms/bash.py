@@ -46,7 +46,7 @@ def submit(stage, debug=0):
     @rtype:
     """
 
-    output_list = str()
+    output_list = list()
     """ @type output_list: list[str | unicode] """
 
     output_list.append('#!/usr/bin/env bash\n')
