@@ -69,7 +69,7 @@ argument_parser.add_argument(
     dest='sas_file',
     help='sample annotation sheet (*.csv) file path',
     required=False,
-    type=unicode)
+    type=str)
 
 name_space = argument_parser.parse_args()
 
