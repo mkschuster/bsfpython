@@ -4072,6 +4072,8 @@ class DESeq(bsf.Analysis):
             str_list.append('<th class="left">Heatmap Blind</th>\n')
             str_list.append('<th class="left">Heatmap Model</th>\n')
             # str_list.append('<th>Plot Aesthetics</th>\n')
+            str_list.append('<th class="left">Cook\'s Distances</th>\n')
+            str_list.append('<th class="left">FPKM Density</th>\n')
             str_list.append('</tr>\n')
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
@@ -4129,6 +4131,10 @@ class DESeq(bsf.Analysis):
 
                     # Plot Aesthetics
                     # str_list.append('<td>' + plot_instance + '</td>\n')
+                    # Cook's Distances
+                    str_list.append('<td></td>\n')
+                    # FPKM Density
+                    str_list.append('<td></td>\n')
                     str_list.append('</tr>\n')
 
                 # Add a line with the variance per principal component plots.
@@ -4162,6 +4168,32 @@ class DESeq(bsf.Analysis):
 
                 str_list.append('<td></td>\n')  # Heatmap Blind
                 str_list.append('<td></td>\n')  # Heatmap Model
+
+                # Cook's Distance Box Plot
+                str_list.append('<td>\n')
+                str_list.append(self.get_html_anchor(
+                    prefix=design_prefix,
+                    suffix='cooks_distances.pdf',
+                    text=self.get_html_image(
+                        prefix=design_prefix,
+                        suffix='cooks_distances.png',
+                        text='Cook\'s distance box plot',
+                        height='80',
+                        width='80')))
+                str_list.append('</td>\n')
+
+                # FPKM Density
+                str_list.append('<td>\n')
+                str_list.append(self.get_html_anchor(
+                    prefix=design_prefix,
+                    suffix='fpkm_density.pdf',
+                    text=self.get_html_image(
+                        prefix=design_prefix,
+                        suffix='fpkm_density.png',
+                        text='FPKM density plot',
+                        height='80',
+                        width='80')))
+                str_list.append('</td>\n')
                 str_list.append('</tr>\n')
 
             str_list.append('</tbody>\n')
