@@ -30,12 +30,14 @@ from __future__ import print_function
 
 import argparse
 import os
+
 import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pandas as pd
 import pysam
 import seaborn as sns
+
+matplotlib.use('Agg')
 
 parser = argparse.ArgumentParser(description="Plot insert sizes from bam files")
 parser.add_argument('--output',
