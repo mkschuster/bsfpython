@@ -70,6 +70,12 @@ argument_parser.add_argument(
     dest='ucsc_to_grc',
     help="convert UCSC-style 'chr' prefixed sequence names to GRC reference names")
 
+argument_parser.add_argument(
+    '--drop-names',
+    action='store_true',
+    dest='drop_names',
+    help='drop probe names')
+
 name_space = argument_parser.parse_args()
 
 if name_space.output_path:
@@ -117,6 +123,8 @@ with open(output_path, 'wt') as output_file:
             if name_space.ucsc_to_grc:
                 if bed_fields[0] == 'chrM':  # The 'chrM' needs converting into 'MT'.
                     interval_fields.append('MT')
+                elif bed_fields[0] == 'chrUn_gl000228':
+                    interval_fields.append('GL000228.1')
                 elif bed_fields[0].startswith('chr'):  # Sequence with or without 'chr'.
                     interval_fields.append(bed_fields[0][3:])
                 else:
@@ -127,7 +135,8 @@ with open(output_path, 'wt') as output_file:
             interval_fields.append(str(int(bed_fields[1]) + 1))  # Start: the BED format is half-open, zero-based.
             interval_fields.append(bed_fields[2])  # End
             interval_fields.append('+')  # Strand
-            interval_fields.append(bed_fields[3])  # Name
+            if len(bed_fields) >= 4 and not name_space.drop_names:
+                interval_fields.append(bed_fields[3])  # Name
 
             sequence_name_dict[interval_fields[0]].append(interval_fields)
 
