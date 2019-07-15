@@ -254,7 +254,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         csq_key_list = csq.description.split()[-1].split('|')
         """ @type csq_key_list: list[str] """
         csq_index_allele_num = None
-        """ @type csq_index_allele_num: int """
+        """ @type csq_index_allele_num: int | None """
 
         for index, csq_key in enumerate(csq_key_list):
             if csq_key == 'ALLELE_NUM':
