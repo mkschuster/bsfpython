@@ -220,9 +220,13 @@ class Reads(NextGenerationBase):
 
         if file_type == 'CASAVA':
             # CASAVA Reads obey a SampleName_Index_Lane_Read_Chunk.fastq.gz schema.
+            # Recursively split off the extension, before splitting by underline character.
 
-            # Split file extensions first, base name components second.
-            component_list = file_name.split('.')[0].split('_')
+            extension = '.'
+            while extension:
+                file_name, extension = os.path.splitext(file_path)
+
+            component_list = bytes.decode(file_name).split('_')
             # Since SampleName can contain underscores, list components need assigning from the end
             # i.e. via negative indices.
 
@@ -1319,7 +1323,7 @@ class ProcessedRunFolder(NextGenerationBase):
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
-        component_list = file_name.split('_')
+        component_list = bytes.decode(file_name).split('_')
 
         if component_list[-1].startswith('CASAVA'):
             return 'CASAVA'
@@ -1357,7 +1361,7 @@ class ProcessedRunFolder(NextGenerationBase):
             # -- MUW_ Medical University Vienna
             # -- SET_ Robert Kralovics group
 
-            component_list = file_name.split('_')
+            component_list = bytes.decode(file_name).split('_')
 
             prf = cls(
                 file_path=file_path,
@@ -2368,7 +2372,8 @@ class Collection(NextGenerationBase):
             if debug > 0:
                 print('from_sas row_dict:', repr(row_dict))
 
-            key_list = row_dict.keys()
+            # Generate a Python list of key objects since the list is subsequently modified.
+            key_list = [key for key in row_dict]
             file_type = process_file_type()
             current_prf = process_processed_run_folder(collection=current_collection, prf=current_prf)
             current_project = process_project(prf=current_prf, project=current_project)
