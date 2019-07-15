@@ -935,7 +935,7 @@ class AnnotationSheet(object):
         field_names = list()
 
         for row_dict in self.row_dicts:
-            for key in row_dict.keys():
+            for key in row_dict:
                 if key not in field_names:
                     field_names.append(key)
 

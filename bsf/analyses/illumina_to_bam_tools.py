@@ -292,7 +292,7 @@ class LibraryAnnotationSheet(bsf.annotation.AnnotationSheet):
             # Check that all or none of the rows have index sequence 1 or 2 populated.
             no_index_1 = 0
             no_index_2 = 0
-            for key in flow_cell_dict[lane_str]['barcode_dict'].keys():
+            for key in flow_cell_dict[lane_str]['barcode_dict']:
                 if key[:9] == '-NoIndex-':
                     no_index_1 += 1
                 if key[-9:] == '-NoIndex-':
