@@ -1336,6 +1336,198 @@ class VariantCallingGATK(bsf.Analysis):
         """
         return '_'.join((cls.get_stage_name_split_somatic_vep(), comparison_name))
 
+    @classmethod
+    def get_file_path_align_lane(cls, paired_reads_name):
+        """Get a C{FilePathAlignment} object.
+
+        @param paired_reads_name: PairedReads name
+        @type paired_reads_name: str
+        @return: C{FilePathAlignment} object
+        @rtype: FilePathAlignment
+        """
+        return FilePathAlignment(
+            prefix=cls.get_prefix_align_lane(paired_reads_name=paired_reads_name))
+
+    @classmethod
+    def get_file_path_process_read_group(cls, paired_reads_name):
+        """Get a C{FilePathProcessReadGroup} object.
+
+        @param paired_reads_name: PairedReads name
+        @type paired_reads_name: str
+        @return: C{FilePathProcessReadGroup} object
+        @rtype: FilePathProcessReadGroup
+        """
+        return FilePathProcessReadGroup(
+            prefix=cls.get_prefix_process_lane(paired_reads_name=paired_reads_name))
+
+    @classmethod
+    def get_file_path_process_sample(cls, sample_name):
+        """Get a C{FilePathProcessSample} object.
+
+        @param sample_name: Sample name
+        @type sample_name: str
+        @return: C{FilePathProcessSample} object
+        @rtype: FilePathProcessSample
+        """
+        return FilePathProcessSample(
+            prefix=cls.get_prefix_process_sample(sample_name=sample_name))
+
+    @classmethod
+    def get_file_path_diagnose_sample(cls, sample_name):
+        """Get a C{FilePathDiagnoseSample} object.
+
+        @param sample_name: Sample name
+        @type sample_name: str
+        @return: C{FilePathDiagnoseSample} object
+        @rtype: FilePathDiagnoseSample
+        """
+        return FilePathDiagnoseSample(
+            prefix=cls.get_prefix_diagnose_sample(sample_name=sample_name))
+
+    @classmethod
+    def get_file_path_merge_cohort(cls, cohort_name):
+        """Get a C{FilePathMergeCohort} object.
+
+        @param cohort_name: Cohort name
+        @type cohort_name: str
+        @return: C{FilePathMergeCohort} object
+        @rtype: FilePathMergeCohort
+        """
+        return FilePathMergeCohort(
+            prefix=cls.get_prefix_merge_cohort(cohort_name=cohort_name))
+
+    @classmethod
+    def get_file_path_process_cohort(cls, cohort_name):
+        """Get a C{FilePathProcessCohort} object.
+
+        @param cohort_name: Cohort name
+        @type cohort_name: str
+        @return: C{FilePathProcessCohort} object
+        @rtype: FilePathProcessCohort
+        """
+        return FilePathProcessCohort(
+            prefix=cls.get_prefix_process_cohort(cohort_name=cohort_name))
+
+    @classmethod
+    def get_file_path_annotate_cohort_snpeff(cls, cohort_name):
+        """Get a C{FilePathAnnotateSnpEff} object.
+
+        @param cohort_name: Cohort name
+        @type cohort_name: str
+        @return: C{FilePathAnnotateSnpEff} object
+        @rtype: FilePathAnnotateSnpEff
+        """
+        return FilePathAnnotateSnpEff(
+            prefix=cls.get_prefix_annotate_cohort_snpeff(cohort_name=cohort_name))
+
+    @classmethod
+    def get_file_path_annotate_cohort_vep(cls, cohort_name):
+        """Get a C{FilePathAnnotateVEP} object.
+
+        @param cohort_name: Cohort name
+        @type cohort_name: str
+        @return: C{FilePathAnnotateVEP} object
+        @rtype: FilePathAnnotateVEP
+        """
+        return FilePathAnnotateVEP(
+            prefix=cls.get_prefix_annotate_cohort_vep(cohort_name=cohort_name))
+
+    @classmethod
+    def get_file_path_annotate_somatic_snpeff(cls, comparison_name):
+        """Get a C{FilePathAnnotateSnpEff} object.
+
+        @param comparison_name: Comparison name
+        @type comparison_name: str
+        @return: C{FilePathAnnotateSnpEff} object
+        @rtype: FilePathAnnotateSnpEff
+        """
+        return FilePathAnnotateSnpEff(
+            prefix=cls.get_prefix_annotate_somatic_snpeff(comparison_name=comparison_name))
+
+    @classmethod
+    def get_file_path_annotate_somatic_vep(cls, comparison_name):
+        """Get a C{FilePathAnnotateVEP} object.
+
+        @param comparison_name: Comparison name
+        @type comparison_name: str
+        @return: C{FilePathAnnotateVEP} object
+        @rtype: FilePathAnnotateVEP
+        """
+        return FilePathAnnotateVEP(
+            prefix=cls.get_prefix_annotate_somatic_vep(comparison_name=comparison_name))
+
+    @classmethod
+    def get_file_path_split_cohort_snpeff(cls, sample_name):
+        """Get a C{FilePathSplitCohort} object.
+
+        @param sample_name: Sample name
+        @type sample_name: str
+        @return: C{FilePathSplitCohort} object
+        @rtype: FilePathSplitCohort
+        """
+        return FilePathSplitCohort(
+            prefix=cls.get_prefix_split_cohort_snpeff(sample_name=sample_name))
+
+    @classmethod
+    def get_file_path_split_cohort_vep(cls, sample_name):
+        """Get a C{FilePathSplitCohort} object.
+
+        @param sample_name: Sample name
+        @type sample_name: str
+        @return: C{FilePathSplitCohort} object
+        @rtype: FilePathSplitCohort
+        """
+        return FilePathSplitCohort(
+            prefix=cls.get_prefix_split_cohort_vep(sample_name=sample_name))
+
+    @classmethod
+    def get_file_path_summary(cls, cohort_name):
+        """Get a C{FilePathSummary} object.
+
+        @param cohort_name: Cohort name
+        @type cohort_name: str
+        @return: C{FilePathSummary} object
+        @rtype: FilePathSummary
+        """
+        return FilePathSummary(
+            prefix=cls.get_prefix_summary(cohort_name=cohort_name))
+
+    @classmethod
+    def get_file_path_somatic(cls, comparison_name):
+        """Get a C{FilePathSomatic} object.
+
+        @param comparison_name: Comparison name
+        @type comparison_name: str
+        @return: C{FilePathSomatic} object
+        @rtype: FilePathSomatic
+        """
+        return FilePathSomatic(
+            prefix=cls.get_prefix_somatic(comparison_name=comparison_name))
+
+    @classmethod
+    def get_file_path_split_somatic_snpeff(cls, comparison_name):
+        """Get a C{FilePathSplitSomatic} object.
+
+        @param comparison_name: Comparison name
+        @type comparison_name: str
+        @return: C{FilePathSplitSomatic} object
+        @rtype: FilePathSplitSomatic
+        """
+        return FilePathSplitSomatic(
+            prefix=cls.get_prefix_split_somatic_snpeff(comparison_name=comparison_name))
+
+    @classmethod
+    def get_file_path_split_somatic_vep(cls, comparison_name):
+        """Get a C{FilePathSplitSomatic} object.
+
+        @param comparison_name: Comparison name
+        @type comparison_name: str
+        @return: C{FilePathSplitSomatic} object
+        @rtype: FilePathSplitSomatic
+        """
+        return FilePathSplitSomatic(
+            prefix=cls.get_prefix_split_somatic_vep(comparison_name=comparison_name))
+
     def __init__(
             self,
             configuration=None,
@@ -2644,7 +2836,7 @@ class VariantCallingGATK(bsf.Analysis):
 
             # Private variables are prefixed with an underscore to avoid clashes with variables in the run() method.
 
-            file_path_somatic_final = FilePathSomatic(prefix=self.get_prefix_somatic(comparison_name=comparison_key))
+            file_path_somatic_final = self.get_file_path_somatic(comparison_name=comparison_key)
 
             # If the final TBI index file already exists, create the bsf.procedure.Runnable objects,
             # but do not submit their corresponding bsf.process.Executable objects.
@@ -2679,7 +2871,6 @@ class VariantCallingGATK(bsf.Analysis):
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
                         cache_path_dict=self._cache_path_dict,
-                        file_path_object=file_path_somatic_scatter,
                         debug=self.debug))
                 executable_scatter = self.set_stage_runnable(
                     stage=stage_somatic,
@@ -2740,9 +2931,8 @@ class VariantCallingGATK(bsf.Analysis):
 
                 # Find and add the FilePathProcessSample object for the 'normal' Sample object.
                 if comparison.normal_sample:
-                    _file_path_process_sample = FilePathProcessSample(
-                        prefix=self.get_prefix_process_sample(
-                            sample_name=comparison.normal_sample.name))
+                    _file_path_process_sample = self.get_file_path_process_sample(
+                        sample_name=comparison.normal_sample.name)
                     _runnable_step.add_gatk_option(
                         key='input_file:normal',
                         value=_file_path_process_sample.realigned_bam)
@@ -2753,9 +2943,8 @@ class VariantCallingGATK(bsf.Analysis):
 
                 # Find and add the FilePathProcessSample object for the 'tumor' Sample object.
                 if comparison.tumor_sample:
-                    _file_path_process_sample = FilePathProcessSample(
-                        prefix=self.get_prefix_process_sample(
-                            sample_name=comparison.tumor_sample.name))
+                    _file_path_process_sample = self.get_file_path_process_sample(
+                        sample_name=comparison.tumor_sample.name)
                     _runnable_step.add_gatk_option(
                         key='input_file:tumor',
                         value=_file_path_process_sample.realigned_bam)
@@ -2798,7 +2987,6 @@ class VariantCallingGATK(bsf.Analysis):
                                 working_directory=self.genome_directory,
                                 cache_directory=self.cache_directory,
                                 cache_path_dict=self._cache_path_dict,
-                                file_path_object=file_path_somatic_gather,
                                 debug=self.debug))
                         executable_gather = self.set_stage_runnable(
                             stage=stage_somatic,
@@ -2908,7 +3096,6 @@ class VariantCallingGATK(bsf.Analysis):
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
-                    file_path_object=file_path_annotate,
                     debug=self.debug))
 
             if use_cache:
@@ -3030,7 +3217,6 @@ class VariantCallingGATK(bsf.Analysis):
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
-                    file_path_object=file_path_annotate,
                     debug=self.debug))
 
             # reference_annotate = runnable_annotate.get_absolute_cache_file_path(
@@ -3620,11 +3806,10 @@ class VariantCallingGATK(bsf.Analysis):
                 else:
                     warnings.warn('No reads have been defined.')
 
-                prefix_align_lane = '_'.join((stage_align_lane.name, paired_reads_name))
                 # TODO: The name for the aligned BAM is constructed by the bsf_run_bwa.py script.
                 # It is currently based on the stage_align_lane.name and paired_reads_name.
                 # The script should also be changed to pre-set all file names beforehand.
-                file_path_alignment = FilePathAlignment(prefix=prefix_align_lane)
+                file_path_alignment = self.get_file_path_align_lane(paired_reads_name=paired_reads_name)
 
                 # Normally, the bwa object would be pushed onto the Stage list.
                 # Experimentally, use Pickler to serialize the bsf.process.Executable into a file.
@@ -3682,9 +3867,8 @@ class VariantCallingGATK(bsf.Analysis):
 
                 # Lane-specific file paths
 
-                file_path_process_read_group = FilePathProcessReadGroup(
-                    prefix=self.get_prefix_process_lane(
-                        paired_reads_name=paired_reads_name))
+                file_path_process_read_group = self.get_file_path_process_read_group(
+                    paired_reads_name=paired_reads_name)
 
                 # Create a bsf.procedure.Runnable and bsf.process.Executable for processing each read group.
 
@@ -3695,7 +3879,6 @@ class VariantCallingGATK(bsf.Analysis):
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
                         cache_path_dict=self._cache_path_dict,
-                        file_path_object=file_path_process_read_group,
                         debug=self.debug))
                 executable_process_lane = self.set_stage_runnable(
                     stage=stage_process_lane,
@@ -3962,9 +4145,7 @@ class VariantCallingGATK(bsf.Analysis):
 
             target_intervals = VariantCallingGATKTargetIntervals.from_sample(sample=sample)
 
-            file_path_process_sample = FilePathProcessSample(
-                prefix=self.get_prefix_process_sample(
-                    sample_name=sample.name))
+            file_path_process_sample = self.get_file_path_process_sample(sample_name=sample.name)
 
             # Create a bsf.procedure.Runnable and bsf.process.Executable for processing each Sample.
 
@@ -3975,7 +4156,6 @@ class VariantCallingGATK(bsf.Analysis):
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
-                    file_path_object=file_path_process_sample,
                     debug=self.debug))
             executable_process_sample = self.set_stage_runnable(
                 stage=stage_process_sample,
@@ -4330,9 +4510,7 @@ class VariantCallingGATK(bsf.Analysis):
             #   GATK QualifyMissingIntervals         (diagnose_sample_gatk_qualify_missing_intervals)
             #   Picard CollectHsMetrics              (diagnose_sample_picard_collect_hybrid_selection_metrics)
 
-            file_path_diagnose_sample = FilePathDiagnoseSample(
-                prefix=self.get_prefix_diagnose_sample(
-                    sample_name=sample.name))
+            file_path_diagnose_sample = self.get_file_path_diagnose_sample(sample_name=sample.name)
 
             # Create a bsf.procedure.Runnable and bsf.process.Executable for diagnosing each sample.
 
@@ -4343,7 +4521,6 @@ class VariantCallingGATK(bsf.Analysis):
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
-                    file_path_object=file_path_diagnose_sample,
                     debug=self.debug))
             executable_diagnose_sample = self.set_stage_runnable(
                 stage=stage_diagnose_sample,
@@ -4648,9 +4825,7 @@ class VariantCallingGATK(bsf.Analysis):
         runnable_process_cohort_gather = run_genotype_cohort_scatter_gather(
             file_path_cohort_gvcf=file_path_merge_cohort_gvcf)
 
-        file_path_process_cohort = FilePathProcessCohort(
-            prefix=self.get_prefix_process_cohort(
-                cohort_name=self.cohort_name))
+        file_path_process_cohort = self.get_file_path_process_cohort(cohort_name=self.cohort_name)
 
         # Create a bsf.procedure.Runnable and bsf.process.Executable for processing the cohort.
 
@@ -4661,7 +4836,6 @@ class VariantCallingGATK(bsf.Analysis):
                 working_directory=self.genome_directory,
                 cache_directory=self.cache_directory,
                 cache_path_dict=self._cache_path_dict,
-                file_path_object=file_path_process_cohort,
                 debug=self.debug))
         executable_process_cohort = self.set_stage_runnable(
             stage=stage_process_cohort,
@@ -4872,13 +5046,9 @@ class VariantCallingGATK(bsf.Analysis):
         # GATK SelectVariants   (split_cohort_gatk_select_variants_vep)
         # GATK VariantsToTable  (split_cohort_gatk_variants_to_table_vep)
 
-        file_path_annotate_cohort_snpeff = FilePathAnnotateSnpEff(
-            prefix=self.get_prefix_annotate_cohort_snpeff(
-                cohort_name=self.cohort_name))
+        file_path_annotate_cohort_snpeff = self.get_file_path_annotate_cohort_snpeff(cohort_name=self.cohort_name)
 
-        file_path_annotate_cohort_vep = FilePathAnnotateVEP(
-            prefix=self.get_prefix_annotate_cohort_vep(
-                cohort_name=self.cohort_name))
+        file_path_annotate_cohort_vep = self.get_file_path_annotate_cohort_vep(cohort_name=self.cohort_name)
 
         for sample in self.sample_list:
             # Get all PairedReads objects solely to exclude samples without any.
@@ -4889,9 +5059,7 @@ class VariantCallingGATK(bsf.Analysis):
 
             # Split the snpEff-annotated multi-sample VCF file.
 
-            file_path_split_cohort_snpeff = FilePathSplitCohort(
-                prefix=self.get_prefix_split_cohort_snpeff(
-                    sample_name=sample.name))
+            file_path_split_cohort_snpeff = self.get_file_path_split_cohort_snpeff(sample_name=sample.name)
 
             runnable_split_cohort_snpeff = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
@@ -4900,7 +5068,6 @@ class VariantCallingGATK(bsf.Analysis):
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
-                    file_path_object=file_path_split_cohort_snpeff,
                     debug=self.debug))
             executable_split_cohort_snpeff = self.set_stage_runnable(
                 stage=stage_split_cohort_snpeff,
@@ -4969,9 +5136,7 @@ class VariantCallingGATK(bsf.Analysis):
 
             # Split the Ensembl Variant Effect Predictor-annotated multi-sample VCF file.
 
-            file_path_split_cohort_vep = FilePathSplitCohort(
-                prefix=self.get_prefix_split_cohort_vep(
-                    sample_name=sample.name))
+            file_path_split_cohort_vep = self.get_file_path_split_cohort_vep(sample_name=sample.name)
 
             runnable_split_cohort_vep = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
@@ -4980,7 +5145,6 @@ class VariantCallingGATK(bsf.Analysis):
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
-                    file_path_object=file_path_split_cohort_vep,
                     debug=self.debug))
             executable_split_cohort_vep = self.set_stage_runnable(
                 stage=stage_split_cohort_vep,
@@ -5044,7 +5208,7 @@ class VariantCallingGATK(bsf.Analysis):
         #
         # bsfR bsf_variant_calling_summary.R    (summary)
 
-        file_path_summary = FilePathSummary(prefix=self.get_prefix_summary(cohort_name=self.cohort_name))
+        # file_path_summary = FilePathSummary(prefix=self.get_prefix_summary(cohort_name=self.cohort_name))
 
         # Create a bsf.procedure.Runnable and bsf.process.Executable for summarising the cohort.
 
@@ -5055,7 +5219,6 @@ class VariantCallingGATK(bsf.Analysis):
                 working_directory=self.genome_directory,
                 cache_directory=self.cache_directory,
                 cache_path_dict=self._cache_path_dict,
-                file_path_object=file_path_summary,
                 debug=self.debug))
         executable_summary = self.set_stage_runnable(
             stage=stage_summary,
@@ -5085,7 +5248,7 @@ class VariantCallingGATK(bsf.Analysis):
         for comparison_name in sorted(self._comparison_dict):
             # Somatic variant calling-specific file paths
 
-            file_path_somatic = FilePathSomatic(prefix=self.get_prefix_somatic(comparison_name=comparison_name))
+            file_path_somatic = self.get_file_path_somatic(comparison_name=comparison_name)
 
             runnable_somatic_gather = run_somatic_scatter_gather(comparison_key=comparison_name)
 
@@ -5098,7 +5261,6 @@ class VariantCallingGATK(bsf.Analysis):
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
-                    file_path_object=file_path_somatic,
                     debug=self.debug))
             executable_somatic = self.set_stage_runnable(
                 stage=stage_somatic,
@@ -5128,9 +5290,8 @@ class VariantCallingGATK(bsf.Analysis):
             # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
             executable_annotate_somatic_snpeff.dependencies.append(runnable_somatic_gather.name)
 
-            file_path_annotate_somatic_snpeff = FilePathAnnotateSnpEff(
-                prefix=self.get_prefix_annotate_somatic_snpeff(
-                    comparison_name=comparison_name))
+            file_path_annotate_somatic_snpeff = self.get_file_path_annotate_somatic_snpeff(
+                comparison_name=comparison_name)
 
             # Run Ensembl Variant Effect Predictor (VEP) annotation.
 
@@ -5143,9 +5304,8 @@ class VariantCallingGATK(bsf.Analysis):
             # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
             executable_annotate_somatic_vep.dependencies.append(runnable_somatic_gather.name)
 
-            file_path_annotate_somatic_vep = FilePathAnnotateVEP(
-                prefix=self.get_prefix_annotate_somatic_vep(
-                    comparison_name=comparison_name))
+            file_path_annotate_somatic_vep = self.get_file_path_annotate_somatic_vep(
+                comparison_name=comparison_name)
 
             #########################################
             # Step 12: Split somatic variant calls. #
@@ -5153,9 +5313,7 @@ class VariantCallingGATK(bsf.Analysis):
 
             # Split the somatic snpEff-annotated VCF file into a TSV file.
 
-            file_path_split_somatic_snpeff = FilePathSplitSomatic(
-                prefix=self.get_prefix_split_somatic_snpeff(
-                    comparison_name=comparison_name))
+            file_path_split_somatic_snpeff = self.get_file_path_split_somatic_snpeff(comparison_name=comparison_name)
 
             runnable_split_somatic_snpeff = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
@@ -5164,7 +5322,6 @@ class VariantCallingGATK(bsf.Analysis):
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
-                    file_path_object=file_path_split_somatic_snpeff,
                     debug=self.debug))
             executable_split_somatic_snpeff = self.set_stage_runnable(
                 stage=stage_split_somatic_snpeff,
@@ -5217,9 +5374,7 @@ class VariantCallingGATK(bsf.Analysis):
 
             # Split the somatic Ensembl VEP-annotated VCF file into a TSV file.
 
-            file_path_split_somatic_vep = FilePathSplitSomatic(
-                prefix=self.get_prefix_split_somatic_vep(
-                    comparison_name=comparison_name))
+            file_path_split_somatic_vep = self.get_file_path_split_somatic_vep(comparison_name=comparison_name)
 
             runnable_split_somatic_vep = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
@@ -5228,7 +5383,6 @@ class VariantCallingGATK(bsf.Analysis):
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
                     cache_path_dict=self._cache_path_dict,
-                    file_path_object=file_path_split_somatic_vep,
                     debug=self.debug))
             executable_split_somatic_vep = self.set_stage_runnable(
                 stage=stage_split_somatic_vep,
@@ -5360,29 +5514,13 @@ class VariantCallingGATK(bsf.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                file_path_process_sample = FilePathProcessSample(
-                    prefix=self.get_prefix_process_sample(
-                        sample_name=sample.name))
-
-                # file_path_diagnose_sample = FilePathDiagnoseSample(
-                #     prefix=self.get_prefix_diagnose_sample(
-                #         sample_name=sample.name))
-
-                file_path_annotate_cohort_snpeff = FilePathAnnotateSnpEff(
-                    prefix=self.get_prefix_annotate_cohort_snpeff(
-                        cohort_name=self.cohort_name))
-
-                file_path_annotate_cohort_vep = FilePathAnnotateVEP(
-                    prefix=self.get_prefix_annotate_cohort_vep(
-                        cohort_name=self.cohort_name))
-
-                file_path_split_cohort_snpeff = FilePathSplitCohort(
-                    prefix=self.get_prefix_split_cohort_snpeff(
-                        sample_name=sample.name))
-
-                file_path_split_cohort_vep = FilePathSplitCohort(
-                    prefix=self.get_prefix_split_cohort_vep(
-                        sample_name=sample.name))
+                file_path_process_sample = self.get_file_path_process_sample(sample_name=sample.name)
+                # file_path_diagnose_sample = self.get_file_path_diagnose_sample(sample_name=sample.name)
+                file_path_annotate_cohort_snpeff = self.get_file_path_annotate_cohort_snpeff(
+                    cohort_name=self.cohort_name)
+                file_path_annotate_cohort_vep = self.get_file_path_annotate_cohort_vep(cohort_name=self.cohort_name)
+                file_path_split_cohort_snpeff = self.get_file_path_split_cohort_snpeff(sample_name=sample.name)
+                file_path_split_cohort_vep = self.get_file_path_split_cohort_vep(sample_name=sample.name)
 
                 # Create a sample-specific directory and add symbolic links to it.
 
@@ -5489,9 +5627,7 @@ class VariantCallingGATK(bsf.Analysis):
             # Process per (somatic) comparison
 
             for comparison_name in self._comparison_dict:
-                file_path_somatic = FilePathSomatic(
-                    prefix=self.get_prefix_somatic(
-                        comparison_name=comparison_name))
+                file_path_somatic = self.get_file_path_somatic(comparison_name=comparison_name)
 
                 for attribute, extension in (
                         ('somatic_vcf', '.vcf.gz'),
@@ -5502,9 +5638,8 @@ class VariantCallingGATK(bsf.Analysis):
                             directory_results_by_pair),
                         target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
 
-                file_path_annotate_somatic_snpeff = FilePathAnnotateSnpEff(
-                    prefix=self.get_prefix_annotate_somatic_snpeff(
-                        comparison_name=comparison_name))
+                file_path_annotate_somatic_snpeff = self.get_file_path_annotate_somatic_snpeff(
+                    comparison_name=comparison_name)
 
                 for attribute, extension in (
                         ('snpeff_vcf_bgz', '_snpeff.vcf.gz'),
@@ -5519,9 +5654,8 @@ class VariantCallingGATK(bsf.Analysis):
                             directory_results_by_pair),
                         target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
 
-                file_path_split_somatic_snpeff = FilePathSplitSomatic(
-                    prefix=self.get_prefix_split_somatic_snpeff(
-                        comparison_name=comparison_name))
+                file_path_split_somatic_snpeff = self.get_file_path_split_somatic_snpeff(
+                    comparison_name=comparison_name)
 
                 for attribute, extension in (
                         ('comparison_tsv', '_snpeff.tsv'),):
@@ -5531,9 +5665,8 @@ class VariantCallingGATK(bsf.Analysis):
                             directory_results_by_pair),
                         target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
 
-                file_path_annotate_somatic_vep = FilePathAnnotateVEP(
-                    prefix=self.get_prefix_annotate_somatic_vep(
-                        comparison_name=comparison_name))
+                file_path_annotate_somatic_vep = self.get_file_path_annotate_somatic_vep(
+                    comparison_name=comparison_name)
 
                 for attribute, extension in (
                         ('vep_complete_vcf_bgz', '_vep.vcf.gz'),
@@ -5544,9 +5677,8 @@ class VariantCallingGATK(bsf.Analysis):
                             directory_results_by_pair),
                         target_path=os.path.join(directory_results_by_pair, comparison_name + extension))
 
-                file_path_split_somatic_vep = FilePathSplitSomatic(
-                    prefix=self.get_prefix_split_somatic_vep(
-                        comparison_name=comparison_name))
+                file_path_split_somatic_vep = self.get_file_path_split_somatic_vep(
+                    comparison_name=comparison_name)
 
                 for attribute, extension in (
                         ('comparison_tsv', '_vep.tsv'),):
@@ -5617,21 +5749,10 @@ class VariantCallingGATK(bsf.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                file_path_process_sample = FilePathProcessSample(
-                    prefix=self.get_prefix_process_sample(
-                        sample_name=sample.name))
-
-                file_path_diagnosis = FilePathDiagnoseSample(
-                    prefix=self.get_prefix_diagnose_sample(
-                        sample_name=sample.name))
-
-                file_path_split_cohort_snpeff = FilePathSplitCohort(
-                    prefix=self.get_prefix_split_cohort_snpeff(
-                        sample_name=sample.name))
-
-                file_path_split_cohort_vep = FilePathSplitCohort(
-                    prefix=self.get_prefix_split_cohort_vep(
-                        sample_name=sample.name))
+                file_path_process_sample = self.get_file_path_process_sample(sample_name=sample.name)
+                file_path_diagnose_sample = self.get_file_path_diagnose_sample(sample_name=sample.name)
+                file_path_split_cohort_snpeff = self.get_file_path_split_cohort_snpeff(sample_name=sample.name)
+                file_path_split_cohort_vep = self.get_file_path_split_cohort_vep(sample_name=sample.name)
 
                 str_list.append('<tr>\n')
                 # Sample
@@ -5690,8 +5811,8 @@ class VariantCallingGATK(bsf.Analysis):
                 if os.path.isfile(
                         os.path.join(
                             self.genome_directory,
-                            file_path_diagnosis.hybrid_selection_metrics)):
-                    str_list.append('<a href="' + file_path_diagnosis.hybrid_selection_metrics + '">')
+                            file_path_diagnose_sample.hybrid_selection_metrics)):
+                    str_list.append('<a href="' + file_path_diagnose_sample.hybrid_selection_metrics + '">')
                     str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
                     str_list.append('</a>')
                 str_list.append('</td>\n')
@@ -5700,16 +5821,16 @@ class VariantCallingGATK(bsf.Analysis):
                 if os.path.isfile(
                         os.path.join(
                             self.genome_directory,
-                            file_path_diagnosis.non_callable_loci_tsv)):
-                    str_list.append('<a href="' + file_path_diagnosis.callable_bed + '">')
+                            file_path_diagnose_sample.non_callable_loci_tsv)):
+                    str_list.append('<a href="' + file_path_diagnose_sample.callable_bed + '">')
                     str_list.append('<abbr title="Browser Extensible Data">BED</abbr>')
                     str_list.append('</a>&nbsp;')
-                    str_list.append('<a href="' + file_path_diagnosis.callable_bb + '">')
+                    str_list.append('<a href="' + file_path_diagnose_sample.callable_bb + '">')
                     str_list.append('<abbr title="Big Browser Extensible Data">BigBED</abbr>')
                     str_list.append('</a>&nbsp;')
-                    # Do not link the more complex file_path_diagnosis.non_callable_regions_tsv
+                    # Do not link the more complex file_path_diagnose_sample.non_callable_regions_tsv
                     # file for the moment.
-                    str_list.append('<a href="' + file_path_diagnosis.non_callable_regions_tsv + '">')
+                    str_list.append('<a href="' + file_path_diagnose_sample.non_callable_regions_tsv + '">')
                     str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
                     str_list.append('</a>')
                 str_list.append('</td>\n')
@@ -5718,8 +5839,8 @@ class VariantCallingGATK(bsf.Analysis):
                 if os.path.isfile(
                         os.path.join(
                             self.genome_directory,
-                            file_path_diagnosis.non_callable_summary_tsv)):
-                    str_list.append('<a href="' + file_path_diagnosis.non_callable_summary_tsv + '">')
+                            file_path_diagnose_sample.non_callable_summary_tsv)):
+                    str_list.append('<a href="' + file_path_diagnose_sample.non_callable_summary_tsv + '">')
                     str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
                     str_list.append('</a>')
                 str_list.append('</td>\n')
@@ -5728,22 +5849,21 @@ class VariantCallingGATK(bsf.Analysis):
                 if os.path.isfile(
                         os.path.join(
                             self.genome_directory,
-                            file_path_diagnosis.insert_size_tsv)):
-                    str_list.append('<a href="' + file_path_diagnosis.insert_size_pdf + '">')
+                            file_path_diagnose_sample.insert_size_tsv)):
+                    str_list.append('<a href="' + file_path_diagnose_sample.insert_size_pdf + '">')
                     str_list.append('<img alt="Insert Size per Sample ' + sample.name + '"')
-                    str_list.append(' src="' + file_path_diagnosis.insert_size_png + '"')
+                    str_list.append(' src="' + file_path_diagnose_sample.insert_size_png + '"')
                     str_list.append(' height="80" width="80" />')
                     str_list.append('</a>')
-                    str_list.append('<a href="' + file_path_diagnosis.insert_size_tsv + '">')
+                    str_list.append('<a href="' + file_path_diagnose_sample.insert_size_tsv + '">')
                     str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
                     str_list.append('</a>')
                 str_list.append('</td>\n')
                 str_list.append('</tr>\n')
 
                 for paired_reads_name in sorted(paired_reads_dict):
-                    file_path_process_read_group = FilePathProcessReadGroup(
-                        prefix=self.get_prefix_process_lane(
-                            paired_reads_name=paired_reads_name))
+                    file_path_process_read_group = self.get_file_path_process_read_group(
+                        paired_reads_name=paired_reads_name)
 
                     str_list.append('<tr>\n')
                     # Sample
@@ -5796,9 +5916,7 @@ class VariantCallingGATK(bsf.Analysis):
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
 
-            file_path_annotate_cohort_snpeff = FilePathAnnotateSnpEff(
-                prefix=self.get_prefix_annotate_cohort_snpeff(
-                    cohort_name=self.cohort_name))
+            file_path_annotate_cohort_snpeff = self.get_file_path_annotate_cohort_snpeff(cohort_name=self.cohort_name)
 
             str_list.append('<tr>\n')
             str_list.append('<td class="left">' + self.cohort_name + '</td>\n')
@@ -5844,9 +5962,7 @@ class VariantCallingGATK(bsf.Analysis):
             str_list.append('</td>\n')
             str_list.append('</tr>\n')
 
-            file_path_annotate_cohort_vep = FilePathAnnotateVEP(
-                prefix=self.get_prefix_annotate_cohort_vep(
-                    cohort_name=self.cohort_name))
+            file_path_annotate_cohort_vep = self.get_file_path_annotate_cohort_vep(cohort_name=self.cohort_name)
 
             str_list.append('<tr>\n')
             str_list.append('<td class="left">' + self.cohort_name + '</td>\n')
@@ -5893,30 +6009,21 @@ class VariantCallingGATK(bsf.Analysis):
                 str_list.append('<tbody>\n')
 
                 for comparison_name in sorted(self._comparison_dict):
-                    # runnable_somatic = self.runnable_dict[
-                    #     '_'.join((self.stage_name_somatic, comparison_name))]
-                    # file_path_somatic = runnable_somatic.file_path_object
-                    # """ @type file_path_somatic: FilePathSomatic """
-
                     # Add snpEff annotation
 
-                    file_path_annotate_somatic_snpeff = FilePathAnnotateSnpEff(
-                        prefix=self.get_prefix_annotate_somatic_snpeff(
-                            comparison_name=comparison_name))
+                    file_path_annotate_somatic_snpeff = self.get_file_path_annotate_somatic_snpeff(
+                        comparison_name=comparison_name)
 
-                    file_path_split_somatic_snpeff = FilePathSplitSomatic(
-                        prefix=self.get_prefix_split_somatic_snpeff(
-                            comparison_name=comparison_name))
+                    file_path_split_somatic_snpeff = self.get_file_path_split_somatic_snpeff(
+                        comparison_name=comparison_name)
 
                     # Add VEP annotation
 
-                    file_path_annotate_somatic_vep = FilePathAnnotateVEP(
-                        prefix=self.get_prefix_annotate_somatic_vep(
-                            comparison_name=comparison_name))
+                    file_path_annotate_somatic_vep = self.get_file_path_annotate_somatic_vep(
+                        comparison_name=comparison_name)
 
-                    file_path_split_somatic_vep = FilePathSplitSomatic(
-                        prefix=self.get_prefix_split_somatic_vep(
-                            comparison_name=comparison_name))
+                    file_path_split_somatic_vep = self.get_file_path_split_somatic_vep(
+                        comparison_name=comparison_name)
 
                     str_list.append('<tr>\n')
 
@@ -5976,7 +6083,7 @@ class VariantCallingGATK(bsf.Analysis):
             str_list.append('</thead>\n')
             str_list.append('<tbody>\n')
 
-            file_path_summary = FilePathSummary(prefix=self.get_prefix_summary(cohort_name=self.cohort_name))
+            file_path_summary = self.get_file_path_summary(cohort_name=self.cohort_name)
 
             # Alignment Summary - TSV
             if os.path.exists(
@@ -6300,21 +6407,10 @@ class VariantCallingGATK(bsf.Analysis):
                     # Skip Sample objects, which PairedReads objects have all been excluded.
                     continue
 
-                file_path_process_sample = FilePathProcessSample(
-                    prefix=self.get_prefix_process_sample(
-                        sample_name=sample.name))
-
-                file_path_diagnose_sample = FilePathDiagnoseSample(
-                    prefix=self.get_prefix_diagnose_sample(
-                        sample_name=sample.name))
-
-                file_path_split_cohort_snpeff = FilePathSplitCohort(
-                    prefix=self.get_prefix_split_cohort_snpeff(
-                        sample_name=sample.name))
-
-                file_path_split_cohort_vep = FilePathSplitCohort(
-                    prefix=self.get_prefix_split_cohort_vep(
-                        sample_name=sample.name))
+                file_path_process_sample = self.get_file_path_process_sample(sample_name=sample.name)
+                file_path_diagnose_sample = self.get_file_path_diagnose_sample(sample_name=sample.name)
+                file_path_split_cohort_snpeff = self.get_file_path_split_cohort_snpeff(sample_name=sample.name)
+                file_path_split_cohort_vep = self.get_file_path_split_cohort_vep(sample_name=sample.name)
 
                 #
                 #  Alignments track

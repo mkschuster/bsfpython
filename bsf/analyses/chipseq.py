@@ -1028,7 +1028,6 @@ class ChIPSeq(bsf.Analysis):
                             name=prefix_peak_calling,
                             code_module='bsf.runnables.generic',
                             working_directory=self.genome_directory,
-                            file_path_object=file_path_peak_calling,
                             debug=self.debug))
                     executable_peak_calling = self.set_stage_runnable(
                         stage=stage_peak_calling,
@@ -1161,7 +1160,6 @@ class ChIPSeq(bsf.Analysis):
                             name=prefix_peak_calling,
                             code_module='bsf.runnables.generic',
                             working_directory=self.genome_directory,
-                            file_path_object=file_path_peak_calling,
                             debug=self.debug))
                     executable_peak_calling = self.set_stage_runnable(
                         stage=stage_peak_calling,
@@ -1445,7 +1443,6 @@ class ChIPSeq(bsf.Analysis):
                             name=prefix_diff_bind,
                             code_module='bsf.runnables.generic',
                             working_directory=self.genome_directory,
-                            file_path_object=file_path_diff_bind,
                             debug=self.debug))
                     executable_diff_bind = self.set_stage_runnable(
                         stage=stage_diff_bind,

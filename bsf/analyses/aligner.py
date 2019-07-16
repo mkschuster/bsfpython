@@ -809,7 +809,6 @@ class Aligner(bsf.Analysis):
                         code_module='bsf.runnables.concurrent',
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
-                        file_path_object=file_path_align,
                         debug=self.debug))
                 self.set_stage_runnable(
                     stage=stage_align,
@@ -944,7 +943,6 @@ class Aligner(bsf.Analysis):
                         code_module='bsf.runnables.generic',
                         working_directory=self.genome_directory,
                         cache_directory=self.cache_directory,
-                        file_path_object=file_path_read_group,
                         debug=self.debug))
                 executable_read_group = self.set_stage_runnable(
                     stage=stage_read_group,
@@ -1141,7 +1139,6 @@ class Aligner(bsf.Analysis):
                     code_module='bsf.runnables.generic',
                     working_directory=self.genome_directory,
                     cache_directory=self.cache_directory,
-                    file_path_object=file_path_sample,
                     debug=self.debug))
             executable_sample = self.set_stage_runnable(
                 stage=stage_sample,
@@ -1412,7 +1409,6 @@ class Aligner(bsf.Analysis):
                 code_module='bsf.runnables.generic',
                 working_directory=self.genome_directory,
                 cache_directory=self.cache_directory,
-                file_path_object=file_path_summary,
                 debug=self.debug))
         executable_summary = self.set_stage_runnable(
             stage=stage_summary,

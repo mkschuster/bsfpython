@@ -99,6 +99,36 @@ class FastQC(bsf.Analysis):
         """
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
+    @classmethod
+    def get_file_path_read_group(cls, read_group_name, file_path):
+        """Get a C{FilePathFastQCReadGroup} object.
+
+        @param read_group_name: Read group name
+        @type read_group_name: str
+        @param file_path: File path (*.bam, *.fastq, *. fastq.gz, ...)
+        @type file_path: str
+        @return: C{FilePathFastQCReadGroup} object
+        @rtype: FilePathFastQCReadGroup
+        """
+        def get_file_prefix(_file_path):
+            """Private function to isolate a file prefix from '*.bam', '*.fastq', '*.fastq.gz', ... file paths.
+
+            @param _file_path: File path
+            @type _file_path: str
+            @return: File prefix
+            @rtype: str | unicode
+            """
+            root_path, extension = os.path.splitext(os.path.basename(_file_path))
+
+            if extension:
+                return get_file_prefix(_file_path=root_path)
+            else:
+                return root_path
+
+        return FilePathFastQCReadGroup(
+            prefix=cls.get_prefix_read_group(read_group_name=read_group_name),
+            file_prefix=get_file_prefix(_file_path=file_path))
+
     def __init__(
             self,
             configuration=None,
@@ -206,19 +236,6 @@ class FastQC(bsf.Analysis):
 
             return
 
-        def run_file_prefix(file_path):
-            """Private function to isolate a file prefix from '*.bam', '*.fastq', '*.fastq.gz', ... file paths.
-
-            @param file_path: File path
-            @return: str | unicode
-            """
-            root_path, extension = os.path.splitext(os.path.basename(file_path))
-
-            if extension:
-                return run_file_prefix(file_path=root_path)
-            else:
-                return root_path
-
         # Start of the run() method body.
 
         super(FastQC, self).run()
@@ -244,11 +261,11 @@ class FastQC(bsf.Analysis):
                     if self.debug > 0:
                         print(self, 'PairedReads name:', paired_reads.get_name())
 
-                    prefix_read_group = '_'.join((stage_read_group.name, paired_reads_name))
+                    prefix_read_group = self.get_prefix_read_group(read_group_name=paired_reads_name)
 
-                    file_path_read_group = FilePathFastQCReadGroup(
-                        prefix=prefix_read_group,
-                        file_prefix=run_file_prefix(file_path=paired_reads.reads_1.file_path))
+                    file_path_read_group = self.get_file_path_read_group(
+                        read_group_name=paired_reads_name,
+                        file_path=paired_reads.reads_1.file_path)
 
                     # Create a Runnable and an Executable for running the FastQC analysis.
 
@@ -256,8 +273,7 @@ class FastQC(bsf.Analysis):
                         runnable=bsf.procedure.ConsecutiveRunnable(
                             name=prefix_read_group,
                             code_module='bsf.runnables.generic',
-                            working_directory=self.project_directory,
-                            file_path_object=file_path_read_group))
+                            working_directory=self.project_directory))
                     self.set_stage_runnable(stage=stage_read_group, runnable=runnable_read_group)
 
                     # Create a new RunnableStepMakeDirectory in preparation of the FastQC program.
@@ -340,19 +356,27 @@ class FastQC(bsf.Analysis):
                 continue
 
             for paired_reads_name in sorted(paired_reads_dict):
-                # for paired_reads in paired_reads_dict[paired_reads_name]:
-                runnable_read_group = self.runnable_dict[self.get_prefix_read_group(read_group_name=paired_reads_name)]
-                file_path_read_group = runnable_read_group.file_path_object
-                """ @type file_path_read_group: FilePathFastQCReadGroup """
+                for paired_reads in paired_reads_dict[paired_reads_name]:
+                    file_path_read_group = self.get_file_path_read_group(
+                        read_group_name=paired_reads_name,
+                        file_path=paired_reads.reads_1.file_path)
 
-                report_list.append('<tr>\n')
-                report_list.append('<td>' + paired_reads_name + '</td>\n')
-                report_list.append('<td><a href="' + urllib.quote(file_path_read_group.report) +
-                                   '"><strong><abbr title="Hypertext Markup Language">HTML</abbr></strong></a></td>\n')
-                report_list.append('<td><a href="' + urllib.quote(file_path_read_group.archive) +
-                                   '"><abbr title="PKWARE, Inc. ZIP">ZIP</abbr></a></td>\n')
-                report_list.append('</tr>\n')
-                report_list.append('\n')
+                    report_list.append('<tr>\n')
+                    report_list.append('<td>')
+                    report_list.append(paired_reads_name)
+                    report_list.append('</td>\n')
+                    report_list.append('<td>')
+                    report_list.append('<a href="' + urllib.quote(file_path_read_group.report) + '">')
+                    report_list.append('<strong><abbr title="Hypertext Markup Language">HTML</abbr></strong>')
+                    report_list.append('</a>')
+                    report_list.append('</td>\n')
+                    report_list.append('<td>')
+                    report_list.append('<a href="' + urllib.quote(file_path_read_group.archive) + '">')
+                    report_list.append('<abbr title="PKWARE, Inc. ZIP">ZIP</abbr>')
+                    report_list.append('</a>')
+                    report_list.append('</td>\n')
+                    report_list.append('</tr>\n')
+                    report_list.append('\n')
 
         report_list.append('</tbody>\n')
         report_list.append('</table>\n')

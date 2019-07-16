@@ -87,6 +87,17 @@ class EGACryptor(bsf.Analysis):
         """
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
 
+    @classmethod
+    def get_file_path_read_group(cls, read_group_name):
+        """Get a C{FilePathEGACryptorReadGroup} object.
+
+        @param read_group_name: Read group name
+        @type read_group_name: str
+        @return: C{FilePathEGACryptorReadGroup} object
+        @rtype: FilePathEGACryptorReadGroup
+        """
+        return FilePathEGACryptorReadGroup(prefix=cls.get_prefix_read_group(read_group_name=read_group_name))
+
     def __init__(
             self,
             configuration=None,
@@ -232,19 +243,15 @@ class EGACryptor(bsf.Analysis):
                     if self.debug > 0:
                         print(self, 'PairedReads name:', paired_reads.get_name())
 
-                    prefix_read_group = self.get_prefix_read_group(read_group_name=paired_reads_name)
-
-                    file_path_read_group = FilePathEGACryptorReadGroup(
-                        prefix=prefix_read_group)
+                    file_path_read_group = self.get_file_path_read_group(read_group_name=paired_reads_name)
 
                     # Create a Runnable and an Executable for running the EGA Cryptor analysis.
 
                     runnable_read_group = self.add_runnable_consecutive(
                         runnable=bsf.procedure.ConsecutiveRunnable(
-                            name=prefix_read_group,
+                            name=self.get_prefix_read_group(read_group_name=paired_reads_name),
                             code_module='bsf.runnables.generic',
-                            working_directory=self.project_directory,
-                            file_path_object=file_path_read_group))
+                            working_directory=self.project_directory))
                     self.set_stage_runnable(stage=stage_read_group, runnable=runnable_read_group)
 
                     # Create a new RunnableStepMakeDirectory in preparation of the EGA Cryptor program.

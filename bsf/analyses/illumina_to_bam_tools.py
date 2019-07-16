@@ -462,9 +462,11 @@ class FilePathIlluminaToBamLane(bsf.procedure.FilePath):
     @type archive_md5: str | unicode
     """
 
-    def __init__(self, project_name, lane, experiment_directory):
+    def __init__(self, prefix, project_name, lane, experiment_directory):
         """Initialise a C{bsf.analyses.illumina_to_bam_tools.FilePathIlluminaToBamLane} object.
         
+        @param prefix: Prefix
+        @type prefix: str | unicode
         @param project_name: Project name
         @type project_name: str
         @param lane: Lane
@@ -474,8 +476,6 @@ class FilePathIlluminaToBamLane(bsf.procedure.FilePath):
         @return:
         @rtype:
         """
-        prefix = IlluminaToBam.get_prefix_lane(project_name=project_name, lane=lane)
-
         super(FilePathIlluminaToBamLane, self).__init__(prefix=prefix)
 
         self.unsorted_bam = prefix + '_unsorted.bam'
@@ -574,6 +574,25 @@ class IlluminaToBam(bsf.Analysis):
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_lane(), project_name, lane))
+
+    @classmethod
+    def get_file_path_lane(cls, project_name, lane, experiment_directory):
+        """Get a C{FilePathIlluminaToBamLane} object.
+
+        @param project_name: Project name
+        @type project_name: str
+        @param lane: Lane
+        @type lane: str
+        @param experiment_directory: BSF experiment directory
+        @type experiment_directory: str | unicode
+        @return: C{FilePathIlluminaToBamLane} object
+        @rtype: FilePathIlluminaToBamLane
+        """
+        return FilePathIlluminaToBamLane(
+            prefix=cls.get_prefix_lane(project_name=project_name, lane=lane),
+            project_name=project_name,
+            lane=lane,
+            experiment_directory=experiment_directory)
 
     def __init__(
             self,
@@ -932,7 +951,7 @@ class IlluminaToBam(bsf.Analysis):
         for lane_int in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
             lane_str = str(lane_int)
 
-            file_path_lane = FilePathIlluminaToBamLane(
+            file_path_lane = self.get_file_path_lane(
                 project_name=self.project_name,
                 lane=lane_str,
                 experiment_directory=experiment_directory)
@@ -942,8 +961,7 @@ class IlluminaToBam(bsf.Analysis):
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     code_module='bsf.runnables.generic',
-                    working_directory=self.project_directory,
-                    file_path_object=file_path_lane))
+                    working_directory=self.project_directory))
 
             # TODO: The Runnable class could have dependencies just like the Executable class so that they could be
             # passed on upon creation of the Executable from the Runnable via Executable.from_analysis_runnable().
@@ -1331,6 +1349,38 @@ class BamIndexDecoder(bsf.Analysis):
         return '_'.join((cls.get_stage_name_lane(), project_name, lane))
 
     @classmethod
+    def get_file_path_cell(cls, project_name):
+        """Get a C{FilePathBamIndexDecoderCell} object.
+
+        @param project_name: Project name
+        @type project_name: str
+        @return: C{FilePathBamIndexDecoderCell} object
+        @rtype: FilePathBamIndexDecoderCell
+        """
+        return FilePathBamIndexDecoderCell(
+            prefix=cls.get_prefix_cell(project_name=project_name),
+            project_name=project_name)
+
+    @classmethod
+    def get_file_path_lane(cls, project_name, lane, sequences_directory):
+        """Get a C{FilePathBamIndexDecoderLane} object.
+
+        @param project_name: Project name
+        @type project_name: str
+        @param lane: Lane
+        @type lane: str
+        @param sequences_directory: BSF sequences directory
+        @type sequences_directory: str | unicode
+        @return: C{FilePathBamIndexDecoderLane} object
+        @rtype: FilePathBamIndexDecoderLane
+        """
+        return FilePathBamIndexDecoderLane(
+            prefix=cls.get_prefix_lane(project_name=project_name, lane=lane),
+            project_name=project_name,
+            lane=lane,
+            sequences_directory=sequences_directory)
+
+    @classmethod
     def get_sample_annotation_sheet(cls, file_path):
         """Get a C{bsf.ngs.SampleAnnotationSheet} object to annotate C{bsf.ngs.Sample} objects in a
         flow cell-specific I{BSF samples} directory.
@@ -1636,9 +1686,7 @@ class BamIndexDecoder(bsf.Analysis):
         library_annotation_dict = library_annotation_sheet.get_annotation_dict()
         library_barcode_dict = library_annotation_sheet.get_barcode_length_dict()
 
-        file_path_cell = FilePathBamIndexDecoderCell(
-            prefix=self.get_prefix_cell(project_name=self.project_name),
-            project_name=self.project_name)
+        file_path_cell = self.get_file_path_cell(project_name=self.project_name)
 
         # Create a SampleAnnotationSheet in the project directory and
         # eventually transfer it into the experiment directory.
@@ -1652,8 +1700,7 @@ class BamIndexDecoder(bsf.Analysis):
 
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)
-            file_path_lane = FilePathBamIndexDecoderLane(
-                prefix=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
+            file_path_lane = self.get_file_path_lane(
                 project_name=self.project_name,
                 lane=lane_str,
                 sequences_directory=self.sequences_directory)
@@ -1716,8 +1763,7 @@ class BamIndexDecoder(bsf.Analysis):
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     code_module='bsf.runnables.generic',
-                    working_directory=self.project_directory,
-                    file_path_object=file_path_lane))
+                    working_directory=self.project_directory))
 
             # TODO: It would be good to extend the Runnable so that it holds dependencies on other Runnable objects
             # and that it could be submitted to a Stage so that the Executable gets automatically created and submitted.
@@ -1951,8 +1997,7 @@ class BamIndexDecoder(bsf.Analysis):
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
-                working_directory=self.project_directory,
-                file_path_object=file_path_cell))
+                working_directory=self.project_directory))
 
         executable_cell = self.set_stage_runnable(
             stage=stage_cell,

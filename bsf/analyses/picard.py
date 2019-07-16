@@ -567,6 +567,35 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
     name = 'Picard Extract Illumina Run Folder Analysis'
     prefix = 'extract_illumina_run_folder'
 
+    @classmethod
+    def get_file_path_cell(cls, project_name):
+        """Get a C{FilePathExtractIlluminaCell} object.
+
+        @param project_name: Project name
+        @type project_name: str
+        @return: C{FilePathExtractIlluminaCell} object
+        @rtype: FilePathExtractIlluminaCell
+        """
+        return FilePathExtractIlluminaCell(
+            prefix=cls.get_prefix_cell(project_name=project_name),
+            project_name=project_name)
+
+    @classmethod
+    def get_file_path_lane(cls, project_name, lane):
+        """Get a C{FilePathExtractIlluminaLane} object.
+
+        @param project_name: Project name
+        @type project_name: str
+        @param lane: Lane
+        @type lane: str
+        @return: C{FilePathExtractIlluminaLane} object
+        @rtype: FilePathExtractIlluminaLane
+        """
+        return FilePathExtractIlluminaLane(
+            prefix=cls.get_prefix_lane(project_name=project_name, lane=lane),
+            project_name=project_name,
+            lane=lane)
+
     def __init__(
             self,
             configuration=None,
@@ -845,9 +874,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         stage_lane = self.get_stage(name=self.get_stage_name_lane())
         stage_cell = self.get_stage(name=self.get_stage_name_cell())
 
-        file_path_cell = FilePathExtractIlluminaCell(
-            prefix=self.get_prefix_cell(project_name=self.project_name),
-            project_name=self.project_name)
+        file_path_cell = self.get_file_path_cell(project_name=self.project_name)
 
         # NOTE: Use a SampleAnnotationSheet as long as the Collection does not have a method to
         # write a de-normalised table.
@@ -870,12 +897,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
 
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)
-            file_path_lane = FilePathExtractIlluminaLane(
-                prefix=self.get_prefix_lane(
-                    project_name=self.project_name,
-                    lane=lane_str),
-                project_name=self.project_name,
-                lane=lane_str)
+            file_path_lane = self.get_file_path_lane(project_name=self.project_name, lane=lane_str)
 
             # BARCODE_FILE
             eib_sheet = ExtractIlluminaBarcodesSheet(
@@ -965,8 +987,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     code_module='bsf.runnables.generic',
-                    working_directory=self.project_directory,
-                    file_path_object=file_path_lane))
+                    working_directory=self.project_directory))
             executable_lane = self.set_stage_runnable(
                 stage=stage_lane,
                 runnable=runnable_lane)
@@ -1204,8 +1225,7 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
-                working_directory=self.project_directory,
-                file_path_object=file_path_cell))
+                working_directory=self.project_directory))
         executable_cell = self.set_stage_runnable(
             stage=stage_cell,
             runnable=runnable_cell)
@@ -1232,8 +1252,8 @@ class ExtractIlluminaRunFolder(PicardIlluminaRunFolder):
         return
 
 
-class FilePathIlluminaMultiplexSam(bsf.procedure.FilePath):
-    """The C{bsf.analyses.picard.FilePathIlluminaMultiplexSam} class models files in a directory.
+class FilePathIlluminaMultiplexSamLane(bsf.procedure.FilePath):
+    """The C{bsf.analyses.picard.FilePathIlluminaMultiplexSamLane} class models files in a directory.
 
     Attributes:
     @ivar unsorted_bam: Unsorted BAM file
@@ -1250,9 +1270,11 @@ class FilePathIlluminaMultiplexSam(bsf.procedure.FilePath):
     @type archive_md5: str | unicode
     """
 
-    def __init__(self, project_name, lane, experiment_directory):
-        """Initialise a C{bsf.analyses.picard.FilePathIlluminaMultiplexSam} object.
+    def __init__(self, prefix, project_name, lane, experiment_directory):
+        """Initialise a C{bsf.analyses.picard.FilePathIlluminaMultiplexSamLane} object.
 
+        @param prefix: Prefix
+        @type prefix: str | unicode
         @param project_name: Project name
         @type project_name: str
         @param lane: Lane
@@ -1262,9 +1284,7 @@ class FilePathIlluminaMultiplexSam(bsf.procedure.FilePath):
         @return:
         @rtype:
         """
-        prefix = IlluminaMultiplexSam.get_prefix_lane(project_name=project_name, lane=lane)
-
-        super(FilePathIlluminaMultiplexSam, self).__init__(prefix=prefix)
+        super(FilePathIlluminaMultiplexSamLane, self).__init__(prefix=prefix)
 
         self.unsorted_bam = prefix + '_unsorted.bam'
         self.unsorted_md5 = prefix + '_unsorted.bam.md5'
@@ -1305,6 +1325,25 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
     name = 'Picard IlluminaMultiplexSam Analysis'
     prefix = 'illumina_multiplex_sam'
+
+    @classmethod
+    def get_file_path_lane(cls, project_name, lane, experiment_directory):
+        """Get a C{FilePathIlluminaMultiplexSamLane} object.
+
+        @param project_name: Project name
+        @type project_name: str
+        @param lane: Lane
+        @type lane: str
+        @param experiment_directory: BSF experiment directory
+        @type experiment_directory: str | unicode
+        @return: C{FilePathIlluminaMultiplexSamLane} object
+        @rtype: FilePathIlluminaMultiplexSamLane
+        """
+        return FilePathIlluminaMultiplexSamLane(
+            prefix=cls.get_prefix_lane(project_name=project_name, lane=lane),
+            project_name=project_name,
+            lane=lane,
+            experiment_directory=experiment_directory)
 
     def __init__(
             self,
@@ -1579,7 +1618,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         for lane_int in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
             lane_str = str(lane_int)
 
-            file_path_lane = FilePathIlluminaMultiplexSam(
+            file_path_lane = self.get_file_path_lane(
                 project_name=self.project_name,
                 lane=lane_str,
                 experiment_directory=experiment_directory)
@@ -1588,8 +1627,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     code_module='bsf.runnables.generic',
-                    working_directory=self.project_directory,
-                    file_path_object=file_path_lane))
+                    working_directory=self.project_directory))
 
             executable_lane = self.set_stage_runnable(
                 stage=stage_lane,
@@ -1936,6 +1974,38 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         """
         return '_'.join((cls.get_stage_name_lane(), project_name, lane))
 
+    @classmethod
+    def get_file_path_cell(cls, project_name):
+        """Get a C{FilePathIlluminaDemultiplexSamCell} object.
+
+        @param project_name: Project name
+        @type project_name: str
+        @return: C{FilePathIlluminaDemultiplexSamCell} object
+        @rtype: FilePathIlluminaDemultiplexSamCell
+        """
+        return FilePathIlluminaDemultiplexSamCell(
+            prefix=cls.get_prefix_cell(project_name=project_name),
+            project_name=project_name)
+
+    @classmethod
+    def get_file_path_lane(cls, project_name, lane, sequences_directory):
+        """Get a C{FilePathIlluminaDemultiplexSamLane} object.
+
+        @param project_name: Project name
+        @type project_name: str
+        @param lane: Lane
+        @type lane: str
+        @param sequences_directory: BSF sequences directory
+        @type sequences_directory: str | unicode
+        @return: C{FilePathIlluminaDemultiplexSamLane} object
+        @rtype: FilePathIlluminaDemultiplexSamLane
+        """
+        return FilePathIlluminaDemultiplexSamLane(
+            prefix=cls.get_prefix_lane(project_name=project_name, lane=lane),
+            project_name=project_name,
+            lane=lane,
+            sequences_directory=sequences_directory)
+
     def __init__(
             self,
             configuration=None,
@@ -2241,9 +2311,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         stage_lane = self.get_stage(name=self.get_stage_name_lane())
         stage_cell = self.get_stage(name=self.get_stage_name_cell())
 
-        file_path_cell = FilePathIlluminaDemultiplexSamCell(
-            prefix=self.get_prefix_cell(project_name=self.project_name),
-            project_name=self.project_name)
+        file_path_cell = self.get_file_path_cell(project_name=self.project_name)
 
         # NOTE: Use a SampleAnnotationSheet as long as the Collection does not have a method to
         # write a de-normalised table.
@@ -2272,8 +2340,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
 
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)
-            file_path_lane = FilePathIlluminaDemultiplexSamLane(
-                prefix=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
+            file_path_lane = self.get_file_path_lane(
                 project_name=self.project_name,
                 lane=lane_str,
                 sequences_directory=self.sequences_directory)
@@ -2375,8 +2442,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
                 runnable=bsf.procedure.ConsecutiveRunnable(
                     name=self.get_prefix_lane(project_name=self.project_name, lane=lane_str),
                     code_module='bsf.runnables.generic',
-                    working_directory=self.project_directory,
-                    file_path_object=file_path_lane))
+                    working_directory=self.project_directory))
             executable_lane = self.set_stage_runnable(
                 stage=stage_lane,
                 runnable=runnable_lane)
@@ -2541,8 +2607,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=self.get_prefix_cell(project_name=self.project_name),
                 code_module='bsf.runnables.generic',
-                working_directory=self.project_directory,
-                file_path_object=file_path_cell))
+                working_directory=self.project_directory))
         executable_cell = self.set_stage_runnable(
             stage=stage_cell,
             runnable=runnable_cell)
@@ -2608,6 +2673,20 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
     name = 'Picard CollectHiSeqXPfFailMetrics Analysis'
     prefix = 'picard_hiseq_x_pf_fail'
 
+    @classmethod
+    def get_file_path_lane(cls, project_name, lane):
+        """Get a C{FilePathCollectHiSeqXPfFailMetricsLane} object.
+
+        @param project_name: Project name
+        @type project_name: str
+        @param lane: Lane
+        @type lane: str
+        @return: C{FilePathCollectHiSeqXPfFailMetricsLane} object
+        @rtype: FilePathCollectHiSeqXPfFailMetricsLane
+        """
+        return FilePathCollectHiSeqXPfFailMetricsLane(
+            prefix=cls.get_prefix_lane(project_name=project_name, lane=lane))
+
     def run(self):
         """Run the C{bsf.analyses.picard.CollectHiSeqXPfFailMetrics} C{bsf.Analysis}.
 
@@ -2625,11 +2704,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
         for lane_int in range(0 + 1, self._irf.run_information.flow_cell_layout.lane_count + 1):
             lane_str = str(lane_int)
 
-            prefix_lane = self.get_prefix_lane(
-                project_name=self.project_name,
-                lane=lane_str)
-
-            file_path_lane = FilePathCollectHiSeqXPfFailMetricsLane(prefix=prefix_lane)
+            file_path_lane = self.get_file_path_lane(project_name=self.project_name, lane=lane_str)
 
             runnable_lane = self.add_runnable_consecutive(
                 runnable=bsf.procedure.ConsecutiveRunnable(
@@ -2637,8 +2712,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
                         project_name=self.project_name,
                         lane=lane_str),
                     code_module='bsf.runnables.generic',
-                    working_directory=self.project_directory,
-                    file_path_object=file_path_lane))
+                    working_directory=self.project_directory))
             executable_lane = self.set_stage_runnable(
                 stage=stage_lane,
                 runnable=runnable_lane)
@@ -2658,7 +2732,7 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
             # BASECALLS_DIR Required
             runnable_step.add_picard_option(key='BASECALLS_DIR', value=self.basecalls_directory)
             # OUTPUT Required
-            runnable_step.add_picard_option(key='OUTPUT', value=prefix_lane)
+            runnable_step.add_picard_option(key='OUTPUT', value=file_path_lane.prefix)
             # PROB_EXPLICIT_READS [0.0]
             # LANE Required
             runnable_step.add_picard_option(key='LANE', value=lane_str)
@@ -2672,8 +2746,8 @@ class CollectHiSeqXPfFailMetrics(PicardIlluminaRunFolder):
         return
 
 
-class FilePathDownsampleSam(bsf.procedure.FilePath):
-    """The C{bsf.analyses.picard.FilePathDownsampleSam} models files in a directory.
+class FilePathDownsampleSamReadGroup(bsf.procedure.FilePath):
+    """The C{bsf.analyses.picard.FilePathDownsampleSamReadGroup} models files in a directory.
 
     Attributes:
     @ivar output_directory: Output directory
@@ -2683,14 +2757,14 @@ class FilePathDownsampleSam(bsf.procedure.FilePath):
     """
 
     def __init__(self, prefix):
-        """Initialise a C{bsf.analyses.picard.FilePathDownsampleSam} object.
+        """Initialise a C{bsf.analyses.picard.FilePathDownsampleSamReadGroup} object.
 
         @param prefix: Prefix
         @type prefix: str | unicode
         @return:
         @rtype:
         """
-        super(FilePathDownsampleSam, self).__init__(prefix=prefix)
+        super(FilePathDownsampleSamReadGroup, self).__init__(prefix=prefix)
 
         self.output_directory = prefix
         self.downsampled_bam = prefix + '_downsampled.bam'
@@ -2733,6 +2807,18 @@ class DownsampleSam(bsf.Analysis):
         @rtype: str
         """
         return '_'.join((cls.get_stage_name_read_group(), read_group_name))
+
+    @classmethod
+    def get_file_path_read_group(cls, read_group_name):
+        """Get a C{FilePathDownsampleSamReadGroup} object.
+
+        @param read_group_name: Read group name
+        @type read_group_name: str
+        @return: C{FilePathDownsampleSamReadGroup} object
+        @rtype: FilePathDownsampleSamReadGroup
+        """
+        return FilePathDownsampleSamReadGroup(
+            prefix=cls.get_prefix_read_group(read_group_name=read_group_name))
 
     def __init__(
             self,
@@ -2886,7 +2972,7 @@ class DownsampleSam(bsf.Analysis):
 
                     prefix_read_group = self.get_prefix_read_group(read_group_name=paired_reads_name)
 
-                    file_path_read_group = FilePathDownsampleSam(prefix=prefix_read_group)
+                    file_path_read_group = self.get_file_path_read_group(read_group_name=paired_reads_name)
 
                     # Keep the original BAM file and modify the file_path in the Reads object.
                     bam_file_path = reads.file_path
@@ -2900,8 +2986,7 @@ class DownsampleSam(bsf.Analysis):
                         runnable=bsf.procedure.ConsecutiveRunnable(
                             name=prefix_read_group,
                             code_module='bsf.runnables.generic',
-                            working_directory=self.project_directory,
-                            file_path_object=file_path_read_group))
+                            working_directory=self.project_directory))
 
                     # Create an Executable for running the Picard SamToFastq Runnable.
 
@@ -3089,6 +3174,34 @@ class SamToFastq(bsf.Analysis):
         """
         return '_'.join((cls.get_stage_name_project(), project_name))
 
+    @classmethod
+    def get_file_path_read_group(cls, read_group_name):
+        """Get a C{FilePathSamToFastqReadGroup} object.
+
+        @param read_group_name: Read group name
+        @type read_group_name: str
+        @return: C{FilePathSamToFastqReadGroup} object
+        @rtype: FilePathSamToFastqReadGroup
+        """
+        return FilePathSamToFastqReadGroup(
+            prefix=cls.get_prefix_read_group(read_group_name=read_group_name))
+
+    @classmethod
+    def get_file_path_project(cls, project_name, prefix_analysis):
+        """Get a C{FilePathSamToFastqProject} object.
+
+        @param project_name: Project name
+        @type project_name: str
+        @param prefix_analysis: C{bsf.Analysis.prefix}
+        @type prefix_analysis: str
+        @return: C{FilePathSamToFastqProject} object
+        @rtype: FilePathSamToFastqProject
+        """
+        return FilePathSamToFastqProject(
+            prefix=cls.get_prefix_project(project_name=project_name),
+            prefix_analysis=prefix_analysis,
+            project_name=project_name)
+
     def __init__(
             self,
             configuration=None,
@@ -3251,7 +3364,7 @@ class SamToFastq(bsf.Analysis):
                         bam_file_path = reads.file_path
                         prefix_read_group = self.get_prefix_read_group(read_group_name=paired_reads_name)
 
-                        file_path_read_group = FilePathSamToFastqReadGroup(prefix=prefix_read_group)
+                        file_path_read_group = self.get_file_path_read_group(read_group_name=paired_reads_name)
 
                         # Get the SAM header of a BAM file to extract the read group (@RG), amongst other things.
 
@@ -3332,8 +3445,7 @@ class SamToFastq(bsf.Analysis):
                             runnable=bsf.procedure.ConsecutiveRunnable(
                                 name=prefix_read_group,
                                 code_module='bsf.runnables.generic',
-                                working_directory=self.project_directory,
-                                file_path_object=file_path_read_group))
+                                working_directory=self.project_directory))
                         self.set_stage_runnable(stage=stage_read_group, runnable=runnable_read_group)
 
                         # Record the Executable.name for the project dependency.
@@ -3413,10 +3525,7 @@ class SamToFastq(bsf.Analysis):
 
         prefix_project = self.get_prefix_project(project_name=self.project_name)
 
-        file_path_project = FilePathSamToFastqProject(
-            prefix=prefix_project,
-            prefix_analysis=self.prefix,
-            project_name=self.project_name)
+        file_path_project = self.get_file_path_project(project_name=self.project_name, prefix_analysis=self.prefix)
 
         # Convert the (modified) Collection object into a SampleAnnotationSheet object and write it to disk.
 
@@ -3429,8 +3538,7 @@ class SamToFastq(bsf.Analysis):
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=prefix_project,
                 code_module='bsf.runnables.picard_sam_to_fastq_sample_sheet',
-                working_directory=self.project_directory,
-                file_path_object=file_path_project))
+                working_directory=self.project_directory))
         executable_project = self.set_stage_runnable(
             stage=stage_project,
             runnable=runnable_project)

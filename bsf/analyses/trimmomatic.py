@@ -199,6 +199,34 @@ class Trimmomatic(bsf.Analysis):
         """
         return cls.get_stage_name_project()
 
+    @classmethod
+    def get_file_path_read_group(cls, read_group_name):
+        """Get a C{FilePathTrimmomaticReadGroup} object.
+
+        @param read_group_name: Read group name
+        @type read_group_name: str
+        @return: C{FilePathTrimmomaticReadGroup} object
+        @rtype: FilePathTrimmomaticReadGroup
+        """
+        return FilePathTrimmomaticReadGroup(
+            prefix=cls.get_prefix_read_group(read_group_name=read_group_name))
+
+    @classmethod
+    def get_file_path_project(cls, project_name, prefix_analysis):
+        """Get a C{FilePathTrimmomaticProject} object.
+
+        @param project_name: Project name
+        @type project_name: str
+        @param prefix_analysis: C{bsf.Analysis.prefix}
+        @type prefix_analysis: str
+        @return: C{FilePathTrimmomaticProject} object
+        @rtype: FilePathTrimmomaticProject
+        """
+        return FilePathTrimmomaticProject(
+            prefix=cls.get_prefix_project(),
+            prefix_analysis=prefix_analysis,
+            project_name=project_name)
+
     def __init__(
             self,
             configuration=None,
@@ -429,21 +457,15 @@ class Trimmomatic(bsf.Analysis):
                     if paired_reads.reads_1 is None and paired_reads.reads_2 is not None:
                         raise Exception('PairedReads object with a reads_2, but no reads_1 object.')
 
-                    prefix_read_group = '_'.join((stage_read_group.name, paired_reads_name))
-
-                    if self.debug > 0:
-                        print('Trimmomatic Prefix:', prefix_read_group)
-
-                    file_path_read_group = FilePathTrimmomaticReadGroup(prefix=prefix_read_group)
+                    file_path_read_group = self.get_file_path_read_group(read_group_name=paired_reads_name)
 
                     # Create a Runnable and an Executable for running the Trimmomatic analysis.
 
                     runnable_read_group = self.add_runnable_consecutive(
                         runnable=bsf.procedure.ConsecutiveRunnable(
-                            name=prefix_read_group,
+                            name=self.get_prefix_read_group(read_group_name=paired_reads_name),
                             code_module='bsf.runnables.generic',
-                            working_directory=self.project_directory,
-                            file_path_object=file_path_read_group))
+                            working_directory=self.project_directory))
                     self.set_stage_runnable(stage=stage_read_group, runnable=runnable_read_group)
 
                     # Record the Executable.name for the project dependency.
@@ -569,8 +591,7 @@ class Trimmomatic(bsf.Analysis):
                         runnable=bsf.procedure.ConsecutiveRunnable(
                             name=prefix_summary,
                             code_module='bsf.runnables.generic',
-                            working_directory=self.project_directory,
-                            file_path_object=file_path_read_group))  # Use the same FilePath object.
+                            working_directory=self.project_directory))
                     executable_summary = self.set_stage_runnable(stage=stage_summary, runnable=runnable_summary)
                     executable_summary.dependencies.append(runnable_read_group.name)
 
@@ -592,10 +613,7 @@ class Trimmomatic(bsf.Analysis):
 
         prefix_project = '_'.join((stage_project.name, self.project_name))
 
-        file_path_project = FilePathTrimmomaticProject(
-            prefix=prefix_project,
-            prefix_analysis=self.prefix,
-            project_name=self.project_name)
+        file_path_project = self.get_file_path_project(project_name=self.project_name, prefix_analysis=self.prefix)
 
         # Convert the (modified) Collection object into a SampleAnnotationSheet object and write it to disk.
 
@@ -608,8 +626,7 @@ class Trimmomatic(bsf.Analysis):
             runnable=bsf.procedure.ConsecutiveRunnable(
                 name=prefix_project,
                 code_module='bsf.runnables.picard_sam_to_fastq_sample_sheet',
-                working_directory=self.project_directory,
-                file_path_object=file_path_project))
+                working_directory=self.project_directory))
         executable_project = self.set_stage_runnable(
             stage=stage_project,
             runnable=runnable_project)
@@ -689,7 +706,7 @@ class Trimmomatic(bsf.Analysis):
                     continue
 
                 runnable_read_group = self.runnable_dict[prefix_read_group]
-                file_path_read_group = FilePathTrimmomaticReadGroup(prefix=prefix_read_group)
+                file_path_read_group = self.get_file_path_read_group(read_group_name=paired_reads_name)
 
                 report_list.append('<tr>\n')
                 # Sample
