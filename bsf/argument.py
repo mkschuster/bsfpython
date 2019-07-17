@@ -40,6 +40,8 @@ class Argument(object):
     Attributes:
     @ivar key: Key
     @type key: str | unicode
+    @ivar value: Value
+    @type value: str | unicode | None
     """
 
     @classmethod
@@ -95,6 +97,7 @@ class Argument(object):
             raise Exception('The key argument has to be defined.')
 
         self.key = key
+        self.value = None
 
         return
 
