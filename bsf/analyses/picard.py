@@ -3299,6 +3299,20 @@ class SamToFastq(bsf.Analysis):
 
         return
 
+    def _read_comparisons(self):
+        """Private method to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
+
+        This implementation just adds all C{bsf.ngs.Sample} objects from the
+        C{bsf.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
+        C{bsf.Analysis.sample_list} instance variable.
+        @return:
+        @rtype:
+        """
+
+        self.sample_list.extend(self.collection.get_all_samples())
+
+        return
+
     def run(self):
         """Run the C{bsf.analyses.picard.SamToFastq} C{bsf.Analysis}.
 
@@ -3306,20 +3320,6 @@ class SamToFastq(bsf.Analysis):
         @return:
         @rtype:
         """
-
-        def run_read_comparisons():
-            """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
-
-            This implementation just adds all C{bsf.ngs.Sample} objects from the
-            C{bsf.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
-            C{bsf.Analysis.sample_list} instance variable.
-            @return:
-            @rtype:
-            """
-
-            self.sample_list.extend(self.collection.get_all_samples())
-
-            return
 
         # Start of the run() method body.
 
@@ -3332,7 +3332,7 @@ class SamToFastq(bsf.Analysis):
             if not self.classpath_picard:
                 raise Exception('The ' + self.name + " requires a 'classpath_picard' configuration option.")
 
-        run_read_comparisons()
+        self._read_comparisons()
 
         # Picard SamToFastq
 
@@ -3554,8 +3554,68 @@ class SamToFastq(bsf.Analysis):
         runnable_step.add_option_long(key='sas_path_new', value=file_path_project.sas_path_new)
         runnable_step.add_option_long(key='minimum_size', value='1024')
 
-        runnable_step_project.add_option_long(key='sas_path_old', value=file_path_project.sas_path_old)
-        runnable_step_project.add_option_long(key='sas_path_new', value=file_path_project.sas_path_new)
-        runnable_step_project.add_option_long(key='minimum_size', value='1024')
+        return
+
+    def prune(self):
+        """Prune the Analysis by replacing FASTQ files with (empty) status files (*.truncated).
+
+        The status files are recognised by the bsf.runnables.picard_sam_to_fastq_sample_sheet module
+        so that Reads and PairedReads objects are kept in the sample annotation sheet.
+        @return:
+        @rtype:
+        """
+        super(SamToFastq, self).run()
+
+        self._read_comparisons()
+
+        if self.debug > 0:
+            print('Prune!')
+
+        for sample in self.sample_list:
+            if self.debug > 0:
+                print(self, 'Sample name:', sample.name)
+                sys.stdout.writelines(sample.trace(level=1))
+
+            paired_reads_dict = sample.get_all_paired_reads(replicate_grouping=False)
+
+            for paired_reads_name in sorted(paired_reads_dict):
+                for paired_reads in paired_reads_dict[paired_reads_name]:
+                    if self.debug > 0:
+                        print(self, 'PairedReads name:', paired_reads.get_name())
+
+                    file_path_read_group = self.get_file_path_read_group(read_group_name=paired_reads_name)
+
+                    def prune_file_path(reads):
+                        """Private function to prune files of a Reads object.
+
+                        @param reads: Reads
+                        @type reads: bsf.ngs.Reads
+                        @return:
+                        @rtype:
+                        """
+                        if os.path.isabs(reads.file_path):
+                            file_path = reads.file_path
+                        else:
+                            file_path = os.path.join(
+                                self.genome_directory,
+                                file_path_read_group.output_directory,
+                                reads.file_path)
+
+                        if os.path.exists(file_path):
+                            open(file_path + '.truncated', 'wt').close()
+                            os.remove(file_path)
+
+                        # Also remove an eventual MD5 sum file.
+                        file_path += '.md5'
+                        if os.path.exists(file_path):
+                            os.remove(file_path)
+
+                        return
+
+                    if paired_reads.reads_1 is not None:
+                        prune_file_path(reads=paired_reads.reads_1)
+
+                    if paired_reads.reads_2 is not None:
+                        prune_file_path(reads=paired_reads.reads_2)
 
         return

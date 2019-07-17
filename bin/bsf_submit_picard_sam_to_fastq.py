@@ -95,17 +95,19 @@ if name_space.project_name:
 if name_space.sas_file:
     analysis.sas_file = name_space.sas_file
 
-analysis.run()
-analysis.check_state()
-analysis.submit(name=name_space.stage)
+if name_space.stage == 'prune':
+    analysis.prune()
+else:
+    analysis.run()
+    analysis.check_state()
+    analysis.submit(name=name_space.stage)
 
-print(analysis.name)
-print('Project name:      ', analysis.project_name)
-print('Genome version:    ', analysis.genome_version)
-print('Input directory:   ', analysis.input_directory)
-print('Output directory:  ', analysis.output_directory)
-print('Project directory: ', analysis.project_directory)
-print('Genome directory:  ', analysis.genome_directory)
+    print(analysis.name)
+    print('Project name:      ', analysis.project_name)
+    print('Input directory:   ', analysis.input_directory)
+    print('Output directory:  ', analysis.output_directory)
+    print('Project directory: ', analysis.project_directory)
+    print('Genome directory:  ', analysis.genome_directory)
 
 if analysis.debug >= 2:
     print(repr(analysis), 'final trace:')

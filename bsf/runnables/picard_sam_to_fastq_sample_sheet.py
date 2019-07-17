@@ -31,10 +31,72 @@ are automatically deleted.
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
+import argparse
 import os
+import sys
 
 import bsf.argument
 import bsf.ngs
+
+
+def _convert_collection(file_path_old, file_path_new, minimum_size, debug=0):
+    collection = bsf.ngs.Collection.from_sas_path(
+        file_path='',
+        file_type='',
+        name='picard_sam_to_fastq',
+        sas_path=file_path_old,
+        debug=debug)
+
+    if debug > 0:
+        print('Initial Collection:')
+        sys.stdout.writelines(collection.trace(level=1))
+
+    for prf in collection.processed_run_folder_dict.values():
+        for project in prf.project_dict.values():
+            for sample in project.sample_dict.values():
+                new_paired_reads_list = list()
+                """ @type new_paired_reads_list: list[bsf.ngs.PairedReads] """
+                for paired_reads in sample.paired_reads_list:
+                    paired_reads_keep = False
+                    if paired_reads.reads_1 is not None:
+                        if os.path.exists(paired_reads.reads_1.file_path):
+                            if os.path.getsize(paired_reads.reads_1.file_path) >= minimum_size:
+                                paired_reads_keep = True
+                            else:
+                                os.remove(paired_reads.reads_1.file_path)
+                                paired_reads.reads_1 = None
+                        elif os.path.exists(paired_reads.reads_1.file_path + '.truncated'):
+                            paired_reads_keep = True
+                        else:
+                            # The PairedReads object does not have a meaningful Reads object in reads1.
+                            paired_reads.reads_1 = None
+                    if paired_reads.reads_2 is not None:
+                        if os.path.exists(paired_reads.reads_2.file_path):
+                            if os.path.getsize(paired_reads.reads_2.file_path) >= minimum_size:
+                                paired_reads_keep = True
+                            else:
+                                os.remove(paired_reads.reads_2.file_path)
+                                paired_reads.reads_2 = None
+                        elif os.path.exists(paired_reads.reads_2.file_path + '.truncated'):
+                            paired_reads_keep = True
+                        else:
+                            # The PairedReads object does not have a meaningful Reads object in reads2.
+                            paired_reads.reads_2 = None
+                    if paired_reads.reads_1 is None and paired_reads.reads_2 is None:
+                        paired_reads_keep = False
+                    if paired_reads_keep:
+                        new_paired_reads_list.append(paired_reads)
+                sample.paired_reads_list = new_paired_reads_list
+                # The Sample object could have lost all its PairedReads objects.
+                # The PairedReads objects may no longer have the correct weak reference to their Sample.
+
+    collection.to_sas_path(name='picard_sam_to_fastq', file_path=file_path_new)
+
+    if debug > 0:
+        print('Final Collection:')
+        sys.stdout.writelines(collection.trace(level=1))
+
+    return
 
 
 def run(runnable):
@@ -56,7 +118,6 @@ def run(runnable):
         @rtype: str | unicode
         """
         argument = runnable_step.options[key][0]
-        """ @type argument: bsf.argument.OptionLong """
         return argument.value
 
     # If the ConsecutiveRunnable status file exists, there is nothing to do and
@@ -69,52 +130,10 @@ def run(runnable):
 
     runnable_step = runnable.runnable_step_list[0]
 
-    file_path_old = run_get_value(key='sas_path_old')
-    file_path_new = run_get_value(key='sas_path_new')
-    minimum_size = int(run_get_value(key='minimum_size'))
-
-    collection = bsf.ngs.Collection.from_sas_path(
-        file_path='',
-        file_type='',
-        name='picard_sam_to_fastq',
-        sas_path=file_path_old)
-
-    for prf in collection.processed_run_folder_dict.values():
-        for project in prf.project_dict.values():
-            for sample in project.sample_dict.values():
-                new_paired_reads_list = list()
-                """ @type new_paired_reads_list: list[bsf.ngs.PairedReads] """
-                for paired_reads in sample.paired_reads_list:
-                    paired_reads_keep = False
-                    if paired_reads.reads_1 is not None:
-                        if os.path.exists(paired_reads.reads_1.file_path):
-                            if os.path.getsize(paired_reads.reads_1.file_path) >= minimum_size:
-                                paired_reads_keep = True
-                            else:
-                                os.remove(paired_reads.reads_1.file_path)
-                                paired_reads.reads_1 = None
-                        else:
-                            # The PairedReads object does not have a meaningful Reads object in reads1.
-                            paired_reads.reads_1 = None
-                    if paired_reads.reads_2 is not None:
-                        if os.path.exists(paired_reads.reads_2.file_path):
-                            if os.path.getsize(paired_reads.reads_2.file_path) >= minimum_size:
-                                paired_reads_keep = True
-                            else:
-                                os.remove(paired_reads.reads_2.file_path)
-                                paired_reads.reads_2 = None
-                        else:
-                            # The PairedReads object does not have a meaningful Reads object in reads2.
-                            paired_reads.reads_2 = None
-                    if paired_reads.reads_1 is None and paired_reads.reads_2 is None:
-                        paired_reads_keep = False
-                    if paired_reads_keep:
-                        new_paired_reads_list.append(paired_reads)
-                sample.paired_reads_list = new_paired_reads_list
-                # The Sample object could have lost all its PairedReads objects.
-                # The PairedReads objects may no longer have the correct weak reference to their Sample.
-
-    collection.to_sas_path(name='picard_sam_to_fastq', file_path=file_path_new)
+    _convert_collection(
+        file_path_old=run_get_value(key='sas_path_old'),
+        file_path_new=run_get_value(key='sas_path_new'),
+        minimum_size=int(run_get_value(key='minimum_size')))
 
     runnable_step.remove_obsolete_file_paths()
 
@@ -125,3 +144,44 @@ def run(runnable):
     runnable.runnable_status_file_create(success=True)
 
     return
+
+
+if __name__ == '__main__':
+    argument_parser = argparse.ArgumentParser(
+        description='Module driver script.')
+
+    argument_parser.add_argument(
+        '--debug',
+        help='Debug level',
+        required=False,
+        type=int)
+
+    argument_parser.add_argument(
+        '--old-sas-path',
+        dest='old_sas_path',
+        help='Old sample annotation sheet file path',
+        required=True,
+        type=str)
+
+    argument_parser.add_argument(
+        '--new-sas-path',
+        dest='new_sas_path',
+        help='New sample annotation sheet file path',
+        required=True,
+        type=str)
+
+    argument_parser.add_argument(
+        '--minimum-size',
+        default=1024,
+        dest='minimum_size',
+        help='Minimum file size',
+        required=False,
+        type=int)
+
+    name_space = argument_parser.parse_args()
+
+    _convert_collection(
+        file_path_old=name_space.old_sas_path,
+        file_path_new=name_space.new_sas_path,
+        minimum_size=name_space.minimum_size,
+        debug=name_space.debug)
