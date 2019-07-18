@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to support IBM Linear Tape File System (LTFS) operations.
@@ -474,7 +474,7 @@ else:
 
 total_size = 0
 
-with open(cartridge_code + '.txt', 'rt') as input_file:
+with open(file=cartridge_code + '.txt', mode='rt') as input_file:
     for main_file_path in input_file:
         main_file_path = main_file_path.strip()
         main_file_path = os.path.normpath(main_file_path)

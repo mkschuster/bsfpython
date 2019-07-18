@@ -163,7 +163,7 @@ def get_interval_tiles(interval_path=None, tile_number=None, tile_width=None, na
     total_length = 0
     """ @type total_length: int """
 
-    with open(interval_path, 'rt') as input_file:
+    with open(file=interval_path, mode='rt') as input_file:
         for line_str in input_file:
             if line_str.startswith('@'):
                 continue

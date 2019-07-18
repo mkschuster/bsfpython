@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to collect and update MD5 sums.
@@ -125,7 +125,7 @@ name_space = argument_parser.parse_args()
 # Read the initial MD5 sum file that needs updating.
 
 if os.path.exists(name_space.file_path):
-    with open(name_space.file_path, 'rt') as input_file:
+    with open(file=name_space.file_path, mode='rt') as input_file:
         for line_str in input_file:
             md5_check_sum, md5_check_mode, md5_file_name = split_md5sum_line(md5sum_str=line_str)
 
@@ -156,7 +156,7 @@ for file_path, directory_name_list, file_name_list in os.walk(top=name_space.dir
         if not fnmatch.fnmatch(file_name, name_space.pattern):
             continue
 
-        with open(os.path.join(file_path, file_name), 'rt') as input_file:
+        with open(file=os.path.join(file_path, file_name), mode='rt') as input_file:
             for line_str in input_file:
                 md5_check_sum, md5_check_mode, md5_file_name = split_md5sum_line(md5sum_str=line_str)
 
@@ -175,7 +175,7 @@ for file_path, directory_name_list, file_name_list in os.walk(top=name_space.dir
                     entry_file_name=md5_file_name,
                     entry_check_mode=md5_check_mode)
 
-with open(name_space.file_path, 'wt') as output_file:
+with open(file=name_space.file_path, mode='wt') as output_file:
     for md5_file_name in sorted(md5_dict):
         md5_check_sum = md5_dict[md5_file_name][0]
         md5_check_mode = md5_dict[md5_file_name][1]

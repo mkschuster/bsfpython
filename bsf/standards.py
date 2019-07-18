@@ -25,14 +25,14 @@ A package of classes and methods modelling configuration and default information
 #  You should have received a copy of the GNU Lesser General Public License
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
-import ConfigParser
+import configparser
 import os
 
 
 class Configuration(object):
     """The C{bsf.standards.Configuration} class represents one or more UNIX-style initialisation (*.ini) files.
 
-    A C{bsf.standards.Configuration} has an associated Python C{ConfigParser.SafeConfigParser} to parse the file(s).
+    A C{bsf.standards.Configuration} has an associated Python C{configparser.ConfigParser} to parse the file(s).
 
     Attributes:
     @cvar global_configuration: Global C{bsf.standards.Configuration}
@@ -41,8 +41,8 @@ class Configuration(object):
     @type global_file_path: str | unicode
     @ivar file_path_list: C{bsf.standards.Configuration} file path
     @type file_path_list: list[str | unicode]
-    @ivar config_parser: Python C{ConfigParser.SafeConfigParser}
-    @type config_parser: ConfigParser.SafeConfigParser
+    @ivar config_parser: Python C{configparser.ConfigParser}
+    @type config_parser: configparser.ConfigParser
     """
 
     global_configuration = None
@@ -145,7 +145,7 @@ class Configuration(object):
         # they have to be case sensitive.
         # Hence, override optionxform() with str().
 
-        config_parser = ConfigParser.SafeConfigParser()
+        config_parser = configparser.ConfigParser()
         config_parser.optionxform = str
 
         configuration = cls(file_path_list=file_path_list, config_parser=config_parser)
@@ -163,8 +163,8 @@ class Configuration(object):
 
         @param file_path_list: Python C{list} of Python C{str} or C{unicode} configuration file path objects
         @type file_path_list: list[str | unicode]
-        @param config_parser: Python C{ConfigParser.SafeConfigParser}
-        @type config_parser: ConfigParser.SafeConfigParser
+        @param config_parser: Python C{configparser.ConfigParser}
+        @type config_parser: configparser.ConfigParser
         @return:
         @rtype:
         """
@@ -177,9 +177,9 @@ class Configuration(object):
             self.file_path_list = file_path_list
 
         if config_parser is None:
-            self.config_parser = ConfigParser.SafeConfigParser()
+            self.config_parser = configparser.ConfigParser()
         else:
-            assert isinstance(config_parser, ConfigParser.SafeConfigParser)
+            assert isinstance(config_parser, configparser.ConfigParser)
             self.config_parser = config_parser
 
         self._config_path_list = None
@@ -251,7 +251,7 @@ class BaseSection(object):
 
     The defaults are read from the [{section}] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section
+    @cvar section: C{configparser.ConfigParser} section
     @type section: str | unicode
     """
     section = None
@@ -260,7 +260,7 @@ class BaseSection(object):
     def get(cls, option=None):
         """Get the value for a configuration option in the section defined by the sub-class section class variable.
 
-        This method is a re-implementation of the C{SafeConfigParser.get()} method that returns C{None}
+        This method is a re-implementation of the C{configparser.ConfigParser.get()} method that returns C{None}
         upon non-existing sections or options.
         @param option: Configuration option
         @type option: None | str | unicode
@@ -286,7 +286,7 @@ class BaseSection(object):
     def getboolean(cls, option=None):
         """Get the value for a configuration option in the section defined by the sub-class section class variable.
 
-        This method is a re-implementation of the C{SafeConfigParser.getboolean()} method that returns C{None}
+        This method is a re-implementation of the C{configparser.ConfigParser.getboolean()} method that returns C{None}
         upon non-existing sections or options.
         @param option: Configuration option
         @type option: None | str | unicode
@@ -314,7 +314,7 @@ class BaseSectionVersion(object):
 
     The defaults are read from the [{section}_{version}] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section
+    @cvar section: C{configparser.ConfigParser} section
     @type section: str | unicode
     """
     section = None
@@ -384,7 +384,7 @@ class JavaClassPath(BaseSection):
 
     The defaults are read from the [classpath] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section
+    @cvar section: C{configparser.ConfigParser} section
     @type section: str | unicode
     """
     section = 'classpath'
@@ -449,7 +449,7 @@ class EnsemblVEP(BaseSectionVersion):
 
     The defaults are read from the [ensembl_vep_{genome_version}] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section
+    @cvar section: C{configparser.ConfigParser} section
     @type section: str | unicode
     """
     section = 'ensembl_vep'
@@ -614,7 +614,7 @@ class Genome(BaseSectionVersion):
 
     The defaults are read from the [genome_{genome_version}] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section
+    @cvar section: C{configparser.ConfigParser} section
     @type section: str | unicode
     """
     section = 'genome'
@@ -721,7 +721,7 @@ class Transcriptome(BaseSectionVersion):
 
     The defaults are read from the [transcriptome_{transcriptome_version}] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section
+    @cvar section: C{configparser.ConfigParser} section
     @type section: str | unicode
     """
     section = 'transcriptome'
@@ -798,7 +798,7 @@ class FilePath(BaseSection):
 
     The defaults are read from the [directories] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section
+    @cvar section: C{configparser.ConfigParser} section
     @type section: str | unicode
     """
 
@@ -1195,7 +1195,7 @@ class Index(BaseSection):
 
     The defaults are read from the [indices] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section
+    @cvar section: C{configparser.ConfigParser} section
     @type section: str | unicode
     """
     section = 'indices'
@@ -1206,7 +1206,7 @@ class Operator(BaseSection):
 
     The defaults are read from the [operator] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section
+    @cvar section: C{configparser.ConfigParser} section
     @type section: str | unicode
     """
     section = 'operator'
@@ -1253,7 +1253,7 @@ class UCSC(BaseSection):
 
     The defaults are read from the [ucsc] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section
+    @cvar section: C{configparser.ConfigParser} section
     @type section: str | unicode
     """
 
@@ -1283,7 +1283,7 @@ class URL(BaseSection):
 
     The defaults are read from the [url] section of the global configuration file.
     Attributes:
-    @cvar section: C{SafeConfigParser} section
+    @cvar section: C{configparser.ConfigParser} section
     @type section: str | unicode
     """
 
@@ -1362,7 +1362,7 @@ class VendorQualityFilter(BaseSection):
     The defaults are read from the [VendorQualityFilter] section of the global configuration file.
     For each flow cell type a boolean specifies whether vendor quality filtering should be applied or not.
     Attributes:
-    @cvar section: C{SafeConfigParser} section
+    @cvar section: C{configparser.ConfigParser} section
     @type section: str | unicode
     """
 

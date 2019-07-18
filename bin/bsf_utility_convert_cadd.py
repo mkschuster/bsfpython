@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to convert a CADD file into a VCF file that can be used by the
@@ -41,7 +41,7 @@ import bsf.process
 
 def process_stdout(input_file_handle, thread_lock, debug, output_file_path):
     thread_lock.acquire(True)
-    output_file = open(output_file_path, 'wb')
+    output_file = open(file=output_file_path, mode='wb')
     output_process = subprocess.Popen(
         args=['bgzip'],
         bufsize=-1,
@@ -49,7 +49,8 @@ def process_stdout(input_file_handle, thread_lock, debug, output_file_path):
         stdout=output_file,
         stderr=None,
         shell=False,
-        close_fds='posix' in sys.builtin_module_names)
+        close_fds='posix' in sys.builtin_module_names,
+        text=True)
     thread_lock.release()
 
     if debug > 0:
@@ -155,7 +156,7 @@ name_space = argument_parser.parse_args()
 
 contig_list = list()
 
-with open(name_space.reference_vcf, 'rt') as input_file:
+with open(file=name_space.reference_vcf, mode='rt') as input_file:
     for line_str in input_file:
         if line_str.startswith('##contig'):
             contig_list.append(line_str)

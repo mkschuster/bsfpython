@@ -1120,15 +1120,18 @@ class RunFolder(object):
 
         # Illumina Run Folders obey a 'YYMMDD_SN000_Run_PositionFCID' schema.
 
+        if isinstance(file_name, bytes):
+            file_name = file_name.decode()
+
         component_list = file_name.split('_')
 
         return cls(
             file_path=file_path,
             file_type='Illumina',
-            date=component_list[0].decode(),
-            instrument=component_list[1].decode(),
-            run=component_list[2].decode(),
-            flow_cell=component_list[3].decode(),
+            date=component_list[0],
+            instrument=component_list[1],
+            run=component_list[2],
+            flow_cell=component_list[3],
             run_information=RunInformation.from_file_path(file_path=os.path.join(file_path, 'RunInfo.xml')),
             run_parameters=RunParameters.from_file_path(file_path=run_parameters_path),
             image_analysis=ImageAnalysis.from_file_path(file_path=os.path.join(
@@ -2846,7 +2849,7 @@ class RunFolder(object):
             # On the NextSeq and NovaSeq instruments.
             _file_name_list.append('RunParameters.xml')
         else:
-            # On all but the NextSeq instrument.
+            # On the HiSeq and MiSeq instruments.
             _file_name_list.append('runParameters.xml')
 
         if rta in ('1.18.54',):
@@ -2854,7 +2857,7 @@ class RunFolder(object):
             _file_name_list.append('SampleSheet.csv')
 
         if rta not in ('1.18.54', '2.4.11', 'v3.3.3', 'v3.4.4'):
-            # Not for MiSeq, NextSeq and NovaSeq instruments.
+            # Not on MiSeq, NextSeq and NovaSeq instruments.
             _file_name_list.append('First_Base_Report.htm')
 
         if rta in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
@@ -2880,6 +2883,7 @@ class RunFolder(object):
                 _file_name_list.append('ImageAnalysis_Netcopy_complete_Read{:d}.txt'.format(read_number))
 
         if rta in ('2.4.11',):
+            # On the NextSeq instrument.
             _file_name_list.append('RunCompletionStatus.xml')
 
         self._check_files(

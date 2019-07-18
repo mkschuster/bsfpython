@@ -1160,7 +1160,7 @@ class Tuxedo(bsf.Analysis):
             @param annotation_dict: Annotation dict
             @type annotation_dict: dict[str, list[str | unicode]]
             """
-            with open(annotation_path, 'wt') as _annotation_file:
+            with open(file=annotation_path, mode='wt') as _annotation_file:
                 _annotation_file.write('sample_id\tgroup_label\n')
                 for _group_name in sorted(annotation_dict):
                     for _file_path in annotation_dict[_group_name]:
@@ -1477,9 +1477,9 @@ class Tuxedo(bsf.Analysis):
                 pickler_path = os.path.join(
                     self.genome_directory,
                     stage_run_tophat.name + '_' + sample.name + '.pkl')
-                with open(pickler_path, 'wb') as pickler_file:
+                with open(file=pickler_path, mode='wb') as pickler_file:
                     pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
-                    pickler.dump(obj=pickler_dict_run_tophat)
+                    pickler.dump(pickler_dict_run_tophat)
 
                 executable_run_tophat = stage_run_tophat.add_executable(
                     executable=bsf.process.Executable(
@@ -2117,7 +2117,9 @@ class Tuxedo(bsf.Analysis):
                 # Write a Cuffmerge assembly manifest file to merge all transcriptome GTF files of each Sample object.
                 # This requires an absolute path, because the working directory is not set at the stage of
                 # job submission.
-                with open(os.path.join(self.genome_directory, file_path_cuffmerge.assembly_txt), 'wt') as assembly_file:
+                with open(
+                        file=os.path.join(self.genome_directory, file_path_cuffmerge.assembly_txt),
+                        mode='wt') as assembly_file:
                     assembly_file.writelines(cuffmerge_transcript_gtf_list)
 
             if len(self._comparison_dict[comparison_name]) >= 2:

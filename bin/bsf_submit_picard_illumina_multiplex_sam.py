@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to drive the Picard IlluminaMultiplexSam analysis.

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to convert a VCF file into the simple 23andMe format.
@@ -55,8 +55,8 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-with open(name_space.output, 'wt') as output_file:
-    with open(name_space.input, 'rt') as input_file:
+with open(file=name_space.output, mode='wt') as output_file:
+    with open(file=name_space.input, mode='rt') as input_file:
         for line_str in input_file:
             # Ignore comment lines.
             if line_str.startswith('#'):

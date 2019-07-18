@@ -2158,7 +2158,7 @@ class ChIPSeq(bsf.Analysis):
                 minimum = None
                 maximum = None
 
-                with open(file_path_absolute, 'rt') as file_handle:
+                with open(file=file_path_absolute, mode='rt') as file_handle:
                     for line in file_handle:
                         if line.startswith('min:'):
                             line_list = line.split()

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to run Tophat.
@@ -82,7 +82,7 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     sam_header_rg = list()
     """ @type sam_header_rg: list[str | unicode] """
 
-    with open(path_temporary_sam, 'rt') as _input_file:
+    with open(file=path_temporary_sam, mode='rt') as _input_file:
         for line_str in _input_file:
             if line_str.startswith('@PG'):
                 sam_header_pg.append(line_str.rstrip())
@@ -164,8 +164,8 @@ args = parser.parse_args()
 
 # Unpickle the file into a Python dict object.
 
-with open(args.pickler_path, 'rb') as input_file:
-    pickler_dict = pickle.Unpickler(file=input_file).load()
+with open(file=args.pickler_path, mode='rb') as input_file:
+    pickler_dict = pickle.Unpickler(input_file).load()
 
 key = 'prefix'
 if key in pickler_dict and pickler_dict[key]:

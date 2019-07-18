@@ -27,7 +27,7 @@ A package of classes and methods supporting the FastQC tool.
 #
 import os
 import sys
-import urllib
+import urllib.parse
 
 import bsf
 import bsf.annotation
@@ -366,12 +366,12 @@ class FastQC(bsf.Analysis):
                     report_list.append(paired_reads_name)
                     report_list.append('</td>\n')
                     report_list.append('<td>')
-                    report_list.append('<a href="' + urllib.quote(file_path_read_group.report) + '">')
+                    report_list.append('<a href="' + urllib.parse.quote(string=file_path_read_group.report) + '">')
                     report_list.append('<strong><abbr title="Hypertext Markup Language">HTML</abbr></strong>')
                     report_list.append('</a>')
                     report_list.append('</td>\n')
                     report_list.append('<td>')
-                    report_list.append('<a href="' + urllib.quote(file_path_read_group.archive) + '">')
+                    report_list.append('<a href="' + urllib.parse.quote(string=file_path_read_group.archive) + '">')
                     report_list.append('<abbr title="PKWARE, Inc. ZIP">ZIP</abbr>')
                     report_list.append('</a>')
                     report_list.append('</td>\n')

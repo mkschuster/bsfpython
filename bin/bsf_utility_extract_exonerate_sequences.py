@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to extract sequences form Exonerate alignments.
@@ -104,7 +104,7 @@ for vulgar in vulgar_list:
     if identifier in seq_io_dict:
         seq_io = seq_io_dict[identifier]
     else:
-        seq_io = open("test_aligned_{}_to_{}.fasta".format(sample_name, identifier), 'wt')
+        seq_io = open(file="test_aligned_{}_to_{}.fasta".format(sample_name, identifier), mode='wt')
         seq_io_dict[identifier] = seq_io
 
     Bio.SeqIO.write(sequences=q_record, handle=seq_io, format='fasta')

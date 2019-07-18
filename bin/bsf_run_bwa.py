@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to run the Burrows Wheeler Aligner BWA.
@@ -58,8 +58,8 @@ args = parser.parse_args()
 
 # Unpickle the file into a Python dict object.
 
-with open(args.pickler_path, 'rb') as input_file:
-    pickler_dict = pickle.Unpickler(file=input_file).load()
+with open(file=args.pickler_path, mode='rb') as input_file:
+    pickler_dict = pickle.Unpickler(input_file).load()
 
 key = 'prefix'
 if key in pickler_dict and pickler_dict[key]:
@@ -144,7 +144,7 @@ if executable_bwa.sub_command.program == 'mem' and executable_bwa.sub_command.ar
     if child_return_code:
         raise Exception('Could not complete the {!r} step on the BAM file for the replicate.'.format(samtools.name))
 
-    with open(path_temporary_sam, 'rt') as input_file:
+    with open(file=path_temporary_sam, mode='rt') as input_file:
         for line_str in input_file:
             if line_str.startswith('@PG'):
                 sam_header_pg.append(line_str.rstrip())
@@ -299,8 +299,8 @@ if len(sam_header_pg) or len(sam_header_rg):
     if child_return_code:
         raise Exception('Could not complete the {!r} step on the SAM file after CleanSam.'.format(samtools.name))
 
-    with open(path_temporary_sam, 'rt') as input_file:
-        with open(path_header_sam, 'wt') as output_file:
+    with open(file=path_temporary_sam, mode='rt') as input_file:
+        with open(file=path_header_sam, mode='wt') as output_file:
             for line_str in input_file:
                 if line_str.startswith('@PG'):
                     # Insert all @PG lines before this one,
@@ -428,6 +428,6 @@ shutil.rmtree(path=path_temporary, ignore_errors=False)
 # Write a status file.
 
 status_path = "{}{}_completed.txt".format(prefix, replicate_key)
-open(status_path, 'wt').close()
+open(file=status_path, mode='wt').close()
 
 # Job done.

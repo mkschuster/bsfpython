@@ -68,7 +68,7 @@ def submit(stage, debug=0):
         output_list.append('\n')
 
     script_path = os.path.join(stage.working_directory, 'bsfpython_bash_' + repr(stage.name) + '.bash')
-    with open(script_path, 'wt') as script_file:
+    with open(file=script_path, mode='wt') as script_file:
         script_file.writelines(output_list)
 
     return

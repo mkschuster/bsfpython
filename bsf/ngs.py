@@ -226,7 +226,10 @@ class Reads(NextGenerationBase):
             while extension:
                 file_name, extension = os.path.splitext(file_path)
 
-            component_list = bytes.decode(file_name).split('_')
+            if isinstance(file_name, bytes):
+                file_name = file_name.decode()
+
+            component_list = file_name.split('_')
             # Since SampleName can contain underscores, list components need assigning from the end
             # i.e. via negative indices.
 
@@ -1323,7 +1326,10 @@ class ProcessedRunFolder(NextGenerationBase):
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
 
-        component_list = bytes.decode(file_name).split('_')
+        if isinstance(file_name, bytes):
+            file_name = file_name.decode()
+
+        component_list = file_name.split('_')
 
         if component_list[-1].startswith('CASAVA'):
             return 'CASAVA'
@@ -1361,7 +1367,10 @@ class ProcessedRunFolder(NextGenerationBase):
             # -- MUW_ Medical University Vienna
             # -- SET_ Robert Kralovics group
 
-            component_list = bytes.decode(file_name).split('_')
+            if isinstance(file_name, bytes):
+                file_name = file_name.decode()
+
+            component_list = file_name.split('_')
 
             prf = cls(
                 file_path=file_path,

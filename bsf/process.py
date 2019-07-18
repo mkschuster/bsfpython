@@ -698,8 +698,8 @@ class Executable(Command):
         If a file_path was provided, a corresponding Python C{file} will be opened in text mode,
         if not C{sys.stdout} or C{sys.stderr} will be used according to the I{file_type}.
         If a debug level was set, diagnostic output will be printed to C{sys.stdout}, as well as the output stream.
-        @param file_handle: The I{STDOUT} or I{STDERR} file handle
-        @type file_handle: file
+        @param file_handle: The I{STDOUT} or I{STDERR} C{io.TextIOWrapper} file handle
+        @type file_handle: io.TextIOWrapper
         @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: threading.Lock
         @param debug: Debug level
@@ -722,7 +722,7 @@ class Executable(Command):
                   file=sys.stdout)
         output_file = None
         if file_path:
-            output_file = open(file_path, 'wt')
+            output_file = open(file=file_path, mode='wt')
             if debug > 0:
                 print(get_timestamp(), 'Opened ' + repr(file_type) + ' file ' + repr(file_path) + '.', file=sys.stdout)
         elif file_type == 'STDOUT':
@@ -754,8 +754,8 @@ class Executable(Command):
     def process_stdout(stdout_handle, thread_lock, debug, stdout_path=None):
         """Process I{STDOUT} from the child process as a thread.
 
-        @param stdout_handle: The I{STDOUT} file handle
-        @type stdout_handle: file
+        @param stdout_handle: The I{STDOUT} C{io.TextIOWrapper} file handle
+        @type stdout_handle: io.TextIOWrapper
         @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: threading.Lock
         @param debug: Debug level
@@ -776,8 +776,8 @@ class Executable(Command):
     def process_stderr(stderr_handle, thread_lock, debug, stderr_path=None):
         """Process I{STDERR} from the child process as a thread.
 
-        @param stderr_handle: The I{STDERR} file handle
-        @type stderr_handle: file
+        @param stderr_handle: The I{STDERR} C{io.TextIOWrapper} file handle
+        @type stderr_handle: io.TextIOWrapper
         @param thread_lock: A Python C{threading.Lock} object
         @type thread_lock: threading.Lock
         @param debug: Debug level
@@ -949,17 +949,17 @@ class Executable(Command):
             @param _connector: C{bsf.connector.Connector} or sub-class thereof.
             @type _connector: bsf.connector.Connector
             @return: File handle
-            @rtype: file | subprocess.PIPE
+            @rtype: io.IOBase | subprocess.PIPE | subprocess.DEVNULL
             """
             if isinstance(_connector, bsf.connector.ElectronicSink):
-                return open('/dev/null', 'wb')
+                return subprocess.DEVNULL
 
             if isinstance(_connector, bsf.connector.ConnectorFile):
                 if isinstance(_connector, bsf.connector.ConnectorPipeNamed):
                     # A named pipe needs creating before it can be opened.
                     if not os.path.exists(_connector.file_path):
                         os.mkfifo(_connector.file_path)
-                return open(_connector.file_path, _connector.file_mode)
+                return open(file=_connector.file_path, mode=_connector.file_mode)
 
             if isinstance(_connector, bsf.connector.ConnectorPipe):
                 return subprocess.PIPE
@@ -1001,7 +1001,8 @@ class Executable(Command):
                     stdout=_map_connector(_connector=self.stdout),
                     stderr=_map_connector(_connector=self.stderr),
                     close_fds='posix' in sys.builtin_module_names,
-                    shell=False)
+                    shell=False,
+                    text=True)
             except OSError as exception:
                 if exception.errno == errno.ENOENT:
                     raise Exception(repr(self) + ' ' + repr(self.program) + ' could not be found.')

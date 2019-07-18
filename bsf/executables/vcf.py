@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 """Variant Calling Format (VCF) Executables module
 
@@ -209,7 +209,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         sequence_ontology_list = list()
         """ @type sequence_ontology_list: list[str] """
 
-        with open(self.soc_path, 'rt') as input_file:
+        with open(file=self.soc_path, mode='rt') as input_file:
             for row_dict in csv.DictReader(input_file, dialect='excel-tab'):
                 """ @type row_dict: dict[str, str] """
                 sequence_ontology_list.append(row_dict['SO term'])
@@ -218,7 +218,7 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         vep_header_dict = dict()
         """ @type vep_header_dict: dict[str, dict[str, str]] """
 
-        with open(self.ofc_path, 'rt') as input_file:
+        with open(file=self.ofc_path, mode='rt') as input_file:
             for row_dict in csv.DictReader(input_file, dialect='excel-tab'):
                 """ @type row_dict: dict[str, str] """
                 # NOTE: Override all types with 'String' to allow multiple values joined by '&' characters.
@@ -481,12 +481,13 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
                 # since 0 represents the reference allele.
                 if vep_header_dict[vep_key]['Allele'] == 'collate':
                     # Only select the first value for each alternative allele.
-                    vri[new_key] = map(collate_allele_values, vep_dict[new_key])[1:]
+                    vri[new_key] = [collate_allele_values(_allele_list) for _allele_list in vep_dict[new_key]][1:]
                 elif vep_header_dict[vep_key]['Allele'] == 'exclude':
                     pass
                 else:
-                    # Join all values for each alternative allele.
-                    vri[new_key] = map(lambda x: '|'.join(x), vep_dict[new_key])[1:]
+                    # Join all values for each alternative allele, but start at index 1,
+                    # since 0 represents the reference allele.
+                    vri[new_key] = ['|'.join(_allele_list) for _allele_list in vep_dict[new_key]][1:]
 
             # Remove the original CSQ field from the record.
             del vri['CSQ']

@@ -714,13 +714,13 @@ class AnnotationSheet(object):
             self.row_dicts = row_dicts
 
         self._csv_reader_file = None
-        """ @type _csv_reader_file: file | None """
+        """ @type _csv_reader_file: io.TextIOWrapper | None """
 
         self._csv_reader_object = None
         """ @type _csv_reader_object: csv.DictReader | None """
 
         self._csv_writer_file = None
-        """ @type _csv_writer_file: file | None """
+        """ @type _csv_writer_file: io.TextIOWrapper | None """
 
         self._csv_writer_object = None
         """ @type _csv_writer_object: csv.DictWriter | None """
@@ -781,7 +781,7 @@ class AnnotationSheet(object):
 
         # For Python2.7, the open() function has to use the binary 'b' flag.
         # For Python3, the open() function has to use newline=''.
-        self._csv_reader_file = open(self.file_path, 'rb')
+        self._csv_reader_file = open(file=self.file_path, mode='r', newline='')
         self._csv_reader_object = csv.DictReader(
             f=self._csv_reader_file,
             fieldnames=csv_field_names,
@@ -835,7 +835,7 @@ class AnnotationSheet(object):
 
         # For Python2.7, the open() function has to use the binary 'b' flag.
         # For Python3, the open() function has to use newline=''.
-        self._csv_writer_file = open(self.file_path, 'wb')
+        self._csv_writer_file = open(file=self.file_path, mode='w', newline='')
         self._csv_writer_object = csv.DictWriter(
             f=self._csv_writer_file,
             fieldnames=self.field_names,

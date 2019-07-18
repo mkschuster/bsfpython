@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to extract the index read sequence (BC) and quality scores (QT) of an unaligned BAM file
@@ -30,10 +30,10 @@
 
 from __future__ import print_function
 
-import Queue
 import argparse
 import gzip
 import os
+import queue
 import re
 import threading
 import warnings
@@ -46,8 +46,8 @@ def write_gzip_file(task_gzip_file, task_fifo_queue):
 
     @param task_gzip_file: C{gzip.GzipFile}
     @type task_gzip_file: gzip.GzipFile
-    @param task_fifo_queue: C{Queue.Queue}
-    @type task_fifo_queue: Queue.Queue
+    @param task_fifo_queue: C{queue.Queue}
+    @type task_fifo_queue: queue.Queue
     @return:
     @rtype:
     """
@@ -148,7 +148,7 @@ for read_group_dict in alignment_file.header['RG']:
         gzip_file_list.append(gzip_file)
 
         # Create a FIFO Queue with 100 items maximum.
-        fifo_queue = Queue.Queue(maxsize=100)
+        fifo_queue = queue.Queue(maxsize=100)
         fifo_queue_list.append(fifo_queue)
 
         # Create a daemon Thread and start it.

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to convert a Picard sequence dictionary based on a
@@ -64,8 +64,8 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-with open(name_space.output_path, 'wt') as output_file:
-    with open(name_space.input_path, 'rt') as input_file:
+with open(file=name_space.output_path, mode='wt') as output_file:
+    with open(file=name_space.input_path, mode='rt') as input_file:
         for line_str in input_file:
             if not line_str.startswith('@SQ'):
                 continue

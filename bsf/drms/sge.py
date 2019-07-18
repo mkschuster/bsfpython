@@ -447,7 +447,7 @@ def submit(stage, debug=0):
         The response to the SGE qsub command looks like:
         Your job 137657 ("ls") has been submitted
         @param _file_handle: File handle (i.e. pipe)
-        @type _file_handle: file
+        @type _file_handle: io.TextIOWrapper
         @param _thread_lock: Thread lock
         @type _thread_lock: threading.lock
         @param _debug: Debug level
@@ -623,7 +623,7 @@ def submit(stage, debug=0):
         output_list.append('\n')
 
     script_path = os.path.join(stage.working_directory, 'bsfpython_sge_' + stage.name + '.bash')
-    with open(script_path, 'wt') as script_file:
+    with open(file=script_path, mode='wt') as script_file:
         script_file.writelines(output_list)
 
     return

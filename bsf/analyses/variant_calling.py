@@ -1871,7 +1871,7 @@ class VariantCallingGATK(bsf.Analysis):
 
             Configuration options I{vqsr_resources_indel} and I{vqsr_resources_snp} provide a comma-separated list of
             resources that are to be used in the VQSR procedure. Each option needs to correspond to a sub-section of
-            the C{ConfigParser.SafeConfigParser} in C{bsf.standards.Configuration.config_parser}.
+            the C{configparser.ConfigParser} in C{bsf.standards.Configuration.config_parser}.
             Each sub-section needs options 'known', 'training', 'truth', 'prior' and 'file_path'.
             @param vqsr_resources_dict: Python C{dict} of Python C{str} (resource name) and Python C{dict} values
             @type vqsr_resources_dict: dict[str, dict[str, str | unicode]] | None
@@ -3825,9 +3825,9 @@ class VariantCallingGATK(bsf.Analysis):
                 pickler_path = os.path.join(
                     self.genome_directory,
                     stage_align_lane.name + '_' + paired_reads_name + '.pkl')
-                with open(pickler_path, 'wb') as pickler_file:
+                with open(file=pickler_path, mode='wb') as pickler_file:
                     pickler = pickle.Pickler(file=pickler_file, protocol=pickle.HIGHEST_PROTOCOL)
-                    pickler.dump(obj=pickler_dict_align_lane)
+                    pickler.dump(pickler_dict_align_lane)
 
                 # Create a bsf_run_bwa.py job to run the pickled object.
 

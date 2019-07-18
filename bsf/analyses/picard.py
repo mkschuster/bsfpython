@@ -3602,7 +3602,7 @@ class SamToFastq(bsf.Analysis):
                                 reads.file_path)
 
                         if os.path.exists(file_path):
-                            open(file_path + '.truncated', 'wt').close()
+                            open(file=file_path + '.truncated', mode='wt').close()
                             os.remove(file_path)
 
                         # Also remove an eventual MD5 sum file.

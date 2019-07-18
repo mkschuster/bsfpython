@@ -824,7 +824,7 @@ class DatabaseAdaptor(object):
         # Get the list of values by using the column definition and reading attributes of the same name
         # from the Python object.
 
-        value_list = map(lambda x: object_instance.__getattribute__(x), self._get_column_name_list_without_primary())
+        value_list = [object_instance.__getattribute__(x) for x in self._get_column_name_list_without_primary()]
 
         try:
             self.get_cursor().execute(self.statement_insert(), value_list)
@@ -898,7 +898,8 @@ class DatabaseAdaptor(object):
         column_dict_new = dict(map(lambda x: (x, None), map(lambda x: x[0], self.column_definition)))
         """ @type column_dict_new: dict[str | unicode, None] """
 
-        for key in column_dict_new.keys():
+        # Use a list comprehension to create a list of key objects since the dict gets modified in the loop.
+        for key in [key for key in column_dict_new]:
             if key in column_dict_old:
                 del column_dict_new[key]
                 del column_dict_old[key]

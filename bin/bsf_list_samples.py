@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to list a hierarchy of BSF ProcessedRunFolder, BSF Project and
@@ -54,7 +54,7 @@ args = parser.parse_args()
 
 # For Python2.7, the open() function has to use the binary 'b' flag.
 # For Python3, the open() function has to use newline=''.
-csv_file = open(args.output_file, 'wb')
+csv_file = open(file=args.output_file, mode='w', newline='')
 
 csv_fields = ['ProcessedRunFolder', 'Project', 'Sample']
 

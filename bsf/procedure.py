@@ -181,9 +181,9 @@ class Runnable(object):
         @return:
         @rtype:
         """
-        with open(self.pickler_path, 'wb') as output_file:
+        with open(file=self.pickler_path, mode='wb') as output_file:
             pickler = pickle.Pickler(file=output_file, protocol=pickle.HIGHEST_PROTOCOL)
-            pickler.dump(obj=self)
+            pickler.dump(self)
 
         return
 
@@ -196,8 +196,8 @@ class Runnable(object):
         @return: C{bsf.procedure.Runnable}
         @rtype: bsf.procedure.Runnable
         """
-        with open(file_path, 'rb') as input_file:
-            runnable = pickle.Unpickler(file=input_file).load()
+        with open(file=file_path, mode='rb') as input_file:
+            runnable = pickle.Unpickler(input_file).load()
             """ @type runnable: bsf.procedure.Runnable """
 
         # Did the Unpickler really return a Runnable object?
@@ -373,7 +373,7 @@ class Runnable(object):
         @rtype:
         """
         status_path = self.runnable_status_file_path(success=success)
-        open(status_path, 'wt').close()
+        open(file=status_path, mode='wt').close()
 
         return
 
@@ -437,7 +437,7 @@ class Runnable(object):
             return
 
         status_path = self.runnable_step_status_file_path(runnable_step=runnable_step, success=success)
-        open(status_path, 'wt').close()
+        open(file=status_path, mode='wt').close()
 
         return
 

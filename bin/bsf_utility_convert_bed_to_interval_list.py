@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to convert a BED file into a Picard interval list file.
@@ -97,9 +97,9 @@ sequence_name_dict = dict()
 sequence_name_list = list()
 """ @type sequence_name_list: list[str] """
 
-with open(output_path, 'wt') as output_file:
+with open(file=output_path, mode='wt') as output_file:
     # Read the SAM header dictionary and copy it to the output file.
-    with open(name_space.dictionary, 'rt') as input_file:
+    with open(file=name_space.dictionary, mode='rt') as input_file:
         for line_str in input_file:
             output_file.write(line_str)
             if line_str.startswith('@SQ'):
@@ -109,7 +109,7 @@ with open(output_path, 'wt') as output_file:
                         sequence_name_list.append(sam_field[3:])
 
     # Read the BED file.
-    with open(name_space.input_path, 'rt') as input_file:
+    with open(file=name_space.input_path, mode='rt') as input_file:
         for line_str in input_file:
             bed_fields = line_str.strip().split()
 

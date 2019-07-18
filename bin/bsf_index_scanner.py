@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.7
 # -*- coding: utf-8 -*-
 #
 # BSF Python script to list multiplexing indices (barcodes).
@@ -90,7 +90,7 @@ with pysam.AlignmentFile(name_space.input_file, 'rb', check_sq=False) as alignme
         if not alignment_counter % log_after_x_processed_reads:
             print('Processed {} reads'.format(alignment_counter))
 
-with open(name_space.output_file, 'wt') as output_file:
+with open(file=name_space.output_file, mode='wt') as output_file:
     output_file.write('Barcode\tCount\n')
 
     for barcode in sorted(barcode_dict):
@@ -109,7 +109,7 @@ def parse_sam_format(file_path):
     @return:
     @rtype:
     """
-    with open(file_path, 'rt') as input_file:
+    with open(file=file_path, mode='rt') as input_file:
         for line_str in input_file:
             if line_str.startswith('@'):
                 continue
@@ -141,7 +141,7 @@ def parse_sam_file(input_filename):
           'like BC:Z:GGAACC (Picard - IlluminaToSam creates these unmapped BAM files)')
 
     barcodes = dict()
-    with open(input_filename, 'rt') as input_file:
+    with open(file=input_filename, mode='rt') as input_file:
         i = 0
         for line in input_file:
             # ignore SAM header (starts with @)
@@ -199,7 +199,7 @@ def parse_bam_file(input_filename):
 def parse_fastq_file(file_path):
     print('Processing FASTQ file (expecting barcode in the header)')
 
-    with open(file_path, 'rt') as input_file:
+    with open(file=file_path, mode='rt') as input_file:
         i = 0
         for line_str in input_file:
             if i % 4 == 0:
@@ -238,7 +238,8 @@ elif file_type == '.bam':
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         shell=False,
-        close_fds=on_posix)
+        close_fds=on_posix,
+        text=True)
 
     # Two threads, thread_out and thread_err reading STDOUT and STDERR, respectively,
     # should make sure that buffers are not filling up.
@@ -294,7 +295,7 @@ else:
     raise Exception('Unsupported file format.')
 
 # write report
-# with open('unmatched_barcode_report.csv', 'wt') as output_file:
+# with open(file='unmatched_barcode_report.csv', mode='wt') as output_file:
 # Write dict sorted by highest number of occurrence
 for barcode in collections.OrderedDict(sorted(barcode_dict.items(), reverse=True, key=lambda item: item[1])):
     message = barcode + ';' + str(barcode_dict[barcode])
@@ -314,7 +315,7 @@ illumina_adapters = [
 ]
 """ @type illumina_adapters: list[str] """
 
-# with open('unmatched_barcode_report.illumina.csv', 'wt') as output_file:
+# with open(file='unmatched_barcode_report.illumina.csv', mode='wt') as output_file:
 
 for adapter in illumina_adapters:
     count = 0

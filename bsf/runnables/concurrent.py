@@ -73,17 +73,17 @@ def run(runnable):
         @param _connector: C{bsf.connector.Connector} or sub-class thereof.
         @type _connector: bsf.connector.Connector
         @return: File handle
-        @rtype: file | subprocess.PIPE
+        @rtype: io.TextIOWrapper | subprocess.PIPE
         """
         if isinstance(_connector, bsf.connector.ElectronicSink):
-            return open('/dev/null', 'wb')
+            return open(file='/dev/null', mode='wb')
 
         if isinstance(_connector, bsf.connector.ConnectorFile):
             if isinstance(_connector, bsf.connector.ConnectorPipeNamed):
                 # A named pipe needs creating before it can be opened.
                 if not os.path.exists(_connector.file_path):
                     os.mkfifo(_connector.file_path)
-            return open(_connector.file_path, _connector.file_mode)
+            return open(file=_connector.file_path, mode=_connector.file_mode)
 
         if isinstance(_connector, bsf.connector.ConnectorPipe):
             return subprocess.PIPE
@@ -142,7 +142,8 @@ def run(runnable):
                 stdout=_map_connector(_connector=runnable_step.stdout),
                 stderr=_map_connector(_connector=runnable_step.stderr),
                 close_fds=True,
-                shell=False)
+                shell=False,
+                text=True)
         except OSError as exception:
             if exception.errno == errno.ENOENT:
                 raise Exception(

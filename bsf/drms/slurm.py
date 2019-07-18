@@ -750,7 +750,7 @@ def submit(stage, debug=0):
         The response to the SLURM sbatch command looks like:
         Submitted batch job 1234567
         @param _file_handle: File handle (i.e. pipe)
-        @type _file_handle: file
+        @type _file_handle: io.TextIOWrapper
         @param _thread_lock: Thread lock
         @type _thread_lock: threading.lock
         @param _debug: Debug level
@@ -962,7 +962,7 @@ def submit(stage, debug=0):
         database_connection.commit()
 
     script_path = os.path.join(stage.working_directory, 'bsfpython_slurm_' + stage.name + '.bash')
-    with open(script_path, 'wt') as script_file:
+    with open(file=script_path, mode='wt') as script_file:
         script_file.writelines(output_list)
 
     return
@@ -983,7 +983,7 @@ def check_state(stage, debug=0):
         """Thread callable to process the SLURM I{sacct} I{STDOUT} stream.
 
         @param _stdout_handle: The I{STDOUT} or I{STDERR} file handle
-        @type _stdout_handle: file
+        @type _stdout_handle: io.TextIOWrapper
         @param _thread_lock: Python C{threading.Lock}
         @type _thread_lock: threading.Lock
         @param _debug: Debug level
@@ -1001,7 +1001,7 @@ def check_state(stage, debug=0):
             _thread_lock.release()
 
         if _stdout_path:
-            output_file = open(_stdout_path, 'wt')
+            output_file = open(file=_stdout_path, mode='wt')
             if _debug > 0:
                 _thread_lock.acquire(True)
                 print(bsf.process.get_timestamp(), "Opened 'STDOUT' file " + repr(_stdout_path) + '.')
