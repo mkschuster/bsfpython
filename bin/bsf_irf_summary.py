@@ -39,6 +39,7 @@ parser = argparse.ArgumentParser(description='Summarise an Illumina Run Folder.'
 
 parser.add_argument(
     '--debug',
+    default=0,
     help='Debug level',
     required=False,
     type=int)
