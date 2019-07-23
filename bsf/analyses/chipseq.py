@@ -362,8 +362,10 @@ class FilePathDiffBind(bsf.procedure.FilePath):
         self.pca_pdf = os.path.join(prefix, prefix + '_pca_plot.pdf')
         self.pca_png = os.path.join(prefix, prefix + '_pca_plot.png')
         self.contrasts_csv = os.path.join(prefix, prefix + '_contrasts.csv')
-        self.chromosome_regions_pdf = os.path.join(prefix, prefix + '_peak_set_chromosome_regions.pdf')
-        self.chromosome_regions_png = os.path.join(prefix, prefix + '_peak_set_chromosome_regions.png')
+        self.genes_complete_tsv = os.path.join(prefix, prefix + '_peak_set_genes_complete.tsv')
+        self.regions_pdf = os.path.join(prefix, prefix + '_peak_set_regions.pdf')
+        self.regions_png = os.path.join(prefix, prefix + '_peak_set_regions.png')
+        self.regions_tsv = os.path.join(prefix, prefix + '_peak_set_regions.tsv')
 
         return
 
@@ -393,8 +395,12 @@ class FilePathDiffBindContrast(bsf.procedure.FilePath):
         self.pca_plot_png = os.path.join(prefix, prefix + '_pca_plot_' + suffix + '.png')
         self.box_plot_pdf = os.path.join(prefix, prefix + '_box_plot_' + suffix + '.pdf')
         self.box_plot_png = os.path.join(prefix, prefix + '_box_plot_' + suffix + '.png')
-        self.dba_report_tsv = os.path.join(prefix, prefix + '_peaks_' + suffix + '.tsv')
-        self.dba_report_genes_tsv = os.path.join(prefix, prefix + '_peaks_' + suffix + '_genes.tsv')
+        self.peaks_tsv = os.path.join(prefix, prefix + '_peaks_' + suffix + '.tsv')
+        self.genes_complete_tsv = os.path.join(prefix, prefix + '_peaks_' + suffix + '_genes_complete.tsv')
+        self.genes_significant_tsv = os.path.join(prefix, prefix + '_peaks_' + suffix + '_genes_significant.tsv')
+        self.regions_pdf = os.path.join(prefix, prefix + '_peaks_' + suffix + '_regions.pdf')
+        self.regions_png = os.path.join(prefix, prefix + '_peaks_' + suffix + '_regions.png')
+        self.regions_tsv = os.path.join(prefix, prefix + '_peaks_' + suffix + '_regions.tsv')
 
         return
 
@@ -1798,7 +1804,7 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('<img')
                     str_list.append(' alt="MACS2 peak model for treatment ' + chipseq_comparison.t_name + '"')
                     str_list.append(' src="' + file_path_peak_calling.model_0_png + '"')
-                    str_list.append(' height="80" width="80">')
+                    str_list.append(' height="80" width="80" />')
                     str_list.append('</a>')
                     str_list.append('</td>')
                     # Cross-Correlation
@@ -1807,7 +1813,7 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('<img')
                     str_list.append(' alt="MACS2 cross-correlation for treatment ' + chipseq_comparison.t_name + '"')
                     str_list.append(' src="' + file_path_peak_calling.model_1_png + '"')
-                    str_list.append(' height="80" width="80">')
+                    str_list.append(' height="80" width="80" />')
                     str_list.append('</a>')
                     str_list.append('</td>')
 
@@ -1840,6 +1846,7 @@ class ChIPSeq(bsf.Analysis):
             str_list.append('<th>Scatter Plot</th>\n')
             str_list.append('<th>PCA Plot</th>\n')
             str_list.append('<th>Box Plot</th>\n')
+            str_list.append('<th>Chromosome Regions</th>\n')
             str_list.append('<th>Differentially Bound Sites</th>\n')
             str_list.append('<th>ChIPQC Report</th>\n')
             str_list.append('</tr>\n')
@@ -1868,7 +1875,7 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('<img')
                     str_list.append(' alt="DiffBind correlation analysis for factor ' + factor_name + '"')
                     str_list.append(' src="' + file_path_diff_bind.correlation_peak_caller_score_png + '"')
-                    str_list.append(' height="80" width="80">')
+                    str_list.append(' height="80" width="80" />')
                     str_list.append('</a>')
                     str_list.append('</td>\n')
 
@@ -1878,7 +1885,7 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('<img')
                     str_list.append(' alt="DiffBind correlation analysis for factor ' + factor_name + '"')
                     str_list.append(' src="' + file_path_diff_bind.correlation_read_counts_png + '"')
-                    str_list.append(' height="80" width="80">')
+                    str_list.append(' height="80" width="80" />')
                     str_list.append('</a>')
                     str_list.append('</td>\n')
 
@@ -1888,7 +1895,7 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('<img')
                     str_list.append(' alt="DiffBind correlation analysis for factor ' + factor_name + '"')
                     str_list.append(' src="' + file_path_diff_bind.correlation_analysis_png + '"')
-                    str_list.append(' height="80" width="80">')
+                    str_list.append(' height="80" width="80" />')
                     str_list.append('</a>')
                     str_list.append('</td>\n')
 
@@ -1901,20 +1908,32 @@ class ChIPSeq(bsf.Analysis):
                     str_list.append('<img')
                     str_list.append(' alt="Score-based PCA plot for factor ' + factor_name + '"')
                     str_list.append(' src="' + file_path_diff_bind.pca_png + '"')
-                    str_list.append(' height="80" width="80">')
+                    str_list.append(' height="80" width="80" />')
                     str_list.append('</a>')
                     str_list.append('</td>\n')
 
                     str_list.append('<td></td>\n')  # Box Plot
 
-                    # DiffBind Report
+                    # Chromosome Regions
                     str_list.append('<td>')
-                    if os.path.exists(os.path.join(self.genome_directory, file_path_diff_bind.chromosome_regions_png)):
-                        str_list.append('<a href="' + file_path_diff_bind.chromosome_regions_pdf + '">')
+                    if os.path.exists(os.path.join(self.genome_directory, file_path_diff_bind.regions_png)):
+                        str_list.append('<a href="' + file_path_diff_bind.regions_pdf + '">')
                         str_list.append('<img')
                         str_list.append(' alt="Chromosome region plot for factor ' + factor_name + '"')
-                        str_list.append(' src="' + file_path_diff_bind.chromosome_regions_png + '"')
-                        str_list.append(' height="80" width="80">')
+                        str_list.append(' src="' + file_path_diff_bind.regions_png + '"')
+                        str_list.append(' height="80" width="80" />')
+                        str_list.append('</a>')
+                        str_list.append('<br />')
+                        str_list.append('<a href="' + file_path_diff_bind.regions_tsv + '">')
+                        str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+                        str_list.append('</a>')
+                    str_list.append('</td>\n')
+
+                    # Differentially Bound Sites
+                    str_list.append('<td>')
+                    if os.path.exists(os.path.join(self.genome_directory, file_path_diff_bind.genes_complete_tsv)):
+                        str_list.append('<a href="' + file_path_diff_bind.genes_complete_tsv + '">')
+                        str_list.append('<abbr title="Tab-Separated Value">complete</abbr>')
                         str_list.append('</a>')
                     str_list.append('</td>\n')
 
@@ -1962,9 +1981,10 @@ class ChIPSeq(bsf.Analysis):
                         str_list.append('<td>')
                         str_list.append('<a href="' + file_path_diff_bind_contrast.ma_plot_pdf + '">')
                         str_list.append('<img')
-                        str_list.append(' alt="DiffBind MA plot for factor ' + factor_name + '"')
+                        str_list.append(' alt="DiffBind MA plot for factor {} contrast {} vs {}"'.format(
+                            factor_name, row_dict['Group1'], row_dict['Group2']))
                         str_list.append(' src="' + file_path_diff_bind_contrast.ma_plot_png + '"')
-                        str_list.append(' height="80" width="80">')
+                        str_list.append(' height="80" width="80" />')
                         str_list.append('</a>')
                         str_list.append('</td>\n')
 
@@ -1972,21 +1992,25 @@ class ChIPSeq(bsf.Analysis):
                         str_list.append('<td>')
                         str_list.append('<a href="' + file_path_diff_bind_contrast.scatter_plot_pdf + '">')
                         str_list.append('<img')
-                        str_list.append(' alt="DiffBind scatter plot for factor ' + factor_name + '"')
+                        str_list.append(' alt="DiffBind scatter for factor {} contrast {} vs {}"'.format(
+                            factor_name, row_dict['Group1'], row_dict['Group2']))
                         str_list.append(' src="' + file_path_diff_bind_contrast.scatter_plot_png + '"')
-                        str_list.append(' height="80" width="80">')
+                        str_list.append(' height="80" width="80" />')
                         str_list.append('</a>')
                         str_list.append('</td>\n')
 
                         # Principal Component Analysis Plot (optional)
                         str_list.append('<td>')
                         if os.path.exists(
-                                os.path.join(self.genome_directory, file_path_diff_bind_contrast.pca_plot_png)):
+                                os.path.join(
+                                    self.genome_directory,
+                                    file_path_diff_bind_contrast.pca_plot_png)):
                             str_list.append('<a href="' + file_path_diff_bind_contrast.pca_plot_pdf + '">')
                             str_list.append('<img')
-                            str_list.append(' alt="DiffBind PCA plot for factor ' + factor_name + '"')
+                            str_list.append(' alt="DiffBind PCA plot for factor {} contrast {} vs {}"'.format(
+                                factor_name, row_dict['Group1'], row_dict['Group2']))
                             str_list.append(' src="' + file_path_diff_bind_contrast.pca_plot_png + '"')
-                            str_list.append(' height="80" width="80">')
+                            str_list.append(' height="80" width="80" />')
                             str_list.append('</a>')
                         str_list.append('</td>\n')
 
@@ -1996,24 +2020,49 @@ class ChIPSeq(bsf.Analysis):
                                 os.path.join(self.genome_directory, file_path_diff_bind_contrast.box_plot_png)):
                             str_list.append('<a href="' + file_path_diff_bind_contrast.box_plot_pdf + '">')
                             str_list.append('<img')
-                            str_list.append(' alt="DiffBind Box plot for factor ' + factor_name + '"')
+                            str_list.append(' alt="DiffBind Box plot for factor {} contrast {} vs {}"'.format(
+                                factor_name, row_dict['Group1'], row_dict['Group2']))
                             str_list.append(' src="' + file_path_diff_bind_contrast.box_plot_png + '"')
-                            str_list.append(' height="80" width="80">')
+                            str_list.append(' height="80" width="80" />')
                             str_list.append('</a>')
                         str_list.append('</td>\n')
 
-                        # DiffBind report (optional)
-                        # Try the annotated report (*_suffix_genes.tsv) first, then the unannotated one (_suffix.tsv).
+                        # Chromosome Regions
                         str_list.append('<td>')
-                        if os.path.exists(
-                                os.path.join(self.genome_directory, file_path_diff_bind_contrast.dba_report_genes_tsv)):
-                            str_list.append('<a href="' + file_path_diff_bind_contrast.dba_report_genes_tsv + '">')
+                        # Insert the chromosome regions plot
+                        if os.path.exists(os.path.join(
+                                self.genome_directory,
+                                file_path_diff_bind_contrast.regions_png)):
+                            str_list.append('<a href="' + file_path_diff_bind_contrast.regions_pdf + '">')
+                            str_list.append('<img')
+                            str_list.append(' alt="Chromosome region plot for factor {} contrast {} vs {}"'.format(
+                                factor_name, row_dict['Group1'], row_dict['Group2']))
+                            str_list.append(' src="' + file_path_diff_bind_contrast.regions_png + '"')
+                            str_list.append(' height="80" width="80" />')
+                            str_list.append('</a>')
+                            str_list.append('<br />')
+                            str_list.append('<a href="' + file_path_diff_bind_contrast.regions_tsv + '">')
                             str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
                             str_list.append('</a>')
+                        str_list.append('</td>\n')
+
+                        # Differentially Bound Sites
+                        str_list.append('<td>')
+                        # Try the annotated report (*_suffix_genes_complete.tsv) first,
+                        # then the unannotated one (_suffix.tsv).
+                        if os.path.exists(
+                                os.path.join(self.genome_directory, file_path_diff_bind_contrast.genes_complete_tsv)):
+                            str_list.append('<a href="' + file_path_diff_bind_contrast.genes_complete_tsv + '">')
+                            str_list.append('<abbr title="Tab-Separated Value">complete</abbr>')
+                            str_list.append('</a>')
+                            str_list.append('<br />\n')
+                            str_list.append('<a href="' + file_path_diff_bind_contrast.genes_significant_tsv + '">')
+                            str_list.append('<abbr title="Tab-Separated Value">significant</abbr>')
+                            str_list.append('</a>')
                         elif os.path.exists(
-                                os.path.join(self.genome_directory, file_path_diff_bind_contrast.dba_report_tsv)):
-                            str_list.append('<a href="' + file_path_diff_bind_contrast.dba_report_tsv + '">')
-                            str_list.append('<abbr title="Tab-Separated Value">TSV</abbr>')
+                                os.path.join(self.genome_directory, file_path_diff_bind_contrast.peaks_tsv)):
+                            str_list.append('<a href="' + file_path_diff_bind_contrast.peaks_tsv + '">')
+                            str_list.append('<abbr title="Tab-Separated Value">raw</abbr>')
                             str_list.append('</a>')
                         str_list.append('</td>\n')
 
