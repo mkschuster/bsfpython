@@ -62,3 +62,21 @@ if isinstance(runnable, bsf.procedure.ConsecutiveRunnable):
             print('\n' + 'RunnableStep command list:', runnable_step.command_list())
         elif name_space.format == 'str':
             print('\n' + 'RunnableStep command str:', runnable_step.command_str())
+elif isinstance(runnable, bsf.procedure.ConcurrentRunnable):
+    for runnable_step in runnable.runnable_step_list_pre:
+        if name_space.format == 'list':
+            print('\n' + 'RunnableStep pre command list:', runnable_step.command_list())
+        elif name_space.format == 'str':
+            print('\n' + 'RunnableStep pre command str:', runnable_step.command_str())
+
+    for runnable_step in runnable.runnable_step_list_concurrent:
+        if name_space.format == 'list':
+            print('\n' + 'RunnableStep concurrent command list:', runnable_step.command_list())
+        elif name_space.format == 'str':
+            print('\n' + 'RunnableStep concurrent command str:', runnable_step.command_str())
+
+    for runnable_step in runnable.runnable_step_list_post:
+        if name_space.format == 'list':
+            print('\n' + 'RunnableStep post command list:', runnable_step.command_list())
+        elif name_space.format == 'str':
+            print('\n' + 'RunnableStep post command str:', runnable_step.command_str())

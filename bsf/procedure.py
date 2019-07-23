@@ -751,6 +751,48 @@ class ConcurrentRunnable(Runnable):
 
         return
 
+    def trace(self, level=1):
+        """Trace a C{bsf.procedure.ConcurrentRunnable}.
+
+        @param level: Indentation level
+        @type level: int
+        @return: Trace information
+        @rtype: list[str | unicode]
+        """
+        indent = '  ' * level
+
+        str_list = list()
+        """ @type str_list: list[str | unicode] """
+
+        str_list.append('{}{!r}\n'.format(indent, self))
+        str_list.append('{}  name: {!r}\n'.format(indent, self.name))
+        str_list.append('{}  code_module: {!r}\n'.format(indent, self.code_module))
+        str_list.append('{}  working_directory: {!r}\n'.format(indent, self.working_directory))
+        str_list.append('{}  cache_directory: {!r}\n'.format(indent, self.cache_directory))
+        str_list.append('{}  cache_path_dict: {!r}\n'.format(indent, self.cache_path_dict))
+        str_list.append('{}  runnable_step_list_pre: {!r}\n'.format(indent, self.runnable_step_list_pre))
+        str_list.append('{}  runnable_step_list_concurrent: {!r}\n'.format(indent, self.runnable_step_list_concurrent))
+        str_list.append('{}  runnable_step_list_post: {!r}\n'.format(indent, self.runnable_step_list_post))
+        str_list.append('{}  debug: {!r}\n'.format(indent, self.debug))
+
+        str_list.append('{}  Python dict of Python str (cache path) objects:\n'.format(indent))
+        for key in sorted(self.cache_path_dict):
+            str_list.append('{}    Key: {!r} file_path: {!r}\n'.format(indent, key, self.cache_path_dict[key]))
+
+        str_list.append('{}  Python list of pre RunnableStep objects:\n'.format(indent))
+        for runnable_step in self.runnable_step_list_pre:
+            str_list.extend(runnable_step.trace(level=level + 1))
+
+        str_list.append('{}  Python list of concurrent RunnableStep objects:\n'.format(indent))
+        for runnable_step in self.runnable_step_list_concurrent:
+            str_list.extend(runnable_step.trace(level=level + 1))
+
+        str_list.append('{}  Python list of postRunnableStep objects:\n'.format(indent))
+        for runnable_step in self.runnable_step_list_post:
+            str_list.extend(runnable_step.trace(level=level + 1))
+
+        return str_list
+
     def add_runnable_step_pre(self, runnable_step):
         """Convenience method to add a C{bsf.process.RunnableStep} to the pre-run list.
 
