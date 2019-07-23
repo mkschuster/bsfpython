@@ -2029,6 +2029,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
             classpath_picard=None,
             compression_level=None,
             lanes=None,
+            lane_list=None,
             force=None):
         """Initialise a C{bsf.analyses.picard.IlluminaDemultiplexSam} object.
 
@@ -2076,6 +2077,8 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         @type compression_level: int | None
         @param lanes: Number of lanes on the flow cell
         @type lanes: int | None
+        @param lane_list: Python C{list} of Python C{str} lane number objects to process.
+        @type lane_list: list[str]
         @param force: Force de-multiplexing with a Library Annotation sheet failing validation
         @type force: bool | None
         @return:
@@ -2108,6 +2111,7 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         self.classpath_picard = classpath_picard
         self.compression_level = compression_level
         self.lanes = lanes
+        self.lane_list = lane_list
         self.force = force
 
         return
@@ -2174,6 +2178,10 @@ class IlluminaDemultiplexSam(bsf.Analysis):
         option = 'lanes'
         if configuration.config_parser.has_option(section=section, option=option):
             self.lanes = configuration.config_parser.getint(section=section, option=option)
+
+        option = 'lane_list'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.lane_list = configuration.get_list_from_csv(section=section, option=option)
 
         option = 'force'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -2340,6 +2348,11 @@ class IlluminaDemultiplexSam(bsf.Analysis):
 
         for lane_int in sorted(library_annotation_dict):
             lane_str = str(lane_int)
+
+            # If a list of lanes was defined, ignore lanes not on the list.
+            if self.lane_list and lane_str not in self.lane_list:
+                continue
+
             file_path_lane = self.get_file_path_lane(
                 project_name=self.project_name,
                 lane=lane_str,

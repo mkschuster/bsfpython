@@ -79,6 +79,14 @@ argument_parser.add_argument(
     type=str)
 
 argument_parser.add_argument(
+    '--lane-list',
+    default='',
+    dest='lane_list',
+    help='Comma-separated list of lanes to process',
+    required=False,
+    type=str)
+
+argument_parser.add_argument(
     '--mode',
     help='HiSeq run mode i.e. high (high-output) or rapid (rapid run)',
     required=False,
@@ -113,6 +121,9 @@ if name_space.irf:
 
 if name_space.project_name:
     analysis.project_name = name_space.project_name
+
+if name_space.lane_list:
+    analysis.lane_list = name_space.lane_list.split(',')
 
 # FIXME: Remove the mode option.
 # Since the script requires an IRF option, the lanes can be read from the bsf.illumina.RunFolder.
