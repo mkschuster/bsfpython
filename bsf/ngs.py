@@ -2759,24 +2759,24 @@ class Collection(NextGenerationBase):
 
         # At this stage all annotation keys should be added. Partition and sort the list of field names.
 
-        field_names = list(sas.field_names)
-        field_names.sort()
+        field_names = sorted(sas.field_names)  # Create a new sorted list.
 
-        sas.field_names = list()
-        sas.field_names.extend(filter(lambda x: x.startswith('File Type'), field_names))
-        field_names = filter(lambda x: not x.startswith('File Type'), field_names)
-        sas.field_names.extend(filter(lambda x: x.startswith('ProcessedRunFolder'), field_names))
-        field_names = filter(lambda x: not x.startswith('ProcessedRunFolder'), field_names)
-        sas.field_names.extend(filter(lambda x: x.startswith('Project'), field_names))
-        field_names = filter(lambda x: not x.startswith('Project'), field_names)
-        sas.field_names.extend(filter(lambda x: x.startswith('Sample'), field_names))
-        field_names = filter(lambda x: not x.startswith('Sample'), field_names)
-        sas.field_names.extend(filter(lambda x: x.startswith('PairedReads'), field_names))
-        field_names = filter(lambda x: not x.startswith('PairedReads'), field_names)
-        sas.field_names.extend(filter(lambda x: x.startswith('Reads1'), field_names))
-        field_names = filter(lambda x: not x.startswith('Reads1'), field_names)
-        sas.field_names.extend(filter(lambda x: x.startswith('Reads2'), field_names))
-        field_names = filter(lambda x: not x.startswith('Reads2'), field_names)
+        del sas.field_names[:]  # Clear the existing list.
+
+        sas.field_names.extend([item for item in field_names if item.startswith('File Type')])
+        field_names = [item for item in field_names if not item.startswith('File Type')]
+        sas.field_names.extend([item for item in field_names if item.startswith('ProcessedRunFolder')])
+        field_names = [item for item in field_names if not item.startswith('ProcessedRunFolder')]
+        sas.field_names.extend([item for item in field_names if item.startswith('Project')])
+        field_names = [item for item in field_names if not item.startswith('Project')]
+        sas.field_names.extend([item for item in field_names if item.startswith('Sample')])
+        field_names = [item for item in field_names if not item.startswith('Sample')]
+        sas.field_names.extend([item for item in field_names if item.startswith('PairedReads')])
+        field_names = [item for item in field_names if not item.startswith('PairedReads')]
+        sas.field_names.extend([item for item in field_names if item.startswith('Reads1')])
+        field_names = [item for item in field_names if not item.startswith('Reads1')]
+        sas.field_names.extend([item for item in field_names if item.startswith('Reads2')])
+        field_names = [item for item in field_names if not item.startswith('Reads2')]
         sas.field_names.extend(field_names)
 
         # Finally, construct the SampleAnnotationSheet.
