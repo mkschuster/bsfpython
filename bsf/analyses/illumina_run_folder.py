@@ -53,6 +53,10 @@ class IlluminaRunFolderArchive(bsf.Analysis):
     @ivar experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
         Illumina Run Folder parameters
     @type experiment_name: str | None
+    @ivar sav_mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
+    @type sav_mode_directory: str | None
+    @ivar sav_mode_file: Comma-separated list of file permission bit names according to the C{stat} module
+    @type sav_mode_file: str | None
     @ivar force: Force processing of incomplete Illumina Run Folders
     @type force: bool | None
     """
@@ -97,6 +101,15 @@ class IlluminaRunFolderArchive(bsf.Analysis):
         @rtype: str
         """
         return '_'.join((cls.prefix, 'folder'))
+
+    @classmethod
+    def get_stage_name_post_process(cls):
+        """Get a particular C{bsf.Stage.name}.
+
+        @return: C{bsf.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'post_process'))
 
     @classmethod
     def get_prefix_pre_process(cls, project_name):
@@ -146,6 +159,17 @@ class IlluminaRunFolderArchive(bsf.Analysis):
         """
         return '_'.join((cls.get_stage_name_archive_folder(), project_name))
 
+    @classmethod
+    def get_prefix_post_process(cls, project_name):
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+
+        @param project_name: A project name
+        @type project_name: str
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_post_process(), project_name))
+
     def __init__(
             self,
             configuration=None,
@@ -163,6 +187,8 @@ class IlluminaRunFolderArchive(bsf.Analysis):
             archive_directory=None,
             run_directory=None,
             experiment_name=None,
+            sav_mode_directory=None,
+            sav_mode_file=None,
             force=None):
         """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.Analysis}.
 
@@ -199,6 +225,10 @@ class IlluminaRunFolderArchive(bsf.Analysis):
         @param experiment_name: Experiment name (i.e. flow cell identifier) normally automatically read from
             Illumina Run Folder parameters
         @type experiment_name: str | None
+        @param sav_mode_directory: Comma-separated list of file permission bit names according to the C{stat} module
+        @type sav_mode_directory: str | None
+        @param sav_mode_file: Comma-separated list of file permission bit names according to the C{stat} module
+        @type sav_mode_file: str | None
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool | None
         @return:
@@ -223,6 +253,8 @@ class IlluminaRunFolderArchive(bsf.Analysis):
         self.archive_directory = archive_directory
         self.run_directory = run_directory
         self.experiment_name = experiment_name
+        self.sav_mode_directory = sav_mode_directory
+        self.sav_mode_file = sav_mode_file
         self.force = force
 
         return
@@ -259,6 +291,14 @@ class IlluminaRunFolderArchive(bsf.Analysis):
         option = 'experiment_name'
         if configuration.config_parser.has_option(section=section, option=option):
             self.experiment_name = configuration.config_parser.get(section=section, option=option)
+
+        option = 'sav_mode_directory'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.sav_mode_directory = configuration.config_parser.get(section=section, option=option)
+
+        option = 'sav_mode_file'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.sav_mode_file = configuration.config_parser.get(section=section, option=option)
 
         # Get the force flag.
 
@@ -383,6 +423,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
         stage_compress_base_calls = self.get_stage(name=self.get_stage_name_base_calls())
         stage_archive_intensities = self.get_stage(name=self.get_stage_name_intensities())
         stage_archive_folder = self.get_stage(name=self.get_stage_name_archive_folder())
+        stage_post_process_folder = self.get_stage(name=self.get_stage_name_post_process())
 
         # Pre-process on folder level.
 
@@ -689,17 +730,65 @@ class IlluminaRunFolderArchive(bsf.Analysis):
         runnable_step.add_switch_long(key='stdout')
         runnable_step.add_option_long(key='processes', value=str(stage_archive_folder.threads))
 
-        # 2. Calculate a MD5 checksum.
+        # Post-process the archive folder.
+
+        runnable_post_process_folder = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
+                name=self.get_prefix_post_process(project_name=self.project_name),
+                code_module='bsf.runnables.generic',
+                working_directory=self.project_directory))
+        executable_post_process_folder = self.set_stage_runnable(
+            stage=stage_post_process_folder,
+            runnable=runnable_post_process_folder)
+        executable_post_process_folder.dependencies.append(runnable_archive_folder.name)
+
+        # 1. Calculate a MD5 checksum.
 
         runnable_step = bsf.process.RunnableStep(
                 name='md5_sum',
                 program='md5sum',
                 stdout=bsf.connector.ConnectorFile(file_path=archive_file_path + '.md5', file_mode='wt'))
-        runnable_archive_folder.add_runnable_step_post(runnable_step=runnable_step)
+        runnable_post_process_folder.add_runnable_step(runnable_step=runnable_step)
 
         runnable_step.add_switch_long(key='binary')
 
         runnable_step.arguments.append(archive_file_path)
+
+        # 2. Extract files relevant for the Illumina Sequence Analysis Viewer (SAV).
+
+        runnable_step = bsf.process.RunnableStep(
+            name='extract_folder_tar',
+            program='tar')
+        runnable_post_process_folder.add_runnable_step(runnable_step=runnable_step)
+
+        runnable_step.add_switch_long(key='extract')
+        runnable_step.add_option_long(key='file', value=archive_file_path)
+        runnable_step.add_switch_long(key='ignore-failed-read')
+        runnable_step.add_switch_long(key='wildcards')
+
+        for file_path in irf.get_sav_archive_paths():
+            runnable_step.arguments.append(file_path)
+
+        # 3. Move the extracted Run Folder into the Illumina Sequence Analysis Viewer (SAV) directory.
+
+        sav_path = bsf.standards.Configuration.get_absolute_path(
+                file_path=run_name + '_sav',
+                default_path=bsf.standards.FilePath.get_illumina_sav(absolute=True))
+
+        runnable_step = bsf.process.RunnableStepMove(
+            name='move_sav',
+            source_path=run_name,
+            target_path=sav_path)
+        runnable_post_process_folder.add_runnable_step(runnable_step=runnable_step)
+
+        # 4. Adjust the file permissions of the SAV folder.
+
+        runnable_step = bsf.process.RunnableStepChangeMode(
+            name='set_sav_permissions',
+            file_path=sav_path,
+            mode_directory=self.sav_mode_directory,
+            mode_file=self.sav_mode_file)
+        runnable_post_process_folder.add_runnable_step(runnable_step=runnable_step)
 
         return
 

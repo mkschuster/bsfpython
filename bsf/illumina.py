@@ -1042,10 +1042,12 @@ class RunFolderNotComplete(Exception):
 
 
 class RunFolder(object):
-    """The C{bsf.illumina.RunFolder} class represents an Illumina
-    Run Folder copied off the instrument.
+    """The C{bsf.illumina.RunFolder} class represents an Illumina Run Folder.
 
     Attributes:
+    @cvar rta_dict: Python C{dict} of Python C{str} (RTA version) key objects and
+        Python C{str} (RTA description) value objects
+    @type rta_dict: dict[str, str]
     @ivar file_path: File path
     @type file_path: str | unicode
     @ivar file_type: File type
@@ -1063,6 +1065,23 @@ class RunFolder(object):
     @ivar run_information: C{bsf.illumina.RunInformation} object
     @type run_information: bsf.illumina.RunInformation
     """
+
+    rta_dict = {
+        '1.12.4': 'HiSeq Control Software 1.4.5 (HiSeq 2000)',
+        '1.12.4.2': 'HiSeq Control Software 1.4.8 (HiSeq 2000)',
+        '1.13.48': 'HiSeq Control Software 1.5.15.1 (HiSeq 2000)',
+        '1.17.21.3': 'HiSeq Control Software 2.0.12.0 (HiSeq 2000)',
+        '1.18.54': 'MiSeq Control Software 2.5.0.5 (MiSeq)',
+        '1.18.61': 'HiSeq Control Software 2.2.38 (HiSeq 2000)',
+        '1.18.64': 'HiSeq Control Software 2.2.58 (HiSeq 2000)',
+        '2.4.11': 'NextSeq Control Software 2.1.0.31 (NextSeq)',
+        '2.5.2': 'HiSeq Control Software 3.3.20 (HiSeq 3000/4000)',
+        '2.7.3': 'HiSeq Control Software 3.3.52 (HiSeq 3000/4000)',
+        '2.7.6': 'HiSeq Control Software 3.3.76 (HiSeq 3000/4000)',
+        '2.7.7': 'HiSeq Control Software HD 3.4.0.38 (HiSeq 3000/4000)',
+        'v3.3.3': 'NovaSeq Control Software 1.2.0 (NovaSeq 6000)',
+        'v3.4.4': 'NovaSeq Control Software 1.6.0 (NovaSeq 6000)',
+    }
 
     @staticmethod
     def absolute_file_path(name):
@@ -1232,6 +1251,50 @@ class RunFolder(object):
         @rtype: str | unicode
         """
         return '_'.join((self.date, self.instrument, self.run, self.flow_cell))
+
+    def get_sav_archive_paths(self):
+        """Get Illumina Sequence Analysis Viewer (SAV) archive file paths.
+
+        Return paths for files to be extracted from an Illumina Run Folder (IRF) in GNU Tar format,
+        which are relevant for viewing in the Illumina Sequence Analysis Viewer (SAV).
+        The file paths depend on the Realtime Analysis (RTA) software version.
+        @return: Python C{list} object of Python C{str} file path objects
+        @rtype: list[str]
+        """
+        str_list = list()
+
+        rta = self.run_parameters.get_real_time_analysis_version
+
+        if rta not in self.rta_dict:
+            raise Exception('Unsupported RTA version: ' + repr(rta))
+
+        # On all instruments.
+        str_list.append('Config')
+        str_list.append('InterOp')
+        str_list.append('RTAComplete.txt')
+        str_list.append('RunInfo.xml')
+
+        if rta in ('1.12.4', '1.12.4.2', '1.13.48', '1.17.21.3', '1.18.54', '1.18.61', '1.18.64'):
+            # Only on MiSeq and HiSeq 2000 instruments.
+            str_list.append('Data/Intensities/config.xml')
+            str_list.append('Data/Intensities/BaseCalls/config.xml')
+            str_list.append('Data/Intensities/RTAConfiguration.xml')
+
+        if rta in ('2.4.11', '2.5.2', '2.7.3', '2.7.6', '2.7.7'):
+            # Only on HiSeq 3000/4000 and NextSeq instruments.
+            str_list.append('RTAConfiguration.xml')
+
+        if rta in ('v3.3.3', 'v3.4.4'):
+            # Only on NovaSeq instruments.
+            str_list.append('RTA3.cfg')
+
+        if rta in ('2.4.11', 'v3.3.3', 'v3.4.4'):
+            # Only on NextSeq and NovaSeq instruments.
+            str_list.append('RunParameters.xml')
+        else:
+            str_list.append('runParameters.xml')
+
+        return ['/'.join((self.get_name, item)) for item in str_list]
 
     def _check_tiles_base_call(self):
         """Check for missing I{<Tile>} elements in the I{IRF/Data/Intensities/BaseCalls/config.xml}
@@ -2767,22 +2830,7 @@ class RunFolder(object):
         """
         rta = self.run_parameters.get_real_time_analysis_version
 
-        if rta not in (
-                '1.12.4',  # HiSeq Control Software 1.4.5
-                '1.12.4.2',  # HiSeq Control Software 1.4.8
-                '1.13.48',  # HiSeq Control Software 1.5.15.1
-                '1.17.21.3',  # HiSeq Control Software 2.0.12.0
-                '1.18.54',  # MiSeq Control Software 2.5.0.5
-                '1.18.61',  # HiSeq Control Software 2.2.38
-                '1.18.64',  # HiSeq Control Software 2.2.58
-                '2.4.11',  # NextSeq Control Software 2.1.0.31
-                '2.5.2',  # HiSeq Control Software 3.3.20 (HiSeq 3000/4000)
-                '2.7.3',  # HiSeq Control Software 3.3.52 (HiSeq 3000/4000)
-                '2.7.6',  # HiSeq Control Software 3.3.76 (HiSeq 3000/4000)
-                '2.7.7',  # HiSeq Control Software HD 3.4.0.38 (HiSeq 3000/4000)
-                'v3.3.3',  # NovaSeq Control Software 1.2.0 (NovaSeq 6000)
-                'v3.4.4',  # NovaSeq Control Software 1.6.0 (NovaSeq 6000)
-        ):
+        if rta not in self.rta_dict:
             raise Exception('Unsupported RTA version: ' + repr(rta))
 
         # _directory_name = os.path.basename(self.file_path)
