@@ -37,9 +37,9 @@ fi
 
 if test "$#" -lt '3';
 then
-    echo "Error: $(basename ${0})  Too few arguments." 1>&2 \
+    echo "Error: $(basename "${0}")  Too few arguments." 1>&2 \
     || exit 1;
-    echo "Usage: $(basename ${0})  <directory> <genome_fasta> <genome_sizes>" 1>&2 \
+    echo "Usage: $(basename "${0}")  <directory> <genome_fasta> <genome_sizes>" 1>&2 \
     || exit 1;
     exit 1;
 fi

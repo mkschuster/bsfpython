@@ -37,9 +37,9 @@ fi
 
 if test "$#" -lt '2';
 then
-    echo "Error: $(basename ${0}) Too few arguments." 1>&2 \
+    echo "Error: $(basename "${0}") Too few arguments." 1>&2 \
     || exit 1
-    echo "Usage: $(basename ${0}) <prefix> <chromosome_sizes>" 1>&2 \
+    echo "Usage: $(basename "${0}") <prefix> <chromosome_sizes>" 1>&2 \
     || exit 1
     exit 1
 fi
@@ -201,7 +201,7 @@ do
             cl+=" ${prefix}/${prefix}_${suffix}_clipped.bed";
             cl+=" ${chromosome_sizes}";
             cl+=" ${prefix}/${prefix}_${suffix}.bb";
-            eval ${cl} || exit 1;
+            eval "${cl}" || exit 1;
 
             bigBedInfo "${prefix}/${prefix}_${suffix}.bb" > "${prefix}/${prefix}_${suffix}_bbi.txt" \
                 || exit 1;

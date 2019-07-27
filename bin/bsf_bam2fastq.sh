@@ -68,17 +68,19 @@ fi
 
 declare input_file="${1}"
 declare picard_jar="${2}"
+decalre directory='';
+decalre prefix='';
 
 if test -n "${3}"; then
-    declare directory="${3}"
+    directory="${3}"
 else
-    declare directory="$(dirname "${input_file}")"
+    directory="$(dirname "${input_file}")"
 fi
 
 # Get the base name of the input_file parameter, remove the .bam or .sam extension
 # and subsequently a potential [._]unmapped part.
 
-declare prefix="$(basename "${input_file}")"
+prefix="$(basename "${input_file}")"
 prefix="${prefix%.[bs]am}"
 prefix="${prefix%[._]unmapped}"
 
