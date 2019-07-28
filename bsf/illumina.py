@@ -914,9 +914,9 @@ class XMLConfiguration(object):
     @classmethod
     def from_file_path(cls, file_path):
         """Create a C{bsf.illumina.XMLConfiguration} object from a file path.
+
         In case the file path does not exist a C{bsf.illumina.XMLConfiguration} object
         with an empty C{xml.etree.ElementTree.ElementTree} will be returned.
-
         @param file_path: File path
         @type file_path: str | unicode
         @return: C{bsf.illumina.XMLConfiguration} object
@@ -1295,6 +1295,71 @@ class RunFolder(object):
             str_list.append('runParameters.xml')
 
         return ['/'.join((self.get_name, item)) for item in str_list]
+
+    def has_compressed_base_calls(self):
+        """The Illumina Run Folder has un-compressed base call files.
+
+        @return: True if un-compressed files exist, False otherwise
+        @rtype: bool
+        """
+        rta = self.run_parameters.get_real_time_analysis_version
+
+        if rta not in self.rta_dict:
+            raise Exception('Unsupported RTA version: ' + repr(rta))
+
+        if rta in (
+                '1.18.54',
+                # 1.18.54 MiSeq Control Software 2.6.2.1 (MiSeq)
+                #   IRF/Data/Intensities/BaseCalls/L001/C1.1/s_1_1101.bcl
+                #   IRF/Data/Intensities/BaseCalls/L001/C1.1/s_1_1101.stats
+                #   Uncompressed base calls, but for consistency they are kept uncompressed.
+                '2.4.11',
+                # 2.4.11 NextSeq Control Software 2.2.0.4 (NextSeq 500/550)
+                #   IRF/Data/Intensities/BaseCalls/L001/*.bcl.bgzf
+                #   IRF/Data/Intensities/BaseCalls/L001/*.bcl.bgzf.bci
+                '2.5.2', '2.7.3', '2.7.6', '2.7.7',
+                # 2.5.2 HiSeq Control Software 3.3.20 (HiSeq 3000/4000)
+                # 2.7.3 HiSeq Control Software 3.3.52 (HiSeq 3000/4000)
+                # 2.7.6 HiSeq Control Software 3.3.76 (HiSeq 3000/4000)
+                # 2.7.7 HiSeq Control Software HD 3.4.0.38 (HiSeq 3000/4000)
+                #   IRF/Data/Intensities/BaseCalls/L001/C1.1/s_1_1101.bcl.gz
+                'v3.3.3', 'v3.4.4',
+                # v3.3.3 NovaSeq Control Software 1.2.0 (NovaSeq 6000)
+                # v3.4.4 NovaSeq Control Software 1.6.0 (NovaSeq 6000)
+                #   IRF/Data/Intensities/BaseCalls/L001/C1.1/L001_1.cbcl
+        ):
+            return True
+        else:
+            return False
+
+    def has_intensities(self):
+        """The Illumina Run Folder has intensity files.
+
+        @return: True if intensity files exist, False otherwise
+        @rtype: bool
+        """
+        rta = self.run_parameters.get_real_time_analysis_version
+
+        if rta not in self.rta_dict:
+            raise Exception('Unsupported RTA version: ' + repr(rta))
+
+        if rta in (
+                '1.18.54',
+                # 1.18.54 MiSeq Control Software 2.6.2.1 (MiSeq)
+                '2.4.11',
+                # 2.4.11 NextSeq Control Software 2.2.0.4 (NextSeq 500/550)
+                '2.5.2', '2.7.3', '2.7.6', '2.7.7',
+                # 2.5.2 HiSeq Control Software 3.3.20 (HiSeq 3000/4000)
+                # 2.7.3 HiSeq Control Software 3.3.52 (HiSeq 3000/4000)
+                # 2.7.6 HiSeq Control Software 3.3.76 (HiSeq 3000/4000)
+                # 2.7.7 HiSeq Control Software HD 3.4.0.38 (HiSeq 3000/4000)
+                'v3.3.3', 'v3.4.4',
+                # v3.3.3 NovaSeq Control Software 1.2.0 (NovaSeq 6000)
+                # v3.4.4 NovaSeq Control Software 1.6.0 (NovaSeq 6000)
+        ):
+            return False
+        else:
+            return True
 
     def _check_tiles_base_call(self):
         """Check for missing I{<Tile>} elements in the I{IRF/Data/Intensities/BaseCalls/config.xml}
