@@ -36,9 +36,9 @@ else
 fi
 
 if test "$#" -lt '1'; then
-    echo "Error: $(basename ${0}) Too few arguments." 1>&2 \
+    echo "Error: $(basename "${0}") Too few arguments." 1>&2 \
     || exit 1
-    echo "Usage: $(basename ${0}) <prefix>" 1>&2 \
+    echo "Usage: $(basename "${0}") <prefix>" 1>&2 \
     || exit 1
     exit 1
 fi
@@ -50,7 +50,7 @@ declare prefix="${1}"
 # Warning: The samtools sort command attaches a *.bam to the prefix.
 
 samtools view -b -S -u "${prefix}.sam" | \
-    samtools sort -o "${prefix}.bam" -T "$(dirname ${prefix})" - || exit 1
+    samtools sort -o "${prefix}.bam" -T "$(dirname "${prefix}")" - || exit 1
 
 # Index the aligned and sorted BAM file.
 
