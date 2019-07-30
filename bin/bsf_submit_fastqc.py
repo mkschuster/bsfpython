@@ -33,6 +33,7 @@ import argparse
 import sys
 
 import bsf.analyses.fastqc
+import bsf.standards
 
 argument_parser = argparse.ArgumentParser(
     description=bsf.analyses.fastqc.FastQC.name + ' driver script.')

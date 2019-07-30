@@ -57,7 +57,7 @@ class Argument(object):
         @param value: Value
         @type value: str | unicode
         @return: C{bsf.argument.Argument}
-        @rtype: bsf.argument.Argument
+        @rtype: Argument
         """
         if key.startswith('--'):
             # Long switch, option or option pair ...

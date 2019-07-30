@@ -36,6 +36,7 @@ import threading
 
 import bsf.connector
 import bsf.procedure
+import bsf.process
 
 
 def run(runnable):

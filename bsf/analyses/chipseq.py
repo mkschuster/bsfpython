@@ -31,8 +31,8 @@ import os
 import sys
 import warnings
 
-import bsf
 import bsf.analyses.bowtie
+import bsf.analysis
 import bsf.annotation
 import bsf.executables
 import bsf.ngs
@@ -504,13 +504,13 @@ class ChIPSeqDiffBindSheet(bsf.annotation.AnnotationSheet):
         return
 
 
-class ChIPSeq(bsf.Analysis):
-    """The C{bsf.analyses.chipseq.ChIPSeq} class represents the logic to run a ChIP-Seq-specific C{bsf.Analysis}.
+class ChIPSeq(bsf.analysis.Analysis):
+    """The C{bsf.analyses.chipseq.ChIPSeq} class represents the logic to run a ChIP-Seq-specific Analysis.
 
     Attributes:
-    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
@@ -541,27 +541,27 @@ class ChIPSeq(bsf.Analysis):
 
     @classmethod
     def get_stage_name_peak_calling(cls):
-        """Get a Python C{str} for a particular C{bsf.Stage.name}.
+        """Get a Python C{str} for a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'peak_calling'))
 
     @classmethod
     def get_stage_name_chipqc(cls):
-        """Get a Python C{str} for a particular C{bsf.Stage.name}.
+        """Get a Python C{str} for a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'chipqc'))
 
     @classmethod
     def get_stage_name_diff_bind(cls):
-        """Get a Python C{str} for a particular C{bsf.Stage.name}.
+        """Get a Python C{str} for a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'diff_bind'))
@@ -688,22 +688,22 @@ class ChIPSeq(bsf.Analysis):
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{bsf.Analysis}-wide input directory
+        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{bsf.Analysis}-wide output directory
+        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{bsf.Analysis}-wide project directory,
-            normally under the C{bsf.Analysis}-wide output directory
+        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
+            normally under the C{bsf.analysis.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{bsf.Analysis}-wide genome directory,
-            normally under the C{bsf.Analysis}-wide project directory
+        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
+            normally under the C{bsf.analysis.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param stage_list: Python C{list} of C{bsf.Stage} objects
-        @type stage_list: list[bsf.Stage]
+        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
+        @type stage_list: list[bsf.analysis.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -852,7 +852,7 @@ class ChIPSeq(bsf.Analysis):
             return self.colour_default
 
     def run(self):
-        """Run a C{bsf.analyses.chipseq.ChIPSeq} C{bsf.Analysis}.
+        """Run a C{bsf.analyses.chipseq.ChIPSeq} C{bsf.analysis.Analysis}.
 
         @return:
         @rtype:
@@ -864,10 +864,10 @@ class ChIPSeq(bsf.Analysis):
                 - Column headers for CASAVA folders:
                     - Treatment/Control ProcessedRunFolder:
                         - CASAVA processed run folder name or
-                        - C{bsf.Analysis.input_directory} by default
+                        - C{bsf.analysis.Analysis.input_directory} by default
                     - Treatment/Control Project:
                         - CASAVA Project name or
-                        - C{bsf.Analysis.project_name} by default
+                        - C{bsf.analysis.Analysis.project_name} by default
                     - Treatment/Control Sample:
                         - CASAVA Sample name, no default
                 - Column headers for independent samples:
@@ -1042,16 +1042,16 @@ class ChIPSeq(bsf.Analysis):
                     # Add a RunnableStep to create the output directory.
 
                     runnable_step = bsf.process.RunnableStepMakeDirectory(
-                            name='make_directory',
-                            directory_path=file_path_peak_calling.output_directory)
+                        name='make_directory',
+                        directory_path=file_path_peak_calling.output_directory)
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Add a RunnableStep for MACS14 call peak.
 
                     runnable_step = bsf.process.RunnableStep(
-                            name='macs14_call_peak',
-                            program='macs14',
-                            sub_command=bsf.process.Command(program='callpeak'))
+                        name='macs14_call_peak',
+                        program='macs14',
+                        sub_command=bsf.process.Command(program='callpeak'))
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Read RunnableStep options from configuration sections:
@@ -1123,8 +1123,8 @@ class ChIPSeq(bsf.Analysis):
                     # Add a RunnableStep to process MACS14 output.
 
                     runnable_step = bsf.process.RunnableStep(
-                            name='process_macs14',
-                            program='bsf_chipseq_process_macs14.bash')
+                        name='process_macs14',
+                        program='bsf_chipseq_process_macs14.bash')
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Specify the output path as in the macs14 --name option.
@@ -1174,16 +1174,16 @@ class ChIPSeq(bsf.Analysis):
                     # Add a RunnableStep to create the output directory.
 
                     runnable_step = bsf.process.RunnableStepMakeDirectory(
-                            name='make_directory',
-                            directory_path=file_path_peak_calling.output_directory)
+                        name='make_directory',
+                        directory_path=file_path_peak_calling.output_directory)
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Add a RunnableStep for MACS2 call peak.
 
                     runnable_step = bsf.process.RunnableStep(
-                            name='macs2_call_peak',
-                            program='macs2',
-                            sub_command=bsf.process.Command(program='callpeak'))
+                        name='macs2_call_peak',
+                        program='macs2',
+                        sub_command=bsf.process.Command(program='callpeak'))
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Read RunnableStep options from configuration sections:
@@ -1302,9 +1302,9 @@ class ChIPSeq(bsf.Analysis):
                     # Add a RunnableStep to compare bedGraph files.
 
                     runnable_step = bsf.process.RunnableStep(
-                            name='macs2_bdg_cmp',
-                            program='macs2',
-                            sub_command=bsf.process.Command(program='bdgcmp'))
+                        name='macs2_bdg_cmp',
+                        program='macs2',
+                        sub_command=bsf.process.Command(program='bdgcmp'))
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     # Read RunnableStep options from configuration sections:
@@ -1341,8 +1341,8 @@ class ChIPSeq(bsf.Analysis):
                     # Add a RunnableStep to process MACS2 output.
 
                     runnable_step = bsf.process.RunnableStep(
-                            name='process_macs2',
-                            program='bsf_chipseq_process_macs2.bash')
+                        name='process_macs2',
+                        program='bsf_chipseq_process_macs2.bash')
                     runnable_peak_calling.add_runnable_step(runnable_step=runnable_step)
 
                     runnable_step.arguments.append(prefix_peak_calling)
@@ -1458,8 +1458,8 @@ class ChIPSeq(bsf.Analysis):
                     # Add a RunnableStep for Bioconductor DiffBind.
 
                     runnable_step = bsf.process.RunnableStep(
-                            name='diff_bind',
-                            program='bsf_chipseq_diffbind.R')
+                        name='diff_bind',
+                        program='bsf_chipseq_diffbind.R')
                     runnable_diff_bind.add_runnable_step(runnable_step=runnable_step)
 
                     runnable_step.add_option_long(
@@ -1496,8 +1496,8 @@ class ChIPSeq(bsf.Analysis):
                     # Add a RunnableStep for Bioconductor ChIPQC.
 
                     runnable_step = bsf.process.RunnableStep(
-                            name='chipqc',
-                            program='bsf_chipseq_chipqc.R')
+                        name='chipqc',
+                        program='bsf_chipseq_chipqc.R')
                     runnable_diff_bind.add_runnable_step(runnable_step=runnable_step)
 
                     runnable_step.add_option_long(

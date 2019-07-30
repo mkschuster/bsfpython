@@ -32,8 +32,8 @@ from __future__ import print_function
 
 import os
 
-import bsf
 import bsf.analyses.aligner
+import bsf.analysis
 import bsf.annotation
 import bsf.connector
 import bsf.process
@@ -118,9 +118,9 @@ class StarAligner(bsf.analyses.aligner.Aligner):
     """STAR Aligner C{bsf.analyses.aligner.Aligner} sub-class.
 
     Attributes:
-    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar index_directory: Genome directory with STAR indices
     @type index_directory: str | unicode | None
@@ -185,22 +185,22 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{bsf.Analysis}-wide input directory
+        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{bsf.Analysis}-wide output directory
+        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{bsf.Analysis}-wide project directory,
-            normally under the C{bsf.Analysis}-wide output directory
+        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
+            normally under the C{bsf.analysis.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{bsf.Analysis}-wide genome directory,
-            normally under the C{bsf.Analysis}-wide project directory
+        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
+            normally under the C{bsf.analysis.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param stage_list: Python C{list} of C{bsf.Stage} objects
-        @type stage_list: list[bsf.Stage]
+        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
+        @type stage_list: list[bsf.analysis.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -283,8 +283,8 @@ class StarAligner(bsf.analyses.aligner.Aligner):
 
         @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
         @type runnable_align: bsf.procedure.ConcurrentRunnable
-        @param stage_align: C{bsf.Stage}
-        @type stage_align: bsf.Stage
+        @param stage_align: C{bsf.analysis.Stage}
+        @type stage_align: bsf.analysis.Stage
         @param file_path_1: FASTQ file path 1
         @type file_path_1: str | unicode | None
         @param file_path_2: FASTQ file path 2
@@ -297,10 +297,10 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         # Run the STAR Aligner
 
         runnable_step = bsf.process.RunnableStep(
-                name='STAR',
-                program='STAR',
-                stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+            name='STAR',
+            program='STAR',
+            stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+            stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
         runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         self.set_runnable_step_configuration(runnable_step=runnable_step)
@@ -327,8 +327,8 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         # Run GNU Zip over the rather large splice junction table.
 
         runnable_step = bsf.process.RunnableStep(
-                name='gzip',
-                program='gzip')
+            name='gzip',
+            program='gzip')
         runnable_align.add_runnable_step_post(runnable_step=runnable_step)
 
         runnable_step.add_switch_long(key='best')
@@ -341,14 +341,14 @@ class StarAligner(bsf.analyses.aligner.Aligner):
 
         @param runnable_summary: C{bsf.procedure.ConsecutiveRunnable}
         @type runnable_summary: bsf.procedure.ConsecutiveRunnable
-        @param stage_summary: C{bsf.Stage}
-        @type stage_summary: bsf.Stage
+        @param stage_summary: C{bsf.analysis.Stage}
+        @type stage_summary: bsf.analysis.Stage
         @return:
         @rtype:
         """
         runnable_step = bsf.process.RunnableStep(
-                name='star_summary',
-                program='bsf_star_aligner_summary.R')
+            name='star_summary',
+            program='bsf_star_aligner_summary.R')
         runnable_summary.add_runnable_step(runnable_step=runnable_step)
 
         return
@@ -371,7 +371,7 @@ class StarAligner(bsf.analyses.aligner.Aligner):
         if not self.transcriptome_version:
             raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
 
-        # Get the genome version before calling the run() method of the bsf.Analysis super-class.
+        # Get the genome version before calling the run() method of the bsf.analysis.Analysis super-class.
 
         if not self.genome_version:
             self.genome_version = bsf.standards.Transcriptome.get_genome(

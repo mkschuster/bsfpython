@@ -33,13 +33,13 @@ import bsf.connector
 
 
 def submit(stage, debug=0):
-    """Submit each C{bsf.process.Executable} of a C{bsf.Stage}.
+    """Submit each C{bsf.process.Executable} of a C{bsf.analysis.Stage}.
 
     Submits each C{bsf.process.Executable} by writing a GNU Bourne-Again Shell (BASH) script
-    into the C{bsf.Stage.work_directory}.
+    into the C{bsf.analysis.Stage.work_directory}.
 
-    @param stage: C{bsf.Stage}
-    @type stage: bsf.Stage
+    @param stage: C{bsf.analysis.Stage}
+    @type stage: bsf.analysis.Stage
     @param debug: Debug level
     @type debug: int
     @return:
@@ -75,10 +75,10 @@ def submit(stage, debug=0):
 
 
 def check_state(stage, debug=0):
-    """Check the state of each C{bsf.process.Executable} of a C{bsf.Stage}.
+    """Check the state of each C{bsf.process.Executable} of a C{bsf.analysis.Stage}.
 
-    @param stage: C{bsf.Stage}
-    @type stage: bsf.Stage
+    @param stage: C{bsf.analysis.Stage}
+    @type stage: bsf.analysis.Stage
     @param debug: Debug level
     @type debug: int
     @return:

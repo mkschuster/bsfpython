@@ -36,7 +36,7 @@ import re
 import stat
 import sys
 
-import bsf
+import bsf.analysis
 import bsf.standards
 
 
@@ -104,7 +104,7 @@ argument_parser.add_argument(
 
 name_space = argument_parser.parse_args()
 
-analysis = bsf.Analysis(project_name=name_space.project)
+analysis = bsf.analysis.Analysis(project_name=name_space.project)
 analysis.run()
 
 project_name = name_space.project

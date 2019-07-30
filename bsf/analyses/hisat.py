@@ -34,6 +34,8 @@ import os
 
 import bsf.analyses.aligner
 import bsf.connector
+import bsf.process
+import bsf.standards
 
 
 class FilePathAlign(bsf.analyses.aligner.FilePathAlign):
@@ -63,9 +65,9 @@ class Hisat2(bsf.analyses.aligner.Aligner):
     """The C{bsf.analyses.hisat.Hisat2} class represents the logic to run a (short read) aligner.
 
     Attributes:
-    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @cvar rna_strand: mRNA strand (i.e. F, R, FR or RF)
     @type rna_strand: str
@@ -112,22 +114,22 @@ class Hisat2(bsf.analyses.aligner.Aligner):
         @type project_name: str | None
         @param genome_version: Genome version
         @type genome_version: str | None
-        @param input_directory: C{bsf.Analysis}-wide input directory
+        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
         @type input_directory: str | None
-        @param output_directory: C{bsf.Analysis}-wide output directory
+        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
         @type output_directory: str | None
-        @param project_directory: C{bsf.Analysis}-wide project directory,
-            normally under the C{bsf.Analysis}-wide output directory
+        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
+            normally under the C{bsf.analysis.Analysis}-wide output directory
         @type project_directory: str | None
-        @param genome_directory: C{bsf.Analysis}-wide genome directory,
-            normally under the C{bsf.Analysis}-wide project directory
+        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
+            normally under the C{bsf.analysis.Analysis}-wide project directory
         @type genome_directory: str | None
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str | None
         @param debug: Integer debugging level
         @type debug: int
-        @param stage_list: Python C{list} of C{bsf.Stage} objects
-        @type stage_list: list[bsf.Stage] | None
+        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
+        @type stage_list: list[bsf.analysis.Stage] | None
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection | None
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -197,8 +199,8 @@ class Hisat2(bsf.analyses.aligner.Aligner):
 
         @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
         @type runnable_align: bsf.procedure.ConcurrentRunnable
-        @param stage_align: C{bsf.Stage}
-        @type stage_align: bsf.Stage
+        @param stage_align: C{bsf.analysis.Stage}
+        @type stage_align: bsf.analysis.Stage
         @param file_path_1: FASTQ file path 1
         @type file_path_1: str | unicode | None
         @param file_path_2: FASTQ file path 2
@@ -209,10 +211,10 @@ class Hisat2(bsf.analyses.aligner.Aligner):
         file_path_align = FilePathAlign(prefix=runnable_align.name)
 
         runnable_step = bsf.process.RunnableStep(
-                name='HISAT2',
-                program='hisat2',
-                stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+            name='HISAT2',
+            program='hisat2',
+            stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+            stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
         runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         self.set_runnable_step_configuration(runnable_step=runnable_step)

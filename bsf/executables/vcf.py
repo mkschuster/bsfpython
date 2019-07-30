@@ -95,11 +95,11 @@ class RunnableStepCsqToVep(bsf.process.RunnableStep):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None

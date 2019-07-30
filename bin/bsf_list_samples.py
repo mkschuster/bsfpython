@@ -33,7 +33,8 @@ import csv
 import os
 import re
 
-import bsf
+import bsf.ngs
+import bsf.standards
 
 parser = argparse.ArgumentParser(description='List projects and samples.')
 

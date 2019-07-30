@@ -30,7 +30,7 @@ from __future__ import print_function
 import os
 import sys
 
-import bsf
+import bsf.analysis
 import bsf.ngs
 import bsf.procedure
 import bsf.process
@@ -105,7 +105,7 @@ class FilePathTrimmomaticProject(bsf.procedure.FilePath):
 
         @param prefix: Prefix
         @type prefix: str | unicode
-        @param prefix_analysis: C{bsf.Analysis.prefix}
+        @param prefix_analysis: C{bsf.analysis.Analysis.prefix}
         @type prefix_analysis: str
         @param project_name: Project name
         @type project_name: str
@@ -121,14 +121,14 @@ class FilePathTrimmomaticProject(bsf.procedure.FilePath):
         return
 
 
-class Trimmomatic(bsf.Analysis):
+class Trimmomatic(bsf.analysis.Analysis):
     """The C{bsf.analyses.trimmomatic.Trimmomatic} class represents the logic to run the Trimmomatic analysis.
 
     Attributes:
 
-    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar adapter_path: Adapter file path
     @type adapter_path: None | str | unicode
@@ -145,27 +145,27 @@ class Trimmomatic(bsf.Analysis):
 
     @classmethod
     def get_stage_name_read_group(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'read_group'))
 
     @classmethod
     def get_stage_name_summary(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'summary'))
 
     @classmethod
     def get_stage_name_project(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'project'))
@@ -217,7 +217,7 @@ class Trimmomatic(bsf.Analysis):
 
         @param project_name: Project name
         @type project_name: str
-        @param prefix_analysis: C{bsf.Analysis.prefix}
+        @param prefix_analysis: C{bsf.analysis.Analysis.prefix}
         @type prefix_analysis: str
         @return: C{FilePathTrimmomaticProject} object
         @rtype: FilePathTrimmomaticProject
@@ -253,22 +253,22 @@ class Trimmomatic(bsf.Analysis):
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{bsf.Analysis}-wide input directory
+        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{bsf.Analysis}-wide output directory
+        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{bsf.Analysis}-wide project directory,
-            normally under the C{bsf.Analysis}-wide output directory
+        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
+            normally under the C{bsf.analysis.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{bsf.Analysis}-wide genome directory,
-            normally under the C{bsf.Analysis}-wide project directory
+        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
+            normally under the C{bsf.analysis.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param stage_list: Python C{list} of C{bsf.Stage} objects
-        @type stage_list: list[bsf.Stage]
+        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
+        @type stage_list: list[bsf.analysis.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -346,9 +346,10 @@ class Trimmomatic(bsf.Analysis):
         return
 
     def run(self):
-        """Run the C{bsf.analyses.trimmomatic.Trimmomatic} C{bsf.Analysis}.
+        """Run the C{bsf.analyses.trimmomatic.Trimmomatic} C{bsf.analysis.Analysis}.
 
-        This method changes the C{bsf.ngs.Collection} object of this C{bsf.Analysis} to update with FASTQ file paths.
+        This method changes the C{bsf.ngs.Collection} object of this C{bsf.analysis.Analysis}
+        to update with FASTQ file paths.
         @return:
         @rtype:
         """
@@ -375,8 +376,8 @@ class Trimmomatic(bsf.Analysis):
             """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
 
             This implementation just adds all C{bsf.ngs.Sample} objects from the
-            C{bsf.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
-            C{bsf.Analysis.sample_list} instance variable.
+            C{bsf.analysis.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
+            C{bsf.analysis.Analysis.sample_list} instance variable.
             @return:
             @rtype:
             """
@@ -475,17 +476,17 @@ class Trimmomatic(bsf.Analysis):
                     # Create a new RunnableStepMakeDirectory in preparation of the Trimmomatic program.
 
                     runnable_step_read_group = bsf.process.RunnableStepMakeDirectory(
-                            name='mkdir',
-                            directory_path=file_path_read_group.output_directory)
+                        name='mkdir',
+                        directory_path=file_path_read_group.output_directory)
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step_read_group)
 
                     # Create a RunnableStep for the Trimmomatic program.
 
                     runnable_step_read_group = bsf.process.RunnableStepJava(
-                            name='trimmomatic',
-                            java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
-                            java_heap_maximum='Xmx4G',
-                            java_jar_path=self.classpath_trimmomatic)
+                        name='trimmomatic',
+                        java_temporary_path=runnable_read_group.temporary_directory_path(absolute=False),
+                        java_heap_maximum='Xmx4G',
+                        java_jar_path=self.classpath_trimmomatic)
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step_read_group)
 
                     if paired_reads.reads_2 is None:
@@ -598,11 +599,11 @@ class Trimmomatic(bsf.Analysis):
                     # Create a new RunnableStep to aggregate the trim log file.
 
                     runnable_step_summary = bsf.process.RunnableStep(
-                            name='trimmomatic_summary',
-                            program='bsf_trimmomatic_summary.R',
-                            obsolete_file_path_list=[
-                                file_path_read_group.trim_log_tsv,
-                            ])
+                        name='trimmomatic_summary',
+                        program='bsf_trimmomatic_summary.R',
+                        obsolete_file_path_list=[
+                            file_path_read_group.trim_log_tsv,
+                        ])
                     runnable_summary.add_runnable_step(runnable_step=runnable_step_summary)
 
                     runnable_step_summary.add_option_long(
@@ -635,7 +636,7 @@ class Trimmomatic(bsf.Analysis):
         # Create a new RunnableStep.
 
         runnable_step_project = bsf.process.RunnableStep(
-                name='prune_sample_annotation_sheet')
+            name='prune_sample_annotation_sheet')
         runnable_project.add_runnable_step(runnable_step=runnable_step_project)
 
         runnable_step_project.add_option_long(key='sas_path_old', value=file_path_project.sas_path_old)

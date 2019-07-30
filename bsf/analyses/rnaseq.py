@@ -34,9 +34,9 @@ import re
 import sys
 import warnings
 
-import bsf
 import bsf.analyses.hisat
 import bsf.analyses.star_aligner
+import bsf.analysis
 import bsf.annotation
 import bsf.executables
 import bsf.ngs
@@ -391,13 +391,13 @@ class TuxedoSamplePairSheet(bsf.annotation.AnnotationSheet):
     _test_methods = dict()
 
 
-class Tuxedo(bsf.Analysis):
-    """Tuxedo RNASeq C{bsf.Analysis} sub-class.
+class Tuxedo(bsf.analysis.Analysis):
+    """Tuxedo RNASeq C{bsf.analysis.Analysis} sub-class.
 
     Attributes:
-    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool | None
@@ -437,36 +437,36 @@ class Tuxedo(bsf.Analysis):
 
     @classmethod
     def get_stage_name_run_tophat(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'run_tophat'))
 
     @classmethod
     def get_stage_name_process_tophat(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'process_tophat'))
 
     @classmethod
     def get_stage_name_run_cufflinks(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'run_cufflinks'))
 
     @classmethod
     def get_stage_name_process_cufflinks(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'process_cufflinks'))
@@ -475,54 +475,54 @@ class Tuxedo(bsf.Analysis):
 
     @classmethod
     def get_stage_name_run_cuffmerge(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'cuffmerge'))
 
     @classmethod
     def get_stage_name_run_cuffquant(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'cuffquant'))
 
     @classmethod
     def get_stage_name_run_cuffnorm(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'cuffnorm'))
 
     @classmethod
     def get_stage_name_run_cuffdiff(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'cuffdiff'))
 
     @classmethod
     def get_stage_name_process_cuffdiff(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'process_cuffdiff'))
 
     @classmethod
     def get_stage_name_monocle(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'monocle'))
@@ -804,22 +804,22 @@ class Tuxedo(bsf.Analysis):
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{bsf.Analysis}-wide input directory
+        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{bsf.Analysis}-wide output directory
+        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{bsf.Analysis}-wide project directory,
-            normally under the C{bsf.Analysis}-wide output directory
+        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
+            normally under the C{bsf.analysis.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{bsf.Analysis}-wide genome directory,
-            normally under the C{bsf.Analysis}-wide project directory
+        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
+            normally under the C{bsf.analysis.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param stage_list: Python C{list} of C{bsf.Stage} objects
-        @type stage_list: list[bsf.Stage]
+        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
+        @type stage_list: list[bsf.analysis.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -983,15 +983,15 @@ class Tuxedo(bsf.Analysis):
             """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
 
             All C{bsf.ngs.Sample} objects referenced in a comparison are added from the C{bsf.ngs.Collection} to the
-            C{bsf.Analysis} object.
+            C{bsf.analysis.Analysis} object.
 
                 - Column headers for CASAVA folders:
                     - Treatment/Control/Point N ProcessedRunFolder:
                         - CASAVA processed run folder name or
-                        - C{bsf.Analysis.input_directory} by default
+                        - C{bsf.analysis.Analysis.input_directory} by default
                     - Treatment/Control/Point N Project:
                         - CASAVA Project name or
-                        - C{bsf.Analysis.project_name} by default
+                        - C{bsf.analysis.Analysis.project_name} by default
                     - Treatment/Control/Point N Sample:
                         - CASAVA Sample name, no default
                 - Column headers for independent samples:
@@ -1095,7 +1095,7 @@ class Tuxedo(bsf.Analysis):
                                         name=_group_name,
                                         sample_list=_sample_list_new))
                                     # Also expand each Python list of bsf.ngs.Sample objects to get all those
-                                    # bsf.ngs.Sample objects that this bsf.Analysis needs considering.
+                                    # bsf.ngs.Sample objects that this bsf.analysis.Analysis needs considering.
                                     for _sample in _sample_list_new:
                                         self.add_sample(sample=_sample)
                                         if self.debug > 1:
@@ -1180,7 +1180,7 @@ class Tuxedo(bsf.Analysis):
         if not self.transcriptome_version:
             raise Exception('A ' + self.name + " requires a 'transcriptome_version' configuration option.")
 
-        # Get the genome version before calling the run() method of the bsf.Analysis super-class.
+        # Get the genome version before calling the run() method of the bsf.analysis.Analysis super-class.
 
         if not self.genome_version:
             self.genome_version = bsf.standards.Transcriptome.get_genome(
@@ -3597,13 +3597,13 @@ class FilePathDESeq(bsf.procedure.FilePath):
         return
 
 
-class DESeq(bsf.Analysis):
-    """DESeq RNASeq C{bsf.Analysis} sub-class.
+class DESeq(bsf.analysis.Analysis):
+    """DESeq RNASeq C{bsf.analysis.Analysis} sub-class.
 
     Attributes:
-    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar replicate_grouping: Group all replicates into a single Tophat and Cufflinks process
     @type replicate_grouping: bool
@@ -3626,18 +3626,18 @@ class DESeq(bsf.Analysis):
 
     @classmethod
     def get_stage_name_analysis(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'analysis'))
 
     @classmethod
     def get_stage_name_results(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'results'))
@@ -3671,22 +3671,22 @@ class DESeq(bsf.Analysis):
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{bsf.Analysis}-wide input directory
+        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{bsf.Analysis}-wide output directory
+        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{bsf.Analysis}-wide project directory,
-            normally under the C{bsf.Analysis}-wide output directory
+        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
+            normally under the C{bsf.analysis.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{bsf.Analysis}-wide genome directory,
-            normally under the C{bsf.Analysis}-wide project directory
+        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
+            normally under the C{bsf.analysis.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param stage_list: Python C{list} of C{bsf.Stage} objects
-        @type stage_list: list[bsf.Stage]
+        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
+        @type stage_list: list[bsf.analysis.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects

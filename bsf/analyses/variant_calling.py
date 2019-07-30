@@ -34,7 +34,7 @@ import pickle
 import sys
 import warnings
 
-import bsf
+import bsf.analysis
 import bsf.annotation
 import bsf.argument
 import bsf.connector
@@ -93,11 +93,11 @@ class RunnableStepGATK(bsf.process.RunnableStepJava):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.Stage}
+        @param submit: Submit the C{bsf.process.Executable} into the C{bsf.analysis.Stage}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
@@ -889,14 +889,14 @@ class VariantCallingGATKTargetIntervals(object):
         return
 
 
-class VariantCallingGATK(bsf.Analysis):
+class VariantCallingGATK(bsf.analysis.Analysis):
     """C{bsf.analyses.variant_calling.VariantCallingGATK} class representing the logic to run the
     Genome Analysis Toolkit (GATK).
 
     Attributes:
-    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @ivar replicate_grouping: Group individual C{bsf.ngs.PairedReads} objects for processing or run them separately
     @type replicate_grouping: bool | None
@@ -1018,144 +1018,144 @@ class VariantCallingGATK(bsf.Analysis):
 
     @classmethod
     def get_stage_name_align_lane(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'align_lane'))
 
     @classmethod
     def get_stage_name_process_lane(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'process_lane'))
 
     @classmethod
     def get_stage_name_process_sample(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'process_sample'))
 
     @classmethod
     def get_stage_name_diagnose_sample(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'diagnose_sample'))
 
     @classmethod
     def get_stage_name_merge_cohort(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'merge_cohort'))
 
     @classmethod
     def get_stage_name_process_cohort(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'process_cohort'))
 
     @classmethod
     def get_stage_name_annotate_cohort_snpeff(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'annotate_cohort_snpeff'))
 
     @classmethod
     def get_stage_name_annotate_cohort_vep(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'annotate_cohort_vep'))
 
     @classmethod
     def get_stage_name_split_cohort_snpeff(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'split_cohort_snpeff'))
 
     @classmethod
     def get_stage_name_split_cohort_vep(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'split_cohort_vep'))
 
     @classmethod
     def get_stage_name_summary(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'summary'))
 
     @classmethod
     def get_stage_name_somatic(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'somatic'))
 
     @classmethod
     def get_stage_name_annotate_somatic_snpeff(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'annotate_somatic_snpeff'))
 
     @classmethod
     def get_stage_name_annotate_somatic_vep(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'annotate_somatic_vep'))
 
     @classmethod
     def get_stage_name_split_somatic_snpeff(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'split_somatic_snpeff'))
 
     @classmethod
     def get_stage_name_split_somatic_vep(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'split_somatic_vep'))
@@ -1604,22 +1604,22 @@ class VariantCallingGATK(bsf.Analysis):
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{bsf.Analysis}-wide input directory
+        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{bsf.Analysis}-wide output directory
+        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{bsf.Analysis}-wide project directory,
-            normally under the C{bsf.Analysis}-wide output directory
+        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
+            normally under the C{bsf.analysis.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{bsf.Analysis}-wide genome directory,
-            normally under the C{bsf.Analysis}-wide project directory
+        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
+            normally under the C{bsf.analysis.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param stage_list: Python C{list} of C{bsf.Stage} objects
-        @type stage_list: list[bsf.Stage]
+        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
+        @type stage_list: list[bsf.analysis.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -2204,10 +2204,10 @@ class VariantCallingGATK(bsf.Analysis):
                 - Column headers for CASAVA folders:
                     - Normal/Tumor ProcessedRunFolder:
                         - CASAVA processed run folder name or
-                        - C{bsf.Analysis.input_directory} by default
+                        - C{bsf.analysis.Analysis.input_directory} by default
                     - Normal/Tumor Project:
                         - CASAVA Project name or
-                        - C{bsf.Analysis.project_name} by default
+                        - C{bsf.analysis.Analysis.project_name} by default
                     - Normal/Tumor Sample:
                         - CASAVA Sample name, no default
                 - Column headers for independent samples:
@@ -2219,7 +2219,7 @@ class VariantCallingGATK(bsf.Analysis):
             @return:
             @rtype:
             """
-            # For variant calling, all samples need adding to the bsf.Analysis regardless.
+            # For variant calling, all samples need adding to the bsf.analysis.Analysis regardless.
             for _sample in self.collection.get_all_samples():
                 self.add_sample(sample=_sample)
 
@@ -2380,8 +2380,8 @@ class VariantCallingGATK(bsf.Analysis):
 
             This method merges GVCF file paths from individual process_sample bsf.procedure.Runnable objects or
             an accessory cohort.
-            @param analysis_stage: C{bsf.Analysis} C{bsf.Stage}
-            @type analysis_stage: bsf.Stage
+            @param analysis_stage: C{bsf.analysis.Analysis} C{bsf.analysis.Stage}
+            @type analysis_stage: bsf.analysis.Stage
             @param cohort_runnable_dict: Python C{dict} of Python C{str} key and Python C{list} of
                 C{bsf.procedure.Runnable}, Python C{str} of Python C{unicode} object value data
             @type cohort_runnable_dict: dict[str, list[(bsf.procedure.Runnable | str | unicode, str)]]
@@ -2436,7 +2436,7 @@ class VariantCallingGATK(bsf.Analysis):
                     stage=analysis_stage,
                     runnable=runnable_scatter)
                 # Submit the bsf.process.Executable only, if the final TBI index file does not exist,
-                # but do not override the state set by the bsf.Analysis.set_stage_runnable() method.
+                # but do not override the state set by the bsf.analysis.Analysis.set_stage_runnable() method.
                 if not final_index_exists:
                     executable_scatter.submit = False
                 for cohort_component, cohort_component_prefix in cohort_object_list:
@@ -2529,7 +2529,7 @@ class VariantCallingGATK(bsf.Analysis):
                             stage=analysis_stage,
                             runnable=runnable_gather)
                         # Submit the bsf.process.Executable only, if the final TBI index file does not exist,
-                        # but do not override the state set by the bsf.Analysis.set_stage_runnable() method.
+                        # but do not override the state set by the bsf.analysis.Analysis.set_stage_runnable() method.
                         if not final_index_exists:
                             executable_gather.submit = False
                         # Dependencies on scatter processes are set based on genome tile indices below.
@@ -2658,7 +2658,7 @@ class VariantCallingGATK(bsf.Analysis):
                     stage=stage_process_cohort,
                     runnable=runnable_scatter)
                 # Submit the bsf.process.Executable only, if the final TBI index file does not exist,
-                # but do not override the state set by the bsf.Analysis.set_stage_runnable() method.
+                # but do not override the state set by the bsf.analysis.Analysis.set_stage_runnable() method.
                 if not final_index_exists:
                     executable_scatter.submit = False
                 # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
@@ -2745,7 +2745,7 @@ class VariantCallingGATK(bsf.Analysis):
                             stage=stage_process_cohort,
                             runnable=runnable_gather)
                         # Submit the bsf.process.Executable only, if the final TBI index file does not exist,
-                        # but do not override the state set by the bsf.Analysis.set_stage_runnable() method.
+                        # but do not override the state set by the bsf.analysis.Analysis.set_stage_runnable() method.
                         if not final_index_exists:
                             executable_gather.submit = False
                         # Dependencies on scatter processes are set based on genome tile indices below.
@@ -2876,7 +2876,7 @@ class VariantCallingGATK(bsf.Analysis):
                     stage=stage_somatic,
                     runnable=runnable_scatter)
                 # Submit the bsf.process.Executable only, if the final TBI index file does not exist,
-                # but do not override the state set by the bsf.Analysis.set_stage_runnable() method.
+                # but do not override the state set by the bsf.analysis.Analysis.set_stage_runnable() method.
                 if not final_index_exists:
                     executable_scatter.submit = False
                 # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
@@ -2992,7 +2992,7 @@ class VariantCallingGATK(bsf.Analysis):
                             stage=stage_somatic,
                             runnable=runnable_gather)
                         # Submit the bsf.process.Executable only, if the final TBI index file does not exist,
-                        # but do not override the state set by the bsf.Analysis.set_stage_runnable() method.
+                        # but do not override the state set by the bsf.analysis.Analysis.set_stage_runnable() method.
                         if not final_index_exists:
                             executable_gather.submit = False
                         # Dependencies on scatter processes are set based on genome tile indices below.
@@ -4482,7 +4482,7 @@ class VariantCallingGATK(bsf.Analysis):
 
             # Finally, record the process_sample bsf.procedure.Runnable for the merge_cohort stage under the Sample's
             # 'Cohort Name' annotation, or if it does not exist, under the cohort name defined in the
-            # bsf.Analysis in the configuration file.
+            # bsf.analysis.Analysis in the configuration file.
 
             if 'Cohort Name' in sample.annotation_dict:
                 cohort_key = sample.annotation_dict['Cohort Name'][0]
@@ -5482,7 +5482,8 @@ class VariantCallingGATK(bsf.Analysis):
             @return:
             @rtype:
             """
-            # Create a result directory as concatenation of bsf.Analysis.genome_version and bsf.Analysis.prefix.
+            # Create a result directory as concatenation of bsf.analysis.Analysis.genome_version and
+            # bsf.analysis.Analysis.prefix.
 
             directory_results = report_create_directory(
                 path=os.path.join(self.project_directory, '_'.join((self.genome_version, self.prefix))))

@@ -29,8 +29,6 @@ restarting of the C{bsf.procedure.ConsecutiveRunnable} object processing.
 #
 import os
 
-import bsf.process
-
 
 def run(runnable):
     """Run the the C{bsf.procedure.ConsecutiveRunnable}.

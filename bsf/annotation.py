@@ -636,7 +636,7 @@ class AnnotationSheet(object):
         @param name: Name
         @type name: str
         @return: C{bsf.annotation.AnnotationSheet}
-        @rtype: bsf.annotation.AnnotationSheet
+        @rtype: AnnotationSheet
         """
         annotation_sheet = cls(file_path=file_path, file_type=file_type, name=name)
 

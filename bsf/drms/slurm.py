@@ -606,7 +606,7 @@ class ProcessSLURMAdaptor(bsf.database.DatabaseAdaptor):
     def select_all_by_job_name(self, name):
         """Select all C{bsf.drms.slurm.ProcessSLURM} objects by I{job_name}.
 
-        The same C{bsf.process.Executable} can be submitted more than once into the C{bsf.Stage}.
+        The same C{bsf.process.Executable} can be submitted more than once into the C{bsf.analysis.Stage}.
 
         @param name: Job name
         @type name: str
@@ -729,13 +729,13 @@ def _recalculate_memory(memory):
 
 
 def submit(stage, debug=0):
-    """Submit each C{bsf.process.Executable} of a C{bsf.Stage}.
+    """Submit each C{bsf.process.Executable} of a C{bsf.analysis.Stage}.
 
     Submits each C{bsf.process.Executable} into the
     Simple Linux Utility for Resource Management (SLURM)
     Distributed Resource Management System (DRMS).
-    @param stage: C{bsf.Stage}
-    @type stage: bsf.Stage
+    @param stage: C{bsf.analysis.Stage}
+    @type stage: bsf.analysis.Stage
     @param debug: Debug level
     @type debug: int
     @return:
@@ -969,10 +969,10 @@ def submit(stage, debug=0):
 
 
 def check_state(stage, debug=0):
-    """Check the state of each C{bsf.process.Executable} of a C{bsf.Stage}.
+    """Check the state of each C{bsf.process.Executable} of a C{bsf.analysis.Stage}.
 
-    @param stage: C{bsf.Stage}
-    @type stage: bsf.Stage
+    @param stage: C{bsf.analysis.Stage}
+    @type stage: bsf.analysis.Stage
     @param debug: Debug level
     @type debug: int
     @return:

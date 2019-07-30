@@ -33,6 +33,7 @@ import pickle
 import shutil
 
 import bsf.connector
+import bsf.process
 import bsf.standards
 
 # Set the environment consistently.

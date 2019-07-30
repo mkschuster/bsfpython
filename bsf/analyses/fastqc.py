@@ -29,11 +29,12 @@ import os
 import sys
 import urllib.parse
 
-import bsf
+import bsf.analysis
 import bsf.annotation
 import bsf.executables
 import bsf.ngs
 import bsf.procedure
+import bsf.process
 
 
 class FilePathFastQCReadGroup(bsf.procedure.FilePath):
@@ -66,13 +67,13 @@ class FilePathFastQCReadGroup(bsf.procedure.FilePath):
         return
 
 
-class FastQC(bsf.Analysis):
-    """BSF FastQC-specific Quality Assessment C{bsf.Analysis} sub-class.
+class FastQC(bsf.analysis.Analysis):
+    """BSF FastQC-specific Quality Assessment C{bsf.analysis.Analysis} sub-class.
 
     Attributes:
-    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     """
 
@@ -81,9 +82,9 @@ class FastQC(bsf.Analysis):
 
     @classmethod
     def get_stage_name_read_group(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'read_group'))
@@ -110,6 +111,7 @@ class FastQC(bsf.Analysis):
         @return: C{FilePathFastQCReadGroup} object
         @rtype: FilePathFastQCReadGroup
         """
+
         def get_file_prefix(_file_path):
             """Private function to isolate a file prefix from '*.bam', '*.fastq', '*.fastq.gz', ... file paths.
 
@@ -151,22 +153,22 @@ class FastQC(bsf.Analysis):
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{bsf.Analysis}-wide input directory
+        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{bsf.Analysis}-wide output directory
+        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{bsf.Analysis}-wide project directory,
-            normally under the C{bsf.Analysis}-wide output directory
+        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
+            normally under the C{bsf.analysis.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{bsf.Analysis}-wide genome directory,
-            normally under the C{bsf.Analysis}-wide project directory
+        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
+            normally under the C{bsf.analysis.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param stage_list: Python C{list} of BSF C{bsf.Stage} objects
-        @type stage_list: list[bsf.Stage]
+        @param stage_list: Python C{list} of BSF C{bsf.analysis.Stage} objects
+        @type stage_list: list[bsf.analysis.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -213,7 +215,7 @@ class FastQC(bsf.Analysis):
         return
 
     def run(self):
-        """Run a C{bsf.analyses.fastqc.FastQC} C{bsf.Analysis}.
+        """Run a C{bsf.analyses.fastqc.FastQC} C{bsf.analysis.Analysis}.
 
         @return:
         @rtype:
@@ -226,8 +228,8 @@ class FastQC(bsf.Analysis):
             """Private function to read a C{bsf.annotation.AnnotationSheet} CSV file specifying comparisons from disk.
 
             This implementation just adds all C{bsf.ngs.Sample} objects from the
-            C{bsf.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
-            C{bsf.Analysis.sample_list} instance variable.
+            C{bsf.analysis.Analysis.collection} instance variable (i.e. C{bsf.ngs.Collection}) to the
+            C{bsf.analysis.Analysis.sample_list} instance variable.
             @return:
             @rtype:
             """
@@ -279,13 +281,13 @@ class FastQC(bsf.Analysis):
                     # Create a new RunnableStepMakeDirectory in preparation of the FastQC program.
 
                     runnable_step = bsf.process.RunnableStepMakeDirectory(
-                            name='mkdir',
-                            directory_path=file_path_read_group.output_directory)
+                        name='mkdir',
+                        directory_path=file_path_read_group.output_directory)
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
                     runnable_step = bsf.process.RunnableStep(
-                            name=prefix_read_group,
-                            program='fastqc')
+                        name=prefix_read_group,
+                        program='fastqc')
                     runnable_read_group.add_runnable_step(runnable_step=runnable_step)
 
                     runnable_step.add_switch_long(key='quiet')

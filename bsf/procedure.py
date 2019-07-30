@@ -194,11 +194,11 @@ class Runnable(object):
         @param file_path: File path to a Python C{pickle.Pickler} file
         @type file_path: str | unicode
         @return: C{bsf.procedure.Runnable}
-        @rtype: bsf.procedure.Runnable
+        @rtype: Runnable
         """
         with open(file=file_path, mode='rb') as input_file:
             runnable = pickle.Unpickler(input_file).load()
-            """ @type runnable: bsf.procedure.Runnable """
+            """ @type runnable: Runnable """
 
         # Did the Unpickler really return a Runnable object?
         assert isinstance(runnable, Runnable)

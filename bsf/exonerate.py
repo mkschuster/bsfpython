@@ -67,7 +67,7 @@ class VULGAR(object):
         @param vulgar_str: VULGAR string
         @type vulgar_str: str
         @return: C{bsf.exonerate.VULGAR} object
-        @rtype: bsf.exonerate.VULGAR
+        @rtype: VULGAR
         """
 
         self = cls()

@@ -60,8 +60,8 @@ The Python 'in' comparison operator uses the memory address in lack of a specifi
 it may make sense to implement such a more specific method.
 See method bsf.ngs.Collection._process_row_dict
 
-The bsf.Analysis.samples instance variable also needed changing from a dict to a list. A similar
-check avoiding duplicates is in place in the bsf.Analysis.add_sample method.
+The bsf.analysis.Analysis.samples instance variable also needed changing from a dict to a list. A similar
+check avoiding duplicates is in place in the bsf.analysis.Analysis.add_sample method.
 
 BSF Sample objects can now have the same name and be treated as replicates via grouping.
 
@@ -98,7 +98,7 @@ individually or as a pool and a subsequent comparison stage.
     for ChIP-Seq they should be aligned in pools.
 
     To get around this, it would be good to have a SampleGroups object that gets pushed onto the
-    bsf.Analysis.sample list. The SampleGroups object could then provide methods to retrieve
+    bsf.analysis.Analysis.sample list. The SampleGroups object could then provide methods to retrieve
     BSF PairedReads objects as list (i.e. pooled) or separately.
 
 
@@ -113,17 +113,17 @@ individually or as a pool and a subsequent comparison stage.
     Project, Sample and PairedReads.
 
 
-bsf.Analysis
+bsf.analysis.Analysis
 
-The bsf.Analysis class represents a high-level analysis of NGS data.
+The bsf.analysis.Analysis class represents a high-level analysis of NGS data.
 
     Maybe, some sub-classes could be defined, although this may lead to multiple inheritance
     complexities.
 
-        - bsf.Analysis.Genome
+        - bsf.analysis.Analysis.Genome
           For analyses depending on a genome assembly, defining an analysis.genome_directory
 
-        - bsf.Analysis.Comparison
+        - bsf.analysis.Analysis.Comparison
           For analyses that involve comparisons of BSF Sample objects.
 
 The bsf.process.Executable class represents an executable program, its options and arguments.
@@ -177,7 +177,7 @@ bsf
   - from bsf.ngs import Collection (no further dependency)
   - from bsf.argument import * (no further dependency)
 
-bsf.Analysis
+bsf.analysis.Analysis
   - from bsf import Analysis, Configuration, Default, Defaults, Stage, Executable (no further dependency)
   - from bsf.ngs import Collection, ProcessedRunFolder, Sample, SampleAnnotationSheet (no further dependency)
   - from bsf.executables import Bowtie2, Macs14, Macs2Callpeak, Cuffdiff, Cufflinks, Cuffmerge, TopHat, FastQC

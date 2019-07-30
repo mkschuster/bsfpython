@@ -27,7 +27,7 @@ A package of classes and methods supporting analyses to archive and restore Illu
 #
 import os
 
-import bsf
+import bsf.analysis
 import bsf.connector
 import bsf.illumina
 import bsf.procedure
@@ -35,14 +35,14 @@ import bsf.process
 import bsf.standards
 
 
-class IlluminaRunFolderArchive(bsf.Analysis):
+class IlluminaRunFolderArchive(bsf.analysis.Analysis):
     """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} class represents the logic to archive
     an Illumina Run Folder in a format suitable for magnetic tape libraries.
 
     Attributes:
-    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @cvar compress_archive_files: Compress archive files with GNU Zip
     @type compress_archive_files: bool
@@ -76,45 +76,45 @@ class IlluminaRunFolderArchive(bsf.Analysis):
 
     @classmethod
     def get_stage_name_pre_process(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'pre_process'))
 
     @classmethod
     def get_stage_name_base_calls(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'base_calls'))
 
     @classmethod
     def get_stage_name_intensities(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'intensities'))
 
     @classmethod
     def get_stage_name_archive_folder(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'folder'))
 
     @classmethod
     def get_stage_name_post_process(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'post_process'))
@@ -200,7 +200,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
             irf_mode_file=None,
             sav_mode_file=None,
             force=None):
-        """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.Analysis}.
+        """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.analysis.Analysis}.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -208,22 +208,22 @@ class IlluminaRunFolderArchive(bsf.Analysis):
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{bsf.Analysis}-wide input directory
+        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{bsf.Analysis}-wide output directory
+        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{bsf.Analysis}-wide project directory,
-            normally under the C{bsf.Analysis}-wide output directory
+        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
+            normally under the C{bsf.analysis.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{bsf.Analysis}-wide genome directory,
-            normally under the C{bsf.Analysis}-wide project directory
+        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
+            normally under the C{bsf.analysis.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param stage_list: Python C{list} of C{bsf.Stage} objects
-        @type stage_list: list[bsf.Stage]
+        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
+        @type stage_list: list[bsf.analysis.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -280,7 +280,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.Analysis}
+        """Set instance variables of a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} object
         via a section of a C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
@@ -337,7 +337,7 @@ class IlluminaRunFolderArchive(bsf.Analysis):
         return
 
     def run(self):
-        """Run a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.Analysis}.
+        """Run a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.analysis.Analysis}.
 
         Archive an I{Illumina Run Folder} in a format suitable for magnetic tape libraries.
 
@@ -816,14 +816,14 @@ class FilePathIlluminaRunFolderRestore(bsf.procedure.FilePath):
         return
 
 
-class IlluminaRunFolderRestore(bsf.Analysis):
+class IlluminaRunFolderRestore(bsf.analysis.Analysis):
     """The C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} class represents the logic to restore an
     Illumina Run Folder from a format suitable for magnetic tape libraries.
 
     Attributes:
-    @cvar name: C{bsf.Analysis.name} that should be overridden by sub-classes
+    @cvar name: C{bsf.analysis.Analysis.name} that should be overridden by sub-classes
     @type name: str
-    @cvar prefix: C{bsf.Analysis.prefix} that should be overridden by sub-classes
+    @cvar prefix: C{bsf.analysis.Analysis.prefix} that should be overridden by sub-classes
     @type prefix: str
     @cvar maximum_lane_number: Maximum number of lanes
     @type maximum_lane_number: int
@@ -844,27 +844,27 @@ class IlluminaRunFolderRestore(bsf.Analysis):
 
     @classmethod
     def get_stage_name_extract_archive(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'extract_archive'))
 
     @classmethod
     def get_stage_name_compress_base_calls(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'compress_base_calls'))
 
     @classmethod
     def get_stage_name_compress_logs(cls):
-        """Get a particular C{bsf.Stage.name}.
+        """Get a particular C{bsf.analysis.Stage.name}.
 
-        @return: C{bsf.Stage.name}
+        @return: C{bsf.analysis.Stage.name}
         @rtype: str
         """
         return '_'.join((cls.prefix, 'compress_logs'))
@@ -924,7 +924,7 @@ class IlluminaRunFolderRestore(bsf.Analysis):
             illumina_directory=None,
             extract_intensities=False,
             force=False):
-        """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} C{bsf.Analysis}.
+        """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} C{bsf.analysis.Analysis}.
 
         @param configuration: C{bsf.standards.Configuration}
         @type configuration: bsf.standards.Configuration
@@ -932,22 +932,22 @@ class IlluminaRunFolderRestore(bsf.Analysis):
         @type project_name: str
         @param genome_version: Genome version
         @type genome_version: str
-        @param input_directory: C{bsf.Analysis}-wide input directory
+        @param input_directory: C{bsf.analysis.Analysis}-wide input directory
         @type input_directory: str
-        @param output_directory: C{bsf.Analysis}-wide output directory
+        @param output_directory: C{bsf.analysis.Analysis}-wide output directory
         @type output_directory: str
-        @param project_directory: C{bsf.Analysis}-wide project directory,
-            normally under the C{bsf.Analysis}-wide output directory
+        @param project_directory: C{bsf.analysis.Analysis}-wide project directory,
+            normally under the C{bsf.analysis.Analysis}-wide output directory
         @type project_directory: str
-        @param genome_directory: C{bsf.Analysis}-wide genome directory,
-            normally under the C{bsf.Analysis}-wide project directory
+        @param genome_directory: C{bsf.analysis.Analysis}-wide genome directory,
+            normally under the C{bsf.analysis.Analysis}-wide project directory
         @type genome_directory: str
         @param e_mail: e-Mail address for a UCSC Genome Browser Track Hub
         @type e_mail: str
         @param debug: Integer debugging level
         @type debug: int
-        @param stage_list: Python C{list} of C{bsf.Stage} objects
-        @type stage_list: list[bsf.Stage]
+        @param stage_list: Python C{list} of C{bsf.analysis.Stage} objects
+        @type stage_list: list[bsf.analysis.Stage]
         @param collection: C{bsf.ngs.Collection}
         @type collection: bsf.ngs.Collection
         @param sample_list: Python C{list} of C{bsf.ngs.Sample} objects
@@ -987,7 +987,7 @@ class IlluminaRunFolderRestore(bsf.Analysis):
         return
 
     def set_configuration(self, configuration, section):
-        """Set instance variables of a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} C{bsf.Analysis}
+        """Set instance variables of a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} object
         via a section of a C{bsf.standards.Configuration} object.
 
         Instance variables without a configuration option remain unchanged.
@@ -1025,7 +1025,7 @@ class IlluminaRunFolderRestore(bsf.Analysis):
         return
 
     def run(self):
-        """Run this C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} C{bsf.Analysis}.
+        """Run this C{bsf.analyses.illumina_run_folder.IlluminaRunFolderRestore} C{bsf.analysis.Analysis}.
 
         Restore an Illumina Run Folder from a format suitable for magnetic tape libraries.
             1. Extract the IRF_Folder.tar file.

@@ -79,7 +79,7 @@ class Adaptors(object):
         @param file_path: File path
         @type file_path: str | unicode
         @return: C{bsf.illumina.Adaptors}
-        @rtype: bsf.illumina.Adaptors
+        @rtype: Adaptors
         """
         annotation_sheet = bsf.annotation.AnnotationSheet.from_file_path(
             file_path=file_path,
@@ -321,7 +321,7 @@ class RunInformation(object):
         @param file_path: File path
         @type file_path: str | unicode
         @return: C{bsf.illumina.RunInformation}
-        @rtype: bsf.illumina.RunInformation
+        @rtype: RunInformation
         """
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
@@ -685,7 +685,7 @@ class RunParameters(object):
         @param file_path: File path
         @type file_path: str | unicode | None
         @return: C{bsf.illumina.RunParameters} object
-        @rtype: bsf.illumina.RunParameters
+        @rtype: RunParameters
         """
         file_path = os.path.normpath(file_path)
 
@@ -920,7 +920,7 @@ class XMLConfiguration(object):
         @param file_path: File path
         @type file_path: str | unicode
         @return: C{bsf.illumina.XMLConfiguration} object
-        @rtype: bsf.illumina.XMLConfiguration
+        @rtype: XMLConfiguration
         """
         file_path = os.path.normpath(file_path)
 
@@ -1122,7 +1122,7 @@ class RunFolder(object):
         @param file_path: File path
         @type file_path: str | unicode
         @return: C{bsf.illumina.RunFolder}
-        @rtype: bsf.illumina.RunFolder
+        @rtype: RunFolder
         """
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)

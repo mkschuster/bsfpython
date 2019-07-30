@@ -425,14 +425,14 @@ class ProcessSGEAdaptor(bsf.database.DatabaseAdaptor):
 
 
 def submit(stage, debug=0):
-    """Submit each C{bsf.process.Executable} of a C{bsf.Stage}.
+    """Submit each C{bsf.process.Executable} of a C{bsf.analysis.Stage}.
 
     Submits each C{bsf.process.Executable} into the
     Son of Grid Engine (SGE)
     Distributed Resource Management System (DRMS).
 
-    @param stage: C{bsf.Stage}
-    @type stage: bsf.Stage
+    @param stage: C{bsf.analysis.Stage}
+    @type stage: bsf.analysis.Stage
     @param debug: Debug level
     @type debug: int
     @return:
@@ -630,10 +630,10 @@ def submit(stage, debug=0):
 
 
 def check_state(stage, debug=0):
-    """Check the state of each C{bsf.process.Executable} of a C{bsf.Stage}.
+    """Check the state of each C{bsf.process.Executable} of a C{bsf.analysis.Stage}.
 
-    @param stage: C{bsf.Stage}
-    @type stage: bsf.Stage
+    @param stage: C{bsf.analysis.Stage}
+    @type stage: bsf.analysis.Stage
     @param debug: Debug level
     @type debug: int
     @return:

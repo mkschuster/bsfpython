@@ -213,7 +213,7 @@ class Reads(NextGenerationBase):
         @param file_type: File type
         @type file_type: str
         @return: C{bsf.ngs.Reads} object
-        @rtype: bsf.ngs.Reads
+        @rtype: Reads
         """
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
@@ -810,7 +810,7 @@ class Sample(NextGenerationBase):
         @param file_type: File type
         @type file_type: str
         @return: C{bsf.ngs.Sample}
-        @rtype: bsf.ngs.Sample
+        @rtype: Sample
         """
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
@@ -849,7 +849,7 @@ class Sample(NextGenerationBase):
         @param sample2: C{bsf.ngs.Sample}
         @type sample2: bsf.ngs.Sample
         @return: C{bsf.ngs.Sample}
-        @rtype: bsf.ngs.Sample
+        @rtype: Sample
         """
         assert isinstance(sample1, Sample)
         assert isinstance(sample2, Sample)
@@ -1127,7 +1127,7 @@ class Project(NextGenerationBase):
         @param file_type: File type
         @type file_type: str
         @return: C{bsf.ngs.Project}
-        @rtype: bsf.ngs.Project
+        @rtype: Project
         """
         file_path = os.path.normpath(file_path)
         file_name = os.path.basename(file_path)
@@ -1349,7 +1349,7 @@ class ProcessedRunFolder(NextGenerationBase):
         @param file_type: File type
         @type file_type: str | None
         @return: C{bsf.ngs.ProcessedRunFolder}
-        @rtype: bsf.ngs.ProcessedRunFolder
+        @rtype: ProcessedRunFolder
         """
         # Try to determine the file_type if not explicitly specified.
 
@@ -1577,10 +1577,9 @@ class Collection(NextGenerationBase):
         @param debug: Debug level
         @type debug: int
         @return: C{bsf.ngs.Collection}
-        @rtype: bsf.ngs.Collection
+        @rtype: Collection
         """
         sas = SampleAnnotationSheet.from_file_path(file_path=sas_path)
-        """ @type sas: bsf.ngs.SampleAnnotationSheet """
 
         return cls.from_sas(
             file_path=file_path,
@@ -1628,7 +1627,7 @@ class Collection(NextGenerationBase):
         @param debug: Debug level
         @type debug: int
         @return: C{bsf.ngs.Collection}
-        @rtype: bsf.ngs.Collection
+        @rtype: Collection
         """
         current_prf = None
         """ @type current_prf: bsf.ngs.ProcessedRunFolder | None """
@@ -3022,7 +3021,7 @@ class SampleGroup(object):
 
 class SampleAnnotationSheet(bsf.annotation.AnnotationSheet):
     """The C{bsf.ngs.SampleAnnotationSheet} class represents a Comma-Separated Value (CSV) table of sample information
-    after running the C{bsf.analyses.illumina_to_bam_tools.IlluminaToBamTools.BamIndexDecoder} C{bsf.Analysis}.
+    after running the C{bsf.analyses.illumina_to_bam_tools.IlluminaToBamTools.BamIndexDecoder} C{bsf.analysis.Analysis}.
 
     Attributes:
     """

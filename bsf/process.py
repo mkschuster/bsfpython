@@ -675,11 +675,11 @@ class Executable(Command):
     @ivar stderr: Standard error I{STDERR} C{bsf.connector.Connector}
     @type stderr: bsf.connector.Connector | None
     @ivar dependencies: Python C{list} of C{bsf.process.Executable.name} properties in the
-        context of C{bsf.Stage} dependencies
+        context of C{bsf.analysis.Stage} dependencies
     @type dependencies: list[bsf.process.Executable.name]
     @ivar hold: Hold on job scheduling
     @type hold: str | None
-    @ivar submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+    @ivar submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
     @type submit: bool
     @ivar maximum_attempts: Maximum number of attempts to run this C{bsf.process.Executable}
     @type maximum_attempts: int
@@ -831,11 +831,11 @@ class Executable(Command):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param maximum_attempts: Maximum number of attempts to run this C{bsf.process.Executable}
         @type maximum_attempts: int
@@ -1172,11 +1172,11 @@ class RunnableStep(Executable):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
@@ -1302,11 +1302,11 @@ class RunnableStepChangeMode(RunnableStep):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
@@ -1497,11 +1497,11 @@ class RunnableStepCopy(RunnableStep):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
@@ -1610,11 +1610,11 @@ class RunnableStepJava(RunnableStep):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
@@ -1734,11 +1734,11 @@ class RunnableStepPicard(RunnableStepJava):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
@@ -1856,11 +1856,11 @@ class RunnableStepLink(RunnableStep):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
@@ -1969,11 +1969,11 @@ class RunnableStepMakeDirectory(RunnableStep):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
@@ -2079,11 +2079,11 @@ class RunnableStepMakeNamedPipe(RunnableStep):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
@@ -2192,11 +2192,11 @@ class RunnableStepMove(RunnableStep):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
@@ -2301,11 +2301,11 @@ class RunnableStepSleep(RunnableStep):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None
@@ -2410,11 +2410,11 @@ class RunnableStepSetEnvironment(RunnableStep):
         @param stderr: Standard error I{STDERR} C{bsf.connector.Connector}
         @type stderr: bsf.connector.Connector | None
         @param dependencies: Python C{list} of C{bsf.process.Executable.name}
-            properties in the context of C{bsf.Stage} dependencies
+            properties in the context of C{bsf.analysis.Stage} dependencies
         @type dependencies: list[bsf.process.Executable.name] | None
         @param hold: Hold on job scheduling
         @type hold: str | None
-        @param submit: Submit the C{bsf.process.Executable} during C{bsf.Stage.submit}
+        @param submit: Submit the C{bsf.process.Executable} during C{bsf.analysis.Stage.submit}
         @type submit: bool
         @param process_identifier: Process identifier
         @type process_identifier: str | None

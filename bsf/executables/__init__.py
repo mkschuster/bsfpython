@@ -26,7 +26,6 @@ A package of classes and methods supporting executable programs and scripts.
 #  along with BSF Python.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import bsf
 import bsf.process
 
 
@@ -42,8 +41,8 @@ class BWA(bsf.process.Executable):
 
         @param name: Name
         @type name: str
-        @param analysis: C{bsf.Analysis}
-        @type analysis: bsf.Analysis
+        @param analysis: C{bsf.analysis.Analysis}
+        @type analysis: bsf.analysis.Analysis
         @return:
         @rtype:
         """
@@ -74,8 +73,8 @@ class TopHat(bsf.process.Executable):
 
         @param name: Name
         @type name: str
-        @param analysis: C{bsf.Analysis}
-        @type analysis: bsf.Analysis
+        @param analysis: C{bsf.analysis.Analysis}
+        @type analysis: bsf.analysis.Analysis
         @return:
         @rtype:
         """

@@ -29,10 +29,12 @@ from __future__ import print_function
 
 import os
 
-import bsf
 import bsf.analyses.aligner
+import bsf.analysis
 import bsf.connector
 import bsf.procedure
+import bsf.process
+import bsf.standards
 
 
 class Bowtie1(bsf.analyses.aligner.Aligner):
@@ -48,8 +50,8 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
 
         @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
         @type runnable_align: bsf.procedure.ConcurrentRunnable
-        @param stage_align: C{bsf.Stage}
-        @type stage_align: bsf.Stage
+        @param stage_align: C{bsf.analysis.Stage}
+        @type stage_align: bsf.analysis.Stage
         @param file_path_1: FASTQ file path 1
         @type file_path_1: str | unicode | None
         @param file_path_2: FASTQ file path 2
@@ -60,10 +62,10 @@ class Bowtie1(bsf.analyses.aligner.Aligner):
         file_path_align = bsf.analyses.aligner.FilePathAlign(prefix=runnable_align.name)
 
         runnable_step = bsf.process.RunnableStep(
-                name='bowtie1',
-                program='bowtie',
-                stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+            name='bowtie1',
+            program='bowtie',
+            stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+            stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
         runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         runnable_step.arguments.append(self.genome_index)
@@ -128,8 +130,8 @@ class Bowtie2(bsf.analyses.aligner.Aligner):
 
         @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
         @type runnable_align: bsf.procedure.ConcurrentRunnable
-        @param stage_align: C{bsf.Stage}
-        @type stage_align: bsf.Stage
+        @param stage_align: C{bsf.analysis.Stage}
+        @type stage_align: bsf.analysis.Stage
         @param file_path_1: FASTQ file path 1
         @type file_path_1: str | unicode | None
         @param file_path_2: FASTQ file path 2
@@ -140,10 +142,10 @@ class Bowtie2(bsf.analyses.aligner.Aligner):
         file_path_align = bsf.analyses.aligner.FilePathAlign(prefix=runnable_align.name)
 
         runnable_step = bsf.process.RunnableStep(
-                name='bowtie2',
-                program='bowtie2',
-                stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+            name='bowtie2',
+            program='bowtie2',
+            stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+            stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
         runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         runnable_step.add_option_short(key='S', value=file_path_align.aligned_sam)

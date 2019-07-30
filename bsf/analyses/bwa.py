@@ -30,10 +30,11 @@ from __future__ import print_function
 
 import os
 
-import bsf
 import bsf.analyses.aligner
+import bsf.analysis
 import bsf.connector
 import bsf.process
+import bsf.standards
 
 
 class MaximalExactMatches(bsf.analyses.aligner.Aligner):
@@ -49,8 +50,8 @@ class MaximalExactMatches(bsf.analyses.aligner.Aligner):
 
         @param runnable_align: C{bsf.procedure.ConcurrentRunnable}
         @type runnable_align: bsf.procedure.ConcurrentRunnable
-        @param stage_align: C{bsf.Stage}
-        @type stage_align: bsf.Stage
+        @param stage_align: C{bsf.analysis.Stage}
+        @type stage_align: bsf.analysis.Stage
         @param file_path_1: FASTQ file path 1
         @type file_path_1: str | unicode | None
         @param file_path_2: FASTQ file path 2
@@ -61,11 +62,11 @@ class MaximalExactMatches(bsf.analyses.aligner.Aligner):
         file_path_align = bsf.analyses.aligner.FilePathAlign(prefix=runnable_align.name)
 
         runnable_step = bsf.process.RunnableStep(
-                name='bwa_mem',
-                program='bwa',
-                sub_command=bsf.process.Command(name='mem', program='mem'),
-                stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
-                stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
+            name='bwa_mem',
+            program='bwa',
+            sub_command=bsf.process.Command(name='mem', program='mem'),
+            stdout=bsf.connector.ConnectorFile(file_path=file_path_align.stdout_txt, file_mode='wt'),
+            stderr=bsf.connector.ConnectorFile(file_path=file_path_align.stderr_txt, file_mode='wt'))
         runnable_align.add_runnable_step(runnable_step=runnable_step)
 
         sub_command = runnable_step.sub_command
