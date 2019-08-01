@@ -3751,12 +3751,19 @@ class VariantCallingGATK(bsf.analysis.Analysis):
                 # - Picard SamToFastq
                 # - BWA MEM
 
-                bwa = bsf.executables.BWA(name='variant_calling_bwa_' + paired_reads_name, analysis=self)
-                # Instead of adding the bsf.executables.BWA bsf.process.Executable to the Stage,
+                runnable_step = bsf.process.RunnableStep(
+                    name='align_lane_bwa',
+                    program='bwa',
+                    sub_command=bsf.process.Command(program='mem'))
+                # Instead of adding the bsf.process.RunnableStep to the bsf.procedure.Runnable,
                 # it gets serialised into the pickler_file.
-                # stage_bwa.add_executable(executable=bwa)
 
-                bwa_mem = bwa.sub_command
+                # Read configuration sections
+                # [bsf.analyses.variant_calling.VariantCallingGATK.align_lane_bwa]
+                # [bsf.analyses.variant_calling.VariantCallingGATK.align_lane_bwa.mem]
+                self.set_runnable_step_configuration(runnable_step=runnable_step)
+
+                bwa_mem = runnable_step.sub_command
 
                 # Set BWA mem options.
 
@@ -3819,7 +3826,7 @@ class VariantCallingGATK(bsf.analysis.Analysis):
                     'replicate_key': paired_reads_name,
                     'classpath_gatk': self.classpath_gatk,
                     'classpath_picard': self.classpath_picard,
-                    'bwa_executable': bwa,
+                    'runnable_step': runnable_step,
                 }
 
                 pickler_path = os.path.join(
@@ -3831,7 +3838,7 @@ class VariantCallingGATK(bsf.analysis.Analysis):
 
                 # Create a bsf_run_bwa.py job to run the pickled object.
 
-                run_bwa = stage_align_lane.add_executable(
+                executable_align_lane = stage_align_lane.add_executable(
                     executable=bsf.process.Executable(
                         name='_'.join((stage_align_lane.name, paired_reads_name)),
                         program='bsf_run_bwa.py'))
@@ -3839,18 +3846,16 @@ class VariantCallingGATK(bsf.analysis.Analysis):
                 # Only submit this bsf.process.Executable if the final result file does not exist.
                 if (os.path.exists(os.path.join(self.genome_directory, file_path_alignment.aligned_md5)) and
                         os.path.getsize(os.path.join(self.genome_directory, file_path_alignment.aligned_md5))):
-                    run_bwa.submit = False
+                    executable_align_lane.submit = False
                 # Check also for existence of a new-style bsf.procedure.Runnable status file.
                 if os.path.exists(os.path.join(
                         stage_align_lane.working_directory,
                         '_'.join((stage_align_lane.name, paired_reads_name, 'completed.txt')))):
-                    run_bwa.submit = False
+                    executable_align_lane.submit = False
 
-                    # Set run_bwa options.
-
-                self.set_command_configuration(command=run_bwa)
-                run_bwa.add_option_long(key='pickler_path', value=pickler_path)
-                run_bwa.add_option_long(key='debug', value=str(self.debug))
+                # Set executable_align_lane options.
+                executable_align_lane.add_option_long(key='pickler_path', value=pickler_path)
+                executable_align_lane.add_option_long(key='debug', value=str(self.debug))
 
                 ###################################
                 # Step 2: Process per read group. #
@@ -3884,7 +3889,7 @@ class VariantCallingGATK(bsf.analysis.Analysis):
                     stage=stage_process_lane,
                     runnable=runnable_process_lane)
                 # Set dependencies on preceding bsf.procedure.Runnable.name or bsf.process.Executable.name objects.
-                executable_process_lane.dependencies.append(run_bwa.name)
+                executable_process_lane.dependencies.append(executable_align_lane.name)
                 # Set dependencies for succeeding bsf.procedure.Runnable or bsf.process.Executable objects.
                 runnable_process_read_group_list.append(runnable_process_lane)
 

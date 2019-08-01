@@ -1385,28 +1385,27 @@ class Tuxedo(bsf.analysis.Analysis):
                 #
                 # Create a new Tophat bsf.process.RunnableStep.
 
-                # runnable_step = bsf.process.RunnableStep(
-                #     name='tophat2',
-                #     program='tophat2')
+                runnable_step = bsf.process.RunnableStep(
+                    name='tophat2',
+                    program='tophat2')
                 # runnable_run_tophat.add_runnable_step(runnable_step=runnable_step)
 
-                tophat = bsf.executables.TopHat(
-                    name='_'.join(('rnaseq_tophat', sample.name)),
-                    analysis=self)
+                # Read configuration section [bsf.analyses.rnaseq.Tuxedo.tophat2]
+                self.set_runnable_step_configuration(runnable_step=runnable_step)
 
                 # Set tophat options.
 
-                tophat.add_option_long(
+                runnable_step.add_option_long(
                     key='GTF',
                     value=self.transcriptome_gtf_path)
                 if self.transcriptome_index_path:
-                    tophat.add_option_long(
+                    runnable_step.add_option_long(
                         key='transcriptome-index',
                         value=self.transcriptome_index_path)
-                tophat.add_option_long(
+                runnable_step.add_option_long(
                     key='output-dir',
                     value=file_path_run_tophat.output_directory)
-                tophat.add_option_long(
+                runnable_step.add_option_long(
                     key='num-threads',
                     value=str(stage_run_tophat.threads))
                 # TODO: These really are properties of the Reads, PairedReads or Sample objects
@@ -1416,27 +1415,27 @@ class Tuxedo(bsf.analysis.Analysis):
                     insert_size = config_parser.getint(section=config_section, option='insert_size')
                     read_length = config_parser.getint(section=config_section, option='read_length')
                     mate_inner_dist = insert_size - 2 * read_length
-                    tophat.add_option_long(
+                    runnable_step.add_option_long(
                         key='mate-inner-dist',
                         value=str(mate_inner_dist))
                 # TODO: Move the ConfigParser code.
                 if config_parser.has_option(section=config_section, option='mate-std-dev'):
-                    tophat.add_option_long(
+                    runnable_step.add_option_long(
                         key='mate-std-dev',
                         value=config_parser.getint(section=config_section, option='mate-std-dev'))
                 if self.library_type:
-                    tophat.add_option_long(
+                    runnable_step.add_option_long(
                         key='library-type',
                         value=self.library_type)
                 # The TopHat coverage search finds additional 'GT-AG' introns, but is only recommended for
                 # short reads (< 45 bp) and small read numbers (<= 10 M).
                 # TODO: This option should possibly become configurable per sample.
-                tophat.add_switch_long(key='no-coverage-search')
+                runnable_step.add_switch_long(key='no-coverage-search')
                 # TODO: Set -rg-* options to back fill the read group from Illumina2bam.
 
                 # Set rnaseq_tophat arguments.
 
-                tophat.arguments.append(self.genome_index_path)
+                runnable_step.arguments.append(self.genome_index_path)
 
                 # Set rnaseq_tophat arguments for reads1 and reads2.
 
@@ -1457,8 +1456,8 @@ class Tuxedo(bsf.analysis.Analysis):
 
                 # Pass lists of files into Tophat, regardless of whether read 2 exists.
                 # The bsf_run_rnaseq_tophat.py script eventually removes an empty read 2 argument.
-                tophat.arguments.append(','.join(reads_1_file_path_list))
-                tophat.arguments.append(','.join(reads_2_file_path_list))
+                runnable_step.arguments.append(','.join(reads_1_file_path_list))
+                runnable_step.arguments.append(','.join(reads_2_file_path_list))
 
                 # Create a new rnaseq_run_tophat bsf.process.Executable.
                 # TODO: The following code block is required as long as the bsf_run_rnaseq_tophat.py script
@@ -1466,12 +1465,12 @@ class Tuxedo(bsf.analysis.Analysis):
 
                 if self.debug > 0:
                     print('Tophat bsf.process.Executable')
-                    sys.stdout.writelines(tophat.trace(level=1))
+                    sys.stdout.writelines(runnable_step.trace(level=1))
 
                 pickler_dict_run_tophat = {
                     'prefix': stage_run_tophat.name,
                     'replicate_key': sample.name,
-                    'tophat_executable': tophat,
+                    'runnable_step': runnable_step,
                 }
 
                 pickler_path = os.path.join(
@@ -1489,7 +1488,6 @@ class Tuxedo(bsf.analysis.Analysis):
                 # None.
 
                 # Set rnaseq_run_tophat options.
-                self.set_command_configuration(command=executable_run_tophat)
                 executable_run_tophat.add_option_long(key='pickler_path', value=pickler_path)
                 executable_run_tophat.add_option_long(key='debug', value=str(self.debug))
 
@@ -1525,6 +1523,7 @@ class Tuxedo(bsf.analysis.Analysis):
                     program='bsf_rnaseq_process_tophat2.bash')
                 runnable_process_tophat.add_runnable_step(runnable_step=runnable_step)
 
+                # Read configuration section [bsf.analyses.rnaseq.Tuxedo.process_tophat]
                 self.set_runnable_step_configuration(runnable_step=runnable_step)
 
                 runnable_step.arguments.append(file_path_run_tophat.output_directory)
@@ -1745,7 +1744,9 @@ class Tuxedo(bsf.analysis.Analysis):
                 program='bsf_rnaseq_process_cufflinks.R')
             runnable_process_cufflinks.add_runnable_step(runnable_step=runnable_step)
 
+            # Read configuration section [bsf.analyses.rnaseq.Tuxedo.process_cufflinks]
             self.set_runnable_step_configuration(runnable_step=runnable_step)
+
             runnable_step.add_option_long(
                 key='gtf-reference',
                 value=self.transcriptome_gtf_path)
@@ -2343,7 +2344,9 @@ class Tuxedo(bsf.analysis.Analysis):
                 runnable_process_cuffdiff.add_runnable_step(runnable_step=runnable_step_process_cuffdiff)
 
                 # Set rnaseq_process_cuffdiff options.
+                # Read configuration section [bsf.analyses.rnaseq.Tuxedo.process_cuffdiff]
                 self.set_runnable_step_configuration(runnable_step=runnable_step_process_cuffdiff)
+
                 runnable_step_process_cuffdiff.add_option_long(
                     key='comparison-name',
                     value=comparison_name)

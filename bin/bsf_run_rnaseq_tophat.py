@@ -61,17 +61,17 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     path_temporary_sam = os.path.basename(input_path)
     path_temporary_sam = path_temporary_sam.replace('.bam', '.sam')
 
-    samtools = bsf.process.Executable(
+    executable_samtools = bsf.process.Executable(
         name='samtools_view',
         program='samtools',
         sub_command=bsf.process.Command(program='view'),
         stdout=bsf.connector.ConnectorFile(file_path=path_temporary_sam, file_mode='wt'))
 
-    samtools_view = samtools.sub_command
+    samtools_view = executable_samtools.sub_command
     samtools_view.add_switch_short(key='H')
     samtools_view.arguments.append(input_path)
 
-    child_return_code_local = samtools.run()
+    child_return_code_local = executable_samtools.run()
 
     if child_return_code_local:
         raise Exception('Could not complete the samtools view step on the BAM file for the replicate.')
@@ -94,12 +94,12 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     # At this stage, the SAM @PG and @RG lines are stored internally.
     # Now run Picard SamToFastq to convert.
 
-    java_process = bsf.process.Executable(name='sam_to_fastq', program='java', sub_command=bsf.process.Command())
-    java_process.add_switch_short(key='d64')
-    java_process.add_switch_short(key='server')
-    java_process.add_switch_short(key='Xmx4G')
+    executable_java = bsf.process.Executable(name='sam_to_fastq', program='java', sub_command=bsf.process.Command())
+    executable_java.add_switch_short(key='d64')
+    executable_java.add_switch_short(key='server')
+    executable_java.add_switch_short(key='Xmx4G')
 
-    picard_process = java_process.sub_command
+    picard_process = executable_java.sub_command
     picard_process.add_option_short(key='jar', value=os.path.join(classpath_picard, 'picard.jar'))
     picard_process.sub_command = bsf.process.Command(program='SamToFastq')
 
@@ -113,7 +113,7 @@ def run_picard_sam_to_fastq(input_path, temporary_path):
     sam_to_fastq.add_option_pair(key='QUIET', value='false')
     sam_to_fastq.add_option_pair(key='VALIDATION_STRINGENCY', value='STRICT')
 
-    child_return_code_local = java_process.run()
+    child_return_code_local = executable_java.run()
 
     if child_return_code_local:
         raise Exception('Could not complete the Picard SamToFastq step.')
@@ -198,19 +198,19 @@ if not os.path.isdir(path_temporary):
         if exception.errno != errno.EEXIST:
             raise
 
-run_tophat = pickler_dict['tophat_executable']
-assert isinstance(run_tophat, bsf.process.Executable)
+runnable_step_tophat = pickler_dict['runnable_step']
+assert isinstance(runnable_step_tophat, bsf.process.RunnableStep)
 
 if args.debug > 1:
     print('Executable before conversion')
-    sys.stdout.writelines(run_tophat.trace(level=1))
+    sys.stdout.writelines(runnable_step_tophat.trace(level=1))
 
 # Check the list of file paths in the second and third arguments for FASTQ versus BAM files.
 
 new_file_paths_1 = list()
 new_file_paths_2 = list()
-old_file_paths_1 = run_tophat.arguments[1].split(',')
-old_file_paths_2 = run_tophat.arguments[2].split(',')
+old_file_paths_1 = runnable_step_tophat.arguments[1].split(',')
+old_file_paths_2 = runnable_step_tophat.arguments[2].split(',')
 temporary_files = list()
 
 # Tophat does not like empty compressed FASTQ files.
@@ -252,19 +252,19 @@ for i in range(0, len(old_file_paths_1)):
             if os.path.getsize(file_path_1) > minimum_size:
                 new_file_paths_1.append(file_path_1)
 
-run_tophat.arguments[1] = ','.join(new_file_paths_1)
+runnable_step_tophat.arguments[1] = ','.join(new_file_paths_1)
 
 if len(new_file_paths_2):
-    run_tophat.arguments[2] = ','.join(new_file_paths_2)
+    runnable_step_tophat.arguments[2] = ','.join(new_file_paths_2)
 else:
     # If the list of arguments is now empty truncate it to just two (0: genome index, 1: R1 FASTQ files).
-    run_tophat.arguments = run_tophat.arguments[:2]
+    runnable_step_tophat.arguments = runnable_step_tophat.arguments[:2]
 
 if args.debug > 1:
     print('Executable after conversion')
-    sys.stdout.writelines(run_tophat.trace(level=1))
+    sys.stdout.writelines(runnable_step_tophat.trace(level=1))
 
-child_return_code = run_tophat.run()
+child_return_code = runnable_step_tophat.run()
 
 if child_return_code:
     raise Exception('Could not complete the Tophat step.')
