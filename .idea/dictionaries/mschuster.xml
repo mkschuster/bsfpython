@@ -15,8 +15,10 @@
       <w>casava</w>
       <w>chipseq</w>
       <w>codon</w>
+      <w>configparser</w>
       <w>covariates</w>
       <w>ctcf</w>
+      <w>cuffcompare</w>
       <w>cuffdiff</w>
       <w>cufflinks</w>
       <w>cuffmerge</w>
@@ -48,6 +50,7 @@
       <w>hapmap</w>
       <w>illumina</w>
       <w>indel</w>
+      <w>introns</w>
       <w>isoform</w>
       <w>isoforms</w>
       <w>iupac</w>
@@ -70,6 +73,7 @@
       <w>stderr</w>
       <w>stdin</w>
       <w>stdout</w>
+      <w>supertrack</w>
       <w>tophat</w>
       <w>transcriptome</w>
       <w>transcriptomes</w>
