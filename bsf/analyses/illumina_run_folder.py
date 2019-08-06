@@ -29,6 +29,7 @@ import os
 
 import bsf.analysis
 import bsf.connector
+import bsf.executables.cloud
 import bsf.illumina
 import bsf.procedure
 import bsf.process
@@ -65,6 +66,12 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
     @ivar sav_mode_file: Comma-separated list of file permission bit names according to the C{stat} module
         for the Sequence Analysis Viewer (SAV) archive
     @type sav_mode_file: str | None
+    @ivar cloud_account: Microsoft Azure storage account name
+    @type cloud_account: str | None
+    @ivar cloud_container: Microsoft Azure storage container name
+    @type cloud_container: str | None
+    @ivar cloud_path_prefix: Blob file path prefix
+    @type cloud_path_prefix: str | None
     @ivar force: Force processing of incomplete Illumina Run Folders
     @type force: bool | None
     """
@@ -118,6 +125,24 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
         @rtype: str
         """
         return '_'.join((cls.prefix, 'post_process'))
+
+    @classmethod
+    def get_stage_name_sav(cls):
+        """Get a particular C{bsf.analysis.Stage.name}.
+
+        @return: C{bsf.analysis.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'sav'))
+
+    @classmethod
+    def get_stage_name_cloud(cls):
+        """Get a particular C{bsf.analysis.Stage.name}.
+
+        @return: C{bsf.analysis.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'cloud'))
 
     @classmethod
     def get_prefix_pre_process(cls, project_name):
@@ -178,6 +203,28 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
         """
         return '_'.join((cls.get_stage_name_post_process(), project_name))
 
+    @classmethod
+    def get_prefix_sav(cls, project_name):
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+
+        @param project_name: A project name
+        @type project_name: str
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_sav(), project_name))
+
+    @classmethod
+    def get_prefix_cloud(cls, project_name):
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+
+        @param project_name: A project name
+        @type project_name: str
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_cloud(), project_name))
+
     def __init__(
             self,
             configuration=None,
@@ -199,6 +246,9 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
             sav_mode_directory=None,
             irf_mode_file=None,
             sav_mode_file=None,
+            cloud_account=None,
+            cloud_container=None,
+            cloud_path_prefix=None,
             force=None):
         """Initialise a C{bsf.analyses.illumina_run_folder.IlluminaRunFolderArchive} C{bsf.analysis.Analysis}.
 
@@ -247,6 +297,12 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
         @param sav_mode_file: Comma-separated list of file permission bit names according to the C{stat} module
             for the Sequence Analysis Viewer (SAV) archive
         @type sav_mode_file: str | None
+        @param cloud_account: Microsoft Azure storage account name
+        @type cloud_account: str | None
+        @param cloud_container: Microsoft Azure storage container name
+        @type cloud_container: str | None
+        @param cloud_path_prefix: Blob file path prefix
+        @type cloud_path_prefix: str | None
         @param force: Force processing of incomplete Illumina Run Folders
         @type force: bool | None
         @return:
@@ -275,6 +331,9 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
         self.sav_mode_directory = sav_mode_directory
         self.irf_mode_file = irf_mode_file
         self.sav_mode_file = sav_mode_file
+        self.cloud_account = cloud_account
+        self.cloud_container = cloud_container
+        self.cloud_path_prefix = cloud_path_prefix
         self.force = force
 
         return
@@ -328,7 +387,17 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
         if configuration.config_parser.has_option(section=section, option=option):
             self.sav_mode_file = configuration.config_parser.get(section=section, option=option)
 
-        # Get the force flag.
+        option = 'cloud_account'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.cloud_account = configuration.config_parser.get(section=section, option=option)
+
+        option = 'cloud_container'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.cloud_container = configuration.config_parser.get(section=section, option=option)
+
+        option = 'cloud_path_prefix'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.cloud_path_prefix = configuration.config_parser.get(section=section, option=option)
 
         option = 'force'
         if configuration.config_parser.has_option(section=section, option=option):
@@ -447,6 +516,8 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
         stage_archive_intensities = self.get_stage(name=self.get_stage_name_intensities())
         stage_archive_folder = self.get_stage(name=self.get_stage_name_archive_folder())
         stage_post_process_folder = self.get_stage(name=self.get_stage_name_post_process())
+        stage_sav = self.get_stage(name=self.get_stage_name_sav())
+        stage_cloud = self.get_stage(name=self.get_stage_name_cloud())
 
         # Pre-process on folder level.
 
@@ -604,14 +675,6 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
                     archive_file_path = '.'.join((archive_file_path, 'tar'))
                 archive_file_path = os.path.join(self.archive_directory, archive_file_path)
 
-                if os.path.exists(archive_file_path):
-                    if self.force:
-                        os.remove(archive_file_path)
-                    else:
-                        raise Exception(
-                            'Archive file path ' + repr(archive_file_path) + ' already exists.\n' +
-                            'Please remove or use the --force option.')
-
                 runnable_step = bsf.process.RunnableStep(
                     name='archive_intensities_tar',
                     program='tar',
@@ -694,14 +757,6 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
             archive_file_path = '.'.join((archive_file_path, 'tar'))
         archive_file_path = os.path.join(self.archive_directory, archive_file_path)
 
-        if os.path.exists(archive_file_path):
-            if self.force:
-                os.remove(archive_file_path)
-            else:
-                raise Exception(
-                    'Archive file path ' + repr(archive_file_path) + ' already exists.\n' +
-                    'Please remove or use the --force option.')
-
         runnable_step = bsf.process.RunnableStep(
             name='archive_folder_tar',
             program='tar',
@@ -752,10 +807,20 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
 
         # Extract files relevant for the Illumina Sequence Analysis Viewer (SAV).
 
+        runnable_sav = self.add_runnable_consecutive(
+            runnable=bsf.procedure.ConsecutiveRunnable(
+                name=self.get_prefix_sav(project_name=self.project_name),
+                code_module='bsf.runnables.generic',
+                working_directory=self.project_directory))
+        executable_sav = self.set_stage_runnable(
+            stage=stage_sav,
+            runnable=runnable_sav)
+        executable_sav.dependencies.append(runnable_post_process_folder.name)
+
         runnable_step = bsf.process.RunnableStep(
             name='extract_folder_tar',
             program='tar')
-        runnable_post_process_folder.add_runnable_step(runnable_step=runnable_step)
+        runnable_sav.add_runnable_step(runnable_step=runnable_step)
 
         runnable_step.add_switch_long(key='extract')
         runnable_step.add_option_long(key='file', value=archive_file_path)
@@ -775,7 +840,7 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
             name='move_sav',
             source_path=run_name,
             target_path=sav_path)
-        runnable_post_process_folder.add_runnable_step(runnable_step=runnable_step)
+        runnable_sav.add_runnable_step(runnable_step=runnable_step)
 
         # Adjust the file permissions of the SAV folder.
 
@@ -784,7 +849,45 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
             file_path=sav_path,
             mode_directory=self.sav_mode_directory,
             mode_file=self.sav_mode_file)
-        runnable_post_process_folder.add_runnable_step(runnable_step=runnable_step)
+        runnable_sav.add_runnable_step(runnable_step=runnable_step)
+
+        # Upload the archive run folder into the block blob storage.
+
+        if self.cloud_account and self.cloud_container:
+            runnable_cloud = self.add_runnable_consecutive(
+                runnable=bsf.procedure.ConsecutiveRunnable(
+                    name=self.get_prefix_cloud(project_name=self.project_name),
+                    code_module='bsf.runnables.generic',
+                    working_directory=self.project_directory))
+            executable_cloud = self.set_stage_runnable(
+                stage=stage_cloud,
+                runnable=runnable_cloud)
+            executable_cloud.dependencies.append(runnable_post_process_folder.name)
+
+            # The target (blob) path is the base name and optionally the cloud path prefix.
+            target_path = os.path.basename(archive_file_path)
+            if self.cloud_path_prefix:
+                target_path = os.path.join(self.cloud_path_prefix, target_path)
+
+            # Upload teh GNU Tar file.
+
+            runnable_step = bsf.executables.cloud.RunnableStepAzureBlockBlobUpload(
+                name='blob_upload',
+                account_name=self.cloud_account,
+                container_name=self.cloud_container,
+                source_path=archive_file_path,
+                target_path=target_path)
+            runnable_cloud.add_runnable_step(runnable_step=runnable_step)
+
+            # Upload the MD5 checksum file.
+
+            runnable_step = bsf.executables.cloud.RunnableStepAzureBlockBlobUpload(
+                name='blob_upload',
+                account_name=self.cloud_account,
+                container_name=self.cloud_container,
+                source_path=archive_file_path + '.md5',
+                target_path=target_path + '.md5')
+            runnable_cloud.add_runnable_step(runnable_step=runnable_step)
 
         return
 

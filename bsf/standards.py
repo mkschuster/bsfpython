@@ -27,6 +27,7 @@ A package of classes and methods modelling configuration and default information
 #
 import configparser
 import os
+import stat
 
 
 class Configuration(object):
@@ -1394,3 +1395,38 @@ class VendorQualityFilter(BaseSection):
                             repr(Configuration.global_file_path) + '\n')
 
         return cls.getboolean(option=flow_cell_type)
+
+
+class Secrets(BaseSection):
+    """The C{bsf.standards.Secrets} class models file paths to configuration files with secrets.
+
+    Attributes:
+    @cvar section: C{configparser.ConfigParser} section
+    @type section: str | unicode
+    """
+    section = 'secrets'
+
+    user_mask = stat.S_IRWXG | stat.S_IRWXO
+
+    @classmethod
+    def get_azure_file_path(cls):
+        """Get the configuration file path with Microsoft Azure secrets.
+
+        Also checks that the file is only readable by the user and not accessible for group and other.
+        @return: File path to configuration file with secrets.
+        @rtype: str | None
+        """
+        file_path = os.path.normpath(os.path.expandvars(os.path.expanduser(cls.get(option='azure_file_path'))))
+
+        if not file_path:
+            return None
+
+        file_stat_result = os.stat(path=file_path, follow_symlinks=True)
+
+        if file_stat_result.st_mode & cls.user_mask:
+            raise Exception(
+                'Secrets configuration file {} has file mode {:#0o}, '
+                'but should obey user mask {:#0o}.'.format(
+                    file_path, file_stat_result.st_mode, cls.user_mask))
+
+        return file_path
