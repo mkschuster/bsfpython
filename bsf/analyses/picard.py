@@ -38,6 +38,7 @@ import pysam
 import bsf.analyses.illumina_to_bam_tools
 import bsf.analysis
 import bsf.annotation
+import bsf.executables.cloud
 import bsf.illumina
 import bsf.ngs
 import bsf.procedure
@@ -1292,8 +1293,13 @@ class FilePathIlluminaMultiplexSamLane(bsf.procedure.FilePath):
         self.sorted_md5 = prefix + '_sorted.bam.md5'
         # The final BAM and MD5 files are non-standard in that they do not contain a prefix and
         # reside in the experiment_directory.
-        self.archive_bam = os.path.join(experiment_directory, '_'.join((project_name, lane)) + '.bam')
-        self.archive_md5 = os.path.join(experiment_directory, '_'.join((project_name, lane)) + '.bam.md5')
+        self.final_bam = '_'.join((project_name, lane)) + '.bam'
+        self.final_md5 = '_'.join((project_name, lane)) + '.bam.md5'
+        self.archive_bam = os.path.join(experiment_directory, self.final_bam)
+        self.archive_md5 = os.path.join(experiment_directory, self.final_md5)
+        # The Microsoft Azure Service uses a slash character regardless of the local file system.
+        self.cloud_bam = '/'.join((project_name, self.final_bam))
+        self.cloud_md5 = '/'.join((project_name, self.final_md5))
 
         return
 
@@ -1321,10 +1327,36 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
     @type vendor_quality_filter: bool
     @ivar compression_level: (Zlib) Compression level
     @type compression_level: int | None
+    @ivar cloud_account: Microsoft Azure storage account name
+    @type cloud_account: str | None
+    @ivar cloud_container: Microsoft Azure storage container name
+    @type cloud_container: str | None
     """
 
     name = 'Picard IlluminaMultiplexSam Analysis'
     prefix = 'illumina_multiplex_sam'
+
+    @classmethod
+    def get_stage_name_cloud(cls):
+        """Get a particular C{bsf.analysis.Stage.name}.
+
+        @return: C{bsf.analysis.Stage.name}
+        @rtype: str
+        """
+        return '_'.join((cls.prefix, 'cloud'))
+
+    @classmethod
+    def get_prefix_cloud(cls, project_name, lane):
+        """Get a Python C{str} prefix representing a C{bsf.procedure.Runnable}.
+
+        @param project_name: A project name
+        @type project_name: str
+        @param lane: A lane number
+        @type lane: str
+        @return: Python C{str} prefix representing a C{bsf.procedure.Runnable}
+        @rtype: str
+        """
+        return '_'.join((cls.get_stage_name_cloud(), project_name, lane))
 
     @classmethod
     def get_file_path_lane(cls, project_name, lane, experiment_directory):
@@ -1371,7 +1403,9 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
             mode_file=None,
             eamss_filter=None,
             vendor_quality_filter=None,
-            compression_level=None):
+            compression_level=None,
+            cloud_account=None,
+            cloud_container=None):
         """Initialise a C{bsf.analyses.picard.IlluminaMultiplexSam} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -1429,6 +1463,10 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         @type vendor_quality_filter: bool | None
         @param compression_level: (Zlib) Compression level
         @type compression_level: int | None
+        @param cloud_account: Microsoft Azure storage account name
+        @type cloud_account: str | None
+        @param cloud_container: Microsoft Azure storage container name
+        @type cloud_container: str | None
         """
         super(IlluminaMultiplexSam, self).__init__(
             configuration=configuration,
@@ -1457,6 +1495,8 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         self.eamss_filter = eamss_filter
         self.vendor_quality_filter = vendor_quality_filter
         self.compression_level = compression_level
+        self.cloud_account = cloud_account
+        self.cloud_container = cloud_container
 
         return
 
@@ -1514,6 +1554,14 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
         option = 'compression_level'
         if configuration.config_parser.has_option(section=section, option=option):
             self.compression_level = configuration.config_parser.getint(section=section, option=option)
+
+        option = 'cloud_account'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.cloud_account = configuration.config_parser.get(section=section, option=option)
+
+        option = 'cloud_container'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.cloud_container = configuration.config_parser.get(section=section, option=option)
 
         return
 
@@ -1614,6 +1662,7 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
 
         stage_lane = self.get_stage(name=self.get_stage_name_lane())
         stage_cell = self.get_stage(name=self.get_stage_name_cell())
+        stage_cloud = self.get_stage(name=self.get_stage_name_cloud())
 
         for lane_int in range(0 + 1, irf.run_information.flow_cell_layout.lane_count + 1):
             lane_str = str(lane_int)
@@ -1724,6 +1773,35 @@ class IlluminaMultiplexSam(PicardIlluminaRunFolder):
                 source_path=file_path_lane.sorted_md5,
                 target_path=file_path_lane.archive_md5)
             runnable_lane.add_runnable_step(runnable_step=runnable_step)
+
+            # Upload the archive BAM file into the block blob storage.
+
+            if self.cloud_account and self.cloud_container:
+                runnable_cloud = self.add_runnable_consecutive(
+                    runnable=bsf.procedure.ConsecutiveRunnable(
+                        name=self.get_prefix_cloud(project_name=self.project_name, lane=lane_str),
+                        code_module='bsf.runnables.generic',
+                        working_directory=self.project_directory))
+                executable_cloud = self.set_stage_runnable(stage=stage_cloud, runnable=runnable_cloud)
+                executable_cloud.dependencies.append(executable_lane.name)
+
+                # Upload the unaligned BAM file from its archive location.
+                runnable_step = bsf.executables.cloud.RunnableStepAzureBlockBlobUpload(
+                    name='blob_upload_bam',
+                    account_name=self.cloud_account,
+                    container_name=self.cloud_container,
+                    source_path=file_path_lane.archive_bam,
+                    target_path=file_path_lane.cloud_bam)
+                runnable_cloud.add_runnable_step(runnable_step=runnable_step)
+
+                # Upload the MD5 checksum file from its archive location.
+                runnable_step = bsf.executables.cloud.RunnableStepAzureBlockBlobUpload(
+                    name='blob_upload_md5',
+                    account_name=self.cloud_account,
+                    container_name=self.cloud_container,
+                    source_path=file_path_lane.archive_md5,
+                    target_path=file_path_lane.cloud_md5)
+                runnable_cloud.add_runnable_step(runnable_step=runnable_step)
 
         # Add another flow cell-specific Runnable to reset directory and file mode permissions if requested.
 
