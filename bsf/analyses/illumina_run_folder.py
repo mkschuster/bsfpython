@@ -867,12 +867,13 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
             # The target (blob) path is the base name and optionally the cloud path prefix.
             target_path = os.path.basename(archive_file_path)
             if self.cloud_path_prefix:
-                target_path = os.path.join(self.cloud_path_prefix, target_path)
+                # The Microsoft Azure Service uses a slash character regardless of the local file system.
+                target_path = '/'.join((self.cloud_path_prefix, target_path))
 
             # Upload teh GNU Tar file.
 
             runnable_step = bsf.executables.cloud.RunnableStepAzureBlockBlobUpload(
-                name='blob_upload',
+                name='blob_upload_tar',
                 account_name=self.cloud_account,
                 container_name=self.cloud_container,
                 source_path=archive_file_path,
@@ -882,7 +883,7 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
             # Upload the MD5 checksum file.
 
             runnable_step = bsf.executables.cloud.RunnableStepAzureBlockBlobUpload(
-                name='blob_upload',
+                name='blob_upload_md5',
                 account_name=self.cloud_account,
                 container_name=self.cloud_container,
                 source_path=archive_file_path + '.md5',
