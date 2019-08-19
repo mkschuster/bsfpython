@@ -41,6 +41,7 @@ argument_parser = argparse.ArgumentParser(
 
 argument_parser.add_argument(
     '--debug',
+    default=0,
     help='debug level',
     required=False,
     type=int)

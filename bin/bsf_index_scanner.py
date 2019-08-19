@@ -51,16 +51,20 @@ thread_join_timeout = 5
 
 # Parse the arguments.
 
-parser = argparse.ArgumentParser(
+argument_parser = argparse.ArgumentParser(
     description='BSF barcode index scanner.')
 
-parser.add_argument('--debug', required=False, type=int,
-                    help='debug level')
+argument_parser.add_argument(
+    '--debug',
+    default=0,
+    required=False,
+    type=int,
+    help='debug level')
 
-parser.add_argument('--input_file', help='file path to a BAM file')
-parser.add_argument('--output_file', help='file path to a TSV file')
+argument_parser.add_argument('--input_file', help='file path to a BAM file')
+argument_parser.add_argument('--output_file', help='file path to a TSV file')
 
-name_space = parser.parse_args()
+name_space = argument_parser.parse_args()
 
 # TODO: dual indices not supported
 # TODO: GNU Zip FASTQ files could be read directly: http://docs.python.org/2/library/gzip.html

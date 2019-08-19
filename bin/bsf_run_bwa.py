@@ -42,24 +42,25 @@ os.environ['LANG'] = 'C'
 
 # Parse the arguments.
 
-parser = argparse.ArgumentParser(description='BSF Runner for the Burrows Wheeler Aligner (BWA).')
+argument_parser = argparse.ArgumentParser(description='BSF Runner for the Burrows Wheeler Aligner (BWA).')
 
-parser.add_argument(
+argument_parser.add_argument(
     '--debug',
+    default=0,
     help='debug level',
     required=False,
     type=int)
 
-parser.add_argument(
+argument_parser.add_argument(
     '--pickler_path',
     help='file path to a Python Pickler file',
     required=True)
 
-args = parser.parse_args()
+name_space = argument_parser.parse_args()
 
 # Unpickle the file into a Python dict object.
 
-with open(file=args.pickler_path, mode='rb') as input_file:
+with open(file=name_space.pickler_path, mode='rb') as input_file:
     pickler_dict = pickle.Unpickler(input_file).load()
 
 key = 'prefix'
