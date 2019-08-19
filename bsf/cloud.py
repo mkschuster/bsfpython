@@ -101,7 +101,7 @@ def azure_block_blob_upload(block_blob_service, container_name, file_path, blob_
         raise Exception('Container ' + container_name + ' does not exists.')
 
     if not blob_name:
-        blob_name = os.path.basename(path=file_path)
+        blob_name = os.path.basename(file_path)
 
     return block_blob_service.create_blob_from_path(
         container_name=container_name,
@@ -127,7 +127,7 @@ def azure_block_blob_download(block_blob_service, container_name, blob_name, fil
         raise Exception('Container ' + container_name + ' does not exists.')
 
     if not file_path:
-        file_path = os.path.basename(path=blob_name)
+        file_path = os.path.basename(blob_name)
 
     return block_blob_service.get_blob_to_path(
         container_name=container_name,
