@@ -679,7 +679,7 @@ class Aligner(bsf.analysis.Analysis):
 
                 return bam_name, _paired_reads.annotation_dict['BAM File'][0]
             else:
-                warnings.warn("PairedReads object '" + _paired_reads.get_name() + "without 'BAM File' annotation.")
+                warnings.warn('PairedReads object ' + _paired_reads.get_name() + " without 'BAM File' annotation.")
                 return _paired_reads.get_name(), None
 
         # Start of the run() method body.
