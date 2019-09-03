@@ -621,6 +621,17 @@ class Genome(BaseSectionVersion):
     section = 'genome'
 
     @classmethod
+    def get_black_list(cls, genome_version=None):
+        """Get the (ENCODE) black list file path of problematic regions.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Back list file path
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='black_list', version=genome_version)
+
+    @classmethod
     def get_date(cls, genome_version=None):
         """Get the release date.
 
@@ -630,6 +641,17 @@ class Genome(BaseSectionVersion):
         @rtype: None | str | unicode
         """
         return cls.get(option='date', version=genome_version)
+
+    @classmethod
+    def get_effective_size(cls, genome_version=None):
+        """Get the effective genome size.
+
+        @param genome_version: Genome assembly version
+        @type genome_version: None | str
+        @return: Effective size
+        @rtype: None | str | unicode
+        """
+        return cls.get(option='effective_size', version=genome_version)
 
     @classmethod
     def get_fasta_suffix(cls, genome_version=None):
@@ -955,6 +977,26 @@ class FilePath(BaseSection):
             file_path = os.path.join(file_path, genome_version)
 
         return cls._prepend_resource(absolute=absolute, file_path=file_path)
+
+    @classmethod
+    def get_resource_genome_black_list(cls, genome_version):
+        """Get the Genome black list file path.
+
+        @param genome_version: The genome version (e.g. mm10, ...)
+        @type genome_version: None | str
+        @return: Genome black list file path
+        @rtype: None | str | unicode
+        """
+        black_list_file_path = Genome.get_black_list(genome_version=genome_version)
+        if not black_list_file_path:
+            return None
+
+        if os.path.isabs(black_list_file_path):
+            return black_list_file_path
+        else:
+            return os.path.join(
+                cls.get_resource_genome(genome_version=genome_version, absolute=True),
+                black_list_file_path)
 
     @classmethod
     def get_resource_genome_index(cls, genome_version, genome_index=None, absolute=True):
