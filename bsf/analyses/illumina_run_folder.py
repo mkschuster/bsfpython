@@ -870,7 +870,7 @@ class IlluminaRunFolderArchive(bsf.analysis.Analysis):
                 # The Microsoft Azure Service uses a slash character regardless of the local file system.
                 target_path = '/'.join((self.cloud_path_prefix, target_path))
 
-            # Upload teh GNU Tar file.
+            # Upload the GNU Tar file.
 
             runnable_step = bsf.executables.cloud.RunnableStepAzureBlockBlobUpload(
                 name='blob_upload_tar',
