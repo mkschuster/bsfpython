@@ -1187,9 +1187,19 @@ class ChIPSeq(bsf.analysis.Analysis):
             @return:
             @rtype:
             """
+            chipseq_comparison_key_list = list()
+            """ @type chipseq_comparison_key_list: list[str] """
+
             for comparison_name in sorted(self._comparison_dict):
                 for comparison_pair in sorted(self._comparison_dict[comparison_name]):
                     chipseq_comparison = self._comparison_dict[comparison_name][comparison_pair]
+                    # Since a particular peak calling pair may exists in more than one comparison group,
+                    # make sure only unique pairs get submitted.
+                    if chipseq_comparison.get_key() in chipseq_comparison_key_list:
+                        continue
+                    else:
+                        chipseq_comparison_key_list.append(chipseq_comparison.get_key())
+
                     factor = chipseq_comparison.factor.upper()
 
                     t_file_path_list = list()
@@ -1317,9 +1327,19 @@ class ChIPSeq(bsf.analysis.Analysis):
             @return:
             @rtype:
             """
+            chipseq_comparison_key_list = list()
+            """ @type chipseq_comparison_key_list: list[str] """
+
             for comparison_name in sorted(self._comparison_dict):
                 for comparison_pair in sorted(self._comparison_dict[comparison_name]):
                     chipseq_comparison = self._comparison_dict[comparison_name][comparison_pair]
+                    # Since a particular peak calling pair may exists in more than one comparison group,
+                    # make sure only unique pairs get submitted.
+                    if chipseq_comparison.get_key() in chipseq_comparison_key_list:
+                        continue
+                    else:
+                        chipseq_comparison_key_list.append(chipseq_comparison.get_key())
+
                     factor = chipseq_comparison.factor.upper()
                     prefix_peak_calling = chipseq_comparison.get_prefix_peak_calling()
 
@@ -1828,6 +1848,11 @@ class ChIPSeq(bsf.analysis.Analysis):
             str_list.append('</p>\n')
             str_list.append('\n')
 
+            # Peak Calling section.
+
+            str_list.append('<h2 id="peak_calling">Peak Calling</h2>\n')
+            str_list.append('\n')
+
             str_list.append('<table id="peak_calling_table">\n')
             str_list.append('<thead>\n')
 
@@ -1946,6 +1971,11 @@ class ChIPSeq(bsf.analysis.Analysis):
             str_list.append('</p>\n')
             str_list.append('\n')
 
+            # Peak Calling section.
+
+            str_list.append('<h2 id="peak_calling">Peak Calling</h2>\n')
+            str_list.append('\n')
+
             str_list.append('<table id="peak_calling_table">\n')
             str_list.append('<thead>\n')
             str_list.append('<tr>\n')
@@ -2010,7 +2040,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             str_list.append('</table>\n')
             str_list.append('\n')
 
-            # Differential binding analysis.
+            # Differential Binding Analysis section.
 
             str_list.append('<h2 id="differential_binding">Differential Binding Analysis</h2>\n')
             str_list.append('\n')
@@ -2270,9 +2300,19 @@ class ChIPSeq(bsf.analysis.Analysis):
             str_list = list()
             """ @type str_list: list[str | unicode] """
 
+            chipseq_comparison_key_list = list()
+            """ @type chipseq_comparison_key_list: list[str] """
+
             for comparison_name in sorted(self._comparison_dict):
                 for comparison_pair in sorted(self._comparison_dict[comparison_name]):
                     chipseq_comparison = self._comparison_dict[comparison_name][comparison_pair]
+                    # Since a particular peak calling pair may exists in more than one comparison group,
+                    # make sure only unique pairs get listed in the track database definition.
+                    if chipseq_comparison.get_key() in chipseq_comparison_key_list:
+                        continue
+                    else:
+                        chipseq_comparison_key_list.append(chipseq_comparison.get_key())
+
                     prefix = chipseq_comparison.get_prefix_peak_calling()
 
                     # Add UCSC trackDB entries for each treatment/control and absolute/normalised pair.
@@ -2422,7 +2462,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             for factor in factor_dict:
                 factor_str += ' ' + factor + '=' + factor
 
-            # Composite track alignment (BAM)
+            # 1. Composite track "alignment" (BAM)
 
             str_list_1 = list()
             """ @type str_list_1: list[str | unicode] """
@@ -2443,6 +2483,8 @@ class ChIPSeq(bsf.analysis.Analysis):
             str_list_1.append('centerLabelsDense on\n')
             # str_list_1.append('dragAndDrop subTracks\n')
             str_list_1.append('\n')
+
+            # 2. Composite track "coverage" (bigWig)
 
             str_list_2 = list()
             """ @type str_list_2: list[str | unicode] """
@@ -2472,7 +2514,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # str_list_2.append('dragAndDrop subTracks\n')
             str_list_2.append('\n')
 
-            # Composite track background (bigWig)
+            # 3. Composite track "background" (bigWig)
 
             str_list_3 = list()
             """ @type str_list_3: list[str | unicode] """
@@ -2507,7 +2549,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # str_list_3.append('dragAndDrop subTracks\n')
             str_list_3.append('\n')
 
-            # Composite track enrichment (bigWig)
+            # 4. Composite track "enrichment" (bigWig)
 
             str_list_4 = list()
             """ @type str_list_4: list[str | unicode] """
@@ -2542,7 +2584,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # str_list_4.append('dragAndDrop subTracks\n')
             str_list_4.append('\n')
 
-            # Composite track intensity (bigWig)
+            # 5. Composite track "intensity" (bigWig)
 
             str_list_5 = list()
             """ @type str_list_5: list[str | unicode] """
@@ -2580,7 +2622,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # str_list_5.append('dragAndDrop subTracks\n')
             str_list_5.append('\n')
 
-            # Composite track peaks (bigBed)
+            # 6. Composite track "peaks" (bigBed)
 
             str_list_6 = list()
             """ @type str_list_6: list[str | unicode] """
@@ -2602,7 +2644,7 @@ class ChIPSeq(bsf.analysis.Analysis):
             # str_list_6.append('dragAndDrop subTracks\n')
             str_list_6.append('\n')
 
-            # Composite track summits (bigBed)
+            # 7. Composite track "summits" (bigBed)
 
             str_list_7 = list()
             """ @type str_list_7: list[str | unicode] """
@@ -2624,6 +2666,8 @@ class ChIPSeq(bsf.analysis.Analysis):
             # str_list_7.append('dragAndDrop subTracks\n')
             str_list_7.append('\n')
 
+            # Add UCSC trackDB entries for each comparison.
+
             for comparison_name in sorted(self._comparison_dict):
                 for comparison_pair in sorted(self._comparison_dict[comparison_name]):
                     chipseq_comparison = self._comparison_dict[comparison_name][comparison_pair]
@@ -2636,6 +2680,11 @@ class ChIPSeq(bsf.analysis.Analysis):
                     else:
                         prefix_short = chipseq_comparison.t_name
                         prefix_long = chipseq_comparison.t_name
+
+                    # Make track names unique by including the comparison name.
+
+                    prefix_short = '_'.join((comparison_name, prefix_short))
+                    prefix_long = ' '.join((comparison_name, prefix_long))
 
                     # Add a "background" sub-track for each NAME_control_lambda.bw file.
 
@@ -2858,18 +2907,18 @@ class ChIPSeq(bsf.analysis.Analysis):
                         str_list_7.append('  subGroups comparison=' + comparison_name + ' factor=' + factor_name + '\n')
                         str_list_7.append('  \n')
 
-            # Add UCSC trackDB entries for each Bowtie2 BAM file.
+            # Add UCSC trackDB entries for each alignment.
 
             for sample in self.sample_list:
                 file_path_alignment = self.get_file_path_alignment(sample_name=sample.name)
 
-                # Add a UCSC trackDB entry for each NAME.bam file.
+                # Add an "alignment" sub-track for each NAME.bam file.
 
                 # Common settings
                 str_list_1.append('  track ' + sample.name + '_alignment\n')
                 str_list_1.append('  type bam\n')
                 str_list_1.append('  shortLabel ' + sample.name + '_alignment\n')
-                str_list_1.append('  longLabel ' + sample.name + ' ChIP read alignment\n')
+                str_list_1.append('  longLabel ChIP read alignment ' + sample.name + '\n')
                 str_list_1.append('  bigDataUrl ' + file_path_alignment.sample_bam + '\n')
                 # str_list_1.append('  html ...\n')
                 str_list_1.append('  visibility hide\n')
@@ -2885,7 +2934,7 @@ class ChIPSeq(bsf.analysis.Analysis):
                 # str_list_1.append('  subGroups \n')
                 str_list_1.append('  \n')
 
-                # Add a UCSC trackDb entry for each name.bw file.
+                # Add a "coverage" sub-track for each NAME.bw file.
 
                 # Common settings
                 str_list_2.append('  track ' + sample.name + '_coverage\n')
