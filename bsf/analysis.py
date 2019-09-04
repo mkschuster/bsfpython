@@ -417,7 +417,7 @@ class Analysis(object):
         @param name: Name
         @type name: str
         @return: C{bsf.analysis.Stage}
-        @rtype: bsf.analysis.Stage
+        @rtype: Stage
         """
         # Check if a Stage with this the name already exists and if so, return it.
         for stage in self.stage_list:
