@@ -72,6 +72,20 @@ argument_parser.add_argument(
     required=False,
     type=str)
 
+argument_parser.add_argument(
+    '--drop-read-1',
+    action='store_true',
+    dest='drop_read_1',
+    help='Drop read 1',
+    required=False)
+
+argument_parser.add_argument(
+    '--drop-read-2',
+    action='store_true',
+    dest='drop_read_2',
+    help='Drop read 2',
+    required=False)
+
 name_space = argument_parser.parse_args()
 
 # This analysis requires either a non-default --configuration argument or a
@@ -95,6 +109,12 @@ if name_space.project_name:
 
 if name_space.sas_file:
     analysis.sas_file = name_space.sas_file
+
+if name_space.drop_read_1:
+    analysis.drop_read_1 = name_space.drop_read_1
+
+if name_space.drop_read_2:
+    analysis.drop_read_2 = name_space.drop_read_2
 
 if name_space.stage == 'prune':
     analysis.prune()

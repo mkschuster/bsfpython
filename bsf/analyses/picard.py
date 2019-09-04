@@ -3218,6 +3218,10 @@ class SamToFastq(bsf.analysis.Analysis):
     @type classpath_picard: None | str | unicode
     @ivar include_non_pf_reads: Include non-pass filer reads
     @type include_non_pf_reads: bool | None
+    @ivar drop_read_1: Drop read 1
+    @type drop_read_1: bool | None
+    @ivar drop_read_2: Drop read 2
+    @type drop_read_2: bool | None
     """
 
     name = 'Picard SamToFastq Analysis'
@@ -3309,7 +3313,9 @@ class SamToFastq(bsf.analysis.Analysis):
             collection=None,
             sample_list=None,
             classpath_picard=None,
-            include_non_pf_reads=None):
+            include_non_pf_reads=None,
+            drop_read_1=None,
+            drop_read_2=None):
         """Initialise a C{bsf.analyses.picard.SamToFastq} object.
 
         @param configuration: C{bsf.standards.Configuration}
@@ -3342,6 +3348,10 @@ class SamToFastq(bsf.analysis.Analysis):
         @type classpath_picard: str | unicode | None
         @param include_non_pf_reads: Include non-pass filer reads
         @type include_non_pf_reads: bool | None
+        @param drop_read_1: Drop read 1
+        @type drop_read_1: bool | None
+        @param drop_read_2: Drop read 2
+        @type drop_read_2: bool | None
         @return:
         @rtype:
         """
@@ -3361,6 +3371,8 @@ class SamToFastq(bsf.analysis.Analysis):
 
         self.classpath_picard = classpath_picard
         self.include_non_pass_filter_reads = include_non_pf_reads
+        self.drop_read_1 = drop_read_1
+        self.drop_read_2 = drop_read_2
 
         return
 
@@ -3388,6 +3400,14 @@ class SamToFastq(bsf.analysis.Analysis):
         option = 'include_non_pass_filter_reads'
         if configuration.config_parser.has_option(section=section, option=option):
             self.include_non_pass_filter_reads = configuration.config_parser.getboolean(section=section, option=option)
+
+        option = 'drop_read_1'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.drop_read_1 = configuration.config_parser.getboolean(section=section, option=option)
+
+        option = 'drop_read_2'
+        if configuration.config_parser.has_option(section=section, option=option):
+            self.drop_read_2 = configuration.config_parser.getboolean(section=section, option=option)
 
         return
 
@@ -3646,6 +3666,10 @@ class SamToFastq(bsf.analysis.Analysis):
         runnable_step.add_option_long(key='sas_path_old', value=file_path_project.sas_path_old)
         runnable_step.add_option_long(key='sas_path_new', value=file_path_project.sas_path_new)
         runnable_step.add_option_long(key='minimum_size', value='1024')
+        if self.drop_read_1:
+            runnable_step.add_option_long(key='drop_read_1', value='True')
+        if self.drop_read_2:
+            runnable_step.add_option_long(key='drop_read_2', value='True')
 
         return
 

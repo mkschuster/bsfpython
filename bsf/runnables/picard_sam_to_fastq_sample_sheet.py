@@ -37,9 +37,27 @@ import sys
 
 import bsf.argument
 import bsf.ngs
+import bsf.procedure
 
 
-def _convert_collection(file_path_old, file_path_new, minimum_size, debug=0):
+def _convert_collection(file_path_old, file_path_new, minimum_size, drop_read_1=False, drop_read_2=False, debug=0):
+    """Private function to convert a collection into a Sample Annotation Sheet.
+
+    @param file_path_old: Old sample annotation sheet file path
+    @type file_path_old: str
+    @param file_path_new: New sample annotation sheet file path
+    @type file_path_new: str
+    @param minimum_size: Minimum file size of the FASTQ file to keep it
+    @type minimum_size: int
+    @param drop_read_1: Drop read 1
+    @type drop_read_1: bool
+    @param drop_read_2: Drop read 2
+    @type drop_read_2: bool
+    @param debug: Debug level
+    @type debug: int
+    @return:
+    @rtype:
+    """
     collection = bsf.ngs.Collection.from_sas_path(
         file_path='',
         file_type='',
@@ -70,6 +88,8 @@ def _convert_collection(file_path_old, file_path_new, minimum_size, debug=0):
                         else:
                             # The PairedReads object does not have a meaningful Reads object in reads1.
                             paired_reads.reads_1 = None
+                    if drop_read_1:
+                        paired_reads.reads_1 = None
                     if paired_reads.reads_2 is not None:
                         if os.path.exists(paired_reads.reads_2.file_path):
                             if os.path.getsize(paired_reads.reads_2.file_path) >= minimum_size:
@@ -82,6 +102,8 @@ def _convert_collection(file_path_old, file_path_new, minimum_size, debug=0):
                         else:
                             # The PairedReads object does not have a meaningful Reads object in reads2.
                             paired_reads.reads_2 = None
+                    if drop_read_2:
+                        paired_reads.reads_2 = None
                     if paired_reads.reads_1 is None and paired_reads.reads_2 is None:
                         paired_reads_keep = False
                     if paired_reads_keep:
@@ -115,10 +137,12 @@ def run(runnable):
         @param key: C{bsf.argument.OptionLong} key
         @type key: str | unicode
         @return: C{bsf.argument.OptionLong} value
-        @rtype: str | unicode
+        @rtype: str | unicode | None
         """
-        argument = runnable_step.options[key][0]
-        return argument.value
+        if key in runnable_step.options and runnable_step.options[key]:
+            return runnable_step.options[key][0].value
+        else:
+            return None
 
     # If the ConsecutiveRunnable status file exists, there is nothing to do and
     # this ConsecutiveRunnable should not have been submitted in the first place.
@@ -133,7 +157,10 @@ def run(runnable):
     _convert_collection(
         file_path_old=run_get_value(key='sas_path_old'),
         file_path_new=run_get_value(key='sas_path_new'),
-        minimum_size=int(run_get_value(key='minimum_size')))
+        minimum_size=int(run_get_value(key='minimum_size')),
+        drop_read_1=bool(run_get_value(key='drop_read_1')),
+        drop_read_2=bool(run_get_value(key='drop_read_2')),
+        debug=runnable.debug)
 
     runnable_step.remove_obsolete_file_paths()
 
@@ -178,10 +205,26 @@ if __name__ == '__main__':
         required=False,
         type=int)
 
+    argument_parser.add_argument(
+        '--drop-read-1',
+        action='store_true',
+        dest='drop_read_1',
+        help='Drop read 1',
+        required=False)
+
+    argument_parser.add_argument(
+        '--drop-read-2',
+        action='store_true',
+        dest='drop_read_2',
+        help='Drop read 2',
+        required=False)
+
     name_space = argument_parser.parse_args()
 
     _convert_collection(
         file_path_old=name_space.old_sas_path,
         file_path_new=name_space.new_sas_path,
         minimum_size=name_space.minimum_size,
+        drop_read_1=name_space.drop_read_1,
+        drop_read_2=name_space.drop_read_2,
         debug=name_space.debug)
