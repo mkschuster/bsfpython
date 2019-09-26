@@ -4235,6 +4235,57 @@ class DESeq(bsf.analysis.Analysis):
             str_list.append('</table>\n')
             str_list.append('\n')
 
+            # Link Enrichr and Heatmap reports.
+
+            str_list.append('<h2 id="accessory_reports">Accessory Reports</h2>\n')
+            str_list.append('\n')
+
+            str_list.append('<p>Accessory reports provide annotated expression heat map plots and\n')
+            str_list.append('<a href="https://amp.pharm.mssm.edu/Enrichr/">Enrichr</a> results of\n')
+            str_list.append('up- and down-regulated genes for selected libraries.</p>\n')
+
+            str_list.append('<table id="contrasts_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th class="left">Design</th>\n')
+            str_list.append('<th class="left">Enrichr Report</th>\n')
+            str_list.append('<th class="left">Heatmap Report</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
+
+            for design_name in sorted(contrast_dict):
+                str_list.append('<tr>\n')
+                str_list.append('<td>' + design_name + '</td>\n')
+
+                enrichr_prefix = '_'.join((self.prefix, design_name, 'enrichr'))
+                if os.path.exists(os.path.join(
+                        self.genome_directory,
+                        enrichr_prefix,
+                        enrichr_prefix + '_report.html')):
+                    str_list.append('<td><a href="' +
+                                    '/'.join((enrichr_prefix, enrichr_prefix + '_report.html')) +
+                                    '">HTML</a></td>\n')
+                else:
+                    str_list.append('<td></td>\n')
+
+                heatmap_prefix = '_'.join((self.prefix, design_name, 'heatmap'))
+                if os.path.exists(os.path.join(
+                        self.genome_directory,
+                        heatmap_prefix,
+                        heatmap_prefix + '_report_model.html')):
+                    str_list.append('<td><a href="' +
+                                    '/'.join((heatmap_prefix, heatmap_prefix + '_report_model.html')) +
+                                    '">HTML</a></td>\n')
+                else:
+                    str_list.append('<td></td>\n')
+
+                str_list.append('</tr>\n')
+
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
+
             # Link MDS and PCA plots.
 
             str_list.append('<h2 id="plots">Plots</h2>\n')

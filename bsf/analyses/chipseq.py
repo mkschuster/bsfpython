@@ -1971,6 +1971,66 @@ class ChIPSeq(bsf.analysis.Analysis):
             str_list.append('</p>\n')
             str_list.append('\n')
 
+            # Alignment section
+
+            str_list.append('<h2 id="alignment">Alignment</h2>\n')
+            str_list.append('<p>')
+            str_list.append('Bowtie2 alignments were post-processed by removing reads from the (ENCODE)\n')
+            str_list.append('blacklist regions, before coverage tracks were normalised to one-fold genome coverage.')
+            str_list.append('</p>\n')
+
+            str_list.append('<table id="alignment_table">\n')
+            str_list.append('<thead>\n')
+            str_list.append('<tr>\n')
+            str_list.append('<th>Sample</th>\n')
+            str_list.append('<th>BAM</th>\n')
+            str_list.append('<th>BAI</th>\n')
+            # str_list.append('<th>MD5</th>\n')
+            str_list.append('<th>bigWig</th>\n')
+            str_list.append('</tr>\n')
+            str_list.append('</thead>\n')
+            str_list.append('<tbody>\n')
+
+            for sample in self.sample_list:
+                file_path_alignment = self.get_file_path_alignment(sample_name=sample.name)
+                str_list.append('<tr>\n')
+
+                # Sample
+                str_list.append('<td class="left">')
+                str_list.append(sample.name)
+                str_list.append('</td>\n')
+                # BAM
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_alignment.sample_bam + '">')
+                str_list.append('<abbr title="Binary Alignment/Map">BAM</abbr>')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
+                # BAI
+                str_list.append('<td class="center">')
+                str_list.append('<a href="' + file_path_alignment.sample_bai + '">')
+                str_list.append('<abbr title="Binary Alignment/Map Index">BAI</abbr>')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
+                # MD5
+                # str_list.append('<td class="center">')
+                # str_list.append('<a href="' + file_path_alignment.sample_md5 + '">')
+                # str_list.append('<abbr title="Message Digest 5 Checksum">MD5</abbr>')
+                # str_list.append('</a>')
+                # str_list.append('</td>\n')
+                # bigWig
+                str_list.append('<td>')
+                str_list.append('<a href="' + file_path_alignment.coverage_bw + '">')
+                str_list.append('<abbr title="UCSC Big Wiggle signal track">bigWig</abbr>')
+                str_list.append('</a>')
+                str_list.append('</td>\n')
+
+                str_list.append('</tr>\n')
+                str_list.append('\n')
+
+            str_list.append('</tbody>\n')
+            str_list.append('</table>\n')
+            str_list.append('\n')
+
             # Peak Calling section.
 
             str_list.append('<h2 id="peak_calling">Peak Calling</h2>\n')
