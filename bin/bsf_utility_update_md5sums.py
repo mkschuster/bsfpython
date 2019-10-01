@@ -176,12 +176,14 @@ for file_path, directory_name_list, file_name_list in os.walk(top=name_space.dir
                     entry_file_name=md5_file_name,
                     entry_check_mode=md5_check_mode)
 
+# Write the updated MD5 sum file.
+
 with open(file=name_space.file_path, mode='wt') as output_file:
     for md5_file_name in sorted(md5_dict):
         md5_check_sum = md5_dict[md5_file_name][0]
         md5_check_mode = md5_dict[md5_file_name][1]
         # Adjust the mode to binary for certain files.
-        for suffix in '.bam', '.gz':
+        for suffix in ('.bam', '.gz'):
             if md5_file_name.endswith(suffix):
                 md5_check_mode = '*'
 
