@@ -1454,7 +1454,7 @@ class RunFolder(object):
             return False
 
     @staticmethod
-    def _check_files(directory_dict, directory_path, file_name_list, debug=0):
+    def _check_file_names(directory_dict, directory_path, file_name_list, debug=0):
         """Check a Python C{list} of file names against a Python C{dict} of directory entries.
 
         @param directory_dict: Python C{dict} of directory entries
@@ -1478,6 +1478,36 @@ class RunFolder(object):
                 del directory_dict[file_name]
             else:
                 print('Missing file', file_path)
+
+        return
+
+    @staticmethod
+    def _check_file_suffixes(directory_dict, directory_path, file_suffix_list, debug=0):
+        """Check a Python C{list} of file suffixes against a Python C{dict} of directory entries.
+
+        @param directory_dict: Python C{dict} of directory entries
+        @type directory_dict: dict[str | unicode, int]
+        @param directory_path: Directory path
+        @type directory_path: str | unicode
+        @param file_suffix_list: Python C{list} of file names
+        @type file_suffix_list: list[str | unicode]
+        @param debug: Integer debugging level
+        @type debug: int
+        @return:
+        @rtype:
+        """
+        if debug > 0:
+            # print('Processing directory', directory_path)
+            pass
+
+        for file_suffix in file_suffix_list:
+            for file_name in directory_dict:
+                if file_name.endswith(file_suffix):
+                    del directory_dict[file_name]
+                    break
+            else:
+                file_path = os.path.join(directory_path, '*' + file_suffix)
+                print('Missing file suffix', file_path)
 
         return
 
@@ -1511,6 +1541,8 @@ class RunFolder(object):
 
         _file_name_list = list()
         """ @type _file_name_list: list[str | unicode] """
+        _file_suffix_list = list()
+        """ @type _file_suffix_list: list[str | unicode] """
 
         if rta in ('1.18.54',):
             # MiSeq
@@ -1529,6 +1561,9 @@ class RunFolder(object):
             _file_name_list.append('HiSeqControlSoftware.Options.cfg')
             _file_name_list.append('RTAStart.log')
             _file_name_list.append('Variability_HiSeq_E.bin')
+            _file_suffix_list.append('_Effective.cfg')
+            _file_suffix_list.append('_Override.cfg')
+            _file_suffix_list.append('_SortedOverride.cfg')
 
         if rta in ('2.4.11',):
             # NextSeq
@@ -1545,10 +1580,16 @@ class RunFolder(object):
             _file_name_list.append('NovaSeqOverride.cfg')
             _file_name_list.append('Options.cfg')
 
-        self._check_files(
+        self._check_file_names(
             directory_dict=_directory_dict,
             directory_path=_directory_path,
             file_name_list=_file_name_list,
+            debug=debug)
+
+        self._check_file_suffixes(
+            directory_dict=_directory_dict,
+            directory_path=_directory_path,
+            file_suffix_list=_file_suffix_list,
             debug=debug)
 
         if len(_directory_dict):
@@ -2588,7 +2629,7 @@ class RunFolder(object):
                     _cycle_file_name_list.append('CorrectedIntMetricsOut.bin')
                     _cycle_file_name_list.append('QMetricsOut.bin')
 
-                self._check_files(
+                self._check_file_names(
                     directory_dict=cycle_dict,
                     directory_path=cycle_path,
                     file_name_list=_cycle_file_name_list)
@@ -2604,7 +2645,7 @@ class RunFolder(object):
             # Other than HiSeq 3000/4000, NextSeq and NovaSeq instruments.
             _file_name_list.append('ControlMetricsOut.bin')
 
-        self._check_files(
+        self._check_file_names(
             directory_dict=_directory_dict,
             directory_path=_directory_path,
             file_name_list=_file_name_list,
@@ -2650,7 +2691,7 @@ class RunFolder(object):
             'Save All Thumbnails.xml'
         ]
 
-        self._check_files(
+        self._check_file_names(
             directory_dict=_directory_dict,
             directory_path=_directory_path,
             file_name_list=_file_name_list,
@@ -2709,7 +2750,7 @@ class RunFolder(object):
                 # The HiSeq 3000/4000 and NovaSeq instruments do not have a 'FCID_RunState.xml' file.
                 _file_name_list.append(flow_cell_barcode + '_RunState.xml')
 
-        self._check_files(
+        self._check_file_names(
             directory_dict=_directory_dict,
             directory_path=_directory_path,
             file_name_list=_file_name_list,
@@ -2999,7 +3040,7 @@ class RunFolder(object):
             # On the NextSeq instrument.
             _file_name_list.append('RunCompletionStatus.xml')
 
-        self._check_files(
+        self._check_file_names(
             directory_dict=_directory_dict,
             directory_path=_directory_path,
             file_name_list=_file_name_list,
